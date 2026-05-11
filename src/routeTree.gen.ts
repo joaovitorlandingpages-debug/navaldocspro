@@ -9,38 +9,241 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VesselsRouteImport } from './routes/vessels'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ProcessesRouteImport } from './routes/processes'
+import { Route as PlansRouteImport } from './routes/plans'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as DocumentsRouteImport } from './routes/documents'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminLogsRouteImport } from './routes/admin/logs'
+import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 
+const VesselsRoute = VesselsRouteImport.update({
+  id: '/vessels',
+  path: '/vessels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProcessesRoute = ProcessesRouteImport.update({
+  id: '/processes',
+  path: '/processes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlansRoute = PlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentsRoute = DocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomersRoute = CustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLogsRoute = AdminLogsRouteImport.update({
+  id: '/admin/logs',
+  path: '/admin/logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDocumentsRoute = AdminDocumentsRouteImport.update({
+  id: '/admin/documents',
+  path: '/admin/documents',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/customers': typeof CustomersRoute
+  '/dashboard': typeof DashboardRoute
+  '/documents': typeof DocumentsRoute
+  '/login': typeof LoginRoute
+  '/plans': typeof PlansRoute
+  '/processes': typeof ProcessesRoute
+  '/register': typeof RegisterRoute
+  '/vessels': typeof VesselsRoute
+  '/admin/documents': typeof AdminDocumentsRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/users': typeof AdminUsersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/customers': typeof CustomersRoute
+  '/dashboard': typeof DashboardRoute
+  '/documents': typeof DocumentsRoute
+  '/login': typeof LoginRoute
+  '/plans': typeof PlansRoute
+  '/processes': typeof ProcessesRoute
+  '/register': typeof RegisterRoute
+  '/vessels': typeof VesselsRoute
+  '/admin/documents': typeof AdminDocumentsRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/users': typeof AdminUsersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/customers': typeof CustomersRoute
+  '/dashboard': typeof DashboardRoute
+  '/documents': typeof DocumentsRoute
+  '/login': typeof LoginRoute
+  '/plans': typeof PlansRoute
+  '/processes': typeof ProcessesRoute
+  '/register': typeof RegisterRoute
+  '/vessels': typeof VesselsRoute
+  '/admin/documents': typeof AdminDocumentsRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/users': typeof AdminUsersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/customers'
+    | '/dashboard'
+    | '/documents'
+    | '/login'
+    | '/plans'
+    | '/processes'
+    | '/register'
+    | '/vessels'
+    | '/admin/documents'
+    | '/admin/logs'
+    | '/admin/users'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/customers'
+    | '/dashboard'
+    | '/documents'
+    | '/login'
+    | '/plans'
+    | '/processes'
+    | '/register'
+    | '/vessels'
+    | '/admin/documents'
+    | '/admin/logs'
+    | '/admin/users'
+  id:
+    | '__root__'
+    | '/'
+    | '/customers'
+    | '/dashboard'
+    | '/documents'
+    | '/login'
+    | '/plans'
+    | '/processes'
+    | '/register'
+    | '/vessels'
+    | '/admin/documents'
+    | '/admin/logs'
+    | '/admin/users'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CustomersRoute: typeof CustomersRoute
+  DashboardRoute: typeof DashboardRoute
+  DocumentsRoute: typeof DocumentsRoute
+  LoginRoute: typeof LoginRoute
+  PlansRoute: typeof PlansRoute
+  ProcessesRoute: typeof ProcessesRoute
+  RegisterRoute: typeof RegisterRoute
+  VesselsRoute: typeof VesselsRoute
+  AdminDocumentsRoute: typeof AdminDocumentsRoute
+  AdminLogsRoute: typeof AdminLogsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/vessels': {
+      id: '/vessels'
+      path: '/vessels'
+      fullPath: '/vessels'
+      preLoaderRoute: typeof VesselsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/processes': {
+      id: '/processes'
+      path: '/processes'
+      fullPath: '/processes'
+      preLoaderRoute: typeof ProcessesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plans': {
+      id: '/plans'
+      path: '/plans'
+      fullPath: '/plans'
+      preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/documents': {
+      id: '/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof DocumentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customers': {
+      id: '/customers'
+      path: '/customers'
+      fullPath: '/customers'
+      preLoaderRoute: typeof CustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,12 +251,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/logs': {
+      id: '/admin/logs'
+      path: '/admin/logs'
+      fullPath: '/admin/logs'
+      preLoaderRoute: typeof AdminLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/documents': {
+      id: '/admin/documents'
+      path: '/admin/documents'
+      fullPath: '/admin/documents'
+      preLoaderRoute: typeof AdminDocumentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CustomersRoute: CustomersRoute,
+  DashboardRoute: DashboardRoute,
+  DocumentsRoute: DocumentsRoute,
+  LoginRoute: LoginRoute,
+  PlansRoute: PlansRoute,
+  ProcessesRoute: ProcessesRoute,
+  RegisterRoute: RegisterRoute,
+  VesselsRoute: VesselsRoute,
+  AdminDocumentsRoute: AdminDocumentsRoute,
+  AdminLogsRoute: AdminLogsRoute,
+  AdminUsersRoute: AdminUsersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
