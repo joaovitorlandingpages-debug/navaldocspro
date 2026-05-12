@@ -19,6 +19,8 @@ import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as AutomationRouteImport } from './routes/automation'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
@@ -78,6 +80,16 @@ const CustomersRoute = CustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AutomationRoute = AutomationRouteImport.update({
+  id: '/automation',
+  path: '/automation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -122,6 +134,8 @@ const AdminDocumentsRoute = AdminDocumentsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/automation': typeof AutomationRoute
+  '/calendar': typeof CalendarRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/document-generator': typeof DocumentGeneratorRoute
@@ -141,6 +155,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/automation': typeof AutomationRoute
+  '/calendar': typeof CalendarRoute
   '/customers': typeof CustomersRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
@@ -161,6 +177,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/automation': typeof AutomationRoute
+  '/calendar': typeof CalendarRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/document-generator': typeof DocumentGeneratorRoute
@@ -183,6 +201,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/automation'
+    | '/calendar'
     | '/customers'
     | '/dashboard'
     | '/document-generator'
@@ -202,6 +222,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/automation'
+    | '/calendar'
     | '/customers'
     | '/document-generator'
     | '/documents'
@@ -221,6 +243,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/automation'
+    | '/calendar'
     | '/customers'
     | '/dashboard'
     | '/document-generator'
@@ -242,6 +266,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AutomationRoute: typeof AutomationRoute
+  CalendarRoute: typeof CalendarRoute
   CustomersRoute: typeof CustomersRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
@@ -324,6 +350,20 @@ declare module '@tanstack/react-router' {
       path: '/customers'
       fullPath: '/customers'
       preLoaderRoute: typeof CustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/automation': {
+      id: '/automation'
+      path: '/automation'
+      fullPath: '/automation'
+      preLoaderRoute: typeof AutomationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -428,6 +468,8 @@ const ProcessesRouteWithChildren = ProcessesRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  AutomationRoute: AutomationRoute,
+  CalendarRoute: CalendarRoute,
   CustomersRoute: CustomersRoute,
   DashboardRoute: DashboardRouteWithChildren,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
