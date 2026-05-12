@@ -1,9 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { 
   ClipboardList, Search, Plus, MoreHorizontal, 
   ArrowRight, Calendar, User, Ship, AlertCircle 
 } from "lucide-react";
 import { useState } from "react";
+import { useNewProcess } from "@/hooks/useNewProcess";
 
 export const Route = createFileRoute("/processes")({
   component: Processes,
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/processes")({
 
 function Processes() {
   const [view, setView] = useState<"list" | "kanban">("kanban");
+  const { setIsNewProcessOpen } = useNewProcess();
 
   const columns = [
     { id: "novo", title: "Novo", color: "bg-blue-500" },
@@ -32,8 +34,8 @@ function Processes() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight">Fluxo de Processos</h1>
-          <p className="text-muted-foreground">Acompanhamento visual de cada etapa técnica e burocrática.</p>
+          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Fluxo de Processos</h1>
+          <p className="text-muted-foreground font-medium">Acompanhamento visual de cada etapa técnica e burocrática.</p>
         </div>
         <div className="flex gap-3 w-full sm:w-auto">
           <div className="bg-slate-100 p-1 rounded-2xl flex border border-slate-200">
@@ -50,14 +52,17 @@ function Processes() {
               Lista
             </button>
           </div>
-          <button className="flex-grow sm:flex-initial bg-primary text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/20">
+          <button 
+            onClick={() => setIsNewProcessOpen(true)}
+            className="flex-grow sm:flex-initial bg-primary text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/20"
+          >
             <Plus className="h-4 w-4 inline mr-2" /> Novo Processo
           </button>
         </div>
       </div>
 
       {view === "kanban" ? (
-        <div className="flex gap-8 overflow-x-auto pb-8 h-[calc(100vh-280px)] min-h-[650px] custom-scrollbar">
+        <div className="flex gap-8 overflow-x-auto pb-8 h-[calc(100vh-280px)] min-h-[650px] custom-scrollbar px-2">
           {columns.map((col) => (
             <div key={col.id} className="flex-shrink-0 w-80 flex flex-col gap-6">
               <div className="flex items-center justify-between px-2">
@@ -68,12 +73,16 @@ function Processes() {
                     {processes.filter(p => p.status === col.id).length}
                   </span>
                 </div>
-                <button className="p-1 hover:bg-slate-100 rounded-lg text-slate-300 transition-colors"><Plus className="h-4 w-4" /></button>
+                <button onClick={() => setIsNewProcessOpen(true)} className="p-1 hover:bg-slate-100 rounded-lg text-slate-300 transition-colors"><Plus className="h-4 w-4" /></button>
               </div>
               
-              <div className="flex-grow bg-slate-50/50 rounded-[2.5rem] p-5 space-y-5 border border-slate-100 overflow-y-auto custom-scrollbar backdrop-blur-sm">
+              <div className="flex-grow bg-slate-100/30 rounded-[2.5rem] p-5 space-y-5 border border-slate-100/50 overflow-y-auto custom-scrollbar backdrop-blur-sm">
                 {processes.filter(p => p.status === col.id).map((p) => (
-                  <div key={p.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-primary/30 transition-all cursor-grab active:cursor-grabbing group relative overflow-hidden">
+                  <Link 
+                    key={p.id} 
+                    to={`/processes/${p.id}`}
+                    className="block bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-primary/30 transition-all cursor-pointer group relative overflow-hidden"
+                  >
                     <div className="absolute top-0 right-0 p-4">
                        <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-50 rounded-lg text-slate-300 transition-all">
                           <MoreHorizontal className="h-4 w-4" />
@@ -109,10 +118,13 @@ function Processes() {
                         RA
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
                 
-                <button className="w-full py-4 border-2 border-dashed border-slate-200 rounded-3xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 hover:border-primary/30 hover:text-primary transition-all hover:bg-white/50">
+                <button 
+                  onClick={() => setIsNewProcessOpen(true)}
+                  className="w-full py-4 border-2 border-dashed border-slate-200 rounded-3xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 hover:border-primary/30 hover:text-primary transition-all hover:bg-white/50"
+                >
                    Adicionar Card
                 </button>
               </div>
@@ -125,7 +137,7 @@ function Processes() {
               <ClipboardList className="h-10 w-10" />
            </div>
            <h3 className="text-xl font-black text-navy mb-2 uppercase tracking-tight">Visualização em Lista</h3>
-           <p className="text-sm text-slate-400 max-w-xs mx-auto mb-8">Prefere o modo clássico? Esta visualização está sendo otimizada para tabelas de alta densidade.</p>
+           <p className="text-sm text-slate-400 max-w-xs mx-auto mb-8 font-medium">Prefere o modo clássico? Esta visualização está sendo otimizada para tabelas de alta densidade.</p>
            <button onClick={() => setView("kanban")} className="text-xs font-black uppercase tracking-widest text-primary hover:underline">Voltar para Kanban</button>
         </div>
       )}

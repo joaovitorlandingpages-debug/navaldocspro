@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Users, Search, Plus, MoreHorizontal, Mail, MapPin, Filter, X } from "lucide-react";
 import { useState } from "react";
+import { useNewProcess } from "@/hooks/useNewProcess";
 
 export const Route = createFileRoute("/customers")({
   component: Customers,
@@ -8,6 +9,7 @@ export const Route = createFileRoute("/customers")({
 
 function Customers() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { setIsNewProcessOpen } = useNewProcess();
   
   const customers = [
     { name: "Marinha Mercante Ltda", id: "23.456.789/0001-21", type: "Empresa", location: "Santos, SP", contact: "contato@mercante.com", phone: "(13) 3210-9090", shipCount: 12 },
@@ -18,26 +20,34 @@ function Customers() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-       <div className="flex justify-between items-end">
+       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight">Clientes</h1>
-          <p className="text-muted-foreground">Gerencie sua base de clientes e contatos.</p>
+          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Clientes</h1>
+          <p className="text-muted-foreground font-medium">Gerencie sua base de clientes e contatos.</p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-primary text-white px-5 py-2.5 rounded-lg font-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/20"
-        >
-          <Plus className="h-5 w-5" /> Novo Cliente
-        </button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button 
+            onClick={() => setIsNewProcessOpen(true)}
+            className="flex-grow sm:flex-initial bg-navy text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
+          >
+            <Plus className="h-4 w-4" /> Novo Processo
+          </button>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+          >
+            <Plus className="h-4 w-4" /> Novo Cliente
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-         <div className="p-4 border-b bg-slate-50/50 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+         <div className="p-6 border-b bg-slate-50/50 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:max-w-md">
-               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-               <input placeholder="Filtrar clientes..." className="w-full pl-10 pr-4 py-2 bg-white rounded-lg text-sm border-slate-200 focus:ring-2 focus:ring-primary/20" />
+               <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+               <input placeholder="Filtrar clientes..." className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium bg-white hover:bg-slate-50">
+            <button className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest bg-white hover:bg-slate-50 transition-all">
                <Filter className="h-4 w-4" /> Filtros Avançados
             </button>
          </div>
@@ -45,44 +55,44 @@ function Customers() {
          <div className="overflow-x-auto">
             <table className="w-full text-left">
                <thead>
-                  <tr className="bg-slate-50/50 text-slate-500 text-xs uppercase tracking-wider">
-                     <th className="px-6 py-4 font-semibold">CLIENTE / DOC</th>
-                     <th className="px-6 py-4 font-semibold">TIPO</th>
-                     <th className="px-6 py-4 font-semibold">CONTATO</th>
-                     <th className="px-6 py-4 font-semibold">EMBARCAÇÕES</th>
-                     <th className="px-6 py-4 font-semibold"></th>
+                  <tr className="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                     <th className="px-6 py-4">CLIENTE / DOC</th>
+                     <th className="px-6 py-4">TIPO</th>
+                     <th className="px-6 py-4">CONTATO</th>
+                     <th className="px-6 py-4">EMBARCAÇÕES</th>
+                     <th className="px-6 py-4"></th>
                   </tr>
                </thead>
-               <tbody className="divide-y divide-slate-100">
+               <tbody className="divide-y divide-slate-100 font-medium">
                   {customers.map((c, i) => (
-                    <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={i} className="hover:bg-slate-50/50 transition-colors group cursor-pointer">
                        <td className="px-6 py-4">
-                          <div className="font-bold text-navy">{c.name}</div>
-                          <div className="text-[10px] text-slate-400 font-mono">{c.id}</div>
+                          <div className="font-bold text-navy group-hover:text-primary transition-colors">{c.name}</div>
+                          <div className="text-[10px] text-slate-400 font-mono tracking-tighter">{c.id}</div>
                        </td>
                        <td className="px-6 py-4 text-sm">
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${c.type === 'Empresa' ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-600'}`}>
+                          <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${c.type === 'Empresa' ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-600'}`}>
                              {c.type}
                           </span>
                        </td>
                        <td className="px-6 py-4 text-sm text-slate-500">
-                          <div className="flex items-center gap-1.5 mb-1">
+                          <div className="flex items-center gap-1.5 mb-1 font-bold">
                              <Mail className="h-3.5 w-3.5" /> {c.contact}
                           </div>
-                          <div className="text-[11px] flex items-center gap-1.5 opacity-70">
+                          <div className="text-[11px] flex items-center gap-1.5 opacity-70 font-medium">
                              <MapPin className="h-3 w-3" /> {c.location}
                           </div>
                        </td>
                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                             <div className="h-1.5 w-12 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="flex items-center gap-3">
+                             <div className="h-1.5 w-16 bg-slate-100 rounded-full overflow-hidden">
                                 <div className="h-full bg-primary" style={{ width: `${Math.min(c.shipCount * 2, 100)}%` }} />
                              </div>
-                             <span className="text-sm font-bold">{c.shipCount}</span>
+                             <span className="text-xs font-black text-navy">{c.shipCount}</span>
                           </div>
                        </td>
                        <td className="px-6 py-4 text-right">
-                          <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-400">
+                          <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-300 transition-colors">
                              <MoreHorizontal className="h-5 w-5" />
                           </button>
                        </td>
@@ -92,13 +102,13 @@ function Customers() {
             </table>
          </div>
          
-         <div className="p-4 border-t flex items-center justify-between text-xs text-slate-500">
+         <div className="p-6 border-t flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
             <span>Mostrando 4 de 42 clientes</span>
             <div className="flex gap-2">
-               <button className="px-3 py-1 border rounded hover:bg-slate-50 disabled:opacity-50" disabled>Anterior</button>
-               <button className="px-3 py-1 border rounded bg-primary text-white">1</button>
-               <button className="px-3 py-1 border rounded hover:bg-slate-50">2</button>
-               <button className="px-3 py-1 border rounded hover:bg-slate-50">Próximo</button>
+               <button className="px-3 py-1.5 border rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-all" disabled>Anterior</button>
+               <button className="px-4 py-1.5 border rounded-lg bg-primary text-white shadow-sm transition-all">1</button>
+               <button className="px-4 py-1.5 border rounded-lg hover:bg-slate-50 transition-all">2</button>
+               <button className="px-3 py-1.5 border rounded-lg hover:bg-slate-50 transition-all">Próximo</button>
             </div>
          </div>
       </div>
@@ -106,54 +116,54 @@ function Customers() {
       {/* Modal Novo Cliente */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/20 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b flex justify-between items-center bg-slate-50">
+          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-8 border-b flex justify-between items-center bg-slate-50">
               <div>
-                <h3 className="text-xl font-bold text-navy">Cadastrar Novo Cliente</h3>
-                <p className="text-xs text-muted-foreground">Preencha os dados básicos para iniciar.</p>
+                <h3 className="text-xl font-black text-navy uppercase tracking-tight">Cadastrar Novo Cliente</h3>
+                <p className="text-xs text-muted-foreground font-medium mt-1">Preencha os dados básicos para iniciar.</p>
               </div>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-                <X className="h-5 w-5" />
+                <X className="h-6 w-6 text-slate-300" />
               </button>
             </div>
             <div className="p-8 space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Nome / Razão Social</label>
-                  <input className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Ex: João Silva ou Empresa LTDA" />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome / Razão Social</label>
+                  <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" placeholder="Ex: João Silva ou Empresa LTDA" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">CPF / CNPJ</label>
-                  <input className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none" placeholder="000.000.000-00" />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">CPF / CNPJ</label>
+                  <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" placeholder="000.000.000-00" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">E-mail</label>
-                  <input className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none" placeholder="contato@cliente.com" />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">E-mail</label>
+                  <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" placeholder="contato@cliente.com" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Telefone</label>
-                  <input className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none" placeholder="(00) 00000-0000" />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Telefone</label>
+                  <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" placeholder="(00) 00000-0000" />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-bold text-slate-700">Endereço Completo</label>
-                  <input className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Rua, Número, Bairro, Cidade - UF" />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Endereço Completo</label>
+                  <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" placeholder="Rua, Número, Bairro, Cidade - UF" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Tipo de Cliente</label>
-                  <select className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tipo de Cliente</label>
+                  <select className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all">
                     <option>Individual (Pessoa Física)</option>
                     <option>Empresa (Pessoa Jurídica)</option>
                   </select>
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700">Observações Internas</label>
-                <textarea className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none h-24 resize-none" placeholder="Notas adicionais sobre este cliente..." />
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Observações Internas</label>
+                <textarea className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none h-24 resize-none font-medium text-sm transition-all" placeholder="Notas adicionais sobre este cliente..." />
               </div>
             </div>
-            <div className="p-6 bg-slate-50 border-t flex justify-end gap-3">
-              <button onClick={() => setIsModalOpen(false)} className="px-6 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-200 transition-all">Cancelar</button>
-              <button className="px-8 py-2.5 bg-primary text-white rounded-xl font-bold hover:opacity-90 shadow-lg shadow-primary/20 transition-all">Salvar Cliente</button>
+            <div className="p-8 bg-slate-50 border-t flex justify-end gap-3">
+              <button onClick={() => setIsModalOpen(false)} className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all">Cancelar</button>
+              <button className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-primary/20 transition-all">Salvar Cliente</button>
             </div>
           </div>
         </div>

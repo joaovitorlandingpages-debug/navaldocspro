@@ -5,6 +5,7 @@ import {
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity
 } from "lucide-react";
 import { useState } from "react";
+import { useNewProcess } from "@/hooks/useNewProcess";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/dashboard")({
 
 function DashboardLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const { setIsNewProcessOpen } = useNewProcess();
 
   const navItems = [
     { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
@@ -79,20 +81,29 @@ function DashboardLayout() {
               </div>
            </div>
            
-           <div className="flex items-center gap-4">
-              <button className="relative p-2 hover:bg-slate-100 rounded-full">
-                 <Bell className="h-5 w-5 text-slate-600" />
-                 <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
+           <div className="flex items-center gap-6">
+              <button 
+                onClick={() => setIsNewProcessOpen(true)}
+                className="hidden md:flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+              >
+                <Plus className="h-4 w-4" /> Novo Processo
               </button>
-              <div className="h-8 w-px bg-slate-200" />
-              <div className="flex items-center gap-3">
-                 <div className="text-right hidden sm:block">
-                    <p className="text-sm font-bold text-navy">Eng. Ricardo Almeida</p>
-                    <p className="text-xs text-muted-foreground">Plano Pro</p>
-                 </div>
-                 <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-                    RA
-                 </div>
+
+              <div className="flex items-center gap-4">
+                <button className="relative p-2 hover:bg-slate-100 rounded-full">
+                    <Bell className="h-5 w-5 text-slate-600" />
+                    <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
+                </button>
+                <div className="h-8 w-px bg-slate-200" />
+                <div className="flex items-center gap-3">
+                    <div className="text-right hidden sm:block">
+                        <p className="text-sm font-bold text-navy">Eng. Ricardo Almeida</p>
+                        <p className="text-xs text-muted-foreground">Plano Pro</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+                        RA
+                    </div>
+                </div>
               </div>
            </div>
         </header>
@@ -107,6 +118,7 @@ function DashboardLayout() {
 }
 
 export function DashboardContent() {
+  const { setIsNewProcessOpen } = useNewProcess();
   const stats = [
     { label: "Clientes Ativos", value: "42", icon: <Users className="text-blue-600" />, trend: "+12%" },
     { label: "Embarcações", value: "86", icon: <Ship className="text-cyan-600" />, trend: "+5%" },
@@ -125,14 +137,17 @@ export function DashboardContent() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Bem-vindo ao centro de operações NavalDocs.</p>
+          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Dashboard</h1>
+          <p className="text-muted-foreground font-medium">Bem-vindo ao centro de operações NavalDocs.</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <button className="flex-grow sm:flex-initial bg-white border border-slate-200 text-navy px-5 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
             <TrendingUp className="h-4 w-4" /> Relatórios
           </button>
-          <button className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/20">
+          <button 
+            onClick={() => setIsNewProcessOpen(true)}
+            className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+          >
             <Plus className="h-5 w-5" /> Novo Processo
           </button>
         </div>
@@ -163,7 +178,7 @@ export function DashboardContent() {
             {/* Gráfico Fictício */}
             <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-100 shadow-sm">
                <div className="flex justify-between items-center mb-8">
-                  <h3 className="font-bold text-navy flex items-center gap-2">
+                  <h3 className="font-bold text-navy flex items-center gap-2 uppercase text-xs tracking-widest">
                     <Activity className="h-5 w-5 text-primary" /> Atividade de Processos
                   </h3>
                   <select className="bg-slate-50 border-none text-[10px] font-bold uppercase rounded-lg px-3 py-1.5 outline-none">
@@ -194,10 +209,10 @@ export function DashboardContent() {
             {/* Recent Processes */}
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                <div className="p-6 border-b flex justify-between items-center bg-slate-50/30">
-                  <h3 className="font-bold text-navy flex items-center gap-2">
+                  <h3 className="font-bold text-navy flex items-center gap-2 uppercase text-xs tracking-widest">
                     <Clock className="h-5 w-5 text-primary" /> Últimos Processos
                   </h3>
-                  <button className="text-xs text-primary font-black uppercase tracking-widest hover:underline">Ver todos</button>
+                  <Link to="/processes" className="text-xs text-primary font-black uppercase tracking-widest hover:underline">Ver todos</Link>
                </div>
                <div className="overflow-x-auto">
                   <table className="w-full text-left">
@@ -211,10 +226,10 @@ export function DashboardContent() {
                      </thead>
                      <tbody className="divide-y divide-slate-100">
                        {recentProcesses.map((proc, idx) => (
-                         <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                         <tr key={idx} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => window.location.href=`/processes/${proc.id}`}>
                            <td className="px-6 py-4 font-mono text-xs text-slate-400">{proc.id}</td>
                            <td className="px-6 py-4">
-                              <div className="font-bold text-sm text-navy">{proc.client}</div>
+                              <div className="font-bold text-sm text-navy group-hover:text-primary transition-colors">{proc.client}</div>
                               <div className="text-[10px] text-muted-foreground flex items-center gap-1">
                                 <Ship className="h-3 w-3" /> {proc.ship}
                               </div>
@@ -244,15 +259,15 @@ export function DashboardContent() {
                   <TrendingUp className="h-48 w-48" />
                </div>
                <div className="relative z-10">
-                  <h4 className="text-xl font-bold mb-2 flex items-center gap-2">
+                  <h4 className="text-xl font-bold mb-2 flex items-center gap-2 uppercase tracking-tight">
                     <ShieldCheck className="h-5 w-5 text-primary" /> Desempenho
                   </h4>
-                  <p className="text-slate-400 text-sm mb-8">Sua eficiência subiu 15% este mês.</p>
+                  <p className="text-slate-400 text-xs mb-8 font-medium">Sua eficiência subiu 15% este mês.</p>
                   
                   <div className="space-y-6">
                      <div className="space-y-2">
-                        <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
-                           <span className="text-slate-400">Meta Mensal</span>
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                           <span className="text-slate-500">Meta Mensal</span>
                            <span className="text-primary">85%</span>
                         </div>
                         <div className="h-2 bg-white/5 rounded-full overflow-hidden">
@@ -262,12 +277,12 @@ export function DashboardContent() {
                      
                      <div className="grid grid-cols-2 gap-4">
                         <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                           <p className="text-[10px] text-slate-500 font-bold uppercase">Tempo Médio</p>
-                           <p className="text-lg font-black">4.2d</p>
+                           <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Tempo Médio</p>
+                           <p className="text-lg font-black text-white">4.2d</p>
                         </div>
                         <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                           <p className="text-[10px] text-slate-500 font-bold uppercase">Taxa Aprovação</p>
-                           <p className="text-lg font-black">98%</p>
+                           <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Taxa Aprovação</p>
+                           <p className="text-lg font-black text-white">98%</p>
                         </div>
                      </div>
                   </div>
@@ -275,8 +290,8 @@ export function DashboardContent() {
             </div>
 
             <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden">
-               <h3 className="font-bold text-navy mb-6 flex items-center gap-2">
-                 <Bell className="h-5 w-5 text-amber-500 animate-bounce" /> Alertas Críticos
+               <h3 className="font-bold text-navy mb-6 flex items-center gap-2 uppercase text-xs tracking-widest">
+                  <Bell className="h-5 w-5 text-amber-500 animate-bounce" /> Alertas Críticos
                </h3>
                <div className="space-y-4">
                   {[
@@ -287,8 +302,8 @@ export function DashboardContent() {
                        <div className="flex justify-between items-start mb-1">
                           <p className="text-sm font-black text-navy">{alert.title}</p>
                        </div>
-                       <p className="text-xs text-slate-500 mb-2">{alert.desc}</p>
-                       <p className={`text-[10px] font-black uppercase ${alert.color === 'red' ? 'text-red-600' : 'text-amber-600'}`}>{alert.days}</p>
+                       <p className="text-[11px] text-slate-500 mb-2 font-medium">{alert.desc}</p>
+                       <p className={`text-[10px] font-black uppercase tracking-widest ${alert.color === 'red' ? 'text-red-600' : 'text-amber-600'}`}>{alert.days}</p>
                     </div>
                   ))}
                </div>

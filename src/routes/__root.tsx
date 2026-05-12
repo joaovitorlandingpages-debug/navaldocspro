@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { NewProcessProvider } from "@/hooks/useNewProcess";
 
 function NotFoundComponent() {
   return (
@@ -107,7 +108,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <NewProcessProvider>
+          {children}
+        </NewProcessProvider>
         <Scripts />
       </body>
     </html>
