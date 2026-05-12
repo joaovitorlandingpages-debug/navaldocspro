@@ -3,7 +3,7 @@ import {
   ArrowLeft, Calendar, User, Ship, FileText, 
   Clock, CheckCircle2, AlertCircle, MoreHorizontal, 
   Download, Share2, PlayCircle, MessageSquare, Plus,
-  FileCheck, History, Info
+  FileCheck, History, Info, Zap, Bot
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,9 @@ function ProcessDetail() {
   const timeline = [
     { title: "Processo criado", date: "10/05/2026 - 09:45", user: "Ricardo Almeida", icon: <Plus className="h-3 w-3" />, color: "bg-blue-500" },
     { title: "Cliente vinculado", date: "10/05/2026 - 10:15", user: "Ricardo Almeida", icon: <User className="h-3 w-3" />, color: "bg-purple-500" },
-    { title: "Documento enviado", date: "11/05/2026 - 14:20", user: "Sistema", desc: "Comprovante de residência anexado.", icon: <FileText className="h-3 w-3" />, color: "bg-amber-500" },
+    { title: "OCR: Dados Extraídos", date: "10/05/2026 - 10:16", user: "Sistema IA", desc: "CNH processada e campos preenchidos automaticamente.", icon: <Zap className="h-3 w-3" />, color: "bg-amber-500" },
+    { title: "Doc: Procuração Gerada", date: "10/05/2026 - 10:17", user: "Sistema", desc: "Template de procuração preenchido com dados do cliente.", icon: <Bot className="h-3 w-3" />, color: "bg-indigo-500" },
+    { title: "Documento enviado", date: "11/05/2026 - 14:20", user: "Sistema", desc: "Link de assinatura enviado via WhatsApp.", icon: <FileText className="h-3 w-3" />, color: "bg-blue-400" },
     { title: "GRU anexada", date: "12/05/2026 - 08:30", user: "Cliente", icon: <FileText className="h-3 w-3" />, color: "bg-green-500" },
     { title: "Documento validado", date: "12/05/2026 - 11:00", user: "Admin", desc: "RG e CPF validados com sucesso.", icon: <FileCheck className="h-3 w-3" />, color: "bg-cyan-500" },
   ];
