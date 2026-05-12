@@ -130,6 +130,5 @@ function Processes() {
         </div>
       )}
     </div>
-    </div>
   );
 }
