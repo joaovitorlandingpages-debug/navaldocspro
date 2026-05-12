@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VesselsRouteImport } from './routes/vessels'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PlansRouteImport } from './routes/plans'
@@ -26,6 +27,11 @@ import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
   path: '/vessels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRoute
   '/register': typeof RegisterRoute
+  '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRoute
   '/register': typeof RegisterRoute
+  '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRoute
   '/register': typeof RegisterRoute
+  '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/processes'
     | '/register'
+    | '/settings'
     | '/vessels'
     | '/admin/documents'
     | '/admin/logs'
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/processes'
     | '/register'
+    | '/settings'
     | '/vessels'
     | '/admin/documents'
     | '/admin/logs'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/processes'
     | '/register'
+    | '/settings'
     | '/vessels'
     | '/admin/documents'
     | '/admin/logs'
@@ -193,6 +205,7 @@ export interface RootRouteChildren {
   PlansRoute: typeof PlansRoute
   ProcessesRoute: typeof ProcessesRoute
   RegisterRoute: typeof RegisterRoute
+  SettingsRoute: typeof SettingsRoute
   VesselsRoute: typeof VesselsRoute
 }
 
@@ -203,6 +216,13 @@ declare module '@tanstack/react-router' {
       path: '/vessels'
       fullPath: '/vessels'
       preLoaderRoute: typeof VesselsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -316,8 +336,19 @@ const rootRouteChildren: RootRouteChildren = {
   PlansRoute: PlansRoute,
   ProcessesRoute: ProcessesRoute,
   RegisterRoute: RegisterRoute,
+  SettingsRoute: SettingsRoute,
   VesselsRoute: VesselsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

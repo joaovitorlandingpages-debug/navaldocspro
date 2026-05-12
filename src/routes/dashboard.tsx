@@ -20,6 +20,7 @@ function DashboardLayout() {
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
     { name: "Documentos", icon: <FileText className="h-5 w-5" />, path: "/documents" },
     { name: "Planos", icon: <CreditCard className="h-5 w-5" />, path: "/plans" },
+    { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
   ];
 
   return (
