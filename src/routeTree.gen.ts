@@ -16,6 +16,7 @@ import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DocumentsRouteImport } from './routes/documents'
+import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -60,6 +61,11 @@ const LoginRoute = LoginRouteImport.update({
 const DocumentsRoute = DocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentGeneratorRoute = DocumentGeneratorRouteImport.update({
+  id: '/document-generator',
+  path: '/document-generator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/customers': typeof CustomersRoute
+  '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/customers'
     | '/dashboard'
+    | '/document-generator'
     | '/documents'
     | '/login'
     | '/plans'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/customers'
+    | '/document-generator'
     | '/documents'
     | '/login'
     | '/plans'
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/customers'
     | '/dashboard'
+    | '/document-generator'
     | '/documents'
     | '/login'
     | '/plans'
@@ -232,6 +244,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   CustomersRoute: typeof CustomersRoute
   DashboardRoute: typeof DashboardRouteWithChildren
+  DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
   LoginRoute: typeof LoginRoute
   PlansRoute: typeof PlansRoute
@@ -290,6 +303,13 @@ declare module '@tanstack/react-router' {
       path: '/documents'
       fullPath: '/documents'
       preLoaderRoute: typeof DocumentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/document-generator': {
+      id: '/document-generator'
+      path: '/document-generator'
+      fullPath: '/document-generator'
+      preLoaderRoute: typeof DocumentGeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -410,6 +430,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   CustomersRoute: CustomersRoute,
   DashboardRoute: DashboardRouteWithChildren,
+  DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
   LoginRoute: LoginRoute,
   PlansRoute: PlansRoute,
