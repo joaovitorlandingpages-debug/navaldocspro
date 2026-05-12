@@ -46,8 +46,16 @@ export function AutomationFlow() {
       <div className="space-y-4">
         {steps.map((step, i) => (
           <div key={i} className="relative">
-            <div className={`p-5 rounded-2xl border border-slate-100 flex items-center gap-4 bg-slate-50/50 hover:bg-white hover:shadow-md transition-all cursor-pointer group border-l-4 border-l-${step.color}-500`}>
-              <div className={`h-10 w-10 rounded-xl bg-${step.color}-50 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>
+            <div className={`p-5 rounded-2xl border border-slate-100 flex items-center gap-4 bg-slate-50/50 hover:bg-white hover:shadow-md transition-all cursor-pointer group border-l-4 ${
+              step.color === 'blue' ? 'border-l-blue-500' :
+              step.color === 'indigo' ? 'border-l-indigo-500' :
+              step.color === 'amber' ? 'border-l-amber-500' : 'border-l-emerald-500'
+            }`}>
+              <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform ${
+                step.color === 'blue' ? 'bg-blue-50' :
+                step.color === 'indigo' ? 'bg-indigo-50' :
+                step.color === 'amber' ? 'bg-amber-50' : 'bg-emerald-50'
+              }`}>
                 {step.icon}
               </div>
               <div className="flex-grow">
