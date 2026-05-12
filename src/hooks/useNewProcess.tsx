@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import { NewProcessWizard } from "@/components/NewProcessWizard";
 
 const NewProcessContext = createContext<{
   setIsNewProcessOpen: (open: boolean) => void;
@@ -10,7 +11,7 @@ export function NewProcessProvider({ children }: { children: React.ReactNode }) 
   return (
     <NewProcessContext.Provider value={{ setIsNewProcessOpen: setIsOpen }}>
       {children}
-      {/* The wizard is handled here or at the layout level */}
+      <NewProcessWizard isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </NewProcessContext.Provider>
   );
 }
