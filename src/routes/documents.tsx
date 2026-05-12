@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { 
   FileText, Search, Plus, Download, Eye, 
-  Filter, Tag, LayoutGrid, List, MoreVertical, X
+  Filter, Tag, LayoutGrid, List, MoreVertical, X,
+  Zap, Cpu
 } from "lucide-react";
 import { useState } from "react";
+import { SmartOCR } from "@/components/SmartOCR";
 
 export const Route = createFileRoute("/documents")({
   component: Documents,
@@ -12,6 +14,7 @@ export const Route = createFileRoute("/documents")({
 function Documents() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [uploadMode, setUploadMode] = useState<"standard" | "smart">("standard");
 
   const categories = ["Todos", "Memoriais", "ARTs", "Certificados", "Projetos", "Vistorias"];
   
@@ -158,47 +161,68 @@ function Documents() {
       {/* Modal Upload Fictício */}
       {isUploadOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/20 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className={`bg-white w-full ${uploadMode === 'smart' ? 'max-w-3xl' : 'max-w-xl'} rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200`}>
             <div className="p-6 border-b flex justify-between items-center bg-slate-50">
-              <h3 className="text-xl font-bold text-navy">Enviar Documentos</h3>
+              <div className="flex gap-4">
+                 <button 
+                   onClick={() => setUploadMode("standard")}
+                   className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${uploadMode === 'standard' ? 'bg-navy text-white shadow-lg' : 'text-slate-400 hover:text-navy'}`}
+                 >
+                   Upload Padrão
+                 </button>
+                 <button 
+                   onClick={() => setUploadMode("smart")}
+                   className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${uploadMode === 'smart' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-primary'}`}
+                 >
+                   <Zap className="h-4 w-4" /> OCR Inteligente
+                 </button>
+              </div>
               <button onClick={() => setIsUploadOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-10 space-y-6">
-              <div className="border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group">
-                <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                   <Plus className="h-8 w-8 text-slate-400 group-hover:text-primary" />
+            {uploadMode === "standard" ? (
+              <>
+                <div className="p-10 space-y-6">
+                  <div className="border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group">
+                    <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                      <Plus className="h-8 w-8 text-slate-400 group-hover:text-primary" />
+                    </div>
+                    <p className="font-bold text-navy">Arraste seus arquivos aqui</p>
+                    <p className="text-sm text-slate-400">ou clique para selecionar do seu computador</p>
+                    <p className="text-[10px] text-slate-300 mt-4">PDF, DOCX, DWG, JPG (Máx. 50MB)</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-slate-700">Categoria</label>
+                      <select className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
+                        <option>Memoriais</option>
+                        <option>ARTs</option>
+                        <option>Certificados</option>
+                        <option>Projetos</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-slate-700">Privacidade</label>
+                      <select className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
+                        <option>Somente eu</option>
+                        <option>Empresa</option>
+                        <option>Público para cliente</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-                <p className="font-bold text-navy">Arraste seus arquivos aqui</p>
-                <p className="text-sm text-slate-400">ou clique para selecionar do seu computador</p>
-                <p className="text-[10px] text-slate-300 mt-4">PDF, DOCX, DWG, JPG (Máx. 50MB)</p>
+                <div className="p-6 bg-slate-50 border-t flex justify-end gap-3">
+                  <button onClick={() => setIsUploadOpen(false)} className="px-6 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-200 transition-all">Cancelar</button>
+                  <button className="px-8 py-2.5 bg-primary text-white rounded-xl font-bold hover:opacity-90 shadow-lg shadow-primary/20 transition-all">Iniciar Upload</button>
+                </div>
+              </>
+            ) : (
+              <div className="p-8 bg-slate-50/50">
+                <SmartOCR />
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                   <label className="text-sm font-bold text-slate-700">Categoria</label>
-                   <select className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
-                     <option>Memoriais</option>
-                     <option>ARTs</option>
-                     <option>Certificados</option>
-                     <option>Projetos</option>
-                   </select>
-                 </div>
-                 <div className="space-y-2">
-                   <label className="text-sm font-bold text-slate-700">Privacidade</label>
-                   <select className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
-                     <option>Somente eu</option>
-                     <option>Empresa</option>
-                     <option>Público para cliente</option>
-                   </select>
-                 </div>
-              </div>
-            </div>
-            <div className="p-6 bg-slate-50 border-t flex justify-end gap-3">
-              <button onClick={() => setIsUploadOpen(false)} className="px-6 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-200 transition-all">Cancelar</button>
-              <button className="px-8 py-2.5 bg-primary text-white rounded-xl font-bold hover:opacity-90 shadow-lg shadow-primary/20 transition-all">Iniciar Upload</button>
-            </div>
+            )}
           </div>
         </div>
       )}

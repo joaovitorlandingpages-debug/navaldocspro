@@ -3,7 +3,7 @@ import {
   ShieldAlert, Users, FileStack, Activity, 
   Settings, LayoutGrid, ArrowLeft, Search, Filter, 
   Download, Plus, MoreHorizontal, Database, 
-  ShieldCheck, Terminal, CreditCard
+  ShieldCheck, Terminal, CreditCard, Zap, Cpu, History
 } from "lucide-react";
 import { useState } from "react";
 
@@ -88,7 +88,7 @@ export function AdminDashboardView() {
   ];
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
        <div className="flex justify-between items-start">
           <div>
             <h1 className="text-4xl font-black tracking-tight mb-2 text-white">Painel Master</h1>
@@ -119,66 +119,88 @@ export function AdminDashboardView() {
           ))}
        </div>
 
-       <div className="grid lg:grid-cols-2 gap-8 pb-20">
-          <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-md">
+       <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-md">
              <div className="flex justify-between items-center mb-8">
                 <h3 className="text-lg font-black text-white flex items-center gap-3 uppercase tracking-tighter">
-                   <Activity className="h-5 w-5 text-red-500" /> Atividade de Segurança
+                   <Zap className="h-5 w-5 text-amber-500" /> Logs de Inteligência & IA
                 </h3>
-                <button className="text-[10px] font-black uppercase text-slate-500 hover:text-white transition-all">Ver Logs</button>
+                <button className="text-[10px] font-black uppercase text-slate-500 hover:text-white transition-all">Ver Todos</button>
              </div>
-             <div className="space-y-4">
+             <div className="space-y-3 font-mono">
                 {[
-                  { action: "Novo cadastro de empresa", target: "Oceanic Logística", time: "2 min atrás", type: "success" },
-                  { action: "Upgrade de plano", target: "Eng. Gabriel Silva", time: "15 min atrás", type: "upgrade" },
-                  { action: "Falha na exportação PDF", target: "Usuário #4920", time: "1h atrás", type: "error" },
-                  { action: "Backup concluído", target: "Database Master", time: "3h atrás", type: "info" }
+                  { event: "OCR_PROCESS_SUCCESS", meta: "CNH_SCAN_492", time: "10:42:01", status: "ok" },
+                  { event: "AUTO_DOC_GEN", meta: "PROC_882_REQUEST", time: "10:40:15", status: "ok" },
+                  { event: "WHATSAPP_API_SENT", meta: "+55119992...", time: "10:38:44", status: "ok" },
+                  { event: "IA_CLASSIFY_SHIP", meta: "PETROLEIRO_PHX", time: "10:35:12", status: "ok" },
+                  { event: "DPC_SINC_ERROR", meta: "GATEWAY_TIMEOUT", time: "10:30:00", status: "error" },
+                  { event: "OCR_LOW_CONFIDENCE", meta: "DOC_RG_AMADOR", time: "10:25:22", status: "warn" }
                 ].map((log, i) => (
-                  <div key={i} className="flex items-center justify-between p-5 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-white/10 cursor-pointer group">
+                  <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-black/40 border border-white/5 hover:border-white/10 transition-all text-[10px]">
                      <div className="flex gap-4 items-center">
-                        <div className={`h-2.5 w-2.5 rounded-full ${
-                          log.type === 'success' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]' : 
-                          log.type === 'error' ? 'bg-red-500 animate-pulse' :
-                          log.type === 'upgrade' ? 'bg-yellow-500' : 'bg-blue-500'
-                        }`} />
-                        <div>
-                           <p className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors">{log.action}</p>
-                           <p className="text-[10px] text-slate-500 font-mono italic">{log.target}</p>
-                        </div>
+                        <span className={`px-2 py-0.5 rounded text-[8px] font-black ${
+                          log.status === 'ok' ? 'bg-green-500/20 text-green-500' : 
+                          log.status === 'error' ? 'bg-red-500/20 text-red-500' : 'bg-amber-500/20 text-amber-500'
+                        }`}>{log.status.toUpperCase()}</span>
+                        <span className="text-slate-300 font-bold">{log.event}</span>
+                        <span className="text-slate-500 italic">params: {log.meta}</span>
                      </div>
-                     <span className="text-[9px] font-mono text-slate-600 group-hover:text-slate-400 transition-colors uppercase">{log.time}</span>
+                     <span className="text-slate-600">{log.time}</span>
                   </div>
                 ))}
              </div>
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-md">
-             <div className="flex justify-between items-center mb-8">
-                <h3 className="text-lg font-black text-white flex items-center gap-3 uppercase tracking-tighter">
-                   <Database className="h-5 w-5 text-blue-500" /> Infra Status
-                </h3>
-                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+          <div className="space-y-8">
+             <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-md">
+                <div className="flex justify-between items-center mb-8">
+                   <h3 className="text-lg font-black text-white flex items-center gap-3 uppercase tracking-tighter">
+                      <Activity className="h-5 w-5 text-red-500" /> Segurança
+                   </h3>
+                </div>
+                <div className="space-y-4">
+                  {[
+                    { action: "Novo cadastro de empresa", target: "Oceanic Logística", time: "2 min atrás", type: "success" },
+                    { action: "Upgrade de plano", target: "Eng. Gabriel Silva", time: "15 min atrás", type: "upgrade" },
+                    { action: "Falha na exportação PDF", target: "Usuário #4920", time: "1h atrás", type: "error" },
+                  ].map((log, i) => (
+                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent">
+                        <div className="flex gap-3 items-center">
+                          <div className={`h-2 w-2 rounded-full ${log.type === 'error' ? 'bg-red-500' : 'bg-green-500'}`} />
+                          <div>
+                            <p className="text-xs font-bold text-slate-200">{log.action}</p>
+                            <p className="text-[9px] text-slate-500 font-mono italic">{log.target}</p>
+                          </div>
+                        </div>
+                        <span className="text-[9px] font-mono text-slate-600">{log.time}</span>
+                    </div>
+                  ))}
+                </div>
              </div>
-             <div className="space-y-8">
-                {[
-                  { label: "Servidor Principal", status: "Operacional", val: 99 },
-                  { label: "Banco de Dados", status: "Operacional", val: 100 },
-                  { label: "Storage (Documentos)", status: "Carga Alta", val: 78, color: "yellow" },
-                  { label: "API Gateway", status: "Operacional", val: 99 }
-                ].map((s, i) => (
-                  <div key={i} className="space-y-3">
-                     <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
-                        <span className="text-slate-400">{s.label}</span>
-                        <span className={`${s.color === 'yellow' ? 'text-yellow-500' : 'text-green-500'}`}>{s.status}</span>
+
+             <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-md">
+                <div className="flex justify-between items-center mb-8">
+                   <h3 className="text-lg font-black text-white flex items-center gap-3 uppercase tracking-tighter">
+                      <Database className="h-5 w-5 text-blue-500" /> Infra
+                   </h3>
+                </div>
+                <div className="space-y-6">
+                   {[
+                     { label: "IA Worker", val: 45 },
+                     { label: "OCR Engine", val: 82 },
+                     { label: "Storage", val: 68 }
+                   ].map((s, i) => (
+                     <div key={i} className="space-y-2">
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
+                           <span>{s.label}</span>
+                           <span>{s.val}%</span>
+                        </div>
+                        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                           <div className="h-full bg-blue-500" style={{ width: `${s.val}%` }} />
+                        </div>
                      </div>
-                     <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full transition-all duration-1000 ${s.color === 'yellow' ? 'bg-yellow-500' : 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]'}`}
-                          style={{ width: `${s.val}%` }}
-                        />
-                     </div>
-                  </div>
-                ))}
+                   ))}
+                </div>
              </div>
           </div>
        </div>

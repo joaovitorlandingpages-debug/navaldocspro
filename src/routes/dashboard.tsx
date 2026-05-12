@@ -2,10 +2,13 @@ import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { 
   Anchor, LayoutDashboard, Users, Ship, ClipboardList, 
   FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
-  Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus
+  Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
+  Zap, Calendar as CalendarIcon, Cpu, Target, Rocket
 } from "lucide-react";
 import { useState } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
+import { NotificationCenter } from "@/components/NotificationCenter";
+import { ActivityFeed } from "@/components/ActivityFeed";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
@@ -13,16 +16,18 @@ export const Route = createFileRoute("/dashboard")({
 
 function DashboardLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isNotificationsOpen, setNotificationsOpen] = useState(false);
   const { setIsNewProcessOpen } = useNewProcess();
 
   const navItems = [
     { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
+    { name: "Agenda", icon: <CalendarIcon className="h-5 w-5" />, path: "/calendar" },
+    { name: "Automação", icon: <Zap className="h-5 w-5" />, path: "/automation" },
     { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
     { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
     { name: "Gerador de Docs", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
     { name: "Documentos", icon: <FileText className="h-5 w-5" />, path: "/documents" },
-    { name: "Planos", icon: <CreditCard className="h-5 w-5" />, path: "/plans" },
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
   ];
 
@@ -91,10 +96,14 @@ function DashboardLayout() {
               </button>
 
               <div className="flex items-center gap-4">
-                <button className="relative p-2 hover:bg-slate-100 rounded-full">
-                    <Bell className="h-5 w-5 text-slate-600" />
-                    <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
-                </button>
+                 <button 
+                   onClick={() => setNotificationsOpen(true)}
+                   className="relative p-2 hover:bg-slate-100 rounded-full transition-all active:scale-95"
+                 >
+                     <Bell className="h-5 w-5 text-slate-600" />
+                     <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full animate-ping" />
+                     <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
+                 </button>
                 <div className="h-8 w-px bg-slate-200" />
                 <div className="flex items-center gap-3">
                     <div className="text-right hidden sm:block">
@@ -108,6 +117,11 @@ function DashboardLayout() {
               </div>
            </div>
         </header>
+
+        <NotificationCenter 
+          isOpen={isNotificationsOpen} 
+          onClose={() => setNotificationsOpen(false)} 
+        />
 
         {/* Dynamic Content Container */}
         <main className="flex-grow overflow-y-auto p-8">
@@ -178,6 +192,52 @@ export function DashboardContent() {
         ))}
       </div>
 
+      {/* Intelligence Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-[2rem] text-white shadow-xl">
+           <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-white/20 rounded-2xl">
+                 <Cpu className="h-6 w-6" />
+              </div>
+              <span className="text-[10px] font-bold uppercase bg-white/20 px-2 py-1 rounded-full">Inteligência Operacional</span>
+           </div>
+           <h3 className="text-xl font-bold mb-1">OCR Ativo</h3>
+           <p className="text-white/70 text-sm mb-4">12 documentos processados automaticamente hoje.</p>
+           <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-full bg-white w-2/3" />
+           </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-[2rem] text-white shadow-xl">
+           <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-white/20 rounded-2xl">
+                 <Rocket className="h-6 w-6" />
+              </div>
+              <span className="text-[10px] font-bold uppercase bg-white/20 px-2 py-1 rounded-full">Eficiência</span>
+           </div>
+           <h3 className="text-xl font-bold mb-1">Gargalos Reduzidos</h3>
+           <p className="text-white/70 text-sm mb-4">O tempo médio de análise caiu para 2.4 dias.</p>
+           <div className="flex gap-1 mt-2">
+              {[1,2,3,4,5].map(i => <div key={i} className={`h-8 flex-grow rounded-md bg-white/${i < 4 ? '40' : '10'}`} />)}
+           </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-500 to-pink-600 p-6 rounded-[2rem] text-white shadow-xl">
+           <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-white/20 rounded-2xl">
+                 <Target className="h-6 w-6" />
+              </div>
+              <span className="text-[10px] font-bold uppercase bg-white/20 px-2 py-1 rounded-full">Equipe</span>
+           </div>
+           <h3 className="text-xl font-bold mb-1">Top Performance</h3>
+           <p className="text-white/70 text-sm mb-4">Ranking liderado por Eng. Ricardo (98% conclusão).</p>
+           <div className="flex -space-x-2 mt-2">
+              {[1,2,3].map(i => <div key={i} className="h-8 w-8 rounded-full border-2 border-white bg-slate-200" />)}
+              <div className="h-8 w-8 rounded-full border-2 border-white bg-white/20 flex items-center justify-center text-[10px] font-bold">+5</div>
+           </div>
+        </div>
+      </div>
+
       {/* Charts & Table Grid */}
       <div className="grid lg:grid-cols-3 gap-8">
          {/* Main Activity Column */}
@@ -210,8 +270,10 @@ export function DashboardContent() {
                </div>
                <div className="flex justify-between mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">
                   <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
-               </div>
             </div>
+            
+            <ActivityFeed />
+         </div>
 
             {/* Recent Processes */}
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
