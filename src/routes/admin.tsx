@@ -3,7 +3,7 @@ import {
   ShieldAlert, Users, FileStack, Activity, 
   Settings, LayoutGrid, ArrowLeft, Search, Filter, 
   Download, Plus, MoreHorizontal, Database, 
-  ShieldCheck, Terminal, CreditCard
+  ShieldCheck, Terminal, CreditCard, Zap, Cpu, History
 } from "lucide-react";
 import { useState } from "react";
 
