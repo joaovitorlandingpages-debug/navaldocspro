@@ -91,39 +91,42 @@ export function AdminDashboardView() {
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
        <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-4xl font-black tracking-tight mb-2">Painel Master</h1>
-            <p className="text-slate-500 font-mono text-sm">Controle global da infraestrutura NavalDocs Pro.</p>
+            <h1 className="text-4xl font-black tracking-tight mb-2 text-white">Painel Master</h1>
+            <p className="text-slate-500 font-mono text-xs italic">Controle global da infraestrutura NavalDocs Pro.</p>
           </div>
           <div className="flex gap-3">
-             <button className="bg-white/5 border border-white/10 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-white/10">
+             <button className="bg-white/5 border border-white/10 px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-white/10 transition-all text-slate-300">
                 <Download className="h-4 w-4" /> Exportar Dados
              </button>
-             <button className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20">
+             <button className="bg-red-500 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-red-600 transition-all shadow-xl shadow-red-500/20">
                 <Plus className="h-4 w-4" /> Novo Alerta Global
              </button>
           </div>
        </div>
 
-       <div className="grid md:grid-cols-4 gap-6">
+       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {stats.map((stat, i) => (
-            <div key={i} className="bg-white/5 border border-white/10 p-6 rounded-2xl hover:border-red-500/30 transition-all group">
-               <div className="flex justify-between items-center mb-4">
-                  <div className="p-3 bg-white/5 rounded-xl group-hover:bg-red-500/10 transition-colors">
+            <div key={i} className="bg-white/5 border border-white/10 p-6 rounded-[2rem] hover:border-red-500/30 transition-all group relative overflow-hidden backdrop-blur-md">
+               <div className="flex justify-between items-center mb-6">
+                  <div className="p-3 bg-white/5 rounded-2xl group-hover:bg-red-500/10 group-hover:text-red-500 transition-all border border-white/5">
                      {stat.icon}
                   </div>
-                  <span className="text-[10px] font-mono font-black text-slate-500 bg-white/5 px-2 py-1 rounded-full">{stat.change}</span>
+                  <span className="text-[10px] font-black text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full">{stat.change}</span>
                </div>
-               <p className="text-slate-400 text-sm font-bold">{stat.label}</p>
-               <h3 className="text-3xl font-black mt-2">{stat.value}</h3>
+               <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">{stat.label}</p>
+               <h3 className="text-3xl font-black text-white">{stat.value}</h3>
             </div>
           ))}
        </div>
 
-       <div className="grid lg:grid-cols-2 gap-8">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-             <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                <Activity className="h-5 w-5 text-red-500" /> Atividade Recente
-             </h3>
+       <div className="grid lg:grid-cols-2 gap-8 pb-20">
+          <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-md">
+             <div className="flex justify-between items-center mb-8">
+                <h3 className="text-lg font-black text-white flex items-center gap-3 uppercase tracking-tighter">
+                   <Activity className="h-5 w-5 text-red-500" /> Atividade de Segurança
+                </h3>
+                <button className="text-[10px] font-black uppercase text-slate-500 hover:text-white transition-all">Ver Logs</button>
+             </div>
              <div className="space-y-4">
                 {[
                   { action: "Novo cadastro de empresa", target: "Oceanic Logística", time: "2 min atrás", type: "success" },
@@ -131,43 +134,46 @@ export function AdminDashboardView() {
                   { action: "Falha na exportação PDF", target: "Usuário #4920", time: "1h atrás", type: "error" },
                   { action: "Backup concluído", target: "Database Master", time: "3h atrás", type: "info" }
                 ].map((log, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-transparent hover:border-white/10 cursor-pointer">
+                  <div key={i} className="flex items-center justify-between p-5 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-white/10 cursor-pointer group">
                      <div className="flex gap-4 items-center">
-                        <div className={`h-2 w-2 rounded-full ${
-                          log.type === 'success' ? 'bg-green-500' : 
+                        <div className={`h-2.5 w-2.5 rounded-full ${
+                          log.type === 'success' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]' : 
                           log.type === 'error' ? 'bg-red-500 animate-pulse' :
                           log.type === 'upgrade' ? 'bg-yellow-500' : 'bg-blue-500'
                         }`} />
                         <div>
-                           <p className="text-sm font-bold">{log.action}</p>
-                           <p className="text-xs text-slate-500">{log.target}</p>
+                           <p className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors">{log.action}</p>
+                           <p className="text-[10px] text-slate-500 font-mono italic">{log.target}</p>
                         </div>
                      </div>
-                     <span className="text-[10px] font-mono text-slate-600">{log.time}</span>
+                     <span className="text-[9px] font-mono text-slate-600 group-hover:text-slate-400 transition-colors uppercase">{log.time}</span>
                   </div>
                 ))}
              </div>
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-             <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                <Database className="h-5 w-5 text-blue-500" /> Status dos Serviços
-             </h3>
-             <div className="space-y-6">
+          <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-md">
+             <div className="flex justify-between items-center mb-8">
+                <h3 className="text-lg font-black text-white flex items-center gap-3 uppercase tracking-tighter">
+                   <Database className="h-5 w-5 text-blue-500" /> Infra Status
+                </h3>
+                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+             </div>
+             <div className="space-y-8">
                 {[
                   { label: "Servidor Principal", status: "Operacional", val: 99 },
-                  { label: "Banco de Dados (Supabase)", status: "Operacional", val: 100 },
+                  { label: "Banco de Dados", status: "Operacional", val: 100 },
                   { label: "Storage (Documentos)", status: "Carga Alta", val: 78, color: "yellow" },
-                  { label: "API Mercado Pago", status: "Operacional", val: 99 }
+                  { label: "API Gateway", status: "Operacional", val: 99 }
                 ].map((s, i) => (
-                  <div key={i} className="space-y-2">
-                     <div className="flex justify-between text-sm">
-                        <span className="font-bold text-slate-300">{s.label}</span>
-                        <span className={`text-xs font-mono ${s.color === 'yellow' ? 'text-yellow-500' : 'text-green-500'}`}>{s.status} ({s.val}%)</span>
+                  <div key={i} className="space-y-3">
+                     <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
+                        <span className="text-slate-400">{s.label}</span>
+                        <span className={`${s.color === 'yellow' ? 'text-yellow-500' : 'text-green-500'}`}>{s.status}</span>
                      </div>
-                     <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                     <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
                         <div 
-                          className={`h-full rounded-full ${s.color === 'yellow' ? 'bg-yellow-500' : 'bg-green-500'}`}
+                          className={`h-full rounded-full transition-all duration-1000 ${s.color === 'yellow' ? 'bg-yellow-500' : 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]'}`}
                           style={{ width: `${s.val}%` }}
                         />
                      </div>

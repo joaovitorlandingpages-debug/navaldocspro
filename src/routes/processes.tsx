@@ -30,81 +30,103 @@ function Processes() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight">Processos</h1>
-          <p className="text-muted-foreground">Acompanhamento de fluxos de trabalho e prazos.</p>
+          <h1 className="text-3xl font-bold text-navy tracking-tight">Fluxo de Processos</h1>
+          <p className="text-muted-foreground">Acompanhamento visual de cada etapa técnica e burocrática.</p>
         </div>
-        <div className="flex gap-3">
-          <div className="bg-slate-100 p-1 rounded-xl flex">
+        <div className="flex gap-3 w-full sm:w-auto">
+          <div className="bg-slate-100 p-1 rounded-2xl flex border border-slate-200">
             <button 
               onClick={() => setView("kanban")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'kanban' ? 'bg-white shadow-sm text-primary' : 'text-slate-500'}`}
+              className={`px-5 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'kanban' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
             >
               Kanban
             </button>
             <button 
               onClick={() => setView("list")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'list' ? 'bg-white shadow-sm text-primary' : 'text-slate-500'}`}
+              className={`px-5 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'list' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
             >
               Lista
             </button>
           </div>
-          <button className="bg-primary text-white px-5 py-2.5 rounded-lg font-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/20">
-            <Plus className="h-5 w-5" /> Novo Processo
+          <button className="flex-grow sm:flex-initial bg-primary text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/20">
+            <Plus className="h-4 w-4 inline mr-2" /> Novo Processo
           </button>
         </div>
       </div>
 
       {view === "kanban" ? (
-        <div className="flex gap-6 overflow-x-auto pb-4 h-[calc(100vh-280px)] min-h-[600px]">
+        <div className="flex gap-8 overflow-x-auto pb-8 h-[calc(100vh-280px)] min-h-[650px] custom-scrollbar">
           {columns.map((col) => (
-            <div key={col.id} className="flex-shrink-0 w-80 flex flex-col gap-4">
+            <div key={col.id} className="flex-shrink-0 w-80 flex flex-col gap-6">
               <div className="flex items-center justify-between px-2">
-                <div className="flex items-center gap-2">
-                  <div className={`h-2 w-2 rounded-full ${col.color}`} />
-                  <h3 className="font-bold text-navy text-sm uppercase tracking-wider">{col.title}</h3>
-                  <span className="bg-slate-100 text-slate-500 text-[10px] font-black px-2 py-0.5 rounded-full">
+                <div className="flex items-center gap-3">
+                  <div className={`h-2.5 w-2.5 rounded-full ${col.color} shadow-[0_0_10px_rgba(0,0,0,0.1)]`} />
+                  <h3 className="font-black text-navy text-[10px] uppercase tracking-[0.2em]">{col.title}</h3>
+                  <span className="bg-white border border-slate-100 text-slate-400 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-sm">
                     {processes.filter(p => p.status === col.id).length}
                   </span>
                 </div>
-                <button className="text-slate-300 hover:text-slate-600"><Plus className="h-4 w-4" /></button>
+                <button className="p-1 hover:bg-slate-100 rounded-lg text-slate-300 transition-colors"><Plus className="h-4 w-4" /></button>
               </div>
               
-              <div className="flex-grow bg-slate-50/50 rounded-2xl p-4 space-y-4 border border-slate-100 overflow-y-auto custom-scrollbar">
+              <div className="flex-grow bg-slate-50/50 rounded-[2.5rem] p-5 space-y-5 border border-slate-100 overflow-y-auto custom-scrollbar backdrop-blur-sm">
                 {processes.filter(p => p.status === col.id).map((p) => (
-                  <div key={p.id} className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-primary/20 transition-all cursor-grab active:cursor-grabbing group">
-                    <div className="flex justify-between items-start mb-3">
-                      <span className="text-[10px] font-mono font-bold text-primary">{p.id}</span>
-                      <button className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-slate-600"><MoreHorizontal className="h-4 w-4" /></button>
+                  <div key={p.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-primary/30 transition-all cursor-grab active:cursor-grabbing group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4">
+                       <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-50 rounded-lg text-slate-300 transition-all">
+                          <MoreHorizontal className="h-4 w-4" />
+                       </button>
                     </div>
-                    <h4 className="font-bold text-navy text-sm mb-1">{p.type}</h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <User className="h-3 w-3" /> {p.client}
+                    
+                    <div className="mb-4">
+                      <span className="text-[10px] font-mono font-black text-primary bg-primary/5 px-2 py-0.5 rounded uppercase tracking-tighter">{p.id}</span>
+                    </div>
+
+                    <h4 className="font-black text-navy text-sm mb-4 leading-tight group-hover:text-primary transition-colors">{p.type}</h4>
+                    
+                    <div className="space-y-3 pb-5 mb-5 border-b border-slate-50">
+                      <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
+                        <div className="h-6 w-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                          <User className="h-3.5 w-3.5" />
+                        </div>
+                        {p.client}
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <Ship className="h-3 w-3" /> {p.vessel}
+                      <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
+                        <div className="h-6 w-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-cyan-100 group-hover:text-cyan-600 transition-all">
+                          <Ship className="h-3.5 w-3.5" />
+                        </div>
+                        {p.vessel}
                       </div>
                     </div>
-                    <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
-                        <Calendar className="h-3 w-3" /> {p.deadline}
+
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        <Calendar className="h-3.5 w-3.5 text-red-400" /> {p.deadline}
                       </div>
-                      <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
+                      <div className="h-8 w-8 rounded-xl bg-navy text-white flex items-center justify-center text-[10px] font-black shadow-lg border-2 border-white">
                         RA
                       </div>
                     </div>
                   </div>
                 ))}
+                
+                <button className="w-full py-4 border-2 border-dashed border-slate-200 rounded-3xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 hover:border-primary/30 hover:text-primary transition-all hover:bg-white/50">
+                   Adicionar Card
+                </button>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          {/* List view placeholder - reuse previous table logic or similar */}
-          <div className="p-8 text-center text-slate-400">Visualização de lista disponível.</div>
+        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-20 flex flex-col items-center justify-center text-center">
+           <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6">
+              <ClipboardList className="h-10 w-10" />
+           </div>
+           <h3 className="text-xl font-black text-navy mb-2 uppercase tracking-tight">Visualização em Lista</h3>
+           <p className="text-sm text-slate-400 max-w-xs mx-auto mb-8">Prefere o modo clássico? Esta visualização está sendo otimizada para tabelas de alta densidade.</p>
+           <button onClick={() => setView("kanban")} className="text-xs font-black uppercase tracking-widest text-primary hover:underline">Voltar para Kanban</button>
         </div>
       )}
     </div>
