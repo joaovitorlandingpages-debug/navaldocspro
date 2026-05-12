@@ -5,6 +5,7 @@ import {
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity
 } from "lucide-react";
 import { useState } from "react";
+import { NewProcessWizard } from "@/components/NewProcessWizard";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/dashboard")({
 
 function DashboardLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isNewProcessOpen, setIsNewProcessOpen] = useState(false);
 
   const navItems = [
     { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
@@ -79,29 +81,40 @@ function DashboardLayout() {
               </div>
            </div>
            
-           <div className="flex items-center gap-4">
-              <button className="relative p-2 hover:bg-slate-100 rounded-full">
-                 <Bell className="h-5 w-5 text-slate-600" />
-                 <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
+           <div className="flex items-center gap-6">
+              <button 
+                onClick={() => setIsNewProcessOpen(true)}
+                className="hidden md:flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+              >
+                <Plus className="h-4 w-4" /> Novo Processo
               </button>
-              <div className="h-8 w-px bg-slate-200" />
-              <div className="flex items-center gap-3">
-                 <div className="text-right hidden sm:block">
-                    <p className="text-sm font-bold text-navy">Eng. Ricardo Almeida</p>
-                    <p className="text-xs text-muted-foreground">Plano Pro</p>
-                 </div>
-                 <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-                    RA
-                 </div>
+
+              <div className="flex items-center gap-4">
+                <button className="relative p-2 hover:bg-slate-100 rounded-full">
+                    <Bell className="h-5 w-5 text-slate-600" />
+                    <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
+                </button>
+                <div className="h-8 w-px bg-slate-200" />
+                <div className="flex items-center gap-3">
+                    <div className="text-right hidden sm:block">
+                        <p className="text-sm font-bold text-navy">Eng. Ricardo Almeida</p>
+                        <p className="text-xs text-muted-foreground">Plano Pro</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+                        RA
+                    </div>
+                </div>
               </div>
            </div>
         </header>
 
         {/* Dynamic Content Container */}
         <main className="flex-grow overflow-y-auto p-8">
-           <Outlet />
+           <Outlet context={{ setIsNewProcessOpen }} />
         </main>
       </div>
+
+      <NewProcessWizard isOpen={isNewProcessOpen} onClose={() => setIsNewProcessOpen(false)} />
     </div>
   );
 }
