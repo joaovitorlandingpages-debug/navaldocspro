@@ -69,7 +69,7 @@ export function SmartOCR() {
           </div>
         )}
 
-        {(status === 'uploading' || status === 'processing') && (status !== 'done') && (
+        {(status === 'uploading' || status === 'processing') && (
           <div className="py-12 text-center space-y-6">
             <div className="relative h-32 w-32 mx-auto">
               <div className="absolute inset-0 rounded-full border-4 border-slate-100" />
