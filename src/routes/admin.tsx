@@ -19,7 +19,7 @@ function AdminLayout() {
     { name: "Visão Geral", icon: <LayoutGrid className="h-5 w-5" />, path: "/admin" },
     { name: "Usuários", icon: <Users className="h-5 w-5" />, path: "/admin/users" },
     { name: "Empresas", icon: <Database className="h-5 w-5" />, path: "/admin/companies" },
-    { name: "Documentos Globais", icon: <FileStack className="h-5 w-5" />, path: "/admin/documents" },
+    { name: "Modelos de Docs", icon: <FileStack className="h-5 w-5" />, path: "/admin/documents" },
     { name: "Logs do Sistema", icon: <Terminal className="h-5 w-5" />, path: "/admin/logs" },
     { name: "Planos & Cobrança", icon: <CreditCard className="h-5 w-5" />, path: "/admin/plans" },
   ];
