@@ -8,6 +8,7 @@ import {
 import { useState } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import { ActivityFeed } from "@/components/ActivityFeed";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
@@ -269,8 +270,10 @@ export function DashboardContent() {
                </div>
                <div className="flex justify-between mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">
                   <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
-               </div>
             </div>
+            
+            <ActivityFeed />
+         </div>
 
             {/* Recent Processes */}
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
