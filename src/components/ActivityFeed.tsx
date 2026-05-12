@@ -22,8 +22,11 @@ export function ActivityFeed() {
         {activities.map((act, i) => (
           <div key={i} className="p-6 hover:bg-slate-50 transition-colors group cursor-pointer">
             <div className="flex gap-4">
-               <div className={`h-10 w-10 rounded-xl bg-${act.color}-50 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>
-                  <div className={`text-${act.color}-600`}>{act.icon}</div>
+               <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform ${
+                 act.color === 'blue' ? 'bg-blue-50 text-blue-600' : 
+                 act.color === 'amber' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+               }`}>
+                  {act.icon}
                </div>
                <div>
                   <p className="text-sm text-slate-600">
