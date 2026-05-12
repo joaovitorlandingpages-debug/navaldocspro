@@ -91,30 +91,30 @@ export function AdminDashboardView() {
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
        <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-4xl font-black tracking-tight mb-2">Painel Master</h1>
-            <p className="text-slate-500 font-mono text-sm">Controle global da infraestrutura NavalDocs Pro.</p>
+            <h1 className="text-4xl font-black tracking-tight mb-2 text-white">Painel Master</h1>
+            <p className="text-slate-500 font-mono text-xs italic">Controle global da infraestrutura NavalDocs Pro.</p>
           </div>
           <div className="flex gap-3">
-             <button className="bg-white/5 border border-white/10 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-white/10">
+             <button className="bg-white/5 border border-white/10 px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-white/10 transition-all text-slate-300">
                 <Download className="h-4 w-4" /> Exportar Dados
              </button>
-             <button className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20">
+             <button className="bg-red-500 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-red-600 transition-all shadow-xl shadow-red-500/20">
                 <Plus className="h-4 w-4" /> Novo Alerta Global
              </button>
           </div>
        </div>
 
-       <div className="grid md:grid-cols-4 gap-6">
+       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {stats.map((stat, i) => (
-            <div key={i} className="bg-white/5 border border-white/10 p-6 rounded-2xl hover:border-red-500/30 transition-all group">
-               <div className="flex justify-between items-center mb-4">
-                  <div className="p-3 bg-white/5 rounded-xl group-hover:bg-red-500/10 transition-colors">
+            <div key={i} className="bg-white/5 border border-white/10 p-6 rounded-[2rem] hover:border-red-500/30 transition-all group relative overflow-hidden backdrop-blur-md">
+               <div className="flex justify-between items-center mb-6">
+                  <div className="p-3 bg-white/5 rounded-2xl group-hover:bg-red-500/10 group-hover:text-red-500 transition-all border border-white/5">
                      {stat.icon}
                   </div>
-                  <span className="text-[10px] font-mono font-black text-slate-500 bg-white/5 px-2 py-1 rounded-full">{stat.change}</span>
+                  <span className="text-[10px] font-black text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full">{stat.change}</span>
                </div>
-               <p className="text-slate-400 text-sm font-bold">{stat.label}</p>
-               <h3 className="text-3xl font-black mt-2">{stat.value}</h3>
+               <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">{stat.label}</p>
+               <h3 className="text-3xl font-black text-white">{stat.value}</h3>
             </div>
           ))}
        </div>
