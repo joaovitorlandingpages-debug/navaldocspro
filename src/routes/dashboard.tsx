@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { 
   Anchor, LayoutDashboard, Users, Ship, ClipboardList, 
   FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
-  Menu, X, TrendingUp, Clock, ShieldCheck
+  Menu, X, TrendingUp, Clock, ShieldCheck, Activity
 } from "lucide-react";
 import { useState } from "react";
 
