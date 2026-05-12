@@ -110,7 +110,7 @@ function DashboardLayout() {
 
         {/* Dynamic Content Container */}
         <main className="flex-grow overflow-y-auto p-8">
-           <Outlet context={{ setIsNewProcessOpen }} />
+           <Outlet />
         </main>
       </div>
 
