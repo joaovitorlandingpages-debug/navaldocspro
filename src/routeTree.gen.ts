@@ -26,7 +26,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
-import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
+import { Route as AdminDocumentsRouteImport } from './routes/admin.documents'
 
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
@@ -442,3 +442,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
