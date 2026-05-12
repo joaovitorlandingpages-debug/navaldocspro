@@ -20,6 +20,7 @@ function DashboardLayout() {
     { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
     { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
+    { name: "Gerador de Docs", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
     { name: "Documentos", icon: <FileText className="h-5 w-5" />, path: "/documents" },
     { name: "Planos", icon: <CreditCard className="h-5 w-5" />, path: "/plans" },
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
