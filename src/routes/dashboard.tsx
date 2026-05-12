@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
+import { NotificationCenter } from "@/components/NotificationCenter";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/dashboard")({
 
 function DashboardLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isNotificationsOpen, setNotificationsOpen] = useState(false);
   const { setIsNewProcessOpen } = useNewProcess();
 
   const navItems = [
@@ -93,10 +95,14 @@ function DashboardLayout() {
               </button>
 
               <div className="flex items-center gap-4">
-                <button className="relative p-2 hover:bg-slate-100 rounded-full">
-                    <Bell className="h-5 w-5 text-slate-600" />
-                    <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
-                </button>
+                 <button 
+                   onClick={() => setNotificationsOpen(true)}
+                   className="relative p-2 hover:bg-slate-100 rounded-full transition-all active:scale-95"
+                 >
+                     <Bell className="h-5 w-5 text-slate-600" />
+                     <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full animate-ping" />
+                     <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
+                 </button>
                 <div className="h-8 w-px bg-slate-200" />
                 <div className="flex items-center gap-3">
                     <div className="text-right hidden sm:block">
@@ -110,6 +116,11 @@ function DashboardLayout() {
               </div>
            </div>
         </header>
+
+        <NotificationCenter 
+          isOpen={isNotificationsOpen} 
+          onClose={() => setNotificationsOpen(false)} 
+        />
 
         {/* Dynamic Content Container */}
         <main className="flex-grow overflow-y-auto p-8">
