@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { 
   Anchor, LayoutDashboard, Users, Ship, ClipboardList, 
   FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
-  Menu, X, TrendingUp, Clock, ShieldCheck, Activity
+  Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus
 } from "lucide-react";
 import { useState } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -20,6 +20,7 @@ function DashboardLayout() {
     { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
     { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
+    { name: "Gerador de Docs", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
     { name: "Documentos", icon: <FileText className="h-5 w-5" />, path: "/documents" },
     { name: "Planos", icon: <CreditCard className="h-5 w-5" />, path: "/plans" },
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
@@ -141,6 +142,12 @@ export function DashboardContent() {
           <p className="text-muted-foreground font-medium">Bem-vindo ao centro de operações NavalDocs.</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
+          <Link 
+            to="/document-generator"
+            className="flex-grow sm:flex-initial bg-navy text-white px-5 py-2.5 rounded-xl font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2"
+          >
+            <FilePlus className="h-4 w-4" /> Gerar Doc
+          </Link>
           <button className="flex-grow sm:flex-initial bg-white border border-slate-200 text-navy px-5 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
             <TrendingUp className="h-4 w-4" /> Relatórios
           </button>
