@@ -3,6 +3,7 @@ import {
   ClipboardList, Search, Plus, MoreHorizontal, 
   ArrowRight, Calendar, User, Ship, AlertCircle 
 } from "lucide-react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/processes")({
   component: Processes,
