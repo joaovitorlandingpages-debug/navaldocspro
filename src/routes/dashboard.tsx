@@ -2,7 +2,8 @@ import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { 
   Anchor, LayoutDashboard, Users, Ship, ClipboardList, 
   FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
-  Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus
+  Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
+  Zap, Calendar as CalendarIcon, Cpu, Target, Rocket
 } from "lucide-react";
 import { useState } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -17,12 +18,13 @@ function DashboardLayout() {
 
   const navItems = [
     { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
+    { name: "Agenda", icon: <CalendarIcon className="h-5 w-5" />, path: "/calendar" },
+    { name: "Automação", icon: <Zap className="h-5 w-5" />, path: "/automation" },
     { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
     { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
     { name: "Gerador de Docs", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
     { name: "Documentos", icon: <FileText className="h-5 w-5" />, path: "/documents" },
-    { name: "Planos", icon: <CreditCard className="h-5 w-5" />, path: "/plans" },
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
   ];
 
@@ -176,6 +178,52 @@ export function DashboardContent() {
              <h3 className="text-2xl md:text-3xl font-black text-navy mt-1">{stat.value}</h3>
           </div>
         ))}
+      </div>
+
+      {/* Intelligence Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-[2rem] text-white shadow-xl">
+           <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-white/20 rounded-2xl">
+                 <Cpu className="h-6 w-6" />
+              </div>
+              <span className="text-[10px] font-bold uppercase bg-white/20 px-2 py-1 rounded-full">Inteligência Operacional</span>
+           </div>
+           <h3 className="text-xl font-bold mb-1">OCR Ativo</h3>
+           <p className="text-white/70 text-sm mb-4">12 documentos processados automaticamente hoje.</p>
+           <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-full bg-white w-2/3" />
+           </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-[2rem] text-white shadow-xl">
+           <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-white/20 rounded-2xl">
+                 <Rocket className="h-6 w-6" />
+              </div>
+              <span className="text-[10px] font-bold uppercase bg-white/20 px-2 py-1 rounded-full">Eficiência</span>
+           </div>
+           <h3 className="text-xl font-bold mb-1">Gargalos Reduzidos</h3>
+           <p className="text-white/70 text-sm mb-4">O tempo médio de análise caiu para 2.4 dias.</p>
+           <div className="flex gap-1 mt-2">
+              {[1,2,3,4,5].map(i => <div key={i} className={`h-8 flex-grow rounded-md bg-white/${i < 4 ? '40' : '10'}`} />)}
+           </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-500 to-pink-600 p-6 rounded-[2rem] text-white shadow-xl">
+           <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-white/20 rounded-2xl">
+                 <Target className="h-6 w-6" />
+              </div>
+              <span className="text-[10px] font-bold uppercase bg-white/20 px-2 py-1 rounded-full">Equipe</span>
+           </div>
+           <h3 className="text-xl font-bold mb-1">Top Performance</h3>
+           <p className="text-white/70 text-sm mb-4">Ranking liderado por Eng. Ricardo (98% conclusão).</p>
+           <div className="flex -space-x-2 mt-2">
+              {[1,2,3].map(i => <div key={i} className="h-8 w-8 rounded-full border-2 border-white bg-slate-200" />)}
+              <div className="h-8 w-8 rounded-full border-2 border-white bg-white/20 flex items-center justify-center text-[10px] font-bold">+5</div>
+           </div>
+        </div>
       </div>
 
       {/* Charts & Table Grid */}
