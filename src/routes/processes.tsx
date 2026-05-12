@@ -29,7 +29,7 @@ function Processes() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold text-navy tracking-tight">Processos</h1>
