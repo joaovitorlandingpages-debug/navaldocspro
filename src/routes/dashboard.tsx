@@ -20,6 +20,7 @@ function DashboardLayout() {
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
     { name: "Documentos", icon: <FileText className="h-5 w-5" />, path: "/documents" },
     { name: "Planos", icon: <CreditCard className="h-5 w-5" />, path: "/plans" },
+    { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
   ];
 
   return (
@@ -98,14 +99,14 @@ function DashboardLayout() {
 
         {/* Dynamic Content Container */}
         <main className="flex-grow overflow-y-auto p-8">
-           <DashboardContent />
+           <Outlet />
         </main>
       </div>
     </div>
   );
 }
 
-function DashboardContent() {
+export function DashboardContent() {
   const stats = [
     { label: "Clientes Ativos", value: "42", icon: <Users className="text-blue-600" />, trend: "+12%" },
     { label: "Embarcações", value: "86", icon: <Ship className="text-cyan-600" />, trend: "+5%" },

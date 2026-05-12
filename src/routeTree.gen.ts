@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VesselsRouteImport } from './routes/vessels'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PlansRouteImport } from './routes/plans'
@@ -19,6 +20,8 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
@@ -26,6 +29,11 @@ import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
   path: '/vessels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -73,6 +81,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -93,47 +111,54 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/customers': typeof CustomersRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/documents': typeof DocumentsRoute
   '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRoute
   '/register': typeof RegisterRoute
+  '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/': typeof AdminIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
   '/customers': typeof CustomersRoute
-  '/dashboard': typeof DashboardRoute
   '/documents': typeof DocumentsRoute
   '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRoute
   '/register': typeof RegisterRoute
+  '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin': typeof AdminIndexRoute
+  '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/customers': typeof CustomersRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/documents': typeof DocumentsRoute
   '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRoute
   '/register': typeof RegisterRoute
+  '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/': typeof AdminIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -147,25 +172,29 @@ export interface FileRouteTypes {
     | '/plans'
     | '/processes'
     | '/register'
+    | '/settings'
     | '/vessels'
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/users'
+    | '/admin/'
+    | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/customers'
-    | '/dashboard'
     | '/documents'
     | '/login'
     | '/plans'
     | '/processes'
     | '/register'
+    | '/settings'
     | '/vessels'
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/users'
+    | '/admin'
+    | '/dashboard'
   id:
     | '__root__'
     | '/'
@@ -177,22 +206,26 @@ export interface FileRouteTypes {
     | '/plans'
     | '/processes'
     | '/register'
+    | '/settings'
     | '/vessels'
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/users'
+    | '/admin/'
+    | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   CustomersRoute: typeof CustomersRoute
-  DashboardRoute: typeof DashboardRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
   DocumentsRoute: typeof DocumentsRoute
   LoginRoute: typeof LoginRoute
   PlansRoute: typeof PlansRoute
   ProcessesRoute: typeof ProcessesRoute
   RegisterRoute: typeof RegisterRoute
+  SettingsRoute: typeof SettingsRoute
   VesselsRoute: typeof VesselsRoute
 }
 
@@ -203,6 +236,13 @@ declare module '@tanstack/react-router' {
       path: '/vessels'
       fullPath: '/vessels'
       preLoaderRoute: typeof VesselsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -268,6 +308,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/users'
@@ -296,26 +350,41 @@ interface AdminRouteChildren {
   AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminUsersRoute: typeof AdminUsersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminDocumentsRoute: AdminDocumentsRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminUsersRoute: AdminUsersRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface DashboardRouteChildren {
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   CustomersRoute: CustomersRoute,
-  DashboardRoute: DashboardRoute,
+  DashboardRoute: DashboardRouteWithChildren,
   DocumentsRoute: DocumentsRoute,
   LoginRoute: LoginRoute,
   PlansRoute: PlansRoute,
   ProcessesRoute: ProcessesRoute,
   RegisterRoute: RegisterRoute,
+  SettingsRoute: SettingsRoute,
   VesselsRoute: VesselsRoute,
 }
 export const routeTree = rootRouteImport

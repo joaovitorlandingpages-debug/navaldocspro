@@ -9,6 +9,7 @@ import { useState } from "react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
+  staticData: { hideMasterView: false }
 });
 
 function AdminLayout() {
@@ -71,7 +72,6 @@ function AdminLayout() {
          </header>
 
          <main className="flex-grow p-8 overflow-y-auto">
-            <AdminDashboardView />
             <Outlet />
          </main>
       </div>
@@ -79,7 +79,7 @@ function AdminLayout() {
   );
 }
 
-function AdminDashboardView() {
+export function AdminDashboardView() {
   const stats = [
     { label: "Total Usuários", value: "1,248", change: "+14%", icon: <Users /> },
     { label: "Receita (MRR)", value: "R$ 42.400", change: "+8.2%", icon: <CreditCard /> },
