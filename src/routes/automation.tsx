@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Zap, Bot, ShieldCheck, Mail, FileCheck } from "lucide-react";
+import { Zap, Bot, ShieldCheck, Mail, FileCheck, Search, Activity, Cpu } from "lucide-react";
+import { SmartOCR } from "@/components/SmartOCR";
+import { AutomationFlow } from "@/components/AutomationFlow";
 
 export const Route = createFileRoute("/automation")({
   component: AutomationPage,
@@ -18,25 +20,67 @@ function AutomationPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { title: "Notificação de Processo", icon: Mail, status: "Ativo", desc: "Envia e-mail automático ao cliente quando o processo é criado." },
-          { title: "Validação Documental", icon: FileCheck, status: "Pausado", desc: "Valida automaticamente GRUs anexadas por OCR." },
-          { title: "Checklist de Embarcação", icon: Bot, status: "Ativo", desc: "Gera tarefas baseadas no tipo de vistoria da embarcação." },
-        ].map((item, i) => (
-          <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-slate-50 rounded-2xl text-primary">
-                <item.icon className="h-6 w-6" />
-              </div>
-              <span className={`text-[10px] font-black px-2 py-1 rounded-full ${item.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
-                {item.status}
-              </span>
-            </div>
-            <h3 className="font-bold text-navy text-lg">{item.title}</h3>
-            <p className="text-sm text-slate-500 mt-2">{item.desc}</p>
+          { label: "Automações Ativas", value: "12", icon: <Zap className="text-amber-500" /> },
+          { label: "Documentos OCR", value: "842", icon: <Search className="text-blue-500" /> },
+          { label: "Erros de Fluxo", value: "0", icon: <ShieldCheck className="text-green-500" /> },
+          { label: "Tempo Salvo", value: "124h", icon: <Activity className="text-primary" /> },
+        ].map((stat, i) => (
+          <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+             <div className="p-3 bg-slate-50 rounded-2xl w-fit mb-4">{stat.icon}</div>
+             <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
+             <h3 className="text-2xl font-black text-navy mt-1">{stat.value}</h3>
           </div>
         ))}
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-8 items-start">
+        <div className="space-y-8">
+           <div className="flex items-center gap-3 mb-2">
+              <Cpu className="h-6 w-6 text-primary" />
+              <h2 className="text-xl font-bold text-navy">Editor de Fluxos</h2>
+           </div>
+           <AutomationFlow />
+           
+           <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+              <h3 className="font-bold text-navy mb-4 uppercase text-xs tracking-widest">Regras Recentes</h3>
+              <div className="space-y-3">
+                 {[
+                   { name: "Backup de Documentos", desc: "Sincroniza com Cloud a cada 4h.", status: "Online" },
+                   { name: "Verificador de TIE", desc: "Checa validade de embarcação em tempo real.", status: "Online" }
+                 ].map((rule, i) => (
+                   <div key={i} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-200 transition-all">
+                      <div>
+                         <p className="font-bold text-navy text-sm">{rule.name}</p>
+                         <p className="text-xs text-slate-500">{rule.desc}</p>
+                      </div>
+                      <span className="h-2 w-2 bg-green-500 rounded-full" />
+                   </div>
+                 ))}
+              </div>
+           </div>
+        </div>
+
+        <div className="space-y-8">
+           <div className="flex items-center gap-3 mb-2">
+              <Search className="h-6 w-6 text-primary" />
+              <h2 className="text-xl font-bold text-navy">OCR Inteligente</h2>
+           </div>
+           <SmartOCR />
+
+           <div className="bg-navy text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden">
+              <div className="relative z-10">
+                 <h4 className="text-lg font-bold mb-4 uppercase tracking-tighter text-primary">Logs de Automação</h4>
+                 <div className="space-y-4 font-mono text-[10px]">
+                    <p className="text-slate-400"><span className="text-green-500">[OK]</span> 14:22:01 - Documento PHX-01 validado com sucesso.</p>
+                    <p className="text-slate-400"><span className="text-green-500">[OK]</span> 14:15:44 - E-mail enviado para cliente Ricardo.</p>
+                    <p className="text-slate-400"><span className="text-blue-500">[INFO]</span> 14:10:00 - Backup concluído (2.4 GB processados).</p>
+                    <p className="text-slate-400"><span className="text-amber-500">[WARN]</span> 13:55:12 - Carga alta detectada no serviço de OCR.</p>
+                 </div>
+              </div>
+           </div>
+        </div>
       </div>
     </div>
   );
