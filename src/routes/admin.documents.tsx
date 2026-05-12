@@ -3,7 +3,7 @@ import {
   Shield, FilePlus, Settings, History, 
   CheckCircle2, AlertCircle, PlayCircle, 
   ArrowLeft, Plus, Edit3, ToggleLeft, 
-  ToggleRight, Eye, Database
+  ToggleRight, Eye, Database, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
