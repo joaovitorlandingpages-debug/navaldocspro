@@ -5,7 +5,7 @@ import {
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity
 } from "lucide-react";
 import { useState } from "react";
-import { NewProcessWizard } from "@/components/NewProcessWizard";
+import { useNewProcess } from "@/hooks/useNewProcess";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/dashboard")({
 
 function DashboardLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [isNewProcessOpen, setIsNewProcessOpen] = useState(false);
+  const { setIsNewProcessOpen } = useNewProcess();
 
   const navItems = [
     { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
@@ -113,8 +113,6 @@ function DashboardLayout() {
            <Outlet />
         </main>
       </div>
-
-      <NewProcessWizard isOpen={isNewProcessOpen} onClose={() => setIsNewProcessOpen(false)} />
     </div>
   );
 }
