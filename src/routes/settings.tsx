@@ -3,7 +3,7 @@ import {
   Building, Users, CreditCard, Shield, Globe, 
   MapPin, Phone, Mail, FileText, UserCheck, 
   CheckCircle2, Clock, MoreVertical, Plus, 
-  Edit2, Trash2, ShieldAlert
+  Edit2, Trash2, ShieldAlert, Search
 } from "lucide-react";
 import { useState } from "react";
 
