@@ -329,8 +329,38 @@ export function DashboardContent() {
             </div>
          </div>
 
-         {/* Sidebar Widgets */}
-         <div className="space-y-8">
+          {/* Sidebar Widgets */}
+          <div className="space-y-8">
+            {/* Team Productivity Widget */}
+            <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+               <div className="flex justify-between items-center mb-6">
+                  <h3 className="font-black text-navy uppercase text-[10px] tracking-widest flex items-center gap-2">
+                     <Users className="h-4 w-4 text-primary" /> Produtividade da Equipe
+                  </h3>
+               </div>
+               <div className="space-y-4">
+                  {[
+                    { name: "Ricardo Almeida", role: "Master", progress: 92, status: "online" },
+                    { name: "Mariana Souza", role: "Engenheira", progress: 78, status: "offline" },
+                    { name: "João Silva", role: "Despachante", progress: 65, status: "online" }
+                  ].map((member, i) => (
+                    <div key={i} className="space-y-2">
+                       <div className="flex justify-between items-end">
+                          <div className="flex items-center gap-2">
+                             <div className={`h-1.5 w-1.5 rounded-full ${member.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                             <p className="text-xs font-bold text-navy">{member.name}</p>
+                          </div>
+                          <span className="text-[10px] font-black text-slate-400">{member.progress}%</span>
+                       </div>
+                       <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
+                          <div className="h-full bg-primary/20 rounded-full" style={{ width: `${member.progress}%` }} />
+                       </div>
+                    </div>
+                  ))}
+               </div>
+               <Link to="/settings" className="mt-6 block text-center text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Gerenciar Equipe</Link>
+            </div>
+
             <div className="bg-navy text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden group">
                <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
                   <TrendingUp className="h-48 w-48" />
@@ -386,8 +416,8 @@ export function DashboardContent() {
                </div>
                <button className="w-full mt-6 py-3 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-navy transition-colors">Ignorar Todos</button>
             </div>
-         </div>
-      </div>
+          </div>
+       </div>
     </div>
   );
 }
