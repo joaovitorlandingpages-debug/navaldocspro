@@ -21,13 +21,14 @@ function DashboardLayout() {
 
   const navItems = [
     { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
+    { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
+    { name: "Central IA", icon: <Zap className="h-5 w-5" />, path: "/ai-center" },
     { name: "Agenda", icon: <CalendarIcon className="h-5 w-5" />, path: "/calendar" },
-    { name: "Automação", icon: <Zap className="h-5 w-5" />, path: "/automation" },
+    { name: "Automação", icon: <Cpu className="h-5 w-5" />, path: "/automation" },
     { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
     { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
     { name: "Gerador de Docs", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
-    { name: "Documentos", icon: <FileText className="h-5 w-5" />, path: "/documents" },
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
   ];
 
