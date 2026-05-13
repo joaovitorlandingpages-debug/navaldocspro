@@ -1,106 +1,152 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { UserPlus, ShieldCheck, Mail, Search, Trash2, MoreVertical, Building, Users } from "lucide-react";
+import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
+import { 
+  ShieldCheck, 
+  Users, 
+  Building, 
+  Settings, 
+  Activity, 
+  ArrowLeft,
+  LayoutDashboard,
+  LogOut
+} from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/admin")({
-  component: AdminMasterPage,
+  component: AdminLayout,
 });
 
-function AdminMasterPage() {
-  const [activeTab, setActiveTab] = useState("empresas");
+function AdminLayout() {
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
 
-  const users = [
-    { name: "Ricardo Almeida", email: "ricardo@almeida.com", role: "Admin Master", status: "Online", lastAccess: "Agora" },
-    { name: "Mariana Souza", email: "mariana@eng.com", role: "Engenheira", status: "Offline", lastAccess: "2h atrás" },
-    { name: "João Silva", email: "joao@desp.com", role: "Despachante", status: "Online", lastAccess: "Agora" },
+  const adminNavItems = [
+    { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },
+    { name: "Empresas", icon: <Building className="h-5 w-5" />, path: "/admin/companies" },
+    { name: "Usuários Global", icon: <Users className="h-5 w-5" />, path: "/admin/users" },
+    { name: "Logs de Sistema", icon: <Activity className="h-5 w-5" />, path: "/admin/logs" },
+    { name: "Configurações", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-      <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Painel de Controle Master</h1>
-          <p className="text-muted-foreground font-medium">Gestão global de empresas, equipes e licenciamento.</p>
+    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
+      {/* Admin Sidebar */}
+      <aside 
+        className={`${
+          isSidebarOpen ? "w-64" : "w-20"
+        } transition-all duration-300 bg-slate-900 text-white flex flex-col z-50`}
+      >
+        <div className="p-6 flex items-center gap-3 border-b border-white/5">
+          <ShieldCheck className="h-8 w-8 text-primary flex-shrink-0" />
+          {isSidebarOpen && <span className="font-bold text-xl tracking-tight uppercase">Admin Master</span>}
         </div>
-        <button className="flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-xl font-bold hover:opacity-90 transition-all shadow-lg shadow-primary/20">
-          <UserPlus className="h-4 w-4" /> Convidar Administrador
-        </button>
+
+        <nav className="flex-grow mt-6 px-4 space-y-2">
+          {adminNavItems.map((item) => (
+            <Link 
+              key={item.name}
+              to={item.path}
+              activeProps={{ className: "bg-primary text-white shadow-lg shadow-primary/20" }}
+              className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all group"
+            >
+              <div className="group-hover:scale-110 transition-transform">{item.icon}</div>
+              {isSidebarOpen && <span className="text-sm font-bold uppercase tracking-wider">{item.name}</span>}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-white/5 space-y-2">
+           <Link to="/dashboard" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+              <ArrowLeft className="h-5 w-5" />
+              {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Voltar ao App</span>}
+           </Link>
+           <button className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all">
+              <LogOut className="h-5 w-5" />
+              {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Sair</span>}
+           </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
+        <header className="h-16 bg-white border-b flex items-center justify-between px-8 z-40">
+           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Plataforma Global NavalDocs</h2>
+           <div className="flex items-center gap-4">
+              <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
+                 <ShieldCheck className="h-4 w-4 text-slate-400" />
+              </div>
+              <span className="text-xs font-bold text-navy">ROOT ADMIN</span>
+           </div>
+        </header>
+
+        <main className="flex-grow overflow-y-auto p-8">
+           <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export function AdminDashboardView() {
+  const stats = [
+    { label: "Empresas", value: "12", trend: "+2 este mês" },
+    { label: "Usuários Ativos", value: "156", trend: "+12%" },
+    { label: "Documentos", value: "4.2k", trend: "Recorde" },
+    { label: "Faturamento", value: "R$ 42k", trend: "+8%" },
+  ];
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div>
+        <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Overview Global</h1>
+        <p className="text-slate-500 font-medium">Controle total da infraestrutura e negócios.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {[
-          { label: "Empresas Ativas", value: "12", color: "text-blue-600" },
-          { label: "Usuários Totais", value: "156", color: "text-indigo-600" },
-          { label: "Licenças Premium", value: "8", color: "text-emerald-600" },
-          { label: "Uso da Plataforma", value: "78%", color: "text-purple-600" },
-        ].map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+        {stats.map((stat, i) => (
+          <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-            <h3 className={`text-3xl font-black ${stat.color} mt-2`}>{stat.value}</h3>
+            <h3 className="text-3xl font-black text-navy mt-2">{stat.value}</h3>
+            <p className="text-[10px] font-bold text-emerald-600 mt-2 uppercase">{stat.trend}</p>
           </div>
         ))}
       </div>
 
-      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-         <div className="flex border-b border-slate-100">
-            {["empresas", "equipe", "logs"].map(tab => (
-              <button 
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-8 py-5 text-xs font-black uppercase tracking-widest transition-all ${
-                  activeTab === tab ? "bg-slate-50 text-navy border-b-2 border-primary" : "text-slate-400 hover:text-navy"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+            <h4 className="font-black text-navy uppercase tracking-widest text-xs mb-6">Empresas Recentes</h4>
+            <div className="space-y-4">
+               {[1,2,3].map(i => (
+                 <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                    <div className="flex items-center gap-4">
+                       <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center">
+                          <Building className="h-5 w-5 text-primary" />
+                       </div>
+                       <div>
+                          <p className="font-bold text-navy text-sm">Empresa Naval {i}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">Assinatura Premium</p>
+                       </div>
+                    </div>
+                    <button className="text-[10px] font-black uppercase text-primary hover:underline">Detalhes</button>
+                 </div>
+               ))}
+            </div>
          </div>
 
-         <div className="p-8">
-            {activeTab === "equipe" ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                      <th className="px-6 py-4">Usuário</th>
-                      <th className="px-6 py-4">Role</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4">Último Acesso</th>
-                      <th className="px-6 py-4"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {users.map((user, i) => (
-                      <tr key={i} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="font-bold text-navy">{user.name}</div>
-                          <div className="text-xs text-slate-400">{user.email}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="bg-slate-100 text-navy px-3 py-1 rounded-lg text-[10px] font-bold uppercase">{user.role}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                             <div className={`h-2 w-2 rounded-full ${user.status === 'Online' ? 'bg-green-500' : 'bg-slate-300'}`} />
-                             <span className="text-xs font-medium text-slate-600">{user.status}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-xs text-slate-500">{user.lastAccess}</td>
-                        <td className="px-6 py-4 text-right">
-                          <button className="text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                 <Building className="h-16 w-16 text-slate-200 mb-6" />
-                 <h3 className="text-lg font-black text-navy uppercase tracking-tight">Gestão de Empresas</h3>
-                 <p className="text-sm text-slate-400 max-w-sm mt-2">Navegue pelas empresas cadastradas no sistema, analise planos e consumo de recursos.</p>
-              </div>
-            )}
+         <div className="bg-navy text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group">
+            <Activity className="absolute -right-8 -bottom-8 h-48 w-48 text-white/5 group-hover:scale-110 transition-all duration-500" />
+            <div className="relative z-10">
+               <h4 className="font-black uppercase tracking-widest text-xs mb-4 text-primary">Status do Sistema</h4>
+               <p className="text-2xl font-bold mb-6">Todos os módulos operando normalmente.</p>
+               <div className="flex gap-4">
+                  <div className="flex-grow bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
+                     <p className="text-[10px] font-black uppercase opacity-60">Uptime</p>
+                     <p className="text-xl font-black text-primary">99.9%</p>
+                  </div>
+                  <div className="flex-grow bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
+                     <p className="text-[10px] font-black uppercase opacity-60">Latency</p>
+                     <p className="text-xl font-black text-primary">24ms</p>
+                  </div>
+               </div>
+            </div>
          </div>
       </div>
     </div>
