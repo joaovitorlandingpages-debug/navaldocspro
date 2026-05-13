@@ -1,79 +1,85 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
 import { 
-  ShieldAlert, Users, FileStack, Activity, 
-  Settings, LayoutGrid, ArrowLeft, Search, Filter, 
-  Download, Plus, MoreHorizontal, Database, 
-  ShieldCheck, Terminal, CreditCard, Zap, Cpu, History
+  ShieldCheck, 
+  Users, 
+  Building, 
+  Settings, 
+  Activity, 
+  ArrowLeft,
+  LayoutDashboard,
+  LogOut
 } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
-  staticData: { hideMasterView: false }
 });
 
 function AdminLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
-  const adminMenu = [
-    { name: "Visão Geral", icon: <LayoutGrid className="h-5 w-5" />, path: "/admin" },
-    { name: "Usuários", icon: <Users className="h-5 w-5" />, path: "/admin/users" },
-    { name: "Empresas", icon: <Database className="h-5 w-5" />, path: "/admin/companies" },
-    { name: "Modelos de Docs", icon: <FileStack className="h-5 w-5" />, path: "/admin/documents" },
-    { name: "Logs do Sistema", icon: <Terminal className="h-5 w-5" />, path: "/admin/logs" },
-    { name: "Planos & Cobrança", icon: <CreditCard className="h-5 w-5" />, path: "/admin/plans" },
+  const adminNavItems = [
+    { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },
+    { name: "Empresas", icon: <Building className="h-5 w-5" />, path: "/admin/companies" },
+    { name: "Usuários Global", icon: <Users className="h-5 w-5" />, path: "/admin/users" },
+    { name: "Logs de Sistema", icon: <Activity className="h-5 w-5" />, path: "/admin/logs" },
+    { name: "Configurações", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },
   ];
 
   return (
-    <div className="flex h-screen bg-slate-900 text-slate-100 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
       {/* Admin Sidebar */}
-      <aside className={`bg-black/40 border-r border-white/5 ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all flex flex-col`}>
-        <div className="p-6 border-b border-white/5 flex items-center justify-between">
-           <div className="flex items-center gap-2">
-              <ShieldAlert className="h-6 w-6 text-red-500" />
-              {isSidebarOpen && <span className="font-black text-xl tracking-tighter uppercase">Master <span className="text-red-500">Admin</span></span>}
-           </div>
+      <aside 
+        className={`${
+          isSidebarOpen ? "w-64" : "w-20"
+        } transition-all duration-300 bg-slate-900 text-white flex flex-col z-50`}
+      >
+        <div className="p-6 flex items-center gap-3 border-b border-white/5">
+          <ShieldCheck className="h-8 w-8 text-primary flex-shrink-0" />
+          {isSidebarOpen && <span className="font-bold text-xl tracking-tight uppercase">Admin Master</span>}
         </div>
 
-        <nav className="flex-grow p-4 space-y-2">
-           {adminMenu.map((item) => (
-             <Link 
-               key={item.name} 
-               to={item.path} 
-               className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors group"
-               activeProps={{ className: "bg-red-500/10 text-red-400 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]" }}
-             >
-               <div className="group-hover:scale-110 transition-transform">{item.icon}</div>
-               {isSidebarOpen && <span className="font-bold text-sm tracking-wide">{item.name}</span>}
-             </Link>
-           ))}
+        <nav className="flex-grow mt-6 px-4 space-y-2">
+          {adminNavItems.map((item) => (
+            <Link 
+              key={item.name}
+              to={item.path}
+              activeProps={{ className: "bg-primary text-white shadow-lg shadow-primary/20" }}
+              className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all group"
+            >
+              <div className="group-hover:scale-110 transition-transform">{item.icon}</div>
+              {isSidebarOpen && <span className="text-sm font-bold uppercase tracking-wider">{item.name}</span>}
+            </Link>
+          ))}
         </nav>
 
-        <div className="p-4 border-t border-white/5">
-           <Link to="/dashboard" className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all">
+        <div className="p-4 border-t border-white/5 space-y-2">
+           <Link to="/dashboard" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
               <ArrowLeft className="h-5 w-5" />
-              {isSidebarOpen && <span className="font-bold text-sm">Voltar ao App</span>}
+              {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Voltar ao App</span>}
            </Link>
+           <button className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all">
+              <LogOut className="h-5 w-5" />
+              {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Sair</span>}
+           </button>
         </div>
       </aside>
 
-      <div className="flex-grow flex flex-col min-w-0">
-         <header className="h-16 border-b border-white/5 px-8 flex items-center justify-between bg-black/20 backdrop-blur-sm">
-            <h2 className="font-mono text-xs text-slate-500 uppercase tracking-[0.2em]">NavalDocs Pro // Secure Administration Layer</h2>
-            <div className="flex items-center gap-6">
-               <div className="flex items-center gap-2 text-xs">
-                  <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-slate-400 font-mono">SYSTEM ONLINE</span>
-               </div>
-               <div className="h-8 w-8 rounded-lg bg-red-500/20 flex items-center justify-center border border-red-500/50">
-                  <ShieldCheck className="h-5 w-5 text-red-500" />
-               </div>
-            </div>
-         </header>
+      {/* Main Content */}
+      <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
+        <header className="h-16 bg-white border-b flex items-center justify-between px-8 z-40">
+           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Plataforma Global NavalDocs</h2>
+           <div className="flex items-center gap-4">
+              <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
+                 <ShieldCheck className="h-4 w-4 text-slate-400" />
+              </div>
+              <span className="text-xs font-bold text-navy">ROOT ADMIN</span>
+           </div>
+        </header>
 
-         <main className="flex-grow p-8 overflow-y-auto">
-            <Outlet />
-         </main>
+        <main className="flex-grow overflow-y-auto p-8">
+           <Outlet />
+        </main>
       </div>
     </div>
   );
@@ -81,129 +87,68 @@ function AdminLayout() {
 
 export function AdminDashboardView() {
   const stats = [
-    { label: "Total Usuários", value: "1,248", change: "+14%", icon: <Users /> },
-    { label: "Receita (MRR)", value: "R$ 42.400", change: "+8.2%", icon: <CreditCard /> },
-    { label: "Processos Ativos", value: "4.892", change: "+21%", icon: <Activity /> },
-    { label: "Erros Críticos", value: "0", change: "Stable", icon: <ShieldAlert className="text-green-500" /> },
+    { label: "Empresas", value: "12", trend: "+2 este mês" },
+    { label: "Usuários Ativos", value: "156", trend: "+12%" },
+    { label: "Documentos", value: "4.2k", trend: "Recorde" },
+    { label: "Faturamento", value: "R$ 42k", trend: "+8%" },
   ];
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-       <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-4xl font-black tracking-tight mb-2 text-white">Painel Master</h1>
-            <p className="text-slate-500 font-mono text-xs italic">Controle global da infraestrutura NavalDocs Pro.</p>
-          </div>
-          <div className="flex gap-3">
-             <button className="bg-white/5 border border-white/10 px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-white/10 transition-all text-slate-300">
-                <Download className="h-4 w-4" /> Exportar Dados
-             </button>
-             <button className="bg-red-500 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-red-600 transition-all shadow-xl shadow-red-500/20">
-                <Plus className="h-4 w-4" /> Novo Alerta Global
-             </button>
-          </div>
-       </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div>
+        <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Overview Global</h1>
+        <p className="text-slate-500 font-medium">Controle total da infraestrutura e negócios.</p>
+      </div>
 
-       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {stats.map((stat, i) => (
-            <div key={i} className="bg-white/5 border border-white/10 p-6 rounded-[2rem] hover:border-red-500/30 transition-all group relative overflow-hidden backdrop-blur-md">
-               <div className="flex justify-between items-center mb-6">
-                  <div className="p-3 bg-white/5 rounded-2xl group-hover:bg-red-500/10 group-hover:text-red-500 transition-all border border-white/5">
-                     {stat.icon}
-                  </div>
-                  <span className="text-[10px] font-black text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full">{stat.change}</span>
-               </div>
-               <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">{stat.label}</p>
-               <h3 className="text-3xl font-black text-white">{stat.value}</h3>
-            </div>
-          ))}
-       </div>
-
-       <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-md">
-             <div className="flex justify-between items-center mb-8">
-                <h3 className="text-lg font-black text-white flex items-center gap-3 uppercase tracking-tighter">
-                   <Zap className="h-5 w-5 text-amber-500" /> Logs de Inteligência & IA
-                </h3>
-                <button className="text-[10px] font-black uppercase text-slate-500 hover:text-white transition-all">Ver Todos</button>
-             </div>
-             <div className="space-y-3 font-mono">
-                {[
-                  { event: "OCR_PROCESS_SUCCESS", meta: "CNH_SCAN_492", time: "10:42:01", status: "ok" },
-                  { event: "AUTO_DOC_GEN", meta: "PROC_882_REQUEST", time: "10:40:15", status: "ok" },
-                  { event: "WHATSAPP_API_SENT", meta: "+55119992...", time: "10:38:44", status: "ok" },
-                  { event: "IA_CLASSIFY_SHIP", meta: "PETROLEIRO_PHX", time: "10:35:12", status: "ok" },
-                  { event: "DPC_SINC_ERROR", meta: "GATEWAY_TIMEOUT", time: "10:30:00", status: "error" },
-                  { event: "OCR_LOW_CONFIDENCE", meta: "DOC_RG_AMADOR", time: "10:25:22", status: "warn" }
-                ].map((log, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-black/40 border border-white/5 hover:border-white/10 transition-all text-[10px]">
-                     <div className="flex gap-4 items-center">
-                        <span className={`px-2 py-0.5 rounded text-[8px] font-black ${
-                          log.status === 'ok' ? 'bg-green-500/20 text-green-500' : 
-                          log.status === 'error' ? 'bg-red-500/20 text-red-500' : 'bg-amber-500/20 text-amber-500'
-                        }`}>{log.status.toUpperCase()}</span>
-                        <span className="text-slate-300 font-bold">{log.event}</span>
-                        <span className="text-slate-500 italic">params: {log.meta}</span>
-                     </div>
-                     <span className="text-slate-600">{log.time}</span>
-                  </div>
-                ))}
-             </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {stats.map((stat, i) => (
+          <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+            <h3 className="text-3xl font-black text-navy mt-2">{stat.value}</h3>
+            <p className="text-[10px] font-bold text-emerald-600 mt-2 uppercase">{stat.trend}</p>
           </div>
+        ))}
+      </div>
 
-          <div className="space-y-8">
-             <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-md">
-                <div className="flex justify-between items-center mb-8">
-                   <h3 className="text-lg font-black text-white flex items-center gap-3 uppercase tracking-tighter">
-                      <Activity className="h-5 w-5 text-red-500" /> Segurança
-                   </h3>
-                </div>
-                <div className="space-y-4">
-                  {[
-                    { action: "Novo cadastro de empresa", target: "Oceanic Logística", time: "2 min atrás", type: "success" },
-                    { action: "Upgrade de plano", target: "Eng. Gabriel Silva", time: "15 min atrás", type: "upgrade" },
-                    { action: "Falha na exportação PDF", target: "Usuário #4920", time: "1h atrás", type: "error" },
-                  ].map((log, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent">
-                        <div className="flex gap-3 items-center">
-                          <div className={`h-2 w-2 rounded-full ${log.type === 'error' ? 'bg-red-500' : 'bg-green-500'}`} />
-                          <div>
-                            <p className="text-xs font-bold text-slate-200">{log.action}</p>
-                            <p className="text-[9px] text-slate-500 font-mono italic">{log.target}</p>
-                          </div>
-                        </div>
-                        <span className="text-[9px] font-mono text-slate-600">{log.time}</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+            <h4 className="font-black text-navy uppercase tracking-widest text-xs mb-6">Empresas Recentes</h4>
+            <div className="space-y-4">
+               {[1,2,3].map(i => (
+                 <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                    <div className="flex items-center gap-4">
+                       <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center">
+                          <Building className="h-5 w-5 text-primary" />
+                       </div>
+                       <div>
+                          <p className="font-bold text-navy text-sm">Empresa Naval {i}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">Assinatura Premium</p>
+                       </div>
                     </div>
-                  ))}
-                </div>
-             </div>
+                    <button className="text-[10px] font-black uppercase text-primary hover:underline">Detalhes</button>
+                 </div>
+               ))}
+            </div>
+         </div>
 
-             <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-md">
-                <div className="flex justify-between items-center mb-8">
-                   <h3 className="text-lg font-black text-white flex items-center gap-3 uppercase tracking-tighter">
-                      <Database className="h-5 w-5 text-blue-500" /> Infra
-                   </h3>
-                </div>
-                <div className="space-y-6">
-                   {[
-                     { label: "IA Worker", val: 45 },
-                     { label: "OCR Engine", val: 82 },
-                     { label: "Storage", val: 68 }
-                   ].map((s, i) => (
-                     <div key={i} className="space-y-2">
-                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
-                           <span>{s.label}</span>
-                           <span>{s.val}%</span>
-                        </div>
-                        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                           <div className="h-full bg-blue-500" style={{ width: `${s.val}%` }} />
-                        </div>
-                     </div>
-                   ))}
-                </div>
-             </div>
-          </div>
-       </div>
+         <div className="bg-navy text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group">
+            <Activity className="absolute -right-8 -bottom-8 h-48 w-48 text-white/5 group-hover:scale-110 transition-all duration-500" />
+            <div className="relative z-10">
+               <h4 className="font-black uppercase tracking-widest text-xs mb-4 text-primary">Status do Sistema</h4>
+               <p className="text-2xl font-bold mb-6">Todos os módulos operando normalmente.</p>
+               <div className="flex gap-4">
+                  <div className="flex-grow bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
+                     <p className="text-[10px] font-black uppercase opacity-60">Uptime</p>
+                     <p className="text-xl font-black text-primary">99.9%</p>
+                  </div>
+                  <div className="flex-grow bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
+                     <p className="text-[10px] font-black uppercase opacity-60">Latency</p>
+                     <p className="text-xl font-black text-primary">24ms</p>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
     </div>
   );
 }

@@ -39,33 +39,41 @@ function DashboardLayout() {
           isSidebarOpen ? "w-64" : "w-20"
         } transition-all duration-300 bg-navy text-white flex flex-col z-50`}
       >
-        <div className="p-6 flex items-center gap-3">
-          <Anchor className="h-8 w-8 text-primary flex-shrink-0" />
-          {isSidebarOpen && <span className="font-bold text-xl tracking-tight">NavalDocs</span>}
+        <div className="p-6 flex flex-col gap-1 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <Anchor className="h-8 w-8 text-primary flex-shrink-0" />
+            {isSidebarOpen && <span className="font-bold text-xl tracking-tight">NavalDocs</span>}
+          </div>
+          {isSidebarOpen && (
+            <div className="mt-2 px-1">
+               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Ambiente Enterprise</p>
+               <p className="text-[10px] font-bold text-white/40 truncate">Almeida Engenharia Naval</p>
+            </div>
+          )}
         </div>
 
-        <nav className="flex-grow mt-6 px-4 space-y-2">
+        <nav className="flex-grow mt-6 px-4 space-y-1 overflow-y-auto custom-scrollbar">
           {navItems.map((item) => (
             <Link 
               key={item.name}
               to={item.path}
-              activeProps={{ className: "bg-primary text-white shadow-lg" }}
-              className="flex items-center gap-4 p-3 rounded-lg hover:bg-white/10 transition-colors group"
+              activeProps={{ className: "bg-primary text-white shadow-lg shadow-primary/20" }}
+              className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all group"
             >
               <div className="group-hover:scale-110 transition-transform">{item.icon}</div>
-              {isSidebarOpen && <span className="font-medium">{item.name}</span>}
+              {isSidebarOpen && <span className="text-sm font-bold uppercase tracking-wider">{item.name}</span>}
             </Link>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/10 space-y-2">
-           <Link to="/admin" className="flex items-center gap-4 p-3 rounded-lg hover:bg-white/10 transition-colors text-slate-400 hover:text-white">
+        <div className="p-4 border-t border-white/5 space-y-2">
+           <Link to="/admin" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
               <ShieldCheck className="h-5 w-5" />
-              {isSidebarOpen && <span className="text-sm">Painel Admin</span>}
+              {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Painel Master</span>}
            </Link>
-           <button className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-red-500/20 text-red-400 transition-colors">
+           <button className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all">
               <LogOut className="h-5 w-5" />
-              {isSidebarOpen && <span className="font-medium">Sair</span>}
+              {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Sair</span>}
            </button>
         </div>
       </aside>
@@ -321,8 +329,38 @@ export function DashboardContent() {
             </div>
          </div>
 
-         {/* Sidebar Widgets */}
-         <div className="space-y-8">
+          {/* Sidebar Widgets */}
+          <div className="space-y-8">
+            {/* Team Productivity Widget */}
+            <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+               <div className="flex justify-between items-center mb-6">
+                  <h3 className="font-black text-navy uppercase text-[10px] tracking-widest flex items-center gap-2">
+                     <Users className="h-4 w-4 text-primary" /> Produtividade da Equipe
+                  </h3>
+               </div>
+               <div className="space-y-4">
+                  {[
+                    { name: "Ricardo Almeida", role: "Master", progress: 92, status: "online" },
+                    { name: "Mariana Souza", role: "Engenheira", progress: 78, status: "offline" },
+                    { name: "João Silva", role: "Despachante", progress: 65, status: "online" }
+                  ].map((member, i) => (
+                    <div key={i} className="space-y-2">
+                       <div className="flex justify-between items-end">
+                          <div className="flex items-center gap-2">
+                             <div className={`h-1.5 w-1.5 rounded-full ${member.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                             <p className="text-xs font-bold text-navy">{member.name}</p>
+                          </div>
+                          <span className="text-[10px] font-black text-slate-400">{member.progress}%</span>
+                       </div>
+                       <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
+                          <div className="h-full bg-primary/20 rounded-full" style={{ width: `${member.progress}%` }} />
+                       </div>
+                    </div>
+                  ))}
+               </div>
+               <Link to="/settings" className="mt-6 block text-center text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Gerenciar Equipe</Link>
+            </div>
+
             <div className="bg-navy text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden group">
                <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
                   <TrendingUp className="h-48 w-48" />
@@ -378,8 +416,8 @@ export function DashboardContent() {
                </div>
                <button className="w-full mt-6 py-3 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-navy transition-colors">Ignorar Todos</button>
             </div>
-         </div>
-      </div>
+          </div>
+       </div>
     </div>
   );
 }
