@@ -112,6 +112,13 @@ function DocumentGenerator() {
 
   const generatePDF = async () => {
     if (!previewRef.current) return;
+    
+    const limit = await checkLimit('documents');
+    if (limit.reached) {
+      toast.error("Limite de documentos mensais atingido. Faça upgrade para continuar gerando.");
+      return;
+    }
+
     setIsGenerating(true);
     
     try {
