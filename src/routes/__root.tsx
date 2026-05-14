@@ -36,8 +36,11 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: any; reset: () => void }) {
-  console.error("Root Error Boundary caught:", error);
   const router = useRouter();
+
+  useEffect(() => {
+    console.error("Root Error Boundary caught:", error);
+  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
