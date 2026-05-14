@@ -2,10 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { 
   FileText, Search, Plus, Download, Eye, 
   Filter, Tag, LayoutGrid, List, MoreVertical, X,
-  Zap, Cpu
+  Zap, Cpu, Loader2, Calendar, User as UserIcon
 } from "lucide-react";
 import { useState } from "react";
 import { SmartOCR } from "@/components/SmartOCR";
+import { useDocuments } from "@/hooks/useDocuments";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export const Route = createFileRoute("/documents")({
   component: Documents,
@@ -15,17 +18,11 @@ function Documents() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadMode, setUploadMode] = useState<"standard" | "smart">("standard");
+  const { generatedDocuments, isLoadingGenerated } = useDocuments();
 
   const categories = ["Todos", "Memoriais", "ARTs", "Certificados", "Projetos", "Vistorias"];
   
-  const documents = [
-    { id: 1, name: "Memorial Descritivo - Phoenix", type: "PDF", category: "Memoriais", size: "2.4 MB", date: "10/05/2024", status: "Assinado", tags: ["Urgente", "DPC"] },
-    { id: 2, name: "ART de Projeto Estrutural", type: "PDF", category: "ARTs", size: "1.1 MB", date: "09/05/2024", status: "Pendente", tags: ["Engenharia"] },
-    { id: 3, name: "Certificado de Segurança", type: "PDF", category: "Certificados", size: "850 KB", date: "08/05/2024", status: "Assinado", tags: ["Renovação"] },
-    { id: 4, name: "Relatório de Vistoria Técnica", type: "DOCX", category: "Vistorias", size: "4.2 MB", date: "05/05/2024", status: "Rascunho", tags: ["Porto Santos"] },
-    { id: 5, name: "Plano de Linhas - Titan", type: "DWG", category: "Projetos", size: "15.8 MB", date: "02/05/2024", status: "Finalizado", tags: ["Projeto"] },
-    { id: 6, name: "Documento de Propriedade", type: "JPG", category: "Legal", size: "2.1 MB", date: "01/05/2024", status: "Verificado", tags: ["Documentação"] },
-  ];
+  const docs = generatedDocuments || [];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
@@ -79,12 +76,22 @@ function Documents() {
           </div>
         </div>
 
-        {viewMode === "grid" ? (
+        {isLoadingGenerated ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-slate-500 font-medium">Carregando documentos...</p>
+          </div>
+        ) : docs.length === 0 ? (
+          <div className="text-center py-20 border-2 border-dashed border-slate-100 rounded-3xl">
+             <FileText className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+             <p className="text-slate-400 font-medium">Nenhum documento encontrado.</p>
+          </div>
+        ) : viewMode === "grid" ? (
           <div className="grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {documents.map((doc) => (
+            {docs.map((doc: any) => (
               <div key={doc.id} className="group bg-slate-50/50 border border-slate-100 rounded-2xl p-4 hover:shadow-xl hover:bg-white transition-all cursor-pointer relative">
                 <div className="flex justify-between items-start mb-4">
-                  <div className={`p-3 rounded-xl ${doc.type === 'PDF' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
+                  <div className="p-3 rounded-xl bg-red-100 text-red-600">
                     <FileText className="h-6 w-6" />
                   </div>
                   <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-100 rounded-md transition-all">
@@ -93,23 +100,32 @@ function Documents() {
                 </div>
                 <h4 className="font-bold text-navy text-sm mb-1 truncate" title={doc.name}>{doc.name}</h4>
                 <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium mb-4">
-                  <span>{doc.type} • {doc.size}</span>
+                  <span>PDF • {doc.customer?.name || 'Geral'}</span>
                   <span className={`px-2 py-0.5 rounded-full ${
-                    doc.status === 'Assinado' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                  }`}>{doc.status}</span>
+                    doc.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                  }`}>{doc.status === 'completed' ? 'Concluído' : 'Rascunho'}</span>
                 </div>
                 
                 <div className="flex flex-wrap gap-1 mb-4">
-                   {doc.tags.map(tag => (
-                     <span key={tag} className="text-[9px] bg-white border border-slate-100 px-1.5 py-0.5 rounded text-slate-500 flex items-center gap-1">
-                       <Tag className="h-2 w-2" /> {tag}
+                   {doc.vessel?.name && (
+                     <span className="text-[9px] bg-white border border-slate-100 px-1.5 py-0.5 rounded text-slate-500 flex items-center gap-1">
+                       <Tag className="h-2 w-2" /> {doc.vessel.name}
                      </span>
-                   ))}
+                   )}
                 </div>
 
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="flex-grow py-2 rounded-lg bg-navy text-white text-[10px] font-bold hover:bg-navy/90">Visualizar</button>
-                  <button className="p-2 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200"><Download className="h-3 w-3" /></button>
+                  <a 
+                    href={doc.generated_file_url} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="flex-grow py-2 rounded-lg bg-navy text-white text-[10px] font-bold hover:bg-navy/90 text-center"
+                  >
+                    Visualizar
+                  </a>
+                  <button className="p-2 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200">
+                    <Download className="h-3 w-3" />
+                  </button>
                 </div>
               </div>
             ))}
@@ -120,33 +136,31 @@ function Documents() {
               <thead>
                 <tr className="text-slate-400 text-[10px] font-black uppercase tracking-widest border-b">
                   <th className="px-4 py-3">Arquivo</th>
-                  <th className="px-4 py-3">Categoria</th>
-                  <th className="px-4 py-3">Tamanho</th>
+                  <th className="px-4 py-3">Cliente</th>
+                  <th className="px-4 py-3">Embarcação</th>
                   <th className="px-4 py-3">Data</th>
-                  <th className="px-4 py-3">Tags</th>
+                  <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {documents.map((doc) => (
+                {docs.map((doc: any) => (
                   <tr key={doc.id} className="hover:bg-slate-50 transition-colors text-sm group">
                     <td className="px-4 py-4 flex items-center gap-3">
-                      <FileText className={`h-5 w-5 ${doc.type === 'PDF' ? 'text-red-500' : 'text-blue-500'}`} />
+                      <FileText className="h-5 w-5 text-red-500" />
                       <span className="font-bold text-navy">{doc.name}</span>
                     </td>
-                    <td className="px-4 py-4 text-xs text-slate-500">{doc.category}</td>
-                    <td className="px-4 py-4 text-xs text-slate-500">{doc.size}</td>
-                    <td className="px-4 py-4 text-xs text-slate-500">{doc.date}</td>
+                    <td className="px-4 py-4 text-xs text-slate-500">{doc.customer?.name || '-'}</td>
+                    <td className="px-4 py-4 text-xs text-slate-500">{doc.vessel?.name || '-'}</td>
+                    <td className="px-4 py-4 text-xs text-slate-500">{format(new Date(doc.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</td>
                     <td className="px-4 py-4">
-                      <div className="flex gap-1">
-                        {doc.tags.slice(0, 1).map(tag => (
-                          <span key={tag} className="text-[9px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">{tag}</span>
-                        ))}
-                      </div>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        doc.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                      }`}>{doc.status === 'completed' ? 'Concluído' : 'Rascunho'}</span>
                     </td>
                     <td className="px-4 py-4 text-right">
                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                          <button className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></button>
+                          <a href={doc.generated_file_url} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></a>
                           <button className="p-2 text-slate-400 hover:text-navy"><Download className="h-4 w-4" /></button>
                        </div>
                     </td>

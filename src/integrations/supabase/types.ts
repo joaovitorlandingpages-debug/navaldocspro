@@ -132,6 +132,112 @@ export type Database = {
           },
         ]
       }
+      document_fields: {
+        Row: {
+          created_at: string
+          field_label: string
+          field_name: string
+          field_type: string
+          id: string
+          page_number: number | null
+          position_x: number | null
+          position_y: number | null
+          required: boolean | null
+          source_field: string | null
+          source_type: string
+          template_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          field_label: string
+          field_name: string
+          field_type?: string
+          id?: string
+          page_number?: number | null
+          position_x?: number | null
+          position_y?: number | null
+          required?: boolean | null
+          source_field?: string | null
+          source_type?: string
+          template_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          field_label?: string
+          field_name?: string
+          field_type?: string
+          id?: string
+          page_number?: number | null
+          position_x?: number | null
+          position_y?: number | null
+          required?: boolean | null
+          source_field?: string | null
+          source_type?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_fields_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_templates: {
+        Row: {
+          category: string
+          company_id: string | null
+          created_at: string
+          description: string | null
+          fields_config: Json | null
+          id: string
+          is_active: boolean | null
+          name: string
+          process_type: string | null
+          template_file_url: string | null
+          updated_at: string
+          version: number | null
+        }
+        Insert: {
+          category: string
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          fields_config?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          process_type?: string | null
+          template_file_url?: string | null
+          updated_at?: string
+          version?: number | null
+        }
+        Update: {
+          category?: string
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          fields_config?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          process_type?: string | null
+          template_file_url?: string | null
+          updated_at?: string
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           company_id: string
@@ -193,6 +299,90 @@ export type Database = {
           },
           {
             foreignKeyName: "documents_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      generated_documents: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          customer_id: string | null
+          generated_by: string | null
+          generated_file_url: string | null
+          id: string
+          metadata: Json | null
+          name: string
+          process_id: string | null
+          status: string
+          template_id: string | null
+          updated_at: string
+          vessel_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          generated_by?: string | null
+          generated_file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          name: string
+          process_id?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+          vessel_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          generated_by?: string | null
+          generated_file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          name?: string
+          process_id?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+          vessel_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_documents_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_documents_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_documents_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_documents_vessel_id_fkey"
             columns: ["vessel_id"]
             isOneToOne: false
             referencedRelation: "vessels"
