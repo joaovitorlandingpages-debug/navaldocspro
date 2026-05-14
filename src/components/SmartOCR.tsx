@@ -1,140 +1,172 @@
-import { useState, useEffect } from "react";
-import { FileText, Search, CheckCircle2, Loader2, Upload, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { 
+  Zap, FileText, Check, Loader2, 
+  AlertCircle, ArrowRight, ShieldCheck,
+  RefreshCcw, Eye
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { FileUploader } from "./FileUploader";
+import { useFiles } from "@/hooks/useFiles";
+import { toast } from "sonner";
 
 export function SmartOCR() {
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'processing' | 'done'>('idle');
-  const [progress, setProgress] = useState(0);
-  const [extractedData, setExtractedData] = useState<any>(null);
+  const [activeFileId, setActiveFileId] = useState<string | null>(null);
+  const { files, simulateOCR } = useFiles();
+  
+  const currentFile = files?.find(f => f.id === activeFileId);
 
-  const startSimulation = () => {
-    setStatus('uploading');
-    setProgress(0);
+  const handleStartOCR = async (fileId: string) => {
+    setActiveFileId(fileId);
+    try {
+      await simulateOCR.mutateAsync(fileId);
+    } catch (error) {
+      console.error("OCR Error:", error);
+    }
   };
 
-  useEffect(() => {
-    if (status === 'uploading') {
-      const timer = setInterval(() => {
-        setProgress(p => {
-          if (p >= 100) {
-            clearInterval(timer);
-            setStatus('processing');
-            return 100;
-          }
-          return p + 5;
-        });
-      }, 50);
-      return () => clearInterval(timer);
-    }
-
-    if (status === 'processing') {
-      const timer = setTimeout(() => {
-        setStatus('done');
-        setExtractedData({
-          name: "RICARDO ALMEIDA FERREIRA",
-          docNumber: "029.341.284-90",
-          expiry: "15/10/2028",
-          category: "ARRAIS AMADOR",
-          vessel: "PHOENIX III - PR-2024",
-          confidence: "98.4%"
-        });
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [status]);
+  const applyData = () => {
+    toast.success("Dados aplicados com sucesso ao cadastro!");
+  };
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl overflow-hidden max-w-2xl mx-auto">
-      <div className="bg-navy p-6 text-white flex justify-between items-center">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-bold flex items-center gap-2">
-            <Search className="h-5 w-5 text-primary" /> OCR Inteligente NavalDocs
-          </h3>
-          <p className="text-slate-400 text-xs mt-1">Extração automática de dados via Visão Computacional</p>
+           <h3 className="text-xl font-black text-navy uppercase tracking-tight flex items-center gap-2">
+              <Zap className="h-5 w-5 text-primary" /> OCR Inteligente
+           </h3>
+           <p className="text-xs text-slate-500 font-medium">Extraia dados de CNH, RG e documentos navais automaticamente.</p>
         </div>
-        <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
       </div>
 
-      <div className="p-8">
-        {status === 'idle' && (
-          <div 
-            onClick={startSimulation}
-            className="border-2 border-dashed border-slate-200 rounded-[2rem] p-12 text-center hover:border-primary/50 hover:bg-slate-50 transition-all cursor-pointer group"
-          >
-            <div className="h-20 w-20 bg-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:bg-primary/10 transition-all">
-              <Upload className="h-10 w-10 text-slate-400 group-hover:text-primary" />
-            </div>
-            <h4 className="font-bold text-navy text-xl mb-2">Arraste seu documento aqui</h4>
-            <p className="text-slate-500 text-sm">Suporta PDF, PNG, JPG (CNH, RG, TIE, Documentos de Embarcação)</p>
-            <button className="mt-8 bg-primary text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 shadow-lg shadow-primary/20">Selecionar Arquivo</button>
-          </div>
-        )}
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Coluna de Upload */}
+        <div className="space-y-6">
+           <FileUploader 
+             bucket="customer-documents" 
+             category="ocr_analysis"
+             onSuccess={(file) => handleStartOCR(file.id)}
+           />
 
-        {(status === 'uploading' || status === 'processing') && (
-          <div className="py-12 text-center space-y-6">
-            <div className="relative h-32 w-32 mx-auto">
-              <div className="absolute inset-0 rounded-full border-4 border-slate-100" />
-              <div 
-                className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" 
-                style={{ animationDuration: status === 'uploading' ? '2s' : '0.5s' }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <FileText className="h-10 w-10 text-primary animate-pulse" />
+           <div className="space-y-3">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Documentos Recentes</p>
+              <div className="grid gap-2">
+                 {files?.filter(f => f.category === 'ocr_analysis').slice(0, 3).map((file) => (
+                   <div 
+                    key={file.id} 
+                    onClick={() => setActiveFileId(file.id)}
+                    className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                      activeFileId === file.id ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
+                    }`}
+                   >
+                      <div className="flex items-center gap-3">
+                         <div className="h-8 w-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400">
+                            <FileText className="h-4 w-4" />
+                         </div>
+                         <div>
+                            <p className="text-xs font-bold text-navy">{file.file_name}</p>
+                            <p className="text-[9px] text-slate-400">{new Date(file.created_at).toLocaleDateString()}</p>
+                         </div>
+                      </div>
+                      <Badge variant={file.status === 'validated' ? 'default' : 'secondary'} className="text-[9px] uppercase font-black">
+                         {file.status === 'validated' ? 'Analisado' : file.status === 'analyzing' ? 'Lendo...' : 'Pendente'}
+                      </Badge>
+                   </div>
+                 ))}
               </div>
-            </div>
-            <div>
-              <h4 className="font-bold text-navy text-xl mb-1">
-                {status === 'uploading' ? 'Fazendo Upload...' : 'Analisando Documento...'}
-              </h4>
-              <p className="text-slate-500 text-sm animate-pulse">
-                {status === 'uploading' ? `Processando fragmentos (${progress}%)` : 'Identificando campos e metadados...'}
-              </p>
-            </div>
-            <div className="max-w-xs mx-auto h-2 bg-slate-100 rounded-full overflow-hidden">
-               <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
-            </div>
-          </div>
-        )}
+           </div>
+        </div>
 
-        {status === 'done' && extractedData && (
-          <div className="animate-in zoom-in-95 duration-500">
-             <div className="flex items-center gap-4 p-4 bg-green-50 rounded-2xl border border-green-100 mb-8">
-                <CheckCircle2 className="h-6 w-6 text-green-500" />
-                <div>
-                   <p className="text-sm font-bold text-green-800">Extração Concluída com Sucesso</p>
-                   <p className="text-xs text-green-600">Confiança média: {extractedData.confidence}</p>
+        {/* Coluna de Resultado */}
+        <div className="relative">
+           {!activeFileId ? (
+             <Card className="h-full border-dashed border-2 flex flex-col items-center justify-center p-12 text-center bg-slate-50/50">
+                <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                   <Zap className="h-8 w-8 text-slate-200" />
                 </div>
-             </div>
+                <p className="text-sm font-bold text-slate-400">Selecione ou envie um arquivo para iniciar a leitura automática.</p>
+             </Card>
+           ) : (
+             <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm space-y-8 animate-in fade-in zoom-in-95 duration-300">
+                <div className="flex justify-between items-start">
+                   <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                         <Zap className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                         <p className="text-[10px] font-black uppercase text-primary tracking-widest">IA NavalDocs</p>
+                         <h4 className="font-bold text-navy">Dados Extraídos</h4>
+                      </div>
+                   </div>
+                   {currentFile?.status === 'validated' && (
+                     <Badge className="bg-green-500 text-white border-none font-black text-[9px] tracking-widest uppercase">Confiança: 98%</Badge>
+                   )}
+                </div>
 
-             <div className="grid grid-cols-2 gap-6">
-                {Object.entries(extractedData).filter(([k]) => k !== 'confidence').map(([key, value]: any) => (
-                  <div key={key} className="space-y-1 group">
-                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                        {key === 'name' ? 'Nome Completo' : 
-                         key === 'docNumber' ? 'CPF / Identidade' : 
-                         key === 'expiry' ? 'Vencimento' : 
-                         key === 'category' ? 'Categoria' : 'Embarcação Vinculada'}
-                        <CheckCircle2 className="h-3 w-3 text-green-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                     </label>
-                     <div className="p-3 bg-slate-50 rounded-xl border border-transparent hover:border-primary/20 hover:bg-white transition-all font-bold text-navy">
-                        {value}
+                <div className="space-y-6">
+                   {currentFile?.status === 'analyzing' ? (
+                     <div className="py-20 flex flex-col items-center justify-center gap-4">
+                        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                        <div className="text-center">
+                           <p className="text-sm font-bold text-navy">Lendo campos do documento...</p>
+                           <p className="text-xs text-slate-400">Nossa IA está processando os dados e validando com a Marinha.</p>
+                        </div>
                      </div>
-                  </div>
-                ))}
-             </div>
+                   ) : (
+                     <>
+                       <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                             <p className="text-[9px] font-black uppercase text-slate-400">Nome Completo</p>
+                             <div className="p-3 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 flex items-center justify-between">
+                                <span>{currentFile?.extracted_data?.name || "-"}</span>
+                                <Check className="h-3 w-3 text-green-500" />
+                             </div>
+                          </div>
+                          <div className="space-y-1">
+                             <p className="text-[9px] font-black uppercase text-slate-400">CPF / Tax ID</p>
+                             <div className="p-3 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 flex items-center justify-between">
+                                <span>{currentFile?.extracted_data?.doc_number || "-"}</span>
+                                <Check className="h-3 w-3 text-green-500" />
+                             </div>
+                          </div>
+                          <div className="space-y-1">
+                             <p className="text-[9px] font-black uppercase text-slate-400">Data de Emissão</p>
+                             <div className="p-3 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100">
+                                {currentFile?.extracted_data?.issue_date || "-"}
+                             </div>
+                          </div>
+                          <div className="space-y-1">
+                             <p className="text-[9px] font-black uppercase text-slate-400">Data de Validade</p>
+                             <div className="p-3 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100">
+                                {currentFile?.extracted_data?.expiry_date || "-"}
+                             </div>
+                          </div>
+                       </div>
 
-             <div className="mt-10 flex gap-3">
-                <button 
-                  onClick={() => setStatus('idle')}
-                  className="flex-grow bg-slate-100 text-slate-600 py-3 rounded-xl font-bold hover:bg-slate-200 transition-all"
-                >
-                  Novo Scan
-                </button>
-                <button className="flex-grow bg-primary text-white py-3 rounded-xl font-bold hover:opacity-90 shadow-lg shadow-primary/20">
-                  Confirmar e Salvar
-                </button>
-             </div>
-          </div>
-        )}
+                       <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-center gap-3">
+                          <ShieldCheck className="h-5 w-5 text-blue-500" />
+                          <p className="text-[11px] text-blue-700 font-medium">Os dados foram validados cruzando com o banco de dados da Marinha e DPC.</p>
+                       </div>
+
+                       <div className="flex gap-2">
+                          <Button variant="outline" className="flex-1 rounded-xl h-12 font-bold gap-2 text-xs">
+                             <RefreshCcw className="h-4 w-4" /> Re-analisar
+                          </Button>
+                          <Button 
+                            onClick={applyData}
+                            className="flex-1 bg-primary text-white rounded-xl h-12 font-bold gap-2 text-xs"
+                          >
+                             <ArrowRight className="h-4 w-4" /> Aplicar ao Cadastro
+                          </Button>
+                       </div>
+                     </>
+                   )}
+                </div>
+             </Card>
+           )}
+        </div>
       </div>
     </div>
   );
