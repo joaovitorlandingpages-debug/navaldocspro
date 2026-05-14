@@ -17,35 +17,39 @@ export function PlanLimitProvider({ children }: { children: React.ReactNode }) {
   const { subscription, isLoadingSubscription } = useSubscription();
 
   const checkLimit = async (resource: 'customers' | 'documents' | 'users') => {
-    if (!subscription || !subscription.plan) {
-      return { reached: false, current: 0, limit: null }; // Default to no block if no sub info
+    try {
+      if (!subscription || !subscription.plan) {
+        return { reached: false, current: 0, limit: null };
+      }
+
+      const plan = subscription.plan;
+      const limit = resource === 'customers' ? plan.customer_limit : 
+                    resource === 'documents' ? plan.document_limit : 
+                    plan.user_limit;
+
+      if (limit === null) return { reached: false, current: 0, limit: null };
+
+      let current = 0;
+      if (resource === 'customers') {
+        const { count } = await supabase.from('customers').select('*', { count: 'exact', head: true }).eq('company_id', subscription.company_id);
+        current = count || 0;
+      } else if (resource === 'documents') {
+        const { count } = await supabase.from('generated_documents').select('*', { count: 'exact', head: true }).eq('company_id', subscription.company_id);
+        current = count || 0;
+      } else if (resource === 'users') {
+        const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('company_id', subscription.company_id);
+        current = count || 0;
+      }
+
+      return {
+        reached: current >= limit,
+        current,
+        limit
+      };
+    } catch (err) {
+      console.error("Error checking plan limit:", err);
+      return { reached: false, current: 0, limit: null };
     }
-
-    const plan = subscription.plan;
-    const limit = resource === 'customers' ? plan.customer_limit : 
-                  resource === 'documents' ? plan.document_limit : 
-                  plan.user_limit;
-
-    if (limit === null) return { reached: false, current: 0, limit: null };
-
-    // Fetch current usage
-    let current = 0;
-    if (resource === 'customers') {
-      const { count } = await supabase.from('customers').select('*', { count: 'exact', head: true }).eq('company_id', subscription.company_id);
-      current = count || 0;
-    } else if (resource === 'documents') {
-      const { count } = await supabase.from('generated_documents').select('*', { count: 'exact', head: true }).eq('company_id', subscription.company_id);
-      current = count || 0;
-    } else if (resource === 'users') {
-      const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('company_id', subscription.company_id);
-      current = count || 0;
-    }
-
-    return {
-      reached: current >= limit,
-      current,
-      limit
-    };
   };
 
   return (
