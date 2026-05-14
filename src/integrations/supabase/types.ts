@@ -495,6 +495,92 @@ export type Database = {
           },
         ]
       }
+      uploaded_files: {
+        Row: {
+          category: string
+          company_id: string | null
+          created_at: string
+          customer_id: string | null
+          extracted_data: Json | null
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          metadata: Json | null
+          process_id: string | null
+          status: string
+          updated_at: string
+          uploaded_by: string | null
+          vessel_id: string | null
+        }
+        Insert: {
+          category: string
+          company_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          extracted_data?: Json | null
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          metadata?: Json | null
+          process_id?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          vessel_id?: string | null
+        }
+        Update: {
+          category?: string
+          company_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          extracted_data?: Json | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          metadata?: Json | null
+          process_id?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          vessel_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uploaded_files_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "uploaded_files_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "uploaded_files_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "uploaded_files_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vessels: {
         Row: {
           category: string | null
