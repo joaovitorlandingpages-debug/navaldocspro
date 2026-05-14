@@ -86,10 +86,12 @@ function DashboardLayout() {
         </nav>
 
         <div className="p-4 border-t border-white/5 space-y-2">
-           <Link to="/admin" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
-              <ShieldCheck className="h-5 w-5" />
-              {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Painel Master</span>}
-           </Link>
+           {profile?.role === 'admin_master' && (
+             <Link to="/admin" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+                <ShieldCheck className="h-5 w-5" />
+                {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Painel Master</span>}
+             </Link>
+           )}
            <button 
              onClick={handleLogout}
              className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all"
