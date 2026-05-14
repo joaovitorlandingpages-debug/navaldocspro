@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/debug/system" as any)({
+export const Route = createFileRoute("/debug/system")({
   component: DebugSystem,
   ssr: false,
 });
