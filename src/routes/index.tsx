@@ -45,8 +45,8 @@ function Index() {
             <a href="#beneficios" className="text-lg font-medium">Benefícios</a>
             <a href="#planos" className="text-lg font-medium">Planos</a>
             <hr />
-            <Link to="/login" className="text-lg font-medium">Entrar</Link>
-            <Link to="/register" className="bg-primary text-primary-foreground px-4 py-3 rounded-md text-center font-bold">Começar Grátis</Link>
+            <Link to="/auth/login" className="text-lg font-medium">Entrar</Link>
+            <Link to="/auth/signup" className="bg-primary text-primary-foreground px-4 py-3 rounded-md text-center font-bold">Começar Grátis</Link>
           </div>
         )}
       </nav>
