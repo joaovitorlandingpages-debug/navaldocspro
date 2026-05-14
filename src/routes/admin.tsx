@@ -7,7 +7,9 @@ import {
   Activity, 
   ArrowLeft,
   LayoutDashboard,
-  LogOut
+  LogOut,
+  CreditCard,
+  History
 } from "lucide-react";
 import { useState } from "react";
 
