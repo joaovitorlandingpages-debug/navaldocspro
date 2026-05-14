@@ -11,10 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VesselsRouteImport } from './routes/vessels'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PlansRouteImport } from './routes/plans'
-import { Route as LoginRouteImport } from './routes/login'
+import { Route as HomeRouteImport } from './routes/home'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -31,8 +30,10 @@ import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminDocumentsRouteImport } from './routes/admin.documents'
+import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
 import { Route as AdminBillingRouteImport } from './routes/admin.billing'
 
 const VesselsRoute = VesselsRouteImport.update({
@@ -45,11 +46,6 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProcessesRoute = ProcessesRouteImport.update({
   id: '/processes',
   path: '/processes',
@@ -60,9 +56,9 @@ const PlansRoute = PlansRouteImport.update({
   path: '/plans',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocumentsRoute = DocumentsRouteImport.update({
@@ -145,6 +141,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLogsRoute = AdminLogsRouteImport.update({
   id: '/logs',
   path: '/logs',
@@ -153,6 +154,11 @@ const AdminLogsRoute = AdminLogsRouteImport.update({
 const AdminDocumentsRoute = AdminDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCompaniesRoute = AdminCompaniesRouteImport.update({
+  id: '/companies',
+  path: '/companies',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminBillingRoute = AdminBillingRouteImport.update({
@@ -172,15 +178,16 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteWithChildren
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
-  '/login': typeof LoginRoute
+  '/home': typeof HomeRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
-  '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/companies': typeof AdminCompaniesRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -197,15 +204,16 @@ export interface FileRoutesByTo {
   '/customers': typeof CustomersRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
-  '/login': typeof LoginRoute
+  '/home': typeof HomeRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
-  '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/companies': typeof AdminCompaniesRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -225,15 +233,16 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteWithChildren
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
-  '/login': typeof LoginRoute
+  '/home': typeof HomeRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
-  '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/companies': typeof AdminCompaniesRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -254,15 +263,16 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/document-generator'
     | '/documents'
-    | '/login'
+    | '/home'
     | '/plans'
     | '/processes'
-    | '/register'
     | '/settings'
     | '/vessels'
     | '/admin/billing'
+    | '/admin/companies'
     | '/admin/documents'
     | '/admin/logs'
+    | '/admin/settings'
     | '/admin/users'
     | '/auth/login'
     | '/auth/signup'
@@ -279,15 +289,16 @@ export interface FileRouteTypes {
     | '/customers'
     | '/document-generator'
     | '/documents'
-    | '/login'
+    | '/home'
     | '/plans'
     | '/processes'
-    | '/register'
     | '/settings'
     | '/vessels'
     | '/admin/billing'
+    | '/admin/companies'
     | '/admin/documents'
     | '/admin/logs'
+    | '/admin/settings'
     | '/admin/users'
     | '/auth/login'
     | '/auth/signup'
@@ -306,15 +317,16 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/document-generator'
     | '/documents'
-    | '/login'
+    | '/home'
     | '/plans'
     | '/processes'
-    | '/register'
     | '/settings'
     | '/vessels'
     | '/admin/billing'
+    | '/admin/companies'
     | '/admin/documents'
     | '/admin/logs'
+    | '/admin/settings'
     | '/admin/users'
     | '/auth/login'
     | '/auth/signup'
@@ -334,10 +346,9 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
-  LoginRoute: typeof LoginRoute
+  HomeRoute: typeof HomeRoute
   PlansRoute: typeof PlansRoute
   ProcessesRoute: typeof ProcessesRouteWithChildren
-  RegisterRoute: typeof RegisterRoute
   SettingsRoute: typeof SettingsRoute
   VesselsRoute: typeof VesselsRoute
   AuthLoginRoute: typeof AuthLoginRoute
@@ -360,13 +371,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/processes': {
       id: '/processes'
       path: '/processes'
@@ -381,11 +385,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlansRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/documents': {
@@ -500,6 +504,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/logs': {
       id: '/admin/logs'
       path: '/logs'
@@ -514,6 +525,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocumentsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/companies': {
+      id: '/admin/companies'
+      path: '/companies'
+      fullPath: '/admin/companies'
+      preLoaderRoute: typeof AdminCompaniesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/billing': {
       id: '/admin/billing'
       path: '/billing'
@@ -526,16 +544,20 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminBillingRoute: typeof AdminBillingRoute
+  AdminCompaniesRoute: typeof AdminCompaniesRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminLogsRoute: typeof AdminLogsRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminBillingRoute: AdminBillingRoute,
+  AdminCompaniesRoute: AdminCompaniesRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
   AdminLogsRoute: AdminLogsRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
@@ -577,10 +599,9 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
-  LoginRoute: LoginRoute,
+  HomeRoute: HomeRoute,
   PlansRoute: PlansRoute,
   ProcessesRoute: ProcessesRouteWithChildren,
-  RegisterRoute: RegisterRoute,
   SettingsRoute: SettingsRoute,
   VesselsRoute: VesselsRoute,
   AuthLoginRoute: AuthLoginRoute,
@@ -589,13 +610,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

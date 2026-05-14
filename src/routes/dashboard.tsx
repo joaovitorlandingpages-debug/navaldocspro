@@ -5,12 +5,14 @@ import {
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
@@ -19,35 +21,15 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isNotificationsOpen, setNotificationsOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [company, setCompany] = useState<any>(null);
+  const { profile, loading } = useAuth();
   const { setIsNewProcessOpen } = useNewProcess();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate({ to: "/auth/login" });
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*, companies(*)')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        setUserProfile(profile);
-        if (profile.companies) {
-          setCompany(profile.companies);
-        }
-      }
-    };
-
-    fetchUserData();
-  }, [navigate]);
+    if (!loading && !profile) {
+      navigate({ to: "/auth/login" });
+    }
+  }, [profile, loading, navigate]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -84,7 +66,7 @@ function DashboardLayout() {
           {isSidebarOpen && (
             <div className="mt-2 px-1">
                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Ambiente Enterprise</p>
-               <p className="text-[10px] font-bold text-white/40 truncate">{company?.name || "Carregando..."}</p>
+               <p className="text-[10px] font-bold text-white/40 truncate">{profile?.companies?.name || "Empresa..."}</p>
             </div>
           )}
         </div>
@@ -104,10 +86,12 @@ function DashboardLayout() {
         </nav>
 
         <div className="p-4 border-t border-white/5 space-y-2">
-           <Link to="/admin" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
-              <ShieldCheck className="h-5 w-5" />
-              {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Painel Master</span>}
-           </Link>
+           {profile?.role === 'admin_master' && (
+             <Link to="/admin" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+                <ShieldCheck className="h-5 w-5" />
+                {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Painel Master</span>}
+             </Link>
+           )}
            <button 
              onClick={handleLogout}
              className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all"
@@ -155,11 +139,11 @@ function DashboardLayout() {
                 <div className="h-8 w-px bg-slate-200" />
                 <div className="flex items-center gap-3">
                     <div className="text-right hidden sm:block">
-                        <p className="text-sm font-bold text-navy">{userProfile?.name || "Usuário"}</p>
-                        <p className="text-xs text-muted-foreground uppercase tracking-tighter">{userProfile?.role || "Plan Pro"}</p>
+                        <p className="text-sm font-bold text-navy">{profile?.name || "Usuário"}</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-tighter">{profile?.role || "Plan Pro"}</p>
                     </div>
                     <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-                        {userProfile?.name?.substring(0, 2).toUpperCase() || "RA"}
+                        {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
                     </div>
                 </div>
               </div>
@@ -173,14 +157,16 @@ function DashboardLayout() {
 
         {/* Dynamic Content Container */}
         <main className="flex-grow overflow-y-auto p-8">
-           <Outlet />
+           <Suspense fallback={<DashboardSkeleton />}>
+             <Outlet />
+           </Suspense>
         </main>
       </div>
     </div>
   );
 }
 
-export function DashboardContent() {
+export function RouteContent() {
   const { setIsNewProcessOpen } = useNewProcess();
   const stats = [
     { label: "Clientes Ativos", value: "42", icon: <Users className="text-blue-600" />, trend: "+12%" },
@@ -458,6 +444,30 @@ export function DashboardContent() {
             </div>
           </div>
        </div>
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      <div className="flex justify-between items-end">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-24" />
+        </div>
+      </div>
+      <div className="grid grid-cols-4 gap-6">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-32 rounded-3xl" />)}
+      </div>
+      <div className="grid grid-cols-3 gap-8">
+        <Skeleton className="col-span-2 h-96 rounded-3xl" />
+        <Skeleton className="h-96 rounded-3xl" />
+      </div>
     </div>
   );
 }

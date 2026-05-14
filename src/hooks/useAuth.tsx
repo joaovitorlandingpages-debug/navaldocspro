@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
+import { useQuery } from '@tanstack/react-query';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -22,5 +23,20 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  return { user, loading };
+  const { data: profile, isLoading: isLoadingProfile } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*, companies(*)')
+        .eq('id', user.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  return { user, profile, loading: loading || isLoadingProfile };
 };

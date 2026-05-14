@@ -11,6 +11,7 @@ import {
 import appCss from "../styles.css?url";
 import { NewProcessProvider } from "@/hooks/useNewProcess";
 import { PlanLimitProvider } from "@/hooks/usePlanLimits";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 function NotFoundComponent() {
   return (
@@ -88,6 +89,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "A plataforma definitiva para engenheiros, despachantes e empresas navais gerenciarem embarcações, processos e documentos." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/cb00e87b-aefe-445b-884e-7da2bd5e094c/id-preview-93dd6d0d--d787974f-6f1a-48dd-89bf-51655d93efdf.lovable.app-1778546586583.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/cb00e87b-aefe-445b-884e-7da2bd5e094c/id-preview-93dd6d0d--d787974f-6f1a-48dd-89bf-51655d93efdf.lovable.app-1778546586583.png" },
+      { rel: "manifest", href: "/manifest.json" },
+      { rel: "apple-touch-icon", href: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/cb00e87b-aefe-445b-884e-7da2bd5e094c/id-preview-93dd6d0d--d787974f-6f1a-48dd-89bf-51655d93efdf.lovable.app-1778546586583.png" },
     ],
     links: [
       {
@@ -109,11 +112,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <PlanLimitProvider>
-          <NewProcessProvider>
-            {children}
-          </NewProcessProvider>
-        </PlanLimitProvider>
+        <ErrorBoundary>
+          <PlanLimitProvider>
+            <NewProcessProvider>
+              {children}
+            </NewProcessProvider>
+          </PlanLimitProvider>
+        </ErrorBoundary>
         <Scripts />
       </body>
     </html>

@@ -82,7 +82,7 @@ export const useSubscription = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token}`
         },
-        body: JSON.stringify({ planId })
+        body: JSON.stringify({ planId, origin: window.location.origin })
       });
 
       if (!response.ok) {

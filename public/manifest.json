@@ -1,0 +1,21 @@
+{
+  "name": "NavalDocs Pro",
+  "short_name": "NavalDocs",
+  "description": "Plataforma de Gestão e Automação para Engenharia Naval",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#001B3D",
+  "theme_color": "#001B3D",
+  "icons": [
+    {
+      "src": "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/cb00e87b-aefe-445b-884e-7da2bd5e094c/id-preview-93dd6d0d--d787974f-6f1a-48dd-89bf-51655d93efdf.lovable.app-1778546586583.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/cb00e87b-aefe-445b-884e-7da2bd5e094c/id-preview-93dd6d0d--d787974f-6f1a-48dd-89bf-51655d93efdf.lovable.app-1778546586583.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
