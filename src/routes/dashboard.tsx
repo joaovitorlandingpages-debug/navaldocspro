@@ -5,12 +5,13 @@ import {
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
@@ -173,7 +174,9 @@ function DashboardLayout() {
 
         {/* Dynamic Content Container */}
         <main className="flex-grow overflow-y-auto p-8">
-           <Outlet />
+           <Suspense fallback={<DashboardSkeleton />}>
+             <Outlet />
+           </Suspense>
         </main>
       </div>
     </div>
@@ -458,6 +461,28 @@ export function RouteContent() {
             </div>
           </div>
        </div>
+    </div>
+  );
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      <div className="flex justify-between items-end">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-24" />
+        </div>
+      </div>
+      <div className="grid grid-cols-4 gap-6">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-32 rounded-3xl" />)}
+      </div>
+      <div className="grid grid-cols-3 gap-8">
+        <Skeleton className="col-span-2 h-96 rounded-3xl" />
+        <Skeleton className="h-96 rounded-3xl" />
+      </div>
     </div>
   );
 }

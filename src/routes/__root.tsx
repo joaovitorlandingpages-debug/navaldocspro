@@ -11,6 +11,7 @@ import {
 import appCss from "../styles.css?url";
 import { NewProcessProvider } from "@/hooks/useNewProcess";
 import { PlanLimitProvider } from "@/hooks/usePlanLimits";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 function NotFoundComponent() {
   return (
@@ -111,11 +112,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <PlanLimitProvider>
-          <NewProcessProvider>
-            {children}
-          </NewProcessProvider>
-        </PlanLimitProvider>
+        <ErrorBoundary>
+          <PlanLimitProvider>
+            <NewProcessProvider>
+              {children}
+            </NewProcessProvider>
+          </PlanLimitProvider>
+        </ErrorBoundary>
         <Scripts />
       </body>
     </html>
