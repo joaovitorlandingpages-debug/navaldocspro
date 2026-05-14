@@ -32,9 +32,14 @@ function DashboardLayout() {
   }, [profile, loading, navigate]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("Sessão encerrada");
-    navigate({ to: "/auth/login" });
+    try {
+      await supabase.auth.signOut();
+      toast.success("Sessão encerrada");
+      navigate({ to: "/auth/login" });
+    } catch (error) {
+      console.error("Logout error:", error);
+      window.location.href = "/auth/login";
+    }
   };
 
   const navItems = [

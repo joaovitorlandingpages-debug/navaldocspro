@@ -42,10 +42,11 @@ export const useSubscription = () => {
       if (error) throw error;
       return data as Plan[];
     },
+    enabled: !!user,
   });
 
   const { data: subscription, isLoading: isLoadingSubscription } = useQuery({
-    queryKey: ["subscription"],
+    queryKey: ["subscription", user?.id],
     queryFn: async () => {
       if (!user) return null;
 
