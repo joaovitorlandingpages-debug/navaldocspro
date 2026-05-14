@@ -216,7 +216,7 @@ function Index() {
                            </li>
                          ))}
                       </ul>
-                      <Link to="/register" className={`w-full block py-3 rounded-lg text-center font-bold transition-all ${plan.popular ? 'bg-primary text-white hover:opacity-90' : 'bg-slate-100 text-navy hover:bg-slate-200'}`}>
+                      <Link to="/auth/signup" className={`w-full block py-3 rounded-lg text-center font-bold transition-all ${plan.popular ? 'bg-primary text-white hover:opacity-90' : 'bg-slate-100 text-navy hover:bg-slate-200'}`}>
                         Escolher Plano
                       </Link>
                    </div>
