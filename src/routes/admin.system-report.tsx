@@ -32,8 +32,13 @@ function SystemReport() {
   const { data: dbStatus } = useQuery({
     queryKey: ["db-status-check"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("id").limit(1);
-      return !error;
+      // Direct count to verify accessibility
+      const { count, error } = await supabase.from("profiles").select("*", { count: 'exact', head: true });
+      if (error) {
+        console.error("DB Status Check Error:", error);
+        return false;
+      }
+      return true;
     },
     retry: 1
   });
