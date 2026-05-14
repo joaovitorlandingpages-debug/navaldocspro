@@ -25,8 +25,8 @@ function Index() {
               <a href="#solucao" className="text-sm font-medium hover:text-primary transition-colors">Solução</a>
               <a href="#beneficios" className="text-sm font-medium hover:text-primary transition-colors">Benefícios</a>
               <a href="#planos" className="text-sm font-medium hover:text-primary transition-colors">Planos</a>
-              <Link to="/login" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Entrar</Link>
-              <Link to="/register" className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-bold hover:opacity-90 transition-all">Começar Grátis</Link>
+              <Link to="/auth/login" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Entrar</Link>
+              <Link to="/auth/signup" className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-bold hover:opacity-90 transition-all">Começar Grátis</Link>
             </div>
 
             {/* Mobile menu button */}
