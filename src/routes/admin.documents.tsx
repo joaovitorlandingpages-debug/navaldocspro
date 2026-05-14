@@ -3,12 +3,18 @@ import {
   FileStack, Search, Plus, Filter, 
   MoreVertical, Download, Globe, Lock, 
   Settings, RefreshCw, ToggleLeft, ToggleRight, Trash2,
-  Loader2
+  Loader2, X, Upload
 } from "lucide-react";
 import { useState } from "react";
 import { useDocuments } from "@/hooks/useDocuments";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/documents")({
   component: AdminDocuments,
@@ -16,7 +22,34 @@ export const Route = createFileRoute("/admin/documents")({
 
 function AdminDocuments() {
   const [activeTab, setActiveTab] = useState("templates");
-  const { templates, isLoadingTemplates } = useDocuments();
+  const [isNewTemplateOpen, setIsNewTemplateOpen] = useState(false);
+  const [newTemplate, setNewTemplate] = useState({
+    name: "",
+    category: "Engenharia",
+    description: ""
+  });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  
+  const { templates, isLoadingTemplates, createTemplate } = useDocuments();
+
+  const handleCreateTemplate = async () => {
+    if (!newTemplate.name) {
+      toast.error("O nome do template é obrigatório");
+      return;
+    }
+
+    try {
+      await createTemplate.mutateAsync({
+        ...newTemplate,
+        file: selectedFile || undefined
+      });
+      setIsNewTemplateOpen(false);
+      setNewTemplate({ name: "", category: "Engenharia", description: "" });
+      setSelectedFile(null);
+    } catch (error) {
+      // toast handled in hook
+    }
+  };
 
   const docs = templates || [];
 
