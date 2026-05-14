@@ -282,7 +282,32 @@ function Customers() {
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     />
                   </div>
-      {/* Modal Detalhes do Cliente */}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Observações Internas</label>
+                  <textarea 
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none h-24 resize-none font-medium text-sm transition-all" 
+                    placeholder="Notas adicionais sobre este cliente..." 
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="p-8 bg-slate-50 border-t flex justify-end gap-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all">Cancelar</button>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-primary/20 transition-all flex items-center gap-2"
+                >
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Salvar Cliente
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white border-none rounded-[2.5rem] shadow-2xl">
           <div className="p-8 border-b bg-slate-50 flex justify-between items-start">
