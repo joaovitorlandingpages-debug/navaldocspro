@@ -14,7 +14,7 @@ import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { NewProcessProvider } from "@/hooks/useNewProcess";
 import { PlanLimitProvider } from "@/hooks/usePlanLimits";
-const ErrorBoundary = lazy(() => import("@/components/ErrorBoundary"));
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 function NotFoundComponent() {
   return (
@@ -139,11 +139,9 @@ function RootContentWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Carregando sistema...</div>}>
-        <ErrorBoundary>
-          {children}
-        </ErrorBoundary>
-      </Suspense>
+      <ErrorBoundary>
+        {children}
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }
