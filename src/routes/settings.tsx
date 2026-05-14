@@ -35,10 +35,10 @@ function CompanyTeamPage() {
         if (profile.companies) {
           setCompany(profile.companies);
           
-          const { data: teamData } = await supabase
+      const { data: teamData } = await supabase
             .from('profiles')
             .select('*')
-            .eq('company_id', profile.company_id);
+            .eq('company_id', profile.company_id as string);
           
           if (teamData) setTeam(teamData);
         }
