@@ -3,9 +3,11 @@ import {
   Building, Users, CreditCard, Shield, Globe, 
   MapPin, Phone, Mail, FileText, UserCheck, 
   CheckCircle2, Clock, MoreVertical, Plus, 
-  Edit2, Trash2, ShieldAlert, Search
+  Edit2, Trash2, ShieldAlert, Search, Loader2
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
   component: CompanyTeamPage,
@@ -13,6 +15,39 @@ export const Route = createFileRoute("/settings")({
 
 function CompanyTeamPage() {
   const [activeTab, setActiveTab] = useState("empresa");
+  const [company, setCompany] = useState<any>(null);
+  const [team, setTeam] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*, companies(*)')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        if (profile.companies) {
+          setCompany(profile.companies);
+          
+      const { data: teamData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('company_id', profile.company_id as string);
+          
+          if (teamData) setTeam(teamData);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    fetchData();
+  }, []);
 
   const tabs = [
     { id: "empresa", label: "Dados da Empresa", icon: <Building className="h-4 w-4" /> },
@@ -22,19 +57,33 @@ function CompanyTeamPage() {
     { id: "seguranca", label: "Segurança e Logs", icon: <ShieldAlert className="h-4 w-4" /> },
   ];
 
-  const team = [
-    { name: "Ricardo Almeida", email: "ricardo@almeida.com", role: "Admin Master", status: "Online", lastActive: "Agora" },
-    { name: "Mariana Souza", email: "mariana@eng.com", role: "Engenheira", status: "Offline", lastActive: "2h atrás" },
-    { name: "João Silva", email: "joao@desp.com", role: "Despachante", status: "Online", lastActive: "Agora" },
-    { name: "Carlos Oliveira", email: "carlos@operacional.com", role: "Operacional", status: "Offline", lastActive: "Ontem" },
-  ];
+  const handleUpdateCompany = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!company) return;
+    
+    const { error } = await supabase
+      .from('companies')
+      .update({
+        name: company.name,
+        cnpj: company.cnpj,
+        email: company.email,
+        phone: company.phone
+      })
+      .eq('id', company.id);
+
+    if (error) {
+      toast.error("Erro ao atualizar dados da empresa");
+    } else {
+      toast.success("Dados atualizados com sucesso!");
+    }
+  };
 
   const roles = [
-    { name: "Admin Master", users: 1, permissions: "Acesso Total" },
-    { name: "Administrador da Empresa", users: 1, permissions: "Gestão de Equipe e Financeiro" },
-    { name: "Engenheiro", users: 3, permissions: "Criação e Edição de Processos" },
-    { name: "Despachante", users: 2, permissions: "Gestão de Documentos" },
-    { name: "Operacional", users: 5, permissions: "Visualização e Upload" },
+    { name: "Admin Master", users: 0, permissions: "Acesso Total" },
+    { name: "company_admin", users: team.filter(t => t.role === 'company_admin').length, permissions: "Gestão de Equipe e Financeiro" },
+    { name: "engineer", users: team.filter(t => t.role === 'engineer').length, permissions: "Criação e Edição de Processos" },
+    { name: "dispatcher", users: team.filter(t => t.role === 'dispatcher').length, permissions: "Gestão de Documentos" },
+    { name: "operational", users: team.filter(t => t.role === 'operational').length, permissions: "Visualização e Upload" },
   ];
 
   return (
@@ -42,7 +91,7 @@ function CompanyTeamPage() {
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Gestão Corporativa</h1>
-          <p className="text-slate-500 font-medium italic">Ambiente corporativo: Almeida Engenharia Naval LTDA</p>
+          <p className="text-slate-500 font-medium italic">Ambiente corporativo: {company?.name || "Carregando..."}</p>
         </div>
         <div className="flex gap-3">
            <button className="bg-slate-50 border border-slate-200 text-navy px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-all">Exportar Dados</button>
@@ -90,11 +139,11 @@ function CompanyTeamPage() {
                       <Building className="h-8 w-8 mb-2 opacity-30 group-hover:text-primary transition-all" />
                       <span className="text-[10px] font-black uppercase tracking-tight">Logo da Empresa</span>
                    </div>
-                   <div className="space-y-4">
-                      <div>
-                         <h3 className="text-2xl font-black text-navy uppercase tracking-tight">Almeida Engenharia Naval LTDA</h3>
-                         <p className="text-sm text-slate-400 font-medium">Desde Outubro de 2023 • ID: COR-8829-X</p>
-                      </div>
+                    <div className="space-y-4">
+                       <div>
+                          <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{company?.name || "Empresa"}</h3>
+                          <p className="text-sm text-slate-400 font-medium">Desde {new Date(company?.created_at).toLocaleDateString('pt-BR')} • ID: {company?.id?.substring(0, 8).toUpperCase()}</p>
+                       </div>
                       <div className="flex flex-wrap gap-2">
                          <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-1">
                             <CheckCircle2 className="h-3 w-3" /> Conta Verificada
@@ -107,31 +156,56 @@ function CompanyTeamPage() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8">
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Razão Social</label>
-                      <input type="text" defaultValue="Almeida Engenharia Naval LTDA" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                   </div>
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">CNPJ</label>
-                      <input type="text" defaultValue="12.345.678/0001-90" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                   </div>
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">E-mail Administrativo</label>
-                      <input type="email" defaultValue="admin@almeidanaval.com.br" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                   </div>
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Telefone Corporativo</label>
-                      <input type="text" defaultValue="(11) 4004-9090" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                   </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Razão Social</label>
+                       <input 
+                         type="text" 
+                         value={company?.name || ""} 
+                         onChange={(e) => setCompany({...company, name: e.target.value})}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">CNPJ</label>
+                       <input 
+                         type="text" 
+                         value={company?.cnpj || ""} 
+                         onChange={(e) => setCompany({...company, cnpj: e.target.value})}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">E-mail Administrativo</label>
+                       <input 
+                         type="email" 
+                         value={company?.email || ""} 
+                         onChange={(e) => setCompany({...company, email: e.target.value})}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Telefone Corporativo</label>
+                       <input 
+                         type="text" 
+                         value={company?.phone || ""} 
+                         onChange={(e) => setCompany({...company, phone: e.target.value})}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                       />
+                    </div>
                    <div className="space-y-2 md:col-span-2">
                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Endereço Sede</label>
                       <input type="text" defaultValue="Av. Marítima, 1000 - Porto Central, Santos/SP" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
                    </div>
                 </div>
 
-                <div className="pt-8 flex justify-end">
-                   <button className="bg-navy text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-navy/20 active:scale-95">Salvar Configurações</button>
-                </div>
+                 <div className="pt-8 flex justify-end">
+                    <button 
+                      onClick={handleUpdateCompany}
+                      className="bg-navy text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-navy/20 active:scale-95"
+                    >
+                      Salvar Configurações
+                    </button>
+                 </div>
              </div>
            )}
 
@@ -163,9 +237,9 @@ function CompanyTeamPage() {
                           <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
                             <td className="px-8 py-6">
                                <div className="flex items-center gap-4">
-                                  <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-navy text-xs">
-                                     {user.name.split(' ').map(n => n[0]).join('')}
-                                  </div>
+                                   <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-navy text-xs">
+                                      {user.name?.split(' ').map((n: string) => n[0]).join('') || '??'}
+                                   </div>
                                   <div>
                                      <p className="font-black text-navy text-sm">{user.name}</p>
                                      <p className="text-xs text-slate-400 font-medium">{user.email}</p>

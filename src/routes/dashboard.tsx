@@ -1,14 +1,16 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { 
   Anchor, LayoutDashboard, Users, Ship, ClipboardList, 
   FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ActivityFeed } from "@/components/ActivityFeed";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
@@ -17,7 +19,41 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isNotificationsOpen, setNotificationsOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [company, setCompany] = useState<any>(null);
   const { setIsNewProcessOpen } = useNewProcess();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate({ to: "/auth/login" });
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*, companies(*)')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        setUserProfile(profile);
+        if (profile.companies) {
+          setCompany(profile.companies);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Sessão encerrada");
+    navigate({ to: "/auth/login" });
+  };
 
   const navItems = [
     { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
@@ -48,7 +84,7 @@ function DashboardLayout() {
           {isSidebarOpen && (
             <div className="mt-2 px-1">
                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Ambiente Enterprise</p>
-               <p className="text-[10px] font-bold text-white/40 truncate">Almeida Engenharia Naval</p>
+               <p className="text-[10px] font-bold text-white/40 truncate">{company?.name || "Carregando..."}</p>
             </div>
           )}
         </div>
@@ -72,7 +108,10 @@ function DashboardLayout() {
               <ShieldCheck className="h-5 w-5" />
               {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Painel Master</span>}
            </Link>
-           <button className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all">
+           <button 
+             onClick={handleLogout}
+             className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all"
+           >
               <LogOut className="h-5 w-5" />
               {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Sair</span>}
            </button>
@@ -116,11 +155,11 @@ function DashboardLayout() {
                 <div className="h-8 w-px bg-slate-200" />
                 <div className="flex items-center gap-3">
                     <div className="text-right hidden sm:block">
-                        <p className="text-sm font-bold text-navy">Eng. Ricardo Almeida</p>
-                        <p className="text-xs text-muted-foreground">Plano Pro</p>
+                        <p className="text-sm font-bold text-navy">{userProfile?.name || "Usuário"}</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-tighter">{userProfile?.role || "Plan Pro"}</p>
                     </div>
                     <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-                        RA
+                        {userProfile?.name?.substring(0, 2).toUpperCase() || "RA"}
                     </div>
                 </div>
               </div>

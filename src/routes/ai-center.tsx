@@ -5,7 +5,8 @@ import {
   Lightbulb, ArrowRight, Mic, Send, 
   RefreshCw, Terminal, Cpu
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/ai-center")({
   component: AICenterPage,
@@ -14,6 +15,22 @@ export const Route = createFileRoute("/ai-center")({
 function AICenterPage() {
   const [query, setQuery] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [userName, setUserName] = useState("Usuário");
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', user.id)
+          .single();
+        if (profile?.name) setUserName(profile.name);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const aiCapabilities = [
     { title: "Análise de Riscos", icon: <ShieldCheck className="h-6 w-6" />, desc: "Identifica potenciais atrasos ou inconsistências em processos navais." },
@@ -121,7 +138,7 @@ function AICenterPage() {
                   </div>
                   <div className="bg-slate-50 p-6 rounded-[2rem] rounded-tl-none border border-slate-100 max-w-lg">
                      <p className="text-sm text-navy font-medium leading-relaxed">
-                        Olá Eng. Ricardo! Eu sou o assistente IA do NavalDocs Pro. Como posso otimizar sua operação hoje?
+                        Olá {userName}! Eu sou o assistente IA do NavalDocs Pro. Como posso otimizar sua operação hoje?
                      </p>
                      <div className="mt-4 flex flex-wrap gap-2">
                         <button onClick={handleSuggest} className="px-3 py-1.5 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-navy hover:bg-slate-100 transition-all">Resumir semana</button>

@@ -25,8 +25,8 @@ function Index() {
               <a href="#solucao" className="text-sm font-medium hover:text-primary transition-colors">Solução</a>
               <a href="#beneficios" className="text-sm font-medium hover:text-primary transition-colors">Benefícios</a>
               <a href="#planos" className="text-sm font-medium hover:text-primary transition-colors">Planos</a>
-              <Link to="/login" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Entrar</Link>
-              <Link to="/register" className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-bold hover:opacity-90 transition-all">Começar Grátis</Link>
+              <Link to="/auth/login" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Entrar</Link>
+              <Link to="/auth/signup" className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-bold hover:opacity-90 transition-all">Começar Grátis</Link>
             </div>
 
             {/* Mobile menu button */}
@@ -45,8 +45,8 @@ function Index() {
             <a href="#beneficios" className="text-lg font-medium">Benefícios</a>
             <a href="#planos" className="text-lg font-medium">Planos</a>
             <hr />
-            <Link to="/login" className="text-lg font-medium">Entrar</Link>
-            <Link to="/register" className="bg-primary text-primary-foreground px-4 py-3 rounded-md text-center font-bold">Começar Grátis</Link>
+            <Link to="/auth/login" className="text-lg font-medium">Entrar</Link>
+            <Link to="/auth/signup" className="bg-primary text-primary-foreground px-4 py-3 rounded-md text-center font-bold">Começar Grátis</Link>
           </div>
         )}
       </nav>
@@ -69,7 +69,7 @@ function Index() {
                   A plataforma definitiva para engenheiros, despachantes e empresas navais gerenciarem embarcações, processos e documentos em um só lugar.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link to="/register" className="bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">
+                  <Link to="/auth/signup" className="bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">
                     Começar Grátis <ArrowRight className="h-5 w-5" />
                   </Link>
                   <button className="border-2 border-primary/20 bg-white text-navy px-8 py-4 rounded-lg text-lg font-bold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
@@ -216,7 +216,7 @@ function Index() {
                            </li>
                          ))}
                       </ul>
-                      <Link to="/register" className={`w-full block py-3 rounded-lg text-center font-bold transition-all ${plan.popular ? 'bg-primary text-white hover:opacity-90' : 'bg-slate-100 text-navy hover:bg-slate-200'}`}>
+                      <Link to="/auth/signup" className={`w-full block py-3 rounded-lg text-center font-bold transition-all ${plan.popular ? 'bg-primary text-white hover:opacity-90' : 'bg-slate-100 text-navy hover:bg-slate-200'}`}>
                         Escolher Plano
                       </Link>
                    </div>
@@ -233,7 +233,7 @@ function Index() {
                  <h2 className="text-4xl lg:text-6xl font-bold mb-6 relative z-10">Pronto para elevar o nível da sua gestão naval?</h2>
                  <p className="text-xl opacity-80 mb-10 max-w-2xl mx-auto relative z-10">Crie sua conta agora e ganhe 14 dias de teste completo. Sem cartão de crédito.</p>
                  <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
-                    <Link to="/register" className="bg-white text-primary px-8 py-4 rounded-xl text-lg font-black hover:scale-105 transition-transform">Começar Agora</Link>
+                    <Link to="/auth/signup" className="bg-white text-primary px-8 py-4 rounded-xl text-lg font-black hover:scale-105 transition-transform">Começar Agora</Link>
                     <button className="bg-navy/20 border border-white/20 px-8 py-4 rounded-xl text-lg font-bold hover:bg-navy/40 transition-colors">Agendar Demonstração</button>
                  </div>
               </div>
