@@ -18,6 +18,7 @@ function LoginComponent() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = Route.useRouter();
+  const navigate = Route.useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
