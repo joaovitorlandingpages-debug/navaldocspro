@@ -233,7 +233,7 @@ function Index() {
                  <h2 className="text-4xl lg:text-6xl font-bold mb-6 relative z-10">Pronto para elevar o nível da sua gestão naval?</h2>
                  <p className="text-xl opacity-80 mb-10 max-w-2xl mx-auto relative z-10">Crie sua conta agora e ganhe 14 dias de teste completo. Sem cartão de crédito.</p>
                  <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
-                    <Link to="/register" className="bg-white text-primary px-8 py-4 rounded-xl text-lg font-black hover:scale-105 transition-transform">Começar Agora</Link>
+                    <Link to="/auth/signup" className="bg-white text-primary px-8 py-4 rounded-xl text-lg font-black hover:scale-105 transition-transform">Começar Agora</Link>
                     <button className="bg-navy/20 border border-white/20 px-8 py-4 rounded-xl text-lg font-bold hover:bg-navy/40 transition-colors">Agendar Demonstração</button>
                  </div>
               </div>
