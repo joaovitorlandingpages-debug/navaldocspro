@@ -98,7 +98,11 @@ function Processes() {
               </div>
               
               <div className="flex-grow bg-slate-100/30 rounded-[2.5rem] p-5 space-y-5 border border-slate-100/50 overflow-y-auto custom-scrollbar backdrop-blur-sm">
-                {processes.filter(p => p.status === col.id).map((p) => (
+                {isLoading ? (
+                  <div className="py-10 text-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-slate-300 mx-auto" />
+                  </div>
+                ) : processes.filter(p => p.status === col.id).map((p) => (
                   <Link 
                     key={p.id} 
                     to={`/processes/${p.id}`}
@@ -111,32 +115,32 @@ function Processes() {
                     </div>
                     
                     <div className="mb-4">
-                      <span className="text-[10px] font-mono font-black text-primary bg-primary/5 px-2 py-0.5 rounded uppercase tracking-tighter">{p.id}</span>
+                      <span className="text-[10px] font-mono font-black text-primary bg-primary/5 px-2 py-0.5 rounded uppercase tracking-tighter">{p.id.substring(0, 8)}</span>
                     </div>
 
-                    <h4 className="font-black text-navy text-sm mb-4 leading-tight group-hover:text-primary transition-colors">{p.type}</h4>
+                    <h4 className="font-black text-navy text-sm mb-4 leading-tight group-hover:text-primary transition-colors">{p.process_type}</h4>
                     
                     <div className="space-y-3 pb-5 mb-5 border-b border-slate-50">
                       <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
                         <div className="h-6 w-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
                           <User className="h-3.5 w-3.5" />
                         </div>
-                        {p.client}
+                        {p.customers?.name || "Cliente"}
                       </div>
                       <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
                         <div className="h-6 w-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-cyan-100 group-hover:text-cyan-600 transition-all">
                           <Ship className="h-3.5 w-3.5" />
                         </div>
-                        {p.vessel}
+                        {p.vessels?.name || "Embarcação"}
                       </div>
                     </div>
 
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        <Calendar className="h-3.5 w-3.5 text-red-400" /> {p.deadline}
+                        <Calendar className="h-3.5 w-3.5 text-red-400" /> {p.due_date ? new Date(p.due_date).toLocaleDateString('pt-BR') : "S/ data"}
                       </div>
                       <div className="h-8 w-8 rounded-xl bg-navy text-white flex items-center justify-center text-[10px] font-black shadow-lg border-2 border-white">
-                        RA
+                        {p.priority === 'high' ? '!!!' : 'U'}
                       </div>
                     </div>
                   </Link>
