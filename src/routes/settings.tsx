@@ -198,9 +198,14 @@ function CompanyTeamPage() {
                    </div>
                 </div>
 
-                <div className="pt-8 flex justify-end">
-                   <button className="bg-navy text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-navy/20 active:scale-95">Salvar Configurações</button>
-                </div>
+                 <div className="pt-8 flex justify-end">
+                    <button 
+                      onClick={handleUpdateCompany}
+                      className="bg-navy text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-navy/20 active:scale-95"
+                    >
+                      Salvar Configurações
+                    </button>
+                 </div>
              </div>
            )}
 
