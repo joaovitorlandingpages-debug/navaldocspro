@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Users, Search, Plus, MoreHorizontal, Mail, MapPin, Filter, X } from "lucide-react";
-import { useState } from "react";
+import { Users, Search, Plus, MoreHorizontal, Mail, MapPin, Filter, X, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/customers")({
   component: Customers,
@@ -9,14 +11,83 @@ export const Route = createFileRoute("/customers")({
 
 function Customers() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { setIsNewProcessOpen } = useNewProcess();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [companyId, setCompanyId] = useState<string | null>(null);
   
-  const customers = [
-    { name: "Marinha Mercante Ltda", id: "23.456.789/0001-21", type: "Empresa", location: "Santos, SP", contact: "contato@mercante.com", phone: "(13) 3210-9090", shipCount: 12 },
-    { name: "Eng. Pedro Santos", id: "123.456.789-00", type: "Individual", location: "Rio de Janeiro, RJ", contact: "pedro@eng.com", phone: "(21) 98888-7777", shipCount: 2 },
-    { name: "Estaleiro Navegar", id: "34.567.890/0001-32", type: "Empresa", location: "Itajaí, SC", contact: "adm@navegar.com", phone: "(47) 3344-5566", shipCount: 45 },
-    { name: "Dra. Ana Marina", id: "234.567.890-11", type: "Individual", location: "Salvador, BA", contact: "ana@marina.pro", phone: "(71) 99999-8888", shipCount: 5 },
-  ];
+  // Form State
+  const [formData, setFormData] = useState({
+    name: "",
+    cpf_cnpj: "",
+    email: "",
+    phone: "",
+    address: "",
+    type: "Individual",
+    notes: ""
+  });
+
+  const { setIsNewProcessOpen } = useNewProcess();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.company_id) {
+        setCompanyId(profile.company_id);
+        const { data: customerData } = await supabase
+          .from('customers')
+          .select('*, vessels(count)')
+          .eq('company_id', profile.company_id);
+        
+        if (customerData) setCustomers(customerData);
+      }
+      setIsLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
+  const handleCreateCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!companyId) return;
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .insert({
+          company_id: companyId,
+          name: formData.name,
+          cpf_cnpj: formData.cpf_cnpj,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          notes: formData.notes
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setCustomers([...customers, { ...data, vessels: [{ count: 0 }] }]);
+      setIsModalOpen(false);
+      setFormData({ name: "", cpf_cnpj: "", email: "", phone: "", address: "", type: "Individual", notes: "" });
+      toast.success("Cliente cadastrado com sucesso!");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao cadastrar cliente");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
