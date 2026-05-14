@@ -69,7 +69,7 @@ function Index() {
                   A plataforma definitiva para engenheiros, despachantes e empresas navais gerenciarem embarcações, processos e documentos em um só lugar.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link to="/register" className="bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">
+                  <Link to="/auth/signup" className="bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">
                     Começar Grátis <ArrowRight className="h-5 w-5" />
                   </Link>
                   <button className="border-2 border-primary/20 bg-white text-navy px-8 py-4 rounded-lg text-lg font-bold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
