@@ -155,11 +155,11 @@ function DashboardLayout() {
                 <div className="h-8 w-px bg-slate-200" />
                 <div className="flex items-center gap-3">
                     <div className="text-right hidden sm:block">
-                        <p className="text-sm font-bold text-navy">Eng. Ricardo Almeida</p>
-                        <p className="text-xs text-muted-foreground">Plano Pro</p>
+                        <p className="text-sm font-bold text-navy">{userProfile?.name || "Usuário"}</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-tighter">{userProfile?.role || "Plan Pro"}</p>
                     </div>
                     <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-                        RA
+                        {userProfile?.name?.substring(0, 2).toUpperCase() || "RA"}
                     </div>
                 </div>
               </div>
