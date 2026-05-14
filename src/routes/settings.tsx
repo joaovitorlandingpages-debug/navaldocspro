@@ -139,11 +139,11 @@ function CompanyTeamPage() {
                       <Building className="h-8 w-8 mb-2 opacity-30 group-hover:text-primary transition-all" />
                       <span className="text-[10px] font-black uppercase tracking-tight">Logo da Empresa</span>
                    </div>
-                   <div className="space-y-4">
-                      <div>
-                         <h3 className="text-2xl font-black text-navy uppercase tracking-tight">Almeida Engenharia Naval LTDA</h3>
-                         <p className="text-sm text-slate-400 font-medium">Desde Outubro de 2023 • ID: COR-8829-X</p>
-                      </div>
+                    <div className="space-y-4">
+                       <div>
+                          <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{company?.name || "Empresa"}</h3>
+                          <p className="text-sm text-slate-400 font-medium">Desde {new Date(company?.created_at).toLocaleDateString('pt-BR')} • ID: {company?.id?.substring(0, 8).toUpperCase()}</p>
+                       </div>
                       <div className="flex flex-wrap gap-2">
                          <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-1">
                             <CheckCircle2 className="h-3 w-3" /> Conta Verificada
