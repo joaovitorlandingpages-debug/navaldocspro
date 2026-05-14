@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,7 @@ function LoginComponent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const router = Route.useRouter();
-  const navigate = Route.useNavigate();
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +32,7 @@ function LoginComponent() {
       if (error) throw error;
 
       toast.success("Login realizado com sucesso!");
-      router.navigate({ to: "/dashboard" });
+      navigate({ to: "/dashboard" });
     } catch (error: any) {
       toast.error(error.message || "Erro ao realizar login");
     } finally {
