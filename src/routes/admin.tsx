@@ -26,6 +26,7 @@ function AdminLayout() {
     { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/admin/billing" },
     { name: "Usuários Global", icon: <Users className="h-5 w-5" />, path: "/admin/users" },
     { name: "Logs de Sistema", icon: <Activity className="h-5 w-5" />, path: "/admin/logs" },
+    { name: "Relatório Técnico", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/system-report" },
     { name: "Configurações", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },
   ];
 

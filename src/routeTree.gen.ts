@@ -30,6 +30,7 @@ import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminSystemReportRouteImport } from './routes/admin.system-report'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminDocumentsRouteImport } from './routes/admin.documents'
@@ -141,6 +142,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSystemReportRoute = AdminSystemReportRouteImport.update({
+  id: '/system-report',
+  path: '/system-report',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -188,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -273,6 +282,7 @@ export interface FileRouteTypes {
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/settings'
+    | '/admin/system-report'
     | '/admin/users'
     | '/auth/login'
     | '/auth/signup'
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/settings'
+    | '/admin/system-report'
     | '/admin/users'
     | '/auth/login'
     | '/auth/signup'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/settings'
+    | '/admin/system-report'
     | '/admin/users'
     | '/auth/login'
     | '/auth/signup'
@@ -504,6 +516,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/system-report': {
+      id: '/admin/system-report'
+      path: '/system-report'
+      fullPath: '/admin/system-report'
+      preLoaderRoute: typeof AdminSystemReportRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
@@ -548,6 +567,7 @@ interface AdminRouteChildren {
   AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSystemReportRoute: typeof AdminSystemReportRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -558,6 +578,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDocumentsRoute: AdminDocumentsRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminSystemReportRoute: AdminSystemReportRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
