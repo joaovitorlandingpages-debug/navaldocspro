@@ -188,43 +188,53 @@ function ProcessDetail() {
                </TabsContent>
 
                <TabsContent value="documents" className="animate-in fade-in duration-300">
-                  <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-                     <div className="p-8 border-b flex justify-between items-center">
-                        <h3 className="text-lg font-black text-navy uppercase tracking-tight">Checklist de Documentos</h3>
-                        <Button className="bg-navy text-white h-10 rounded-xl gap-2 font-bold text-xs uppercase tracking-widest">
-                           <Plus className="h-4 w-4" /> Adicionar Doc
-                        </Button>
+                  <div className="grid lg:grid-cols-2 gap-8">
+                     <div className="space-y-6">
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                           <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center justify-between">
+                              Anexar Documento
+                           </h3>
+                           <FileUploader 
+                             bucket="process-attachments" 
+                             category="attachment" 
+                             processId={id}
+                             customerId={process?.customer?.id}
+                             vesselId={process?.vessel?.id}
+                           />
+                        </div>
                      </div>
-                     <div className="p-4">
-                        {documents.map((doc, idx) => (
-                           <div key={idx} className="p-4 rounded-2xl flex items-center justify-between hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group">
-                              <div className="flex items-center gap-4">
-                                 <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
-                                    <FileText className="h-6 w-6" />
-                                 </div>
-                                 <div>
-                                    <p className="text-sm font-bold text-navy">{doc.name}</p>
-                                    <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
-                                       <span>{doc.type}</span>
-                                       <span className="h-1 w-1 bg-slate-300 rounded-full" />
-                                       <span>{doc.size}</span>
+
+                     <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden h-fit">
+                        <div className="p-8 border-b flex justify-between items-center">
+                           <h3 className="text-lg font-black text-navy uppercase tracking-tight">Arquivos do Processo</h3>
+                           <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase px-2.5 py-1">{files?.length || 0} Itens</Badge>
+                        </div>
+                        <div className="p-4 space-y-2">
+                           {files?.map((file) => (
+                              <div key={file.id} className="p-4 rounded-2xl flex items-center justify-between hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group">
+                                 <div className="flex items-center gap-4">
+                                    <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                                       {file.file_type.includes('image') ? <ImageIcon className="h-6 w-6" /> : <FileText className="h-6 w-6" />}
+                                    </div>
+                                    <div>
+                                       <p className="text-sm font-bold text-navy truncate max-w-[150px]">{file.file_name}</p>
+                                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">{file.status === 'validated' ? 'Validado' : 'Em Análise'}</p>
                                     </div>
                                  </div>
+                                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <a href={file.file_url} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></a>
+                                    <button onClick={() => deleteFile.mutate(file.id)} className="p-2 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
+                                 </div>
                               </div>
-                              <div className="flex items-center gap-4">
-                                 <Badge className={`border-none font-black text-[9px] uppercase px-2.5 py-1 ${
-                                    doc.status === 'Validado' ? 'bg-green-100 text-green-700' :
-                                    doc.status === 'Em Análise' ? 'bg-blue-100 text-blue-700' :
-                                    doc.status === 'Correção Necessária' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500'
-                                 }`}>
-                                    {doc.status}
-                                 </Badge>
-                                 <button className="p-2 hover:bg-slate-200 rounded-lg text-slate-300 transition-colors">
-                                    <MoreHorizontal className="h-5 w-5" />
-                                 </button>
-                              </div>
-                           </div>
-                        ))}
+                           ))}
+                           
+                           {(!files || files.length === 0) && (
+                             <div className="text-center py-12">
+                                <FileText className="h-10 w-10 text-slate-100 mx-auto mb-2" />
+                                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhum anexo</p>
+                             </div>
+                           )}
+                        </div>
                      </div>
                   </div>
                </TabsContent>
