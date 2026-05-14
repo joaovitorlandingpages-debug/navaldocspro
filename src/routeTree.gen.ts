@@ -13,6 +13,7 @@ import { Route as VesselsRouteImport } from './routes/vessels'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PlansRouteImport } from './routes/plans'
+import { Route as HomeRouteImport } from './routes/home'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -51,6 +52,11 @@ const ProcessesRoute = ProcessesRouteImport.update({
 const PlansRoute = PlansRouteImport.update({
   id: '/plans',
   path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocumentsRoute = DocumentsRouteImport.update({
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteWithChildren
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/home': typeof HomeRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
@@ -183,6 +190,7 @@ export interface FileRoutesByTo {
   '/customers': typeof CustomersRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/home': typeof HomeRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
@@ -209,6 +217,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteWithChildren
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/home': typeof HomeRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/document-generator'
     | '/documents'
+    | '/home'
     | '/plans'
     | '/processes'
     | '/settings'
@@ -259,6 +269,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/document-generator'
     | '/documents'
+    | '/home'
     | '/plans'
     | '/processes'
     | '/settings'
@@ -284,6 +295,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/document-generator'
     | '/documents'
+    | '/home'
     | '/plans'
     | '/processes'
     | '/settings'
@@ -310,6 +322,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
+  HomeRoute: typeof HomeRoute
   PlansRoute: typeof PlansRoute
   ProcessesRoute: typeof ProcessesRouteWithChildren
   SettingsRoute: typeof SettingsRoute
@@ -346,6 +359,13 @@ declare module '@tanstack/react-router' {
       path: '/plans'
       fullPath: '/plans'
       preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/documents': {
@@ -537,6 +557,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
+  HomeRoute: HomeRoute,
   PlansRoute: PlansRoute,
   ProcessesRoute: ProcessesRouteWithChildren,
   SettingsRoute: SettingsRoute,
@@ -547,3 +568,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
