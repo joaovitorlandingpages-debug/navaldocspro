@@ -12,6 +12,7 @@ import { ActivityFeed } from "@/components/ActivityFeed";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
@@ -20,35 +21,15 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isNotificationsOpen, setNotificationsOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [company, setCompany] = useState<any>(null);
+  const { profile, loading } = useAuth();
   const { setIsNewProcessOpen } = useNewProcess();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate({ to: "/auth/login" });
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*, companies(*)')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        setUserProfile(profile);
-        if (profile.companies) {
-          setCompany(profile.companies);
-        }
-      }
-    };
-
-    fetchUserData();
-  }, [navigate]);
+    if (!loading && !profile) {
+      navigate({ to: "/auth/login" });
+    }
+  }, [profile, loading, navigate]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -85,7 +66,7 @@ function DashboardLayout() {
           {isSidebarOpen && (
             <div className="mt-2 px-1">
                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Ambiente Enterprise</p>
-               <p className="text-[10px] font-bold text-white/40 truncate">{company?.name || "Carregando..."}</p>
+               <p className="text-[10px] font-bold text-white/40 truncate">{profile?.companies?.name || "Empresa..."}</p>
             </div>
           )}
         </div>
@@ -156,11 +137,11 @@ function DashboardLayout() {
                 <div className="h-8 w-px bg-slate-200" />
                 <div className="flex items-center gap-3">
                     <div className="text-right hidden sm:block">
-                        <p className="text-sm font-bold text-navy">{userProfile?.name || "Usuário"}</p>
-                        <p className="text-xs text-muted-foreground uppercase tracking-tighter">{userProfile?.role || "Plan Pro"}</p>
+                        <p className="text-sm font-bold text-navy">{profile?.name || "Usuário"}</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-tighter">{profile?.role || "Plan Pro"}</p>
                     </div>
                     <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-                        {userProfile?.name?.substring(0, 2).toUpperCase() || "RA"}
+                        {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
                     </div>
                 </div>
               </div>
