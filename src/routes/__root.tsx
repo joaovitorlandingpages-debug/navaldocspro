@@ -8,12 +8,13 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import * as React from "react";
+import { Suspense, lazy } from "react";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { NewProcessProvider } from "@/hooks/useNewProcess";
 import { PlanLimitProvider } from "@/hooks/usePlanLimits";
-import ErrorBoundary from "@/components/ErrorBoundary";
+const ErrorBoundary = lazy(() => import("@/components/ErrorBoundary"));
 
 function NotFoundComponent() {
   return (
@@ -138,9 +139,11 @@ function RootContentWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        {children}
-      </ErrorBoundary>
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Carregando sistema...</div>}>
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
+      </Suspense>
     </QueryClientProvider>
   );
 }
