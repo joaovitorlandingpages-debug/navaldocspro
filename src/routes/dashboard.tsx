@@ -84,7 +84,7 @@ function DashboardLayout() {
           {isSidebarOpen && (
             <div className="mt-2 px-1">
                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Ambiente Enterprise</p>
-               <p className="text-[10px] font-bold text-white/40 truncate">Almeida Engenharia Naval</p>
+               <p className="text-[10px] font-bold text-white/40 truncate">{company?.name || "Carregando..."}</p>
             </div>
           )}
         </div>
