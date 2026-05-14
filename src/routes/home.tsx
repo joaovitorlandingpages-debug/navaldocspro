@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Anchor, Ship, FileText, CheckCircle, Shield, ArrowRight, Menu, X, Users, Settings, LogIn, Mail } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/home")({
   component: Index,
@@ -8,6 +9,15 @@ export const Route = createFileRoute("/home")({
 
 function Index() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate({ to: "/dashboard" });
+      }
+    });
+  }, [navigate]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -277,7 +287,7 @@ function Index() {
               </div>
            </div>
            <div className="pt-8 border-t border-slate-800 text-center text-xs">
-              <p>&copy; 2024 NavalDocs Pro - Todos os direitos reservados. Marinha do Brasil e DPC são marcas registradas de seus respectivos órgãos.</p>
+              <p>&copy; {new Date().getFullYear()} NavalDocs Pro - Todos os direitos reservados. Marinha do Brasil e DPC são marcas registradas de seus respectivos órgãos.</p>
            </div>
         </div>
       </footer>
