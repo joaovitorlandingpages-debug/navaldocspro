@@ -145,6 +145,3 @@ function RootComponent() {
   );
 }
 
-function RootComponent() {
-  return <Outlet />;
-}
