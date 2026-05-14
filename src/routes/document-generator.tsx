@@ -85,7 +85,7 @@ function DocumentGenerator() {
   };
 
   const handleCustomerSelect = (customerId: string) => {
-    const customer = customers?.find(c => c.id === customerId);
+    const customer = customers?.find((c: any) => c.id === customerId);
     if (customer) {
       setFormFields(prev => ({
         ...prev,
@@ -97,7 +97,7 @@ function DocumentGenerator() {
   };
 
   const handleVesselSelect = (vesselId: string) => {
-    const vessel = vessels?.find(v => v.id === vesselId);
+    const vessel = vessels?.find((v: any) => v.id === vesselId);
     if (vessel) {
       setFormFields(prev => ({
         ...prev,
@@ -209,7 +209,7 @@ function DocumentGenerator() {
                              <SelectValue placeholder="Selecione o cliente..." />
                           </SelectTrigger>
                           <SelectContent>
-                             {customers?.map(c => (
+                             {customers?.map((c: any) => (
                                <SelectItem key={c.id} value={c.id} className="font-bold">{c.name}</SelectItem>
                              ))}
                           </SelectContent>
@@ -223,7 +223,7 @@ function DocumentGenerator() {
                              <SelectValue placeholder="Selecione a embarcação..." />
                           </SelectTrigger>
                           <SelectContent>
-                             {vessels?.map(v => (
+                             {vessels?.map((v: any) => (
                                <SelectItem key={v.id} value={v.id} className="font-bold">{v.name}</SelectItem>
                              ))}
                           </SelectContent>
