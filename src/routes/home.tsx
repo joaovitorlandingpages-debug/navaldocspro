@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/home")({
   component: Index,
+  ssr: false,
 });
 
 function Index() {

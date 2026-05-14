@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
+  ssr: false,
 });
 
 function DashboardLayout() {
