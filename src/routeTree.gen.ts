@@ -33,6 +33,7 @@ import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminDocumentsRouteImport } from './routes/admin.documents'
+import { Route as AdminBillingRouteImport } from './routes/admin.billing'
 
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
@@ -154,6 +155,11 @@ const AdminDocumentsRoute = AdminDocumentsRouteImport.update({
   path: '/documents',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminBillingRoute = AdminBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
+  '/admin/billing': typeof AdminBillingRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -196,6 +203,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
+  '/admin/billing': typeof AdminBillingRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -223,6 +231,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
+  '/admin/billing': typeof AdminBillingRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/vessels'
+    | '/admin/billing'
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/users'
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/vessels'
+    | '/admin/billing'
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/users'
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/vessels'
+    | '/admin/billing'
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/users'
@@ -502,10 +514,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocumentsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/billing': {
+      id: '/admin/billing'
+      path: '/billing'
+      fullPath: '/admin/billing'
+      preLoaderRoute: typeof AdminBillingRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminBillingRoute: typeof AdminBillingRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -513,6 +533,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminBillingRoute: AdminBillingRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminUsersRoute: AdminUsersRoute,
