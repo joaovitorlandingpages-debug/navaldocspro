@@ -5,7 +5,8 @@ import {
   Lightbulb, ArrowRight, Mic, Send, 
   RefreshCw, Terminal, Cpu
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/ai-center")({
   component: AICenterPage,
@@ -14,6 +15,22 @@ export const Route = createFileRoute("/ai-center")({
 function AICenterPage() {
   const [query, setQuery] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [userName, setUserName] = useState("Usuário");
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', user.id)
+          .single();
+        if (profile?.name) setUserName(profile.name);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const aiCapabilities = [
     { title: "Análise de Riscos", icon: <ShieldCheck className="h-6 w-6" />, desc: "Identifica potenciais atrasos ou inconsistências em processos navais." },
