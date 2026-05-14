@@ -22,6 +22,24 @@ export const Route = createFileRoute("/processes/$id")({
 function ProcessDetail() {
   const { id } = Route.useParams();
   const [status, setStatus] = useState("Em Andamento");
+  const { files, deleteFile } = useFiles({ processId: id });
+  const [process, setProcess] = useState<any | null>(null);
+
+  useEffect(() => {
+    const fetchProcess = async () => {
+      const { data } = await supabase
+        .from('processes')
+        .select(`
+          *,
+          customer:customers(id, name),
+          vessel:vessels(id, name)
+        `)
+        .eq('id', id)
+        .single();
+      if (data) setProcess(data);
+    };
+    fetchProcess();
+  }, [id]);
 
   const timeline = [
     { title: "Processo criado", date: "10/05/2026 - 09:45", user: "Ricardo Almeida", icon: <Plus className="h-3 w-3" />, color: "bg-blue-500" },
