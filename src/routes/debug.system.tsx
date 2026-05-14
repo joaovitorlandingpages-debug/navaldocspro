@@ -13,7 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/debug/system")({
   component: DebugSystem,
-  ssr: false,
 });
 
 function DebugSystem() {
