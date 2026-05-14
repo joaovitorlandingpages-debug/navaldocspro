@@ -10,7 +10,7 @@ function RedirectToIndex() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       if (session) {
         navigate({ to: "/dashboard" });
       } else {

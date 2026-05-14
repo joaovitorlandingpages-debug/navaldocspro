@@ -51,8 +51,8 @@ function AdminBilling() {
 
   const stats = [
     { label: "Receita Mensal (MRR)", value: "R$ 42.890", trend: "+12%", icon: <TrendingUp className="h-5 w-5 text-emerald-500" /> },
-    { label: "Assinaturas Ativas", value: subscriptions?.filter(s => s.status === 'active').length || 0, trend: "+3", icon: <CheckCircle2 className="h-5 w-5 text-blue-500" /> },
-    { label: "Pagamentos Pendentes", value: payments?.filter(p => p.status === 'pending').length || 0, trend: "-2", icon: <AlertCircle className="h-5 w-5 text-amber-500" /> },
+    { label: "Assinaturas Ativas", value: subscriptions?.filter((s: any) => s.status === 'active').length || 0, trend: "+3", icon: <CheckCircle2 className="h-5 w-5 text-blue-500" /> },
+    { label: "Pagamentos Pendentes", value: payments?.filter((p: any) => p.status === 'pending').length || 0, trend: "-2", icon: <AlertCircle className="h-5 w-5 text-amber-500" /> },
     { label: "Taxa de Churn", value: "2.4%", trend: "Estável", icon: <TrendingDown className="h-5 w-5 text-red-500" /> },
   ];
 
@@ -106,7 +106,7 @@ function AdminBilling() {
                           <tr><td colSpan={5} className="py-12 text-center"><Loader2 className="h-6 w-6 animate-spin text-emerald-500 mx-auto" /></td></tr>
                         ) : payments?.length === 0 ? (
                           <tr><td colSpan={5} className="py-12 text-center text-slate-500 text-xs font-bold uppercase">Nenhum pagamento</td></tr>
-                        ) : payments?.map((p) => (
+                        ) : payments?.map((p: any) => (
                            <tr key={p.id} className="hover:bg-white/5 transition-colors">
                               <td className="px-8 py-4">
                                  <div className="font-bold text-white text-sm">{p.company?.name}</div>
@@ -140,7 +140,7 @@ function AdminBilling() {
                <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6">Assinaturas por Plano</h3>
                <div className="space-y-6">
                   {['Professional', 'Start', 'Enterprise'].map((plan) => {
-                     const count = subscriptions?.filter(s => s.plan?.name === plan).length || 0;
+                     const count = subscriptions?.filter((s: any) => s.plan?.name === plan).length || 0;
                      const total = subscriptions?.length || 1;
                      const percentage = Math.round((count / total) * 100);
 
