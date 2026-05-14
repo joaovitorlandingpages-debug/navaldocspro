@@ -109,9 +109,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <NewProcessProvider>
-          {children}
-        </NewProcessProvider>
+        <PlanLimitProvider>
+          <NewProcessProvider>
+            {children}
+          </NewProcessProvider>
+        </PlanLimitProvider>
         <Scripts />
       </body>
     </html>
