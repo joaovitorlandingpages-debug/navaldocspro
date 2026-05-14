@@ -11,10 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VesselsRouteImport } from './routes/vessels'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PlansRouteImport } from './routes/plans'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -45,11 +43,6 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProcessesRoute = ProcessesRouteImport.update({
   id: '/processes',
   path: '/processes',
@@ -58,11 +51,6 @@ const ProcessesRoute = ProcessesRouteImport.update({
 const PlansRoute = PlansRouteImport.update({
   id: '/plans',
   path: '/plans',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocumentsRoute = DocumentsRouteImport.update({
@@ -172,10 +160,8 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteWithChildren
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
-  '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
-  '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
   '/admin/billing': typeof AdminBillingRoute
@@ -197,10 +183,8 @@ export interface FileRoutesByTo {
   '/customers': typeof CustomersRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
-  '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
-  '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
   '/admin/billing': typeof AdminBillingRoute
@@ -225,10 +209,8 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteWithChildren
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
-  '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
-  '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/vessels': typeof VesselsRoute
   '/admin/billing': typeof AdminBillingRoute
@@ -254,10 +236,8 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/document-generator'
     | '/documents'
-    | '/login'
     | '/plans'
     | '/processes'
-    | '/register'
     | '/settings'
     | '/vessels'
     | '/admin/billing'
@@ -279,10 +259,8 @@ export interface FileRouteTypes {
     | '/customers'
     | '/document-generator'
     | '/documents'
-    | '/login'
     | '/plans'
     | '/processes'
-    | '/register'
     | '/settings'
     | '/vessels'
     | '/admin/billing'
@@ -306,10 +284,8 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/document-generator'
     | '/documents'
-    | '/login'
     | '/plans'
     | '/processes'
-    | '/register'
     | '/settings'
     | '/vessels'
     | '/admin/billing'
@@ -334,10 +310,8 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
-  LoginRoute: typeof LoginRoute
   PlansRoute: typeof PlansRoute
   ProcessesRoute: typeof ProcessesRouteWithChildren
-  RegisterRoute: typeof RegisterRoute
   SettingsRoute: typeof SettingsRoute
   VesselsRoute: typeof VesselsRoute
   AuthLoginRoute: typeof AuthLoginRoute
@@ -360,13 +334,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/processes': {
       id: '/processes'
       path: '/processes'
@@ -379,13 +346,6 @@ declare module '@tanstack/react-router' {
       path: '/plans'
       fullPath: '/plans'
       preLoaderRoute: typeof PlansRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/documents': {
@@ -577,10 +537,8 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
-  LoginRoute: LoginRoute,
   PlansRoute: PlansRoute,
   ProcessesRoute: ProcessesRouteWithChildren,
-  RegisterRoute: RegisterRoute,
   SettingsRoute: SettingsRoute,
   VesselsRoute: VesselsRoute,
   AuthLoginRoute: AuthLoginRoute,
