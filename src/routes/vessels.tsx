@@ -1,9 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Ship, Search, Plus, MoreHorizontal, Settings, Info, Anchor, X, User, Hash, Zap, Shield, Loader2 } from "lucide-react";
+import { 
+  Ship, Search, Plus, MoreHorizontal, Settings, 
+  Info, Anchor, X, User, Hash, Zap, Shield, 
+  Loader2, FileText, Download, Trash2, Eye,
+  Image as ImageIcon, Camera
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { FileUploader } from "@/components/FileUploader";
+import { useFiles } from "@/hooks/useFiles";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/vessels")({
   component: Vessels,
@@ -11,24 +22,21 @@ export const Route = createFileRoute("/vessels")({
 
 function Vessels() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedVessel, setSelectedVessel] = useState<any | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [vessels, setVessels] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [companyId, setCompanyId] = useState<string | null>(null);
-  
-  // Form State
-  const [formData, setFormData] = useState({
-    name: "",
-    vessel_type: "",
-    customer_id: "",
-    registration_number: "",
-    engine: "",
-    category: "Esporte e Recreio",
-    status: "Operacional"
-  });
 
   const { setIsNewProcessOpen } = useNewProcess();
+  const { files, deleteFile } = useFiles(selectedVessel ? { vesselId: selectedVessel.id } : undefined);
+
+  const handleOpenDetails = (vessel: any) => {
+    setSelectedVessel(vessel);
+    setIsDetailsOpen(true);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
