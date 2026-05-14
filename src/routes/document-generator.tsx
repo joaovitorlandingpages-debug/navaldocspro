@@ -47,6 +47,7 @@ function DocumentGenerator() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
+  const { checkLimit } = usePlanLimits();
   const { saveGeneratedDocument } = useDocuments();
 
   const { data: customers } = useQuery({
