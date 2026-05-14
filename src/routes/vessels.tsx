@@ -86,7 +86,7 @@ function Vessels() {
           registration_number: formData.registration_number,
           engine: formData.engine,
           category: formData.category,
-          status: formData.status
+          status: formData.status as any
         })
         .select('*, customers(name)')
         .single();
