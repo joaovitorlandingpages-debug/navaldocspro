@@ -135,14 +135,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootContentWrapper({ children }: { children: React.ReactNode }) {
-  const context = useRouteContext({ from: Route.id });
-  
-  if (!context?.queryClient) {
-    return <>{children}</>;
-  }
+  const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <QueryClientProvider client={context.queryClient}>
+    <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
         {children}
       </ErrorBoundary>
