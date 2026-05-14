@@ -3,9 +3,11 @@ import {
   Building, Users, CreditCard, Shield, Globe, 
   MapPin, Phone, Mail, FileText, UserCheck, 
   CheckCircle2, Clock, MoreVertical, Plus, 
-  Edit2, Trash2, ShieldAlert, Search
+  Edit2, Trash2, ShieldAlert, Search, Loader2
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
   component: CompanyTeamPage,
@@ -13,6 +15,39 @@ export const Route = createFileRoute("/settings")({
 
 function CompanyTeamPage() {
   const [activeTab, setActiveTab] = useState("empresa");
+  const [company, setCompany] = useState<any>(null);
+  const [team, setTeam] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*, companies(*)')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        if (profile.companies) {
+          setCompany(profile.companies);
+          
+          const { data: teamData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('company_id', profile.company_id);
+          
+          if (teamData) setTeam(teamData);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    fetchData();
+  }, []);
 
   const tabs = [
     { id: "empresa", label: "Dados da Empresa", icon: <Building className="h-4 w-4" /> },
@@ -22,19 +57,33 @@ function CompanyTeamPage() {
     { id: "seguranca", label: "Segurança e Logs", icon: <ShieldAlert className="h-4 w-4" /> },
   ];
 
-  const team = [
-    { name: "Ricardo Almeida", email: "ricardo@almeida.com", role: "Admin Master", status: "Online", lastActive: "Agora" },
-    { name: "Mariana Souza", email: "mariana@eng.com", role: "Engenheira", status: "Offline", lastActive: "2h atrás" },
-    { name: "João Silva", email: "joao@desp.com", role: "Despachante", status: "Online", lastActive: "Agora" },
-    { name: "Carlos Oliveira", email: "carlos@operacional.com", role: "Operacional", status: "Offline", lastActive: "Ontem" },
-  ];
+  const handleUpdateCompany = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!company) return;
+    
+    const { error } = await supabase
+      .from('companies')
+      .update({
+        name: company.name,
+        cnpj: company.cnpj,
+        email: company.email,
+        phone: company.phone
+      })
+      .eq('id', company.id);
+
+    if (error) {
+      toast.error("Erro ao atualizar dados da empresa");
+    } else {
+      toast.success("Dados atualizados com sucesso!");
+    }
+  };
 
   const roles = [
-    { name: "Admin Master", users: 1, permissions: "Acesso Total" },
-    { name: "Administrador da Empresa", users: 1, permissions: "Gestão de Equipe e Financeiro" },
-    { name: "Engenheiro", users: 3, permissions: "Criação e Edição de Processos" },
-    { name: "Despachante", users: 2, permissions: "Gestão de Documentos" },
-    { name: "Operacional", users: 5, permissions: "Visualização e Upload" },
+    { name: "Admin Master", users: 0, permissions: "Acesso Total" },
+    { name: "company_admin", users: team.filter(t => t.role === 'company_admin').length, permissions: "Gestão de Equipe e Financeiro" },
+    { name: "engineer", users: team.filter(t => t.role === 'engineer').length, permissions: "Criação e Edição de Processos" },
+    { name: "dispatcher", users: team.filter(t => t.role === 'dispatcher').length, permissions: "Gestão de Documentos" },
+    { name: "operational", users: team.filter(t => t.role === 'operational').length, permissions: "Visualização e Upload" },
   ];
 
   return (
@@ -42,7 +91,7 @@ function CompanyTeamPage() {
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Gestão Corporativa</h1>
-          <p className="text-slate-500 font-medium italic">Ambiente corporativo: Almeida Engenharia Naval LTDA</p>
+          <p className="text-slate-500 font-medium italic">Ambiente corporativo: {company?.name || "Carregando..."}</p>
         </div>
         <div className="flex gap-3">
            <button className="bg-slate-50 border border-slate-200 text-navy px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-all">Exportar Dados</button>
