@@ -23,6 +23,7 @@ function AdminLayout() {
   const adminNavItems = [
     { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },
     { name: "Empresas", icon: <Building className="h-5 w-5" />, path: "/admin/companies" },
+    { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/admin/billing" },
     { name: "Usuários Global", icon: <Users className="h-5 w-5" />, path: "/admin/users" },
     { name: "Logs de Sistema", icon: <Activity className="h-5 w-5" />, path: "/admin/logs" },
     { name: "Configurações", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },
