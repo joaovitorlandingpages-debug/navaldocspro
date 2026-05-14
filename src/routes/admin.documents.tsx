@@ -2,9 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { 
   FileStack, Search, Plus, Filter, 
   MoreVertical, Download, Globe, Lock, 
-  Settings, RefreshCw, ToggleLeft, ToggleRight, Trash2
+  Settings, RefreshCw, ToggleLeft, ToggleRight, Trash2,
+  Loader2
 } from "lucide-react";
 import { useState } from "react";
+import { useDocuments } from "@/hooks/useDocuments";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export const Route = createFileRoute("/admin/documents")({
   component: AdminDocuments,
@@ -12,15 +16,9 @@ export const Route = createFileRoute("/admin/documents")({
 
 function AdminDocuments() {
   const [activeTab, setActiveTab] = useState("templates");
+  const { templates, isLoadingTemplates } = useDocuments();
 
-  const globalDocs = [
-    { id: 1, name: "Template Memorial Descritivo - Embarcação Menor", category: "Engenharia", version: "v2.1", access: "Público", status: "Ativo", lastUpdate: "12/05/2026" },
-    { id: 2, name: "Formulário de Inscrição PRPM", category: "Documentação", version: "v1.0", access: "Engenheiros", status: "Ativo", lastUpdate: "10/05/2026" },
-    { id: 3, name: "Checklist de Vistoria de Segurança", category: "Fiscalização", version: "v4.5", access: "Empresas", status: "Inativo", lastUpdate: "01/04/2026" },
-    { id: 4, name: "Norma DPC-01 (Referência)", category: "Legislativo", version: "2024", access: "Público", status: "Ativo", lastUpdate: "01/01/2026" },
-    { id: 5, name: "Termo de Responsabilidade Técnica", category: "Engenharia", version: "v1.2", access: "Público", status: "Ativo", lastUpdate: "15/04/2026" },
-    { id: 6, name: "Procuração Marinha do Brasil", category: "Jurídico", version: "v3.0", access: "Público", status: "Ativo", lastUpdate: "20/03/2026" },
-  ];
+  const docs = templates || [];
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
