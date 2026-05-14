@@ -39,7 +39,7 @@ function DocumentGenerator() {
 
   const docTypes = [
     { id: "req-inscricao", title: "Requerimento de Inscrição", icon: <FileText className="h-4 w-4" /> },
-    { id: "transf-prop", title: "Transferência de Propriedade", icon: <User className="h-4 w-4" /> },
+    { id: "transf-prop", title: "Transferência de Propriedade", icon: <UserIcon className="h-4 w-4" /> },
     { id: "procuracao", title: "Procuração", icon: <FileCheck className="h-4 w-4" /> },
     { id: "decl-resp", title: "Declaração de Responsabilidade", icon: <CheckCircle2 className="h-4 w-4" /> },
     { id: "solic-vistoria", title: "Solicitação de Vistoria", icon: <Search className="h-4 w-4" /> },
