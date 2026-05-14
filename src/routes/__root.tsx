@@ -126,7 +126,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
       <body>
         <QueryClientProvider client={queryClient}>
           <ErrorBoundary>
-            {children}
+            <PlanLimitProvider>
+              <NewProcessProvider>
+                {children}
+              </NewProcessProvider>
+            </PlanLimitProvider>
           </ErrorBoundary>
         </QueryClientProvider>
         <Scripts />
@@ -137,12 +141,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  return (
-    <PlanLimitProvider>
-      <NewProcessProvider>
-        <Outlet />
-      </NewProcessProvider>
-    </PlanLimitProvider>
-  );
+  return <Outlet />;
 }
 
