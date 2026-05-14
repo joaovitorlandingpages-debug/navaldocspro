@@ -10,6 +10,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { NewProcessProvider } from "@/hooks/useNewProcess";
+import { PlanLimitProvider } from "@/hooks/usePlanLimits";
 
 function NotFoundComponent() {
   return (
@@ -108,9 +109,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <NewProcessProvider>
-          {children}
-        </NewProcessProvider>
+        <PlanLimitProvider>
+          <NewProcessProvider>
+            {children}
+          </NewProcessProvider>
+        </PlanLimitProvider>
         <Scripts />
       </body>
     </html>

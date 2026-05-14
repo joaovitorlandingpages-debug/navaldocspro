@@ -390,6 +390,132 @@ export type Database = {
           },
         ]
       }
+      payment_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_type: string | null
+          id: string
+          payload: Json | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string | null
+          id?: string
+          payload?: Json | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string | null
+          id?: string
+          payload?: Json | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          company_id: string | null
+          created_at: string
+          id: string
+          mercado_pago_payment_id: string | null
+          metadata: Json | null
+          paid_at: string | null
+          payment_method: string | null
+          status: string
+          subscription_id: string | null
+        }
+        Insert: {
+          amount: number
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          mercado_pago_payment_id?: string | null
+          metadata?: Json | null
+          paid_at?: string | null
+          payment_method?: string | null
+          status: string
+          subscription_id?: string | null
+        }
+        Update: {
+          amount?: number
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          mercado_pago_payment_id?: string | null
+          metadata?: Json | null
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          billing_cycle: string
+          created_at: string
+          customer_limit: number | null
+          description: string | null
+          document_limit: number | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          mercado_pago_plan_id: string | null
+          name: string
+          price: number
+          user_limit: number | null
+        }
+        Insert: {
+          billing_cycle?: string
+          created_at?: string
+          customer_limit?: number | null
+          description?: string | null
+          document_limit?: number | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          mercado_pago_plan_id?: string | null
+          name: string
+          price: number
+          user_limit?: number | null
+        }
+        Update: {
+          billing_cycle?: string
+          created_at?: string
+          customer_limit?: number | null
+          description?: string | null
+          document_limit?: number | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          mercado_pago_plan_id?: string | null
+          name?: string
+          price?: number
+          user_limit?: number | null
+        }
+        Relationships: []
+      }
       processes: {
         Row: {
           company_id: string
@@ -491,6 +617,66 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          company_id: string | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          mercado_pago_customer_id: string | null
+          mercado_pago_subscription_id: string | null
+          metadata: Json | null
+          plan_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          company_id?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          mercado_pago_customer_id?: string | null
+          mercado_pago_subscription_id?: string | null
+          metadata?: Json | null
+          plan_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          company_id?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          mercado_pago_customer_id?: string | null
+          mercado_pago_subscription_id?: string | null
+          metadata?: Json | null
+          plan_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
             referencedColumns: ["id"]
           },
         ]

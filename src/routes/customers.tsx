@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FileUploader } from "@/components/FileUploader";
 import { useFiles } from "@/hooks/useFiles";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/customers")({
@@ -29,6 +30,7 @@ function Customers() {
   const [companyId, setCompanyId] = useState<string | null>(null);
 
   const { setIsNewProcessOpen } = useNewProcess();
+  const { checkLimit } = usePlanLimits();
   const { files, deleteFile } = useFiles(selectedCustomer ? { customerId: selectedCustomer.id } : undefined);
 
   // Form State
@@ -122,7 +124,14 @@ function Customers() {
             <Plus className="h-4 w-4" /> Novo Processo
           </button>
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={async () => {
+              const limit = await checkLimit('customers');
+              if (limit.reached) {
+                toast.error("Limite de clientes atingido para o seu plano atual. Faça upgrade para continuar.");
+                return;
+              }
+              setIsModalOpen(true);
+            }}
             className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
           >
             <Plus className="h-4 w-4" /> Novo Cliente

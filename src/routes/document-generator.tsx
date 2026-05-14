@@ -24,6 +24,7 @@ import {
 import { useDocuments } from "@/hooks/useDocuments";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
@@ -46,6 +47,7 @@ function DocumentGenerator() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
+  const { checkLimit } = usePlanLimits();
   const { saveGeneratedDocument } = useDocuments();
 
   const { data: customers } = useQuery({
@@ -110,6 +112,13 @@ function DocumentGenerator() {
 
   const generatePDF = async () => {
     if (!previewRef.current) return;
+    
+    const limit = await checkLimit('documents');
+    if (limit.reached) {
+      toast.error("Limite de documentos mensais atingido. Faça upgrade para continuar gerando.");
+      return;
+    }
+
     setIsGenerating(true);
     
     try {
