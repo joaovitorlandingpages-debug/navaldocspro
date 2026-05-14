@@ -1,9 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Users, Search, Plus, MoreHorizontal, Mail, MapPin, Filter, X, Loader2 } from "lucide-react";
+import { 
+  Users, Search, Plus, MoreHorizontal, Mail, 
+  MapPin, Filter, X, Loader2, FileText, 
+  Download, Trash2, Eye, Zap, Image as ImageIcon
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { FileUploader } from "@/components/FileUploader";
+import { useFiles } from "@/hooks/useFiles";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/customers")({
   component: Customers,
@@ -11,23 +21,15 @@ export const Route = createFileRoute("/customers")({
 
 function Customers() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customers, setCustomers] = useState<any[]>([]);
   const [companyId, setCompanyId] = useState<string | null>(null);
-  
-  // Form State
-  const [formData, setFormData] = useState({
-    name: "",
-    cpf_cnpj: "",
-    email: "",
-    phone: "",
-    address: "",
-    type: "Individual",
-    notes: ""
-  });
 
   const { setIsNewProcessOpen } = useNewProcess();
+  const { files, deleteFile } = useFiles(selectedCustomer ? { customerId: selectedCustomer.id } : undefined);
 
   useEffect(() => {
     const fetchData = async () => {
