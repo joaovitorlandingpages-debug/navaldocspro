@@ -116,7 +116,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
-  const { queryClient } = Route.useRouteContext();
+  const context = Route.useRouteContext();
   
   return (
     <html lang="en">
@@ -124,7 +124,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <QueryClientProvider client={queryClient}>
+        <QueryClientProvider client={context.queryClient}>
           <ErrorBoundary>
             <PlanLimitProvider>
               <NewProcessProvider>
