@@ -108,7 +108,10 @@ function DashboardLayout() {
               <ShieldCheck className="h-5 w-5" />
               {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Painel Master</span>}
            </Link>
-           <button className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all">
+           <button 
+             onClick={handleLogout}
+             className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all"
+           >
               <LogOut className="h-5 w-5" />
               {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Sair</span>}
            </button>
