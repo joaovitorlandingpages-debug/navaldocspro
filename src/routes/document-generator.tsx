@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { 
-  FileText, Search, Plus, Ship, User, 
+  FileText, Search, Plus, Ship, User as UserIcon, 
   ArrowRight, FileCheck, Clock, FileWarning,
   Eye, Save, RotateCcw, CheckCircle2,
-  LayoutTemplate, Settings2, Trash2
+  LayoutTemplate, Settings2, Trash2, Download,
+  Loader2
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,12 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { useDocuments } from "@/hooks/useDocuments";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/document-generator")({
   component: DocumentGenerator,
