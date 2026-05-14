@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  useRouteContext,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 
@@ -134,7 +135,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootContentWrapper({ children }: { children: React.ReactNode }) {
-  const context = Route.useRouteContext();
+  const context = useRouteContext({ from: Route.id });
   
   if (!context?.queryClient) {
     return <>{children}</>;
