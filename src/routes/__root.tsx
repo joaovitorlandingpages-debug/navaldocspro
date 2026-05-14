@@ -122,7 +122,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <QueryClientProvider client={Route.useRouteContext().queryClient}>
+          <ErrorBoundary>
+            <PlanLimitProvider>
+              <NewProcessProvider>
+                {children}
+              </NewProcessProvider>
+            </PlanLimitProvider>
+          </ErrorBoundary>
+        </QueryClientProvider>
         <Scripts />
       </body>
     </html>
@@ -130,17 +138,5 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <PlanLimitProvider>
-          <NewProcessProvider>
-            <Outlet />
-          </NewProcessProvider>
-        </PlanLimitProvider>
-      </ErrorBoundary>
-    </QueryClientProvider>
-  );
+  return <Outlet />;
 }
