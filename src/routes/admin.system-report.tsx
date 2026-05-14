@@ -123,7 +123,7 @@ function SystemReport() {
             <h3 className="text-3xl font-black text-navy">{dbStatus ? 'CONECTADO' : 'ERRO'}</h3>
           </div>
           <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase flex items-center gap-1">
-            <Database className="h-3 w-3" /> {tablesCount} Tabelas Ativas
+            <Database className="h-3 w-3" /> {tablesCount || 0} Tabelas Ativas
           </p>
         </Card>
 
