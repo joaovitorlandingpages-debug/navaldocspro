@@ -9,6 +9,12 @@ function createSupabaseClient() {
   const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+    if (typeof window === 'undefined') {
+      // On server, we might be in a build phase where env vars aren't ready
+      // Return a placeholder to avoid crashing the entire build/ssr
+      console.warn("Supabase env vars missing during SSR/Build");
+      return {} as any;
+    }
     const missing = [
       ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
       ...(!SUPABASE_PUBLISHABLE_KEY ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
