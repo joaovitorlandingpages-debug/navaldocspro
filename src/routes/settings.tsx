@@ -307,7 +307,92 @@ function CompanyTeamPage() {
              </div>
            )}
 
-           {activeTab !== "empresa" && activeTab !== "equipe" && activeTab !== "permissoes" && (
+           {activeTab === "assinatura" && (
+             <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 md:p-10 shadow-sm animate-in slide-in-from-right-4 duration-500">
+                <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-8">Plano e Faturamento</h3>
+                <div className="grid md:grid-cols-2 gap-8">
+                   <div className="p-8 bg-navy text-white rounded-[2rem] shadow-xl relative overflow-hidden">
+                      <CreditCard className="absolute -right-4 -bottom-4 h-32 w-32 text-white/5" />
+                      <p className="text-[10px] font-black uppercase text-primary mb-2">Plano Atual</p>
+                      <h4 className="text-3xl font-black mb-4">Enterprise Pro</h4>
+                      <p className="text-sm opacity-60 mb-8">Próximo faturamento em 12/06/2026</p>
+                      <button className="w-full bg-primary text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest">Alterar Plano</button>
+                   </div>
+                   <div className="space-y-6">
+                      <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Método de Pagamento</p>
+                         <div className="flex items-center justify-between">
+                            <p className="font-bold text-navy">•••• 4242 (Visa)</p>
+                            <button className="text-xs font-black text-primary uppercase">Editar</button>
+                         </div>
+                      </div>
+                      <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status da Conta</p>
+                         <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                            <p className="font-bold text-navy">Ativa</p>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+                <div className="mt-10">
+                   <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-4">Faturas Recentes</h4>
+                   <div className="space-y-2">
+                      {[1, 2].map(i => (
+                        <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 transition-all">
+                           <div className="flex items-center gap-3">
+                              <FileText className="h-4 w-4 text-slate-300" />
+                              <span className="text-sm font-bold text-navy">Fatura #INV-2026-00{i}</span>
+                           </div>
+                           <button className="text-xs font-black text-primary uppercase tracking-widest"><Download className="h-3 w-3 inline mr-1" /> PDF</button>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+             </div>
+           )}
+
+           {activeTab === "seguranca" && (
+             <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 md:p-10 shadow-sm animate-in slide-in-from-right-4 duration-500">
+                <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-8">Segurança e Auditoria</h3>
+                <div className="space-y-8">
+                   <div className="p-6 bg-rose-50 border border-rose-100 rounded-2xl flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                         <div className="h-10 w-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600">
+                            <ShieldAlert className="h-5 w-5" />
+                         </div>
+                         <div>
+                            <p className="font-bold text-navy">Autenticação em Duas Etapas</p>
+                            <p className="text-xs text-slate-500">Recomendado para todas as contas enterprise.</p>
+                         </div>
+                      </div>
+                      <button className="bg-navy text-white px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest">Ativar</button>
+                   </div>
+                   
+                   <div>
+                      <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-4">Logs de Acesso Recentes</h4>
+                      <div className="divide-y divide-slate-50 border rounded-2xl overflow-hidden">
+                         {[
+                           { action: "Login realizado", ip: "189.12.34.56", time: "Hoje, 09:45" },
+                           { action: "Alteração de senha", ip: "189.12.34.56", time: "Ontem, 14:20" },
+                           { action: "Exportação de dados", ip: "172.16.0.12", time: "12 Mai, 10:30" },
+                         ].map((log, i) => (
+                           <div key={i} className="p-4 bg-white flex justify-between items-center text-sm">
+                              <div>
+                                 <p className="font-bold text-navy">{log.action}</p>
+                                 <p className="text-[10px] text-slate-400 font-mono uppercase">IP: {log.ip}</p>
+                              </div>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">{log.time}</span>
+                           </div>
+                         ))}
+                      </div>
+                      <button className="mt-4 text-xs font-black text-primary uppercase tracking-widest">Ver Todos os Logs</button>
+                   </div>
+                </div>
+             </div>
+           )}
+
+           {activeTab !== "empresa" && activeTab !== "equipe" && activeTab !== "permissoes" && activeTab !== "assinatura" && activeTab !== "seguranca" && (
               <div className="bg-white rounded-[2.5rem] border border-slate-100 p-20 shadow-sm text-center flex flex-col items-center animate-in slide-in-from-right-4 duration-500">
                  <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6">
                     <Globe className="h-10 w-10 opacity-30" />
