@@ -87,7 +87,7 @@ function Vessels() {
           engine: formData.engine,
           category: formData.category,
           status: formData.status as any
-        })
+        } as any)
         .select('*, customers(name)')
         .single();
 
