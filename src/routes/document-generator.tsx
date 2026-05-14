@@ -36,30 +36,99 @@ function DocumentGenerator() {
   const [step, setStep] = useState(1);
   const [selectedType, setSelectedType] = useState("");
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const { saveGeneratedDocument } = useDocuments();
 
-  const docTypes = [
-    { id: "req-inscricao", title: "Requerimento de Inscrição", icon: <FileText className="h-4 w-4" /> },
-    { id: "transf-prop", title: "Transferência de Propriedade", icon: <UserIcon className="h-4 w-4" /> },
-    { id: "procuracao", title: "Procuração", icon: <FileCheck className="h-4 w-4" /> },
-    { id: "decl-resp", title: "Declaração de Responsabilidade", icon: <CheckCircle2 className="h-4 w-4" /> },
-    { id: "solic-vistoria", title: "Solicitação de Vistoria", icon: <Search className="h-4 w-4" /> },
-    { id: "guia-gru", title: "Guia / GRU", icon: <FileText className="h-4 w-4" /> },
-  ];
+  const { data: customers } = useQuery({
+    queryKey: ["customers-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("customers").select("*");
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: vessels } = useQuery({
+    queryKey: ["vessels-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("vessels").select("*");
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const [formFields, setFormFields] = useState({
+    clientName: "Eng. Ricardo Almeida",
+    clientId: "123.456.789-00",
+    clientAddress: "Rua do Porto, 100 - Centro, Rio de Janeiro",
+    vesselName: "Phoenix",
+    vesselInscription: "9876543-2",
+    vesselEngine: "Wärtsilä 6R32",
+    vesselType: "Petroleiro",
+    vesselCategory: "Mar Aberto",
+    currentDate: new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
+  });
+
+  const generatePDF = async () => {
+    if (!previewRef.current) return;
+    setIsGenerating(true);
+    
+    try {
+      const canvas = await html2canvas(previewRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+      
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+      
+      // Convert PDF to Blob to save to Supabase
+      const pdfBlob = pdf.output("blob");
+      const pdfFile = new File([pdfBlob], `documento-${Date.now()}.pdf`, { type: "application/pdf" });
+      
+      // Save to Supabase
+      await saveGeneratedDocument.mutateAsync({
+        name: selectedType ? docTypes.find(t => t.id === selectedType)?.title || "Documento" : "Documento",
+        status: "completed",
+        file: pdfFile,
+        metadata: { formFields }
+      });
+
+      // Also trigger download
+      pdf.save(`NavalDocs_${Date.now()}.pdf`);
+      
+      toast.success("Documento gerado e salvo com sucesso!");
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      toast.error("Erro ao gerar o documento.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const autoFields = {
     client: {
-      name: "Eng. Ricardo Almeida",
-      id: "123.456.789-00",
-      email: "ricardo@almeida.eng.br",
-      phone: "(21) 98888-7777",
-      address: "Rua do Porto, 100 - Centro, Rio de Janeiro"
+      name: formFields.clientName,
+      id: formFields.clientId,
+      address: formFields.clientAddress
     },
     vessel: {
-      name: "Phoenix",
-      inscription: "9876543-2",
-      type: "Petroleiro",
-      engine: "Wärtsilä 6R32",
-      category: "Mar Aberto"
+      name: formFields.vesselName,
+      inscription: formFields.vesselInscription,
+      type: formFields.vesselType,
+      engine: formFields.vesselEngine,
+      category: formFields.vesselCategory
     }
   };
 
