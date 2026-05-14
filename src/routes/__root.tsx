@@ -10,6 +10,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { NewProcessProvider } from "@/hooks/useNewProcess";
+import { PlanLimitProvider } from "@/hooks/usePlanLimits";
 
 function NotFoundComponent() {
   return (
