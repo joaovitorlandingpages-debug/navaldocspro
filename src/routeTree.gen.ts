@@ -28,6 +28,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
+import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminDocumentsRouteImport } from './routes/admin.documents'
@@ -127,6 +128,11 @@ const ProcessesIdRoute = ProcessesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ProcessesRoute,
 } as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/auth/login': typeof AuthLoginRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/auth/login': typeof AuthLoginRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/auth/login': typeof AuthLoginRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/users'
+    | '/auth/login'
     | '/processes/$id'
     | '/admin/'
     | '/dashboard/'
@@ -258,6 +268,7 @@ export interface FileRouteTypes {
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/users'
+    | '/auth/login'
     | '/processes/$id'
     | '/admin'
     | '/dashboard'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/users'
+    | '/auth/login'
     | '/processes/$id'
     | '/admin/'
     | '/dashboard/'
@@ -304,6 +316,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   SettingsRoute: typeof SettingsRoute
   VesselsRoute: typeof VesselsRoute
+  AuthLoginRoute: typeof AuthLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -441,6 +454,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProcessesIdRouteImport
       parentRoute: typeof ProcessesRoute
     }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/users'
@@ -522,7 +542,18 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   SettingsRoute: SettingsRoute,
   VesselsRoute: VesselsRoute,
+  AuthLoginRoute: AuthLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
