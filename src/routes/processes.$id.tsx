@@ -3,13 +3,17 @@ import {
   ArrowLeft, Calendar, User, Ship, FileText, 
   Clock, CheckCircle2, AlertCircle, MoreHorizontal, 
   Download, Share2, PlayCircle, MessageSquare, Plus,
-  FileCheck, History, Info, Zap, Bot
+  FileCheck, History, Info, Zap, Bot, Eye, Trash2,
+  Image as ImageIcon
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useFiles } from "@/hooks/useFiles";
+import { FileUploader } from "@/components/FileUploader";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
