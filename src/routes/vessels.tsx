@@ -132,9 +132,18 @@ function Vessels() {
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-         {vessels.map((v, i) => (
+         {isLoading ? (
+            <div className="col-span-full py-20 text-center">
+              <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Carregando frota...</p>
+            </div>
+         ) : vessels.length === 0 ? (
+            <div className="col-span-full py-20 text-center">
+              <Ship className="h-16 w-16 text-slate-100 mx-auto mb-4" />
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Nenhuma embarcação cadastrada</p>
+            </div>
+         ) : vessels.map((v, i) => (
             <div key={i} className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden cursor-pointer">
-              {/* Decorativo náutico no fundo do card */}
               <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-500 group-hover:scale-110">
                 <Anchor className="h-40 w-40" />
               </div>
@@ -149,26 +158,22 @@ function Vessels() {
               </div>
               <div className="relative z-10">
                  <h3 className="text-xl font-black text-navy mb-1 uppercase tracking-tight group-hover:text-primary transition-colors">{v.name}</h3>
-                 <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black mb-6">{v.type}</p>
+                 <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black mb-6">{v.vessel_type}</p>
                  <div className="space-y-3 pt-6 border-t border-slate-50">
                     <div className="flex justify-between text-[11px] font-bold">
                        <span className="text-slate-400 uppercase tracking-widest">Proprietário</span>
-                       <span className="text-navy truncate ml-4">{v.owner}</span>
+                       <span className="text-navy truncate ml-4">{v.customers?.name || "Desconhecido"}</span>
                     </div>
                     <div className="flex justify-between text-[11px] font-bold">
-                       <span className="text-slate-400 uppercase tracking-widest">IMO / Insc.</span>
-                       <span className="font-mono text-primary">{v.imo}</span>
-                    </div>
-                    <div className="flex justify-between text-[11px] font-bold">
-                       <span className="text-slate-400 uppercase tracking-widest">Categoria</span>
-                       <span className="text-navy">{v.category}</span>
+                       <span className="text-slate-400 uppercase tracking-widest">Insc. / IMO</span>
+                       <span className="font-mono text-primary">{v.registration_number || "---"}</span>
                     </div>
                     <div className="flex justify-between text-[11px] font-bold pt-3">
                        <span className="text-slate-400 uppercase tracking-widest">Status</span>
                        <span className={`font-black uppercase text-[9px] px-2.5 py-1 rounded-lg tracking-widest ${
                          v.status === 'Operacional' ? 'bg-green-100 text-green-700' : 
                          v.status === 'Em Manutenção' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-                       }`}>{v.status}</span>
+                       }`}>{v.status || "Indisponível"}</span>
                     </div>
                  </div>
               </div>
