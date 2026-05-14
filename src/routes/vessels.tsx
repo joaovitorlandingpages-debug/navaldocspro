@@ -307,7 +307,119 @@ function Vessels() {
                        </label>
                      ))}
                   </div>
+      {/* Modal Detalhes da Embarcação */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white border-none rounded-[2.5rem] shadow-2xl">
+          <div className="p-8 border-b bg-slate-50 flex justify-between items-start">
+            <div className="flex gap-6">
+              <div className="h-16 w-16 bg-navy text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-xl">
+                <Ship className="h-8 w-8" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedVessel?.name}</h3>
+                <div className="flex gap-4 mt-1 text-slate-500 text-xs font-bold">
+                  <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" /> {selectedVessel?.customers?.name}</span>
+                  <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedVessel?.registration_number}</span>
                 </div>
+              </div>
+            </div>
+            <button onClick={() => setIsDetailsOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+              <X className="h-6 w-6 text-slate-300" />
+            </button>
+          </div>
+
+          <div className="px-8 py-6 h-[600px] overflow-y-auto">
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="bg-slate-100 p-1 rounded-xl mb-8">
+                <TabsTrigger value="overview" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Ficha Técnica</TabsTrigger>
+                <TabsTrigger value="documents" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Documentos</TabsTrigger>
+                <TabsTrigger value="history" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Manutenção</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview" className="space-y-6">
+                 <div className="grid grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                       <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Especificações</h4>
+                       <div className="space-y-3">
+                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                             <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Tipo de Embarcação</p>
+                             <p className="text-sm font-bold text-navy">{selectedVessel?.vessel_type || "Não informado"}</p>
+                          </div>
+                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                             <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Motorização</p>
+                             <p className="text-sm font-bold text-navy">{selectedVessel?.engine || "Não informado"}</p>
+                          </div>
+                       </div>
+                    </div>
+                    <div className="space-y-4">
+                       <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Categoria</h4>
+                       <div className="p-4 bg-navy text-white rounded-[2rem] min-h-[120px] flex flex-col justify-center items-center text-center">
+                          <Anchor className="h-8 w-8 mb-2 opacity-50" />
+                          <p className="text-lg font-black uppercase tracking-tight">{selectedVessel?.category}</p>
+                          <p className="text-[10px] font-bold opacity-50 uppercase tracking-[0.2em]">Normam-01/DPC</p>
+                       </div>
+                    </div>
+                 </div>
+              </TabsContent>
+
+              <TabsContent value="documents" className="space-y-8">
+                 <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Documentação Técnica</h4>
+                    <div className="flex gap-2">
+                       <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-widest">{files?.length || 0} Anexos</Badge>
+                    </div>
+                 </div>
+
+                 <div className="grid md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                       <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                          <div className="flex justify-between items-center mb-4">
+                             <h5 className="text-xs font-black text-navy uppercase">Novo Anexo</h5>
+                             <div className="flex gap-2">
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 bg-white border border-slate-200 rounded-lg"><Camera className="h-4 w-4 text-slate-400" /></Button>
+                             </div>
+                          </div>
+                          <FileUploader 
+                            bucket="vessel-documents" 
+                            category="vessel_registration" 
+                            vesselId={selectedVessel?.id}
+                          />
+                       </div>
+                    </div>
+
+                    <div className="space-y-4">
+                       {files?.map((file) => (
+                         <div key={file.id} className="p-4 bg-white border border-slate-100 rounded-2xl flex items-center justify-between group hover:border-primary/20 transition-all">
+                            <div className="flex items-center gap-3">
+                               <div className="h-10 w-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-primary/5 group-hover:text-primary transition-colors">
+                                  {file.file_type.includes('image') ? <ImageIcon className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
+                               </div>
+                               <div>
+                                  <p className="text-xs font-bold text-navy truncate max-w-[150px]">{file.file_name}</p>
+                                  <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest">{file.category}</p>
+                               </div>
+                            </div>
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                               <a href={file.file_url} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></a>
+                               <button onClick={() => deleteFile.mutate(file.id)} className="p-2 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
+                            </div>
+                         </div>
+                       ))}
+                       
+                       {(!files || files.length === 0) && (
+                         <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-[2rem]">
+                            <Ship className="h-12 w-12 text-slate-100 mx-auto mb-2" />
+                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhum documento</p>
+                         </div>
+                       )}
+                    </div>
+                 </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </DialogContent>
+      </Dialog>
+
               </div>
               <div className="p-8 bg-slate-50 border-t flex justify-end gap-3">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all">Cancelar</button>
