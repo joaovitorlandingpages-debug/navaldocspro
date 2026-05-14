@@ -15,7 +15,6 @@ import { useState } from "react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
-  ssr: false,
 });
 
 function AdminLayout() {

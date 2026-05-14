@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   component: RedirectToIndex,
-  ssr: false,
 });
 
 function RedirectToIndex() {
