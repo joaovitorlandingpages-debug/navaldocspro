@@ -5,18 +5,57 @@ import {
   ArrowUpRight, ArrowDownRight, Target,
   Calendar, Layers, Cpu, ShieldCheck
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/analytics")({
   component: AnalyticsPage,
 });
 
 function AnalyticsPage() {
+  const [counts, setCounts] = useState({
+    customers: 0,
+    vessels: 0,
+    processes: 0,
+    documents: 0
+  });
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.company_id) {
+        const [cust, vess, proc, docs] = await Promise.all([
+          supabase.from('customers').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id),
+          supabase.from('vessels').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id),
+          supabase.from('processes').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id),
+          supabase.from('documents').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id),
+        ]);
+
+        setCounts({
+          customers: cust.count || 0,
+          vessels: vess.count || 0,
+          processes: proc.count || 0,
+          documents: docs.count || 0
+        });
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
   const stats = [
-    { label: "Processos Concluídos", value: "1,284", trend: "+12.5%", positive: true, icon: <Target className="h-5 w-5" /> },
-    { label: "Tempo Médio Operacional", value: "3.2 dias", trend: "-18%", positive: true, icon: <Clock className="h-5 w-5" /> },
-    { label: "Produtividade Equipe", value: "94%", trend: "+5.2%", positive: true, icon: <Users className="h-5 w-5" /> },
-    { label: "Economia de Tempo", value: "420h", trend: "+24h", positive: true, icon: <Zap className="h-5 w-5" /> },
+    { label: "Processos Concluídos", value: counts.processes.toString(), trend: "+12.5%", positive: true, icon: <Target className="h-5 w-5" /> },
+    { label: "Embarcações", value: counts.vessels.toString(), trend: "+5%", positive: true, icon: <Ship className="h-5 w-5" /> },
+    { label: "Total Clientes", value: counts.customers.toString(), trend: "+2%", positive: true, icon: <Users className="h-5 w-5" /> },
+    { label: "Documentos Gerados", value: counts.documents.toString(), trend: "+24h", positive: true, icon: <Zap className="h-5 w-5" /> },
   ];
 
   return (
