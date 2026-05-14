@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Ship, Search, Plus, MoreHorizontal, Settings, Info, Anchor, X, User, Hash, Zap, Shield } from "lucide-react";
-import { useState } from "react";
+import { Ship, Search, Plus, MoreHorizontal, Settings, Info, Anchor, X, User, Hash, Zap, Shield, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/vessels")({
   component: Vessels,
@@ -9,14 +11,102 @@ export const Route = createFileRoute("/vessels")({
 
 function Vessels() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { setIsNewProcessOpen } = useNewProcess();
+  const [vessels, setVessels] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [companyId, setCompanyId] = useState<string | null>(null);
   
-  const vessels = [
-    { name: "Phoenix", type: "Petroleiro", imo: "9876543", flag: "Brasil", owner: "Marinha Mercante Ltda", engine: "Wärtsilä 6R32", category: "Transporte", status: "Operacional" },
-    { name: "Titan", type: "Rebocador", imo: "1234567", flag: "Brasil", owner: "Estaleiro Navegar", engine: "CAT 3516B", category: "Apoio Portuário", status: "Em Manutenção" },
-    { name: "Aurora", type: "Veleiro", imo: "N/A", flag: "Panamá", owner: "Dra. Ana Marina", engine: "Yanmar 4JH", category: "Esporte/Recreio", status: "Operacional" },
-    { name: "Netuno", type: "Traineira", imo: "5566778", flag: "Brasil", owner: "Pescados do Porto", engine: "Volvo Penta D13", category: "Pesca Profissional", status: "Vistoria Pendente" },
-  ];
+  // Form State
+  const [formData, setFormData] = useState({
+    name: "",
+    vessel_type: "",
+    customer_id: "",
+    registration_number: "",
+    engine: "",
+    category: "Esporte e Recreio",
+    status: "Operacional"
+  });
+
+  const { setIsNewProcessOpen } = useNewProcess();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.company_id) {
+        setCompanyId(profile.company_id);
+        
+        // Fetch Vessels
+        const { data: vesselData } = await supabase
+          .from('vessels')
+          .select('*, customers(name)')
+          .eq('company_id', profile.company_id);
+        
+        if (vesselData) setVessels(vesselData);
+
+        // Fetch Customers for select
+        const { data: customerData } = await supabase
+          .from('customers')
+          .select('id, name')
+          .eq('company_id', profile.company_id);
+        
+        if (customerData) setCustomers(customerData);
+      }
+      setIsLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
+  const handleCreateVessel = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!companyId || !formData.customer_id) {
+      toast.error("Selecione um cliente");
+      return;
+    }
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('vessels')
+        .insert({
+          company_id: companyId,
+          customer_id: formData.customer_id,
+          name: formData.name,
+          vessel_type: formData.vessel_type,
+          registration_number: formData.registration_number,
+          engine: formData.engine,
+          category: formData.category,
+          status: formData.status
+        })
+        .select('*, customers(name)')
+        .single();
+
+      if (error) throw error;
+
+      setVessels([...vessels, data]);
+      setIsModalOpen(false);
+      setFormData({ 
+        name: "", vessel_type: "", customer_id: "", 
+        registration_number: "", engine: "", 
+        category: "Esporte e Recreio", status: "Operacional" 
+      });
+      toast.success("Embarcação cadastrada com sucesso!");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao cadastrar embarcação");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
