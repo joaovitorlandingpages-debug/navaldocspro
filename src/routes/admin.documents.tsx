@@ -53,11 +53,21 @@ function AdminDocuments() {
        </div>
 
        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {globalDocs.map((doc) => (
+          {isLoadingTemplates ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-20 gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-red-500" />
+              <p className="text-slate-500 font-medium">Carregando templates...</p>
+            </div>
+          ) : docs.length === 0 ? (
+            <div className="col-span-full text-center py-20 border-2 border-dashed border-white/5 rounded-3xl">
+               <FileStack className="h-12 w-12 text-white/5 mx-auto mb-4" />
+               <p className="text-slate-500 font-medium">Nenhum template cadastrado.</p>
+            </div>
+          ) : docs.map((doc: any) => (
             <div key={doc.id} className="bg-white/5 border border-white/10 p-6 rounded-3xl hover:border-red-500/30 transition-all group relative overflow-hidden backdrop-blur-md">
                {/* Overlay decorativo de versão */}
                <div className="absolute -right-2 -top-2 bg-black/40 px-4 py-2 rounded-bl-3xl border-l border-b border-white/5 text-[10px] font-mono text-red-400 font-black tracking-widest group-hover:bg-red-500 group-hover:text-white transition-all">
-                  {doc.version}
+                  v{doc.version}.0
                </div>
 
                <div className="h-14 w-14 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-400 mb-6 group-hover:scale-110 transition-all border border-red-500/20 shadow-inner">
@@ -71,22 +81,22 @@ function AdminDocuments() {
 
                <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-[10px] border-b border-white/5 pb-2">
-                    <span className="text-slate-500">Última Revisão</span>
-                    <span className="text-slate-300 font-mono">{doc.lastUpdate}</span>
+                    <span className="text-slate-500">Criado em</span>
+                    <span className="text-slate-300 font-mono">{format(new Date(doc.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
                   </div>
                   <div className="flex justify-between text-[10px] border-b border-white/5 pb-2">
-                    <span className="text-slate-500">Acesso Restrito</span>
+                    <span className="text-slate-500">Visibilidade</span>
                     <div className="flex items-center gap-1 text-slate-300 font-bold uppercase">
-                      {doc.access === 'Público' ? <Globe className="h-2.5 w-2.5 text-blue-400" /> : <Lock className="h-2.5 w-2.5 text-amber-400" />}
-                      {doc.access}
+                      {doc.company_id ? <Lock className="h-2.5 w-2.5 text-amber-400" /> : <Globe className="h-2.5 w-2.5 text-blue-400" />}
+                      {doc.company_id ? 'Empresa' : 'Global'}
                     </div>
                   </div>
                </div>
 
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                     <button title={doc.status === 'Ativo' ? 'Desativar' : 'Ativar'} className="transition-all">
-                        {doc.status === 'Ativo' ? <ToggleRight className="h-6 w-6 text-green-500" /> : <ToggleLeft className="h-6 w-6 text-slate-600" />}
+                     <button title={doc.is_active ? 'Desativar' : 'Ativar'} className="transition-all">
+                        {doc.is_active ? <ToggleRight className="h-6 w-6 text-green-500" /> : <ToggleLeft className="h-6 w-6 text-slate-600" />}
                      </button>
                   </div>
                   <div className="flex gap-2">
