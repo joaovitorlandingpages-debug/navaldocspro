@@ -212,9 +212,9 @@ function CompanyTeamPage() {
                           <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
                             <td className="px-8 py-6">
                                <div className="flex items-center gap-4">
-                                  <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-navy text-xs">
-                                     {user.name.split(' ').map(n => n[0]).join('')}
-                                  </div>
+                                   <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-navy text-xs">
+                                      {user.name?.split(' ').map((n: string) => n[0]).join('') || '??'}
+                                   </div>
                                   <div>
                                      <p className="font-black text-navy text-sm">{user.name}</p>
                                      <p className="text-xs text-slate-400 font-medium">{user.email}</p>
