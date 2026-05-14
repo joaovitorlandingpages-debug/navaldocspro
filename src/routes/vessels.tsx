@@ -33,11 +33,6 @@ function Vessels() {
   const { setIsNewProcessOpen } = useNewProcess();
   const { files, deleteFile } = useFiles(selectedVessel ? { vesselId: selectedVessel.id } : undefined);
 
-  const handleOpenDetails = (vessel: any) => {
-    setSelectedVessel(vessel);
-    setIsDetailsOpen(true);
-  };
-
   // Form State
   const [formData, setFormData] = useState({
     name: "",
@@ -48,6 +43,11 @@ function Vessels() {
     category: "Esporte e Recreio",
     status: "Operacional"
   });
+
+  const handleOpenDetails = (vessel: any) => {
+    setSelectedVessel(vessel);
+    setIsDetailsOpen(true);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -129,7 +129,7 @@ function Vessels() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Embarcações</h1>
           <p className="text-muted-foreground font-medium">Frota cadastrada e monitoramento de status.</p>
@@ -151,57 +151,57 @@ function Vessels() {
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-         {isLoading ? (
-            <div className="col-span-full py-20 text-center">
-              <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Carregando frota...</p>
+        {isLoading ? (
+          <div className="col-span-full py-20 text-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Carregando frota...</p>
+          </div>
+        ) : vessels.length === 0 ? (
+          <div className="col-span-full py-20 text-center">
+            <Ship className="h-16 w-16 text-slate-100 mx-auto mb-4" />
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Nenhuma embarcação cadastrada</p>
+          </div>
+        ) : vessels.map((v, i) => (
+          <div 
+            key={i} 
+            onClick={() => handleOpenDetails(v)}
+            className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden cursor-pointer"
+          >
+            <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-500 group-hover:scale-110">
+              <Anchor className="h-40 w-40" />
             </div>
-         ) : vessels.length === 0 ? (
-            <div className="col-span-full py-20 text-center">
-              <Ship className="h-16 w-16 text-slate-100 mx-auto mb-4" />
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Nenhuma embarcação cadastrada</p>
+            
+            <div className="flex justify-between items-start mb-8 relative z-10">
+               <div className="h-14 w-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                  <Ship className="h-7 w-7" />
+               </div>
+               <button className="text-slate-200 hover:text-slate-400 p-1">
+                  <MoreHorizontal className="h-6 w-6" />
+               </button>
             </div>
-         ) : vessels.map((v, i) => (
-            <div 
-              key={i} 
-              onClick={() => handleOpenDetails(v)}
-              className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden cursor-pointer"
-            >
-              <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-500 group-hover:scale-110">
-                <Anchor className="h-40 w-40" />
-              </div>
-              
-              <div className="flex justify-between items-start mb-8 relative z-10">
-                 <div className="h-14 w-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                    <Ship className="h-7 w-7" />
-                 </div>
-                 <button className="text-slate-200 hover:text-slate-400 p-1">
-                    <MoreHorizontal className="h-6 w-6" />
-                 </button>
-              </div>
-              <div className="relative z-10">
-                 <h3 className="text-xl font-black text-navy mb-1 uppercase tracking-tight group-hover:text-primary transition-colors">{v.name}</h3>
-                 <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black mb-6">{v.vessel_type}</p>
-                 <div className="space-y-3 pt-6 border-t border-slate-50">
-                    <div className="flex justify-between text-[11px] font-bold">
-                       <span className="text-slate-400 uppercase tracking-widest">Proprietário</span>
-                       <span className="text-navy truncate ml-4">{v.customers?.name || "Desconhecido"}</span>
-                    </div>
-                    <div className="flex justify-between text-[11px] font-bold">
-                       <span className="text-slate-400 uppercase tracking-widest">Insc. / IMO</span>
-                       <span className="font-mono text-primary">{v.registration_number || "---"}</span>
-                    </div>
-                    <div className="flex justify-between text-[11px] font-bold pt-3">
-                       <span className="text-slate-400 uppercase tracking-widest">Status</span>
-                       <span className={`font-black uppercase text-[9px] px-2.5 py-1 rounded-lg tracking-widest ${
-                         v.status === 'Operacional' ? 'bg-green-100 text-green-700' : 
-                         v.status === 'Em Manutenção' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-                       }`}>{v.status || "Indisponível"}</span>
-                    </div>
-                 </div>
-              </div>
+            <div className="relative z-10">
+               <h3 className="text-xl font-black text-navy mb-1 uppercase tracking-tight group-hover:text-primary transition-colors">{v.name}</h3>
+               <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black mb-6">{v.vessel_type}</p>
+               <div className="space-y-3 pt-6 border-t border-slate-50">
+                  <div className="flex justify-between text-[11px] font-bold">
+                     <span className="text-slate-400 uppercase tracking-widest">Proprietário</span>
+                     <span className="text-navy truncate ml-4">{v.customers?.name || "Desconhecido"}</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] font-bold">
+                     <span className="text-slate-400 uppercase tracking-widest">Insc. / IMO</span>
+                     <span className="font-mono text-primary">{v.registration_number || "---"}</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] font-bold pt-3">
+                     <span className="text-slate-400 uppercase tracking-widest">Status</span>
+                     <span className={`font-black uppercase text-[9px] px-2.5 py-1 rounded-lg tracking-widest ${
+                       v.status === 'Operacional' ? 'bg-green-100 text-green-700' : 
+                       v.status === 'Em Manutenção' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                     }`}>{v.status || "Indisponível"}</span>
+                  </div>
+               </div>
             </div>
-         ))}
+          </div>
+        ))}
       </div>
 
       {/* Modal Nova Embarcação */}
@@ -307,6 +307,24 @@ function Vessels() {
                        </label>
                      ))}
                   </div>
+                </div>
+              </div>
+              <div className="p-8 bg-slate-50 border-t flex justify-end gap-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all">Cancelar</button>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="px-12 py-3 bg-navy text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-navy/20 transition-all flex items-center gap-2"
+                >
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Confirmar Cadastro
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Modal Detalhes da Embarcação */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white border-none rounded-[2.5rem] shadow-2xl">
@@ -419,23 +437,6 @@ function Vessels() {
           </div>
         </DialogContent>
       </Dialog>
-
-              </div>
-              <div className="p-8 bg-slate-50 border-t flex justify-end gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all">Cancelar</button>
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="px-12 py-3 bg-navy text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-navy/20 transition-all flex items-center gap-2"
-                >
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  Confirmar Cadastro
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
