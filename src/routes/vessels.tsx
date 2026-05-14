@@ -197,57 +197,107 @@ function Vessels() {
                 <X className="h-6 w-6 text-slate-300" />
               </button>
             </div>
-            <div className="p-8 space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Ship className="h-3 w-3 opacity-40" /> Nome da Embarcação</label>
-                  <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" placeholder="Ex: SS Phoenix" />
+            <form onSubmit={handleCreateVessel}>
+              <div className="p-8 space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Ship className="h-3 w-3 opacity-40" /> Nome da Embarcação</label>
+                    <input 
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                      placeholder="Ex: SS Phoenix" 
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Zap className="h-3 w-3 opacity-40" /> Tipo de Casco / Barco</label>
+                    <input 
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                      placeholder="Ex: Petroleiro, Rebocador, Iate" 
+                      value={formData.vessel_type}
+                      onChange={(e) => setFormData({ ...formData, vessel_type: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><User className="h-3 w-3 opacity-40" /> Proprietário / Armador</label>
+                    <select 
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all"
+                      value={formData.customer_id}
+                      onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
+                      required
+                    >
+                      <option value="">Selecione um cliente</option>
+                      {customers.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Hash className="h-3 w-3 opacity-40" /> Número de Inscrição / IMO</label>
+                    <input 
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                      placeholder="9876543-2" 
+                      value={formData.registration_number}
+                      onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Settings className="h-3 w-3 opacity-40" /> Motorização Principal</label>
+                    <input 
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                      placeholder="Ex: Wärtsilä 6R32 - 4500HP" 
+                      value={formData.engine}
+                      onChange={(e) => setFormData({ ...formData, engine: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Shield className="h-3 w-3 opacity-40" /> Categoria de Navegação</label>
+                    <select 
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all"
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    >
+                      <option>Mar Aberto (Longo Curso)</option>
+                      <option>Cabotagem</option>
+                      <option>Apoio Marítimo</option>
+                      <option>Interior</option>
+                      <option>Esporte e Recreio</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Zap className="h-3 w-3 opacity-40" /> Tipo de Casco / Barco</label>
-                  <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" placeholder="Ex: Petroleiro, Rebocador, Iate" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><User className="h-3 w-3 opacity-40" /> Proprietário / Armador</label>
-                  <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" placeholder="Selecione ou digite o nome" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Hash className="h-3 w-3 opacity-40" /> Número de Inscrição / IMO</label>
-                  <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" placeholder="9876543-2" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Settings className="h-3 w-3 opacity-40" /> Motorização Principal</label>
-                  <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" placeholder="Ex: Wärtsilä 6R32 - 4500HP" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Shield className="h-3 w-3 opacity-40" /> Categoria de Navegação</label>
-                  <select className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all">
-                    <option>Mar Aberto (Longo Curso)</option>
-                    <option>Cabotagem</option>
-                    <option>Apoio Marítimo</option>
-                    <option>Interior</option>
-                    <option>Esporte e Recreio</option>
-                  </select>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status Inicial</label>
+                  <div className="grid grid-cols-3 gap-3">
+                     {["Operacional", "Em Manutenção", "Em Vistoria"].map((s) => (
+                       <label key={s} className="cursor-pointer">
+                          <input 
+                            type="radio" 
+                            name="vesselStatus" 
+                            className="peer hidden" 
+                            checked={formData.status === s}
+                            onChange={() => setFormData({ ...formData, status: s })}
+                          />
+                          <div className="p-4 text-center rounded-xl border border-slate-200 text-xs font-black uppercase tracking-widest peer-checked:bg-navy peer-checked:text-white transition-all shadow-sm">
+                             {s}
+                          </div>
+                       </label>
+                     ))}
+                  </div>
                 </div>
               </div>
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status Inicial</label>
-                <div className="grid grid-cols-3 gap-3">
-                   {["Operacional", "Em Manutenção", "Em Vistoria"].map((s) => (
-                     <label key={s} className="cursor-pointer">
-                        <input type="radio" name="vesselStatus" className="peer hidden" defaultChecked={s === "Operacional"} />
-                        <div className="p-4 text-center rounded-xl border border-slate-200 text-xs font-black uppercase tracking-widest peer-checked:bg-navy peer-checked:text-white transition-all shadow-sm">
-                           {s}
-                        </div>
-                     </label>
-                   ))}
-                </div>
+              <div className="p-8 bg-slate-50 border-t flex justify-end gap-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all">Cancelar</button>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="px-12 py-3 bg-navy text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-navy/20 transition-all flex items-center gap-2"
+                >
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Confirmar Cadastro
+                </button>
               </div>
-            </div>
-            <div className="p-8 bg-slate-50 border-t flex justify-end gap-3">
-              <button onClick={() => setIsModalOpen(false)} className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all">Cancelar</button>
-              <button className="px-12 py-3 bg-navy text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-navy/20 transition-all">Confirmar Cadastro</button>
-            </div>
+            </form>
           </div>
         </div>
       )}
