@@ -3,7 +3,8 @@ import {
   Building, Users, CreditCard, Shield, Globe, 
   MapPin, Phone, Mail, FileText, UserCheck, 
   CheckCircle2, Clock, MoreVertical, Plus, 
-  Edit2, Trash2, ShieldAlert, Search, Loader2
+  Edit2, Trash2, ShieldAlert, Search, Loader2,
+  Download
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
