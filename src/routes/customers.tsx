@@ -30,6 +30,7 @@ function Customers() {
   const [companyId, setCompanyId] = useState<string | null>(null);
 
   const { setIsNewProcessOpen } = useNewProcess();
+  const { checkLimit } = usePlanLimits();
   const { files, deleteFile } = useFiles(selectedCustomer ? { customerId: selectedCustomer.id } : undefined);
 
   // Form State
