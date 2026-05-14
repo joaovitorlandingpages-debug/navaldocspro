@@ -168,7 +168,11 @@ function Customers() {
                       </td>
                     </tr>
                   ) : customers.map((c, i) => (
-                    <tr key={i} className="hover:bg-slate-50/50 transition-colors group cursor-pointer">
+                    <tr 
+                      key={i} 
+                      onClick={() => handleOpenDetails(c)}
+                      className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
+                    >
                        <td className="px-6 py-4">
                           <div className="font-bold text-navy group-hover:text-primary transition-colors">{c.name}</div>
                           <div className="text-[10px] text-slate-400 font-mono tracking-tighter">{c.cpf_cnpj}</div>
