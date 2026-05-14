@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { 
   ClipboardList, Search, Plus, MoreHorizontal, 
-  ArrowRight, Calendar, User, Ship, AlertCircle 
+  ArrowRight, Calendar, User, Ship, AlertCircle, Loader2 
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/processes")({
   component: Processes,
@@ -12,22 +13,42 @@ export const Route = createFileRoute("/processes")({
 
 function Processes() {
   const [view, setView] = useState<"list" | "kanban">("kanban");
+  const [processes, setProcesses] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { setIsNewProcessOpen } = useNewProcess();
 
-  const columns = [
-    { id: "novo", title: "Novo", color: "bg-blue-500" },
-    { id: "andamento", title: "Em Andamento", color: "bg-amber-500" },
-    { id: "pendente", title: "Pendente", color: "bg-red-500" },
-    { id: "assinatura", title: "Assinatura", color: "bg-purple-500" },
-    { id: "finalizado", title: "Finalizado", color: "bg-green-500" },
-  ];
+  useEffect(() => {
+    const fetchProcesses = async () => {
+      setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-  const processes = [
-    { id: "PR-2024-001", client: "Navegação Mar Azul", vessel: "Phoenix", type: "Vistoria Anual", status: "andamento", deadline: "15/05/2024" },
-    { id: "PR-2024-002", client: "Estaleiro Central", vessel: "Titan", type: "Homologação", status: "novo", deadline: "20/05/2024" },
-    { id: "PR-2024-003", client: "Marina Yacht Club", vessel: "Aurora", type: "Renovação CSN", status: "finalizado", deadline: "08/05/2024" },
-    { id: "PR-2024-004", client: "Pescados do Porto", vessel: "Netuno", type: "Inscrição", status: "pendente", deadline: "12/05/2024" },
-    { id: "PR-2024-005", client: "Logística Sul", vessel: "Cargueiro X", type: "Vistoria Periódica", status: "assinatura", deadline: "22/05/2024" },
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.company_id) {
+        const { data } = await supabase
+          .from('processes')
+          .select('*, customers(name), vessels(name)')
+          .eq('company_id', profile.company_id);
+        
+        if (data) setProcesses(data);
+      }
+      setIsLoading(false);
+    };
+
+    fetchProcesses();
+  }, []);
+
+  const columns = [
+    { id: "pending", title: "Pendente", color: "bg-red-500" },
+    { id: "review", title: "Em Análise", color: "bg-blue-500" },
+    { id: "in_progress", title: "Em Andamento", color: "bg-amber-500" },
+    { id: "waiting_docs", title: "Aguardando Docs", color: "bg-purple-500" },
+    { id: "completed", title: "Concluído", color: "bg-green-500" },
   ];
 
   return (
