@@ -33,15 +33,21 @@ export const useSubscription = () => {
   const { data: plans } = useQuery({
     queryKey: ["plans"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("plans")
-        .select("*")
-        .eq("is_active", true)
-        .order("price", { ascending: true });
+      try {
+        const { data, error } = await supabase
+          .from("plans")
+          .select("*")
+          .eq("is_active", true)
+          .order("price", { ascending: true });
 
-      if (error) throw error;
-      return data as Plan[];
+        if (error) throw error;
+        return data as Plan[];
+      } catch (err) {
+        console.error("Error fetching plans:", err);
+        return [];
+      }
     },
+    enabled: !!user,
   });
 
   const { data: subscription, isLoading: isLoadingSubscription } = useQuery({
