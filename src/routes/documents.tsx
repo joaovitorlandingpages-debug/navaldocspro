@@ -2,10 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { 
   FileText, Search, Plus, Download, Eye, 
   Filter, Tag, LayoutGrid, List, MoreVertical, X,
-  Zap, Cpu
+  Zap, Cpu, Loader2, Calendar, User as UserIcon
 } from "lucide-react";
 import { useState } from "react";
 import { SmartOCR } from "@/components/SmartOCR";
+import { useDocuments } from "@/hooks/useDocuments";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export const Route = createFileRoute("/documents")({
   component: Documents,
@@ -15,17 +18,11 @@ function Documents() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadMode, setUploadMode] = useState<"standard" | "smart">("standard");
+  const { generatedDocuments, isLoadingGenerated } = useDocuments();
 
   const categories = ["Todos", "Memoriais", "ARTs", "Certificados", "Projetos", "Vistorias"];
   
-  const documents = [
-    { id: 1, name: "Memorial Descritivo - Phoenix", type: "PDF", category: "Memoriais", size: "2.4 MB", date: "10/05/2024", status: "Assinado", tags: ["Urgente", "DPC"] },
-    { id: 2, name: "ART de Projeto Estrutural", type: "PDF", category: "ARTs", size: "1.1 MB", date: "09/05/2024", status: "Pendente", tags: ["Engenharia"] },
-    { id: 3, name: "Certificado de Segurança", type: "PDF", category: "Certificados", size: "850 KB", date: "08/05/2024", status: "Assinado", tags: ["Renovação"] },
-    { id: 4, name: "Relatório de Vistoria Técnica", type: "DOCX", category: "Vistorias", size: "4.2 MB", date: "05/05/2024", status: "Rascunho", tags: ["Porto Santos"] },
-    { id: 5, name: "Plano de Linhas - Titan", type: "DWG", category: "Projetos", size: "15.8 MB", date: "02/05/2024", status: "Finalizado", tags: ["Projeto"] },
-    { id: 6, name: "Documento de Propriedade", type: "JPG", category: "Legal", size: "2.1 MB", date: "01/05/2024", status: "Verificado", tags: ["Documentação"] },
-  ];
+  const docs = generatedDocuments || [];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
