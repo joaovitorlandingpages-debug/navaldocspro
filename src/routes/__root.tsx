@@ -7,9 +7,9 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
-
+import * as React from "react";
 import appCss from "../styles.css?url";
+import { Toaster } from "@/components/ui/sonner";
 import { NewProcessProvider } from "@/hooks/useNewProcess";
 import { PlanLimitProvider } from "@/hooks/usePlanLimits";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -39,7 +39,7 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: any; reset: () => void }) {
   const router = useRouter();
 
-  useEffect(() => {
+  React.useEffect(() => {
     console.error("Root Error Boundary caught:", error);
   }, [error]);
 
@@ -116,31 +116,33 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
+  const queryClient = React.useMemo(() => new QueryClient(), []);
+
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
+        <QueryClientProvider client={queryClient}>
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
+        </QueryClientProvider>
         <Scripts />
+        <Toaster />
       </body>
     </html>
   );
 }
 
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <PlanLimitProvider>
-          <NewProcessProvider>
-            <Outlet />
-          </NewProcessProvider>
-        </PlanLimitProvider>
-      </ErrorBoundary>
-    </QueryClientProvider>
+    <PlanLimitProvider>
+      <NewProcessProvider>
+        <Outlet />
+      </NewProcessProvider>
+    </PlanLimitProvider>
   );
 }
+
