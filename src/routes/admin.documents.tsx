@@ -64,7 +64,10 @@ function AdminDocuments() {
             <button className="bg-white/5 border border-white/10 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-white/10 transition-all">
                <Settings className="h-4 w-4" /> Configurar Campos
             </button>
-            <button className="bg-red-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-red-600 transition-all shadow-lg shadow-red-500/20">
+            <button 
+              onClick={() => setIsNewTemplateOpen(true)}
+              className="bg-red-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
+            >
                <Plus className="h-4 w-4" /> Novo Template
             </button>
           </div>
