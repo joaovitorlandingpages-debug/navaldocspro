@@ -135,31 +135,45 @@ function Customers() {
                   </tr>
                </thead>
                <tbody className="divide-y divide-slate-100 font-medium">
-                  {customers.map((c, i) => (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-20 text-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Carregando clientes...</p>
+                      </td>
+                    </tr>
+                  ) : customers.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-20 text-center">
+                        <Users className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Nenhum cliente encontrado</p>
+                      </td>
+                    </tr>
+                  ) : customers.map((c, i) => (
                     <tr key={i} className="hover:bg-slate-50/50 transition-colors group cursor-pointer">
                        <td className="px-6 py-4">
                           <div className="font-bold text-navy group-hover:text-primary transition-colors">{c.name}</div>
-                          <div className="text-[10px] text-slate-400 font-mono tracking-tighter">{c.id}</div>
+                          <div className="text-[10px] text-slate-400 font-mono tracking-tighter">{c.cpf_cnpj}</div>
                        </td>
                        <td className="px-6 py-4 text-sm">
-                          <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${c.type === 'Empresa' ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-600'}`}>
-                             {c.type}
+                          <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${c.cpf_cnpj?.length > 14 ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-600'}`}>
+                             {c.cpf_cnpj?.length > 14 ? 'Empresa' : 'Individual'}
                           </span>
                        </td>
                        <td className="px-6 py-4 text-sm text-slate-500">
                           <div className="flex items-center gap-1.5 mb-1 font-bold">
-                             <Mail className="h-3.5 w-3.5" /> {c.contact}
+                             <Mail className="h-3.5 w-3.5" /> {c.email}
                           </div>
-                          <div className="text-[11px] flex items-center gap-1.5 opacity-70 font-medium">
-                             <MapPin className="h-3 w-3" /> {c.location}
+                          <div className="text-[11px] flex items-center gap-1.5 opacity-70 font-medium truncate max-w-[200px]">
+                             <MapPin className="h-3 w-3" /> {c.address}
                           </div>
                        </td>
                        <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                              <div className="h-1.5 w-16 bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-primary" style={{ width: `${Math.min(c.shipCount * 2, 100)}%` }} />
+                                <div className="h-full bg-primary" style={{ width: `${Math.min((c.vessels?.[0]?.count || 0) * 10, 100)}%` }} />
                              </div>
-                             <span className="text-xs font-black text-navy">{c.shipCount}</span>
+                             <span className="text-xs font-black text-navy">{c.vessels?.[0]?.count || 0}</span>
                           </div>
                        </td>
                        <td className="px-6 py-4 text-right">
@@ -174,12 +188,11 @@ function Customers() {
          </div>
          
          <div className="p-6 border-t flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
-            <span>Mostrando 4 de 42 clientes</span>
+            <span>Mostrando {customers.length} clientes</span>
             <div className="flex gap-2">
                <button className="px-3 py-1.5 border rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-all" disabled>Anterior</button>
                <button className="px-4 py-1.5 border rounded-lg bg-primary text-white shadow-sm transition-all">1</button>
-               <button className="px-4 py-1.5 border rounded-lg hover:bg-slate-50 transition-all">2</button>
-               <button className="px-3 py-1.5 border rounded-lg hover:bg-slate-50 transition-all">Próximo</button>
+               <button className="px-3 py-1.5 border rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-all" disabled>Próximo</button>
             </div>
          </div>
       </div>
