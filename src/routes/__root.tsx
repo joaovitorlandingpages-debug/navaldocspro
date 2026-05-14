@@ -116,15 +116,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
+  const queryClient = React.useMemo(() => new QueryClient(), []);
+
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
       <body>
-        <RootContentWrapper>
-          {children}
-        </RootContentWrapper>
+        <QueryClientProvider client={queryClient}>
+          <ErrorBoundary>
+            <PlanLimitProvider>
+              <NewProcessProvider>
+                {children}
+              </NewProcessProvider>
+            </PlanLimitProvider>
+          </ErrorBoundary>
+        </QueryClientProvider>
         <Scripts />
         <Toaster />
       </body>
@@ -132,25 +140,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function RootContentWrapper({ children }: { children: React.ReactNode }) {
-  const queryClient = React.useMemo(() => new QueryClient(), []);
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        {children}
-      </ErrorBoundary>
-    </QueryClientProvider>
-  );
-}
-
 function RootComponent() {
-  return (
-    <PlanLimitProvider>
-      <NewProcessProvider>
-        <Outlet />
-      </NewProcessProvider>
-    </PlanLimitProvider>
-  );
+  return <Outlet />;
 }
 
