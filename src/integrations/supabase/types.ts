@@ -14,13 +14,360 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity_logs: {
+        Row: {
+          action: string
+          company_id: string
+          created_at: string
+          id: string
+          module: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          company_id: string
+          created_at?: string
+          id?: string
+          module: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          module?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          cnpj: string | null
+          created_at: string
+          email: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          phone: string | null
+          plan: string | null
+          updated_at: string
+        }
+        Insert: {
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          phone?: string | null
+          plan?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          plan?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      customers: {
+        Row: {
+          address: string | null
+          company_id: string
+          cpf_cnpj: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          company_id: string
+          cpf_cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          company_id?: string
+          cpf_cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          company_id: string
+          created_at: string
+          customer_id: string | null
+          document_type: string
+          file_url: string | null
+          id: string
+          process_id: string | null
+          status: string
+          updated_at: string
+          vessel_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          customer_id?: string | null
+          document_type: string
+          file_url?: string | null
+          id?: string
+          process_id?: string | null
+          status?: string
+          updated_at?: string
+          vessel_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          customer_id?: string | null
+          document_type?: string
+          file_url?: string | null
+          id?: string
+          process_id?: string | null
+          status?: string
+          updated_at?: string
+          vessel_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      processes: {
+        Row: {
+          company_id: string
+          created_at: string
+          customer_id: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          priority: string
+          process_type: string
+          status: string
+          updated_at: string
+          vessel_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          customer_id: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          process_type: string
+          status?: string
+          updated_at?: string
+          vessel_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          customer_id?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          process_type?: string
+          status?: string
+          updated_at?: string
+          vessel_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processes_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          phone: string | null
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          email?: string | null
+          id: string
+          name?: string | null
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vessels: {
+        Row: {
+          category: string | null
+          company_id: string
+          created_at: string
+          customer_id: string
+          engine: string | null
+          id: string
+          name: string
+          notes: string | null
+          registration_number: string | null
+          updated_at: string
+          vessel_type: string | null
+        }
+        Insert: {
+          category?: string | null
+          company_id: string
+          created_at?: string
+          customer_id: string
+          engine?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          registration_number?: string | null
+          updated_at?: string
+          vessel_type?: string | null
+        }
+        Update: {
+          category?: string | null
+          company_id?: string
+          created_at?: string
+          customer_id?: string
+          engine?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          registration_number?: string | null
+          updated_at?: string
+          vessel_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vessels_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vessels_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin_master: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
