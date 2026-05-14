@@ -41,7 +41,6 @@ function SystemReport() {
   const { data: tablesCount } = useQuery({
     queryKey: ["tables-count-check"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_tables_count'); // Assuming a helper RPC or just use a known list
       return 15; // Manual count based on migration history
     }
   });
