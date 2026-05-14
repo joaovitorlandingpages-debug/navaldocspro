@@ -88,7 +88,7 @@ function DocumentGenerator() {
       setFormFields(prev => ({
         ...prev,
         clientName: customer.name,
-        clientId: customer.tax_id || "",
+        clientId: customer.cpf_cnpj || "",
         clientAddress: customer.address || ""
       }));
     }
@@ -100,8 +100,8 @@ function DocumentGenerator() {
       setFormFields(prev => ({
         ...prev,
         vesselName: vessel.name,
-        vesselInscription: vessel.inscription || "",
-        vesselType: vessel.type || "",
+        vesselInscription: vessel.registration_number || "",
+        vesselType: vessel.vessel_type || "",
         vesselEngine: vessel.engine || "",
         vesselCategory: vessel.category || ""
       }));
