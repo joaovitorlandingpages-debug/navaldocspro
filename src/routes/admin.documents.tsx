@@ -108,12 +108,67 @@ function AdminDocuments() {
 
                <div className="h-14 w-14 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-400 mb-6 group-hover:scale-110 transition-all border border-red-500/20 shadow-inner">
                   <FileStack className="h-7 w-7" />
-               </div>
+       </div>
 
-               <div className="mb-6">
-                 <h3 className="font-bold text-slate-100 text-sm mb-1 leading-snug min-h-[40px]">{doc.name}</h3>
-                 <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">{doc.category}</p>
+       <Dialog open={isNewTemplateOpen} onOpenChange={setIsNewTemplateOpen}>
+         <DialogContent className="max-w-md bg-slate-900 border-white/10 text-white rounded-[2rem]">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-black uppercase tracking-tight">Novo Template</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+               <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-400">Nome do Modelo</Label>
+                  <Input 
+                    value={newTemplate.name}
+                    onChange={(e) => setNewTemplate({...newTemplate, name: e.target.value})}
+                    placeholder="Ex: Requerimento de Inscrição" 
+                    className="bg-white/5 border-white/10 text-white h-12 rounded-xl"
+                  />
                </div>
+               <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-400">Categoria</Label>
+                  <Select 
+                    value={newTemplate.category}
+                    onValueChange={(v) => setNewTemplate({...newTemplate, category: v})}
+                  >
+                    <SelectTrigger className="bg-white/5 border-white/10 text-white h-12 rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-white/10 text-white">
+                      <SelectItem value="Engenharia">Engenharia</SelectItem>
+                      <SelectItem value="Documentação">Documentação</SelectItem>
+                      <SelectItem value="Fiscalização">Fiscalização</SelectItem>
+                      <SelectItem value="Jurídico">Jurídico</SelectItem>
+                    </SelectContent>
+                  </Select>
+               </div>
+               <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-400">Upload do Arquivo (.docx / .pdf)</Label>
+                  <div className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-red-500/50 transition-all cursor-pointer relative group">
+                    <input 
+                      type="file" 
+                      className="absolute inset-0 opacity-0 cursor-pointer" 
+                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    />
+                    <Upload className="h-8 w-8 text-slate-500 mx-auto mb-2 group-hover:text-red-400" />
+                    <p className="text-xs text-slate-400 font-medium">
+                      {selectedFile ? selectedFile.name : "Arraste ou clique para selecionar"}
+                    </p>
+                  </div>
+               </div>
+            </div>
+            <DialogFooter className="gap-2">
+               <Button variant="ghost" onClick={() => setIsNewTemplateOpen(false)} className="rounded-xl text-slate-400">Cancelar</Button>
+               <Button 
+                onClick={handleCreateTemplate}
+                disabled={createTemplate.isPending}
+                className="bg-red-500 hover:bg-red-600 rounded-xl px-8 font-bold"
+               >
+                 {createTemplate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Template"}
+               </Button>
+            </DialogFooter>
+         </DialogContent>
+       </Dialog>
 
                <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-[10px] border-b border-white/5 pb-2">
