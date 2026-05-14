@@ -51,26 +51,31 @@ export const useSubscription = () => {
   });
 
   const { data: subscription, isLoading: isLoadingSubscription } = useQuery({
-    queryKey: ["subscription"],
+    queryKey: ["subscription", user?.id],
     queryFn: async () => {
-      if (!user) return null;
+      try {
+        if (!user) return null;
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("company_id")
-        .eq("id", user.id)
-        .single();
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("company_id")
+          .eq("id", user.id)
+          .single();
 
-      if (!profile?.company_id) return null;
+        if (!profile?.company_id) return null;
 
-      const { data, error } = await supabase
-        .from("subscriptions")
-        .select("*, plan:plans(*)")
-        .eq("company_id", profile.company_id)
-        .maybeSingle();
+        const { data, error } = await supabase
+          .from("subscriptions")
+          .select("*, plan:plans(*)")
+          .eq("company_id", profile.company_id)
+          .maybeSingle();
 
-      if (error && error.code !== "PGRST116") throw error;
-      return data as (Subscription & { plan: Plan }) | null;
+        if (error && error.code !== "PGRST116") throw error;
+        return data as (Subscription & { plan: Plan }) | null;
+      } catch (err) {
+        console.error("Error fetching subscription:", err);
+        return null;
+      }
     },
     enabled: !!user,
   });
