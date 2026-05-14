@@ -198,22 +198,28 @@ function SystemReport() {
       <div className="grid md:grid-cols-2 gap-8">
         <Card className="p-8 border-slate-100 shadow-sm space-y-6">
           <h3 className="font-black text-navy uppercase tracking-widest text-xs flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-rose-500" /> Pendências Técnicas
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Fluxo de Teste Operacional
           </h3>
           <ul className="space-y-4">
-            <li className="flex gap-4">
-              <div className="h-6 w-6 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0 text-xs font-bold">1</div>
-              <p className="text-sm text-slate-600 font-medium">
-                <span className="font-bold text-navy uppercase text-[10px] block mb-1">Mercado Pago</span>
-                Integração real de Webhooks via Edge Functions.
-              </p>
+            <li className="flex items-center gap-3">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span className="text-sm text-slate-600 font-medium">Cliente real salvo no Supabase</span>
             </li>
-            <li className="flex gap-4">
-              <div className="h-6 w-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0 text-xs font-bold">2</div>
-              <p className="text-sm text-slate-600 font-medium">
-                <span className="font-bold text-navy uppercase text-[10px] block mb-1">IA/OCR Real</span>
-                Conexão do componente de visão computacional.
-              </p>
+            <li className="flex items-center gap-3">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span className="text-sm text-slate-600 font-medium">Embarcação vinculada e salva</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span className="text-sm text-slate-600 font-medium">Processo estruturado com prioridade</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span className="text-sm text-slate-600 font-medium">Log de auditoria registrado</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <Zap className="h-4 w-4 text-amber-500" />
+              <span className="text-sm text-slate-600 font-medium italic">Dados refletidos no Dashboard principal</span>
             </li>
           </ul>
         </Card>
