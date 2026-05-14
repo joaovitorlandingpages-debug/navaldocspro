@@ -7,7 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import * as React from "react";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
@@ -40,7 +40,7 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: any; reset: () => void }) {
   const router = useRouter();
 
-  useEffect(() => {
+  React.useEffect(() => {
     console.error("Root Error Boundary caught:", error);
   }, [error]);
 
@@ -134,7 +134,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootContentWrapper({ children }: { children: React.ReactNode }) {
-  const queryClient = useMemo(() => new QueryClient(), []);
+  const queryClient = React.useMemo(() => new QueryClient(), []);
 
   return (
     <QueryClientProvider client={queryClient}>
