@@ -10,6 +10,7 @@ import {
 import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
+import { Toaster } from "@/components/ui/sonner";
 import { NewProcessProvider } from "@/hooks/useNewProcess";
 import { PlanLimitProvider } from "@/hooks/usePlanLimits";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -130,6 +131,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
           </ErrorBoundary>
         </QueryClientProvider>
         <Scripts />
+        <Toaster />
       </body>
     </html>
   );
