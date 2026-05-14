@@ -3,7 +3,7 @@ import {
   TrendingUp, Activity, Users, Clock, 
   FileText, Zap, BarChart3, PieChart, 
   ArrowUpRight, ArrowDownRight, Target,
-  Calendar, Layers, Cpu, ShieldCheck
+  Calendar, Layers, Cpu, ShieldCheck, Ship
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
