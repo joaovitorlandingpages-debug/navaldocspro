@@ -28,6 +28,9 @@ function Customers() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [companyId, setCompanyId] = useState<string | null>(null);
 
+  const { setIsNewProcessOpen } = useNewProcess();
+  const { files, deleteFile } = useFiles(selectedCustomer ? { customerId: selectedCustomer.id } : undefined);
+
   // Form State
   const [formData, setFormData] = useState({
     name: "",
