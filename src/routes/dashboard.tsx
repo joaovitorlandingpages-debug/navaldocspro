@@ -180,7 +180,7 @@ function DashboardLayout() {
   );
 }
 
-export const RouteContent = () => {
+export function RouteContent() {
   const { setIsNewProcessOpen } = useNewProcess();
   const stats = [
     { label: "Clientes Ativos", value: "42", icon: <Users className="text-blue-600" />, trend: "+12%" },
