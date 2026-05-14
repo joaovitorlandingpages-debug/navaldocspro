@@ -156,22 +156,42 @@ function CompanyTeamPage() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8">
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Razão Social</label>
-                      <input type="text" defaultValue="Almeida Engenharia Naval LTDA" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                   </div>
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">CNPJ</label>
-                      <input type="text" defaultValue="12.345.678/0001-90" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                   </div>
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">E-mail Administrativo</label>
-                      <input type="email" defaultValue="admin@almeidanaval.com.br" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                   </div>
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Telefone Corporativo</label>
-                      <input type="text" defaultValue="(11) 4004-9090" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                   </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Razão Social</label>
+                       <input 
+                         type="text" 
+                         value={company?.name || ""} 
+                         onChange={(e) => setCompany({...company, name: e.target.value})}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">CNPJ</label>
+                       <input 
+                         type="text" 
+                         value={company?.cnpj || ""} 
+                         onChange={(e) => setCompany({...company, cnpj: e.target.value})}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">E-mail Administrativo</label>
+                       <input 
+                         type="email" 
+                         value={company?.email || ""} 
+                         onChange={(e) => setCompany({...company, email: e.target.value})}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Telefone Corporativo</label>
+                       <input 
+                         type="text" 
+                         value={company?.phone || ""} 
+                         onChange={(e) => setCompany({...company, phone: e.target.value})}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                       />
+                    </div>
                    <div className="space-y-2 md:col-span-2">
                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Endereço Sede</label>
                       <input type="text" defaultValue="Av. Marítima, 1000 - Porto Central, Santos/SP" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
