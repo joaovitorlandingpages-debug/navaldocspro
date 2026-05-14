@@ -463,6 +463,8 @@ export function RouteContent() {
        </div>
     </div>
   );
+}
+
 function DashboardSkeleton() {
   return (
     <div className="space-y-8 animate-pulse">
