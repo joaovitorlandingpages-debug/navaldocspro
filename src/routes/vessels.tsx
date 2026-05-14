@@ -30,6 +30,14 @@ function Vessels() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [companyId, setCompanyId] = useState<string | null>(null);
 
+  const { setIsNewProcessOpen } = useNewProcess();
+  const { files, deleteFile } = useFiles(selectedVessel ? { vesselId: selectedVessel.id } : undefined);
+
+  const handleOpenDetails = (vessel: any) => {
+    setSelectedVessel(vessel);
+    setIsDetailsOpen(true);
+  };
+
   // Form State
   const [formData, setFormData] = useState({
     name: "",
