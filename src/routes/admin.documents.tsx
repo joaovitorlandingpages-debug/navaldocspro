@@ -3,8 +3,9 @@ import {
   FileStack, Search, Plus, Filter, 
   MoreVertical, Download, Globe, Lock, 
   Settings, RefreshCw, ToggleLeft, ToggleRight, Trash2,
-  Loader2, X, Upload
+  Loader2, X, Upload, FileCheck
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { useDocuments } from "@/hooks/useDocuments";
 import { format } from "date-fns";
