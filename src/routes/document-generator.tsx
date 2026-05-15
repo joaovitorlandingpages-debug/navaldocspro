@@ -223,7 +223,7 @@ function DocumentGenerator() {
                              <SelectValue placeholder="Selecione o template..." />
                           </SelectTrigger>
                           <SelectContent>
-                             {templates?.map(t => (
+                             {templates?.map((t: any) => (
                                <SelectItem key={t.id} value={t.id} className="font-bold">{t.name}</SelectItem>
                              ))}
                           </SelectContent>
