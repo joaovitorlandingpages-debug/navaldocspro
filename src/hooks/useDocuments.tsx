@@ -179,12 +179,89 @@ export const useDocuments = () => {
     },
   });
 
+  const { data: templateFields, isLoading: isLoadingFields } = useQuery({
+    queryKey: ["document-fields"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("document_fields")
+        .select("*");
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const upsertTemplateFields = useMutation({
+    mutationFn: async ({ templateId, fields }: { templateId: string; fields: any[] }) => {
+      // Delete existing fields for this template
+      const { error: deleteError } = await supabase
+        .from("document_fields")
+        .delete()
+        .eq("template_id", templateId);
+
+      if (deleteError) throw deleteError;
+
+      if (fields.length === 0) return [];
+
+      const { data, error } = await supabase
+        .from("document_fields")
+        .insert(
+          fields.map(f => ({
+            ...f,
+            template_id: templateId,
+            id: undefined, // Let DB generate ID
+          }))
+        )
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["document-fields"] });
+      toast.success("Campos do template atualizados!");
+    },
+  });
+
+  const deleteTemplate = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("document_templates")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["document-templates"] });
+      toast.success("Template excluído com sucesso!");
+    },
+  });
+
+  const toggleTemplateActive = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase
+        .from("document_templates")
+        .update({ is_active })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["document-templates"] });
+    },
+  });
+
   return {
     templates,
     isLoadingTemplates,
+    templateFields,
+    isLoadingFields,
     generatedDocuments,
     isLoadingGenerated,
     saveGeneratedDocument,
     createTemplate,
+    upsertTemplateFields,
+    deleteTemplate,
+    toggleTemplateActive,
   };
 };
