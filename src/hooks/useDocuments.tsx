@@ -41,12 +41,15 @@ export const useDocuments = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("document_templates")
-        .select("*")
+        .select(`
+          *,
+          fields:document_fields(*)
+        `)
         .eq("is_active", true)
         .order("name");
 
       if (error) throw error;
-      return data as DocumentTemplate[];
+      return data;
     },
     enabled: !!user,
   });
