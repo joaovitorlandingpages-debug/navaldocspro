@@ -172,6 +172,17 @@ function AdminDocuments() {
          </DialogContent>
        </Dialog>
 
+       <Dialog open={!!editingFieldsId} onOpenChange={(open) => !open && setEditingFieldsId(null)}>
+         <DialogContent className="max-w-2xl bg-slate-900 border-white/10 text-white rounded-[2rem] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-black uppercase tracking-tight">Configurar Mapeamento de Campos</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              {editingFieldsId && <DocumentFieldEditor templateId={editingFieldsId} />}
+            </div>
+         </DialogContent>
+       </Dialog>
+
                <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-[10px] border-b border-white/5 pb-2">
                     <span className="text-slate-500">Criado em</span>
