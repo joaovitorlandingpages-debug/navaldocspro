@@ -137,10 +137,15 @@ function AdminDocuments() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-800 border-white/10 text-white">
-                      <SelectItem value="Engenharia">Engenharia</SelectItem>
-                      <SelectItem value="Documentação">Documentação</SelectItem>
-                      <SelectItem value="Fiscalização">Fiscalização</SelectItem>
-                      <SelectItem value="Jurídico">Jurídico</SelectItem>
+                       <SelectItem value="Registro Inicial">Registro Inicial</SelectItem>
+                       <SelectItem value="Transferência">Transferência</SelectItem>
+                       <SelectItem value="Renovação">Renovação</SelectItem>
+                       <SelectItem value="Procuração">Procuração</SelectItem>
+                       <SelectItem value="Declaração">Declaração</SelectItem>
+                       <SelectItem value="Requerimento">Requerimento</SelectItem>
+                       <SelectItem value="GRU">GRU</SelectItem>
+                       <SelectItem value="Autorização">Autorização</SelectItem>
+                       <SelectItem value="Vistoria">Vistoria</SelectItem>
                     </SelectContent>
                   </Select>
                </div>
