@@ -86,17 +86,17 @@ function DocumentGenerator() {
     enabled: !!user
   });
 
-  const selectedTemplate = templates?.find(t => t.id === selectedTemplateId);
+  const selectedTemplate = templates?.find((t: any) => t.id === selectedTemplateId);
 
   // Auto-populate fields when template or entities change
   useEffect(() => {
     if (!selectedTemplate) return;
 
     const newValues = { ...formValues };
-    const customer = customers?.find(c => c.id === selectedCustomerId);
-    const vessel = vessels?.find(v => v.id === selectedVesselId);
-    const company = profile?.company;
-    const process = processes?.find(p => p.id === selectedProcessId);
+    const customer = customers?.find((c: any) => c.id === selectedCustomerId);
+    const vessel = vessels?.find((v: any) => v.id === selectedVesselId);
+    const company = (profile as any)?.company;
+    const process = processes?.find((p: any) => p.id === selectedProcessId);
 
     selectedTemplate.fields?.forEach((field: any) => {
       if (field.source_type === "customer" && customer) {
