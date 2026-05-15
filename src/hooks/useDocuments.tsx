@@ -119,6 +119,16 @@ export const useDocuments = () => {
         .single();
 
       if (error) throw error;
+
+      // Log the activity
+      await supabase.from("activity_logs").insert({
+        company_id: profile.company_id,
+        user_id: user.id,
+        action: "document_generated",
+        details: `Documento "${doc.name}" gerado com sucesso para o cliente.`,
+        module: "documents"
+      });
+
       return data;
     },
     onSuccess: () => {
