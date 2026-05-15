@@ -112,18 +112,19 @@ function AdminDocuments() {
           </button>
        </div>
 
-       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoadingTemplates ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-20 gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-red-500" />
-              <p className="text-slate-500 font-medium">Carregando templates...</p>
-            </div>
-          ) : docs.length === 0 ? (
-            <div className="col-span-full text-center py-20 border-2 border-dashed border-white/5 rounded-3xl">
-               <FileStack className="h-12 w-12 text-white/5 mx-auto mb-4" />
-               <p className="text-slate-500 font-medium">Nenhum template cadastrado.</p>
-            </div>
-          ) : docs.map((doc: any) => (
+       {activeTab === "templates" ? (
+         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+           {isLoadingTemplates ? (
+             <div className="col-span-full flex flex-col items-center justify-center py-20 gap-4">
+               <Loader2 className="h-8 w-8 animate-spin text-red-500" />
+               <p className="text-slate-500 font-medium">Carregando templates...</p>
+             </div>
+           ) : docs.length === 0 ? (
+             <div className="col-span-full text-center py-20 border-2 border-dashed border-white/5 rounded-3xl">
+                <FileStack className="h-12 w-12 text-white/5 mx-auto mb-4" />
+                <p className="text-slate-500 font-medium">Nenhum template cadastrado.</p>
+             </div>
+           ) : docs.map((doc: any) => (
             <div key={doc.id} className="bg-white/5 border border-white/10 p-6 rounded-3xl hover:border-red-500/30 transition-all group relative overflow-hidden backdrop-blur-md">
                {/* Overlay decorativo de versão */}
                <div className="absolute -right-2 -top-2 bg-black/40 px-4 py-2 rounded-bl-3xl border-l border-b border-white/5 text-[10px] font-mono text-red-400 font-black tracking-widest group-hover:bg-red-500 group-hover:text-white transition-all">
