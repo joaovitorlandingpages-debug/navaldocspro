@@ -199,15 +199,31 @@ function AdminDocuments() {
 
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                     <button title={doc.is_active ? 'Desativar' : 'Ativar'} className="transition-all">
+                     <button 
+                       onClick={() => toggleTemplateActive.mutate({ id: doc.id, is_active: !doc.is_active })}
+                       title={doc.is_active ? 'Desativar' : 'Ativar'} 
+                       className="transition-all"
+                     >
                         {doc.is_active ? <ToggleRight className="h-6 w-6 text-green-500" /> : <ToggleLeft className="h-6 w-6 text-slate-600" />}
                      </button>
                   </div>
                   <div className="flex gap-2">
-                    <button title="Atualizar Versão" className="p-2 bg-white/5 hover:bg-blue-500/20 rounded-xl text-slate-400 hover:text-blue-400 transition-all border border-white/5">
-                       <RefreshCw className="h-3.5 w-3.5" />
+                    <button 
+                      onClick={() => setEditingFieldsId(doc.id)}
+                      title="Configurar Campos" 
+                      className="p-2 bg-white/5 hover:bg-blue-500/20 rounded-xl text-slate-400 hover:text-blue-400 transition-all border border-white/5"
+                    >
+                       <Settings className="h-3.5 w-3.5" />
                     </button>
-                    <button title="Excluir" className="p-2 bg-white/5 hover:bg-red-500/20 rounded-xl text-slate-400 hover:text-red-500 transition-all border border-white/5">
+                    <button 
+                      onClick={() => {
+                        if (confirm("Deseja realmente excluir este template?")) {
+                          deleteTemplate.mutate(doc.id);
+                        }
+                      }}
+                      title="Excluir" 
+                      className="p-2 bg-white/5 hover:bg-red-500/20 rounded-xl text-slate-400 hover:text-red-500 transition-all border border-white/5"
+                    >
                        <Trash2 className="h-3.5 w-3.5" />
                     </button>
                     <button className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-slate-400 border border-white/5">
