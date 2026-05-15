@@ -265,7 +265,40 @@ function AdminDocuments() {
                </button>
             </div>
           ))}
-       </div>
+         </div>
+       ) : activeTab === "activity" ? (
+         <div className="bg-white/5 border border-white/10 rounded-[2.5rem] overflow-hidden">
+            <div className="p-6 border-b border-white/5 bg-white/5">
+               <h3 className="text-sm font-black text-white uppercase tracking-widest">Histórico de Automação</h3>
+            </div>
+            <div className="divide-y divide-white/5">
+               {logs?.length === 0 ? (
+                 <div className="p-20 text-center text-slate-500 italic text-xs uppercase tracking-widest">Nenhuma atividade registrada.</div>
+               ) : logs?.map((log: any) => (
+                 <div key={log.id} className="p-4 hover:bg-white/5 transition-all flex justify-between items-center group">
+                    <div className="flex items-center gap-4">
+                       <div className="h-10 w-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-400 group-hover:scale-110 transition-all border border-red-500/20">
+                          <FileCheck className="h-5 w-5" />
+                       </div>
+                       <div>
+                          <p className="text-sm font-bold text-white">{log.details}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{log.profile?.full_name || 'Sistema'}</span>
+                             <span className="text-slate-700 text-[10px]">•</span>
+                             <span className="text-[10px] font-mono text-slate-500">{format(new Date(log.created_at), "HH:mm - dd/MM/yyyy", { locale: ptBR })}</span>
+                          </div>
+                       </div>
+                    </div>
+                    <Badge className="bg-green-500/10 text-green-500 border-none font-black text-[9px] uppercase tracking-widest">Sucesso</Badge>
+                 </div>
+               ))}
+            </div>
+         </div>
+       ) : (
+         <div className="text-center py-20 text-slate-500 font-bold uppercase tracking-widest border border-dashed border-white/5 rounded-3xl">
+            Selecione uma aba para visualizar
+         </div>
+       )}
     </div>
   );
 }
