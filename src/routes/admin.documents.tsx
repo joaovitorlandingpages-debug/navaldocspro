@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { DocumentFieldEditor } from "@/components/DocumentFieldEditor";
 
 export const Route = createFileRoute("/admin/documents")({
   component: AdminDocuments,
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/admin/documents")({
 function AdminDocuments() {
   const [activeTab, setActiveTab] = useState("templates");
   const [isNewTemplateOpen, setIsNewTemplateOpen] = useState(false);
+  const [editingFieldsId, setEditingFieldsId] = useState<string | null>(null);
   const [newTemplate, setNewTemplate] = useState({
     name: "",
     category: "Engenharia",
@@ -30,7 +32,7 @@ function AdminDocuments() {
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
-  const { templates, isLoadingTemplates, createTemplate } = useDocuments();
+  const { templates, isLoadingTemplates, createTemplate, deleteTemplate, toggleTemplateActive } = useDocuments();
 
   const handleCreateTemplate = async () => {
     if (!newTemplate.name) {
