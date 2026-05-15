@@ -27,7 +27,7 @@ function AdminDocuments() {
   const [editingFieldsId, setEditingFieldsId] = useState<string | null>(null);
   const [newTemplate, setNewTemplate] = useState({
     name: "",
-    category: "Engenharia",
+    category: "Requerimento",
     description: ""
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
