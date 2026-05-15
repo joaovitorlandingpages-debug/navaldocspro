@@ -88,6 +88,12 @@ function AdminDocuments() {
           >
             Categorias
           </button>
+          <button 
+            onClick={() => setActiveTab("activity")}
+            className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'activity' ? 'bg-red-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            Log de Atividade
+          </button>
        </div>
 
        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
