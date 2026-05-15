@@ -34,6 +34,20 @@ function AdminDocuments() {
   
   const { templates, isLoadingTemplates, createTemplate, deleteTemplate, toggleTemplateActive } = useDocuments();
 
+  const { data: logs } = useQuery({
+    queryKey: ["admin-document-logs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("activity_logs")
+        .select(`*, profile:profiles(full_name)`)
+        .eq("module", "documents")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    }
+  });
+
   const handleCreateTemplate = async () => {
     if (!newTemplate.name) {
       toast.error("O nome do template é obrigatório");
