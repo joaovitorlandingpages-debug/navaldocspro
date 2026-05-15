@@ -20,7 +20,7 @@ function Documents() {
   const [uploadMode, setUploadMode] = useState<"standard" | "smart">("standard");
   const { generatedDocuments, isLoadingGenerated } = useDocuments();
 
-  const categories = ["Todos", "Memoriais", "ARTs", "Certificados", "Projetos", "Vistorias"];
+  const categories = ["Todos", "Registro Inicial", "Transferência", "Renovação", "Procuração", "Declaração", "Requerimento", "GRU", "Autorização", "Vistoria"];
   
   const docs = generatedDocuments || [];
 

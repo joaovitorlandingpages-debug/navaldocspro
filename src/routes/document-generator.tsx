@@ -4,14 +4,13 @@ import {
   ArrowRight, FileCheck, Clock, FileWarning,
   Eye, Save, RotateCcw, CheckCircle2,
   LayoutTemplate, Settings2, Trash2, Download,
-  Loader2
+  Loader2, Building2, Briefcase
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { 
@@ -28,27 +27,26 @@ import { usePlanLimits } from "@/hooks/usePlanLimits";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
-
-const docTypes = [
-  { id: "req-inscricao", title: "Requerimento de Inscrição", icon: <FileText className="h-4 w-4" /> },
-  { id: "transf-prop", title: "Transferência de Propriedade", icon: <UserIcon className="h-4 w-4" /> },
-  { id: "procuracao", title: "Procuração", icon: <FileCheck className="h-4 w-4" /> },
-  { id: "decl-resp", title: "Declaração de Responsabilidade", icon: <CheckCircle2 className="h-4 w-4" /> },
-  { id: "solic-vistoria", title: "Solicitação de Vistoria", icon: <Search className="h-4 w-4" /> },
-  { id: "guia-gru", title: "Guia / GRU", icon: <FileText className="h-4 w-4" /> },
-];
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/document-generator")({
   component: DocumentGenerator,
 });
 
 function DocumentGenerator() {
-  const [selectedType, setSelectedType] = useState("");
+  const { user } = useAuth();
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [selectedVesselId, setSelectedVesselId] = useState<string>("");
+  const [selectedProcessId, setSelectedProcessId] = useState<string>("");
+  
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const { checkLimit } = usePlanLimits();
-  const { saveGeneratedDocument } = useDocuments();
+  const { templates, saveGeneratedDocument } = useDocuments();
+
+  const [formValues, setFormValues] = useState<Record<string, string>>({});
 
   const { data: customers } = useQuery({
     queryKey: ["customers-list"],
@@ -68,61 +66,71 @@ function DocumentGenerator() {
     }
   });
 
-  const [formFields, setFormFields] = useState({
-    clientName: "Eng. Ricardo Almeida",
-    clientId: "123.456.789-00",
-    clientAddress: "Rua do Porto, 100 - Centro, Rio de Janeiro",
-    vesselName: "Phoenix",
-    vesselInscription: "9876543-2",
-    vesselEngine: "Wärtsilä 6R32",
-    vesselType: "Petroleiro",
-    vesselCategory: "Mar Aberto",
-    currentDate: new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
+  const { data: processes } = useQuery({
+    queryKey: ["processes-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("processes").select("*, customer:customers(name), vessel:vessels(name)");
+      if (error) throw error;
+      return data;
+    }
   });
 
-  const handleFieldChange = (field: string, value: string) => {
-    setFormFields(prev => ({ ...prev, [field]: value }));
-  };
+  const { data: profile } = useQuery({
+    queryKey: ["profile-info"],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase.from("profiles").select("*, company:companies(*)").eq("id", user.id).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user
+  });
 
-  const handleCustomerSelect = (customerId: string) => {
-    const customer = customers?.find((c: any) => c.id === customerId);
-    if (customer) {
-      setFormFields(prev => ({
-        ...prev,
-        clientName: customer.name,
-        clientId: customer.cpf_cnpj || "",
-        clientAddress: customer.address || ""
-      }));
-    }
-  };
+  const selectedTemplate = templates?.find((t: any) => t.id === selectedTemplateId);
 
-  const handleVesselSelect = (vesselId: string) => {
-    const vessel = vessels?.find((v: any) => v.id === vesselId);
-    if (vessel) {
-      setFormFields(prev => ({
-        ...prev,
-        vesselName: vessel.name,
-        vesselInscription: vessel.registration_number || "",
-        vesselType: vessel.vessel_type || "",
-        vesselEngine: vessel.engine || "",
-        vesselCategory: vessel.category || ""
-      }));
-    }
+  // Auto-populate fields when template or entities change
+  useEffect(() => {
+    if (!selectedTemplate) return;
+
+    const newValues = { ...formValues };
+    const customer = customers?.find((c: any) => c.id === selectedCustomerId);
+    const vessel = vessels?.find((v: any) => v.id === selectedVesselId);
+    const company = (profile as any)?.company;
+    const process = processes?.find((p: any) => p.id === selectedProcessId);
+
+    selectedTemplate.fields?.forEach((field: any) => {
+      if (field.source_type === "customer" && customer) {
+        newValues[field.field_name] = customer[field.source_field] || "";
+      } else if (field.source_type === "vessel" && vessel) {
+        newValues[field.field_name] = vessel[field.source_field] || "";
+      } else if (field.source_type === "company" && company) {
+        newValues[field.field_name] = company[field.source_field] || "";
+      } else if (field.source_type === "process" && process) {
+        newValues[field.field_name] = process[field.source_field] || "";
+      } else if (!newValues[field.field_name]) {
+        newValues[field.field_name] = "";
+      }
+    });
+
+    setFormValues(newValues);
+  }, [selectedTemplateId, selectedCustomerId, selectedVesselId, selectedProcessId]);
+
+  const handleFieldChange = (fieldName: string, value: string) => {
+    setFormValues(prev => ({ ...prev, [fieldName]: value }));
   };
 
   const generatePDF = async () => {
-    if (!previewRef.current) return;
+    if (!previewRef.current || !selectedTemplate) return;
     
     const limit = await checkLimit('documents');
     if (limit.reached) {
-      toast.error("Limite de documentos mensais atingido. Faça upgrade para continuar gerando.");
+      toast.error("Limite de documentos mensais atingido.");
       return;
     }
 
     setIsGenerating(true);
     
     try {
-      // Ensure we are in preview mode temporarily for better capture if needed
       const canvas = await html2canvas(previewRef.current, {
         scale: 2,
         useCORS: true,
@@ -143,16 +151,20 @@ function DocumentGenerator() {
       pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
       
       const pdfBlob = pdf.output("blob");
-      const pdfFile = new File([pdfBlob], `documento-${Date.now()}.pdf`, { type: "application/pdf" });
+      const pdfFile = new File([pdfBlob], `${selectedTemplate.name}-${Date.now()}.pdf`, { type: "application/pdf" });
       
       await saveGeneratedDocument.mutateAsync({
-        name: selectedType ? docTypes.find(t => t.id === selectedType)?.title || "Documento" : "Documento",
+        name: selectedTemplate.name,
+        template_id: selectedTemplate.id,
+        customer_id: selectedCustomerId || null,
+        vessel_id: selectedVesselId || null,
+        process_id: selectedProcessId || null,
         status: "completed",
         file: pdfFile,
-        metadata: { formFields }
+        metadata: { formValues }
       });
 
-      pdf.save(`NavalDocs_${Date.now()}.pdf`);
+      pdf.save(`NavalDocs_${selectedTemplate.name}_${Date.now()}.pdf`);
       toast.success("Documento gerado com sucesso!");
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
@@ -166,65 +178,99 @@ function DocumentGenerator() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-black text-navy tracking-tight uppercase">Gerador de Documentos</h1>
-          <p className="text-muted-foreground font-medium">Automação inteligente de documentação técnica naval.</p>
+          <h1 className="text-3xl font-black text-navy tracking-tight uppercase">Gerador Profissional</h1>
+          <p className="text-muted-foreground font-medium italic font-mono text-xs uppercase tracking-widest">Automação de Documentos Navais Pro</p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
-           <Button variant="outline" className="flex-1 md:flex-none h-12 rounded-xl border-slate-200 font-bold gap-2">
-              <RotateCcw className="h-4 w-4" /> Limpar Tudo
+           <Button 
+             variant="outline" 
+             onClick={() => {
+                setSelectedTemplateId("");
+                setSelectedCustomerId("");
+                setSelectedVesselId("");
+                setFormValues({});
+             }}
+             className="flex-1 md:flex-none h-12 rounded-xl border-slate-200 font-bold gap-2"
+           >
+              <RotateCcw className="h-4 w-4" /> Resetar
            </Button>
-           <Button className="flex-1 md:flex-none bg-primary text-white h-12 rounded-xl font-bold gap-2 hover:opacity-90 shadow-lg shadow-primary/20">
-              <Save className="h-4 w-4" /> Salvar Rascunho
+           <Button 
+             onClick={generatePDF}
+             disabled={!selectedTemplateId || isGenerating}
+             className="flex-1 md:flex-none bg-red-500 text-white h-12 rounded-xl font-bold gap-2 hover:bg-red-600 shadow-lg shadow-red-500/20"
+           >
+              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Gerar PDF Final
            </Button>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-12 gap-8">
         <div className="lg:col-span-5 space-y-8">
-           <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm space-y-8">
-              <div className="space-y-6">
+           <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm space-y-8 bg-white overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-[100%] -mr-10 -mt-10 opacity-50 z-0"></div>
+              
+              <div className="space-y-6 relative z-10">
                  <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
-                    <Settings2 className="h-4 w-4 text-primary" /> Configuração do Documento
+                    <Settings2 className="h-4 w-4 text-red-500" /> Configuração Master
                  </h3>
 
                  <div className="space-y-4">
                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tipo de Documento</Label>
-                       <Select onValueChange={setSelectedType}>
+                       <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Modelo Oficial</Label>
+                       <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
                           <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold">
-                             <SelectValue placeholder="Selecione o modelo..." />
+                             <SelectValue placeholder="Selecione o template..." />
                           </SelectTrigger>
                           <SelectContent>
-                             {docTypes.map(t => (
-                               <SelectItem key={t.id} value={t.id} className="font-bold">{t.title}</SelectItem>
+                             {templates?.map((t: any) => (
+                               <SelectItem key={t.id} value={t.id} className="font-bold">{t.name}</SelectItem>
                              ))}
                           </SelectContent>
                        </Select>
                     </div>
 
-                    <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cliente</Label>
-                       <Select onValueChange={handleCustomerSelect}>
-                          <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold">
-                             <SelectValue placeholder="Selecione o cliente..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                             {customers?.map((c: any) => (
-                               <SelectItem key={c.id} value={c.id} className="font-bold">{c.name}</SelectItem>
-                             ))}
-                          </SelectContent>
-                       </Select>
+                    <div className="grid grid-cols-2 gap-4">
+                       <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cliente</Label>
+                          <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
+                             <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold">
+                                <SelectValue placeholder="Selecione..." />
+                             </SelectTrigger>
+                             <SelectContent>
+                                {customers?.map((c: any) => (
+                                  <SelectItem key={c.id} value={c.id} className="font-bold">{c.name}</SelectItem>
+                                ))}
+                             </SelectContent>
+                          </Select>
+                       </div>
+
+                       <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Embarcação</Label>
+                          <Select value={selectedVesselId} onValueChange={setSelectedVesselId}>
+                             <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold">
+                                <SelectValue placeholder="Selecione..." />
+                             </SelectTrigger>
+                             <SelectContent>
+                                {vessels?.map((v: any) => (
+                                  <SelectItem key={v.id} value={v.id} className="font-bold">{v.name}</SelectItem>
+                                ))}
+                             </SelectContent>
+                          </Select>
+                       </div>
                     </div>
 
                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Embarcação</Label>
-                       <Select onValueChange={handleVesselSelect}>
+                       <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Processo Vinculado (Opcional)</Label>
+                       <Select value={selectedProcessId} onValueChange={setSelectedProcessId}>
                           <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold">
-                             <SelectValue placeholder="Selecione a embarcação..." />
+                             <SelectValue placeholder="Nenhum processo selecionado" />
                           </SelectTrigger>
                           <SelectContent>
-                             {vessels?.map((v: any) => (
-                               <SelectItem key={v.id} value={v.id} className="font-bold">{v.name}</SelectItem>
+                             {processes?.map((p: any) => (
+                               <SelectItem key={p.id} value={p.id} className="font-bold">
+                                  #{p.id.slice(0, 5)} - {p.customer?.name} ({p.vessel?.name})
+                               </SelectItem>
                              ))}
                           </SelectContent>
                        </Select>
@@ -232,83 +278,40 @@ function DocumentGenerator() {
                  </div>
               </div>
 
-              <div className="pt-8 border-t border-slate-50 space-y-6">
+              <div className="pt-8 border-t border-slate-50 space-y-6 relative z-10">
                  <div className="flex justify-between items-center">
                     <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
-                       <LayoutTemplate className="h-4 w-4 text-primary" /> Campos do Modelo
+                       <LayoutTemplate className="h-4 w-4 text-red-500" /> Preenchimento Dinâmico
                     </h3>
-                    <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase text-primary">Recarregar Dados</Button>
                  </div>
 
                  <ScrollArea className="h-[400px] pr-4">
-                    <div className="space-y-6">
-                       <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                             <Label className="text-[9px] font-black uppercase text-slate-400">Nome Requerente</Label>
-                             <Input 
-                               value={formFields.clientName} 
-                               onChange={(e) => handleFieldChange("clientName", e.target.value)}
-                               className="h-10 bg-slate-50 border-slate-200 rounded-lg text-xs font-bold" 
-                             />
-                          </div>
-                          <div className="space-y-1.5">
-                             <Label className="text-[9px] font-black uppercase text-slate-400">CPF / CNPJ</Label>
-                             <Input 
-                               value={formFields.clientId} 
-                               onChange={(e) => handleFieldChange("clientId", e.target.value)}
-                               className="h-10 bg-slate-50 border-slate-200 rounded-lg text-xs font-bold" 
-                             />
-                          </div>
-                          <div className="col-span-2 space-y-1.5">
-                             <Label className="text-[9px] font-black uppercase text-slate-400">Endereço Completo</Label>
-                             <Input 
-                               value={formFields.clientAddress} 
-                               onChange={(e) => handleFieldChange("clientAddress", e.target.value)}
-                               className="h-10 bg-slate-50 border-slate-200 rounded-lg text-xs font-bold" 
-                             />
-                          </div>
-                          <div className="space-y-1.5">
-                             <Label className="text-[9px] font-black uppercase text-slate-400">Embarcação</Label>
-                             <Input 
-                               value={formFields.vesselName} 
-                               onChange={(e) => handleFieldChange("vesselName", e.target.value)}
-                               className="h-10 bg-slate-50 border-slate-200 rounded-lg text-xs font-bold" 
-                             />
-                          </div>
-                          <div className="space-y-1.5">
-                             <Label className="text-[9px] font-black uppercase text-slate-400">Inscrição / IMO</Label>
-                             <Input 
-                               value={formFields.vesselInscription} 
-                               onChange={(e) => handleFieldChange("vesselInscription", e.target.value)}
-                               className="h-10 bg-slate-50 border-slate-200 rounded-lg text-xs font-bold" 
-                             />
-                          </div>
-                          <div className="space-y-1.5">
-                             <Label className="text-[9px] font-black uppercase text-slate-400">Motorização</Label>
-                             <Input 
-                               value={formFields.vesselEngine} 
-                               onChange={(e) => handleFieldChange("vesselEngine", e.target.value)}
-                               className="h-10 bg-slate-50 border-slate-200 rounded-lg text-xs font-bold" 
-                             />
-                          </div>
-                          <div className="space-y-1.5">
-                             <Label className="text-[9px] font-black uppercase text-slate-400">Data Atual</Label>
-                             <Input 
-                               value={formFields.currentDate} 
-                               onChange={(e) => handleFieldChange("currentDate", e.target.value)}
-                               className="h-10 bg-slate-50 border-slate-200 rounded-lg text-xs font-bold" 
-                             />
-                          </div>
-                       </div>
-                       
-                       <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
-                          <div className="flex items-center gap-2 mb-2">
-                             <FileWarning className="h-4 w-4 text-amber-500" />
-                             <span className="text-[10px] font-black uppercase text-amber-700 tracking-widest">Aviso de Preenchimento</span>
-                          </div>
-                          <p className="text-[11px] text-amber-600 font-medium">Os campos em cinza foram importados automaticamente do cadastro do cliente/embarcação.</p>
-                       </div>
-                    </div>
+                    {!selectedTemplateId ? (
+                      <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                         <FileText className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Selecione um modelo para editar os campos</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 gap-4">
+                           {selectedTemplate?.fields?.map((field: any) => (
+                             <div key={field.id} className="space-y-1.5 animate-in slide-in-from-left-4 duration-300">
+                                <Label className="text-[9px] font-black uppercase text-slate-400 flex items-center gap-2">
+                                   {field.field_label}
+                                   {field.source_type !== 'manual' && (
+                                     <Badge className="bg-slate-100 text-slate-500 border-none px-2 py-0 h-4 text-[8px] font-black uppercase">Auto</Badge>
+                                   )}
+                                </Label>
+                                <Input 
+                                  value={formValues[field.field_name] || ""} 
+                                  onChange={(e) => handleFieldChange(field.field_name, e.target.value)}
+                                  className="h-10 bg-slate-50 border-slate-200 rounded-lg text-xs font-bold focus:bg-white transition-all" 
+                                />
+                             </div>
+                           ))}
+                        </div>
+                      </div>
+                    )}
                  </ScrollArea>
               </div>
            </Card>
@@ -317,8 +320,8 @@ function DocumentGenerator() {
         <div className="lg:col-span-7 space-y-6">
            <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
               <div className="flex gap-2">
-                 <Badge className="bg-green-100 text-green-700 border-none px-3 py-1 font-black text-[9px] uppercase tracking-widest">Validado</Badge>
-                 <Badge className="bg-blue-100 text-blue-700 border-none px-3 py-1 font-black text-[9px] uppercase tracking-widest">Versão 2.1</Badge>
+                 <Badge className="bg-green-100 text-green-700 border-none px-3 py-1 font-black text-[9px] uppercase tracking-widest">IA Engine Ready</Badge>
+                 <Badge className="bg-navy/5 text-navy/60 border-none px-3 py-1 font-black text-[9px] uppercase tracking-widest">Preview A4</Badge>
               </div>
               <div className="flex gap-2">
                  <Button 
@@ -326,99 +329,110 @@ function DocumentGenerator() {
                    onClick={() => setIsPreviewMode(false)}
                    className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest"
                  >
-                    Editor
+                    Estrutura
                  </Button>
                  <Button 
                    variant={isPreviewMode ? "default" : "ghost"}
                    onClick={() => setIsPreviewMode(true)}
                    className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest"
                  >
-                    Visualizar A4
+                    Documento Final
                  </Button>
               </div>
            </div>
 
-           <div className="bg-slate-200/50 p-12 rounded-[2.5rem] flex justify-center overflow-hidden min-h-[800px] relative group">
-              <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center pointer-events-none opacity-[0.03] rotate-45 select-none">
-                 <span className="text-9xl font-black uppercase">PRÉVIA</span>
+           <div className="bg-slate-900 p-12 rounded-[2.5rem] flex justify-center overflow-hidden min-h-[800px] relative group shadow-2xl shadow-navy/20">
+              <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center pointer-events-none opacity-[0.02] rotate-45 select-none">
+                 <span className="text-9xl font-black text-white uppercase">NavalDocs Pro</span>
               </div>
 
-              <div 
-                ref={previewRef}
-                className="bg-white w-[595px] h-[842px] shadow-2xl p-16 flex flex-col relative animate-in zoom-in-95 duration-500 origin-top"
-              >
-                 <div className="text-center space-y-2 mb-12 border-b-2 border-slate-900 pb-8">
-                    <h2 className="text-xl font-black uppercase tracking-tight">Marinha do Brasil</h2>
-                    <h3 className="text-lg font-bold uppercase">Diretoria de Portos e Costas</h3>
-                    <p className="text-sm font-medium">Capitania dos Portos do Rio de Janeiro</p>
-                 </div>
-
-                 <div className="text-center mb-12">
-                    <h4 className="text-lg font-black uppercase underline decoration-2 underline-offset-8">
-                       {selectedType ? docTypes.find(t => t.id === selectedType)?.title : "Requerimento de Inscrição"}
-                    </h4>
-                 </div>
-
-                 <div className="space-y-6 text-sm leading-relaxed text-justify flex-grow">
-                    <p>
-                       Eu, <span className="font-bold underline">{formFields.clientName}</span>, inscrito no CPF sob o nº <span className="font-bold underline">{formFields.clientId}</span>, 
-                       residente e domiciliado em <span className="font-bold underline">{formFields.clientAddress}</span>, venho mui respeitosamente requerer a V.Sª. o que segue abaixo:
-                    </p>
-
-                    <p className="font-bold italic">
-                       Solicito a inscrição inicial da embarcação denominada <span className="underline">{formFields.vesselName}</span>, de tipo <span className="underline">{formFields.vesselType}</span>, 
-                       equipada com motorização <span className="underline">{formFields.vesselEngine}</span>, para navegação em categoria de <span className="underline">{formFields.vesselCategory}</span>.
-                    </p>
-
-                    <p>
-                       Declaro, sob as penas da lei, que as informações acima prestadas são a expressão da verdade, assumindo total responsabilidade pelas mesmas perante esta autoridade marítima.
-                    </p>
-
-                    <p className="pt-12">
-                       Nestes termos, <br />
-                       Pede deferimento.
-                    </p>
-                 </div>
-
-                 <div className="mt-auto space-y-12">
-                    <div className="text-right">
-                       <p className="text-sm font-medium">Rio de Janeiro, {formFields.currentDate}</p>
-                    </div>
-
-                    <div className="flex flex-col items-center">
-                       <div className="w-64 border-t border-slate-900 pt-2 text-center">
-                          <p className="text-sm font-bold uppercase">{formFields.clientName}</p>
-                          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest mt-1">Requerente / Outorgante</p>
-                       </div>
-                    </div>
-                 </div>
-
-                 {!isPreviewMode && (
-                   <div className="absolute inset-0 bg-primary/5 border-4 border-dashed border-primary/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      <div className="bg-primary text-white px-6 py-3 rounded-full font-black text-xs uppercase tracking-[0.2em] shadow-xl">
-                         Modo de Edição Ativo
+              {selectedTemplateId ? (
+                <div 
+                  ref={previewRef}
+                  className="bg-white w-[595px] h-[842px] shadow-2xl p-16 flex flex-col relative animate-in zoom-in-95 duration-500 origin-top"
+                >
+                   {/* Logo / Header */}
+                   <div className="flex justify-between items-start mb-12 border-b-2 border-slate-900 pb-8">
+                      <div className="space-y-1">
+                        <h2 className="text-xl font-black uppercase tracking-tighter text-navy leading-none">Marinha do Brasil</h2>
+                        <h3 className="text-xs font-bold uppercase text-slate-600 tracking-widest">Diretoria de Portos e Costas</h3>
+                        <p className="text-[10px] font-medium text-slate-400">Capitania dos Portos Regional</p>
+                      </div>
+                      <div className="h-16 w-16 bg-navy/5 rounded-full flex items-center justify-center border border-navy/10">
+                         <Ship className="h-8 w-8 text-navy opacity-20" />
                       </div>
                    </div>
-                 )}
-              </div>
-           </div>
 
-           <div className="flex justify-end gap-3 pt-4">
-              <Button 
-                size="lg" 
-                className="bg-navy text-white h-14 px-10 rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-xl shadow-navy/20 gap-3"
-              >
-                 <Eye className="h-5 w-5" /> Validar Documento
-              </Button>
-              <Button 
-                onClick={generatePDF}
-                disabled={isGenerating || !selectedType}
-                size="lg" 
-                className="bg-primary text-white h-14 px-10 rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-xl shadow-primary/20 gap-3"
-              >
-                 {isGenerating ? <Loader2 className="h-5 w-5 animate-spin" /> : <FileText className="h-5 w-5" />}
-                 Gerar PDF
-              </Button>
+                   <div className="text-center mb-16">
+                      <h4 className="text-lg font-black uppercase underline decoration-2 underline-offset-8 text-navy">
+                         {selectedTemplate?.name}
+                      </h4>
+                   </div>
+
+                   <div className="space-y-8 text-sm leading-relaxed text-justify flex-grow text-slate-800">
+                      <p>
+                         Eu, <span className="font-bold underline decoration-slate-300">{formValues['owner_name'] || formValues['clientName'] || '________________________'}</span>, 
+                         inscrito no CPF/CNPJ sob o nº <span className="font-bold underline decoration-slate-300">{formValues['owner_id'] || formValues['clientId'] || '________________'}</span>, 
+                         residente e domiciliado em <span className="font-bold underline decoration-slate-300">{formValues['owner_address'] || formValues['clientAddress'] || '________________________________________________'}</span>, 
+                         venho por meio desta solicitar o que segue em relação à embarcação <span className="font-bold underline decoration-slate-300">{formValues['vessel_name'] || '________________'}</span>.
+                      </p>
+
+                      <div className="p-8 bg-slate-50 border border-slate-100 rounded-2xl space-y-4">
+                         <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-200 pb-2 mb-4">Dados Técnicos Declarados</h5>
+                         <div className="grid grid-cols-2 gap-y-4 text-xs">
+                            <div className="space-y-1">
+                               <p className="text-[9px] font-bold text-slate-400 uppercase">Inscrição / TIE</p>
+                               <p className="font-black text-navy">{formValues['vessel_registration'] || formValues['vesselInscription'] || '---'}</p>
+                            </div>
+                            <div className="space-y-1">
+                               <p className="text-[9px] font-bold text-slate-400 uppercase">Tipo / Atividade</p>
+                               <p className="font-black text-navy">{formValues['vessel_type'] || '---'}</p>
+                            </div>
+                            <div className="space-y-1">
+                               <p className="text-[9px] font-bold text-slate-400 uppercase">Motorização</p>
+                               <p className="font-black text-navy">{formValues['vessel_engine'] || '---'}</p>
+                            </div>
+                            <div className="space-y-1">
+                               <p className="text-[9px] font-bold text-slate-400 uppercase">Categoria</p>
+                               <p className="font-black text-navy">{formValues['vessel_category'] || '---'}</p>
+                            </div>
+                         </div>
+                      </div>
+
+                      <p className="pt-4">
+                         Declaro sob as penas da lei que todas as informações acima prestadas são verdadeiras e me responsabilizo integralmente pela veracidade dos dados técnicos e pessoais aqui apresentados.
+                      </p>
+                   </div>
+
+                   <div className="mt-20 space-y-12">
+                      <div className="flex justify-between items-end">
+                         <div className="space-y-1">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Local e Data</p>
+                            <p className="text-xs font-black text-navy">Rio de Janeiro, {new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                         </div>
+                         <div className="w-64 border-t-2 border-slate-900 pt-2 text-center">
+                            <p className="text-[10px] font-black uppercase text-navy">Assinatura do Requerente</p>
+                         </div>
+                      </div>
+
+                      <div className="bg-navy/5 p-4 rounded-xl border border-navy/10 flex justify-between items-center">
+                         <div className="flex items-center gap-3">
+                            <Building2 className="h-4 w-4 text-navy" />
+                            <div className="leading-tight">
+                               <p className="text-[10px] font-black text-navy uppercase">{profile?.company?.name || 'NavalDocs Pro Service'}</p>
+                               <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Responsável Técnico: {profile?.full_name}</p>
+                            </div>
+                         </div>
+                         <p className="text-[8px] font-mono text-slate-400">HASH: {crypto.randomUUID().slice(0, 8).toUpperCase()}</p>
+                      </div>
+                   </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-white/20 gap-6">
+                   <LayoutTemplate className="h-24 w-24 opacity-20" />
+                   <p className="text-xl font-black uppercase tracking-widest">Aguardando Seleção de Modelo</p>
+                </div>
+              )}
            </div>
         </div>
       </div>

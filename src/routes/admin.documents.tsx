@@ -3,8 +3,9 @@ import {
   FileStack, Search, Plus, Filter, 
   MoreVertical, Download, Globe, Lock, 
   Settings, RefreshCw, ToggleLeft, ToggleRight, Trash2,
-  Loader2, X, Upload
+  Loader2, X, Upload, FileCheck
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { useDocuments } from "@/hooks/useDocuments";
 import { format } from "date-fns";
@@ -15,6 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { DocumentFieldEditor } from "@/components/DocumentFieldEditor";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/documents")({
   component: AdminDocuments,
@@ -23,14 +27,29 @@ export const Route = createFileRoute("/admin/documents")({
 function AdminDocuments() {
   const [activeTab, setActiveTab] = useState("templates");
   const [isNewTemplateOpen, setIsNewTemplateOpen] = useState(false);
+  const [editingFieldsId, setEditingFieldsId] = useState<string | null>(null);
   const [newTemplate, setNewTemplate] = useState({
     name: "",
-    category: "Engenharia",
+    category: "Requerimento",
     description: ""
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
-  const { templates, isLoadingTemplates, createTemplate } = useDocuments();
+  const { templates, isLoadingTemplates, createTemplate, deleteTemplate, toggleTemplateActive } = useDocuments();
+
+  const { data: logs } = useQuery({
+    queryKey: ["admin-document-logs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("activity_logs")
+        .select(`*, profile:profiles(full_name)`)
+        .eq("module", "documents")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const handleCreateTemplate = async () => {
     if (!newTemplate.name) {
@@ -86,20 +105,27 @@ function AdminDocuments() {
           >
             Categorias
           </button>
+          <button 
+            onClick={() => setActiveTab("activity")}
+            className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'activity' ? 'bg-red-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            Log de Atividade
+          </button>
        </div>
 
-       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoadingTemplates ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-20 gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-red-500" />
-              <p className="text-slate-500 font-medium">Carregando templates...</p>
-            </div>
-          ) : docs.length === 0 ? (
-            <div className="col-span-full text-center py-20 border-2 border-dashed border-white/5 rounded-3xl">
-               <FileStack className="h-12 w-12 text-white/5 mx-auto mb-4" />
-               <p className="text-slate-500 font-medium">Nenhum template cadastrado.</p>
-            </div>
-          ) : docs.map((doc: any) => (
+       {activeTab === "templates" ? (
+         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+           {isLoadingTemplates ? (
+             <div className="col-span-full flex flex-col items-center justify-center py-20 gap-4">
+               <Loader2 className="h-8 w-8 animate-spin text-red-500" />
+               <p className="text-slate-500 font-medium">Carregando templates...</p>
+             </div>
+           ) : docs.length === 0 ? (
+             <div className="col-span-full text-center py-20 border-2 border-dashed border-white/5 rounded-3xl">
+                <FileStack className="h-12 w-12 text-white/5 mx-auto mb-4" />
+                <p className="text-slate-500 font-medium">Nenhum template cadastrado.</p>
+             </div>
+           ) : docs.map((doc: any) => (
             <div key={doc.id} className="bg-white/5 border border-white/10 p-6 rounded-3xl hover:border-red-500/30 transition-all group relative overflow-hidden backdrop-blur-md">
                {/* Overlay decorativo de versão */}
                <div className="absolute -right-2 -top-2 bg-black/40 px-4 py-2 rounded-bl-3xl border-l border-b border-white/5 text-[10px] font-mono text-red-400 font-black tracking-widest group-hover:bg-red-500 group-hover:text-white transition-all">
@@ -135,10 +161,15 @@ function AdminDocuments() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-800 border-white/10 text-white">
-                      <SelectItem value="Engenharia">Engenharia</SelectItem>
-                      <SelectItem value="Documentação">Documentação</SelectItem>
-                      <SelectItem value="Fiscalização">Fiscalização</SelectItem>
-                      <SelectItem value="Jurídico">Jurídico</SelectItem>
+                       <SelectItem value="Registro Inicial">Registro Inicial</SelectItem>
+                       <SelectItem value="Transferência">Transferência</SelectItem>
+                       <SelectItem value="Renovação">Renovação</SelectItem>
+                       <SelectItem value="Procuração">Procuração</SelectItem>
+                       <SelectItem value="Declaração">Declaração</SelectItem>
+                       <SelectItem value="Requerimento">Requerimento</SelectItem>
+                       <SelectItem value="GRU">GRU</SelectItem>
+                       <SelectItem value="Autorização">Autorização</SelectItem>
+                       <SelectItem value="Vistoria">Vistoria</SelectItem>
                     </SelectContent>
                   </Select>
                </div>
@@ -170,6 +201,17 @@ function AdminDocuments() {
          </DialogContent>
        </Dialog>
 
+       <Dialog open={!!editingFieldsId} onOpenChange={(open) => !open && setEditingFieldsId(null)}>
+         <DialogContent className="max-w-2xl bg-slate-900 border-white/10 text-white rounded-[2rem] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-black uppercase tracking-tight">Configurar Mapeamento de Campos</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              {editingFieldsId && <DocumentFieldEditor templateId={editingFieldsId} />}
+            </div>
+         </DialogContent>
+       </Dialog>
+
                <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-[10px] border-b border-white/5 pb-2">
                     <span className="text-slate-500">Criado em</span>
@@ -186,15 +228,31 @@ function AdminDocuments() {
 
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                     <button title={doc.is_active ? 'Desativar' : 'Ativar'} className="transition-all">
+                     <button 
+                       onClick={() => toggleTemplateActive.mutate({ id: doc.id, is_active: !doc.is_active })}
+                       title={doc.is_active ? 'Desativar' : 'Ativar'} 
+                       className="transition-all"
+                     >
                         {doc.is_active ? <ToggleRight className="h-6 w-6 text-green-500" /> : <ToggleLeft className="h-6 w-6 text-slate-600" />}
                      </button>
                   </div>
                   <div className="flex gap-2">
-                    <button title="Atualizar Versão" className="p-2 bg-white/5 hover:bg-blue-500/20 rounded-xl text-slate-400 hover:text-blue-400 transition-all border border-white/5">
-                       <RefreshCw className="h-3.5 w-3.5" />
+                    <button 
+                      onClick={() => setEditingFieldsId(doc.id)}
+                      title="Configurar Campos" 
+                      className="p-2 bg-white/5 hover:bg-blue-500/20 rounded-xl text-slate-400 hover:text-blue-400 transition-all border border-white/5"
+                    >
+                       <Settings className="h-3.5 w-3.5" />
                     </button>
-                    <button title="Excluir" className="p-2 bg-white/5 hover:bg-red-500/20 rounded-xl text-slate-400 hover:text-red-500 transition-all border border-white/5">
+                    <button 
+                      onClick={() => {
+                        if (confirm("Deseja realmente excluir este template?")) {
+                          deleteTemplate.mutate(doc.id);
+                        }
+                      }}
+                      title="Excluir" 
+                      className="p-2 bg-white/5 hover:bg-red-500/20 rounded-xl text-slate-400 hover:text-red-500 transition-all border border-white/5"
+                    >
                        <Trash2 className="h-3.5 w-3.5" />
                     </button>
                     <button className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-slate-400 border border-white/5">
@@ -208,7 +266,40 @@ function AdminDocuments() {
                </button>
             </div>
           ))}
-       </div>
+         </div>
+       ) : activeTab === "activity" ? (
+         <div className="bg-white/5 border border-white/10 rounded-[2.5rem] overflow-hidden">
+            <div className="p-6 border-b border-white/5 bg-white/5">
+               <h3 className="text-sm font-black text-white uppercase tracking-widest">Histórico de Automação</h3>
+            </div>
+            <div className="divide-y divide-white/5">
+               {logs?.length === 0 ? (
+                 <div className="p-20 text-center text-slate-500 italic text-xs uppercase tracking-widest">Nenhuma atividade registrada.</div>
+               ) : logs?.map((log: any) => (
+                 <div key={log.id} className="p-4 hover:bg-white/5 transition-all flex justify-between items-center group">
+                    <div className="flex items-center gap-4">
+                       <div className="h-10 w-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-400 group-hover:scale-110 transition-all border border-red-500/20">
+                          <FileCheck className="h-5 w-5" />
+                       </div>
+                       <div>
+                          <p className="text-sm font-bold text-white">{log.details}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{log.profile?.full_name || 'Sistema'}</span>
+                             <span className="text-slate-700 text-[10px]">•</span>
+                             <span className="text-[10px] font-mono text-slate-500">{format(new Date(log.created_at), "HH:mm - dd/MM/yyyy", { locale: ptBR })}</span>
+                          </div>
+                       </div>
+                    </div>
+                    <Badge className="bg-green-500/10 text-green-500 border-none font-black text-[9px] uppercase tracking-widest">Sucesso</Badge>
+                 </div>
+               ))}
+            </div>
+         </div>
+       ) : (
+         <div className="text-center py-20 text-slate-500 font-bold uppercase tracking-widest border border-dashed border-white/5 rounded-3xl">
+            Selecione uma aba para visualizar
+         </div>
+       )}
     </div>
   );
 }
