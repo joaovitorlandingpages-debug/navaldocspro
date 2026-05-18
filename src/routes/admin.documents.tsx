@@ -130,7 +130,7 @@ function AdminDocuments() {
             <div key={doc.id} className="bg-white/5 border border-white/10 p-6 rounded-3xl hover:border-red-500/30 transition-all group relative overflow-hidden backdrop-blur-md">
                {/* Overlay decorativo de versão */}
                <div className="absolute -right-2 -top-2 bg-black/40 px-4 py-2 rounded-bl-3xl border-l border-b border-white/5 text-[10px] font-mono text-red-400 font-black tracking-widest group-hover:bg-red-500 group-hover:text-white transition-all">
-                  v{doc.version}.0
+                  v{doc.version}.0 | {doc.file_type?.toUpperCase()}
                </div>
 
                <div className="h-14 w-14 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-400 mb-6 group-hover:scale-110 transition-all border border-red-500/20 shadow-inner">
