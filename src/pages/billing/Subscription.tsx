@@ -23,7 +23,7 @@ export const Route = createFileRoute("/billing/subscription")({
   component: SubscriptionUsage,
 });
 
-function SubscriptionUsage() {
+export default function SubscriptionUsage() {
   const { subscription, checkLimit, isLoading } = usePlanLimits();
 
   const { data: usageData } = useQuery({
