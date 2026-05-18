@@ -110,21 +110,40 @@ function OnboardingFlow() {
                   <label className="text-[10px] font-black uppercase text-slate-400">CNPJ</label>
                   <Input 
                     value={formData.cnpj}
-                    onChange={e => setFormData({...formData, cnpj: e.target.value})}
+                    onChange={e => {
+                      let val = e.target.value.replace(/\D/g, "");
+                      if (val.length <= 14) {
+                        val = val.replace(/^(\d{2})(\d)/, "$1.$2")
+                                 .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+                                 .replace(/\.(\d{3})(\d)/, ".$1/$2")
+                                 .replace(/(\d{4})(\d)/, "$1-$2");
+                      }
+                      setFormData({...formData, cnpj: val});
+                    }}
                     placeholder="00.000.000/0001-00"
-                    className="h-12 border-slate-100 bg-slate-50/50"
+                    maxLength={18}
+                    className="h-12 border-slate-100 bg-slate-50/50 font-mono text-xs"
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase text-slate-400">Telefone</label>
                   <Input 
                     value={formData.phone}
-                    onChange={e => setFormData({...formData, phone: e.target.value})}
+                    onChange={e => {
+                      let val = e.target.value.replace(/\D/g, "");
+                      if (val.length <= 11) {
+                        val = val.replace(/^(\d{2})(\d)/, "($1) $2")
+                                 .replace(/(\d{5})(\d)/, "$1-$2");
+                      }
+                      setFormData({...formData, phone: val});
+                    }}
                     placeholder="(00) 00000-0000"
-                    className="h-12 border-slate-100 bg-slate-50/50"
+                    maxLength={15}
+                    className="h-12 border-slate-100 bg-slate-50/50 font-mono text-xs"
                   />
                 </div>
               </div>
+
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase text-slate-400">E-mail Corporativo</label>
                 <Input 

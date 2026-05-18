@@ -4,10 +4,11 @@ import {
   FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
-  AlertTriangle, ArrowUpCircle, HelpCircle
+  AlertTriangle, ArrowUpCircle, HelpCircle, Loader2
 } from "lucide-react";
-import { useState, useEffect, Suspense, lazy } from "react";
+import { useState, useEffect, Suspense, lazy, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
+
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { WelcomeTour } from "@/components/WelcomeTour";
@@ -17,6 +18,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useQuery } from "@tanstack/react-query";
+
 
 
 export const Route = createFileRoute("/dashboard")({
@@ -253,18 +257,32 @@ function DashboardLayout() {
 
 export function RouteContent() {
   const { setIsNewProcessOpen } = useNewProcess();
-  const stats = [
-    { label: "Clientes Ativos", value: "42", icon: <Users className="text-blue-600" />, trend: "+12%" },
-    { label: "Embarcações", value: "86", icon: <Ship className="text-cyan-600" />, trend: "+5%" },
-    { label: "Processos em Aberto", value: "18", icon: <ClipboardList className="text-amber-600" />, trend: "-2" },
-    { label: "Documentos Gerados", value: "1.240", icon: <FileText className="text-green-600" />, trend: "+124" },
-  ];
+  const navigate = useNavigate();
 
-  const recentProcesses = [
-    { id: "PR-2024-001", client: "Navegação Mar Azul", ship: "Petroleiro Phoenix", status: "Em Análise", date: "10/05/2024" },
-    { id: "PR-2024-002", client: "Estaleiro Central", ship: "Rebocador Titan", status: "Aguardando Docs", date: "09/05/2024" },
-    { id: "PR-2024-003", client: "Marina Yacht Club", ship: "Veleiro Aurora", status: "Concluído", date: "08/05/2024" },
-    { id: "PR-2024-004", client: "Pescados do Porto", ship: "Traineira Netuno", status: "Em Elaboração", date: "07/05/2024" },
+  const { profile } = useAuth();
+  const { data: statsData, isLoading: isLoadingStats } = useDashboardStats();
+  
+  const { data: recentProcesses } = useQuery({
+    queryKey: ["recent-processes", profile?.company_id],
+    queryFn: async () => {
+      if (!profile?.company_id) return [];
+      const { data, error } = await supabase
+        .from("processes")
+        .select("*, vessels(name), customers(name)")
+        .eq("company_id", profile.company_id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.company_id
+  });
+
+  const stats = [
+    { label: "Clientes Ativos", value: statsData?.activeCustomers.toString() || "0", icon: <Users className="text-blue-600" />, trend: statsData?.trends.customers || "+0%" },
+    { label: "Embarcações", value: statsData?.totalVessels.toString() || "0", icon: <Ship className="text-cyan-600" />, trend: statsData?.trends.vessels || "+0%" },
+    { label: "Processos em Aberto", value: statsData?.openProcesses.toString() || "0", icon: <ClipboardList className="text-amber-600" />, trend: statsData?.trends.processes || "Estável" },
+    { label: "Documentos Gerados", value: statsData?.generatedDocuments.toString() || "0", icon: <FileText className="text-green-600" />, trend: statsData?.trends.documents || "+0%" },
   ];
 
   return (
@@ -276,14 +294,18 @@ export function RouteContent() {
         </div>
         
         {/* Onboarding Checklist Quick Access */}
-        <div className="bg-primary/5 border border-primary/10 px-6 py-3 rounded-2xl flex items-center gap-4 animate-pulse">
-           <Rocket className="h-5 w-5 text-primary" />
-           <div>
+        {profile?.companies?.onboarding_status === 'pending' && (
+          <div className="bg-primary/5 border border-primary/10 px-6 py-3 rounded-2xl flex items-center gap-4 animate-pulse">
+            <Rocket className="h-5 w-5 text-primary" />
+            <div>
               <p className="text-[10px] font-black uppercase text-primary tracking-widest">Setup em progresso</p>
               <p className="text-xs font-bold text-navy">Conclua a configuração para liberar 100% da IA.</p>
-           </div>
-           <Button variant="ghost" size="sm" className="text-primary font-bold">Continuar</Button>
-        </div>
+            </div>
+            <Link to="/onboarding">
+              <Button variant="ghost" size="sm" className="text-primary font-bold">Continuar</Button>
+            </Link>
+          </div>
+        )}
         <div className="flex gap-2 w-full sm:w-auto">
           <Link 
             to="/document-generator"
@@ -302,6 +324,7 @@ export function RouteContent() {
           </button>
         </div>
       </div>
+
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -422,29 +445,41 @@ export function RouteContent() {
                           <th className="px-6 py-4 text-right">DATA</th>
                        </tr>
                      </thead>
-                     <tbody className="divide-y divide-slate-100">
-                       {recentProcesses.map((proc, idx) => (
-                         <tr key={idx} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => window.location.href=`/processes/${proc.id}`}>
-                           <td className="px-6 py-4 font-mono text-xs text-slate-400">{proc.id}</td>
-                           <td className="px-6 py-4">
-                              <div className="font-bold text-sm text-navy group-hover:text-primary transition-colors">{proc.client}</div>
-                              <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                <Ship className="h-3 w-3" /> {proc.ship}
-                              </div>
-                           </td>
-                           <td className="px-6 py-4">
-                              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase ${
-                                proc.status === 'Concluído' ? 'bg-green-100 text-green-700' : 
-                                proc.status === 'Aguardando Docs' ? 'bg-amber-100 text-amber-700' :
-                                'bg-blue-100 text-blue-700'
-                              }`}>
-                                 {proc.status}
-                              </span>
-                           </td>
-                           <td className="px-6 py-4 text-right text-xs text-slate-500">{proc.date}</td>
-                         </tr>
-                       ))}
-                     </tbody>
+                      <tbody className="divide-y divide-slate-100">
+                        {recentProcesses?.map((proc: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => navigate({ to: `/processes/${proc.id}` })}>
+                            <td className="px-6 py-4 font-mono text-[10px] text-slate-400 truncate max-w-[80px]">{proc.id.split('-')[0]}</td>
+                            <td className="px-6 py-4">
+                               <div className="font-bold text-sm text-navy group-hover:text-primary transition-colors">{proc.customers?.name || 'Cliente s/ nome'}</div>
+                               <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                 <Ship className="h-3 w-3" /> {proc.vessels?.name || 'Embarcação s/ nome'}
+                               </div>
+                            </td>
+                            <td className="px-6 py-4">
+                               <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase ${
+                                 proc.status === 'completed' ? 'bg-green-100 text-green-700' : 
+                                 proc.status === 'pending_docs' ? 'bg-amber-100 text-amber-700' :
+                                 'bg-blue-100 text-blue-700'
+                               }`}>
+                                  {proc.status === 'in_progress' ? 'Em Andamento' : 
+                                   proc.status === 'completed' ? 'Concluído' :
+                                   proc.status === 'pending_docs' ? 'Aguardando Docs' : proc.status}
+                               </span>
+                            </td>
+                            <td className="px-6 py-4 text-right text-[10px] font-bold text-slate-500">
+                               {new Date(proc.created_at).toLocaleDateString('pt-BR')}
+                            </td>
+                          </tr>
+                        ))}
+                        {(!recentProcesses || recentProcesses.length === 0) && (
+                          <tr>
+                            <td colSpan={4} className="px-6 py-12 text-center">
+                              <p className="text-sm text-slate-400 font-medium italic">Nenhum processo recente encontrado.</p>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+
                   </table>
                </div>
             </div>
@@ -459,26 +494,43 @@ export function RouteContent() {
                      <Users className="h-4 w-4 text-primary" /> Produtividade da Equipe
                   </h3>
                </div>
-               <div className="space-y-4">
-                  {[
-                    { name: "Ricardo Almeida", role: "Master", progress: 92, status: "online" },
-                    { name: "Mariana Souza", role: "Engenheira", progress: 78, status: "offline" },
-                    { name: "João Silva", role: "Despachante", progress: 65, status: "online" }
-                  ].map((member, i) => (
-                    <div key={i} className="space-y-2">
-                       <div className="flex justify-between items-end">
-                          <div className="flex items-center gap-2">
-                             <div className={`h-1.5 w-1.5 rounded-full ${member.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                             <p className="text-xs font-bold text-navy">{member.name}</p>
-                          </div>
-                          <span className="text-[10px] font-black text-slate-400">{member.progress}%</span>
-                       </div>
-                       <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
-                          <div className="h-full bg-primary/20 rounded-full" style={{ width: `${member.progress}%` }} />
-                       </div>
+                <div className="space-y-4">
+                  {isLoadingStats ? (
+                    <div className="flex justify-center p-4">
+                      <Loader2 className="h-4 w-4 animate-spin text-slate-300" />
                     </div>
-                  ))}
-               </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                        <div className="flex items-center gap-3">
+                           <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center text-white text-[10px] font-black uppercase">
+                              {profile?.name?.substring(0, 2).toUpperCase()}
+                           </div>
+                           <div>
+                              <p className="text-[10px] font-black text-navy uppercase tracking-widest">{profile?.name}</p>
+                              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{profile?.role}</p>
+                           </div>
+                        </div>
+                        <div className="h-2 w-2 bg-emerald-500 rounded-full" />
+                      </div>
+                      
+                      <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                         <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-2">Estatísticas Rápidas</p>
+                         <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-white p-2 rounded-lg text-center">
+                               <p className="text-[8px] text-slate-400 font-bold uppercase">OCR Mes</p>
+                               <p className="text-sm font-black text-navy">{statsData?.ocrUsage}</p>
+                            </div>
+                            <div className="bg-white p-2 rounded-lg text-center">
+                               <p className="text-[8px] text-slate-400 font-bold uppercase">Docs</p>
+                               <p className="text-sm font-black text-navy">{statsData?.generatedDocuments}</p>
+                            </div>
+                         </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                <Link to="/settings" className="mt-6 block text-center text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Gerenciar Equipe</Link>
             </div>
 
