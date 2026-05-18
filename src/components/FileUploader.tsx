@@ -13,7 +13,9 @@ interface FileUploaderProps {
   vesselId?: string;
   processId?: string;
   onSuccess?: (file: any) => void;
+  compact?: boolean;
 }
+
 
 export function FileUploader({ 
   bucket, 
@@ -21,8 +23,10 @@ export function FileUploader({
   customerId, 
   vesselId, 
   processId,
-  onSuccess 
+  onSuccess,
+  compact = false
 }: FileUploaderProps) {
+
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const { uploadFile } = useFiles();
