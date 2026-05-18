@@ -132,14 +132,12 @@ function Documents() {
                 </div>
 
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <a 
-                    href={doc.generated_file_url} 
-                    target="_blank" 
-                    rel="noreferrer"
+                  <button 
+                    onClick={() => handleViewDocument(doc)}
                     className="flex-grow py-2 rounded-lg bg-navy text-white text-[10px] font-bold hover:bg-navy/90 text-center"
                   >
                     Visualizar
-                  </a>
+                  </button>
                   <button className="p-2 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200">
                     <Download className="h-3 w-3" />
                   </button>
