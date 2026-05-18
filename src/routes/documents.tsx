@@ -18,7 +18,23 @@ function Documents() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadMode, setUploadMode] = useState<"standard" | "smart">("standard");
-  const { generatedDocuments, isLoadingGenerated } = useDocuments();
+  const { generatedDocuments, isLoadingGenerated, getSignedUrl } = useDocuments();
+  
+  const handleViewDocument = async (doc: any) => {
+    try {
+      if (doc.generated_file_url) {
+        // If it's a full URL (legacy), use it. If it's just a path, get signed URL.
+        const path = doc.generated_file_url.includes('http') 
+          ? doc.generated_file_url.split('/').slice(-2).join('/')
+          : doc.generated_file_url;
+        
+        const url = await getSignedUrl('generated-documents', path);
+        window.open(url, '_blank');
+      }
+    } catch (e) {
+      toast.error("Erro ao abrir documento.");
+    }
+  };
 
   const categories = ["Todos", "Registro Inicial", "Transferência", "Renovação", "Procuração", "Declaração", "Requerimento", "GRU", "Autorização", "Vistoria"];
   
