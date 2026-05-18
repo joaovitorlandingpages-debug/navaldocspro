@@ -440,11 +440,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               Próximo <ChevronRight className="h-4 w-4" />
             </Button>
           )}
-        </div>
       </DialogContent>
     </Dialog>
   );
 }
+
 
 function Settings(props: any) {
   return (
