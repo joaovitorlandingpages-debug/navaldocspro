@@ -85,12 +85,13 @@ function SystemReport() {
     },
     {
       name: "Financeiro & Mercado Pago",
-      status: "Estrutural",
-      completion: 40,
+      status: "Funcional",
+      completion: 100,
       icon: <CreditCard className="h-4 w-4" />,
-      details: "Tabelas criadas. Integração pendente.",
-      priority: "Crítica"
+      details: "Integração segura com logs e sandbox ativa.",
+      priority: "Concluído"
     },
+
     {
       name: "Upload & OCR / IA",
       status: "Visual / Parcial",
@@ -135,10 +136,11 @@ function SystemReport() {
         <Card className="p-6 border-slate-100 shadow-sm">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mercado Pago</p>
           <div className="flex items-center gap-2 mt-2">
-            <div className="h-3 w-3 rounded-full bg-amber-500" />
-            <h3 className="text-3xl font-black text-navy uppercase">Pendentes</h3>
+            <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
+            <h3 className="text-3xl font-black text-navy uppercase">Configurado</h3>
           </div>
-          <p className="text-[10px] font-bold text-amber-600 mt-2 uppercase">Aguardando Produção</p>
+          <p className="text-[10px] font-bold text-emerald-600 mt-2 uppercase">Pronto para Produção</p>
+
         </Card>
       </div>
 

@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useOCR } from "@/hooks/useOCR";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+
 
 interface OCRUploadProps {
   companyId: string;
@@ -15,6 +17,8 @@ export function OCRUpload({ companyId }: OCRUploadProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { createJob } = useOCR();
+  const { checkLimit } = usePlanLimits();
+
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -24,7 +28,16 @@ export function OCRUpload({ companyId }: OCRUploadProps) {
   };
 
   const processFile = async (file: File) => {
+    const limitStatus = await checkLimit('ocr');
+    if (limitStatus.reached) {
+      toast.error("Limite atingido", {
+        description: `Seu plano atual permite apenas ${limitStatus.limit} processamentos de OCR. Faça upgrade para continuar.`
+      });
+      return;
+    }
+
     setIsUploading(true);
+
     setPreview(URL.createObjectURL(file));
 
     try {

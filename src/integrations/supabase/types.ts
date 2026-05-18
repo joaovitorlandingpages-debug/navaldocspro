@@ -523,30 +523,41 @@ export type Database = {
       }
       payment_logs: {
         Row: {
+          company_id: string | null
           created_at: string
-          error_message: string | null
           event_type: string | null
           id: string
+          message: string | null
           payload: Json | null
           status: string | null
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
-          error_message?: string | null
           event_type?: string | null
           id?: string
+          message?: string | null
           payload?: Json | null
           status?: string | null
         }
         Update: {
+          company_id?: string | null
           created_at?: string
-          error_message?: string | null
           event_type?: string | null
           id?: string
+          message?: string | null
           payload?: Json | null
           status?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payment_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {

@@ -12,7 +12,9 @@ export interface Plan {
   customer_limit: number | null;
   document_limit: number | null;
   user_limit: number | null;
+  ocr_limit: number | null;
   features: string[];
+
 }
 
 export interface Subscription {

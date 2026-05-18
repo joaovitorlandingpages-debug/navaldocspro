@@ -25,7 +25,14 @@ serve(async (req) => {
     
     if (authError || !user) throw new Error("Não autorizado");
 
-    const companyId = user.user_metadata?.company_id;
+    // Fetch profile to get company_id
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("company_id")
+      .eq("id", user.id)
+      .single();
+
+    const companyId = profile?.company_id;
     if (!companyId) throw new Error("Empresa não vinculada ao usuário");
 
     // Get plan details
@@ -41,19 +48,36 @@ serve(async (req) => {
 
     const accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
     
+    // Log checkout attempt
+    await supabase.from("payment_logs").insert({
+        company_id: companyId,
+        event_type: "checkout_initiated",
+        status: "pending",
+        payload: { plan_id: planId, plan_name: plan.name }
+    });
+
     if (!accessToken) {
-      // For development, if token is not set, return a mock success
+      console.log("MERCADO_PAGO_ACCESS_TOKEN not set, using sandbox mock mode.");
+      
+      const mockInitPoint = `${origin}/billing/success?collection_id=mock_123&collection_status=approved&payment_id=mock_123&status=approved&external_reference=${companyId}:${planId}&payment_type=credit_card&merchant_order_id=mock_order_123&preference_id=mock_pref_123&site_id=MLB&processing_mode=aggregator&merchant_account_id=null`;
+
+      await supabase.from("payment_logs").insert({
+          company_id: companyId,
+          event_type: "checkout_created",
+          status: "success",
+          payload: { init_point: mockInitPoint, mode: "sandbox_mock" }
+      });
+
       return new Response(
         JSON.stringify({ 
-            init_point: `${origin}/billing/success`,
-            message: "MERCADO_PAGO_ACCESS_TOKEN não configurado. Redirecionando para sucesso (modo dev)." 
+            init_point: mockInitPoint,
+            message: "Modo Sandbox: Redirecionando para sucesso simulado." 
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Mercado Pago API Call (Actual Implementation Example)
-    /*
+    // Actual Mercado Pago API Call
     const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
       method: "POST",
       headers: {
@@ -62,7 +86,8 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         items: [{
-          title: `Plano NavalDocs Pro: ${plan.name}`,
+          id: plan.id,
+          title: `NavalDocs Pro: ${plan.name}`,
           unit_price: Number(plan.price),
           quantity: 1,
           currency_id: "BRL"
@@ -77,20 +102,37 @@ serve(async (req) => {
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercado-pago-webhook`
       })
     });
-    const mpData = await response.json();
-    return new Response(JSON.stringify({ init_point: mpData.init_point }), { status: 200, ... });
-    */
 
-    // Returning simulated checkout for now
+    const mpData = await response.json();
+
+    if (!response.ok) {
+        await supabase.from("payment_logs").insert({
+            company_id: companyId,
+            event_type: "checkout_failed",
+            status: "error",
+            payload: mpData,
+            message: "Falha ao criar preferência no Mercado Pago"
+        });
+        throw new Error(mpData.message || "Erro ao conectar com Mercado Pago");
+    }
+
+    await supabase.from("payment_logs").insert({
+        company_id: companyId,
+        event_type: "checkout_created",
+        status: "success",
+        payload: { preference_id: mpData.id, init_point: mpData.init_point }
+    });
+
     return new Response(
-      JSON.stringify({ init_point: `${origin}/billing/success` }),
+      JSON.stringify({ init_point: mpData.init_point }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (error: any) {
+    console.error("Error creating checkout:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
-
