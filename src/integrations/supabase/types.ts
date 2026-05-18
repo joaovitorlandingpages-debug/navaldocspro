@@ -55,8 +55,11 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          is_active: boolean | null
           logo_url: string | null
           name: string
+          onboarding_status: string | null
+          onboarding_step: number | null
           phone: string | null
           plan: string | null
           updated_at: string
@@ -66,8 +69,11 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_active?: boolean | null
           logo_url?: string | null
           name: string
+          onboarding_status?: string | null
+          onboarding_step?: number | null
           phone?: string | null
           plan?: string | null
           updated_at?: string
@@ -77,8 +83,11 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_active?: boolean | null
           logo_url?: string | null
           name?: string
+          onboarding_status?: string | null
+          onboarding_step?: number | null
           phone?: string | null
           plan?: string | null
           updated_at?: string
@@ -828,6 +837,86 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_health: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_check: string | null
+          latency_ms: number | null
+          module_name: string
+          status: string
+          updated_at: string | null
+          uptime_percentage: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_check?: string | null
+          latency_ms?: number | null
+          module_name: string
+          status?: string
+          updated_at?: string | null
+          uptime_percentage?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_check?: string | null
+          latency_ms?: number | null
+          module_name?: string
+          status?: string
+          updated_at?: string | null
+          uptime_percentage?: number | null
+        }
+        Relationships: []
+      }
+      tickets: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          description: string
+          id: string
+          priority: string
+          status: string
+          title: string
+          type: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          priority?: string
+          status?: string
+          title: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          priority?: string
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
