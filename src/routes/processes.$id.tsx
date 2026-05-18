@@ -1,23 +1,29 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { 
   ArrowLeft, Calendar, User, Ship, FileText, 
   Clock, CheckCircle2, AlertCircle, MoreHorizontal, 
   Download, Share2, PlayCircle, MessageSquare, Plus,
   FileCheck, History, Info, Zap, Bot, Eye, Trash2,
-  Image as ImageIcon
+  Image as ImageIcon, Send, Loader2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { useState, useEffect, useRef } from "react";
 import { useFiles } from "@/hooks/useFiles";
 import { FileUploader } from "@/components/FileUploader";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
 });
+
 
 function ProcessDetail() {
   const { id } = Route.useParams();
