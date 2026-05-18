@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
+import { ProcessChecklist } from "@/components/ProcessChecklist";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
@@ -122,48 +123,7 @@ function ProcessDetail() {
   ];
 
 
-  const getProcessRequirements = (type: string) => {
-    const common = [
-      { name: "RG / CPF Requerente", type: "PDF", size: "---", status: "Pendente" },
-      { name: "Comprovante de Residência", type: "PDF", size: "---", status: "Pendente" },
-      { name: "Procuração Assinada", type: "PDF", size: "---", status: "Pendente" },
-    ];
-
-    switch (type) {
-      case "Registro de Embarcação":
-        return [
-          ...common,
-          { name: "Título de Inscrição (TIE)", type: "PDF", size: "---", status: "Pendente" },
-          { name: "Memorial Descritivo", type: "PDF", size: "---", status: "Pendente" },
-          { name: "Certificado de Segurança (CSN)", type: "PDF", size: "---", status: "Pendente" },
-          { name: "GRU Paga (Registro)", type: "PDF", size: "---", status: "Pendente" }
-        ];
-      case "Tripulação":
-        return [
-          ...common,
-          { name: "CIR (Caderneta)", type: "PDF", size: "---", status: "Pendente" },
-          { name: "Certificado de Saúde", type: "PDF", size: "---", status: "Pendente" },
-          { name: "Rol de Equipagem", type: "PDF", size: "---", status: "Pendente" }
-        ];
-      case "Certificação Técnica":
-        return [
-          ...common,
-          { name: "Plano de Segurança", type: "PDF", size: "---", status: "Pendente" },
-          { name: "Laudo de Estabilidade", type: "PDF", size: "---", status: "Pendente" },
-          { name: "Relatório de Motores", type: "PDF", size: "---", status: "Pendente" }
-        ];
-      default:
-        return common;
-    }
-  };
-
-  const [documents, setDocuments] = useState(getProcessRequirements(process?.process_type || "Geral"));
-
-  useEffect(() => {
-    if (process?.process_type) {
-      setDocuments(getProcessRequirements(process.process_type));
-    }
-  }, [process?.process_type]);
+  // Replaced by ProcessChecklist component logic
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20 max-w-7xl mx-auto">
@@ -231,7 +191,8 @@ function ProcessDetail() {
             <Tabs defaultValue="overview" className="w-full">
                <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex-wrap h-auto">
                   <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geral</TabsTrigger>
-                  <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Documentos</TabsTrigger>
+                  <TabsTrigger value="requirements" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Checklist Inteligente</TabsTrigger>
+                  <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Arquivos</TabsTrigger>
                   <TabsTrigger value="comments" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
                     Notas {comments.length > 0 && <span className="bg-primary text-white text-[10px] px-1.5 rounded-full">{comments.length}</span>}
                   </TabsTrigger>
@@ -295,7 +256,11 @@ function ProcessDetail() {
                         O cliente solicitou urgência devido ao contrato de afretamento que inicia no próximo mês. Todos os documentos técnicos da embarcação Phoenix já foram conferidos. Falta apenas o comprovante de residência atualizado do sócio-administrador.
                      </p>
                   </div>
-                <TabsContent value="comments" className="animate-in fade-in duration-300">
+                  <TabsContent value="requirements" className="space-y-8 animate-in fade-in duration-300">
+                     <ProcessChecklist processId={id} processTypeId={process?.process_type_id} />
+                  </TabsContent>
+
+                  <TabsContent value="comments" className="animate-in fade-in duration-300">
                   <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col h-[600px] overflow-hidden">
                     <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
                       <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
