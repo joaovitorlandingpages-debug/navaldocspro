@@ -1,7 +1,7 @@
 {
   "name": "NavalDocs Pro",
   "short_name": "NavalDocs",
-  "description": "Plataforma de Gestão e Automação para Engenharia Naval",
+  "description": "Gestão e Automação Inteligente para Engenharia Naval",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#001B3D",
