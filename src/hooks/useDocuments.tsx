@@ -265,6 +265,17 @@ export const useDocuments = () => {
   });
 
   const { data: templateFields, isLoading: isLoadingFields } = useQuery({
+    queryKey: ["document-fields"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("document_fields")
+        .select("*");
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
 
   const upsertTemplateFields = useMutation({
     mutationFn: async ({ templateId, fields }: { templateId: string; fields: any[] }) => {
