@@ -46,9 +46,28 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
   const [scale, setScale] = useState(1.2);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
+  const [isSimulating, setIsSimulating] = useState(false);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const currentTemplate = templates?.find((t: any) => t.id === templateId);
+
+  // Mock data for simulation
+  const mockData: Record<string, string> = {
+    name: "JOÃO DA SILVA SAURO",
+    cpf_cnpj: "123.456.789-00",
+    rg: "12.345.678-9",
+    address: "Rua das Marinas, 123 - Angra dos Reis/RJ",
+    phone: "(24) 99999-9999",
+    email: "joao@exemplo.com.br",
+    registration_number: "381.123456-7",
+    vessel_type: "LANCHA",
+    engine_power: "250 HP",
+    length: "24 PÉS",
+    cnpj: "12.345.678/0001-90",
+    process_type: "INSCRIÇÃO INICIAL",
+    status: "EM ANDAMENTO",
+    created_at: new Date().toLocaleDateString(),
+  };
 
   useEffect(() => {
     async function loadPdf() {
