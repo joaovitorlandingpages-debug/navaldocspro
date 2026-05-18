@@ -82,9 +82,9 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
         
         const loadingTask = pdfjsLib.getDocument({
           url,
-          isEvalSupported: false, // Security: prevent script execution inside PDF
-          disableFontFace: false,
+          enableScripting: false, // Security: Disable JS execution in PDF
         });
+
 
         const pdf = await loadingTask.promise;
         setNumPages(pdf.numPages);
