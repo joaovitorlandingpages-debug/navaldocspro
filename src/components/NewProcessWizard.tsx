@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 
+import { useProcessRequirements } from "@/hooks/useProcessRequirements";
+
 interface NewProcessWizardProps {
   isOpen: boolean;
   onClose: () => void;
@@ -26,8 +28,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     type: "",
     client: "",
     vessel: "",
-    documents: [] as string[],
+    documents: [] as any[],
   });
+
+  const { requirements } = useProcessRequirements(formData.type);
 
   // Auto-save draft logic
   useEffect(() => {
@@ -196,36 +200,29 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           </div>
         );
       case 4:
-        const docs = [
-          { name: "Documento pessoal", status: "enviado" },
-          { name: "Comprovante de residência", status: "pendente" },
-          { name: "Documento da embarcação", status: "validado" },
-          { name: "Procuração", status: "precisa correção" },
-          { name: "GRU Paga", status: "pendente" },
-          { name: "Requerimento", status: "pendente" },
+        const docs = requirements || [
+          { template: { name: "Documento pessoal" }, is_mandatory: true, status: "pendente" },
+          { template: { name: "Comprovante de residência" }, is_mandatory: true, status: "pendente" },
+          { template: { name: "Documento da embarcação" }, is_mandatory: true, status: "pendente" },
         ];
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
             <p className="text-sm text-slate-500 mb-4">Checklist automático baseado no tipo: <span className="font-bold text-navy">{formData.type}</span></p>
             <ScrollArea className="h-[300px] pr-4">
               <div className="space-y-3">
-                {docs.map((doc, idx) => (
+                {docs.map((req: any, idx: number) => (
                   <div key={idx} className="p-4 rounded-xl border border-slate-100 flex items-center justify-between bg-white group hover:border-primary/20 transition-all">
                     <div className="flex items-center gap-3">
                       <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                        doc.status === 'validado' ? 'bg-green-100 text-green-600' :
-                        doc.status === 'enviado' ? 'bg-blue-100 text-blue-600' :
-                        doc.status === 'precisa correção' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-400'
+                        req.is_mandatory ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'
                       }`}>
-                        {doc.status === 'validado' ? <FileCheck className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                        <FileText className="h-4 w-4" />
                       </div>
                       <div>
-                         <p className="text-xs font-bold text-navy">{doc.name}</p>
+                         <p className="text-xs font-bold text-navy">{req.template?.name}</p>
                          <p className={`text-[10px] font-black uppercase ${
-                           doc.status === 'validado' ? 'text-green-600' :
-                           doc.status === 'enviado' ? 'text-blue-600' :
-                           doc.status === 'precisa correção' ? 'text-red-600' : 'text-slate-400'
-                         }`}>{doc.status}</p>
+                           req.is_mandatory ? 'text-amber-600' : 'text-slate-400'
+                         }`}>{req.is_mandatory ? 'Obrigatório' : 'Opcional'}</p>
                       </div>
                     </div>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full opacity-0 group-hover:opacity-100">

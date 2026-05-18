@@ -141,6 +141,66 @@ export type Database = {
           },
         ]
       }
+      document_audit_logs: {
+        Row: {
+          action: string
+          company_id: string
+          created_at: string | null
+          details: Json | null
+          document_id: string | null
+          id: string
+          ip_address: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          company_id: string
+          created_at?: string | null
+          details?: Json | null
+          document_id?: string | null
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          company_id?: string
+          created_at?: string | null
+          details?: Json | null
+          document_id?: string | null
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      document_categories: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       document_fields: {
         Row: {
           alignment: string | null
@@ -214,15 +274,18 @@ export type Database = {
       }
       document_templates: {
         Row: {
-          category: string
+          category: string | null
+          category_id: string | null
           company_id: string | null
           created_at: string
           description: string | null
+          document_type_io: string | null
           fields_config: Json | null
           file_type: string | null
           id: string
           is_active: boolean | null
           name: string
+          ocr_enabled: boolean | null
           process_type: string | null
           template_file_url: string | null
           updated_at: string
@@ -230,15 +293,18 @@ export type Database = {
           version_notes: string | null
         }
         Insert: {
-          category: string
+          category?: string | null
+          category_id?: string | null
           company_id?: string | null
           created_at?: string
           description?: string | null
+          document_type_io?: string | null
           fields_config?: Json | null
           file_type?: string | null
           id?: string
           is_active?: boolean | null
           name: string
+          ocr_enabled?: boolean | null
           process_type?: string | null
           template_file_url?: string | null
           updated_at?: string
@@ -246,15 +312,18 @@ export type Database = {
           version_notes?: string | null
         }
         Update: {
-          category?: string
+          category?: string | null
+          category_id?: string | null
           company_id?: string | null
           created_at?: string
           description?: string | null
+          document_type_io?: string | null
           fields_config?: Json | null
           file_type?: string | null
           id?: string
           is_active?: boolean | null
           name?: string
+          ocr_enabled?: boolean | null
           process_type?: string | null
           template_file_url?: string | null
           updated_at?: string
@@ -262,6 +331,13 @@ export type Database = {
           version_notes?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "document_templates_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "document_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "document_templates_company_id_fkey"
             columns: ["company_id"]
@@ -730,6 +806,38 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      process_type_requirements: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_mandatory: boolean | null
+          process_type: string
+          template_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_mandatory?: boolean | null
+          process_type: string
+          template_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_mandatory?: boolean | null
+          process_type?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_type_requirements_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
             referencedColumns: ["id"]
           },
         ]

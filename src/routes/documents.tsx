@@ -19,7 +19,8 @@ function Documents() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadMode, setUploadMode] = useState<"standard" | "smart">("standard");
-  const { generatedDocuments, isLoadingGenerated, getSignedUrl } = useDocuments();
+  const { generatedDocuments, isLoadingGenerated, getSignedUrl, categories: officialCategories } = useDocuments();
+  const [selectedCategory, setSelectedCategory] = useState("Todos");
   
   const handleViewDocument = async (doc: any) => {
     try {
@@ -37,9 +38,11 @@ function Documents() {
     }
   };
 
-  const categories = ["Todos", "Registro Inicial", "Transferência", "Renovação", "Procuração", "Declaração", "Requerimento", "GRU", "Autorização", "Vistoria"];
+  const categories = ["Todos", ...(officialCategories?.map((c: any) => c.name) || [])];
   
-  const docs = generatedDocuments || [];
+  const docs = generatedDocuments?.filter((doc: any) => 
+    selectedCategory === "Todos" || doc.template?.category === selectedCategory || doc.category === selectedCategory
+  ) || [];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
@@ -65,7 +68,11 @@ function Documents() {
         <div className="flex flex-col md:flex-row gap-6 items-center justify-between mb-8">
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
-              <button key={cat} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${cat === 'Todos' ? 'bg-navy text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+              <button 
+                key={cat} 
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${cat === selectedCategory ? 'bg-navy text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+              >
                 {cat}
               </button>
             ))}
