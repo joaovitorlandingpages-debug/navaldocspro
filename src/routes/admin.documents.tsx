@@ -271,6 +271,19 @@ function AdminDocuments() {
                     >
                        <Trash2 className="h-3.5 w-3.5" />
                     </button>
+                    <button 
+                      onClick={async () => {
+                        const path = doc.template_file_url?.split('/').slice(-2).join('/');
+                        if (path) {
+                          const { getSignedUrl } = useDocuments();
+                          const url = await getSignedUrl('document-templates', path);
+                          window.open(url, '_blank');
+                        }
+                      }}
+                      className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-slate-400 border border-white/5"
+                    >
+                       <Download className="h-3.5 w-3.5" />
+                    </button>
                     <button className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-slate-400 border border-white/5">
                        <MoreVertical className="h-3.5 w-3.5" />
                     </button>
