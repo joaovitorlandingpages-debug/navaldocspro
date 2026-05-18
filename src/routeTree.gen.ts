@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VesselsRouteImport } from './routes/vessels'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProcessesRouteImport } from './routes/processes'
@@ -47,6 +48,11 @@ import { Route as AdminBillingRouteImport } from './routes/admin.billing'
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
   path: '/vessels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StatusRoute = StatusRouteImport.update({
@@ -232,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
+  '/support': typeof SupportRoute
   '/vessels': typeof VesselsRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/companies': typeof AdminCompaniesRoute
@@ -266,6 +273,7 @@ export interface FileRoutesByTo {
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
+  '/support': typeof SupportRoute
   '/vessels': typeof VesselsRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/companies': typeof AdminCompaniesRoute
@@ -303,6 +311,7 @@ export interface FileRoutesById {
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
+  '/support': typeof SupportRoute
   '/vessels': typeof VesselsRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/companies': typeof AdminCompaniesRoute
@@ -341,6 +350,7 @@ export interface FileRouteTypes {
     | '/processes'
     | '/settings'
     | '/status'
+    | '/support'
     | '/vessels'
     | '/admin/billing'
     | '/admin/companies'
@@ -375,6 +385,7 @@ export interface FileRouteTypes {
     | '/processes'
     | '/settings'
     | '/status'
+    | '/support'
     | '/vessels'
     | '/admin/billing'
     | '/admin/companies'
@@ -411,6 +422,7 @@ export interface FileRouteTypes {
     | '/processes'
     | '/settings'
     | '/status'
+    | '/support'
     | '/vessels'
     | '/admin/billing'
     | '/admin/companies'
@@ -448,6 +460,7 @@ export interface RootRouteChildren {
   ProcessesRoute: typeof ProcessesRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   StatusRoute: typeof StatusRoute
+  SupportRoute: typeof SupportRoute
   VesselsRoute: typeof VesselsRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthSignupRoute: typeof AuthSignupRoute
@@ -464,6 +477,13 @@ declare module '@tanstack/react-router' {
       path: '/vessels'
       fullPath: '/vessels'
       preLoaderRoute: typeof VesselsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/status': {
@@ -767,6 +787,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProcessesRoute: ProcessesRouteWithChildren,
   SettingsRoute: SettingsRoute,
   StatusRoute: StatusRoute,
+  SupportRoute: SupportRoute,
   VesselsRoute: VesselsRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthSignupRoute: AuthSignupRoute,
@@ -778,3 +799,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
