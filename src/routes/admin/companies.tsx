@@ -1,20 +1,69 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Building, Search, Plus, Filter, Download, ExternalLink, ShieldCheck } from "lucide-react";
+import { 
+  Building, 
+  Search, 
+  Plus, 
+  Filter, 
+  Download, 
+  ExternalLink, 
+  ShieldCheck, 
+  Activity, 
+  TrendingUp, 
+  Users, 
+  AlertTriangle 
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/admin/companies")({
   component: AdminCompanies,
 });
 
 function AdminCompanies() {
-  const companies = [
-    { id: "1", name: "Estaleiro Navegar", email: "adm@navegar.com", plan: "Enterprise", status: "Ativa", users: 12 },
-    { id: "2", name: "Engenharia Marítima SA", email: "contato@maritima.com", plan: "Professional", status: "Ativa", users: 5 },
-    { id: "3", name: "Despachante Porto Sul", email: "porto@sul.com", plan: "Starter", status: "Pendente", users: 2 },
-  ];
+  const queryClient = useQueryClient();
+
+  const { data: companies, isLoading } = useQuery({
+    queryKey: ["admin-companies"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("companies")
+        .select(`
+          *,
+          profiles(count),
+          subscriptions(
+            *,
+            plan:plans(*)
+          )
+        `);
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const updatePlanMutation = useMutation({
+    mutationFn: async ({ companyId, planId }: { companyId: string, planId: string }) => {
+      const { error } = await supabase
+        .from("subscriptions")
+        .upsert({ 
+          company_id: companyId, 
+          plan_id: planId, 
+          status: 'active',
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'company_id' });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-companies"] });
+      toast.success("Plano atualizado manualmente");
+    }
+  });
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
@@ -52,39 +101,65 @@ function AdminCompanies() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {companies.map((company) => (
-                  <tr key={company.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-8 py-6">
-                       <div className="flex items-center gap-4">
-                           <div className="h-10 w-10 bg-slate-100 rounded-xl flex items-center justify-center text-navy font-bold">
-                              {company.name[0]}
-                           </div>
-                           <div>
-                              <p className="font-bold text-navy text-sm">{company.name}</p>
-                              <p className="text-[10px] text-slate-400 font-mono uppercase">ID: {company.id}</p>
-                           </div>
-                       </div>
-                    </td>
-                    <td className="px-8 py-6">
-                       <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-black text-[9px] uppercase tracking-widest">
-                          {company.plan}
-                       </Badge>
-                    </td>
-                    <td className="px-8 py-6">
-                       <div className="flex items-center gap-2">
-                          <div className={`h-1.5 w-1.5 rounded-full ${company.status === 'Ativa' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                          <span className="text-xs font-bold text-slate-600 uppercase">{company.status}</span>
-                       </div>
-                    </td>
-                    <td className="px-8 py-6 text-sm font-bold text-navy">{company.users}</td>
-                    <td className="px-8 py-6 text-right">
-                       <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase text-primary tracking-widest">
-                          <ExternalLink className="h-3 w-3 mr-1" /> Gerenciar
-                       </Button>
-                    </td>
-                  </tr>
-                ))}
+                {isLoading ? (
+                  <tr><td colSpan={5} className="p-12 text-center italic text-slate-400">Carregando instâncias...</td></tr>
+                ) : companies?.map((company: any) => {
+                  const sub = company.subscriptions?.[0];
+                  const plan = sub?.plan;
+                  
+                  return (
+                    <tr key={company.id} className="hover:bg-slate-50/50 transition-colors group">
+                      <td className="px-8 py-6">
+                         <div className="flex items-center gap-4">
+                             <div className="h-10 w-10 bg-navy text-white rounded-xl flex items-center justify-center font-bold">
+                                {company.name[0]}
+                             </div>
+                             <div>
+                                <p className="font-bold text-navy text-sm">{company.name}</p>
+                                <p className="text-[10px] text-slate-400 font-mono uppercase">ID: {company.id.slice(0,8)}</p>
+                             </div>
+                         </div>
+                      </td>
+                      <td className="px-8 py-6">
+                         <div className="space-y-1">
+                            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-black text-[9px] uppercase tracking-widest">
+                               {plan?.name || "Sem Plano"}
+                            </Badge>
+                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter italic">
+                               Ref: {sub?.mercado_pago_subscription_id || "Manual / Sandbox"}
+                            </p>
+                         </div>
+                      </td>
+                      <td className="px-8 py-6">
+                         <div className="flex items-center gap-2">
+                            <div className={`h-1.5 w-1.5 rounded-full ${sub?.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                            <span className="text-xs font-bold text-slate-600 uppercase tracking-widest">{sub?.status || 'Pendente'}</span>
+                         </div>
+                      </td>
+                      <td className="px-8 py-6">
+                         <div className="space-y-2">
+                            <div className="flex justify-between text-[10px] font-black uppercase text-navy">
+                               <span>{company.profiles?.[0]?.count || 0} Usuários</span>
+                               <span>Max {plan?.user_limit || '---'}</span>
+                            </div>
+                            <Progress value={plan?.user_limit ? ((company.profiles?.[0]?.count || 0) / plan.user_limit) * 100 : 0} className="h-1" />
+                         </div>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                         <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase text-primary tracking-widest">
+                               <Activity className="h-3 w-3 mr-1" /> Uso
+                            </Button>
+                            <Button variant="outline" size="sm" className="h-8 rounded-lg text-[9px] font-black uppercase">
+                               Gerenciar
+                            </Button>
+                         </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
+
            </table>
         </div>
       </Card>
