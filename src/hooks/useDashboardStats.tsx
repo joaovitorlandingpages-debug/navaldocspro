@@ -8,6 +8,8 @@ export interface DashboardStats {
   openProcesses: number;
   generatedDocuments: number;
   ocrUsage: number;
+  urgentProcesses: number;
+  missingDocuments: number;
   trends: {
     customers: string;
     vessels: string;
@@ -15,6 +17,7 @@ export interface DashboardStats {
     documents: string;
   };
 }
+
 
 export const useDashboardStats = () => {
   const { profile } = useAuth();
@@ -29,13 +32,15 @@ export const useDashboardStats = () => {
         { count: vesselsCount },
         { count: processesCount },
         { count: documentsCount },
-        { data: ocrData }
+        { data: ocrData },
+        { count: urgentCount }
       ] = await Promise.all([
         supabase.from("customers").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id),
         supabase.from("vessels").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id),
         supabase.from("processes").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).neq("status", "completed"),
         supabase.from("generated_documents").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id),
-        supabase.from("ocr_usage").select("total_jobs").eq("company_id", profile.company_id).eq("month", new Date().getMonth() + 1).maybeSingle()
+        supabase.from("ocr_usage").select("total_jobs").eq("company_id", profile.company_id).eq("month", new Date().getMonth() + 1).maybeSingle(),
+        supabase.from("processes").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).eq("priority", "high").neq("status", "completed")
       ]);
 
       return {
@@ -44,7 +49,10 @@ export const useDashboardStats = () => {
         openProcesses: processesCount || 0,
         generatedDocuments: documentsCount || 0,
         ocrUsage: ocrData?.total_jobs || 0,
+        urgentProcesses: urgentCount || 0,
+        missingDocuments: 3, // Mocked for now
         trends: {
+
           customers: "+0%",
           vessels: "+0%",
           processes: "Estável",
