@@ -2,8 +2,9 @@ import { useState } from "react";
 import { 
   Zap, FileText, Check, Loader2, 
   AlertCircle, ArrowRight, ShieldCheck,
-  RefreshCcw, Eye
+  RefreshCcw, Eye, User, Ship
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -114,55 +115,59 @@ export function SmartOCR() {
                            <p className="text-xs text-slate-400">Nossa IA está processando os dados e validando com a Marinha.</p>
                         </div>
                      </div>
-                   ) : (
-                     <>
-                       <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                             <p className="text-[9px] font-black uppercase text-slate-400">Nome Completo</p>
-                             <div className="p-3 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 flex items-center justify-between">
-                                <span>{currentFile?.extracted_data?.name || "-"}</span>
-                                <Check className="h-3 w-3 text-green-500" />
-                             </div>
-                          </div>
-                          <div className="space-y-1">
-                             <p className="text-[9px] font-black uppercase text-slate-400">CPF / Tax ID</p>
-                             <div className="p-3 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 flex items-center justify-between">
-                                <span>{currentFile?.extracted_data?.doc_number || "-"}</span>
-                                <Check className="h-3 w-3 text-green-500" />
-                             </div>
-                          </div>
-                          <div className="space-y-1">
-                             <p className="text-[9px] font-black uppercase text-slate-400">Data de Emissão</p>
-                             <div className="p-3 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100">
-                                {currentFile?.extracted_data?.issue_date || "-"}
-                             </div>
-                          </div>
-                          <div className="space-y-1">
-                             <p className="text-[9px] font-black uppercase text-slate-400">Data de Validade</p>
-                             <div className="p-3 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100">
-                                {currentFile?.extracted_data?.expiry_date || "-"}
-                             </div>
-                          </div>
-                       </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="space-y-1">
+                              <p className="text-[9px] font-black uppercase text-slate-400">Nome Completo</p>
+                              <div className="p-3 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 flex items-center justify-between">
+                                 <span>{currentFile?.extracted_data?.name || "-"}</span>
+                                 <Check className="h-3 w-3 text-green-500" />
+                              </div>
+                           </div>
+                           <div className="space-y-1">
+                              <p className="text-[9px] font-black uppercase text-slate-400">CPF / Tax ID</p>
+                              <div className="p-3 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 flex items-center justify-between group">
+                                 <span>{currentFile?.extracted_data?.doc_number || "-"}</span>
+                                 {!currentFile?.extracted_data?.doc_number && <AlertCircle className="h-3 w-3 text-red-500 animate-pulse" />}
+                                 {currentFile?.extracted_data?.doc_number && <Check className="h-3 w-3 text-green-500" />}
+                              </div>
+                           </div>
+                        </div>
 
-                       <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-center gap-3">
-                          <ShieldCheck className="h-5 w-5 text-blue-500" />
-                          <p className="text-[11px] text-blue-700 font-medium">Os dados foram validados cruzando com o banco de dados da Marinha e DPC.</p>
-                       </div>
+                        {currentFile?.status === 'validated' && (
+                          <div className="p-5 bg-primary/5 border border-primary/10 rounded-2xl space-y-4 animate-in slide-in-from-bottom-4">
+                             <p className="text-xs font-bold text-navy">Ações Sugeridas pela IA:</p>
+                             <div className="grid gap-2">
+                                <Button variant="outline" size="sm" className="justify-start gap-2 h-10 text-[10px] font-black uppercase border-primary/20 bg-white">
+                                   <User className="h-3.5 w-3.5 text-primary" /> Criar Cliente Automaticamente
+                                </Button>
+                                <Button variant="outline" size="sm" className="justify-start gap-2 h-10 text-[10px] font-black uppercase border-primary/20 bg-white">
+                                   <Ship className="h-3.5 w-3.5 text-primary" /> Vincular a Embarcação Detectada
+                                </Button>
+                             </div>
+                          </div>
+                        )}
 
-                       <div className="flex gap-2">
-                          <Button variant="outline" className="flex-1 rounded-xl h-12 font-bold gap-2 text-xs">
-                             <RefreshCcw className="h-4 w-4" /> Re-analisar
-                          </Button>
-                          <Button 
-                            onClick={applyData}
-                            className="flex-1 bg-primary text-white rounded-xl h-12 font-bold gap-2 text-xs"
-                          >
-                             <ArrowRight className="h-4 w-4" /> Aplicar ao Cadastro
-                          </Button>
-                       </div>
-                     </>
-                   )}
+                        <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-center gap-3">
+                           <ShieldCheck className="h-5 w-5 text-blue-500" />
+                           <p className="text-[11px] text-blue-700 font-medium">Os dados foram validados cruzando com o banco de dados da Marinha e DPC.</p>
+                        </div>
+
+                        <div className="flex gap-2">
+                           <Button variant="outline" className="flex-1 rounded-xl h-12 font-bold gap-2 text-xs">
+                              <RefreshCcw className="h-4 w-4" /> Re-analisar
+                           </Button>
+                           <Button 
+                             onClick={applyData}
+                             className="flex-1 bg-primary text-white rounded-xl h-12 font-bold gap-2 text-xs"
+                           >
+                              <ArrowRight className="h-4 w-4" /> Aplicar ao Processo
+                           </Button>
+                        </div>
+                      </>
+                    )}
+
                 </div>
              </Card>
            )}

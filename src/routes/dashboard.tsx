@@ -4,10 +4,11 @@ import {
   FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
-  AlertTriangle, ArrowUpCircle, HelpCircle, Loader2
+  AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning
 } from "lucide-react";
 import { useState, useEffect, Suspense, lazy, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
+
 
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ActivityFeed } from "@/components/ActivityFeed";
@@ -18,6 +19,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { Badge } from "@/components/ui/badge";
+
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useQuery } from "@tanstack/react-query";
 
@@ -326,23 +329,42 @@ export function RouteContent() {
       </div>
 
 
-      {/* Stats Grid */}
+      {/* Operational Critical Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {stats.map((stat, idx) => (
-          <div key={idx} className="bg-white p-5 md:p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+        <div className="bg-white p-6 rounded-3xl border-2 border-red-100 shadow-sm hover:shadow-md transition-all group">
+           <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-red-50 rounded-2xl group-hover:bg-red-500 group-hover:text-white transition-all text-red-600">
+                 <AlertCircle className="h-5 w-5" />
+              </div>
+              <Badge className="bg-red-100 text-red-700 border-none text-[9px]">Urgente</Badge>
+           </div>
+           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Processos Críticos</p>
+           <h3 className="text-3xl font-black text-navy mt-1">{statsData?.urgentProcesses || 0}</h3>
+        </div>
+
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+           <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all text-primary">
+                 <FileWarning className="h-5 w-5" />
+              </div>
+           </div>
+           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Docs Faltando</p>
+           <h3 className="text-3xl font-black text-navy mt-1">{statsData?.missingDocuments || 0}</h3>
+        </div>
+
+        {stats.slice(2).map((stat, idx) => (
+          <div key={idx} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
              <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all">
                    {stat.icon}
                 </div>
-                <span className={`text-[10px] font-black px-2 py-1 rounded-full ${stat.trend.startsWith('+') ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
-                  {stat.trend}
-                </span>
              </div>
-             <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">{stat.label}</p>
-             <h3 className="text-2xl md:text-3xl font-black text-navy mt-1">{stat.value}</h3>
+             <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
+             <h3 className="text-3xl font-black text-navy mt-1">{stat.value}</h3>
           </div>
         ))}
       </div>
+
 
       {/* Intelligence Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
