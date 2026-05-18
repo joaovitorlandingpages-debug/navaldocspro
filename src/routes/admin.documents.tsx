@@ -173,9 +173,24 @@ function AdminDocuments() {
                        <SelectItem value="Vistoria">Vistoria</SelectItem>
                     </SelectContent>
                   </Select>
-               </div>
-               <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-400">Upload do Arquivo (.docx / .pdf)</Label>
+                </div>
+                <div className="space-y-2">
+                   <Label className="text-xs font-bold text-slate-400">Tipo de Arquivo</Label>
+                   <Select 
+                     value={newTemplate.file_type}
+                     onValueChange={(v: "pdf" | "docx") => setNewTemplate({...newTemplate, file_type: v})}
+                   >
+                     <SelectTrigger className="bg-white/5 border-white/10 text-white h-12 rounded-xl">
+                       <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent className="bg-slate-800 border-white/10 text-white">
+                        <SelectItem value="pdf">PDF (Preenchimento por Coordenadas)</SelectItem>
+                        <SelectItem value="docx">DOCX (Preenchimento por Variáveis)</SelectItem>
+                     </SelectContent>
+                   </Select>
+                </div>
+                <div className="space-y-2">
+                   <Label className="text-xs font-bold text-slate-400">Upload do Modelo ({newTemplate.file_type.toUpperCase()})</Label>
                   <div className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-red-500/50 transition-all cursor-pointer relative group">
                     <input 
                       type="file" 
