@@ -44,7 +44,7 @@ function DocumentGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const { checkLimit } = usePlanLimits();
-  const { templates, saveGeneratedDocument } = useDocuments();
+  const { templates, saveGeneratedDocument, generateDocument } = useDocuments();
 
   const [formValues, setFormValues] = useState<Record<string, string>>({});
 
