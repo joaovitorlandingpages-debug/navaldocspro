@@ -10,7 +10,8 @@ import {
   LogOut,
   CreditCard,
   History,
-  FileText
+  FileText,
+  Sparkles
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -151,6 +152,26 @@ export function AdminDashboardView() {
             <p className="text-[10px] font-bold text-emerald-600 mt-2 uppercase">{stat.trend}</p>
           </div>
         ))}
+      </div>
+
+      <div className="bg-primary/5 border border-primary/20 p-6 rounded-[2rem] flex items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+            <Sparkles className="h-6 w-6" />
+          </div>
+          <div>
+            <h4 className="text-[10px] font-black text-primary uppercase tracking-widest">Dica Estratégica de Marketing</h4>
+            <p className="text-sm text-navy/80 font-medium mt-1">
+              Assim como em clínicas, perfis de engenharia naval no Google Meu Negócio performam melhor com 1-2 postagens de "Atualizações" semanais (como vistorias concluídas ou dicas de NORMAM).
+            </p>
+          </div>
+        </div>
+        <button 
+          onClick={() => window.open('https://business.google.com/', '_blank')}
+          className="bg-primary text-white text-[10px] font-black uppercase tracking-widest px-6 py-3 rounded-xl hover:scale-105 transition-all flex-shrink-0"
+        >
+          Acessar GMB
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
