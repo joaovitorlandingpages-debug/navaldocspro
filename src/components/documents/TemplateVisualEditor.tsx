@@ -52,7 +52,7 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const currentTemplate = templates?.find((t) => t.id === templateId);
+  const currentTemplate = templates?.find((t: any) => t.id === templateId);
 
   useEffect(() => {
     async function loadPdf() {
