@@ -27,7 +27,10 @@ export interface DocumentTemplate {
   id: string;
   company_id: string | null;
   name: string;
-  category: string;
+  category: string | null;
+  category_id?: string | null;
+  document_type_io?: 'in' | 'out';
+  ocr_enabled?: boolean;
   process_type: string | null;
   description: string | null;
   template_file_url: string | null;
@@ -69,7 +72,8 @@ export const useDocuments = () => {
         .from("document_templates")
         .select(`
           *,
-          fields:document_fields(*)
+          fields:document_fields(*),
+          category_details:document_categories(*)
         `);
 
       if (profile?.role !== 'admin_master') {
@@ -247,18 +251,20 @@ export const useDocuments = () => {
     },
   });
 
-  const { data: templateFields, isLoading: isLoadingFields } = useQuery({
-    queryKey: ["document-fields"],
+  const { data: categories, isLoading: isLoadingCategories } = useQuery({
+    queryKey: ["document-categories"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("document_fields")
-        .select("*");
-
+        .from("document_categories")
+        .select("*")
+        .order("name");
       if (error) throw error;
       return data;
     },
     enabled: !!user,
   });
+
+  const { data: templateFields, isLoading: isLoadingFields } = useQuery({
 
   const upsertTemplateFields = useMutation({
     mutationFn: async ({ templateId, fields }: { templateId: string; fields: any[] }) => {
@@ -383,6 +389,8 @@ export const useDocuments = () => {
     isLoadingTemplates,
     templateFields,
     isLoadingFields,
+    categories,
+    isLoadingCategories,
     generatedDocuments,
     isLoadingGenerated,
     saveGeneratedDocument,
