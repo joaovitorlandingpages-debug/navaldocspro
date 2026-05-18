@@ -4,7 +4,7 @@ import {
   FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
-  AlertTriangle, ArrowUpCircle
+  AlertTriangle, ArrowUpCircle, HelpCircle
 } from "lucide-react";
 import { useState, useEffect, Suspense, lazy } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -13,6 +13,7 @@ import { ActivityFeed } from "@/components/ActivityFeed";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 
@@ -32,8 +33,12 @@ function DashboardLayout() {
 
 
   useEffect(() => {
-    if (!loading && !profile) {
-      navigate({ to: "/auth/login" });
+    if (!loading) {
+      if (!profile) {
+        navigate({ to: "/auth/login" });
+      } else if (profile.companies?.onboarding_status === 'pending' && window.location.pathname !== '/onboarding') {
+        navigate({ to: "/onboarding" });
+      }
     }
   }, [profile, loading, navigate]);
 
@@ -85,6 +90,7 @@ function DashboardLayout() {
     { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
     { name: "Assinatura", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
+    { name: "Suporte", icon: <HelpCircle className="h-5 w-5" />, path: "/support" },
   ];
 
   return (
@@ -249,6 +255,16 @@ export function RouteContent() {
         <div>
           <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Dashboard</h1>
           <p className="text-muted-foreground font-medium">Bem-vindo ao centro de operações NavalDocs.</p>
+        </div>
+        
+        {/* Onboarding Checklist Quick Access */}
+        <div className="bg-primary/5 border border-primary/10 px-6 py-3 rounded-2xl flex items-center gap-4 animate-pulse">
+           <Rocket className="h-5 w-5 text-primary" />
+           <div>
+              <p className="text-[10px] font-black uppercase text-primary tracking-widest">Setup em progresso</p>
+              <p className="text-xs font-bold text-navy">Conclua a configuração para liberar 100% da IA.</p>
+           </div>
+           <Button variant="ghost" size="sm" className="text-primary font-bold">Continuar</Button>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Link 

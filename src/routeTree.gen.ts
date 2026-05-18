@@ -10,9 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VesselsRouteImport } from './routes/vessels'
+import { Route as SupportRouteImport } from './routes/support'
+import { Route as StatusRouteImport } from './routes/status'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PlansRouteImport } from './routes/plans'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as OcrCenterRouteImport } from './routes/ocr-center'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as DocumentsRouteImport } from './routes/documents'
@@ -48,6 +51,16 @@ const VesselsRoute = VesselsRouteImport.update({
   path: '/vessels',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -61,6 +74,11 @@ const ProcessesRoute = ProcessesRouteImport.update({
 const PlansRoute = PlansRouteImport.update({
   id: '/plans',
   path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OcrCenterRoute = OcrCenterRouteImport.update({
@@ -222,9 +240,12 @@ export interface FileRoutesByFullPath {
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
   '/ocr-center': typeof OcrCenterRoute
+  '/onboarding': typeof OnboardingRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/status': typeof StatusRoute
+  '/support': typeof SupportRoute
   '/vessels': typeof VesselsRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/companies': typeof AdminCompaniesRoute
@@ -255,9 +276,12 @@ export interface FileRoutesByTo {
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
   '/ocr-center': typeof OcrCenterRoute
+  '/onboarding': typeof OnboardingRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/status': typeof StatusRoute
+  '/support': typeof SupportRoute
   '/vessels': typeof VesselsRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/companies': typeof AdminCompaniesRoute
@@ -291,9 +315,12 @@ export interface FileRoutesById {
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
   '/ocr-center': typeof OcrCenterRoute
+  '/onboarding': typeof OnboardingRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/status': typeof StatusRoute
+  '/support': typeof SupportRoute
   '/vessels': typeof VesselsRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/companies': typeof AdminCompaniesRoute
@@ -328,9 +355,12 @@ export interface FileRouteTypes {
     | '/documents'
     | '/home'
     | '/ocr-center'
+    | '/onboarding'
     | '/plans'
     | '/processes'
     | '/settings'
+    | '/status'
+    | '/support'
     | '/vessels'
     | '/admin/billing'
     | '/admin/companies'
@@ -361,9 +391,12 @@ export interface FileRouteTypes {
     | '/documents'
     | '/home'
     | '/ocr-center'
+    | '/onboarding'
     | '/plans'
     | '/processes'
     | '/settings'
+    | '/status'
+    | '/support'
     | '/vessels'
     | '/admin/billing'
     | '/admin/companies'
@@ -396,9 +429,12 @@ export interface FileRouteTypes {
     | '/documents'
     | '/home'
     | '/ocr-center'
+    | '/onboarding'
     | '/plans'
     | '/processes'
     | '/settings'
+    | '/status'
+    | '/support'
     | '/vessels'
     | '/admin/billing'
     | '/admin/companies'
@@ -432,9 +468,12 @@ export interface RootRouteChildren {
   DocumentsRoute: typeof DocumentsRoute
   HomeRoute: typeof HomeRoute
   OcrCenterRoute: typeof OcrCenterRoute
+  OnboardingRoute: typeof OnboardingRoute
   PlansRoute: typeof PlansRoute
   ProcessesRoute: typeof ProcessesRouteWithChildren
   SettingsRoute: typeof SettingsRoute
+  StatusRoute: typeof StatusRoute
+  SupportRoute: typeof SupportRoute
   VesselsRoute: typeof VesselsRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthSignupRoute: typeof AuthSignupRoute
@@ -451,6 +490,20 @@ declare module '@tanstack/react-router' {
       path: '/vessels'
       fullPath: '/vessels'
       preLoaderRoute: typeof VesselsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -472,6 +525,13 @@ declare module '@tanstack/react-router' {
       path: '/plans'
       fullPath: '/plans'
       preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ocr-center': {
@@ -743,9 +803,12 @@ const rootRouteChildren: RootRouteChildren = {
   DocumentsRoute: DocumentsRoute,
   HomeRoute: HomeRoute,
   OcrCenterRoute: OcrCenterRoute,
+  OnboardingRoute: OnboardingRoute,
   PlansRoute: PlansRoute,
   ProcessesRoute: ProcessesRouteWithChildren,
   SettingsRoute: SettingsRoute,
+  StatusRoute: StatusRoute,
+  SupportRoute: SupportRoute,
   VesselsRoute: VesselsRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthSignupRoute: AuthSignupRoute,

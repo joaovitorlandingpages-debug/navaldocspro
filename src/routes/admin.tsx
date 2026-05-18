@@ -13,6 +13,8 @@ import {
   FileText
 } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -94,18 +96,34 @@ function AdminLayout() {
 }
 
 export function AdminDashboardView() {
+  const { data: companies } = useQuery({
+    queryKey: ["admin_companies_summary"],
+    queryFn: async () => {
+      const { data } = await supabase.from("companies").select("*");
+      return data;
+    },
+  });
+
+  const { data: health } = useQuery({
+    queryKey: ["system_health_summary"],
+    queryFn: async () => {
+      const { data } = await supabase.from("system_health").select("*");
+      return data;
+    },
+  });
+
   const stats = [
-    { label: "Empresas", value: "12", trend: "+2 este mês" },
-    { label: "Usuários Ativos", value: "156", trend: "+12%" },
-    { label: "Documentos", value: "4.2k", trend: "Recorde" },
-    { label: "Faturamento", value: "R$ 42k", trend: "+8%" },
+    { label: "Empresas", value: companies?.length || "0", trend: "Ativas no sistema" },
+    { label: "Onboarding", value: companies?.filter((c: any) => c.onboarding_status === 'pending').length || "0", trend: "Em configuração" },
+    { label: "Saúde Global", value: health?.every((h: any) => h.status === 'operational') ? "100%" : "Alerta", trend: "Status dos serviços" },
+    { label: "Faturamento", value: "R$ 42k", trend: "+8% este mês" },
   ];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Overview Global</h1>
-        <p className="text-slate-500 font-medium">Controle total da infraestrutura e negócios.</p>
+        <p className="text-slate-500 font-medium">Controle total da infraestrutura e negócios NavalDocs Pro.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -120,40 +138,45 @@ export function AdminDashboardView() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-            <h4 className="font-black text-navy uppercase tracking-widest text-xs mb-6">Empresas Recentes</h4>
+            <h4 className="font-black text-navy uppercase tracking-widest text-xs mb-6">Empresas em Onboarding</h4>
             <div className="space-y-4">
-               {[1,2,3].map(i => (
-                 <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+               {companies?.filter((c: any) => c.onboarding_status === 'pending').slice(0, 3).map((company: any) => (
+                 <div key={company.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
                     <div className="flex items-center gap-4">
                        <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center">
                           <Building className="h-5 w-5 text-primary" />
                        </div>
                        <div>
-                          <p className="font-bold text-navy text-sm">Empresa Naval {i}</p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase">Assinatura Premium</p>
+                          <p className="font-bold text-navy text-sm">{company.name}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">Passo {company.onboarding_step}/7</p>
                        </div>
                     </div>
-                    <button className="text-[10px] font-black uppercase text-primary hover:underline">Detalhes</button>
+                    <Link to="/admin/companies" className="text-[10px] font-black uppercase text-primary hover:underline">Ajudar</Link>
                  </div>
                ))}
+               {(!companies || companies.filter((c: any) => c.onboarding_status === 'pending').length === 0) && (
+                 <p className="text-center text-slate-400 text-sm py-4">Nenhuma empresa em onboarding pendente.</p>
+               )}
             </div>
          </div>
 
          <div className="bg-navy text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group">
             <Activity className="absolute -right-8 -bottom-8 h-48 w-48 text-white/5 group-hover:scale-110 transition-all duration-500" />
             <div className="relative z-10">
-               <h4 className="font-black uppercase tracking-widest text-xs mb-4 text-primary">Status do Sistema</h4>
-               <p className="text-2xl font-bold mb-6">Todos os módulos operando normalmente.</p>
-               <div className="flex gap-4">
-                  <div className="flex-grow bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
-                     <p className="text-[10px] font-black uppercase opacity-60">Uptime</p>
-                     <p className="text-xl font-black text-primary">99.9%</p>
-                  </div>
-                  <div className="flex-grow bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
-                     <p className="text-[10px] font-black uppercase opacity-60">Latency</p>
-                     <p className="text-xl font-black text-primary">24ms</p>
-                  </div>
+               <h4 className="font-black uppercase tracking-widest text-xs mb-4 text-primary">Infraestrutura</h4>
+               <p className="text-2xl font-bold mb-6">Módulos críticos em operação.</p>
+               <div className="grid grid-cols-2 gap-4">
+                  {health?.slice(0, 4).map((h: any) => (
+                    <div key={h.id} className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/5">
+                       <p className="text-[10px] font-black uppercase opacity-60">{h.module_name}</p>
+                       <div className="flex items-center justify-between mt-1">
+                          <p className="text-lg font-black text-primary">{h.status === 'operational' ? 'OK' : 'ERR'}</p>
+                          <span className={`h-2 w-2 rounded-full ${h.status === 'operational' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                       </div>
+                    </div>
+                  ))}
                </div>
+               <Link to="/status" className="mt-6 inline-block text-[10px] font-black uppercase text-white/40 hover:text-white transition-all underline decoration-primary">Ver Status Público</Link>
             </div>
          </div>
       </div>
