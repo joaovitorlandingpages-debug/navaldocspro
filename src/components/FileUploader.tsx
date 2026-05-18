@@ -81,21 +81,30 @@ export function FileUploader({
       {!isUploading ? (
         <div 
           {...getRootProps()} 
-          className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer group ${
+          className={`border-2 border-dashed rounded-2xl transition-all cursor-pointer group ${
+            compact ? "p-4" : "p-8 text-center"
+          } ${
             isDragActive ? "border-primary bg-primary/5" : "border-slate-100 hover:border-primary/30 hover:bg-slate-50"
           }`}
         >
           <input {...getInputProps()} />
-          <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-            <Upload className="h-6 w-6 text-slate-400 group-hover:text-primary" />
+          <div className={`${compact ? "flex items-center gap-3" : ""}`}>
+            <div className={`${compact ? "h-8 w-8" : "h-12 w-12 mx-auto mb-3"} bg-slate-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform`}>
+              <Upload className={`${compact ? "h-4 w-4" : "h-6 w-6"} text-slate-400 group-hover:text-primary`} />
+            </div>
+            <div className={compact ? "text-left" : ""}>
+              <p className={`${compact ? "text-xs" : "text-sm"} font-bold text-navy`}>
+                {isDragActive ? "Solte aqui" : compact ? "Anexar arquivo" : "Clique ou arraste o arquivo"}
+              </p>
+              {!compact && (
+                <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-black">
+                  PDF, JPG, PNG (Max. 10MB)
+                </p>
+              )}
+            </div>
           </div>
-          <p className="text-sm font-bold text-navy">
-            {isDragActive ? "Solte o arquivo aqui" : "Clique ou arraste o arquivo"}
-          </p>
-          <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-black">
-            PDF, JPG, PNG (Max. 10MB)
-          </p>
         </div>
+
       ) : (
         <div className="border-2 border-slate-100 rounded-2xl p-8 bg-slate-50 animate-in fade-in duration-300">
            <div className="flex items-center gap-4 mb-4">
