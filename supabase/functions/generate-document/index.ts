@@ -48,7 +48,6 @@ serve(async (req) => {
     let extension: string
 
     if (template.file_type === 'docx') {
-      // Handle DOCX
       const zip = new PizZip(arrayBuffer)
       const doc = new docxtemplater(zip, {
         paragraphLoop: true,
@@ -64,12 +63,10 @@ serve(async (req) => {
       contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
       extension = 'docx'
     } else {
-      // Handle PDF
       const pdfDoc = await PDFDocument.load(arrayBuffer)
       const pages = pdfDoc.getPages()
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
 
-      // Fetch field configs
       const { data: fields } = await supabaseAdmin
         .from('document_fields')
         .select('*')
@@ -79,6 +76,7 @@ serve(async (req) => {
         for (const field of fields) {
           const value = fieldValues[field.field_name] || ''
           if (!value && field.required) continue
+          if (!value) continue
 
           const pageNum = (field.page_number || 1) - 1
           const page = pages[pageNum]
@@ -87,23 +85,28 @@ serve(async (req) => {
           if (field.position_x !== undefined && field.position_y !== undefined) {
              const { height } = page.getSize()
              
-             // Convert from Editor pixels (at scale 1.2 by default in editor) to PDF points
-             // If we assume editor's "px" are equivalent to points when scale=1
-             // The editor uses RND which works in pixels. 
-             // We'll normalize the editor to use points eventually, but for now:
-             const editorScale = 1.2; // This should ideally be passed or normalized
+             // The values from DB are now in points (1/72 inch)
+             const x = field.position_x;
+             const y = height - field.position_y; // Editor uses top-left, PDF uses bottom-left
+             const fontSize = field.font_size || 10;
+             const width = field.width || 150;
              
-             const x = field.position_x / editorScale;
-             const y = height - (field.position_y / editorScale);
-             const fontSize = (field.font_size || 10) / editorScale;
+             let drawX = x;
+             const textWidth = font.widthOfTextAtSize(String(value), fontSize);
+             
+             if (field.alignment === 'center') {
+                drawX = x + (width / 2) - (textWidth / 2);
+             } else if (field.alignment === 'right') {
+                drawX = x + width - textWidth;
+             }
              
              page.drawText(String(value), {
-               x: x,
-               y: y - fontSize, // Adjust for top-left baseline vs bottom-left
+               x: drawX,
+               y: y - fontSize, // Baseline adjustment
                size: fontSize,
                font: font,
                color: rgb(0, 0, 0),
-               maxWidth: (field.width || 150) / editorScale,
+               maxWidth: width,
              })
           }
         }
@@ -115,7 +118,6 @@ serve(async (req) => {
       extension = 'pdf'
     }
 
-    // 3. Upload Generated File
     const generatedFileName = `${crypto.randomUUID()}.${extension}`
     const generatedPath = `${companyId}/${generatedFileName}`
 
@@ -129,7 +131,6 @@ serve(async (req) => {
 
     if (uploadError) throw uploadError
 
-    // 4. Record in DB
     const { data: generatedDoc, error: dbError } = await supabaseAdmin
       .from('generated_documents')
       .insert({
