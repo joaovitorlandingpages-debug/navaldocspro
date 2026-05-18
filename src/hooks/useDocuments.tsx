@@ -297,6 +297,7 @@ export const useDocuments = () => {
     generatedDocuments,
     isLoadingGenerated,
     saveGeneratedDocument,
+    generateDocument,
     createTemplate,
     upsertTemplateFields,
     deleteTemplate,
