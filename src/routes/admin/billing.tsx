@@ -35,38 +35,7 @@ function AdminBilling() {
             <p className="text-xs text-muted-foreground">Empresas pagantes</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Taxa de Churn</CardTitle>
-            <Activity className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-navy">0%</div>
-            <p className="text-xs text-muted-foreground">Cancelamentos este mês</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Tickets Médio</CardTitle>
-            <CreditCard className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-navy">R$ 0,00</div>
-            <p className="text-xs text-muted-foreground">Por assinatura</p>
-          </CardContent>
-        </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Pagamentos Recentes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12 text-muted-foreground">
-            Aguardando primeiros pagamentos reais via Mercado Pago.
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

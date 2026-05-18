@@ -15,13 +15,30 @@ import {
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Navigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
 });
 
 function AdminLayout() {
+  const { profile, loading } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-slate-900">
+        <ShieldCheck className="h-12 w-12 text-primary animate-pulse" />
+      </div>
+    );
+  }
+
+  // Permissão estrita para Admin Master
+  if (profile?.role !== 'admin_master') {
+    return <Navigate to="/dashboard" />;
+  }
+
 
   const adminNavItems = [
     { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },

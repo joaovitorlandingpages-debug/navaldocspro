@@ -38,13 +38,13 @@ import { Route as BillingFailureRouteImport } from './routes/billing.failure'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
-import { Route as AdminSystemReportRouteImport } from './routes/admin.system-report'
+import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
-import { Route as AdminPaymentTestRouteImport } from './routes/admin.payment-test'
+import { Route as AdminPaymentTestRouteImport } from './routes/admin/payment-test'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
-import { Route as AdminDocumentsRouteImport } from './routes/admin.documents'
+import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
-import { Route as AdminBillingRouteImport } from './routes/admin.billing'
+import { Route as AdminBillingRouteImport } from './routes/admin/billing'
 
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
@@ -820,3 +820,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
