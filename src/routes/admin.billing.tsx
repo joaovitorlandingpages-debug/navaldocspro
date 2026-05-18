@@ -1,184 +1,142 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { 
-  CreditCard, TrendingUp, TrendingDown, 
-  ArrowUpRight, Users, Building, Calendar,
-  CheckCircle2, AlertCircle, Loader2, Download
+  BarChart3, 
+  TrendingUp, 
+  AlertTriangle, 
+  DollarSign, 
+  Search, 
+  Filter,
+  ArrowUpRight,
+  ArrowDownRight,
+  Users,
+  Zap
 } from "lucide-react";
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 
 export const Route = createFileRoute("/admin/billing")({
-  component: AdminBilling,
+  component: AdminOCRBillingPage,
 });
 
-function AdminBilling() {
-  const { data: payments, isLoading: isLoadingPayments } = useQuery({
-    queryKey: ["admin-payments"],
+function AdminOCRBillingPage() {
+  const { data: usage, isLoading } = useQuery({
+    queryKey: ["admin-ocr-usage"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("payments")
+        .from("ocr_usage")
         .select(`
           *,
-          company:companies(name)
+          companies (
+            name,
+            plan_type
+          )
         `)
         .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    }
-  });
 
-  const { data: subscriptions, isLoading: isLoadingSubs } = useQuery({
-    queryKey: ["admin-subscriptions"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("subscriptions")
-        .select(`
-          *,
-          company:companies(name),
-          plan:plans(name)
-        `)
-        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
-    }
+    },
   });
 
   const stats = [
-    { label: "Receita Mensal (MRR)", value: "R$ 42.890", trend: "+12%", icon: <TrendingUp className="h-5 w-5 text-emerald-500" /> },
-    { label: "Assinaturas Ativas", value: subscriptions?.filter((s: any) => s.status === 'active').length || 0, trend: "+3", icon: <CheckCircle2 className="h-5 w-5 text-blue-500" /> },
-    { label: "Pagamentos Pendentes", value: payments?.filter((p: any) => p.status === 'pending').length || 0, trend: "-2", icon: <AlertCircle className="h-5 w-5 text-amber-500" /> },
-    { label: "Taxa de Churn", value: "2.4%", trend: "Estável", icon: <TrendingDown className="h-5 w-5 text-red-500" /> },
+    { label: "Custo Estimado Total", value: "R$ 1.250,40", icon: <DollarSign className="text-green-600" />, trend: "+12%" },
+    { label: "Leituras Concluídas", value: usage?.reduce((acc, curr) => acc + (curr.successful_jobs || 0), 0) || "0", icon: <Zap className="text-primary" />, trend: "+18%" },
+    { label: "Taxa de Erro Global", value: "0.8%", icon: <AlertTriangle className="text-red-600" />, trend: "-2%" },
+    { label: "Empresas Ativas", value: new Set(usage?.map(u => u.company_id)).size || "0", icon: <Users className="text-blue-600" />, trend: "+5%" },
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-      <div className="flex justify-between items-end">
-        <div>
-           <h1 className="text-3xl font-black text-white uppercase tracking-tight">Gestão Financeira</h1>
-           <p className="text-slate-500 font-mono text-xs italic">Monitoramento de faturamento, planos e inadimplência.</p>
-        </div>
-        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl gap-2">
-           <Download className="h-4 w-4" /> Exportar Relatório
-        </Button>
+    <div className="space-y-8 animate-in fade-in duration-700">
+      <div>
+        <h1 className="text-3xl font-black text-navy tracking-tight uppercase">Dashboard Financeiro & OCR</h1>
+        <p className="text-slate-500 font-medium">Controle master de custos, consumos e performance da IA.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
-          <div key={i} className="bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat, idx) => (
+          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all">
             <div className="flex justify-between items-start mb-4">
-               <div className="p-2 bg-white/5 rounded-lg">{stat.icon}</div>
-               <Badge className="bg-white/5 text-white/60 border-none text-[10px]">{stat.trend}</Badge>
+              <div className="p-2.5 bg-slate-50 rounded-xl">
+                {stat.icon}
+              </div>
+              <Badge variant="outline" className="text-[10px] font-bold">
+                {stat.trend} {stat.trend.startsWith('+') ? <ArrowUpRight className="h-3 w-3 text-green-500 inline" /> : <ArrowDownRight className="h-3 w-3 text-red-500 inline" />}
+              </Badge>
             </div>
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{stat.label}</p>
-            <h3 className="text-2xl font-black text-white mt-1">{stat.value}</h3>
-          </div>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
+            <h3 className="text-2xl font-black text-navy mt-1">{stat.value}</h3>
+          </Card>
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-         {/* Pagamentos Recentes */}
-         <div className="lg:col-span-2 space-y-6">
-            <Card className="bg-white/5 border-white/10 rounded-[2.5rem] overflow-hidden">
-               <div className="p-8 border-b border-white/5">
-                  <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-                     <CreditCard className="h-4 w-4 text-emerald-500" /> Transações Recentes
-                  </h3>
-               </div>
-               <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                     <thead>
-                        <tr className="text-slate-500 text-[9px] font-black uppercase tracking-widest border-b border-white/5">
-                           <th className="px-8 py-4">Empresa</th>
-                           <th className="px-8 py-4">Valor</th>
-                           <th className="px-8 py-4">Status</th>
-                           <th className="px-8 py-4">Data</th>
-                           <th className="px-8 py-4"></th>
-                        </tr>
-                     </thead>
-                     <tbody className="divide-y divide-white/5">
-                        {isLoadingPayments ? (
-                          <tr><td colSpan={5} className="py-12 text-center"><Loader2 className="h-6 w-6 animate-spin text-emerald-500 mx-auto" /></td></tr>
-                        ) : payments?.length === 0 ? (
-                          <tr><td colSpan={5} className="py-12 text-center text-slate-500 text-xs font-bold uppercase">Nenhum pagamento</td></tr>
-                        ) : payments?.map((p: any) => (
-                           <tr key={p.id} className="hover:bg-white/5 transition-colors">
-                              <td className="px-8 py-4">
-                                 <div className="font-bold text-white text-sm">{p.company?.name}</div>
-                                 <div className="text-[10px] text-slate-500 font-mono tracking-tighter">ID: {p.mercado_pago_payment_id?.slice(0, 8)}...</div>
-                              </td>
-                              <td className="px-8 py-4 text-sm font-black text-white">R$ {Number(p.amount).toFixed(2)}</td>
-                              <td className="px-8 py-4">
-                                 <Badge className={`border-none font-black text-[9px] uppercase tracking-widest ${
-                                    p.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'
-                                 }`}>
-                                    {p.status === 'approved' ? 'Aprovado' : 'Pendente'}
-                                 </Badge>
-                              </td>
-                              <td className="px-8 py-4 text-[11px] text-slate-400 font-medium">
-                                 {format(new Date(p.created_at), "dd/MM/yyyy HH:mm")}
-                              </td>
-                              <td className="px-8 py-4 text-right">
-                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-white/10"><ArrowUpRight className="h-4 w-4 text-slate-500" /></Button>
-                              </td>
-                           </tr>
-                        ))}
-                     </tbody>
-                  </table>
-               </div>
-            </Card>
-         </div>
-
-         {/* Assinaturas por Plano */}
-         <div className="space-y-8">
-            <Card className="bg-slate-900 border-white/10 rounded-[2.5rem] p-8">
-               <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6">Assinaturas por Plano</h3>
-               <div className="space-y-6">
-                  {['Professional', 'Start', 'Enterprise'].map((plan) => {
-                     const count = subscriptions?.filter((s: any) => s.plan?.name === plan).length || 0;
-                     const total = subscriptions?.length || 1;
-                     const percentage = Math.round((count / total) * 100);
-
-                     return (
-                        <div key={plan} className="space-y-2">
-                           <div className="flex justify-between items-center text-xs font-bold">
-                              <span className="text-white uppercase">{plan}</span>
-                              <span className="text-slate-500">{count} empresas ({percentage}%)</span>
-                           </div>
-                           <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                              <div 
-                                className={`h-full rounded-full ${
-                                   plan === 'Professional' ? 'bg-primary' : 
-                                   plan === 'Enterprise' ? 'bg-purple-500' : 'bg-blue-500'
-                                }`} 
-                                style={{ width: `${percentage}%` }} 
-                              />
-                           </div>
-                        </div>
-                     );
-                  })}
-               </div>
-            </Card>
-
-            <div className="bg-emerald-600/10 border border-emerald-600/20 rounded-[2.5rem] p-8 text-emerald-500">
-               <div className="flex items-center gap-3 mb-4">
-                  <div className="h-10 w-10 bg-emerald-500/10 rounded-xl flex items-center justify-center">
-                     <CheckCircle2 className="h-6 w-6" />
-                  </div>
-                  <div>
-                     <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Webhooks Status</p>
-                     <h4 className="font-bold text-white uppercase">Operacional</h4>
-                  </div>
-               </div>
-               <p className="text-xs font-medium leading-relaxed opacity-80">As notificações do Mercado Pago estão sendo processadas em tempo real (Latência: 1.2s).</p>
+      <Card className="border-none shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-100 bg-white flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            <h3 className="font-bold text-navy uppercase text-sm tracking-tight">Consumo por Empresa</h3>
+          </div>
+          <div className="flex gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <input 
+                placeholder="Filtrar empresa..." 
+                className="pl-9 pr-4 py-2 bg-slate-50 border-none rounded-xl text-xs focus:ring-1 focus:ring-primary/20 outline-none w-48"
+              />
             </div>
-         </div>
-      </div>
+            <Button variant="outline" size="sm" className="rounded-xl h-9 text-[10px] font-black uppercase gap-2">
+              <Filter className="h-3.5 w-3.5" /> Mês Atual
+            </Button>
+          </div>
+        </div>
+        
+        <Table>
+          <TableHeader className="bg-slate-50">
+            <TableRow className="border-none">
+              <TableHead className="text-[10px] font-black uppercase text-slate-400 tracking-widest h-12">Empresa</TableHead>
+              <TableHead className="text-[10px] font-black uppercase text-slate-400 tracking-widest h-12">Plano</TableHead>
+              <TableHead className="text-[10px] font-black uppercase text-slate-400 tracking-widest h-12">Período</TableHead>
+              <TableHead className="text-[10px] font-black uppercase text-slate-400 tracking-widest h-12">Total Jobs</TableHead>
+              <TableHead className="text-[10px] font-black uppercase text-slate-400 tracking-widest h-12">Sucesso</TableHead>
+              <TableHead className="text-[10px] font-black uppercase text-slate-400 tracking-widest h-12">Falhas</TableHead>
+              <TableHead className="text-[10px] font-black uppercase text-slate-400 tracking-widest h-12 text-right">Custo Est.</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {usage?.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-12 text-slate-400 font-medium italic text-sm">
+                  Nenhum dado de consumo registrado.
+                </TableCell>
+              </TableRow>
+            )}
+            {usage?.map((u) => (
+              <TableRow key={u.id} className="hover:bg-slate-50/50 transition-colors border-slate-100">
+                <TableCell className="font-bold text-navy text-xs">{(u as any).companies?.name || "N/A"}</TableCell>
+                <TableCell>
+                  <Badge variant="secondary" className="text-[9px] font-black uppercase">
+                    {(u as any).companies?.plan_type || "N/A"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-slate-500 text-xs font-medium">{u.month}/{u.year}</TableCell>
+                <TableCell className="font-bold text-xs">{u.total_jobs}</TableCell>
+                <TableCell className="text-green-600 font-bold text-xs">{u.successful_jobs}</TableCell>
+                <TableCell className="text-red-600 font-bold text-xs">{u.failed_jobs}</TableCell>
+                <TableCell className="text-right font-black text-navy text-xs">R$ {u.estimated_cost?.toFixed(2)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 }
