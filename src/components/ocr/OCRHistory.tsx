@@ -4,7 +4,8 @@ import {
   Clock, 
   AlertCircle, 
   ChevronRight,
-  UserCheck
+  UserCheck,
+  Loader2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useOCR, OCRJob } from "@/hooks/useOCR";
