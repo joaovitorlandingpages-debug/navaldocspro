@@ -165,6 +165,40 @@ export function DocumentFieldEditor({ templateId }: DocumentFieldEditorProps) {
                 )}
               </div>
 
+              {isPdf && (
+                <div className="grid grid-cols-3 gap-4 border-t border-white/5 pt-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Página</Label>
+                    <Input 
+                      type="number"
+                      value={field.page_number}
+                      onChange={(e) => updateField(index, { page_number: Number(e.target.value) })}
+                      className="bg-black/20 border-white/5 text-white h-10 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Posição X</Label>
+                    <Input 
+                      type="number"
+                      value={field.position_x}
+                      onChange={(e) => updateField(index, { position_x: Number(e.target.value) })}
+                      placeholder="px"
+                      className="bg-black/20 border-white/5 text-white h-10 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Posição Y</Label>
+                    <Input 
+                      type="number"
+                      value={field.position_y}
+                      onChange={(e) => updateField(index, { position_y: Number(e.target.value) })}
+                      placeholder="px"
+                      className="bg-black/20 border-white/5 text-white h-10 rounded-xl"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-end">
                 <Button 
                   variant="ghost" 
