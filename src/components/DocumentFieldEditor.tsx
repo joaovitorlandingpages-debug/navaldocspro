@@ -40,8 +40,11 @@ const SOURCE_FIELDS = {
 };
 
 export function DocumentFieldEditor({ templateId }: DocumentFieldEditorProps) {
-  const { templateFields, upsertTemplateFields } = useDocuments();
+  const { templates, templateFields, upsertTemplateFields } = useDocuments();
   const [fields, setFields] = useState<Field[]>([]);
+  
+  const currentTemplate = templates?.find((t: any) => t.id === templateId);
+  const isPdf = currentTemplate?.file_type === 'pdf';
 
   useEffect(() => {
     if (templateFields) {
