@@ -337,27 +337,21 @@ function ProcessDetail() {
                               </Button>
                            </h3>
                            <div className="space-y-4">
-                              {documents.map((doc, idx) => (
-                                <div key={idx} className="p-5 rounded-2xl border border-slate-50 bg-slate-50/30 group hover:bg-white hover:border-primary/20 transition-all">
-                                   <div className="flex justify-between items-start mb-4">
-                                      <div className="flex items-center gap-3">
-                                         <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                                           doc.status === 'Validado' ? 'bg-green-100 text-green-600' : 
-                                           doc.status === 'Correção Necessária' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-400'
-                                         }`}>
-                                            <FileText className="h-4 w-4" />
-                                         </div>
-                                         <div>
-                                            <p className="text-xs font-bold text-navy">{doc.name}</p>
-                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{doc.type} • {doc.size}</p>
-                                         </div>
-                                      </div>
-                                      <Badge className={`text-[9px] font-black uppercase tracking-widest ${
-                                        doc.status === 'Validado' ? 'bg-green-500 text-white' : 
-                                        doc.status === 'Correção Necessária' ? 'bg-red-500 text-white' : 'bg-slate-200 text-slate-500'
-                                      }`}>
-                                         {doc.status}
-                                      </Badge>
+                               {files && files.map((doc: any, idx: number) => (
+                                 <div key={idx} className="p-5 rounded-2xl border border-slate-50 bg-slate-50/30 group hover:bg-white hover:border-primary/20 transition-all">
+                                    <div className="flex justify-between items-start mb-4">
+                                       <div className="flex items-center gap-3">
+                                          <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-slate-100 text-slate-400">
+                                             <FileText className="h-4 w-4" />
+                                          </div>
+                                          <div>
+                                             <p className="text-xs font-bold text-navy truncate max-w-[150px]">{doc.name}</p>
+                                             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{doc.file_type || 'PDF'} • {Math.round((doc.file_size || 0) / 1024)} KB</p>
+                                          </div>
+                                       </div>
+                                       <Badge className="text-[9px] font-black uppercase tracking-widest bg-slate-200 text-slate-500">
+                                          Enviado
+                                       </Badge>
                                    </div>
                                    
                                    {doc.status === 'Pendente' || doc.status === 'Correção Necessária' ? (
