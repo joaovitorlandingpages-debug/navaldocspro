@@ -873,6 +873,54 @@ export type Database = {
           },
         ]
       }
+      process_document_packages: {
+        Row: {
+          conditional_rule: Json | null
+          created_at: string
+          document_role: string | null
+          id: string
+          is_mandatory: boolean | null
+          order_index: number | null
+          process_type_id: string | null
+          template_id: string | null
+        }
+        Insert: {
+          conditional_rule?: Json | null
+          created_at?: string
+          document_role?: string | null
+          id?: string
+          is_mandatory?: boolean | null
+          order_index?: number | null
+          process_type_id?: string | null
+          template_id?: string | null
+        }
+        Update: {
+          conditional_rule?: Json | null
+          created_at?: string
+          document_role?: string | null
+          id?: string
+          is_mandatory?: boolean | null
+          order_index?: number | null
+          process_type_id?: string | null
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_document_packages_process_type_id_fkey"
+            columns: ["process_type_id"]
+            isOneToOne: false
+            referencedRelation: "process_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_document_packages_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_type_requirements: {
         Row: {
           created_at: string | null
@@ -905,6 +953,39 @@ export type Database = {
           },
         ]
       }
+      process_types: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          estimated_days: number | null
+          icon: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_days?: number | null
+          icon?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_days?: number | null
+          icon?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       processes: {
         Row: {
           company_id: string
@@ -917,6 +998,7 @@ export type Database = {
           notes: string | null
           priority: string
           process_type: string
+          process_type_id: string | null
           status: string
           updated_at: string
           vessel_id: string | null
@@ -932,6 +1014,7 @@ export type Database = {
           notes?: string | null
           priority?: string
           process_type: string
+          process_type_id?: string | null
           status?: string
           updated_at?: string
           vessel_id?: string | null
@@ -947,6 +1030,7 @@ export type Database = {
           notes?: string | null
           priority?: string
           process_type?: string
+          process_type_id?: string | null
           status?: string
           updated_at?: string
           vessel_id?: string | null
@@ -964,6 +1048,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processes_process_type_id_fkey"
+            columns: ["process_type_id"]
+            isOneToOne: false
+            referencedRelation: "process_types"
             referencedColumns: ["id"]
           },
           {
