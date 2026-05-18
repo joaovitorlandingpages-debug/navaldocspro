@@ -3,7 +3,9 @@ import {
   X, Check, ChevronRight, ChevronLeft, 
   Ship, User, FileText, ClipboardCheck, 
   Search, Plus, AlertCircle, Clock, FileCheck,
-  Save, Copy, Zap
+  Save, Copy, Zap,
+  Loader2,
+  AlertTriangle
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,8 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-
-import { useProcessRequirements } from "@/hooks/useProcessRequirements";
+import { useProcessRequirements, useProcessTypes } from "@/hooks/useProcessRequirements";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NewProcessWizardProps {
   isOpen: boolean;
@@ -21,17 +24,22 @@ interface NewProcessWizardProps {
 }
 
 export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
+  const { profile } = useAuth();
   const [step, setStep] = useState(1);
   const totalSteps = 6;
 
   const [formData, setFormData] = useState({
+    typeId: "",
     type: "",
     client: "",
+    clientId: "",
     vessel: "",
+    vesselId: "",
     documents: [] as any[],
   });
 
-  const { requirements } = useProcessRequirements(formData.type);
+  const { requirements, isLoading: loadingReqs } = useProcessRequirements(formData.typeId);
+  const { processTypes, isLoading: loadingTypes } = useProcessTypes();
 
   // Auto-save draft logic
   useEffect(() => {
@@ -60,17 +68,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     localStorage.removeItem("process_wizard_draft");
   };
 
-
-  const processTypes = [
-    { id: "registro", title: "Registro de embarcação", icon: <Ship className="h-4 w-4" /> },
-    { id: "transferencia", title: "Transferência de propriedade", icon: <FileText className="h-4 w-4" /> },
-    { id: "renovacao", title: "Renovação", icon: <Clock className="h-4 w-4" /> },
-    { id: "alteracao", title: "Alteração de dados", icon: <Settings className="h-4 w-4" /> },
-    { id: "segunda_via", title: "Segunda via", icon: <FileText className="h-4 w-4" /> },
-    { id: "regularizacao", title: "Regularização", icon: <ClipboardCheck className="h-4 w-4" /> },
-    { id: "vistoria", title: "Vistoria", icon: <Search className="h-4 w-4" /> },
-    { id: "gru", title: "GRU / Taxas", icon: <FileText className="h-4 w-4" /> },
-  ];
+  const handleTypeSelect = (type: any) => {
+    setFormData({ ...formData, typeId: type.id, type: type.name });
+  };
 
   const handleNext = () => {
     if (step < totalSteps) setStep(step + 1);
@@ -85,26 +85,32 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       case 1:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="grid grid-cols-2 gap-3">
-              {processTypes.map((type) => (
-                <button
-                  key={type.id}
-                  onClick={() => setFormData({ ...formData, type: type.title })}
-                  className={`p-4 rounded-2xl border-2 text-left transition-all ${
-                    formData.type === type.title 
-                      ? "border-primary bg-primary/5 shadow-md" 
-                      : "border-slate-100 hover:border-slate-200 bg-white"
-                  }`}
-                >
-                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center mb-3 ${
-                    formData.type === type.title ? "bg-primary text-white" : "bg-slate-50 text-slate-400"
-                  }`}>
-                    {type.icon}
-                  </div>
-                  <p className="text-xs font-black text-navy uppercase leading-tight">{type.title}</p>
-                </button>
-              ))}
-            </div>
+            {loadingTypes ? (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {processTypes.map((type) => (
+                  <button
+                    key={type.id}
+                    onClick={() => handleTypeSelect(type)}
+                    className={`p-4 rounded-2xl border-2 text-left transition-all h-32 flex flex-col justify-center ${
+                      formData.typeId === type.id 
+                        ? "border-primary bg-primary/5 shadow-md" 
+                        : "border-slate-100 hover:border-slate-200 bg-white"
+                    }`}
+                  >
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center mb-3 ${
+                      formData.typeId === type.id ? "bg-primary text-white" : "bg-slate-50 text-slate-400"
+                    }`}>
+                      <Ship className="h-4 w-4" />
+                    </div>
+                    <p className="text-[10px] font-black text-navy uppercase leading-tight line-clamp-2">{type.name}</p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         );
       case 2:
@@ -200,38 +206,50 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           </div>
         );
       case 4:
-        const docs = requirements || [
-          { template: { name: "Documento pessoal" }, is_mandatory: true, status: "pendente" },
-          { template: { name: "Comprovante de residência" }, is_mandatory: true, status: "pendente" },
-          { template: { name: "Documento da embarcação" }, is_mandatory: true, status: "pendente" },
-        ];
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
             <p className="text-sm text-slate-500 mb-4">Checklist automático baseado no tipo: <span className="font-bold text-navy">{formData.type}</span></p>
-            <ScrollArea className="h-[300px] pr-4">
-              <div className="space-y-3">
-                {docs.map((req: any, idx: number) => (
-                  <div key={idx} className="p-4 rounded-xl border border-slate-100 flex items-center justify-between bg-white group hover:border-primary/20 transition-all">
-                    <div className="flex items-center gap-3">
-                      <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                        req.is_mandatory ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'
-                      }`}>
-                        <FileText className="h-4 w-4" />
-                      </div>
-                      <div>
-                         <p className="text-xs font-bold text-navy">{req.template?.name}</p>
-                         <p className={`text-[10px] font-black uppercase ${
-                           req.is_mandatory ? 'text-amber-600' : 'text-slate-400'
-                         }`}>{req.is_mandatory ? 'Obrigatório' : 'Opcional'}</p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full opacity-0 group-hover:opacity-100">
-                       <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+            
+            {loadingReqs ? (
+              <div className="flex justify-center items-center py-10">
+                <Loader2 className="h-6 w-6 text-primary animate-spin" />
               </div>
-            </ScrollArea>
+            ) : requirements.length === 0 ? (
+              <div className="p-10 text-center border border-dashed border-slate-200 rounded-3xl">
+                <AlertTriangle className="h-10 w-10 text-amber-400 mx-auto mb-4" />
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nenhum requisito configurado</p>
+              </div>
+            ) : (
+              <ScrollArea className="h-[300px] pr-4">
+                <div className="space-y-3">
+                  {requirements.map((req: any, idx: number) => (
+                    <div key={idx} className="p-4 rounded-xl border border-slate-100 flex items-center justify-between bg-white group hover:border-primary/20 transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
+                          req.is_mandatory ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'
+                        }`}>
+                          <FileText className="h-4 w-4" />
+                        </div>
+                        <div>
+                           <p className="text-xs font-bold text-navy">{req.template?.name}</p>
+                           <div className="flex gap-2">
+                             <p className={`text-[10px] font-black uppercase ${
+                               req.is_mandatory ? 'text-amber-600' : 'text-slate-400'
+                             }`}>{req.is_mandatory ? 'Obrigatório' : 'Opcional'}</p>
+                             <Badge variant="outline" className="text-[8px] h-3.5 px-1.5 uppercase font-black text-slate-400 border-slate-200">
+                               {req.document_role}
+                             </Badge>
+                           </div>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full opacity-0 group-hover:opacity-100">
+                         <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
           </div>
         );
       case 5:
