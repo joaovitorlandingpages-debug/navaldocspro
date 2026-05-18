@@ -17,7 +17,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { OCRUpload } from "@/components/ocr/OCRUpload";
 import { OCRHistory } from "@/components/ocr/OCRHistory";
-import { OCRResultsReview } from "@/components/ocr/OCRResultsReview";
+import { OCRReview } from "@/components/ocr/OCRReview";
 import { OCRJob, useOCR } from "@/hooks/useOCR";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -171,7 +171,11 @@ function OCRCenterPage() {
                    </div>
                 </Card>
               ) : (
-                <OCRResultsReview job={selectedJob} />
+                <OCRReview 
+                  jobId={selectedJob.id} 
+                  onBack={() => setSelectedJob(null)} 
+                  onComplete={() => setSelectedJob(null)} 
+                />
               )}
             </div>
           )}
