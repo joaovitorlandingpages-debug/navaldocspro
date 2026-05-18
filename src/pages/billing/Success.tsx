@@ -1,7 +1,7 @@
 import React from 'react';
-import { CheckCircle2, ArrowRight, LayoutDashboard } from 'lucide-react';
+import { CheckCircle2, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 
 const Success = () => {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ const Success = () => {
         <div className="space-y-3">
           <Button 
             className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate({ to: '/dashboard' })}
           >
             Ir para Dashboard
             <LayoutDashboard size={18} className="ml-2" />
@@ -27,7 +27,7 @@ const Success = () => {
           <Button 
             variant="outline"
             className="w-full h-12 border-slate-200 text-slate-600 hover:bg-slate-50"
-            onClick={() => navigate('/billing/subscription')}
+            onClick={() => navigate({ to: '/billing/subscription' })}
           >
             Ver detalhes da assinatura
           </Button>

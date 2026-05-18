@@ -1,7 +1,7 @@
 import React from 'react';
 import { XCircle, RefreshCw, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 
 const Failure = () => {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ const Failure = () => {
         <div className="space-y-3">
           <Button 
             className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white font-semibold"
-            onClick={() => navigate('/billing/plans')}
+            onClick={() => navigate({ to: '/billing/plans' })}
           >
             Tentar Novamente
             <RefreshCw size={18} className="ml-2" />

@@ -614,7 +614,10 @@ export type Database = {
           is_active: boolean | null
           mercado_pago_plan_id: string | null
           name: string
+          ocr_limit: number | null
           price: number
+          slug: string | null
+          updated_at: string
           user_limit: number | null
         }
         Insert: {
@@ -628,7 +631,10 @@ export type Database = {
           is_active?: boolean | null
           mercado_pago_plan_id?: string | null
           name: string
+          ocr_limit?: number | null
           price: number
+          slug?: string | null
+          updated_at?: string
           user_limit?: number | null
         }
         Update: {
@@ -642,7 +648,10 @@ export type Database = {
           is_active?: boolean | null
           mercado_pago_plan_id?: string | null
           name?: string
+          ocr_limit?: number | null
           price?: number
+          slug?: string | null
+          updated_at?: string
           user_limit?: number | null
         }
         Relationships: []
