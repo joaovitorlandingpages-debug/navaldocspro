@@ -24,6 +24,7 @@ function AdminLayout() {
     { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },
     { name: "Empresas", icon: <Building className="h-5 w-5" />, path: "/admin/companies" },
     { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/admin/billing" },
+    { name: "Templates Oficiais", icon: <FileText className="h-5 w-5" />, path: "/admin/documents" },
     { name: "Usuários Global", icon: <Users className="h-5 w-5" />, path: "/admin/users" },
     { name: "Logs de Sistema", icon: <Activity className="h-5 w-5" />, path: "/admin/logs" },
     { name: "Relatório Técnico", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/system-report" },
