@@ -6,7 +6,7 @@ import {
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
   AlertTriangle, ArrowUpCircle, HelpCircle
 } from "lucide-react";
-import { useState, useEffect, Suspense, lazy } from "react";
+import { useState, useEffect, Suspense, lazy, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ActivityFeed } from "@/components/ActivityFeed";
@@ -17,6 +17,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useQuery } from "@tanstack/react-query";
+
 
 
 export const Route = createFileRoute("/dashboard")({
@@ -253,18 +256,30 @@ function DashboardLayout() {
 
 export function RouteContent() {
   const { setIsNewProcessOpen } = useNewProcess();
-  const stats = [
-    { label: "Clientes Ativos", value: "42", icon: <Users className="text-blue-600" />, trend: "+12%" },
-    { label: "Embarcações", value: "86", icon: <Ship className="text-cyan-600" />, trend: "+5%" },
-    { label: "Processos em Aberto", value: "18", icon: <ClipboardList className="text-amber-600" />, trend: "-2" },
-    { label: "Documentos Gerados", value: "1.240", icon: <FileText className="text-green-600" />, trend: "+124" },
-  ];
+  const { profile } = useAuth();
+  const { data: statsData, isLoading: isLoadingStats } = useDashboardStats();
+  
+  const { data: recentProcesses } = useQuery({
+    queryKey: ["recent-processes", profile?.company_id],
+    queryFn: async () => {
+      if (!profile?.company_id) return [];
+      const { data, error } = await supabase
+        .from("processes")
+        .select("*, vessels(name), customers(name)")
+        .eq("company_id", profile.company_id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.company_id
+  });
 
-  const recentProcesses = [
-    { id: "PR-2024-001", client: "Navegação Mar Azul", ship: "Petroleiro Phoenix", status: "Em Análise", date: "10/05/2024" },
-    { id: "PR-2024-002", client: "Estaleiro Central", ship: "Rebocador Titan", status: "Aguardando Docs", date: "09/05/2024" },
-    { id: "PR-2024-003", client: "Marina Yacht Club", ship: "Veleiro Aurora", status: "Concluído", date: "08/05/2024" },
-    { id: "PR-2024-004", client: "Pescados do Porto", ship: "Traineira Netuno", status: "Em Elaboração", date: "07/05/2024" },
+  const stats = [
+    { label: "Clientes Ativos", value: statsData?.activeCustomers.toString() || "0", icon: <Users className="text-blue-600" />, trend: statsData?.trends.customers || "+0%" },
+    { label: "Embarcações", value: statsData?.totalVessels.toString() || "0", icon: <Ship className="text-cyan-600" />, trend: statsData?.trends.vessels || "+0%" },
+    { label: "Processos em Aberto", value: statsData?.openProcesses.toString() || "0", icon: <ClipboardList className="text-amber-600" />, trend: statsData?.trends.processes || "Estável" },
+    { label: "Documentos Gerados", value: statsData?.generatedDocuments.toString() || "0", icon: <FileText className="text-green-600" />, trend: statsData?.trends.documents || "+0%" },
   ];
 
   return (
@@ -276,14 +291,18 @@ export function RouteContent() {
         </div>
         
         {/* Onboarding Checklist Quick Access */}
-        <div className="bg-primary/5 border border-primary/10 px-6 py-3 rounded-2xl flex items-center gap-4 animate-pulse">
-           <Rocket className="h-5 w-5 text-primary" />
-           <div>
+        {profile?.companies?.onboarding_status === 'pending' && (
+          <div className="bg-primary/5 border border-primary/10 px-6 py-3 rounded-2xl flex items-center gap-4 animate-pulse">
+            <Rocket className="h-5 w-5 text-primary" />
+            <div>
               <p className="text-[10px] font-black uppercase text-primary tracking-widest">Setup em progresso</p>
               <p className="text-xs font-bold text-navy">Conclua a configuração para liberar 100% da IA.</p>
-           </div>
-           <Button variant="ghost" size="sm" className="text-primary font-bold">Continuar</Button>
-        </div>
+            </div>
+            <Link to="/onboarding">
+              <Button variant="ghost" size="sm" className="text-primary font-bold">Continuar</Button>
+            </Link>
+          </div>
+        )}
         <div className="flex gap-2 w-full sm:w-auto">
           <Link 
             to="/document-generator"
@@ -302,6 +321,7 @@ export function RouteContent() {
           </button>
         </div>
       </div>
+
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
