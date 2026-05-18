@@ -64,7 +64,7 @@ function AdminDocuments() {
         file: selectedFile || undefined
       });
       setIsNewTemplateOpen(false);
-      setNewTemplate({ name: "", category: "Engenharia", description: "" });
+      setNewTemplate({ name: "", category: "Requerimento", description: "", file_type: "pdf" });
       setSelectedFile(null);
     } catch (error) {
       // toast handled in hook
