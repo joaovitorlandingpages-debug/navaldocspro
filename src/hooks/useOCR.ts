@@ -56,52 +56,35 @@ export function useOCR() {
           uploaded_file_id: fileId,
           company_id: companyId,
           document_type: docType,
-          status: 'processing'
+          status: 'pending'
         })
         .select()
         .single();
 
       if (error) throw error;
       
-      // Simulate processing for now
-      setTimeout(async () => {
-        await simulateProcessing(data.id);
-      }, 2000);
+      // Chamada real para a Edge Function de OCR
+      const { error: processError } = await supabase.functions.invoke('process-ocr-document', {
+        body: { jobId: data.id }
+      });
+
+      if (processError) {
+        console.error("Erro ao iniciar OCR:", processError);
+        // Atualiza para falha se não conseguir invocar
+        await supabase
+          .from("ocr_jobs")
+          .update({ status: 'failed', error_message: processError.message })
+          .eq('id', data.id);
+      }
 
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ocr-jobs"] });
-      toast.success("Documento enviado para processamento OCR!");
+      toast.success("Documento enviado para processamento inteligente!");
     },
   });
 
-  const simulateProcessing = async (jobId: string) => {
-    // Mock data based on common documents
-    const mockData = {
-      name: "JOÃO DA SILVA SANTOS",
-      doc_number: "123.456.789-00",
-      birth_date: "1985-05-20",
-      address: "RUA DAS MARINHAS, 100 - RIO DE JANEIRO",
-      vessel_name: "MAR AZUL II",
-      vessel_id: "201ABC1234"
-    };
-
-    const { error } = await supabase
-      .from("ocr_jobs")
-      .update({
-        status: 'completed',
-        extracted_data: mockData,
-        confidence_score: 0.98,
-        processing_time: 1500
-      })
-      .eq("id", jobId);
-
-    if (!error) {
-      queryClient.invalidateQueries({ queryKey: ["ocr-jobs"] });
-      toast.info("Processamento OCR concluído!");
-    }
-  };
 
   const updateJobStatus = useMutation({
     mutationFn: async ({ jobId, status, extractedData }: { jobId: string; status: string; extractedData?: any }) => {
