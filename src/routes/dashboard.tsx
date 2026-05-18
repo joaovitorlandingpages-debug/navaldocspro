@@ -4,10 +4,11 @@ import {
   FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
-  AlertTriangle, ArrowUpCircle, HelpCircle, Loader2
+  AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning
 } from "lucide-react";
 import { useState, useEffect, Suspense, lazy, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
+
 
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ActivityFeed } from "@/components/ActivityFeed";
@@ -18,6 +19,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { Badge } from "@/components/ui/badge";
+
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useQuery } from "@tanstack/react-query";
 
