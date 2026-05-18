@@ -3,7 +3,7 @@ import {
   Anchor, LayoutDashboard, Users, Ship, ClipboardList, 
   FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
-  Zap, Calendar as CalendarIcon, Cpu, Target, Rocket
+  Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign
 } from "lucide-react";
 import { useState, useEffect, Suspense, lazy } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -54,6 +54,7 @@ function DashboardLayout() {
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
     { name: "Biblioteca", icon: <FileText className="h-5 w-5" />, path: "/documents" },
     { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
+    { name: "Assinatura", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
   ];
 
@@ -97,6 +98,12 @@ function DashboardLayout() {
              <Link to="/admin" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
                 <ShieldCheck className="h-5 w-5" />
                 {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Painel Master</span>}
+             </Link>
+           )}
+           {profile?.role === 'admin_master' && (
+             <Link to="/admin/billing" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+                <DollarSign className="h-5 w-5" />
+                {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Financeiro</span>}
              </Link>
            )}
            <button 
