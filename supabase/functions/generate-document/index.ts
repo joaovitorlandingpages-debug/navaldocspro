@@ -48,7 +48,6 @@ serve(async (req) => {
     let extension: string
 
     if (template.file_type === 'docx') {
-      // Handle DOCX
       const zip = new PizZip(arrayBuffer)
       const doc = new docxtemplater(zip, {
         paragraphLoop: true,
@@ -64,13 +63,10 @@ serve(async (req) => {
       contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
       extension = 'docx'
     } else {
-      // Handle PDF
       const pdfDoc = await PDFDocument.load(arrayBuffer)
       const pages = pdfDoc.getPages()
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
-      const fontSize = 10
 
-      // Fetch field configs to know where to draw (if using coordinates)
       const { data: fields } = await supabaseAdmin
         .from('document_fields')
         .select('*')
@@ -79,6 +75,7 @@ serve(async (req) => {
       if (fields) {
         for (const field of fields) {
           const value = fieldValues[field.field_name] || ''
+          if (!value && field.required) continue
           if (!value) continue
 
           const pageNum = (field.page_number || 1) - 1
@@ -86,15 +83,30 @@ serve(async (req) => {
           if (!page) continue
 
           if (field.position_x !== undefined && field.position_y !== undefined) {
-             // Basic coordinate based drawing
-             // PDF-lib uses 0,0 as bottom left. We might need to adjust based on expected behavior (usually top-left).
              const { height } = page.getSize()
+             
+             // The values from DB are now in points (1/72 inch)
+             const x = field.position_x;
+             const y = height - field.position_y; // Editor uses top-left, PDF uses bottom-left
+             const fontSize = field.font_size || 10;
+             const width = field.width || 150;
+             
+             let drawX = x;
+             const textWidth = font.widthOfTextAtSize(String(value), fontSize);
+             
+             if (field.alignment === 'center') {
+                drawX = x + (width / 2) - (textWidth / 2);
+             } else if (field.alignment === 'right') {
+                drawX = x + width - textWidth;
+             }
+             
              page.drawText(String(value), {
-               x: field.position_x,
-               y: height - field.position_y,
+               x: drawX,
+               y: y - fontSize, // Baseline adjustment
                size: fontSize,
                font: font,
                color: rgb(0, 0, 0),
+               maxWidth: width,
              })
           }
         }
@@ -106,7 +118,6 @@ serve(async (req) => {
       extension = 'pdf'
     }
 
-    // 3. Upload Generated File
     const generatedFileName = `${crypto.randomUUID()}.${extension}`
     const generatedPath = `${companyId}/${generatedFileName}`
 
@@ -120,7 +131,6 @@ serve(async (req) => {
 
     if (uploadError) throw uploadError
 
-    // 4. Record in DB
     const { data: generatedDoc, error: dbError } = await supabaseAdmin
       .from('generated_documents')
       .insert({

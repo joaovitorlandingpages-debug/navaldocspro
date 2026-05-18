@@ -3,6 +3,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+export interface DocumentField {
+  id?: string;
+  template_id: string;
+  field_name: string;
+  field_label: string;
+  field_type: string;
+  source_type: string;
+  source_field?: string;
+  required: boolean;
+  page_number: number;
+  position_x?: number;
+  position_y?: number;
+  width?: number;
+  height?: number;
+  font_size?: number;
+  field_options?: any;
+  alignment?: string;
+  created_at?: string;
+}
+
 export interface DocumentTemplate {
   id: string;
   company_id: string | null;
@@ -11,7 +31,7 @@ export interface DocumentTemplate {
   process_type: string | null;
   description: string | null;
   template_file_url: string | null;
-  fields_config: any[];
+  fields?: DocumentField[];
   version: number;
   is_active: boolean;
   created_at: string;
@@ -299,6 +319,57 @@ export const useDocuments = () => {
     },
   });
 
+  const duplicateTemplate = useMutation({
+    mutationFn: async (id: string) => {
+      // 1. Fetch original template
+      const { data: original, error: fetchError } = await supabase
+        .from("document_templates")
+        .select(`*, fields:document_fields(*)`)
+        .eq("id", id)
+        .single();
+      
+      if (fetchError) throw fetchError;
+
+      // 2. Create copy
+      const { data: copy, error: createError } = await supabase
+        .from("document_templates")
+        .insert({
+          ...original,
+          id: undefined,
+          name: `${original.name} (Cópia)`,
+          created_at: undefined,
+          fields: undefined,
+          version: 1,
+        } as any)
+        .select()
+        .single();
+      
+      if (createError) throw createError;
+
+      // 3. Copy fields
+      if (original.fields && original.fields.length > 0) {
+        const fieldsToInsert = original.fields.map((f: any) => ({
+          ...f,
+          id: undefined,
+          template_id: copy.id,
+          created_at: undefined,
+        }));
+        
+        const { error: fieldsError } = await supabase
+          .from("document_fields")
+          .insert(fieldsToInsert);
+        
+        if (fieldsError) throw fieldsError;
+      }
+
+      return copy;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["document-templates"] });
+      toast.success("Template duplicado com sucesso!");
+    },
+  });
+
   const getSignedUrl = async (bucket: string, path: string) => {
     const { data, error } = await supabase.storage
       .from(bucket)
@@ -320,6 +391,7 @@ export const useDocuments = () => {
     upsertTemplateFields,
     deleteTemplate,
     toggleTemplateActive,
+    duplicateTemplate,
     getSignedUrl,
   };
 };

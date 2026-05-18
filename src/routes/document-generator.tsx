@@ -189,14 +189,14 @@ function DocumentGenerator() {
            >
               <RotateCcw className="h-4 w-4" /> Resetar
            </Button>
-           <Button 
-             onClick={handleGenerateRealDocument}
-             disabled={!selectedTemplateId || isGenerating}
-             className="flex-1 md:flex-none bg-red-500 text-white h-12 rounded-xl font-bold gap-2 hover:bg-red-600 shadow-lg shadow-red-500/20"
-           >
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Gerar PDF Final
-           </Button>
+            <Button 
+              onClick={handleGenerateRealDocument}
+              disabled={!selectedTemplateId || isGenerating}
+              className="flex-1 md:flex-none bg-red-500 text-white h-12 rounded-xl font-bold gap-2 hover:bg-red-600 shadow-lg shadow-red-500/20"
+            >
+               {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileCheck className="h-4 w-4" />}
+               Gerar Documento Oficial
+            </Button>
         </div>
       </div>
 

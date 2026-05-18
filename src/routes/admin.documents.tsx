@@ -3,7 +3,7 @@ import {
   FileStack, Search, Plus, Filter, 
   MoreVertical, Download, Globe, Lock, 
   Settings, RefreshCw, ToggleLeft, ToggleRight, Trash2,
-  Loader2, X, Upload, FileCheck
+  Loader2, X, Upload, FileCheck, Copy
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { DocumentFieldEditor } from "@/components/DocumentFieldEditor";
+import { TemplateVisualEditor } from "@/components/documents/TemplateVisualEditor";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -36,7 +36,7 @@ function AdminDocuments() {
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
-  const { templates, isLoadingTemplates, createTemplate, deleteTemplate, toggleTemplateActive, getSignedUrl } = useDocuments();
+  const { templates, isLoadingTemplates, createTemplate, deleteTemplate, toggleTemplateActive, getSignedUrl, duplicateTemplate } = useDocuments();
 
   const { data: logs } = useQuery({
     queryKey: ["admin-document-logs"],
@@ -218,12 +218,9 @@ function AdminDocuments() {
        </Dialog>
 
        <Dialog open={!!editingFieldsId} onOpenChange={(open) => !open && setEditingFieldsId(null)}>
-         <DialogContent className="max-w-2xl bg-slate-900 border-white/10 text-white rounded-[2rem] overflow-hidden">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-black uppercase tracking-tight">Configurar Mapeamento de Campos</DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
-              {editingFieldsId && <DocumentFieldEditor templateId={editingFieldsId} />}
+         <DialogContent className="max-w-[95vw] w-[1400px] h-[95vh] bg-slate-900 border-white/10 text-white p-0 rounded-[2rem] overflow-hidden">
+            <div className="w-full h-full">
+              {editingFieldsId && <TemplateVisualEditor templateId={editingFieldsId} onClose={() => setEditingFieldsId(null)} />}
             </div>
          </DialogContent>
        </Dialog>
@@ -260,17 +257,24 @@ function AdminDocuments() {
                     >
                        <Settings className="h-3.5 w-3.5" />
                     </button>
-                    <button 
-                      onClick={() => {
-                        if (confirm("Deseja realmente excluir este template?")) {
-                          deleteTemplate.mutate(doc.id);
-                        }
-                      }}
-                      title="Excluir" 
-                      className="p-2 bg-white/5 hover:bg-red-500/20 rounded-xl text-slate-400 hover:text-red-500 transition-all border border-white/5"
-                    >
-                       <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                     <button 
+                       onClick={() => duplicateTemplate.mutate(doc.id)}
+                       title="Duplicar" 
+                       className="p-2 bg-white/5 hover:bg-amber-500/20 rounded-xl text-slate-400 hover:text-amber-500 transition-all border border-white/5"
+                     >
+                        <Copy className="h-3.5 w-3.5" />
+                     </button>
+                     <button 
+                       onClick={() => {
+                         if (confirm("Deseja realmente excluir este template?")) {
+                           deleteTemplate.mutate(doc.id);
+                         }
+                       }}
+                       title="Excluir" 
+                       className="p-2 bg-white/5 hover:bg-red-500/20 rounded-xl text-slate-400 hover:text-red-500 transition-all border border-white/5"
+                     >
+                        <Trash2 className="h-3.5 w-3.5" />
+                     </button>
                     <button 
                       onClick={async () => {
                         const path = doc.template_file_url?.split('/').slice(-2).join('/');

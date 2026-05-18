@@ -134,10 +134,14 @@ export type Database = {
       }
       document_fields: {
         Row: {
+          alignment: string | null
           created_at: string
           field_label: string
           field_name: string
+          field_options: Json | null
           field_type: string
+          font_size: number | null
+          height: number | null
           id: string
           page_number: number | null
           position_x: number | null
@@ -146,12 +150,17 @@ export type Database = {
           source_field: string | null
           source_type: string
           template_id: string | null
+          width: number | null
         }
         Insert: {
+          alignment?: string | null
           created_at?: string
           field_label: string
           field_name: string
+          field_options?: Json | null
           field_type?: string
+          font_size?: number | null
+          height?: number | null
           id?: string
           page_number?: number | null
           position_x?: number | null
@@ -160,12 +169,17 @@ export type Database = {
           source_field?: string | null
           source_type?: string
           template_id?: string | null
+          width?: number | null
         }
         Update: {
+          alignment?: string | null
           created_at?: string
           field_label?: string
           field_name?: string
+          field_options?: Json | null
           field_type?: string
+          font_size?: number | null
+          height?: number | null
           id?: string
           page_number?: number | null
           position_x?: number | null
@@ -174,6 +188,7 @@ export type Database = {
           source_field?: string | null
           source_type?: string
           template_id?: string | null
+          width?: number | null
         }
         Relationships: [
           {
