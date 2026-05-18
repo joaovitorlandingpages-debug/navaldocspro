@@ -430,16 +430,6 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             )}
           </div>
         </div>
-
-                (step === 1 && !formData.type) ||
-                (step === 2 && !formData.client) ||
-                (step === 3 && !formData.vessel)
-              }
-              className="bg-navy hover:bg-navy/90 rounded-2xl h-14 px-10 font-black uppercase text-xs tracking-widest shadow-xl shadow-navy/20 gap-2"
-            >
-              Próximo <ChevronRight className="h-4 w-4" />
-            </Button>
-          )}
       </DialogContent>
     </Dialog>
   );
