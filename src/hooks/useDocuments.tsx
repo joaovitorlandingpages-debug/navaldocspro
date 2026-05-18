@@ -391,6 +391,7 @@ export const useDocuments = () => {
     upsertTemplateFields,
     deleteTemplate,
     toggleTemplateActive,
+    duplicateTemplate,
     getSignedUrl,
   };
 };
