@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { 
   Activity, AlertTriangle, ShieldCheck, 
   Terminal, Search, Filter, Trash2
@@ -11,12 +12,23 @@ export const Route = createFileRoute("/admin/logs")({
 });
 
 function AdminLogs() {
-  const logs = [
-    { id: 1, type: 'info', msg: 'Novo template DOCX processado com sucesso', user: 'Ricardo Eng.', time: '2 min atrás' },
-    { id: 2, type: 'error', msg: 'Falha na conexão com Mercado Pago API', user: 'Sistema', time: '15 min atrás' },
-    { id: 3, type: 'warning', msg: 'Limite de OCR atingido pela Empresa Naval X', user: 'Automation', time: '1h atrás' },
-    { id: 4, type: 'info', msg: 'Upload de logo concluído', user: 'Ana Marina', time: '3h atrás' },
-  ];
+  const { data: logs, isLoading } = useQuery({
+    queryKey: ["admin_system_logs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("system_logs")
+        .select("*, companies(name), profiles(name)")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const clearLogs = async () => {
+     const { error } = await supabase.from("system_logs").delete().neq('id', '00000000-0000-0000-0000-000000000000');
+     if (!error) toast.success("Logs limpos com sucesso");
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -26,7 +38,10 @@ function AdminLogs() {
           <p className="text-slate-500 font-medium">Monitoramento técnico e auditoria de eventos.</p>
         </div>
         <div className="flex gap-2">
-           <button className="bg-white px-4 py-2 border border-slate-100 rounded-xl text-xs font-bold uppercase text-red-500 flex items-center gap-2 hover:bg-red-50 transition-all">
+           <button 
+             onClick={clearLogs}
+             className="bg-white px-4 py-2 border border-slate-100 rounded-xl text-xs font-bold uppercase text-red-500 flex items-center gap-2 hover:bg-red-50 transition-all"
+           >
               <Trash2 className="h-4 w-4" /> Limpar Logs
            </button>
         </div>
@@ -39,25 +54,32 @@ function AdminLogs() {
          </div>
 
          <div className="space-y-4 font-mono">
-            {logs.map((log) => (
-              <div key={log.id} className="flex gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-white/10 group">
-                 <div className="mt-1">
-                    {log.type === 'error' ? <AlertTriangle className="h-4 w-4 text-red-500" /> : 
-                     log.type === 'warning' ? <AlertTriangle className="h-4 w-4 text-amber-500" /> :
-                     <ShieldCheck className="h-4 w-4 text-emerald-500" />}
-                 </div>
-                 <div className="flex-grow">
-                    <p className="text-slate-300 text-sm">{log.msg}</p>
-                    <div className="flex items-center gap-4 mt-2">
-                       <span className="text-[10px] font-bold text-white/30 uppercase">User: {log.user}</span>
-                       <span className="text-[10px] font-bold text-white/30 uppercase">{log.time}</span>
-                    </div>
-                 </div>
-                 <div className="opacity-0 group-hover:opacity-100 transition-all">
-                    <button className="text-xs text-primary font-bold hover:underline">Auditar</button>
-                 </div>
-              </div>
-            ))}
+            {isLoading ? (
+              <div className="text-white/20 text-center py-10">Lendo console de eventos...</div>
+            ) : logs?.length === 0 ? (
+              <div className="text-white/20 text-center py-10">Nenhum evento registrado.</div>
+            ) : (
+              logs?.map((log: any) => (
+                <div key={log.id} className="flex gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-white/10 group">
+                   <div className="mt-1">
+                      {log.event_type === 'error' ? <AlertTriangle className="h-4 w-4 text-red-500" /> : 
+                       log.event_type === 'warning' ? <AlertTriangle className="h-4 w-4 text-amber-500" /> :
+                       <ShieldCheck className="h-4 w-4 text-emerald-500" />}
+                   </div>
+                   <div className="flex-grow">
+                      <p className="text-slate-300 text-sm">[{log.module.toUpperCase()}] {log.message}</p>
+                      <div className="flex items-center gap-4 mt-2">
+                         <span className="text-[10px] font-bold text-white/30 uppercase">User: {log.profiles?.name || 'Sistema'}</span>
+                         <span className="text-[10px] font-bold text-white/30 uppercase">Empresa: {log.companies?.name || 'Global'}</span>
+                         <span className="text-[10px] font-bold text-white/30 uppercase">{new Date(log.created_at).toLocaleString()}</span>
+                      </div>
+                   </div>
+                   <div className="opacity-0 group-hover:opacity-100 transition-all">
+                      <button className="text-xs text-primary font-bold hover:underline">Auditar</button>
+                   </div>
+                </div>
+              ))
+            )}
          </div>
 
          <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-white/20">

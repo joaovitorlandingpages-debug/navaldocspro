@@ -229,13 +229,23 @@ function OnboardingFlow() {
                 <Users className="h-8 w-8" />
               </div>
               <h2 className="text-2xl font-black text-navy uppercase">Primeiro Cliente</h2>
-              <p className="text-slate-500">Crie seu primeiro cliente para começar a organizar processos.</p>
+              <p className="text-slate-500">Cadastre o primeiro cliente da sua empresa.</p>
             </div>
             
-            <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm text-center">
-               <p className="text-slate-500 mb-6">Você pode pular esta etapa e fazer depois no dashboard, ou criar agora para agilizar.</p>
-               <Button variant="outline" onClick={() => updateStep(5)} className="mr-2">Pular por enquanto</Button>
-               <Button onClick={() => updateStep(5)} className="bg-primary">Criar Cliente Agora</Button>
+            <div className="space-y-4">
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400">Nome do Cliente / Empresa</label>
+                  <Input placeholder="Ex: Marítima Global" className="h-12 border-slate-100 bg-slate-50/50" />
+               </div>
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400">CPF / CNPJ do Cliente</label>
+                  <Input placeholder="00.000.000/0001-00" className="h-12 border-slate-100 bg-slate-50/50" />
+               </div>
+            </div>
+
+            <div className="flex gap-2">
+               <Button variant="ghost" onClick={() => updateStep(5)} className="flex-grow h-12 text-slate-400 font-bold">Pular</Button>
+               <Button onClick={() => updateStep(5)} className="flex-[2] h-12 bg-primary">Cadastrar Cliente</Button>
             </div>
           </div>
         );
@@ -247,12 +257,29 @@ function OnboardingFlow() {
                 <Ship className="h-8 w-8" />
               </div>
               <h2 className="text-2xl font-black text-navy uppercase">Primeira Embarcação</h2>
-              <p className="text-slate-500">Adicione uma embarcação para vincular aos documentos.</p>
+              <p className="text-slate-500">Vincule a primeira embarcação ao seu cliente.</p>
             </div>
             
-            <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm text-center">
-               <Button variant="outline" onClick={() => updateStep(6)} className="mr-2">Pular</Button>
-               <Button onClick={() => updateStep(6)} className="bg-primary">Adicionar Embarcação</Button>
+            <div className="space-y-4">
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400">Nome da Embarcação</label>
+                  <Input placeholder="Ex: Rebocador Titan" className="h-12 border-slate-100 bg-slate-50/50" />
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase text-slate-400">Número Inscrição</label>
+                     <Input placeholder="000A000000" className="h-12 border-slate-100 bg-slate-50/50" />
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase text-slate-400">Tipo</label>
+                     <Input placeholder="Rebocador" className="h-12 border-slate-100 bg-slate-50/50" />
+                  </div>
+               </div>
+            </div>
+
+            <div className="flex gap-2">
+               <Button variant="ghost" onClick={() => updateStep(6)} className="flex-grow h-12 text-slate-400 font-bold">Pular</Button>
+               <Button onClick={() => updateStep(6)} className="flex-[2] h-12 bg-primary">Adicionar Barco</Button>
             </div>
           </div>
         );
@@ -263,13 +290,28 @@ function OnboardingFlow() {
               <div className="p-4 bg-amber-100 rounded-full text-amber-600 mb-2">
                 <ClipboardList className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-black text-navy uppercase">Primeiro Processo</h2>
-              <p className="text-slate-500">Tudo pronto para criar seu primeiro processo de engenharia.</p>
+              <h2 className="text-2xl font-black text-navy uppercase">Novo Processo</h2>
+              <p className="text-slate-500">Inicie seu primeiro processo de automação.</p>
             </div>
             
-            <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm text-center">
-               <Button variant="outline" onClick={() => updateStep(7)} className="mr-2">Pular</Button>
-               <Button onClick={() => updateStep(7)} className="bg-primary">Abrir Processo</Button>
+            <div className="space-y-4">
+               <div className="space-y-2 text-left">
+                  <label className="text-[10px] font-black uppercase text-slate-400">Tipo de Processo</label>
+                  <select className="w-full h-12 px-4 rounded-md border border-slate-100 bg-slate-50/50 text-sm outline-none">
+                     <option>Vistoria de Renovação</option>
+                     <option>Inscrição de Embarcação</option>
+                     <option>Alteração de Nome</option>
+                  </select>
+               </div>
+               <div className="space-y-2 text-left p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Dica Pro</p>
+                  <p className="text-xs text-navy/70 leading-relaxed">Você poderá usar nossa IA para extrair dados de documentos e preencher este processo automaticamente depois.</p>
+               </div>
+            </div>
+
+            <div className="flex gap-2">
+               <Button variant="ghost" onClick={() => updateStep(7)} className="flex-grow h-12 text-slate-400 font-bold">Pular</Button>
+               <Button onClick={() => updateStep(7)} className="flex-[2] h-12 bg-primary">Abrir Processo</Button>
             </div>
           </div>
         );

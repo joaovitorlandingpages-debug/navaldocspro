@@ -874,6 +874,47 @@ export type Database = {
         }
         Relationships: []
       }
+      system_logs: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          event_type: string
+          id: string
+          message: string
+          metadata: Json | null
+          module: string
+          user_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          event_type: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          module: string
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          module?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tickets: {
         Row: {
           company_id: string | null
@@ -1070,6 +1111,16 @@ export type Database = {
     }
     Functions: {
       is_admin_master: { Args: never; Returns: boolean }
+      log_system_event: {
+        Args: {
+          p_company_id?: string
+          p_event_type: string
+          p_message: string
+          p_metadata?: Json
+          p_module: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
