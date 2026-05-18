@@ -260,7 +260,61 @@ function ProcessDetail() {
                         O cliente solicitou urgência devido ao contrato de afretamento que inicia no próximo mês. Todos os documentos técnicos da embarcação Phoenix já foram conferidos. Falta apenas o comprovante de residência atualizado do sócio-administrador.
                      </p>
                   </div>
+                <TabsContent value="comments" className="animate-in fade-in duration-300">
+                  <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col h-[600px] overflow-hidden">
+                    <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
+                      <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4 text-primary" /> Comunicação Interna
+                      </h3>
+                      <Badge variant="outline" className="text-[10px] text-slate-400 border-slate-200">Visível apenas para equipe</Badge>
+                    </div>
+                    
+                    <div ref={scrollRef} className="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50/30">
+                      {comments.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
+                          <MessageSquare className="h-12 w-12 mb-4" />
+                          <p className="text-sm font-bold uppercase tracking-widest">Nenhum comentário ainda</p>
+                          <p className="text-xs">Inicie a conversa sobre este processo.</p>
+                        </div>
+                      ) : (
+                        comments.map((comment) => (
+                          <div key={comment.id} className={`flex flex-col ${comment.user_id === profile?.id ? "items-end" : "items-start"}`}>
+                            <div className={`max-w-[80%] p-4 rounded-2xl ${
+                              comment.user_id === profile?.id 
+                                ? "bg-navy text-white rounded-tr-none" 
+                                : "bg-white text-navy rounded-tl-none border border-slate-100 shadow-sm"
+                            }`}>
+                              <p className="text-sm leading-relaxed">{comment.content}</p>
+                            </div>
+                            <div className="flex items-center gap-2 mt-2 px-1">
+                               <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                                 {comment.profiles?.name} • {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}
+                               </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <form onSubmit={handleSendComment} className="p-6 border-t bg-white flex gap-3">
+                      <Input 
+                        placeholder="Digite sua nota interna..." 
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        className="h-12 rounded-xl bg-slate-50 border-slate-100 focus:bg-white"
+                      />
+                      <Button 
+                        type="submit" 
+                        disabled={!newComment.trim() || isSubmittingComment}
+                        className="h-12 w-12 rounded-xl p-0 bg-primary hover:opacity-90 shadow-lg shadow-primary/20"
+                      >
+                        {isSubmittingComment ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                      </Button>
+                    </form>
+                  </div>
+                </TabsContent>
                </TabsContent>
+
 
                <TabsContent value="documents" className="animate-in fade-in duration-300">
                   <div className="grid lg:grid-cols-2 gap-8">
