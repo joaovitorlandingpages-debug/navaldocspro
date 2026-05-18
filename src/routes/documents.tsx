@@ -38,7 +38,7 @@ function Documents() {
     }
   };
 
-  const categories = ["Todos", ...(officialCategories?.map(c => c.name) || [])];
+  const categories = ["Todos", ...(officialCategories?.map((c: any) => c.name) || [])];
   
   const docs = generatedDocuments?.filter((doc: any) => 
     selectedCategory === "Todos" || doc.template?.category === selectedCategory || doc.category === selectedCategory
