@@ -4,6 +4,7 @@ import {
   Filter, Tag, LayoutGrid, List, MoreVertical, X,
   Zap, Cpu, Loader2, Calendar, User as UserIcon
 } from "lucide-react";
+import { toast } from "sonner";
 import { useState } from "react";
 import { SmartOCR } from "@/components/SmartOCR";
 import { useDocuments } from "@/hooks/useDocuments";
