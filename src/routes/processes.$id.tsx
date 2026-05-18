@@ -316,22 +316,56 @@ function ProcessDetail() {
                </TabsContent>
 
 
-               <TabsContent value="documents" className="animate-in fade-in duration-300">
+                <TabsContent value="documents" className="animate-in fade-in duration-300">
                   <div className="grid lg:grid-cols-2 gap-8">
                      <div className="space-y-6">
                         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
                            <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center justify-between">
-                              Anexar Documento
+                              Checklist Documental
                            </h3>
-                           <FileUploader 
-                             bucket="process-attachments" 
-                             category="attachment" 
-                             processId={id}
-                             customerId={process?.customer?.id}
-                             vesselId={process?.vessel?.id}
-                           />
+                           <div className="space-y-4">
+                              {documents.map((doc, idx) => (
+                                <div key={idx} className="p-5 rounded-2xl border border-slate-50 bg-slate-50/30 group hover:bg-white hover:border-primary/20 transition-all">
+                                   <div className="flex justify-between items-start mb-4">
+                                      <div className="flex items-center gap-3">
+                                         <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
+                                           doc.status === 'Validado' ? 'bg-green-100 text-green-600' : 
+                                           doc.status === 'Correção Necessária' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-400'
+                                         }`}>
+                                            <FileText className="h-4 w-4" />
+                                         </div>
+                                         <div>
+                                            <p className="text-xs font-bold text-navy">{doc.name}</p>
+                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{doc.type} • {doc.size}</p>
+                                         </div>
+                                      </div>
+                                      <Badge className={`text-[9px] font-black uppercase tracking-widest ${
+                                        doc.status === 'Validado' ? 'bg-green-500 text-white' : 
+                                        doc.status === 'Correção Necessária' ? 'bg-red-500 text-white' : 'bg-slate-200 text-slate-500'
+                                      }`}>
+                                         {doc.status}
+                                      </Badge>
+                                   </div>
+                                   
+                                   {doc.status === 'Pendente' || doc.status === 'Correção Necessária' ? (
+                                     <FileUploader 
+                                       bucket="process-attachments" 
+                                       category="attachment" 
+                                       processId={id}
+                                       compact={true}
+                                     />
+                                   ) : (
+                                     <div className="flex gap-2">
+                                        <Button variant="ghost" size="sm" className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest text-primary">Visualizar</Button>
+                                        <Button variant="ghost" size="sm" className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-400">Substituir</Button>
+                                     </div>
+                                   )}
+                                </div>
+                              ))}
+                           </div>
                         </div>
                      </div>
+
 
                      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden h-fit">
                         <div className="p-8 border-b flex justify-between items-center">
