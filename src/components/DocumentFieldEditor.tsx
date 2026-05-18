@@ -33,10 +33,10 @@ const SOURCE_TYPES = [
 ];
 
 const SOURCE_FIELDS = {
-  customer: ["name", "cpf_cnpj", "rg", "address", "phone", "email"],
-  vessel: ["name", "registration_number", "vessel_type", "category", "engine"],
-  company: ["name", "cnpj", "phone"],
-  process: ["process_type", "status", "created_at"],
+  customer: ["name", "cpf_cnpj", "rg", "cnh", "address", "phone", "email", "occupation", "nationality", "marital_status"],
+  vessel: ["name", "registration_number", "vessel_type", "category", "engine_power", "length", "hull_material", "year_built"],
+  company: ["name", "cnpj", "phone", "email", "address"],
+  process: ["process_type", "status", "created_at", "assigned_to"],
 };
 
 export function DocumentFieldEditor({ templateId }: DocumentFieldEditorProps) {
