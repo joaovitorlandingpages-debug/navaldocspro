@@ -4,8 +4,7 @@ import * as pdfjsLib from "pdfjs-dist";
 import { 
   ChevronLeft, ChevronRight, Plus, 
   Save, Trash2, Settings2, 
-  MousePointer2, Maximize2, ZoomIn, 
-  ZoomOut, Loader2, Database, Type,
+  ZoomIn, ZoomOut, Loader2, Database, Type,
   Layout, GripHorizontal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,11 +46,8 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
   const [scale, setScale] = useState(1.2);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   
-  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
   const currentTemplate = templates?.find((t: any) => t.id === templateId);
 
   useEffect(() => {
@@ -62,12 +58,11 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
         setIsLoading(true);
         const path = currentTemplate.template_file_url.split('/').slice(-2).join('/');
         const url = await getSignedUrl('document-templates', path);
-        setPdfUrl(url);
         
         const loadingTask = pdfjsLib.getDocument(url);
         const pdf = await loadingTask.promise;
         setNumPages(pdf.numPages);
-        renderPage(pdf, currentPage, scale);
+        await renderPage(pdf, currentPage, scale);
       } catch (error) {
         console.error("Error loading PDF:", error);
         toast.error("Erro ao carregar o PDF");
@@ -85,7 +80,12 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
         .filter((f: any) => f.template_id === templateId)
         .map((f: any) => ({
           ...f,
-          id: f.id || Math.random().toString(36).substr(2, 9)
+          id: f.id || Math.random().toString(36).substr(2, 9),
+          // Store raw points from DB, we'll scale them in the UI
+          position_x: f.position_x || 0,
+          position_y: f.position_y || 0,
+          width: f.width || 150,
+          height: f.height || 30,
         }));
       setFields(filtered);
     }
@@ -122,11 +122,12 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
       source_type: "manual",
       required: false,
       page_number: currentPage,
-      position_x: 50,
+      position_x: 50, // These are in points
       position_y: 50,
       width: 150,
-      height: 30,
+      height: 25,
       font_size: 12,
+      alignment: 'left'
     };
     setFields([...fields, newField]);
     setSelectedFieldId(newField.id!);
@@ -152,7 +153,7 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
   const selectedField = fields.find(f => f.id === selectedFieldId);
 
   return (
-    <div className="flex h-[90vh] w-full bg-slate-950 rounded-3xl overflow-hidden border border-white/10 shadow-2xl animate-in zoom-in-95 duration-300">
+    <div className="flex h-full w-full bg-slate-950 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
       {/* Sidebar - Tools & Field List */}
       <div className="w-80 border-r border-white/10 flex flex-col bg-slate-900/50 backdrop-blur-xl">
         <div className="p-6 border-b border-white/10">
@@ -277,7 +278,7 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1.5">
-                    <Label className="text-[9px] font-bold text-slate-500 uppercase">Fonte (px)</Label>
+                    <Label className="text-[9px] font-bold text-slate-500 uppercase">Fonte (pt)</Label>
                     <Input 
                       type="number"
                       value={selectedField.font_size}
@@ -295,9 +296,9 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-900 border-white/10 text-white">
-                        <SelectItem value="left" className="text-xs text-left">Esquerda</SelectItem>
-                        <SelectItem value="center" className="text-xs text-center">Centro</SelectItem>
-                        <SelectItem value="right" className="text-xs text-right">Direita</SelectItem>
+                        <SelectItem value="left" className="text-xs">Esquerda</SelectItem>
+                        <SelectItem value="center" className="text-xs">Centro</SelectItem>
+                        <SelectItem value="right" className="text-xs">Direita</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -359,15 +360,14 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
           </div>
 
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 px-3 py-1 font-mono text-[9px] tracking-widest uppercase">
+            <div className="px-3 py-1 bg-green-500/10 text-green-500 border border-green-500/20 rounded text-[9px] tracking-widest uppercase font-mono">
               Modo Edição
-            </Badge>
+            </div>
           </div>
         </div>
 
         {/* Viewport */}
         <div 
-          ref={containerRef}
           className="flex-1 overflow-auto p-12 flex justify-center bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 to-black scrollbar-hide"
         >
           <div className="relative shadow-[0_0_100px_rgba(0,0,0,0.5)]">
@@ -386,14 +386,26 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
               .map(field => (
                 <Rnd
                   key={field.id}
-                  size={{ width: field.width || 150, height: field.height || 30 }}
-                  position={{ x: field.position_x || 0, y: field.position_y || 0 }}
-                  onDragStop={(e, d) => updateField(field.id!, { position_x: d.x, position_y: d.y })}
+                  size={{ 
+                    width: (field.width || 150) * scale, 
+                    height: (field.height || 25) * scale 
+                  }}
+                  position={{ 
+                    x: (field.position_x || 0) * scale, 
+                    y: (field.position_y || 0) * scale 
+                  }}
+                  onDragStop={(e, d) => {
+                    updateField(field.id!, { 
+                      position_x: d.x / scale, 
+                      position_y: d.y / scale 
+                    });
+                  }}
                   onResizeStop={(e, direction, ref, delta, position) => {
                     updateField(field.id!, {
-                      width: parseInt(ref.style.width),
-                      height: parseInt(ref.style.height),
-                      ...position,
+                      width: parseInt(ref.style.width) / scale,
+                      height: parseInt(ref.style.height) / scale,
+                      position_x: position.x / scale,
+                      position_y: position.y / scale,
                     });
                   }}
                   bounds="parent"
@@ -415,7 +427,6 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
                     <GripHorizontal className="h-3 w-3 text-white/20 shrink-0" />
                   </div>
                   
-                  {/* Handle decorativo de resize */}
                   {selectedFieldId === field.id && (
                     <div className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-slate-900" />
                   )}
@@ -424,14 +435,6 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function Badge({ children, variant = "default", className }: { children: React.ReactNode, variant?: string, className?: string }) {
-  return (
-    <div className={cn("px-2 py-0.5 rounded text-[10px] font-bold", className)}>
-      {children}
     </div>
   );
 }
