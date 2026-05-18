@@ -82,8 +82,10 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
         
         const loadingTask = pdfjsLib.getDocument({
           url,
-          enableScripting: false, // Security: Disable JS execution in PDF
-        });
+          // @ts-ignore - Security settings for pdf.js loading
+          enableScripting: false, 
+        } as any);
+
 
 
         const pdf = await loadingTask.promise;
