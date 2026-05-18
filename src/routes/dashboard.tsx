@@ -493,26 +493,43 @@ export function RouteContent() {
                      <Users className="h-4 w-4 text-primary" /> Produtividade da Equipe
                   </h3>
                </div>
-               <div className="space-y-4">
-                  {[
-                    { name: "Ricardo Almeida", role: "Master", progress: 92, status: "online" },
-                    { name: "Mariana Souza", role: "Engenheira", progress: 78, status: "offline" },
-                    { name: "João Silva", role: "Despachante", progress: 65, status: "online" }
-                  ].map((member, i) => (
-                    <div key={i} className="space-y-2">
-                       <div className="flex justify-between items-end">
-                          <div className="flex items-center gap-2">
-                             <div className={`h-1.5 w-1.5 rounded-full ${member.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                             <p className="text-xs font-bold text-navy">{member.name}</p>
-                          </div>
-                          <span className="text-[10px] font-black text-slate-400">{member.progress}%</span>
-                       </div>
-                       <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
-                          <div className="h-full bg-primary/20 rounded-full" style={{ width: `${member.progress}%` }} />
-                       </div>
+                <div className="space-y-4">
+                  {isLoadingStats ? (
+                    <div className="flex justify-center p-4">
+                      <Loader2 className="h-4 w-4 animate-spin text-slate-300" />
                     </div>
-                  ))}
-               </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                        <div className="flex items-center gap-3">
+                           <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center text-white text-[10px] font-black uppercase">
+                              {profile?.name?.substring(0, 2).toUpperCase()}
+                           </div>
+                           <div>
+                              <p className="text-[10px] font-black text-navy uppercase tracking-widest">{profile?.name}</p>
+                              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{profile?.role}</p>
+                           </div>
+                        </div>
+                        <div className="h-2 w-2 bg-emerald-500 rounded-full" />
+                      </div>
+                      
+                      <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                         <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-2">Estatísticas Rápidas</p>
+                         <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-white p-2 rounded-lg text-center">
+                               <p className="text-[8px] text-slate-400 font-bold uppercase">OCR Mes</p>
+                               <p className="text-sm font-black text-navy">{statsData?.ocrUsage}</p>
+                            </div>
+                            <div className="bg-white p-2 rounded-lg text-center">
+                               <p className="text-[8px] text-slate-400 font-bold uppercase">Docs</p>
+                               <p className="text-sm font-black text-navy">{statsData?.generatedDocuments}</p>
+                            </div>
+                         </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                <Link to="/settings" className="mt-6 block text-center text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Gerenciar Equipe</Link>
             </div>
 
