@@ -414,12 +414,15 @@ export type Database = {
       ocr_jobs: {
         Row: {
           company_id: string | null
+          confidence_by_field: Json | null
           confidence_score: number | null
           created_at: string
           document_type: string | null
+          error_message: string | null
           extracted_data: Json | null
           id: string
           processing_time: number | null
+          provider_used: string | null
           reviewed_by: string | null
           status: string
           updated_at: string
@@ -427,12 +430,15 @@ export type Database = {
         }
         Insert: {
           company_id?: string | null
+          confidence_by_field?: Json | null
           confidence_score?: number | null
           created_at?: string
           document_type?: string | null
+          error_message?: string | null
           extracted_data?: Json | null
           id?: string
           processing_time?: number | null
+          provider_used?: string | null
           reviewed_by?: string | null
           status?: string
           updated_at?: string
@@ -440,12 +446,15 @@ export type Database = {
         }
         Update: {
           company_id?: string | null
+          confidence_by_field?: Json | null
           confidence_score?: number | null
           created_at?: string
           document_type?: string | null
+          error_message?: string | null
           extracted_data?: Json | null
           id?: string
           processing_time?: number | null
+          provider_used?: string | null
           reviewed_by?: string | null
           status?: string
           updated_at?: string
@@ -464,6 +473,50 @@ export type Database = {
             columns: ["uploaded_file_id"]
             isOneToOne: false
             referencedRelation: "uploaded_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ocr_usage: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          estimated_cost: number | null
+          failed_jobs: number | null
+          id: string
+          month: number
+          successful_jobs: number | null
+          total_jobs: number | null
+          year: number
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          estimated_cost?: number | null
+          failed_jobs?: number | null
+          id?: string
+          month: number
+          successful_jobs?: number | null
+          total_jobs?: number | null
+          year: number
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          estimated_cost?: number | null
+          failed_jobs?: number | null
+          id?: string
+          month?: number
+          successful_jobs?: number | null
+          total_jobs?: number | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ocr_usage_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
