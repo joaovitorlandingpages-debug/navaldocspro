@@ -256,6 +256,8 @@ function DashboardLayout() {
 
 export function RouteContent() {
   const { setIsNewProcessOpen } = useNewProcess();
+  const navigate = useNavigate();
+
   const { profile } = useAuth();
   const { data: statsData, isLoading: isLoadingStats } = useDashboardStats();
   
