@@ -5,7 +5,10 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { supabase } from "@/integrations/supabase/client";
+
 
 export const Route = createFileRoute("/processes")({
   component: Processes,
@@ -16,6 +19,13 @@ function Processes() {
   const [processes, setProcesses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { setIsNewProcessOpen } = useNewProcess();
+  const { checkLimit } = usePlanLimits();
+  const [upgradeModal, setUpgradeModal] = useState<{ isOpen: boolean; current: number; limit: number | null }>({
+    isOpen: false,
+    current: 0,
+    limit: null
+  });
+
 
   useEffect(() => {
     const fetchProcesses = async () => {
@@ -74,9 +84,17 @@ function Processes() {
             </button>
           </div>
           <button 
-            onClick={() => setIsNewProcessOpen(true)}
+            onClick={async () => {
+              const limit = await checkLimit('processes');
+              if (limit.reached) {
+                setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
+                return;
+              }
+              setIsNewProcessOpen(true);
+            }}
             className="flex-grow sm:flex-initial bg-primary text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/20"
           >
+
             <Plus className="h-4 w-4 inline mr-2" /> Novo Processo
           </button>
         </div>
@@ -166,6 +184,15 @@ function Processes() {
            <button onClick={() => setView("kanban")} className="text-xs font-black uppercase tracking-widest text-primary hover:underline">Voltar para Kanban</button>
         </div>
       )}
+
+      <UpgradeModal 
+        isOpen={upgradeModal.isOpen} 
+        onClose={() => setUpgradeModal({ ...upgradeModal, isOpen: false })} 
+        resource="processes"
+        limit={upgradeModal.limit}
+        current={upgradeModal.current}
+      />
     </div>
+
   );
 }

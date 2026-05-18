@@ -15,6 +15,8 @@ import { FileUploader } from "@/components/FileUploader";
 import { useFiles } from "@/hooks/useFiles";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { Badge } from "@/components/ui/badge";
+import { UpgradeModal } from "@/components/billing/UpgradeModal";
+
 
 export const Route = createFileRoute("/customers")({
   component: Customers,
@@ -28,6 +30,12 @@ function Customers() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customers, setCustomers] = useState<any[]>([]);
   const [companyId, setCompanyId] = useState<string | null>(null);
+  const [upgradeModal, setUpgradeModal] = useState<{ isOpen: boolean; current: number; limit: number | null }>({
+    isOpen: false,
+    current: 0,
+    limit: null
+  });
+
 
   const { setIsNewProcessOpen } = useNewProcess();
   const { checkLimit } = usePlanLimits();
@@ -127,11 +135,12 @@ function Customers() {
             onClick={async () => {
               const limit = await checkLimit('customers');
               if (limit.reached) {
-                toast.error("Limite de clientes atingido para o seu plano atual. Faça upgrade para continuar.");
+                setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
                 return;
               }
               setIsModalOpen(true);
             }}
+
             className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
           >
             <Plus className="h-4 w-4" /> Novo Cliente
@@ -414,8 +423,17 @@ function Customers() {
                             <FileText className="h-12 w-12 text-slate-100 mx-auto mb-2" />
                             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhum documento</p>
                          </div>
-                       )}
-                    </div>
+      )}
+
+      <UpgradeModal 
+        isOpen={upgradeModal.isOpen} 
+        onClose={() => setUpgradeModal({ ...upgradeModal, isOpen: false })} 
+        resource="customers"
+        limit={upgradeModal.limit}
+        current={upgradeModal.current}
+      />
+    </div>
+
                  </div>
               </TabsContent>
             </Tabs>

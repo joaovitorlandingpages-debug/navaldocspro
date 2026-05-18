@@ -15,6 +15,9 @@ import { Button } from "@/components/ui/button";
 import { FileUploader } from "@/components/FileUploader";
 import { useFiles } from "@/hooks/useFiles";
 import { Badge } from "@/components/ui/badge";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { UpgradeModal } from "@/components/billing/UpgradeModal";
+
 
 export const Route = createFileRoute("/vessels")({
   component: Vessels,
@@ -31,6 +34,13 @@ function Vessels() {
   const [companyId, setCompanyId] = useState<string | null>(null);
 
   const { setIsNewProcessOpen } = useNewProcess();
+  const { checkLimit } = usePlanLimits();
+  const [upgradeModal, setUpgradeModal] = useState<{ isOpen: boolean; current: number; limit: number | null }>({
+    isOpen: false,
+    current: 0,
+    limit: null
+  });
+
   const { files, deleteFile } = useFiles(selectedVessel ? { vesselId: selectedVessel.id } : undefined);
 
   // Form State
@@ -142,7 +152,15 @@ function Vessels() {
             <Plus className="h-4 w-4" /> Novo Processo
           </button>
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={async () => {
+              const limit = await checkLimit('vessels' as any);
+              if (limit.reached) {
+                setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
+                return;
+              }
+              setIsModalOpen(true);
+            }}
+
             className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
           >
             <Plus className="h-4 w-4" /> Nova Embarcação
@@ -437,6 +455,14 @@ function Vessels() {
           </div>
         </DialogContent>
       </Dialog>
+      <UpgradeModal 
+        isOpen={upgradeModal.isOpen} 
+        onClose={() => setUpgradeModal({ ...upgradeModal, isOpen: false })} 
+        resource="vessels"
+        limit={upgradeModal.limit}
+        current={upgradeModal.current}
+      />
     </div>
   );
 }
+

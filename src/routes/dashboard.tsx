@@ -3,7 +3,8 @@ import {
   Anchor, LayoutDashboard, Users, Ship, ClipboardList, 
   FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
-  Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign
+  Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
+  AlertTriangle, ArrowUpCircle
 } from "lucide-react";
 import { useState, useEffect, Suspense, lazy } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -13,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
@@ -23,13 +26,39 @@ function DashboardLayout() {
   const [isNotificationsOpen, setNotificationsOpen] = useState(false);
   const { profile, loading } = useAuth();
   const { setIsNewProcessOpen } = useNewProcess();
+  const { checkLimit, subscription } = usePlanLimits();
+  const [quotaWarnings, setQuotaWarnings] = useState<string[]>([]);
   const navigate = useNavigate();
+
 
   useEffect(() => {
     if (!loading && !profile) {
       navigate({ to: "/auth/login" });
     }
   }, [profile, loading, navigate]);
+
+  useEffect(() => {
+    const checkAllLimits = async () => {
+      if (!subscription) return;
+      const resources = ['customers', 'vessels', 'processes', 'documents', 'ocr'] as const;
+      const warnings: string[] = [];
+      
+      for (const res of resources) {
+        const status = await checkLimit(res);
+        const percentage = status.limit ? (status.current / status.limit) * 100 : 0;
+        
+        if (percentage >= 100) {
+          warnings.push(`Limite atingido: ${res}`);
+        } else if (percentage >= 80) {
+          warnings.push(`Quase no limite: ${res} (${Math.round(percentage)}%)`);
+        }
+      }
+      setQuotaWarnings(warnings);
+    };
+
+    checkAllLimits();
+  }, [subscription]);
+
 
   const handleLogout = async () => {
     try {
@@ -119,50 +148,68 @@ function DashboardLayout() {
       {/* Main Content */}
       <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
-        <header className="h-16 bg-white border-b flex items-center justify-between px-8 z-40">
-           <div className="flex items-center gap-4 flex-grow">
-              <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-100 rounded-lg lg:block hidden">
-                <Menu className="h-5 w-5" />
-              </button>
-              <div className="relative max-w-md w-full hidden sm:block">
-                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                 <input 
-                   placeholder="Buscar processos, barcos ou clientes..." 
-                   className="w-full pl-10 pr-4 py-2 bg-slate-100 rounded-full text-sm border-transparent focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all"
-                 />
-              </div>
-           </div>
-           
-           <div className="flex items-center gap-6">
-              <button 
-                onClick={() => setIsNewProcessOpen(true)}
-                className="hidden md:flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20"
-              >
-                <Plus className="h-4 w-4" /> Novo Processo
-              </button>
-
-              <div className="flex items-center gap-4">
-                 <button 
-                   onClick={() => setNotificationsOpen(true)}
-                   className="relative p-2 hover:bg-slate-100 rounded-full transition-all active:scale-95"
-                 >
-                     <Bell className="h-5 w-5 text-slate-600" />
-                     <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full animate-ping" />
-                     <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
-                 </button>
-                <div className="h-8 w-px bg-slate-200" />
+        <header className="h-auto min-h-16 bg-white border-b flex flex-col z-40">
+           {quotaWarnings.length > 0 && (
+             <div className="bg-amber-50 border-b border-amber-100 px-8 py-2 flex items-center justify-between animate-in slide-in-from-top duration-500">
                 <div className="flex items-center gap-3">
-                    <div className="text-right hidden sm:block">
-                        <p className="text-sm font-bold text-navy">{profile?.name || "Usuário"}</p>
-                        <p className="text-xs text-muted-foreground uppercase tracking-tighter">{profile?.role || "Plan Pro"}</p>
-                    </div>
-                    <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-                        {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
-                    </div>
+                   <AlertTriangle className="h-4 w-4 text-amber-600" />
+                   <p className="text-[10px] font-bold text-amber-800 uppercase tracking-widest">
+                     Atenção: {quotaWarnings[0]} {quotaWarnings.length > 1 && `(+${quotaWarnings.length - 1} alertas)`}
+                   </p>
                 </div>
-              </div>
+                <Link to="/billing/subscription">
+                   <button className="text-[9px] font-black uppercase text-amber-700 hover:underline flex items-center gap-1">
+                      Gerenciar Plano <ArrowUpCircle className="h-3 w-3" />
+                   </button>
+                </Link>
+             </div>
+           )}
+           <div className="h-16 flex items-center justify-between px-8">
+             <div className="flex items-center gap-4 flex-grow">
+                <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-100 rounded-lg lg:block hidden">
+                  <Menu className="h-5 w-5" />
+                </button>
+                <div className="relative max-w-md w-full hidden sm:block">
+                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                   <input 
+                     placeholder="Buscar processos, barcos ou clientes..." 
+                     className="w-full pl-10 pr-4 py-2 bg-slate-100 rounded-full text-sm border-transparent focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all"
+                   />
+                </div>
+             </div>
+             
+             <div className="flex items-center gap-6">
+                <button 
+                  onClick={() => setIsNewProcessOpen(true)}
+                  className="hidden md:flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                >
+                  <Plus className="h-4 w-4" /> Novo Processo
+                </button>
+  
+                <div className="flex items-center gap-4">
+                   <button 
+                     onClick={() => setNotificationsOpen(true)}
+                     className="relative p-2 hover:bg-slate-100 rounded-full transition-all active:scale-95"
+                   >
+                       <Bell className="h-5 w-5 text-slate-600" />
+                       <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full animate-ping" />
+                       <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
+                   </button>
+                  <div className="h-8 w-px bg-slate-200" />
+                  <div className="flex items-center gap-3">
+                      <div className="text-right hidden sm:block">
+                          <p className="text-sm font-bold text-navy">{profile?.name || "Usuário"}</p>
+                          <p className="text-xs text-muted-foreground uppercase tracking-tighter">{subscription?.plan?.name || "Free Tier"}</p>
+                      </div>
+                      <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+                          {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
+                      </div>
+                  </div>
+                </div>
+             </div>
            </div>
         </header>
+
 
         <NotificationCenter 
           isOpen={isNotificationsOpen} 
