@@ -218,12 +218,9 @@ function AdminDocuments() {
        </Dialog>
 
        <Dialog open={!!editingFieldsId} onOpenChange={(open) => !open && setEditingFieldsId(null)}>
-         <DialogContent className="max-w-2xl bg-slate-900 border-white/10 text-white rounded-[2rem] overflow-hidden">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-black uppercase tracking-tight">Configurar Mapeamento de Campos</DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
-              {editingFieldsId && <DocumentFieldEditor templateId={editingFieldsId} />}
+         <DialogContent className="max-w-[95vw] w-[1400px] h-[95vh] bg-slate-900 border-white/10 text-white p-0 rounded-[2rem] overflow-hidden">
+            <div className="w-full h-full">
+              {editingFieldsId && <TemplateVisualEditor templateId={editingFieldsId} onClose={() => setEditingFieldsId(null)} />}
             </div>
          </DialogContent>
        </Dialog>
