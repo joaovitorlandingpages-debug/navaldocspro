@@ -28,7 +28,7 @@ const Subscription = () => {
       } catch (error) {
         console.error('Error fetching subscription:', error);
       } finally {
-        setLoading(null);
+        setLoading(false);
       }
     };
 

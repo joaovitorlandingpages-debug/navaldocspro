@@ -29,6 +29,9 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as DebugSystemRouteImport } from './routes/debug.system'
+import { Route as BillingSuccessRouteImport } from './routes/billing.success'
+import { Route as BillingSubscriptionRouteImport } from './routes/billing.subscription'
+import { Route as BillingFailureRouteImport } from './routes/billing.failure'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
@@ -139,6 +142,21 @@ const DebugSystemRoute = DebugSystemRouteImport.update({
   path: '/debug/system',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BillingSuccessRoute = BillingSuccessRouteImport.update({
+  id: '/billing/success',
+  path: '/billing/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillingSubscriptionRoute = BillingSubscriptionRouteImport.update({
+  id: '/billing/subscription',
+  path: '/billing/subscription',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillingFailureRoute = BillingFailureRouteImport.update({
+  id: '/billing/failure',
+  path: '/billing/failure',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/auth/signup',
   path: '/auth/signup',
@@ -211,6 +229,9 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/billing/failure': typeof BillingFailureRoute
+  '/billing/subscription': typeof BillingSubscriptionRoute
+  '/billing/success': typeof BillingSuccessRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -240,6 +261,9 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/billing/failure': typeof BillingFailureRoute
+  '/billing/subscription': typeof BillingSubscriptionRoute
+  '/billing/success': typeof BillingSuccessRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin': typeof AdminIndexRoute
@@ -272,6 +296,9 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/billing/failure': typeof BillingFailureRoute
+  '/billing/subscription': typeof BillingSubscriptionRoute
+  '/billing/success': typeof BillingSuccessRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -305,6 +332,9 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/auth/login'
     | '/auth/signup'
+    | '/billing/failure'
+    | '/billing/subscription'
+    | '/billing/success'
     | '/debug/system'
     | '/processes/$id'
     | '/admin/'
@@ -334,6 +364,9 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/auth/login'
     | '/auth/signup'
+    | '/billing/failure'
+    | '/billing/subscription'
+    | '/billing/success'
     | '/debug/system'
     | '/processes/$id'
     | '/admin'
@@ -365,6 +398,9 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/auth/login'
     | '/auth/signup'
+    | '/billing/failure'
+    | '/billing/subscription'
+    | '/billing/success'
     | '/debug/system'
     | '/processes/$id'
     | '/admin/'
@@ -390,6 +426,9 @@ export interface RootRouteChildren {
   VesselsRoute: typeof VesselsRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  BillingFailureRoute: typeof BillingFailureRoute
+  BillingSubscriptionRoute: typeof BillingSubscriptionRoute
+  BillingSuccessRoute: typeof BillingSuccessRoute
   DebugSystemRoute: typeof DebugSystemRoute
 }
 
@@ -535,6 +574,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DebugSystemRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/billing/success': {
+      id: '/billing/success'
+      path: '/billing/success'
+      fullPath: '/billing/success'
+      preLoaderRoute: typeof BillingSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/billing/subscription': {
+      id: '/billing/subscription'
+      path: '/billing/subscription'
+      fullPath: '/billing/subscription'
+      preLoaderRoute: typeof BillingSubscriptionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/billing/failure': {
+      id: '/billing/failure'
+      path: '/billing/failure'
+      fullPath: '/billing/failure'
+      preLoaderRoute: typeof BillingFailureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/signup': {
       id: '/auth/signup'
       path: '/auth/signup'
@@ -668,6 +728,9 @@ const rootRouteChildren: RootRouteChildren = {
   VesselsRoute: VesselsRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthSignupRoute: AuthSignupRoute,
+  BillingFailureRoute: BillingFailureRoute,
+  BillingSubscriptionRoute: BillingSubscriptionRoute,
+  BillingSuccessRoute: BillingSuccessRoute,
   DebugSystemRoute: DebugSystemRoute,
 }
 export const routeTree = rootRouteImport
