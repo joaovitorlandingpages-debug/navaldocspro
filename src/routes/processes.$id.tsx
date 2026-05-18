@@ -19,11 +19,11 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
+import { ProcessChecklist } from "@/components/ProcessChecklist";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
 });
-
 
 function ProcessDetail() {
   const { id } = Route.useParams();
@@ -66,7 +66,6 @@ function ProcessDetail() {
     fetchProcess();
     fetchComments();
     
-    // Subscribe to new comments
     const channel = supabase
       .channel('schema-db-changes')
       .on(
@@ -121,50 +120,6 @@ function ProcessDetail() {
     { title: "Documento validado", date: "12/05/2026 - 11:00", user: "Admin", desc: "RG e CPF validados com sucesso.", icon: <FileCheck className="h-3 w-3" />, color: "bg-cyan-500" },
   ];
 
-
-  const getProcessRequirements = (type: string) => {
-    const common = [
-      { name: "RG / CPF Requerente", type: "PDF", size: "---", status: "Pendente" },
-      { name: "Comprovante de Residência", type: "PDF", size: "---", status: "Pendente" },
-      { name: "Procuração Assinada", type: "PDF", size: "---", status: "Pendente" },
-    ];
-
-    switch (type) {
-      case "Registro de Embarcação":
-        return [
-          ...common,
-          { name: "Título de Inscrição (TIE)", type: "PDF", size: "---", status: "Pendente" },
-          { name: "Memorial Descritivo", type: "PDF", size: "---", status: "Pendente" },
-          { name: "Certificado de Segurança (CSN)", type: "PDF", size: "---", status: "Pendente" },
-          { name: "GRU Paga (Registro)", type: "PDF", size: "---", status: "Pendente" }
-        ];
-      case "Tripulação":
-        return [
-          ...common,
-          { name: "CIR (Caderneta)", type: "PDF", size: "---", status: "Pendente" },
-          { name: "Certificado de Saúde", type: "PDF", size: "---", status: "Pendente" },
-          { name: "Rol de Equipagem", type: "PDF", size: "---", status: "Pendente" }
-        ];
-      case "Certificação Técnica":
-        return [
-          ...common,
-          { name: "Plano de Segurança", type: "PDF", size: "---", status: "Pendente" },
-          { name: "Laudo de Estabilidade", type: "PDF", size: "---", status: "Pendente" },
-          { name: "Relatório de Motores", type: "PDF", size: "---", status: "Pendente" }
-        ];
-      default:
-        return common;
-    }
-  };
-
-  const [documents, setDocuments] = useState(getProcessRequirements(process?.process_type || "Geral"));
-
-  useEffect(() => {
-    if (process?.process_type) {
-      setDocuments(getProcessRequirements(process.process_type));
-    }
-  }, [process?.process_type]);
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20 max-w-7xl mx-auto">
       {/* Header */}
@@ -174,8 +129,8 @@ function ProcessDetail() {
             <ArrowLeft className="h-5 w-5 text-navy" />
           </Link>
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-[10px] font-mono font-black text-primary bg-primary/10 px-2 py-1 rounded uppercase tracking-tighter">{id}</span>
-            <h1 className="text-2xl font-black text-navy uppercase tracking-tight">Registro de Embarcação Especial</h1>
+            <span className="text-[10px] font-mono font-black text-primary bg-primary/10 px-2 py-1 rounded uppercase tracking-tighter">{id.substring(0, 8)}</span>
+            <h1 className="text-2xl font-black text-navy uppercase tracking-tight">{process?.process_type || "Carregando..."}</h1>
             <Badge className="bg-amber-500 text-white border-none px-3 py-1 rounded-lg font-black text-[10px] uppercase tracking-widest">{status}</Badge>
           </div>
         </div>
@@ -188,7 +143,7 @@ function ProcessDetail() {
                  </div>
                  <div>
                     <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Cliente</p>
-                    <p className="text-sm font-bold text-navy">Marinha Mercante Ltda</p>
+                    <p className="text-sm font-bold text-navy">{process?.customer?.name || "---"}</p>
                  </div>
               </div>
               <div className="flex items-center gap-3">
@@ -197,7 +152,7 @@ function ProcessDetail() {
                  </div>
                  <div>
                     <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Embarcação</p>
-                    <p className="text-sm font-bold text-navy">Phoenix (Petroleiro)</p>
+                    <p className="text-sm font-bold text-navy">{process?.vessel?.name || "Não vinculada"}</p>
                  </div>
               </div>
               <div className="flex items-center gap-3">
@@ -206,7 +161,7 @@ function ProcessDetail() {
                  </div>
                  <div>
                     <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Abertura</p>
-                    <p className="text-sm font-bold text-navy">10 Mai 2026</p>
+                    <p className="text-sm font-bold text-navy">{process?.created_at ? new Date(process.created_at).toLocaleDateString('pt-BR') : "---"}</p>
                  </div>
               </div>
            </div>
@@ -226,18 +181,17 @@ function ProcessDetail() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
-         {/* Main Column */}
          <div className="lg:col-span-2 space-y-8">
             <Tabs defaultValue="overview" className="w-full">
                <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex-wrap h-auto">
                   <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geral</TabsTrigger>
-                  <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Documentos</TabsTrigger>
+                  <TabsTrigger value="requirements" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Checklist Inteligente</TabsTrigger>
+                  <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Arquivos</TabsTrigger>
                   <TabsTrigger value="comments" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
                     Notas {comments.length > 0 && <span className="bg-primary text-white text-[10px] px-1.5 rounded-full">{comments.length}</span>}
                   </TabsTrigger>
                   <TabsTrigger value="history" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Histórico</TabsTrigger>
                </TabsList>
-
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
                   <div className="grid md:grid-cols-2 gap-6">
@@ -248,7 +202,7 @@ function ProcessDetail() {
                         <div className="space-y-4">
                            <div className="flex justify-between py-3 border-b border-slate-50">
                               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tipo</span>
-                              <span className="text-sm font-bold text-navy">Registro Inicial</span>
+                              <span className="text-sm font-bold text-navy">{process?.process_type || "---"}</span>
                            </div>
                            <div className="flex justify-between py-3 border-b border-slate-50">
                               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Responsável</span>
@@ -256,11 +210,11 @@ function ProcessDetail() {
                            </div>
                            <div className="flex justify-between py-3 border-b border-slate-50">
                               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Prazo</span>
-                              <span className="text-sm font-bold text-red-500">25/05/2026 (12 dias)</span>
+                              <span className="text-sm font-bold text-red-500">{process?.due_date ? new Date(process.due_date).toLocaleDateString('pt-BR') : "---"}</span>
                            </div>
                            <div className="flex justify-between py-3">
                               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Prioridade</span>
-                              <span className="text-sm font-bold text-amber-500">Alta</span>
+                              <span className="text-sm font-bold text-amber-500 uppercase">{process?.priority || "Média"}</span>
                            </div>
                         </div>
                      </div>
@@ -268,34 +222,69 @@ function ProcessDetail() {
                      <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between">
                         <div>
                            <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
-                              <CheckCircle2 className="h-5 w-5 text-green-500" /> Progresso
+                              <CheckCircle2 className="h-5 w-5 text-green-500" /> Resumo do Status
                            </h3>
-                           <div className="flex items-center gap-4 mb-2">
-                              <div className="text-3xl font-black text-navy">65%</div>
-                              <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Concluído</div>
-                           </div>
-                           <div className="h-3 bg-slate-100 rounded-full overflow-hidden mb-8">
-                              <div className="h-full bg-green-500 w-[65%] rounded-full shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all duration-1000" />
-                           </div>
+                           <p className="text-sm font-medium text-slate-500 mb-4">Acompanhe o status geral da documentação na aba Checklist Inteligente.</p>
                         </div>
                         <div className="bg-slate-50 p-4 rounded-2xl">
-                           <p className="text-xs text-slate-500 leading-relaxed font-medium">Aguardando apenas a assinatura da procuração para protocolar junto à Capitania.</p>
+                           <p className="text-xs text-slate-500 leading-relaxed font-medium">{process?.notes || "Nenhuma observação interna registrada."}</p>
                         </div>
                      </div>
                   </div>
+               </TabsContent>
 
+               <TabsContent value="requirements" className="space-y-8 animate-in fade-in duration-300">
+                  <ProcessChecklist processId={id} processTypeId={process?.process_type_id} />
+               </TabsContent>
+
+               <TabsContent value="documents" className="animate-in fade-in duration-300">
                   <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
-                           <MessageSquare className="h-5 w-5 text-primary" /> Observações Internas
-                        </h3>
-                        <Button variant="ghost" className="text-xs font-black uppercase text-primary tracking-widest">Editar</Button>
-                     </div>
-                     <p className="text-sm text-slate-500 leading-relaxed bg-slate-50 p-6 rounded-2xl border border-dashed border-slate-200">
-                        O cliente solicitou urgência devido ao contrato de afretamento que inicia no próximo mês. Todos os documentos técnicos da embarcação Phoenix já foram conferidos. Falta apenas o comprovante de residência atualizado do sócio-administrador.
-                     </p>
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-primary" /> Arquivos Enviados
+                      </h3>
+                      <div className="w-64">
+                        <FileUploader 
+                          processId={id} 
+                          bucket="process-attachments" 
+                          category="Processo" 
+                          compact
+                        />
+                      </div>
+                    </div>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {files && files.map((file: any) => (
+                        <div key={file.id} className="p-4 rounded-2xl border border-slate-100 bg-slate-50/30 group hover:bg-white hover:border-primary/20 transition-all">
+                           <div className="flex justify-between items-start mb-4">
+                              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400">
+                                 <FileText className="h-5 w-5" />
+                              </div>
+                              <div className="flex gap-1">
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
+                                  <a href={file.file_url} target="_blank" rel="noreferrer"><Eye className="h-4 w-4" /></a>
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500" onClick={() => deleteFile.mutate(file.id)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                           </div>
+                           <p className="text-sm font-bold text-navy truncate">{file.file_name}</p>
+                           <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-1">
+                             {file.file_type || 'Documento'} • {Math.round((file.file_size || 0) / 1024)} KB
+                           </p>
+                        </div>
+                      ))}
+                      {(!files || files.length === 0) && (
+                        <div className="col-span-full py-10 text-center opacity-40">
+                          <FileText className="h-12 w-12 mx-auto mb-2" />
+                          <p className="text-sm font-bold uppercase tracking-widest">Nenhum arquivo enviado</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                <TabsContent value="comments" className="animate-in fade-in duration-300">
+               </TabsContent>
+
+               <TabsContent value="comments" className="animate-in fade-in duration-300">
                   <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col h-[600px] overflow-hidden">
                     <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
                       <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
@@ -347,185 +336,67 @@ function ProcessDetail() {
                       </Button>
                     </form>
                   </div>
-                </TabsContent>
-               </TabsContent>
-
-
-                <TabsContent value="documents" className="animate-in fade-in duration-300">
-                  <div className="grid lg:grid-cols-2 gap-8">
-                     <div className="space-y-6">
-                        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                           <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <FileCheck className="h-5 w-5 text-primary" />
-                                Checklist Documental
-                              </div>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-8 border-primary/20 text-primary hover:bg-primary/5 text-[10px] font-black uppercase tracking-widest gap-2"
-                                onClick={() => {
-                                  toast.success("IA analisou o processo e sugeriu documentos técnicos.");
-                                }}
-                              >
-                                <Zap className="h-3 w-3" /> IA Sugerir
-                              </Button>
-                           </h3>
-                           <div className="space-y-4">
-                              {documents.map((doc, idx) => (
-                                <div key={idx} className="p-5 rounded-2xl border border-slate-50 bg-slate-50/30 group hover:bg-white hover:border-primary/20 transition-all">
-                                   <div className="flex justify-between items-start mb-4">
-                                      <div className="flex items-center gap-3">
-                                         <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                                           doc.status === 'Validado' ? 'bg-green-100 text-green-600' : 
-                                           doc.status === 'Correção Necessária' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-400'
-                                         }`}>
-                                            <FileText className="h-4 w-4" />
-                                         </div>
-                                         <div>
-                                            <p className="text-xs font-bold text-navy">{doc.name}</p>
-                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{doc.type} • {doc.size}</p>
-                                         </div>
-                                      </div>
-                                      <Badge className={`text-[9px] font-black uppercase tracking-widest ${
-                                        doc.status === 'Validado' ? 'bg-green-500 text-white' : 
-                                        doc.status === 'Correção Necessária' ? 'bg-red-500 text-white' : 'bg-slate-200 text-slate-500'
-                                      }`}>
-                                         {doc.status}
-                                      </Badge>
-                                   </div>
-                                   
-                                   {doc.status === 'Pendente' || doc.status === 'Correção Necessária' ? (
-                                     <FileUploader 
-                                       bucket="process-attachments" 
-                                       category="attachment" 
-                                       processId={id}
-                                       compact={true}
-                                     />
-                                   ) : (
-                                     <div className="flex gap-2">
-                                        <Button variant="ghost" size="sm" className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest text-primary">Visualizar</Button>
-                                        <Button variant="ghost" size="sm" className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-400">Substituir</Button>
-                                     </div>
-                                   )}
-                                </div>
-                              ))}
-                           </div>
-                        </div>
-                     </div>
-
-
-                     <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden h-fit">
-                        <div className="p-8 border-b flex justify-between items-center">
-                           <h3 className="text-lg font-black text-navy uppercase tracking-tight">Arquivos do Processo</h3>
-                           <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase px-2.5 py-1">{files?.length || 0} Itens</Badge>
-                        </div>
-                        <div className="p-4 space-y-2">
-                           {files?.map((file) => (
-                              <div key={file.id} className="p-4 rounded-2xl flex items-center justify-between hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group">
-                                 <div className="flex items-center gap-4">
-                                    <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
-                                       {file.file_type.includes('image') ? <ImageIcon className="h-6 w-6" /> : <FileText className="h-6 w-6" />}
-                                    </div>
-                                    <div>
-                                       <p className="text-sm font-bold text-navy truncate max-w-[150px]">{file.file_name}</p>
-                                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">{file.status === 'validated' ? 'Validado' : 'Em Análise'}</p>
-                                    </div>
-                                 </div>
-                                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <a href={file.file_url} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></a>
-                                    <button onClick={() => deleteFile.mutate(file.id)} className="p-2 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
-                                 </div>
-                              </div>
-                           ))}
-                           
-                           {(!files || files.length === 0) && (
-                             <div className="text-center py-12">
-                                <FileText className="h-10 w-10 text-slate-100 mx-auto mb-2" />
-                                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhum anexo</p>
-                             </div>
-                           )}
-                        </div>
-                     </div>
-                  </div>
                </TabsContent>
 
                <TabsContent value="history" className="animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                     <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-8 flex items-center gap-2">
-                        <History className="h-5 w-5 text-primary" /> Linha do Tempo
-                     </h3>
-                     <div className="space-y-8 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
-                        {timeline.map((item, idx) => (
-                           <div key={idx} className="relative pl-12">
-                              <div className={`absolute left-0 top-0 h-10 w-10 rounded-full ${item.color} text-white flex items-center justify-center shadow-lg border-4 border-white z-10`}>
-                                 {item.icon}
-                              </div>
-                              <div className="bg-slate-50 p-5 rounded-2xl">
-                                 <div className="flex flex-wrap justify-between items-start mb-2 gap-2">
-                                    <h4 className="text-sm font-black text-navy uppercase tracking-tight">{item.title}</h4>
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.date}</span>
-                                 </div>
-                                 <p className="text-xs text-slate-500 mb-3">{item.desc || "Ação registrada automaticamente pelo sistema."}</p>
-                                 <div className="flex items-center gap-2">
-                                    <div className="h-5 w-5 rounded-full bg-navy text-white flex items-center justify-center text-[8px] font-black">
-                                       {item.user.charAt(0)}
-                                    </div>
-                                    <span className="text-[10px] font-bold text-navy uppercase tracking-widest">{item.user}</span>
-                                 </div>
-                              </div>
-                           </div>
-                        ))}
-                     </div>
+                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                    <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-8 flex items-center gap-2">
+                       <History className="h-5 w-5 text-primary" /> Linha do Tempo
+                    </h3>
+                    <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-slate-100">
+                       {timeline.map((item, idx) => (
+                          <div key={idx} className="relative flex items-center gap-6 group">
+                             <div className={`h-10 w-10 rounded-xl ${item.color} text-white flex items-center justify-center z-10 shadow-lg border-4 border-white group-hover:scale-110 transition-transform`}>
+                                {item.icon}
+                             </div>
+                             <div className="flex flex-col">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.date}</span>
+                                <h4 className="text-sm font-bold text-navy">{item.title}</h4>
+                                <p className="text-[11px] font-medium text-slate-500">{item.user} • {item.desc || "Operação realizada com sucesso."}</p>
+                             </div>
+                          </div>
+                       ))}
+                    </div>
                   </div>
                </TabsContent>
             </Tabs>
          </div>
 
-         {/* Right Column / Widgets */}
+         {/* Sidebar */}
          <div className="space-y-8">
-            <div className="bg-navy text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden group">
-               <div className="absolute -right-4 -top-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
-                  <PlayCircle className="h-40 w-40" />
-               </div>
-               <div className="relative z-10">
-                  <h4 className="text-xl font-bold mb-6">Ações Rápidas</h4>
-                  <div className="space-y-3">
-                     <Button className="w-full bg-primary hover:opacity-90 h-12 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20">
-                        Validar Documentos
-                     </Button>
-                     <Button className="w-full bg-white/10 hover:bg-white/20 h-12 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] border border-white/10 transition-all">
-                        Anexar Procuração
-                     </Button>
-                     <Button variant="ghost" className="w-full text-slate-400 hover:text-white h-12 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em]">
-                        Suspender Processo
-                     </Button>
-                  </div>
+            <div className="bg-navy p-8 rounded-[2.5rem] text-white shadow-xl shadow-navy/20">
+               <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6">Ações Rápidas</h3>
+               <div className="space-y-3">
+                  <Button className="w-full bg-primary hover:opacity-90 text-white h-12 rounded-2xl font-bold gap-2">
+                     <FileCheck className="h-4 w-4" /> Validar Documentos
+                  </Button>
+                  <Button variant="outline" className="w-full h-12 rounded-2xl font-bold gap-2 border-white/10 text-white hover:bg-white/5">
+                     <PlayCircle className="h-4 w-4" /> Iniciar Automação
+                  </Button>
+                  <Button variant="outline" className="w-full h-12 rounded-2xl font-bold gap-2 border-white/10 text-white hover:bg-white/5">
+                     <MessageSquare className="h-4 w-4" /> Notificar Cliente
+                  </Button>
                </div>
             </div>
 
-            <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-               <h3 className="font-bold text-navy mb-6 flex items-center gap-2 uppercase text-xs tracking-[0.2em]">
-                  <AlertCircle className="h-4 w-4 text-amber-500" /> Alertas
-               </h3>
-               <div className="p-4 bg-red-50 rounded-2xl border-l-4 border-red-500">
-                  <p className="text-xs font-bold text-navy mb-1">Título de Inscrição Inválido</p>
-                  <p className="text-[11px] text-slate-500 leading-relaxed mb-3">O documento enviado está com a data de validade vencida desde 2023.</p>
-                  <Button size="sm" className="h-8 bg-red-500 text-white rounded-lg text-[10px] font-black uppercase px-4">Resolver Agora</Button>
-               </div>
-            </div>
-
-            <div className="bg-slate-100/50 p-8 rounded-[2rem] border border-slate-100 border-dashed">
-               <h3 className="font-bold text-slate-400 mb-6 uppercase text-[10px] tracking-[0.2em] text-center">Atalhos do Sistema</h3>
-               <div className="grid grid-cols-2 gap-4">
-                  <Link to="/customers" className="bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-all text-center">
-                     <User className="h-5 w-5 text-primary mx-auto mb-2" />
-                     <span className="text-[10px] font-black text-navy uppercase">Cliente</span>
-                  </Link>
-                  <Link to="/vessels" className="bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-all text-center">
-                     <Ship className="h-5 w-5 text-cyan-500 mx-auto mb-2" />
-                     <span className="text-[10px] font-black text-navy uppercase">Embarcação</span>
-                  </Link>
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+               <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6">Equipe Vinculada</h3>
+               <div className="space-y-4">
+                  {[
+                    { name: "Ricardo Almeida", role: "Engenheiro Responsável", avatar: "RA" },
+                    { name: "Ana Paula", role: "Assistente Documental", avatar: "AP" }
+                  ].map((user) => (
+                    <div key={user.name} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
+                       <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">{user.avatar}</div>
+                       <div>
+                          <p className="text-xs font-bold text-navy">{user.name}</p>
+                          <p className="text-[10px] font-medium text-slate-500">{user.role}</p>
+                       </div>
+                    </div>
+                  ))}
+                  <Button variant="ghost" className="w-full mt-4 text-[10px] font-black uppercase tracking-widest text-primary gap-2">
+                     <Plus className="h-3 w-3" /> Gerenciar Equipe
+                  </Button>
                </div>
             </div>
          </div>

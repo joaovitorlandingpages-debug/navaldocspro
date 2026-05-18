@@ -3,7 +3,10 @@ import {
   X, Check, ChevronRight, ChevronLeft, 
   Ship, User, FileText, ClipboardCheck, 
   Search, Plus, AlertCircle, Clock, FileCheck,
-  Save, Copy, Zap
+  Save, Copy, Zap,
+  Loader2,
+  AlertTriangle,
+  Settings
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,26 +15,38 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-
-import { useProcessRequirements } from "@/hooks/useProcessRequirements";
+import { useProcessRequirements, useProcessTypes } from "@/hooks/useProcessRequirements";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NewProcessWizardProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const INITIAL_FORM_DATA = {
+  typeId: "",
+  type: "",
+  client: "",
+  clientId: "",
+  vessel: "",
+  vesselId: "",
+  documents: [] as any[],
+};
+
 export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
+  const { profile } = useAuth();
   const [step, setStep] = useState(1);
   const totalSteps = 6;
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [formData, setFormData] = useState({
-    type: "",
-    client: "",
-    vessel: "",
-    documents: [] as any[],
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [vessels, setVessels] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const { requirements } = useProcessRequirements(formData.type);
+  const { requirements, isLoading: loadingReqs } = useProcessRequirements(formData.typeId);
+  const { processTypes, isLoading: loadingTypes } = useProcessTypes();
 
   // Auto-save draft logic
   useEffect(() => {
@@ -42,7 +57,6 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           const parsed = JSON.parse(savedDraft);
           setFormData(parsed.formData);
           setStep(parsed.step);
-          toast.info("Rascunho recuperado automaticamente");
         } catch (e) {
           console.error("Error loading draft", e);
         }
@@ -56,21 +70,42 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     }
   }, [formData, step, isOpen]);
 
+  useEffect(() => {
+    async function fetchCustomers() {
+      if (step === 2) {
+        const { data } = await supabase
+          .from('customers')
+          .select('id, name')
+          .ilike('name', `%${searchTerm}%`)
+          .limit(10);
+        setCustomers(data || []);
+      }
+    }
+    fetchCustomers();
+  }, [step, searchTerm]);
+
+  useEffect(() => {
+    async function fetchVessels() {
+      if (step === 3 && formData.clientId) {
+        const { data } = await supabase
+          .from('vessels')
+          .select('id, name')
+          .eq('customer_id', formData.clientId);
+        setVessels(data || []);
+      }
+    }
+    fetchVessels();
+  }, [step, formData.clientId]);
+
   const clearDraft = () => {
     localStorage.removeItem("process_wizard_draft");
+    setFormData(INITIAL_FORM_DATA);
+    setStep(1);
   };
 
-
-  const processTypes = [
-    { id: "registro", title: "Registro de embarcação", icon: <Ship className="h-4 w-4" /> },
-    { id: "transferencia", title: "Transferência de propriedade", icon: <FileText className="h-4 w-4" /> },
-    { id: "renovacao", title: "Renovação", icon: <Clock className="h-4 w-4" /> },
-    { id: "alteracao", title: "Alteração de dados", icon: <Settings className="h-4 w-4" /> },
-    { id: "segunda_via", title: "Segunda via", icon: <FileText className="h-4 w-4" /> },
-    { id: "regularizacao", title: "Regularização", icon: <ClipboardCheck className="h-4 w-4" /> },
-    { id: "vistoria", title: "Vistoria", icon: <Search className="h-4 w-4" /> },
-    { id: "gru", title: "GRU / Taxas", icon: <FileText className="h-4 w-4" /> },
-  ];
+  const handleTypeSelect = (type: any) => {
+    setFormData({ ...formData, typeId: type.id, type: type.name });
+  };
 
   const handleNext = () => {
     if (step < totalSteps) setStep(step + 1);
@@ -80,31 +115,66 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     if (step > 1) setStep(step - 1);
   };
 
+  const handleCreateProcess = async () => {
+    if (!profile?.company_id) return;
+    
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('processes')
+        .insert({
+          company_id: profile.company_id,
+          customer_id: formData.clientId,
+          vessel_id: formData.vesselId || null,
+          process_type: formData.type,
+          process_type_id: formData.typeId,
+          status: 'pending',
+          priority: 'medium',
+        });
+
+      if (error) throw error;
+
+      toast.success("Processo criado com sucesso!");
+      clearDraft();
+      onClose();
+    } catch (err: any) {
+      toast.error("Erro ao criar processo: " + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const renderStep = () => {
     switch (step) {
       case 1:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="grid grid-cols-2 gap-3">
-              {processTypes.map((type) => (
-                <button
-                  key={type.id}
-                  onClick={() => setFormData({ ...formData, type: type.title })}
-                  className={`p-4 rounded-2xl border-2 text-left transition-all ${
-                    formData.type === type.title 
-                      ? "border-primary bg-primary/5 shadow-md" 
-                      : "border-slate-100 hover:border-slate-200 bg-white"
-                  }`}
-                >
-                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center mb-3 ${
-                    formData.type === type.title ? "bg-primary text-white" : "bg-slate-50 text-slate-400"
-                  }`}>
-                    {type.icon}
-                  </div>
-                  <p className="text-xs font-black text-navy uppercase leading-tight">{type.title}</p>
-                </button>
-              ))}
-            </div>
+            {loadingTypes ? (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {processTypes.map((type) => (
+                  <button
+                    key={type.id}
+                    onClick={() => handleTypeSelect(type)}
+                    className={`p-4 rounded-2xl border-2 text-left transition-all h-32 flex flex-col justify-center ${
+                      formData.typeId === type.id 
+                        ? "border-primary bg-primary/5 shadow-md" 
+                        : "border-slate-100 hover:border-slate-200 bg-white"
+                    }`}
+                  >
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center mb-3 ${
+                      formData.typeId === type.id ? "bg-primary text-white" : "bg-slate-50 text-slate-400"
+                    }`}>
+                      <Ship className="h-4 w-4" />
+                    </div>
+                    <p className="text-[10px] font-black text-navy uppercase leading-tight line-clamp-2">{type.name}</p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         );
       case 2:
@@ -115,29 +185,36 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               <Input 
                 placeholder="Buscar cliente existente..." 
                 className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             
             <div className="space-y-2">
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Sugestões</p>
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                {searchTerm ? 'Resultados' : 'Sugestões'}
+              </p>
               <div className="space-y-2">
-                {["Marinha Mercante Ltda", "Eng. Pedro Santos", "Estaleiro Navegar"].map((c) => (
+                {customers.map((c) => (
                   <button
-                    key={c}
-                    onClick={() => setFormData({ ...formData, client: c })}
+                    key={c.id}
+                    onClick={() => setFormData({ ...formData, client: c.name, clientId: c.id })}
                     className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${
-                      formData.client === c ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
+                      formData.clientId === c.id ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
                         <User className="h-4 w-4" />
                       </div>
-                      <span className="text-sm font-bold text-navy">{c}</span>
+                      <span className="text-sm font-bold text-navy">{c.name}</span>
                     </div>
-                    {formData.client === c && <Check className="h-4 w-4 text-primary" />}
+                    {formData.clientId === c.id && <Check className="h-4 w-4 text-primary" />}
                   </button>
                 ))}
+                {customers.length === 0 && !searchTerm && (
+                   <p className="text-xs text-slate-400 text-center py-4">Nenhum cliente sugerido. Use a busca.</p>
+                )}
               </div>
             </div>
 
@@ -153,7 +230,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center gap-4 mb-4">
                <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
-                  {formData.client.charAt(0)}
+                  {formData.client?.charAt(0)}
                </div>
                <div>
                   <p className="text-[10px] font-black uppercase text-primary tracking-widest">Cliente Selecionado</p>
@@ -172,23 +249,26 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             <div className="space-y-2">
               <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Embarcações deste cliente</p>
               <div className="space-y-2">
-                {["Phoenix (Petroleiro)", "Titan (Rebocador)"].map((v) => (
+                {vessels.map((v) => (
                   <button
-                    key={v}
-                    onClick={() => setFormData({ ...formData, vessel: v })}
+                    key={v.id}
+                    onClick={() => setFormData({ ...formData, vessel: v.name, vesselId: v.id })}
                     className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${
-                      formData.vessel === v ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
+                      formData.vesselId === v.id ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
                         <Ship className="h-4 w-4" />
                       </div>
-                      <span className="text-sm font-bold text-navy">{v}</span>
+                      <span className="text-sm font-bold text-navy">{v.name}</span>
                     </div>
-                    {formData.vessel === v && <Check className="h-4 w-4 text-primary" />}
+                    {formData.vesselId === v.id && <Check className="h-4 w-4 text-primary" />}
                   </button>
                 ))}
+                {vessels.length === 0 && (
+                  <p className="text-xs text-slate-400 text-center py-4">Nenhuma embarcação vinculada a este cliente.</p>
+                )}
               </div>
             </div>
 
@@ -200,38 +280,50 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           </div>
         );
       case 4:
-        const docs = requirements || [
-          { template: { name: "Documento pessoal" }, is_mandatory: true, status: "pendente" },
-          { template: { name: "Comprovante de residência" }, is_mandatory: true, status: "pendente" },
-          { template: { name: "Documento da embarcação" }, is_mandatory: true, status: "pendente" },
-        ];
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
             <p className="text-sm text-slate-500 mb-4">Checklist automático baseado no tipo: <span className="font-bold text-navy">{formData.type}</span></p>
-            <ScrollArea className="h-[300px] pr-4">
-              <div className="space-y-3">
-                {docs.map((req: any, idx: number) => (
-                  <div key={idx} className="p-4 rounded-xl border border-slate-100 flex items-center justify-between bg-white group hover:border-primary/20 transition-all">
-                    <div className="flex items-center gap-3">
-                      <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                        req.is_mandatory ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'
-                      }`}>
-                        <FileText className="h-4 w-4" />
-                      </div>
-                      <div>
-                         <p className="text-xs font-bold text-navy">{req.template?.name}</p>
-                         <p className={`text-[10px] font-black uppercase ${
-                           req.is_mandatory ? 'text-amber-600' : 'text-slate-400'
-                         }`}>{req.is_mandatory ? 'Obrigatório' : 'Opcional'}</p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full opacity-0 group-hover:opacity-100">
-                       <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+            
+            {loadingReqs ? (
+              <div className="flex justify-center items-center py-10">
+                <Loader2 className="h-6 w-6 text-primary animate-spin" />
               </div>
-            </ScrollArea>
+            ) : requirements.length === 0 ? (
+              <div className="p-10 text-center border border-dashed border-slate-200 rounded-3xl">
+                <AlertTriangle className="h-10 w-10 text-amber-400 mx-auto mb-4" />
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nenhum requisito configurado</p>
+              </div>
+            ) : (
+              <ScrollArea className="h-[300px] pr-4">
+                <div className="space-y-3">
+                  {requirements.map((req: any, idx: number) => (
+                    <div key={idx} className="p-4 rounded-xl border border-slate-100 flex items-center justify-between bg-white group hover:border-primary/20 transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
+                          req.is_mandatory ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'
+                        }`}>
+                          <FileText className="h-4 w-4" />
+                        </div>
+                        <div>
+                           <p className="text-xs font-bold text-navy">{req.template?.name}</p>
+                           <div className="flex gap-2">
+                             <p className={`text-[10px] font-black uppercase ${
+                               req.is_mandatory ? 'text-amber-600' : 'text-slate-400'
+                             }`}>{req.is_mandatory ? 'Obrigatório' : 'Opcional'}</p>
+                             <Badge variant="outline" className="text-[8px] h-3.5 px-1.5 uppercase font-black text-slate-400 border-slate-200">
+                               {req.document_role}
+                             </Badge>
+                           </div>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full opacity-0 group-hover:opacity-100">
+                         <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
           </div>
         );
       case 5:
@@ -245,15 +337,15 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                    <Label className="text-[10px] uppercase font-black text-slate-400">Nome do Requerente</Label>
-                   <Input defaultValue="Ricardo Almeida Engenharia" className="bg-slate-50 border-slate-200" />
+                   <Input defaultValue={formData.client} className="bg-slate-50 border-slate-200" readOnly />
                 </div>
                 <div className="space-y-1.5">
-                   <Label className="text-[10px] uppercase font-black text-slate-400">Inscrição / IMO</Label>
-                   <Input defaultValue="9876543" className="bg-slate-50 border-slate-200" />
+                   <Label className="text-[10px] uppercase font-black text-slate-400">Embarcação</Label>
+                   <Input defaultValue={formData.vessel} className="bg-slate-50 border-slate-200" readOnly />
                 </div>
                 <div className="space-y-1.5">
                    <Label className="text-[10px] uppercase font-black text-slate-400">Data de Solicitação</Label>
-                   <Input defaultValue="12/05/2026" className="bg-slate-50 border-slate-200" />
+                   <Input defaultValue={new Date().toLocaleDateString('pt-BR')} className="bg-slate-50 border-slate-200" readOnly />
                 </div>
                 <div className="space-y-1.5">
                    <Label className="text-[10px] uppercase font-black text-slate-400">Responsável Técnico</Label>
@@ -262,7 +354,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                 </div>
                 <div className="col-span-2 space-y-1.5">
                    <Label className="text-[10px] uppercase font-black text-slate-400">Objeto da Solicitação</Label>
-                   <textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm min-h-[80px]" defaultValue="Solicitação de vistoria anual para renovação de certificado de segurança de navegação (CSN) da embarcação Phoenix." />
+                   <textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm min-h-[80px]" defaultValue={`Solicitação de ${formData.type} para a embarcação ${formData.vessel}.`} />
                 </div>
              </div>
           </div>
@@ -291,7 +383,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                       <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center"><Ship className="h-5 w-5 text-cyan-400" /></div>
                       <div>
                          <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Embarcação</p>
-                         <p className="text-sm font-bold">{formData.vessel}</p>
+                         <p className="text-sm font-bold">{formData.vessel || "Não vinculada"}</p>
                       </div>
                    </div>
                 </div>
@@ -300,15 +392,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
              <div className="space-y-3">
                 <div className="flex justify-between items-center text-xs px-2">
                    <span className="text-slate-500 font-medium">Documentos vinculados</span>
-                   <span className="text-navy font-bold">6 itens</span>
+                   <span className="text-navy font-bold">{requirements.length} itens</span>
                 </div>
                 <div className="flex justify-between items-center text-xs px-2">
                    <span className="text-slate-500 font-medium">Prazo estimado</span>
                    <span className="text-navy font-bold">15 dias úteis</span>
-                </div>
-                <div className="flex justify-between items-center text-xs px-2">
-                   <span className="text-slate-500 font-medium">Responsável</span>
-                   <span className="text-navy font-bold">Eng. Ricardo Almeida</span>
                 </div>
              </div>
 
@@ -316,7 +404,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                 <div className="h-8 w-8 rounded-full bg-green-500 text-white flex items-center justify-center">
                    <Check className="h-4 w-4" />
                 </div>
-                <p className="text-xs text-green-800 font-medium">Tudo pronto! O processo será criado com status "Novo".</p>
+                <p className="text-xs text-green-800 font-medium">Tudo pronto! O processo será criado com status "Pendente".</p>
              </div>
           </div>
         );
@@ -387,8 +475,6 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               onClick={() => {
                 clearDraft();
                 toast.success("Formulário limpo");
-                setFormData({ type: "", client: "", vessel: "", documents: [] });
-                setStep(1);
               }}
               className="rounded-2xl h-14 px-4 text-slate-400 hover:text-red-500"
             >
@@ -407,19 +493,16 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
             {step === totalSteps ? (
               <Button
-                onClick={() => {
-                  clearDraft();
-                  onClose();
-                  setStep(1);
-                }}
+                onClick={handleCreateProcess}
+                disabled={isSubmitting}
                 className="bg-primary hover:opacity-90 rounded-2xl h-14 px-10 font-black uppercase text-xs tracking-widest shadow-xl shadow-primary/20 gap-2"
               >
-                Criar Processo <Check className="h-4 w-4" />
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Processo"} <Check className="h-4 w-4" />
               </Button>
             ) : (
               <Button
                 onClick={handleNext}
-                disabled={!formData.type && step === 1}
+                disabled={(!formData.typeId && step === 1) || (!formData.clientId && step === 2)}
                 className="bg-navy hover:opacity-90 rounded-2xl h-14 px-10 font-black uppercase text-xs tracking-widest text-white shadow-xl shadow-navy/20 gap-2"
               >
                 Próximo <ChevronRight className="h-4 w-4" />
@@ -430,25 +513,4 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       </DialogContent>
     </Dialog>
   );
-}
-
-
-function Settings(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  )
 }
