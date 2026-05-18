@@ -378,7 +378,18 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex bg-black/40 p-1 rounded-xl border border-white/5">
+              <button 
+                onClick={() => setIsSimulating(!isSimulating)}
+                className={cn(
+                  "px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
+                  isSimulating ? "bg-red-500 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
+                )}
+              >
+                {isSimulating ? "Dados Simulados" : "Mock Off"}
+              </button>
+            </div>
             <div className="px-3 py-1 bg-green-500/10 text-green-500 border border-green-500/20 rounded text-[9px] tracking-widest uppercase font-mono">
               Modo Edição
             </div>
