@@ -194,11 +194,15 @@ function ProcessDetail() {
          {/* Main Column */}
          <div className="lg:col-span-2 space-y-8">
             <Tabs defaultValue="overview" className="w-full">
-               <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6">
+               <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex-wrap h-auto">
                   <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geral</TabsTrigger>
                   <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Documentos</TabsTrigger>
+                  <TabsTrigger value="comments" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
+                    Notas {comments.length > 0 && <span className="bg-primary text-white text-[10px] px-1.5 rounded-full">{comments.length}</span>}
+                  </TabsTrigger>
                   <TabsTrigger value="history" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Histórico</TabsTrigger>
                </TabsList>
+
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
                   <div className="grid md:grid-cols-2 gap-6">
