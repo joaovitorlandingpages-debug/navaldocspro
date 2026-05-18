@@ -48,6 +48,7 @@ function DashboardLayout() {
     { name: "Central IA", icon: <Zap className="h-5 w-5" />, path: "/ai-center" },
     { name: "Agenda", icon: <CalendarIcon className="h-5 w-5" />, path: "/calendar" },
     { name: "Automação", icon: <Cpu className="h-5 w-5" />, path: "/automation" },
+    { name: "Central OCR", icon: <Zap className="h-5 w-5 text-primary" />, path: "/ocr-center" },
     { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
     { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
@@ -234,7 +235,7 @@ export function RouteContent() {
 
       {/* Intelligence Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-[2rem] text-white shadow-xl">
+        <Link to="/ocr-center" className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-[2rem] text-white shadow-xl hover:scale-[1.02] transition-all group">
            <div className="flex justify-between items-start mb-4">
               <div className="p-3 bg-white/20 rounded-2xl">
                  <Cpu className="h-6 w-6" />
@@ -246,7 +247,7 @@ export function RouteContent() {
            <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
               <div className="h-full bg-white w-2/3" />
            </div>
-        </div>
+        </Link>
 
         <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-[2rem] text-white shadow-xl">
            <div className="flex justify-between items-start mb-4">

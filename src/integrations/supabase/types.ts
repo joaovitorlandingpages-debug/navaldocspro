@@ -411,6 +411,63 @@ export type Database = {
           },
         ]
       }
+      ocr_jobs: {
+        Row: {
+          company_id: string | null
+          confidence_score: number | null
+          created_at: string
+          document_type: string | null
+          extracted_data: Json | null
+          id: string
+          processing_time: number | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          uploaded_file_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          document_type?: string | null
+          extracted_data?: Json | null
+          id?: string
+          processing_time?: number | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_file_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          document_type?: string | null
+          extracted_data?: Json | null
+          id?: string
+          processing_time?: number | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_file_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ocr_jobs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ocr_jobs_uploaded_file_id_fkey"
+            columns: ["uploaded_file_id"]
+            isOneToOne: false
+            referencedRelation: "uploaded_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_logs: {
         Row: {
           created_at: string

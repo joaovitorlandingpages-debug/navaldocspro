@@ -13,6 +13,7 @@ import { Route as VesselsRouteImport } from './routes/vessels'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PlansRouteImport } from './routes/plans'
+import { Route as OcrCenterRouteImport } from './routes/ocr-center'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
@@ -56,6 +57,11 @@ const ProcessesRoute = ProcessesRouteImport.update({
 const PlansRoute = PlansRouteImport.update({
   id: '/plans',
   path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OcrCenterRoute = OcrCenterRouteImport.update({
+  id: '/ocr-center',
+  path: '/ocr-center',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeRoute = HomeRouteImport.update({
@@ -191,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
+  '/ocr-center': typeof OcrCenterRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
@@ -219,6 +226,7 @@ export interface FileRoutesByTo {
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
+  '/ocr-center': typeof OcrCenterRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
+  '/ocr-center': typeof OcrCenterRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
@@ -282,6 +291,7 @@ export interface FileRouteTypes {
     | '/document-generator'
     | '/documents'
     | '/home'
+    | '/ocr-center'
     | '/plans'
     | '/processes'
     | '/settings'
@@ -310,6 +320,7 @@ export interface FileRouteTypes {
     | '/document-generator'
     | '/documents'
     | '/home'
+    | '/ocr-center'
     | '/plans'
     | '/processes'
     | '/settings'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/document-generator'
     | '/documents'
     | '/home'
+    | '/ocr-center'
     | '/plans'
     | '/processes'
     | '/settings'
@@ -371,6 +383,7 @@ export interface RootRouteChildren {
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
   HomeRoute: typeof HomeRoute
+  OcrCenterRoute: typeof OcrCenterRoute
   PlansRoute: typeof PlansRoute
   ProcessesRoute: typeof ProcessesRouteWithChildren
   SettingsRoute: typeof SettingsRoute
@@ -408,6 +421,13 @@ declare module '@tanstack/react-router' {
       path: '/plans'
       fullPath: '/plans'
       preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ocr-center': {
+      id: '/ocr-center'
+      path: '/ocr-center'
+      fullPath: '/ocr-center'
+      preLoaderRoute: typeof OcrCenterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/home': {
@@ -641,6 +661,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
   HomeRoute: HomeRoute,
+  OcrCenterRoute: OcrCenterRoute,
   PlansRoute: PlansRoute,
   ProcessesRoute: ProcessesRouteWithChildren,
   SettingsRoute: SettingsRoute,
