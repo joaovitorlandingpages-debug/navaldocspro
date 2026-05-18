@@ -4,10 +4,11 @@ import {
   FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
-  AlertTriangle, ArrowUpCircle, HelpCircle
+  AlertTriangle, ArrowUpCircle, HelpCircle, Loader2
 } from "lucide-react";
 import { useState, useEffect, Suspense, lazy, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
+
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { WelcomeTour } from "@/components/WelcomeTour";
