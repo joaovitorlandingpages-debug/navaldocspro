@@ -18,14 +18,29 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/payment-test")({
   component: PaymentTestPage,
 });
 
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+}
+
+interface PaymentLog {
+  id: string;
+  event_type: string;
+  status: string;
+  message: string;
+  created_at: string;
+  payload: any;
+}
+
+
 function PaymentTestPage() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSimulating, setIsSimulating] = useState(false);
 
@@ -33,9 +48,6 @@ function PaymentTestPage() {
   const { data: configStatus, isLoading: isLoadingConfig } = useQuery({
     queryKey: ["payment-config-status"],
     queryFn: async () => {
-      // We can't see secrets from frontend, but we can check if the functions respond
-      // For this test page, we'll simulate check of env vars by calling a diagnostic function if we had one,
-      // or just checking if we can create a checkout preference (even if it fails, the error tells us something)
       return {
         accessToken: "Configurado (Backend)",
         publicKey: "Configurada (Frontend)",
@@ -55,7 +67,7 @@ function PaymentTestPage() {
         .limit(10);
       
       if (error) throw error;
-      return data;
+      return data as PaymentLog[];
     },
     refetchInterval: 5000 // Refresh every 5s during testing
   });
@@ -66,7 +78,7 @@ function PaymentTestPage() {
     queryFn: async () => {
       const { data, error } = await supabase.from("plans").select("*").eq("is_active", true);
       if (error) throw error;
-      return data;
+      return data as Plan[];
     }
   });
 
@@ -80,20 +92,16 @@ function PaymentTestPage() {
       return data;
     },
     onSuccess: (data) => {
-      toast({
-        title: "Checkout Criado",
+      toast.success("Checkout Criado", {
         description: "Redirecionando para o fluxo de pagamento...",
       });
-      // In test mode, we might just open the init_point
       if (data.init_point) {
           window.open(data.init_point, "_blank");
       }
     },
     onError: (error: any) => {
-      toast({
-        title: "Erro ao criar checkout",
+      toast.error("Erro ao criar checkout", {
         description: error.message,
-        variant: "destructive"
       });
     }
   });
@@ -102,28 +110,28 @@ function PaymentTestPage() {
   const simulateWebhookMutation = useMutation({
     mutationFn: async () => {
       setIsSimulating(true);
-      // Simulate a payment approved notification
       const { data, error } = await supabase.functions.invoke("mercado-pago-webhook", {
         body: {
           type: "payment",
           data: { id: "test_payment_" + Date.now() },
           action: "payment.created",
-          external_reference: "mock_company:mock_plan" // In real test, use real IDs
+          external_reference: "mock_company:mock_plan"
         }
       });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      toast({ title: "Webhook Simulado", description: "O sistema processou a notificação com sucesso." });
+      toast.success("Webhook Simulado", { description: "O sistema processou a notificação com sucesso." });
       queryClient.invalidateQueries({ queryKey: ["payment-logs"] });
       setIsSimulating(false);
     },
     onError: (error: any) => {
-      toast({ title: "Erro na Simulação", description: error.message, variant: "destructive" });
+      toast.error("Erro na Simulação", { description: error.message });
       setIsSimulating(false);
     }
   });
+
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-500 pb-20">
