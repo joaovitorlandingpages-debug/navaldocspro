@@ -38,13 +38,10 @@ import { Route as BillingFailureRouteImport } from './routes/billing.failure'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
-import { Route as AdminSystemReportRouteImport } from './routes/admin.system-report'
+import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
-import { Route as AdminPaymentTestRouteImport } from './routes/admin.payment-test'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
-import { Route as AdminDocumentsRouteImport } from './routes/admin.documents'
 import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
-import { Route as AdminBillingRouteImport } from './routes/admin.billing'
 
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
@@ -201,29 +198,14 @@ const AdminSettingsRoute = AdminSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminPaymentTestRoute = AdminPaymentTestRouteImport.update({
-  id: '/payment-test',
-  path: '/payment-test',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminLogsRoute = AdminLogsRouteImport.update({
   id: '/logs',
   path: '/logs',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminDocumentsRoute = AdminDocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminCompaniesRoute = AdminCompaniesRouteImport.update({
   id: '/companies',
   path: '/companies',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminBillingRoute = AdminBillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
   getParentRoute: () => AdminRoute,
 } as any)
 
@@ -247,11 +229,8 @@ export interface FileRoutesByFullPath {
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
   '/vessels': typeof VesselsRoute
-  '/admin/billing': typeof AdminBillingRoute
   '/admin/companies': typeof AdminCompaniesRoute
-  '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
-  '/admin/payment-test': typeof AdminPaymentTestRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
@@ -283,11 +262,8 @@ export interface FileRoutesByTo {
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
   '/vessels': typeof VesselsRoute
-  '/admin/billing': typeof AdminBillingRoute
   '/admin/companies': typeof AdminCompaniesRoute
-  '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
-  '/admin/payment-test': typeof AdminPaymentTestRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
@@ -322,11 +298,8 @@ export interface FileRoutesById {
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
   '/vessels': typeof VesselsRoute
-  '/admin/billing': typeof AdminBillingRoute
   '/admin/companies': typeof AdminCompaniesRoute
-  '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
-  '/admin/payment-test': typeof AdminPaymentTestRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
@@ -362,11 +335,8 @@ export interface FileRouteTypes {
     | '/status'
     | '/support'
     | '/vessels'
-    | '/admin/billing'
     | '/admin/companies'
-    | '/admin/documents'
     | '/admin/logs'
-    | '/admin/payment-test'
     | '/admin/settings'
     | '/admin/system-report'
     | '/admin/users'
@@ -398,11 +368,8 @@ export interface FileRouteTypes {
     | '/status'
     | '/support'
     | '/vessels'
-    | '/admin/billing'
     | '/admin/companies'
-    | '/admin/documents'
     | '/admin/logs'
-    | '/admin/payment-test'
     | '/admin/settings'
     | '/admin/system-report'
     | '/admin/users'
@@ -436,11 +403,8 @@ export interface FileRouteTypes {
     | '/status'
     | '/support'
     | '/vessels'
-    | '/admin/billing'
     | '/admin/companies'
-    | '/admin/documents'
     | '/admin/logs'
-    | '/admin/payment-test'
     | '/admin/settings'
     | '/admin/system-report'
     | '/admin/users'
@@ -702,25 +666,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/payment-test': {
-      id: '/admin/payment-test'
-      path: '/payment-test'
-      fullPath: '/admin/payment-test'
-      preLoaderRoute: typeof AdminPaymentTestRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/logs': {
       id: '/admin/logs'
       path: '/logs'
       fullPath: '/admin/logs'
       preLoaderRoute: typeof AdminLogsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/documents': {
-      id: '/admin/documents'
-      path: '/documents'
-      fullPath: '/admin/documents'
-      preLoaderRoute: typeof AdminDocumentsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/companies': {
@@ -730,22 +680,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCompaniesRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/billing': {
-      id: '/admin/billing'
-      path: '/billing'
-      fullPath: '/admin/billing'
-      preLoaderRoute: typeof AdminBillingRouteImport
-      parentRoute: typeof AdminRoute
-    }
   }
 }
 
 interface AdminRouteChildren {
-  AdminBillingRoute: typeof AdminBillingRoute
   AdminCompaniesRoute: typeof AdminCompaniesRoute
-  AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminLogsRoute: typeof AdminLogsRoute
-  AdminPaymentTestRoute: typeof AdminPaymentTestRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSystemReportRoute: typeof AdminSystemReportRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -753,11 +693,8 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
-  AdminBillingRoute: AdminBillingRoute,
   AdminCompaniesRoute: AdminCompaniesRoute,
-  AdminDocumentsRoute: AdminDocumentsRoute,
   AdminLogsRoute: AdminLogsRoute,
-  AdminPaymentTestRoute: AdminPaymentTestRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSystemReportRoute: AdminSystemReportRoute,
   AdminUsersRoute: AdminUsersRoute,
@@ -820,3 +757,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
