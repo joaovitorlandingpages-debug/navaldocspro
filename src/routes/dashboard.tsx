@@ -32,8 +32,12 @@ function DashboardLayout() {
 
 
   useEffect(() => {
-    if (!loading && !profile) {
-      navigate({ to: "/auth/login" });
+    if (!loading) {
+      if (!profile) {
+        navigate({ to: "/auth/login" });
+      } else if (profile.companies?.onboarding_status === 'pending' && window.location.pathname !== '/onboarding') {
+        navigate({ to: "/onboarding" });
+      }
     }
   }, [profile, loading, navigate]);
 
@@ -249,6 +253,16 @@ export function RouteContent() {
         <div>
           <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Dashboard</h1>
           <p className="text-muted-foreground font-medium">Bem-vindo ao centro de operações NavalDocs.</p>
+        </div>
+        
+        {/* Onboarding Checklist Quick Access */}
+        <div className="bg-primary/5 border border-primary/10 px-6 py-3 rounded-2xl flex items-center gap-4 animate-pulse">
+           <Rocket className="h-5 w-5 text-primary" />
+           <div>
+              <p className="text-[10px] font-black uppercase text-primary tracking-widest">Setup em progresso</p>
+              <p className="text-xs font-bold text-navy">Conclua a configuração para liberar 100% da IA.</p>
+           </div>
+           <Button variant="ghost" size="sm" className="text-primary font-bold">Continuar</Button>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Link 
