@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle, AlertTriangle, Activity, Database, Zap, HardDrive } from "lucide-react";
+import { CheckCircle, AlertTriangle, Activity, Database, Zap, HardDrive, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/status")({
   component: StatusPage,
@@ -28,7 +28,7 @@ function StatusPage() {
           <div className="text-center py-20">Carregando status...</div>
         ) : (
           <div className="grid gap-4">
-            {health?.map((module) => (
+            {health?.map((module: any) => (
               <div key={module.module_name} className="bg-white p-6 rounded-2xl border border-slate-100 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-4">
                   <div className={`p-3 rounded-xl ${module.status === 'operational' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
