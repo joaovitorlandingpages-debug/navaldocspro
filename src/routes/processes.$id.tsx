@@ -246,7 +246,7 @@ function ProcessDetail() {
                       <div className="w-64">
                         <FileUploader 
                           processId={id} 
-                          bucket="documents" 
+                          bucket="process-attachments" 
                           category="Processo" 
                           compact
                         />
