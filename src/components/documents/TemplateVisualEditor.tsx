@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Rnd } from "react-rnd";
 import * as pdfjsLib from "pdfjs-dist";
+import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+
 import { 
   ChevronLeft, ChevronRight, Plus, 
   Save, Trash2, Settings2, 
@@ -16,7 +18,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 // Worker configuration for pdf.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 interface TemplateVisualEditorProps {
   templateId: string;
@@ -78,7 +80,14 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
         const path = currentTemplate.template_file_url.split('/').slice(-2).join('/');
         const url = await getSignedUrl('document-templates', path);
         
-        const loadingTask = pdfjsLib.getDocument(url);
+        const loadingTask = pdfjsLib.getDocument({
+          url,
+          // @ts-ignore - Security settings for pdf.js loading
+          enableScripting: false, 
+        } as any);
+
+
+
         const pdf = await loadingTask.promise;
         setNumPages(pdf.numPages);
         await renderPage(pdf, currentPage, scale);
