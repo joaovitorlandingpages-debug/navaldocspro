@@ -320,5 +320,6 @@ export const useDocuments = () => {
     upsertTemplateFields,
     deleteTemplate,
     toggleTemplateActive,
+    getSignedUrl,
   };
 };
