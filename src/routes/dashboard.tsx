@@ -51,7 +51,8 @@ function DashboardLayout() {
     { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
     { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
-    { name: "Gerador de Docs", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
+    { name: "Biblioteca", icon: <FileText className="h-5 w-5" />, path: "/documents" },
+    { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
   ];
 
