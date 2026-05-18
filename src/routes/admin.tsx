@@ -9,7 +9,8 @@ import {
   LayoutDashboard,
   LogOut,
   CreditCard,
-  History
+  History,
+  FileText
 } from "lucide-react";
 import { useState } from "react";
 
