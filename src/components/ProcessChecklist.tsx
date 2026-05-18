@@ -26,7 +26,7 @@ export function ProcessChecklist({ processId, processTypeId }: ProcessChecklistP
       setIsLoading(true);
       try {
         const { data, error } = await supabase
-          .from('documents')
+          .from('uploaded_files')
           .select('*')
           .eq('process_id', processId);
         
@@ -54,7 +54,7 @@ export function ProcessChecklist({ processId, processTypeId }: ProcessChecklistP
     if (mandatory.length === 0) return 100;
     
     const completedMandatory = mandatory.filter(r => {
-      const doc = uploadedDocs.find(d => d.document_type === r.template?.name);
+      const doc = uploadedDocs.find(d => d.category === r.template?.name || d.file_name.includes(r.template?.name || ''));
       return doc && doc.status === 'validado';
     });
     
@@ -100,8 +100,8 @@ export function ProcessChecklist({ processId, processTypeId }: ProcessChecklistP
 
         <div className="divide-y divide-slate-50">
           {requirements.map((req) => {
-            const doc = uploadedDocs.find(d => d.document_type === req.template?.name);
-            const status = doc ? doc.status : 'pendente';
+            const doc = uploadedDocs.find(d => d.category === req.template?.name || d.file_name.includes(req.template?.name || ''));
+            const status = doc ? (doc.status === 'uploaded' ? 'enviado' : doc.status) : 'pendente';
             
             return (
               <div key={req.id} className="p-6 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
