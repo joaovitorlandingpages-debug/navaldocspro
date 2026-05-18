@@ -2,8 +2,9 @@ import { useState } from "react";
 import { 
   Zap, FileText, Check, Loader2, 
   AlertCircle, ArrowRight, ShieldCheck,
-  RefreshCcw, Eye
+  RefreshCcw, Eye, User, Ship
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
