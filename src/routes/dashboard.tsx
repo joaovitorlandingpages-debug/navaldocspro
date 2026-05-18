@@ -352,17 +352,25 @@ export function RouteContent() {
            <h3 className="text-3xl font-black text-navy mt-1">{statsData?.missingDocuments || 0}</h3>
         </div>
 
-        {stats.slice(2).map((stat, idx) => (
-          <div key={idx} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
-             <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all">
-                   {stat.icon}
-                </div>
-             </div>
-             <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
-             <h3 className="text-3xl font-black text-navy mt-1">{stat.value}</h3>
-          </div>
-        ))}
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+           <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-amber-50 rounded-2xl group-hover:bg-amber-500 group-hover:text-white transition-all text-amber-600">
+                 <Clock className="h-5 w-5" />
+              </div>
+           </div>
+           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Expirando (30 dias)</p>
+           <h3 className="text-3xl font-black text-navy mt-1">{statsData?.expiringDocuments || 0}</h3>
+        </div>
+
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+           <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all text-primary">
+                 <FileText className="h-5 w-5" />
+              </div>
+           </div>
+           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Documentos Gerados</p>
+           <h3 className="text-3xl font-black text-navy mt-1">{statsData?.generatedDocuments || 0}</h3>
+        </div>
       </div>
 
 
