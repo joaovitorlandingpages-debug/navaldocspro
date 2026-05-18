@@ -175,7 +175,7 @@ function Documents() {
                     </td>
                     <td className="px-4 py-4 text-right">
                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                          <a href={doc.generated_file_url} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></a>
+                          <button onClick={() => handleViewDocument(doc)} className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></button>
                           <button className="p-2 text-slate-400 hover:text-navy"><Download className="h-4 w-4" /></button>
                        </div>
                     </td>
