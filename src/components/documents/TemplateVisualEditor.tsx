@@ -447,14 +447,20 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
                       : "bg-white/5 border-white/20 border-dashed hover:border-red-500/50 z-10"
                   )}
                 >
-                  <div className="flex items-center justify-between gap-2 overflow-hidden pointer-events-none">
-                    <span className={cn(
-                      "text-[10px] font-black truncate uppercase tracking-tight",
-                      selectedFieldId === field.id ? "text-white" : "text-slate-400"
-                    )}>
-                      {field.field_label}
-                    </span>
-                    <GripHorizontal className="h-3 w-3 text-white/20 shrink-0" />
+                  <div className="flex items-center justify-between gap-2 overflow-hidden pointer-events-none w-full">
+                    {isSimulating ? (
+                      <span className="text-[10px] font-bold text-white/90 truncate">
+                        {field.source_type === 'manual' ? field.field_label : (mockData[field.source_field as string] || field.field_label)}
+                      </span>
+                    ) : (
+                      <span className={cn(
+                        "text-[10px] font-black truncate uppercase tracking-tight",
+                        selectedFieldId === field.id ? "text-white" : "text-slate-400"
+                      )}>
+                        {field.field_label}
+                      </span>
+                    )}
+                    {!isSimulating && <GripHorizontal className="h-3 w-3 text-white/20 shrink-0" />}
                   </div>
                   
                   {selectedFieldId === field.id && (
