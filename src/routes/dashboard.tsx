@@ -235,7 +235,7 @@ export function RouteContent() {
 
       {/* Intelligence Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-[2rem] text-white shadow-xl">
+        <Link to="/ocr-center" className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-[2rem] text-white shadow-xl hover:scale-[1.02] transition-all group">
            <div className="flex justify-between items-start mb-4">
               <div className="p-3 bg-white/20 rounded-2xl">
                  <Cpu className="h-6 w-6" />
