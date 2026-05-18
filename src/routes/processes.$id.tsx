@@ -122,13 +122,48 @@ function ProcessDetail() {
   ];
 
 
-  const documents = [
-    { name: "RG / CPF Requerente", type: "PDF", size: "1.2 MB", status: "Validado" },
-    { name: "Comprovante de Residência", type: "JPG", size: "2.4 MB", status: "Em Análise" },
-    { name: "Procuração Assinada", type: "PDF", size: "0.8 MB", status: "Pendente" },
-    { name: "Título de Inscrição (TIE)", type: "PDF", size: "3.1 MB", status: "Correção Necessária" },
-    { name: "GRU Paga", type: "PDF", size: "0.5 MB", status: "Validado" },
-  ];
+  const getProcessRequirements = (type: string) => {
+    const common = [
+      { name: "RG / CPF Requerente", type: "PDF", size: "---", status: "Pendente" },
+      { name: "Comprovante de Residência", type: "PDF", size: "---", status: "Pendente" },
+      { name: "Procuração Assinada", type: "PDF", size: "---", status: "Pendente" },
+    ];
+
+    switch (type) {
+      case "Registro de Embarcação":
+        return [
+          ...common,
+          { name: "Título de Inscrição (TIE)", type: "PDF", size: "---", status: "Pendente" },
+          { name: "Memorial Descritivo", type: "PDF", size: "---", status: "Pendente" },
+          { name: "Certificado de Segurança (CSN)", type: "PDF", size: "---", status: "Pendente" },
+          { name: "GRU Paga (Registro)", type: "PDF", size: "---", status: "Pendente" }
+        ];
+      case "Tripulação":
+        return [
+          ...common,
+          { name: "CIR (Caderneta)", type: "PDF", size: "---", status: "Pendente" },
+          { name: "Certificado de Saúde", type: "PDF", size: "---", status: "Pendente" },
+          { name: "Rol de Equipagem", type: "PDF", size: "---", status: "Pendente" }
+        ];
+      case "Certificação Técnica":
+        return [
+          ...common,
+          { name: "Plano de Segurança", type: "PDF", size: "---", status: "Pendente" },
+          { name: "Laudo de Estabilidade", type: "PDF", size: "---", status: "Pendente" },
+          { name: "Relatório de Motores", type: "PDF", size: "---", status: "Pendente" }
+        ];
+      default:
+        return common;
+    }
+  };
+
+  const [documents, setDocuments] = useState(getProcessRequirements(process?.process_type || "Geral"));
+
+  useEffect(() => {
+    if (process?.process_type) {
+      setDocuments(getProcessRequirements(process.process_type));
+    }
+  }, [process?.process_type]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20 max-w-7xl mx-auto">
