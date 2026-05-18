@@ -126,9 +126,9 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
           </Button>
           <div>
             <h2 className="text-2xl font-black text-navy uppercase tracking-tight flex items-center gap-2">
-              Revisão OCR <Badge className="bg-green-500 uppercase text-[10px]">IA Concluída</Badge>
+              Revisão de Documento <Badge className="bg-primary uppercase text-[10px] ml-2">IA NavalDocs</Badge>
             </h2>
-            <p className="text-xs text-slate-500 font-medium">Confirme os dados extraídos antes de salvar no sistema.</p>
+            <p className="text-xs text-slate-500 font-medium">Extração de dados inteligentes com mapeamento automático para o banco de dados.</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -136,7 +136,10 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
             <RefreshCw className="h-4 w-4" /> Reprocessar
           </Button>
           <Button className="bg-primary text-white rounded-xl font-bold gap-2 text-xs h-10 shadow-lg shadow-primary/20" onClick={handleApplyToClient} disabled={saving}>
-            <Save className="h-4 w-4" /> Aplicar ao Cliente
+            <Save className="h-4 w-4" /> Validar e Salvar no Sistema
+          </Button>
+          <Button className="bg-navy text-white rounded-xl font-bold gap-2 text-xs h-10 shadow-lg" onClick={() => toast.info("Mapeando campos para o Requerimento...")}>
+            <FileText className="h-4 w-4" /> Gerar Requerimento
           </Button>
         </div>
       </div>
