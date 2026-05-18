@@ -3,6 +3,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+export interface DocumentField {
+  id?: string;
+  template_id: string;
+  field_name: string;
+  field_label: string;
+  field_type: string;
+  source_type: string;
+  source_field?: string;
+  required: boolean;
+  page_number: number;
+  position_x?: number;
+  position_y?: number;
+  width?: number;
+  height?: number;
+  font_size?: number;
+  field_options?: any;
+  alignment?: string;
+  created_at?: string;
+}
+
 export interface DocumentTemplate {
   id: string;
   company_id: string | null;
@@ -11,7 +31,7 @@ export interface DocumentTemplate {
   process_type: string | null;
   description: string | null;
   template_file_url: string | null;
-  fields_config: any[];
+  fields?: DocumentField[];
   version: number;
   is_active: boolean;
   created_at: string;
