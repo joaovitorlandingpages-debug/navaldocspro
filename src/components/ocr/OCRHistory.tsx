@@ -30,7 +30,8 @@ export function OCRHistory({ onSelectJob, selectedJobId }: OCRHistoryProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed': return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case 'processing': return <Clock className="h-4 w-4 text-blue-500 animate-pulse" />;
+      case 'pending': return <Clock className="h-4 w-4 text-slate-400" />;
+      case 'processing': return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
       case 'failed': return <AlertCircle className="h-4 w-4 text-red-500" />;
       case 'reviewed': return <UserCheck className="h-4 w-4 text-primary" />;
       default: return <Clock className="h-4 w-4 text-slate-400" />;
@@ -40,6 +41,7 @@ export function OCRHistory({ onSelectJob, selectedJobId }: OCRHistoryProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed': return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none text-[9px] font-black uppercase">Pronto</Badge>;
+      case 'pending': return <Badge variant="secondary" className="text-[9px] font-black uppercase">Fila</Badge>;
       case 'processing': return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none text-[9px] font-black uppercase">Lendo...</Badge>;
       case 'failed': return <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-none text-[9px] font-black uppercase">Erro</Badge>;
       case 'reviewed': return <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-none text-[9px] font-black uppercase">Revisado</Badge>;
