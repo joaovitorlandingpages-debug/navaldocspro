@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { 
   Table, 
   TableBody, 
@@ -50,9 +51,9 @@ function AdminOCRBillingPage() {
 
   const stats = [
     { label: "Custo Estimado Total", value: "R$ 1.250,40", icon: <DollarSign className="text-green-600" />, trend: "+12%" },
-    { label: "Leituras Concluídas", value: usage?.reduce((acc, curr) => acc + (curr.successful_jobs || 0), 0) || "0", icon: <Zap className="text-primary" />, trend: "+18%" },
+    { label: "Leituras Concluídas", value: usage?.reduce((acc: number, curr: any) => acc + (curr.successful_jobs || 0), 0) || "0", icon: <Zap className="text-primary" />, trend: "+18%" },
     { label: "Taxa de Erro Global", value: "0.8%", icon: <AlertTriangle className="text-red-600" />, trend: "-2%" },
-    { label: "Empresas Ativas", value: new Set(usage?.map(u => u.company_id)).size || "0", icon: <Users className="text-blue-600" />, trend: "+5%" },
+    { label: "Empresas Ativas", value: new Set(usage?.map((u: any) => u.company_id)).size || "0", icon: <Users className="text-blue-600" />, trend: "+5%" },
   ];
 
   return (
@@ -119,7 +120,7 @@ function AdminOCRBillingPage() {
                 </TableCell>
               </TableRow>
             )}
-            {usage?.map((u) => (
+            {usage?.map((u: any) => (
               <TableRow key={u.id} className="hover:bg-slate-50/50 transition-colors border-slate-100">
                 <TableCell className="font-bold text-navy text-xs">{(u as any).companies?.name || "N/A"}</TableCell>
                 <TableCell>
