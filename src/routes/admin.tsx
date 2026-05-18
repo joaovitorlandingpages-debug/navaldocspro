@@ -10,7 +10,8 @@ import {
   LogOut,
   CreditCard,
   History,
-  FileText
+  FileText,
+  Sparkles
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
