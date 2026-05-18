@@ -299,6 +299,14 @@ export const useDocuments = () => {
     },
   });
 
+  const getSignedUrl = async (bucket: string, path: string) => {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(path, 60); // 1 minute
+    if (error) throw error;
+    return data.signedUrl;
+  };
+
   return {
     templates,
     isLoadingTemplates,
