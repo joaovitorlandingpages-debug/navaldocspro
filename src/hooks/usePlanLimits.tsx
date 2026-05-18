@@ -7,8 +7,9 @@ import { useAuth } from '@/hooks/useAuth';
 interface PlanLimitContextType {
   subscription: (Subscription & { plan: Plan }) | null | undefined;
   isLoading: boolean;
-  checkLimit: (resource: 'customers' | 'documents' | 'users' | 'ocr') => Promise<{ reached: boolean; current: number; limit: number | null }>;
+  checkLimit: (resource: 'customers' | 'vessels' | 'processes' | 'documents' | 'ocr' | 'users' | 'files') => Promise<{ reached: boolean; current: number; limit: number | null }>;
 }
+
 
 const PlanLimitContext = createContext<PlanLimitContextType | undefined>(undefined);
 
@@ -16,20 +17,23 @@ export function PlanLimitProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { subscription, isLoadingSubscription } = useSubscription();
 
-  const checkLimit = async (resource: 'customers' | 'documents' | 'users' | 'ocr') => {
+  const checkLimit = async (resource: 'customers' | 'documents' | 'users' | 'ocr' | 'files') => {
     try {
       if (!subscription || !subscription.plan) {
-        // Default limits if no subscription found (could be a trial period or free tier)
-        return { reached: false, current: 0, limit: null };
+        // Safe defaults for companies without a recorded subscription yet
+        return { reached: false, current: 0, limit: 10 }; 
       }
 
       const plan = subscription.plan;
       const limit = resource === 'customers' ? plan.customer_limit : 
                     resource === 'documents' ? plan.document_limit : 
                     resource === 'users' ? plan.user_limit :
-                    plan.ocr_limit;
+                    resource === 'ocr' ? plan.ocr_limit :
+                    resource === 'vessels' ? (plan as any).vessel_limit || 20 : // Fallback if missing
+                    null;
 
       if (limit === null || limit === undefined) return { reached: false, current: 0, limit: null };
+
 
       let current = 0;
       if (resource === 'customers') {
@@ -47,7 +51,14 @@ export function PlanLimitProvider({ children }: { children: React.ReactNode }) {
             .eq('company_id', subscription.company_id)
             .eq('event_type', 'ocr_processed');
         current = count || 0;
+      } else if (resource === 'vessels') {
+        const { count } = await supabase.from('vessels').select('*', { count: 'exact', head: true }).eq('company_id', subscription.company_id);
+        current = count || 0;
+      } else if (resource === 'processes') {
+        const { count } = await supabase.from('processes').select('*', { count: 'exact', head: true }).eq('company_id', subscription.company_id);
+        current = count || 0;
       }
+
 
       return {
         reached: current >= limit,
