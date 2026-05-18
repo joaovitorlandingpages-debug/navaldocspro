@@ -31,7 +31,8 @@ function AdminDocuments() {
   const [newTemplate, setNewTemplate] = useState({
     name: "",
     category: "Requerimento",
-    description: ""
+    description: "",
+    file_type: "pdf" as "pdf" | "docx"
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
