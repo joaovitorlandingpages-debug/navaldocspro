@@ -10,6 +10,7 @@ import { useState, useEffect, Suspense, lazy } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ActivityFeed } from "@/components/ActivityFeed";
+import { WelcomeTour } from "@/components/WelcomeTour";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isNotificationsOpen, setNotificationsOpen] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const { profile, loading } = useAuth();
   const { setIsNewProcessOpen } = useNewProcess();
   const { checkLimit, subscription } = usePlanLimits();
@@ -38,6 +40,12 @@ function DashboardLayout() {
         navigate({ to: "/auth/login" });
       } else if (profile.companies?.onboarding_status === 'pending' && window.location.pathname !== '/onboarding') {
         navigate({ to: "/onboarding" });
+      } else if (profile.companies?.onboarding_status === 'completed') {
+        // If just completed but maybe still on low step or first login
+        const hasSeenTour = localStorage.getItem(`tour_seen_${profile.company_id}`);
+        if (!hasSeenTour) {
+          setShowTour(true);
+        }
       }
     }
   }, [profile, loading, navigate]);
@@ -228,6 +236,16 @@ function DashboardLayout() {
              <Outlet />
            </Suspense>
         </main>
+
+        {showTour && profile?.companies && (
+          <WelcomeTour 
+            onboardingStep={profile.companies.onboarding_step || 1} 
+            onClose={() => {
+              setShowTour(false);
+              localStorage.setItem(`tour_seen_${profile.company_id}`, 'true');
+            }}
+          />
+        )}
       </div>
     </div>
   );
