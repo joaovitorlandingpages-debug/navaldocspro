@@ -140,6 +140,31 @@ export const useDocuments = () => {
     },
   });
 
+  const generateDocument = useMutation({
+    mutationFn: async (payload: {
+      templateId: string;
+      companyId: string;
+      customerId?: string;
+      vesselId?: string;
+      processId?: string;
+      fieldValues: Record<string, any>;
+    }) => {
+      const { data, error } = await supabase.functions.invoke("generate-document", {
+        body: payload,
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["generated-documents"] });
+      toast.success("Documento oficial gerado com sucesso!");
+    },
+    onError: (error: any) => {
+      toast.error(`Erro na geração: ${error.message}`);
+    },
+  });
+
   const createTemplate = useMutation({
     mutationFn: async (template: Partial<DocumentTemplate> & { file?: File }) => {
       if (!user) throw new Error("Not authenticated");
