@@ -4,6 +4,7 @@ import {
   Filter, Tag, LayoutGrid, List, MoreVertical, X,
   Zap, Cpu, Loader2, Calendar, User as UserIcon
 } from "lucide-react";
+import { toast } from "sonner";
 import { useState } from "react";
 import { SmartOCR } from "@/components/SmartOCR";
 import { useDocuments } from "@/hooks/useDocuments";
@@ -18,7 +19,23 @@ function Documents() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadMode, setUploadMode] = useState<"standard" | "smart">("standard");
-  const { generatedDocuments, isLoadingGenerated } = useDocuments();
+  const { generatedDocuments, isLoadingGenerated, getSignedUrl } = useDocuments();
+  
+  const handleViewDocument = async (doc: any) => {
+    try {
+      if (doc.generated_file_url) {
+        // If it's a full URL (legacy), use it. If it's just a path, get signed URL.
+        const path = doc.generated_file_url.includes('http') 
+          ? doc.generated_file_url.split('/').slice(-2).join('/')
+          : doc.generated_file_url;
+        
+        const url = await getSignedUrl('generated-documents', path);
+        window.open(url, '_blank');
+      }
+    } catch (e) {
+      toast.error("Erro ao abrir documento.");
+    }
+  };
 
   const categories = ["Todos", "Registro Inicial", "Transferência", "Renovação", "Procuração", "Declaração", "Requerimento", "GRU", "Autorização", "Vistoria"];
   
@@ -115,14 +132,12 @@ function Documents() {
                 </div>
 
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <a 
-                    href={doc.generated_file_url} 
-                    target="_blank" 
-                    rel="noreferrer"
+                  <button 
+                    onClick={() => handleViewDocument(doc)}
                     className="flex-grow py-2 rounded-lg bg-navy text-white text-[10px] font-bold hover:bg-navy/90 text-center"
                   >
                     Visualizar
-                  </a>
+                  </button>
                   <button className="p-2 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200">
                     <Download className="h-3 w-3" />
                   </button>
@@ -160,7 +175,7 @@ function Documents() {
                     </td>
                     <td className="px-4 py-4 text-right">
                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                          <a href={doc.generated_file_url} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></a>
+                          <button onClick={() => handleViewDocument(doc)} className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></button>
                           <button className="p-2 text-slate-400 hover:text-navy"><Download className="h-4 w-4" /></button>
                        </div>
                     </td>

@@ -33,15 +33,18 @@ const SOURCE_TYPES = [
 ];
 
 const SOURCE_FIELDS = {
-  customer: ["name", "cpf_cnpj", "rg", "address", "phone", "email"],
-  vessel: ["name", "registration_number", "vessel_type", "category", "engine"],
-  company: ["name", "cnpj", "phone"],
-  process: ["process_type", "status", "created_at"],
+  customer: ["name", "cpf_cnpj", "rg", "cnh", "address", "phone", "email", "occupation", "nationality", "marital_status"],
+  vessel: ["name", "registration_number", "vessel_type", "category", "engine_power", "length", "hull_material", "year_built"],
+  company: ["name", "cnpj", "phone", "email", "address"],
+  process: ["process_type", "status", "created_at", "assigned_to"],
 };
 
 export function DocumentFieldEditor({ templateId }: DocumentFieldEditorProps) {
-  const { templateFields, upsertTemplateFields } = useDocuments();
+  const { templates, templateFields, upsertTemplateFields } = useDocuments();
   const [fields, setFields] = useState<Field[]>([]);
+  
+  const currentTemplate = templates?.find((t: any) => t.id === templateId);
+  const isPdf = currentTemplate?.file_type === 'pdf';
 
   useEffect(() => {
     if (templateFields) {
@@ -161,6 +164,40 @@ export function DocumentFieldEditor({ templateId }: DocumentFieldEditorProps) {
                   </div>
                 )}
               </div>
+
+              {isPdf && (
+                <div className="grid grid-cols-3 gap-4 border-t border-white/5 pt-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Página</Label>
+                    <Input 
+                      type="number"
+                      value={field.page_number}
+                      onChange={(e) => updateField(index, { page_number: Number(e.target.value) })}
+                      className="bg-black/20 border-white/5 text-white h-10 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Posição X</Label>
+                    <Input 
+                      type="number"
+                      value={field.position_x}
+                      onChange={(e) => updateField(index, { position_x: Number(e.target.value) })}
+                      placeholder="px"
+                      className="bg-black/20 border-white/5 text-white h-10 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Posição Y</Label>
+                    <Input 
+                      type="number"
+                      value={field.position_y}
+                      onChange={(e) => updateField(index, { position_y: Number(e.target.value) })}
+                      placeholder="px"
+                      className="bg-black/20 border-white/5 text-white h-10 rounded-xl"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-end">
                 <Button 

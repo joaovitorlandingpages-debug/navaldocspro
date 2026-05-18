@@ -31,11 +31,12 @@ function AdminDocuments() {
   const [newTemplate, setNewTemplate] = useState({
     name: "",
     category: "Requerimento",
-    description: ""
+    description: "",
+    file_type: "pdf" as "pdf" | "docx"
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
-  const { templates, isLoadingTemplates, createTemplate, deleteTemplate, toggleTemplateActive } = useDocuments();
+  const { templates, isLoadingTemplates, createTemplate, deleteTemplate, toggleTemplateActive, getSignedUrl } = useDocuments();
 
   const { data: logs } = useQuery({
     queryKey: ["admin-document-logs"],
@@ -63,7 +64,7 @@ function AdminDocuments() {
         file: selectedFile || undefined
       });
       setIsNewTemplateOpen(false);
-      setNewTemplate({ name: "", category: "Engenharia", description: "" });
+      setNewTemplate({ name: "", category: "Requerimento", description: "", file_type: "pdf" });
       setSelectedFile(null);
     } catch (error) {
       // toast handled in hook
@@ -129,7 +130,7 @@ function AdminDocuments() {
             <div key={doc.id} className="bg-white/5 border border-white/10 p-6 rounded-3xl hover:border-red-500/30 transition-all group relative overflow-hidden backdrop-blur-md">
                {/* Overlay decorativo de versão */}
                <div className="absolute -right-2 -top-2 bg-black/40 px-4 py-2 rounded-bl-3xl border-l border-b border-white/5 text-[10px] font-mono text-red-400 font-black tracking-widest group-hover:bg-red-500 group-hover:text-white transition-all">
-                  v{doc.version}.0
+                  v{doc.version}.0 | {doc.file_type?.toUpperCase()}
                </div>
 
                <div className="h-14 w-14 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-400 mb-6 group-hover:scale-110 transition-all border border-red-500/20 shadow-inner">
@@ -172,9 +173,24 @@ function AdminDocuments() {
                        <SelectItem value="Vistoria">Vistoria</SelectItem>
                     </SelectContent>
                   </Select>
-               </div>
-               <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-400">Upload do Arquivo (.docx / .pdf)</Label>
+                </div>
+                <div className="space-y-2">
+                   <Label className="text-xs font-bold text-slate-400">Tipo de Arquivo</Label>
+                   <Select 
+                     value={newTemplate.file_type}
+                     onValueChange={(v: "pdf" | "docx") => setNewTemplate({...newTemplate, file_type: v})}
+                   >
+                     <SelectTrigger className="bg-white/5 border-white/10 text-white h-12 rounded-xl">
+                       <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent className="bg-slate-800 border-white/10 text-white">
+                        <SelectItem value="pdf">PDF (Preenchimento por Coordenadas)</SelectItem>
+                        <SelectItem value="docx">DOCX (Preenchimento por Variáveis)</SelectItem>
+                     </SelectContent>
+                   </Select>
+                </div>
+                <div className="space-y-2">
+                   <Label className="text-xs font-bold text-slate-400">Upload do Modelo ({newTemplate.file_type.toUpperCase()})</Label>
                   <div className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-red-500/50 transition-all cursor-pointer relative group">
                     <input 
                       type="file" 
@@ -254,6 +270,23 @@ function AdminDocuments() {
                       className="p-2 bg-white/5 hover:bg-red-500/20 rounded-xl text-slate-400 hover:text-red-500 transition-all border border-white/5"
                     >
                        <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                    <button 
+                      onClick={async () => {
+                        const path = doc.template_file_url?.split('/').slice(-2).join('/');
+                        if (path) {
+                          try {
+                            const url = await getSignedUrl('document-templates', path);
+                            window.open(url, '_blank');
+                          } catch (e) {
+                            toast.error("Erro ao obter link de download");
+                          }
+                        }
+                      }}
+                      title="Baixar Modelo"
+                      className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-slate-400 border border-white/5"
+                    >
+                       <Download className="h-3.5 w-3.5" />
                     </button>
                     <button className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-slate-400 border border-white/5">
                        <MoreVertical className="h-3.5 w-3.5" />

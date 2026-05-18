@@ -39,14 +39,24 @@ export const useDocuments = () => {
   const { data: templates, isLoading: isLoadingTemplates } = useQuery({
     queryKey: ["document-templates"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user?.id)
+        .single();
+
+      let query = supabase
         .from("document_templates")
         .select(`
           *,
           fields:document_fields(*)
-        `)
-        .eq("is_active", true)
-        .order("name");
+        `);
+
+      if (profile?.role !== 'admin_master') {
+        query = query.eq("is_active", true);
+      }
+
+      const { data, error } = await query.order("name");
 
       if (error) throw error;
       return data;
@@ -137,6 +147,31 @@ export const useDocuments = () => {
     },
     onError: (error: any) => {
       toast.error(`Erro ao salvar documento: ${error.message}`);
+    },
+  });
+
+  const generateDocument = useMutation({
+    mutationFn: async (payload: {
+      templateId: string;
+      companyId: string;
+      customerId?: string;
+      vesselId?: string;
+      processId?: string;
+      fieldValues: Record<string, any>;
+    }) => {
+      const { data, error } = await supabase.functions.invoke("generate-document", {
+        body: payload,
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["generated-documents"] });
+      toast.success("Documento oficial gerado com sucesso!");
+    },
+    onError: (error: any) => {
+      toast.error(`Erro na geração: ${error.message}`);
     },
   });
 
@@ -264,6 +299,14 @@ export const useDocuments = () => {
     },
   });
 
+  const getSignedUrl = async (bucket: string, path: string) => {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(path, 60); // 1 minute
+    if (error) throw error;
+    return data.signedUrl;
+  };
+
   return {
     templates,
     isLoadingTemplates,
@@ -272,9 +315,11 @@ export const useDocuments = () => {
     generatedDocuments,
     isLoadingGenerated,
     saveGeneratedDocument,
+    generateDocument,
     createTemplate,
     upsertTemplateFields,
     deleteTemplate,
     toggleTemplateActive,
+    getSignedUrl,
   };
 };

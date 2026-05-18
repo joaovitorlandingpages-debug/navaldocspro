@@ -44,7 +44,7 @@ function DocumentGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const { checkLimit } = usePlanLimits();
-  const { templates, saveGeneratedDocument } = useDocuments();
+  const { templates, saveGeneratedDocument, generateDocument } = useDocuments();
 
   const [formValues, setFormValues] = useState<Record<string, string>>({});
 
@@ -119,8 +119,11 @@ function DocumentGenerator() {
     setFormValues(prev => ({ ...prev, [fieldName]: value }));
   };
 
-  const generatePDF = async () => {
-    if (!previewRef.current || !selectedTemplate) return;
+  const handleGenerateRealDocument = async () => {
+    if (!selectedTemplateId || !profile?.company_id) {
+      toast.error("Selecione um template e certifique-se de estar logado.");
+      return;
+    }
     
     const limit = await checkLimit('documents');
     if (limit.reached) {
@@ -131,44 +134,36 @@ function DocumentGenerator() {
     setIsGenerating(true);
     
     try {
-      const canvas = await html2canvas(previewRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff"
+      await generateDocument.mutateAsync({
+        templateId: selectedTemplateId,
+        companyId: profile.company_id,
+        customerId: selectedCustomerId || undefined,
+        vesselId: selectedVesselId || undefined,
+        processId: selectedProcessId || undefined,
+        fieldValues: formValues
       });
       
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-      
-      const imgWidth = 210;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-      
-      const pdfBlob = pdf.output("blob");
-      const pdfFile = new File([pdfBlob], `${selectedTemplate.name}-${Date.now()}.pdf`, { type: "application/pdf" });
-      
-      await saveGeneratedDocument.mutateAsync({
-        name: selectedTemplate.name,
-        template_id: selectedTemplate.id,
-        customer_id: selectedCustomerId || null,
-        vessel_id: selectedVesselId || null,
-        process_id: selectedProcessId || null,
-        status: "completed",
-        file: pdfFile,
-        metadata: { formValues }
-      });
-
-      pdf.save(`NavalDocs_${selectedTemplate.name}_${Date.now()}.pdf`);
-      toast.success("Documento gerado com sucesso!");
+      toast.success("Documento oficial gerado e salvo com sucesso!");
     } catch (error) {
-      console.error("Erro ao gerar PDF:", error);
-      toast.error("Erro ao gerar o documento.");
+      console.error("Erro ao gerar documento real:", error);
+      toast.error("Erro ao processar documento oficial.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Keep the old generatePDF as "Quick Preview PDF" if needed, but let's prioritize the real one
+  const generateQuickPDF = async () => {
+    if (!previewRef.current || !selectedTemplate) return;
+    setIsGenerating(true);
+    try {
+      const canvas = await html2canvas(previewRef.current, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      pdf.addImage(imgData, "PNG", 0, 0, 210, (canvas.height * 210) / canvas.width);
+      pdf.save(`Preview_${selectedTemplate.name}.pdf`);
+    } catch (error) {
+      toast.error("Erro no preview.");
     } finally {
       setIsGenerating(false);
     }
@@ -195,7 +190,7 @@ function DocumentGenerator() {
               <RotateCcw className="h-4 w-4" /> Resetar
            </Button>
            <Button 
-             onClick={generatePDF}
+             onClick={handleGenerateRealDocument}
              disabled={!selectedTemplateId || isGenerating}
              className="flex-1 md:flex-none bg-red-500 text-white h-12 rounded-xl font-bold gap-2 hover:bg-red-600 shadow-lg shadow-red-500/20"
            >
