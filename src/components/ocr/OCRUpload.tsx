@@ -45,7 +45,7 @@ export function OCRUpload({ companyId }: OCRUploadProps) {
         .insert({
           company_id: companyId,
           file_name: file.name,
-          file_path: filePath,
+          file_url: filePath,
           category: 'ocr_analysis',
           file_type: file.type,
           file_size: file.size
