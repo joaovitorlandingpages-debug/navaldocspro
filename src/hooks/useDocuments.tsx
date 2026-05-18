@@ -39,14 +39,24 @@ export const useDocuments = () => {
   const { data: templates, isLoading: isLoadingTemplates } = useQuery({
     queryKey: ["document-templates"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user?.id)
+        .single();
+
+      let query = supabase
         .from("document_templates")
         .select(`
           *,
           fields:document_fields(*)
-        `)
-        .eq("is_active", true)
-        .order("name");
+        `);
+
+      if (profile?.role !== 'admin_master') {
+        query = query.eq("is_active", true);
+      }
+
+      const { data, error } = await query.order("name");
 
       if (error) throw error;
       return data;
