@@ -246,8 +246,8 @@ export function RouteContent() {
            <p className="text-white/70 text-sm mb-4">12 documentos processados automaticamente hoje.</p>
            <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
               <div className="h-full bg-white w-2/3" />
+           </div>
         </Link>
-        </div>
 
         <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-[2rem] text-white shadow-xl">
            <div className="flex justify-between items-start mb-4">
