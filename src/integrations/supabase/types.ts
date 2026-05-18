@@ -192,6 +192,7 @@ export type Database = {
           created_at: string
           description: string | null
           fields_config: Json | null
+          file_type: string | null
           id: string
           is_active: boolean | null
           name: string
@@ -199,6 +200,7 @@ export type Database = {
           template_file_url: string | null
           updated_at: string
           version: number | null
+          version_notes: string | null
         }
         Insert: {
           category: string
@@ -206,6 +208,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           fields_config?: Json | null
+          file_type?: string | null
           id?: string
           is_active?: boolean | null
           name: string
@@ -213,6 +216,7 @@ export type Database = {
           template_file_url?: string | null
           updated_at?: string
           version?: number | null
+          version_notes?: string | null
         }
         Update: {
           category?: string
@@ -220,6 +224,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           fields_config?: Json | null
+          file_type?: string | null
           id?: string
           is_active?: boolean | null
           name?: string
@@ -227,6 +232,7 @@ export type Database = {
           template_file_url?: string | null
           updated_at?: string
           version?: number | null
+          version_notes?: string | null
         }
         Relationships: [
           {
