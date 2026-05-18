@@ -257,17 +257,24 @@ function AdminDocuments() {
                     >
                        <Settings className="h-3.5 w-3.5" />
                     </button>
-                    <button 
-                      onClick={() => {
-                        if (confirm("Deseja realmente excluir este template?")) {
-                          deleteTemplate.mutate(doc.id);
-                        }
-                      }}
-                      title="Excluir" 
-                      className="p-2 bg-white/5 hover:bg-red-500/20 rounded-xl text-slate-400 hover:text-red-500 transition-all border border-white/5"
-                    >
-                       <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                     <button 
+                       onClick={() => duplicateTemplate.mutate(doc.id)}
+                       title="Duplicar" 
+                       className="p-2 bg-white/5 hover:bg-amber-500/20 rounded-xl text-slate-400 hover:text-amber-500 transition-all border border-white/5"
+                     >
+                        <Copy className="h-3.5 w-3.5" />
+                     </button>
+                     <button 
+                       onClick={() => {
+                         if (confirm("Deseja realmente excluir este template?")) {
+                           deleteTemplate.mutate(doc.id);
+                         }
+                       }}
+                       title="Excluir" 
+                       className="p-2 bg-white/5 hover:bg-red-500/20 rounded-xl text-slate-400 hover:text-red-500 transition-all border border-white/5"
+                     >
+                        <Trash2 className="h-3.5 w-3.5" />
+                     </button>
                     <button 
                       onClick={async () => {
                         const path = doc.template_file_url?.split('/').slice(-2).join('/');
