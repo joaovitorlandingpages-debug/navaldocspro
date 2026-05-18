@@ -455,6 +455,14 @@ function Vessels() {
           </div>
         </DialogContent>
       </Dialog>
+      <UpgradeModal 
+        isOpen={upgradeModal.isOpen} 
+        onClose={() => setUpgradeModal({ ...upgradeModal, isOpen: false })} 
+        resource="vessels"
+        limit={upgradeModal.limit}
+        current={upgradeModal.current}
+      />
     </div>
   );
 }
+
