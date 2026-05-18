@@ -152,6 +152,7 @@ export type Database = {
           font_size: number | null
           height: number | null
           id: string
+          is_mandatory: boolean | null
           page_number: number | null
           position_x: number | null
           position_y: number | null
@@ -171,6 +172,7 @@ export type Database = {
           font_size?: number | null
           height?: number | null
           id?: string
+          is_mandatory?: boolean | null
           page_number?: number | null
           position_x?: number | null
           position_y?: number | null
@@ -190,6 +192,7 @@ export type Database = {
           font_size?: number | null
           height?: number | null
           id?: string
+          is_mandatory?: boolean | null
           page_number?: number | null
           position_x?: number | null
           position_y?: number | null
@@ -676,13 +679,70 @@ export type Database = {
         }
         Relationships: []
       }
+      process_comments: {
+        Row: {
+          company_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          process_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          process_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          process_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_comments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_comments_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       processes: {
         Row: {
           company_id: string
           created_at: string
           customer_id: string
+          draft_data: Json | null
           due_date: string | null
           id: string
+          is_draft: boolean | null
           notes: string | null
           priority: string
           process_type: string
@@ -694,8 +754,10 @@ export type Database = {
           company_id: string
           created_at?: string
           customer_id: string
+          draft_data?: Json | null
           due_date?: string | null
           id?: string
+          is_draft?: boolean | null
           notes?: string | null
           priority?: string
           process_type: string
@@ -707,8 +769,10 @@ export type Database = {
           company_id?: string
           created_at?: string
           customer_id?: string
+          draft_data?: Json | null
           due_date?: string | null
           id?: string
+          is_draft?: boolean | null
           notes?: string | null
           priority?: string
           process_type?: string

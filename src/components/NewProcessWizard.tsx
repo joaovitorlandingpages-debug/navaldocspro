@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   X, Check, ChevronRight, ChevronLeft, 
   Ship, User, FileText, ClipboardCheck, 
-  Search, Plus, AlertCircle, Clock, FileCheck
+  Search, Plus, AlertCircle, Clock, FileCheck,
+  Save, Copy, Zap
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 
 interface NewProcessWizardProps {
   isOpen: boolean;
@@ -26,6 +28,34 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     vessel: "",
     documents: [] as string[],
   });
+
+  // Auto-save draft logic
+  useEffect(() => {
+    if (isOpen) {
+      const savedDraft = localStorage.getItem("process_wizard_draft");
+      if (savedDraft) {
+        try {
+          const parsed = JSON.parse(savedDraft);
+          setFormData(parsed.formData);
+          setStep(parsed.step);
+          toast.info("Rascunho recuperado automaticamente");
+        } catch (e) {
+          console.error("Error loading draft", e);
+        }
+      }
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      localStorage.setItem("process_wizard_draft", JSON.stringify({ formData, step }));
+    }
+  }, [formData, step, isOpen]);
+
+  const clearDraft = () => {
+    localStorage.removeItem("process_wizard_draft");
+  };
+
 
   const processTypes = [
     { id: "registro", title: "Registro de embarcação", icon: <Ship className="h-4 w-4" /> },
@@ -346,29 +376,61 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         </div>
 
         <div className="p-8 pt-4 bg-slate-50/50 flex justify-between items-center">
-          <Button
-            variant="ghost"
-            onClick={handleBack}
-            disabled={step === 1}
-            className="rounded-2xl h-14 px-8 font-black uppercase text-xs tracking-widest gap-2"
-          >
-            <ChevronLeft className="h-4 w-4" /> Voltar
-          </Button>
-
-          {step === totalSteps ? (
+          <div className="flex gap-2">
             <Button
+              variant="ghost"
+              onClick={handleBack}
+              disabled={step === 1}
+              className="rounded-2xl h-14 px-6 font-black uppercase text-xs tracking-widest gap-2"
+            >
+              <ChevronLeft className="h-4 w-4" /> Voltar
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => {
-                onClose();
+                clearDraft();
+                toast.success("Formulário limpo");
+                setFormData({ type: "", client: "", vessel: "", documents: [] });
                 setStep(1);
               }}
-              className="bg-primary hover:opacity-90 rounded-2xl h-14 px-10 font-black uppercase text-xs tracking-widest shadow-xl shadow-primary/20 gap-2"
+              className="rounded-2xl h-14 px-4 text-slate-400 hover:text-red-500"
             >
-              Criar Processo <Check className="h-4 w-4" />
+              <X className="h-4 w-4" />
             </Button>
-          ) : (
+          </div>
+
+          <div className="flex gap-3">
             <Button
-              onClick={handleNext}
-              disabled={
+              variant="outline"
+              className="hidden md:flex rounded-2xl h-14 px-6 font-black uppercase text-xs tracking-widest gap-2 border-slate-200"
+              onClick={() => toast.success("Rascunho salvo no navegador")}
+            >
+              <Save className="h-4 w-4" /> Salvar
+            </Button>
+
+            {step === totalSteps ? (
+              <Button
+                onClick={() => {
+                  clearDraft();
+                  onClose();
+                  setStep(1);
+                }}
+                className="bg-primary hover:opacity-90 rounded-2xl h-14 px-10 font-black uppercase text-xs tracking-widest shadow-xl shadow-primary/20 gap-2"
+              >
+                Criar Processo <Check className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleNext}
+                disabled={!formData.type && step === 1}
+                className="bg-navy hover:opacity-90 rounded-2xl h-14 px-10 font-black uppercase text-xs tracking-widest text-white shadow-xl shadow-navy/20 gap-2"
+              >
+                Próximo <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+
                 (step === 1 && !formData.type) ||
                 (step === 2 && !formData.client) ||
                 (step === 3 && !formData.vessel)
