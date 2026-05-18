@@ -36,7 +36,7 @@ function AdminDocuments() {
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
-  const { templates, isLoadingTemplates, createTemplate, deleteTemplate, toggleTemplateActive } = useDocuments();
+  const { templates, isLoadingTemplates, createTemplate, deleteTemplate, toggleTemplateActive, getSignedUrl } = useDocuments();
 
   const { data: logs } = useQuery({
     queryKey: ["admin-document-logs"],
