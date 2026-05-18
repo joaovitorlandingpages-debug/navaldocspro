@@ -110,10 +110,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      {
-        rel: "icon",
-        href: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/cb00e87b-aefe-445b-884e-7da2bd5e094c/id-preview-93dd6d0d--d787974f-6f1a-48dd-89bf-51655d93efdf.lovable.app-1778546586583.png",
-      },
     ],
   }),
   shellComponent: RootShell,

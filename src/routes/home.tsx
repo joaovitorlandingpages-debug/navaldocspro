@@ -82,10 +82,7 @@ function Index() {
                   <Link to="/auth/signup" className="bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">
                     Começar Grátis <ArrowRight className="h-5 w-5" />
                   </Link>
-                  <button 
-                    onClick={() => window.open('https://wa.me/5500000000000', '_blank')}
-                    className="border-2 border-primary/20 bg-white text-navy px-8 py-4 rounded-lg text-lg font-bold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
-                  >
+                  <button className="border-2 border-primary/20 bg-white text-navy px-8 py-4 rounded-lg text-lg font-bold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
                     Falar com Consultor
                   </button>
                 </div>
