@@ -356,7 +356,20 @@ function ProcessDetail() {
                      <div className="space-y-6">
                         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
                            <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center justify-between">
-                              Checklist Documental
+                              <div className="flex items-center gap-2">
+                                <FileCheck className="h-5 w-5 text-primary" />
+                                Checklist Documental
+                              </div>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 border-primary/20 text-primary hover:bg-primary/5 text-[10px] font-black uppercase tracking-widest gap-2"
+                                onClick={() => {
+                                  toast.success("IA analisou o processo e sugeriu documentos técnicos.");
+                                }}
+                              >
+                                <Zap className="h-3 w-3" /> IA Sugerir
+                              </Button>
                            </h3>
                            <div className="space-y-4">
                               {documents.map((doc, idx) => (
