@@ -154,10 +154,23 @@ export const useFiles = (filters?: { customerId?: string; vesselId?: string; pro
       await new Promise(resolve => setTimeout(resolve, 3000));
 
       const mockData = {
-        name: "RICARDO ALMEIDA SANTOS",
-        doc_number: "123456789-00",
-        expiry_date: "2028-12-31",
-        issue_date: "2018-01-01"
+        name: "NAVIO MERCANTE ESTRELA",
+        doc_number: "9876543-2",
+        expiry_date: "2026-10-15",
+        issue_date: "2021-10-15",
+        engines: [
+          { brand: "Wärtsilä", model: "6R32", power: "4500HP", serial: "W9821-X" },
+          { brand: "Cummins", model: "QSK19", power: "750HP", serial: "C1122-Y" }
+        ],
+        crew: [
+          { name: "João Pereira", role: "Comandante", cir: "RJ-12345/01" },
+          { name: "Maria Clara", role: "Chefe de Máquinas", cir: "SP-98765/02" }
+        ],
+        vessel_details: {
+          imo: "9876543",
+          callsign: "PW321",
+          mmsi: "710123456"
+        }
       };
 
       const { data, error } = await supabase

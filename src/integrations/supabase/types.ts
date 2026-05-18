@@ -94,6 +94,57 @@ export type Database = {
         }
         Relationships: []
       }
+      crew_members: {
+        Row: {
+          cir_number: string | null
+          company_id: string | null
+          created_at: string
+          expiry_date: string | null
+          id: string
+          name: string
+          role: string | null
+          updated_at: string
+          vessel_id: string | null
+        }
+        Insert: {
+          cir_number?: string | null
+          company_id?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          name: string
+          role?: string | null
+          updated_at?: string
+          vessel_id?: string | null
+        }
+        Update: {
+          cir_number?: string | null
+          company_id?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          name?: string
+          role?: string | null
+          updated_at?: string
+          vessel_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_members_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_members_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null
@@ -353,8 +404,10 @@ export type Database = {
           created_at: string
           customer_id: string | null
           document_type: string
+          expiry_date: string | null
           file_url: string | null
           id: string
+          issue_date: string | null
           process_id: string | null
           status: string
           updated_at: string
@@ -365,8 +418,10 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           document_type: string
+          expiry_date?: string | null
           file_url?: string | null
           id?: string
+          issue_date?: string | null
           process_id?: string | null
           status?: string
           updated_at?: string
@@ -377,8 +432,10 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           document_type?: string
+          expiry_date?: string | null
           file_url?: string | null
           id?: string
+          issue_date?: string | null
           process_id?: string | null
           status?: string
           updated_at?: string
@@ -420,9 +477,11 @@ export type Database = {
           company_id: string | null
           created_at: string
           customer_id: string | null
+          expiry_date: string | null
           generated_by: string | null
           generated_file_url: string | null
           id: string
+          issue_date: string | null
           metadata: Json | null
           name: string
           process_id: string | null
@@ -435,9 +494,11 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           customer_id?: string | null
+          expiry_date?: string | null
           generated_by?: string | null
           generated_file_url?: string | null
           id?: string
+          issue_date?: string | null
           metadata?: Json | null
           name: string
           process_id?: string | null
@@ -450,9 +511,11 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           customer_id?: string | null
+          expiry_date?: string | null
           generated_by?: string | null
           generated_file_url?: string | null
           id?: string
+          issue_date?: string | null
           metadata?: Json | null
           name?: string
           process_id?: string | null
@@ -1140,12 +1203,14 @@ export type Database = {
           company_id: string | null
           created_at: string
           customer_id: string | null
+          expiry_date: string | null
           extracted_data: Json | null
           file_name: string
           file_size: number | null
           file_type: string | null
           file_url: string
           id: string
+          issue_date: string | null
           metadata: Json | null
           process_id: string | null
           status: string
@@ -1158,12 +1223,14 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           customer_id?: string | null
+          expiry_date?: string | null
           extracted_data?: Json | null
           file_name: string
           file_size?: number | null
           file_type?: string | null
           file_url: string
           id?: string
+          issue_date?: string | null
           metadata?: Json | null
           process_id?: string | null
           status?: string
@@ -1176,12 +1243,14 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           customer_id?: string | null
+          expiry_date?: string | null
           extracted_data?: Json | null
           file_name?: string
           file_size?: number | null
           file_type?: string | null
           file_url?: string
           id?: string
+          issue_date?: string | null
           metadata?: Json | null
           process_id?: string | null
           status?: string
@@ -1213,6 +1282,50 @@ export type Database = {
           },
           {
             foreignKeyName: "uploaded_files_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vessel_engines: {
+        Row: {
+          brand: string | null
+          created_at: string
+          engine_type: string | null
+          id: string
+          model: string | null
+          power: string | null
+          serial_number: string | null
+          updated_at: string
+          vessel_id: string
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          engine_type?: string | null
+          id?: string
+          model?: string | null
+          power?: string | null
+          serial_number?: string | null
+          updated_at?: string
+          vessel_id: string
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          engine_type?: string | null
+          id?: string
+          model?: string | null
+          power?: string | null
+          serial_number?: string | null
+          updated_at?: string
+          vessel_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vessel_engines_vessel_id_fkey"
             columns: ["vessel_id"]
             isOneToOne: false
             referencedRelation: "vessels"

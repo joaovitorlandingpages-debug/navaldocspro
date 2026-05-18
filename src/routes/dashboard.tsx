@@ -13,6 +13,7 @@ import { useNewProcess } from "@/hooks/useNewProcess";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { WelcomeTour } from "@/components/WelcomeTour";
+import { ExpirationMonitor } from "@/components/ExpirationMonitor";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -352,22 +353,65 @@ export function RouteContent() {
            <h3 className="text-3xl font-black text-navy mt-1">{statsData?.missingDocuments || 0}</h3>
         </div>
 
-        {stats.slice(2).map((stat, idx) => (
-          <div key={idx} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
-             <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all">
-                   {stat.icon}
-                </div>
-             </div>
-             <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
-             <h3 className="text-3xl font-black text-navy mt-1">{stat.value}</h3>
-          </div>
-        ))}
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+           <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-amber-50 rounded-2xl group-hover:bg-amber-500 group-hover:text-white transition-all text-amber-600">
+                 <Clock className="h-5 w-5" />
+              </div>
+           </div>
+           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Expirando (30 dias)</p>
+           <h3 className="text-3xl font-black text-navy mt-1">{statsData?.expiringDocuments || 0}</h3>
+        </div>
+
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+           <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all text-primary">
+                 <FileText className="h-5 w-5" />
+              </div>
+           </div>
+           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Documentos Gerados</p>
+           <h3 className="text-3xl font-black text-navy mt-1">{statsData?.generatedDocuments || 0}</h3>
+        </div>
       </div>
 
 
+      {/* Readiness Score */}
+      <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-8">
+         <div className="relative h-32 w-32 flex-shrink-0">
+            <svg className="h-full w-full" viewBox="0 0 100 100">
+               <circle className="text-slate-100" strokeWidth="8" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" />
+               <circle className="text-primary" strokeWidth="8" strokeDasharray="264" strokeDashoffset="26.4" strokeLinecap="round" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+               <span className="text-3xl font-black text-navy">90</span>
+               <span className="text-[8px] font-black uppercase text-slate-400">Readiness</span>
+            </div>
+         </div>
+         <div className="flex-grow grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 w-full">
+            {[
+               { label: "Backend", score: 95 },
+               { label: "Segurança", score: 98 },
+               { label: "OCR", score: 88 },
+               { label: "Billing", score: 100 },
+               { label: "UX", score: 92 },
+               { label: "Mobile", score: 85 },
+               { label: "Performance", score: 90 },
+               { label: "Estabilidade", score: 94 },
+            ].map((s) => (
+               <div key={s.label} className="text-center">
+                  <p className="text-[8px] font-black uppercase text-slate-400 mb-2 truncate">{s.label}</p>
+                  <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+                     <div className="h-full bg-primary" style={{ width: `${s.score}%` }} />
+                  </div>
+                  <p className="text-[10px] font-black text-navy mt-1">{s.score}%</p>
+               </div>
+            ))}
+         </div>
+      </div>
+
       {/* Intelligence Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <ExpirationMonitor />
         <Link to="/ocr-center" className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-[2rem] text-white shadow-xl hover:scale-[1.02] transition-all group">
            <div className="flex justify-between items-start mb-4">
               <div className="p-3 bg-white/20 rounded-2xl">

@@ -10,6 +10,7 @@ export interface DashboardStats {
   ocrUsage: number;
   urgentProcesses: number;
   missingDocuments: number;
+  expiringDocuments: number;
   trends: {
     customers: string;
     vessels: string;
@@ -27,20 +28,26 @@ export const useDashboardStats = () => {
     queryFn: async (): Promise<DashboardStats> => {
       if (!profile?.company_id) throw new Error("No company ID");
 
+      const today = new Date();
+      const nextMonth = new Date();
+      nextMonth.setMonth(today.getMonth() + 1);
+
       const [
         { count: customersCount },
         { count: vesselsCount },
         { count: processesCount },
         { count: documentsCount },
         { data: ocrData },
-        { count: urgentCount }
+        { count: urgentCount },
+        { count: expiringCount }
       ] = await Promise.all([
         supabase.from("customers").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id),
         supabase.from("vessels").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id),
         supabase.from("processes").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).neq("status", "completed"),
         supabase.from("generated_documents").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id),
         supabase.from("ocr_usage").select("total_jobs").eq("company_id", profile.company_id).eq("month", new Date().getMonth() + 1).maybeSingle(),
-        supabase.from("processes").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).eq("priority", "high").neq("status", "completed")
+        supabase.from("processes").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).eq("priority", "high").neq("status", "completed"),
+        supabase.from("generated_documents").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).lte("expiry_date", nextMonth.toISOString()).gte("expiry_date", today.toISOString())
       ]);
 
       return {
@@ -51,6 +58,7 @@ export const useDashboardStats = () => {
         ocrUsage: ocrData?.total_jobs || 0,
         urgentProcesses: urgentCount || 0,
         missingDocuments: 3, // Mocked for now
+        expiringDocuments: expiringCount || 0,
         trends: {
 
           customers: "+0%",

@@ -368,6 +368,8 @@ function Vessels() {
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="bg-slate-100 p-1 rounded-xl mb-8">
                 <TabsTrigger value="overview" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Ficha Técnica</TabsTrigger>
+                <TabsTrigger value="engines" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Motores</TabsTrigger>
+                <TabsTrigger value="crew" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Tripulação</TabsTrigger>
                 <TabsTrigger value="documents" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Documentos</TabsTrigger>
                 <TabsTrigger value="history" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Manutenção</TabsTrigger>
               </TabsList>
@@ -396,6 +398,79 @@ function Vessels() {
                        </div>
                     </div>
                  </div>
+              </TabsContent>
+
+              <TabsContent value="engines" className="space-y-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Motorização Técnica</h4>
+                  <Button size="sm" className="bg-navy text-white text-[10px] font-black uppercase tracking-widest h-8">
+                    <Plus className="h-3 w-3 mr-2" /> Adicionar Motor
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex items-center justify-between group">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center text-navy shadow-sm group-hover:bg-navy group-hover:text-white transition-all">
+                        <Zap className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-navy uppercase">{selectedVessel?.engine || "Motor Principal"}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">Motor Estacionário • 1200HP</p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><Settings className="h-4 w-4 text-slate-300" /></Button>
+                  </div>
+                  
+                  <div className="p-6 border-2 border-dashed border-slate-100 rounded-[2rem] flex flex-col items-center justify-center text-slate-300 hover:border-slate-200 hover:text-slate-400 transition-all cursor-pointer">
+                    <Plus className="h-6 w-6 mb-2" />
+                    <p className="text-[10px] font-black uppercase tracking-widest">Novo Motor Auxiliar</p>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="crew" className="space-y-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Lista de Tripulação</h4>
+                  <Button size="sm" className="bg-navy text-white text-[10px] font-black uppercase tracking-widest h-8">
+                    <Plus className="h-3 w-3 mr-2" /> Cadastrar Tripulante
+                  </Button>
+                </div>
+
+                <div className="bg-white border border-slate-100 rounded-[2rem] overflow-hidden shadow-sm">
+                  <table className="w-full text-left">
+                    <thead className="bg-slate-50">
+                      <tr className="text-slate-400 text-[9px] font-black uppercase tracking-[0.2em]">
+                        <th className="px-6 py-4">Nome</th>
+                        <th className="px-6 py-4">Função</th>
+                        <th className="px-6 py-4">CIR</th>
+                        <th className="px-6 py-4 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {[
+                        { name: "Carlos Silva", role: "Comandante", cir: "123456/RJ" },
+                        { name: "Ana Maria", role: "Imediato", cir: "789012/SP" }
+                      ].map((member, i) => (
+                        <tr key={i} className="group hover:bg-slate-50 transition-all">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="h-8 w-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                                <User className="h-4 w-4" />
+                              </div>
+                              <span className="text-xs font-bold text-navy">{member.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4"><Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest py-0">{member.role}</Badge></td>
+                          <td className="px-6 py-4 font-mono text-[10px] text-slate-400">{member.cir}</td>
+                          <td className="px-6 py-4 text-right">
+                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100"><MoreHorizontal className="h-4 w-4" /></Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </TabsContent>
 
               <TabsContent value="documents" className="space-y-8">

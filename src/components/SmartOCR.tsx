@@ -134,6 +134,64 @@ export function SmartOCR() {
                               </div>
                            </div>
                         </div>
+                        
+                        {currentFile?.extracted_data?.engines && (
+                          <div className="space-y-3">
+                             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Motores Detectados</p>
+                             <div className="grid gap-2">
+                                {currentFile.extracted_data.engines.map((eng: any, i: number) => (
+                                   <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center">
+                                      <div className="flex items-center gap-3">
+                                         <Zap className="h-4 w-4 text-primary" />
+                                         <div>
+                                            <p className="text-[10px] font-bold text-navy">{eng.brand} {eng.model}</p>
+                                            <p className="text-[9px] text-slate-400 font-medium">{eng.power} • SN: {eng.serial}</p>
+                                         </div>
+                                      </div>
+                                   </div>
+                                ))}
+                             </div>
+                          </div>
+                        )}
+
+                        {currentFile?.extracted_data?.crew && (
+                          <div className="space-y-3">
+                             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tripulantes Detectados</p>
+                             <div className="grid gap-2">
+                                {currentFile.extracted_data.crew.map((person: any, i: number) => (
+                                   <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center">
+                                      <div className="flex items-center gap-3">
+                                         <User className="h-4 w-4 text-primary" />
+                                         <div>
+                                            <p className="text-[10px] font-bold text-navy">{person.name}</p>
+                                            <p className="text-[9px] text-slate-400 font-medium">{person.role} • CIR: {person.cir}</p>
+                                         </div>
+                                      </div>
+                                   </div>
+                                ))}
+                             </div>
+                          </div>
+                        )}
+
+                        {currentFile?.extracted_data?.vessel_details && (
+                          <div className="p-4 bg-navy text-white rounded-2xl space-y-3">
+                             <p className="text-[10px] font-black uppercase opacity-60">Dados de Engenharia / Rádio</p>
+                             <div className="grid grid-cols-3 gap-2">
+                                <div>
+                                   <p className="text-[8px] font-bold opacity-60 uppercase">IMO</p>
+                                   <p className="text-[10px] font-black">{currentFile.extracted_data.vessel_details.imo}</p>
+                                </div>
+                                <div>
+                                   <p className="text-[8px] font-bold opacity-60 uppercase">Callsign</p>
+                                   <p className="text-[10px] font-black">{currentFile.extracted_data.vessel_details.callsign}</p>
+                                </div>
+                                <div>
+                                   <p className="text-[8px] font-bold opacity-60 uppercase">MMSI</p>
+                                   <p className="text-[10px] font-black">{currentFile.extracted_data.vessel_details.mmsi}</p>
+                                </div>
+                             </div>
+                          </div>
+                        )}
 
                         {currentFile?.status === 'validated' && (
                           <div className="p-5 bg-primary/5 border border-primary/10 rounded-2xl space-y-4 animate-in slide-in-from-bottom-4">
