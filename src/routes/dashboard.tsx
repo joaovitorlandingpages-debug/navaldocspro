@@ -442,29 +442,41 @@ export function RouteContent() {
                           <th className="px-6 py-4 text-right">DATA</th>
                        </tr>
                      </thead>
-                     <tbody className="divide-y divide-slate-100">
-                       {recentProcesses.map((proc, idx) => (
-                         <tr key={idx} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => window.location.href=`/processes/${proc.id}`}>
-                           <td className="px-6 py-4 font-mono text-xs text-slate-400">{proc.id}</td>
-                           <td className="px-6 py-4">
-                              <div className="font-bold text-sm text-navy group-hover:text-primary transition-colors">{proc.client}</div>
-                              <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                <Ship className="h-3 w-3" /> {proc.ship}
-                              </div>
-                           </td>
-                           <td className="px-6 py-4">
-                              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase ${
-                                proc.status === 'Concluído' ? 'bg-green-100 text-green-700' : 
-                                proc.status === 'Aguardando Docs' ? 'bg-amber-100 text-amber-700' :
-                                'bg-blue-100 text-blue-700'
-                              }`}>
-                                 {proc.status}
-                              </span>
-                           </td>
-                           <td className="px-6 py-4 text-right text-xs text-slate-500">{proc.date}</td>
-                         </tr>
-                       ))}
-                     </tbody>
+                      <tbody className="divide-y divide-slate-100">
+                        {recentProcesses?.map((proc: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => navigate({ to: `/processes/${proc.id}` })}>
+                            <td className="px-6 py-4 font-mono text-[10px] text-slate-400 truncate max-w-[80px]">{proc.id.split('-')[0]}</td>
+                            <td className="px-6 py-4">
+                               <div className="font-bold text-sm text-navy group-hover:text-primary transition-colors">{proc.customers?.name || 'Cliente s/ nome'}</div>
+                               <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                 <Ship className="h-3 w-3" /> {proc.vessels?.name || 'Embarcação s/ nome'}
+                               </div>
+                            </td>
+                            <td className="px-6 py-4">
+                               <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase ${
+                                 proc.status === 'completed' ? 'bg-green-100 text-green-700' : 
+                                 proc.status === 'pending_docs' ? 'bg-amber-100 text-amber-700' :
+                                 'bg-blue-100 text-blue-700'
+                               }`}>
+                                  {proc.status === 'in_progress' ? 'Em Andamento' : 
+                                   proc.status === 'completed' ? 'Concluído' :
+                                   proc.status === 'pending_docs' ? 'Aguardando Docs' : proc.status}
+                               </span>
+                            </td>
+                            <td className="px-6 py-4 text-right text-[10px] font-bold text-slate-500">
+                               {new Date(proc.created_at).toLocaleDateString('pt-BR')}
+                            </td>
+                          </tr>
+                        ))}
+                        {(!recentProcesses || recentProcesses.length === 0) && (
+                          <tr>
+                            <td colSpan={4} className="px-6 py-12 text-center">
+                              <p className="text-sm text-slate-400 font-medium italic">Nenhum processo recente encontrado.</p>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+
                   </table>
                </div>
             </div>
