@@ -68,7 +68,7 @@ export function useProcessTypes() {
       } catch (error) {
         console.error("Error fetching process types:", error);
       } finally {
-        setIsLoading(true);
+        setIsLoading(false);
       }
     }
 
