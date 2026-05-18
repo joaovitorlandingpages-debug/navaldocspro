@@ -27,25 +27,89 @@ export const Route = createFileRoute("/processes/$id")({
 
 function ProcessDetail() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
+  const { profile } = useAuth();
   const [status, setStatus] = useState("Em Andamento");
   const { files, deleteFile } = useFiles({ processId: id });
   const [process, setProcess] = useState<any | null>(null);
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const fetchProcess = async () => {
+    const { data } = await supabase
+      .from('processes')
+      .select(`
+        *,
+        customer:customers(id, name),
+        vessel:vessels(id, name)
+      `)
+      .eq('id', id)
+      .single();
+    if (data) {
+      setProcess(data);
+      setStatus(data.status === 'in_progress' ? 'Em Andamento' : data.status);
+    }
+  };
+
+  const fetchComments = async () => {
+    const { data } = await supabase
+      .from('process_comments')
+      .select('*, profiles(name)')
+      .eq('process_id', id)
+      .order('created_at', { ascending: true });
+    if (data) setComments(data);
+  };
 
   useEffect(() => {
-    const fetchProcess = async () => {
-      const { data } = await supabase
-        .from('processes')
-        .select(`
-          *,
-          customer:customers(id, name),
-          vessel:vessels(id, name)
-        `)
-        .eq('id', id)
-        .single();
-      if (data) setProcess(data);
-    };
     fetchProcess();
+    fetchComments();
+    
+    // Subscribe to new comments
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'process_comments', filter: `process_id=eq.${id}` },
+        () => fetchComments()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [id]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [comments]);
+
+  const handleSendComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || !profile) return;
+
+    setIsSubmittingComment(true);
+    try {
+      const { error } = await supabase
+        .from('process_comments')
+        .insert({
+          process_id: id,
+          user_id: profile.id,
+          company_id: profile.company_id,
+          content: newComment
+        });
+
+      if (error) throw error;
+      setNewComment("");
+    } catch (err: any) {
+      toast.error("Erro ao enviar comentário: " + err.message);
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
 
   const timeline = [
     { title: "Processo criado", date: "10/05/2026 - 09:45", user: "Ricardo Almeida", icon: <Plus className="h-3 w-3" />, color: "bg-blue-500" },
@@ -56,6 +120,7 @@ function ProcessDetail() {
     { title: "GRU anexada", date: "12/05/2026 - 08:30", user: "Cliente", icon: <FileText className="h-3 w-3" />, color: "bg-green-500" },
     { title: "Documento validado", date: "12/05/2026 - 11:00", user: "Admin", desc: "RG e CPF validados com sucesso.", icon: <FileCheck className="h-3 w-3" />, color: "bg-cyan-500" },
   ];
+
 
   const documents = [
     { name: "RG / CPF Requerente", type: "PDF", size: "1.2 MB", status: "Validado" },
