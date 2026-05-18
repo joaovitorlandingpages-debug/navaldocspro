@@ -243,7 +243,14 @@ function ProcessDetail() {
                       <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
                         <FileText className="h-5 w-5 text-primary" /> Arquivos Enviados
                       </h3>
-                      <FileUploader processId={id} companyId={profile?.company_id || ''} />
+                      <div className="w-64">
+                        <FileUploader 
+                          processId={id} 
+                          bucket="documents" 
+                          category="Processo" 
+                          compact
+                        />
+                      </div>
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {files && files.map((file: any) => (
