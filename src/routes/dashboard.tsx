@@ -360,7 +360,10 @@ export function RouteContent() {
                    <Badge className="bg-primary/20 text-primary border-none mb-4 uppercase text-[9px]">Pronto para Geração</Badge>
                    <h3 className="text-lg font-bold mb-2">Processo PR-2024-08</h3>
                    <p className="text-xs text-slate-400 mb-6">Todos os dados e documentos foram validados pelo OCR.</p>
-                   <button className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                   <button 
+                     onClick={() => navigate({ to: '/document-generator' })}
+                     className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                   >
                       <FilePlus className="h-4 w-4" /> Gerar Documentos
                    </button>
                 </div>
