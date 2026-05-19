@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { DocumentAutomationEngine } from "@/services/automation/documentAutomationEngine";
 
 export interface UploadedFile {
   id: string;
