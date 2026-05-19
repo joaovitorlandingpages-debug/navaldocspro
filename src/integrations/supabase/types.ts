@@ -88,6 +88,7 @@ export type Database = {
         Row: {
           cnpj: string | null
           created_at: string
+          created_by: string | null
           email: string | null
           id: string
           is_active: boolean | null
@@ -102,6 +103,7 @@ export type Database = {
         Insert: {
           cnpj?: string | null
           created_at?: string
+          created_by?: string | null
           email?: string | null
           id?: string
           is_active?: boolean | null
@@ -116,6 +118,7 @@ export type Database = {
         Update: {
           cnpj?: string | null
           created_at?: string
+          created_by?: string | null
           email?: string | null
           id?: string
           is_active?: boolean | null
