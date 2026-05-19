@@ -12,7 +12,8 @@ import {
   Anchor,
   MapPin,
   Calendar,
-  FileText
+  FileText,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OCRJob, useOCR } from "@/hooks/useOCR";
 import { toast } from "sonner";
+import { DocumentValidationEngine } from "@/services/validationEngine";
 
 interface OCRResultsReviewProps {
   job: OCRJob;
