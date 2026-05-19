@@ -61,7 +61,7 @@ export function IntelligencePanel() {
                 <p className="text-[11px] font-bold text-navy leading-relaxed">{insight.message}</p>
                 <div className="flex items-center gap-3 pt-2">
                    <Button variant="ghost" size="sm" className="h-7 px-3 text-[9px] font-black uppercase text-primary hover:bg-primary/5 rounded-lg group/btn">
-                     {insight.action} <ArrowRight className="h-3 w-3 ml-1.5 group-hover/btn:translate-x-1 transition-transform" />
+                     {insight.action_label || 'Ver Detalhes'} <ArrowRight className="h-3 w-3 ml-1.5 group-hover/btn:translate-x-1 transition-transform" />
                    </Button>
                    <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">IA Analisou agora</span>
                 </div>
