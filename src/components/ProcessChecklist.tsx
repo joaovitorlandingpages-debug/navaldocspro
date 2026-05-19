@@ -94,7 +94,14 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
             style={{ width: `${calculateProgress()}%` }}
           />
         </div>
-        <p className="text-[10px] text-slate-400 italic mt-2">Validação automática baseada em regras marítimas e OCR.</p>
+        <div className="flex justify-between items-center mt-2">
+          <p className="text-[10px] text-slate-400 italic">Validação automática baseada em regras marítimas e OCR.</p>
+          {calculateProgress() === 100 && (
+            <Button size="sm" className="bg-navy hover:bg-navy/90 text-white font-black text-[9px] uppercase tracking-widest h-8 gap-2 animate-bounce">
+              <FolderArchive className="h-3.5 w-3.5" /> Gerar Pacote Documental
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
