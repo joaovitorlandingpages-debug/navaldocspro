@@ -48,6 +48,7 @@ import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminPaymentTestRouteImport } from './routes/admin/payment-test'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
+import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
 import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
 import { Route as AdminBillingRouteImport } from './routes/admin/billing'
 import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
@@ -248,6 +249,11 @@ const AdminDocumentsRoute = AdminDocumentsRouteImport.update({
   path: '/documents',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDocumentLibraryRoute = AdminDocumentLibraryRouteImport.update({
+  id: '/document-library',
+  path: '/document-library',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCompaniesRoute = AdminCompaniesRouteImport.update({
   id: '/companies',
   path: '/companies',
@@ -288,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/companies': typeof AdminCompaniesRoute
+  '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/payment-test': typeof AdminPaymentTestRoute
@@ -330,6 +337,7 @@ export interface FileRoutesByTo {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/companies': typeof AdminCompaniesRoute
+  '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/payment-test': typeof AdminPaymentTestRoute
@@ -375,6 +383,7 @@ export interface FileRoutesById {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/companies': typeof AdminCompaniesRoute
+  '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/payment-test': typeof AdminPaymentTestRoute
@@ -421,6 +430,7 @@ export interface FileRouteTypes {
     | '/admin/automation'
     | '/admin/billing'
     | '/admin/companies'
+    | '/admin/document-library'
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/payment-test'
@@ -463,6 +473,7 @@ export interface FileRouteTypes {
     | '/admin/automation'
     | '/admin/billing'
     | '/admin/companies'
+    | '/admin/document-library'
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/payment-test'
@@ -507,6 +518,7 @@ export interface FileRouteTypes {
     | '/admin/automation'
     | '/admin/billing'
     | '/admin/companies'
+    | '/admin/document-library'
     | '/admin/documents'
     | '/admin/logs'
     | '/admin/payment-test'
@@ -832,6 +844,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocumentsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/document-library': {
+      id: '/admin/document-library'
+      path: '/document-library'
+      fullPath: '/admin/document-library'
+      preLoaderRoute: typeof AdminDocumentLibraryRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/companies': {
       id: '/admin/companies'
       path: '/companies'
@@ -860,6 +879,7 @@ interface AdminRouteChildren {
   AdminAutomationRoute: typeof AdminAutomationRoute
   AdminBillingRoute: typeof AdminBillingRoute
   AdminCompaniesRoute: typeof AdminCompaniesRoute
+  AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminPaymentTestRoute: typeof AdminPaymentTestRoute
@@ -873,6 +893,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAutomationRoute: AdminAutomationRoute,
   AdminBillingRoute: AdminBillingRoute,
   AdminCompaniesRoute: AdminCompaniesRoute,
+  AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminPaymentTestRoute: AdminPaymentTestRoute,

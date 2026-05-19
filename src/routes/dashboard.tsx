@@ -5,7 +5,7 @@ import {
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
-  Database, FolderOpen
+  Database, FolderOpen, Library
 } from "lucide-react";
 import { useState, useEffect, Suspense, lazy, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -151,6 +151,12 @@ function DashboardLayout() {
              <Link to="/admin" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
                 <ShieldCheck className="h-5 w-5" />
                 {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Painel Master</span>}
+             </Link>
+           )}
+           {profile?.role === 'admin_master' && (
+             <Link to="/admin/document-library" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+                <Library className="h-5 w-5" />
+                {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Biblioteca Master</span>}
              </Link>
            )}
            {profile?.role === 'admin_master' && (
