@@ -158,8 +158,17 @@ function Processes() {
                       <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
                         <Calendar className="h-3.5 w-3.5 text-red-400" /> {p.due_date ? new Date(p.due_date).toLocaleDateString('pt-BR') : "S/ data"}
                       </div>
-                      <div className="h-8 w-8 rounded-xl bg-navy text-white flex items-center justify-center text-[10px] font-black shadow-lg border-2 border-white">
-                        {p.priority === 'high' ? '!!!' : 'U'}
+                      <div className="flex gap-1.5">
+                         <div className={`h-8 w-8 rounded-xl flex items-center justify-center text-[10px] font-black shadow-lg border-2 border-white ${
+                            p.priority === 'urgent' || p.priority === 'critical' ? 'bg-red-500 text-white' : 'bg-navy text-white'
+                         }`}>
+                           {p.priority === 'urgent' ? '!!!' : p.priority === 'critical' ? 'RT' : 'P'}
+                         </div>
+                         {p.completion_percentage === 100 && (
+                            <div className="h-8 w-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg border-2 border-white">
+                               <CheckCircle2 className="h-4 w-4" />
+                            </div>
+                         )}
                       </div>
                     </div>
                   </Link>
