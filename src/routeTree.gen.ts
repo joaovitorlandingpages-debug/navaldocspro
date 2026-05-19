@@ -51,6 +51,7 @@ import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
 import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
+import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
 import { Route as AdminBillingRouteImport } from './routes/admin/billing'
 import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
 
@@ -265,6 +266,11 @@ const AdminCompaniesRoute = AdminCompaniesRouteImport.update({
   path: '/companies',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCommercialRoute = AdminCommercialRouteImport.update({
+  id: '/commercial',
+  path: '/commercial',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBillingRoute = AdminBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
@@ -301,6 +307,7 @@ export interface FileRoutesByFullPath {
   '/vessels': typeof VesselsRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
@@ -345,6 +352,7 @@ export interface FileRoutesByTo {
   '/vessels': typeof VesselsRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
@@ -392,6 +400,7 @@ export interface FileRoutesById {
   '/vessels': typeof VesselsRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
@@ -440,6 +449,7 @@ export interface FileRouteTypes {
     | '/vessels'
     | '/admin/automation'
     | '/admin/billing'
+    | '/admin/commercial'
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
@@ -484,6 +494,7 @@ export interface FileRouteTypes {
     | '/vessels'
     | '/admin/automation'
     | '/admin/billing'
+    | '/admin/commercial'
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
@@ -530,6 +541,7 @@ export interface FileRouteTypes {
     | '/vessels'
     | '/admin/automation'
     | '/admin/billing'
+    | '/admin/commercial'
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
@@ -879,6 +891,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCompaniesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/commercial': {
+      id: '/admin/commercial'
+      path: '/commercial'
+      fullPath: '/admin/commercial'
+      preLoaderRoute: typeof AdminCommercialRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/billing': {
       id: '/admin/billing'
       path: '/billing'
@@ -899,6 +918,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminAutomationRoute: typeof AdminAutomationRoute
   AdminBillingRoute: typeof AdminBillingRoute
+  AdminCommercialRoute: typeof AdminCommercialRoute
   AdminCompaniesRoute: typeof AdminCompaniesRoute
   AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
@@ -912,6 +932,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAutomationRoute: AdminAutomationRoute,
   AdminBillingRoute: AdminBillingRoute,
+  AdminCommercialRoute: AdminCommercialRoute,
   AdminCompaniesRoute: AdminCompaniesRoute,
   AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,

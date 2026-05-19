@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   MessageSquare, Bug, Lightbulb, 
-  X, Send, CheckCircle2 
+  X, Send, CheckCircle2, Activity 
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
