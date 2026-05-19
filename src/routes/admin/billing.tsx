@@ -65,7 +65,7 @@ function AdminBilling() {
                 <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-primary/5 transition-colors">
                    {stat.icon}
                 </div>
-                <Badge variant="ghost" className={`text-[10px] font-black ${stat.trendUp ? 'text-emerald-600' : 'text-rose-600'}`}>
+                <Badge variant="outline" className={`text-[10px] font-black border-none ${stat.trendUp ? 'text-emerald-600' : 'text-rose-600'}`}>
                    {stat.trendUp ? <ArrowUpCircle className="h-3 w-3 mr-1" /> : <ArrowDownCircle className="h-3 w-3 mr-1" />}
                    {stat.trend}
                 </Badge>
