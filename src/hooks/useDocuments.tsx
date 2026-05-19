@@ -425,6 +425,7 @@ export const useDocuments = () => {
     deleteTemplate,
     toggleTemplateActive,
     duplicateTemplate,
+    toggleFavorite,
     getSignedUrl,
   };
 };
