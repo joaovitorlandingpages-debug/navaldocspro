@@ -5,7 +5,7 @@ import {
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
-  Database, FolderOpen, Library, CheckCircle2
+  Database, FolderOpen, Library, CheckCircle2, History, ChevronRight
 } from "lucide-react";
 import { useState, useEffect, Suspense, lazy, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -485,39 +485,8 @@ export function RouteContent() {
       </div>
 
 
-      {/* Readiness Score */}
-      <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-8">
-         <div className="relative h-32 w-32 flex-shrink-0">
-            <svg className="h-full w-full" viewBox="0 0 100 100">
-               <circle className="text-slate-100" strokeWidth="8" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" />
-               <circle className="text-primary" strokeWidth="8" strokeDasharray="264" strokeDashoffset="26.4" strokeLinecap="round" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-               <span className="text-3xl font-black text-navy">90</span>
-               <span className="text-[8px] font-black uppercase text-slate-400">Readiness</span>
-            </div>
-         </div>
-         <div className="flex-grow grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 w-full">
-            {[
-               { label: "Backend", score: 95 },
-               { label: "Segurança", score: 98 },
-               { label: "OCR", score: 88 },
-               { label: "Billing", score: 100 },
-               { label: "UX", score: 92 },
-               { label: "Mobile", score: 85 },
-               { label: "Performance", score: 90 },
-               { label: "Estabilidade", score: 94 },
-            ].map((s) => (
-               <div key={s.label} className="text-center">
-                  <p className="text-[8px] font-black uppercase text-slate-400 mb-2 truncate">{s.label}</p>
-                  <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
-                     <div className="h-full bg-primary" style={{ width: `${s.score}%` }} />
-                  </div>
-                  <p className="text-[10px] font-black text-navy mt-1">{s.score}%</p>
-               </div>
-            ))}
-         </div>
-      </div>
+      {/* Readiness Score Enterprise */}
+      <ReadinessBanner />
 
       {/* Intelligence Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
