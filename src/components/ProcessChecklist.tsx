@@ -175,6 +175,20 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
                           <FileCheck className="h-4 w-4" />
                         </Button>
                       </>
+                    ) : req.document_role === 'gerado' ? (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-9 px-4 rounded-xl gap-2 font-bold text-xs border-primary/20 text-primary hover:bg-primary/5"
+                        onClick={async () => {
+                           const { data } = await supabase.from('document_templates').select('*').eq('name', req.template?.name).single();
+                           if (data) {
+                             window.dispatchEvent(new CustomEvent('generate-document', { detail: data }));
+                           }
+                        }}
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" /> Gerar
+                      </Button>
                     ) : (
                       <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl gap-2 font-bold text-xs border-slate-200 hover:border-primary hover:text-primary">
                         <Plus className="h-3.5 w-3.5" /> Upload
