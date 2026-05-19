@@ -285,9 +285,9 @@ function ProcessDetail() {
                   <SmartAutomationDashboard processId={id} />
                </TabsContent>
 
-               <TabsContent value="requirements" className="space-y-8 animate-in fade-in duration-300">
-                  <ProcessChecklist processId={id} processTypeId={process?.process_type_id} />
-               </TabsContent>
+                <TabsContent value="requirements" className="space-y-8 animate-in fade-in duration-300">
+                   <ProcessChecklist processId={id} processTypeId={process?.process_type_id} processTypeSlug={process?.process_type?.toLowerCase().replace(/\s+/g, '_')} />
+                </TabsContent>
 
                <TabsContent value="documents" className="animate-in fade-in duration-300">
                   <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
