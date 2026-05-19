@@ -41,7 +41,7 @@ function LoginComponent() {
       toast.success("Login realizado com sucesso!");
 
       if (profile?.role === 'admin_master_global') {
-        navigate({ to: "/admin" }); // Redirecionando para /admin enquanto /admin/global não existe ou é o mesmo
+        navigate({ to: "/admin/global" });
       } else if (profile?.role === 'admin_master') {
         navigate({ to: "/admin" });
       } else {
