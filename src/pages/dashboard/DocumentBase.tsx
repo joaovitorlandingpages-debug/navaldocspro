@@ -6,7 +6,8 @@ import {
   CreditCard, Globe, HeartPulse, Wrench, 
   Briefcase, CheckCircle2, AlertCircle, Clock,
   ChevronRight, MoreVertical, Edit, Trash2,
-  Copy, Download, Eye, Zap, Database, LayoutDashboard
+  Copy, Download, Eye, Zap, Database, LayoutDashboard,
+  Package, Check, Settings
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
