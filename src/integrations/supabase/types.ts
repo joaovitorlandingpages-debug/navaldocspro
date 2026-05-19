@@ -1506,6 +1506,59 @@ export type Database = {
           },
         ]
       }
+      operational_tasks: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          metadata: Json | null
+          priority: string | null
+          process_id: string | null
+          status: string | null
+          task_type: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string | null
+          process_id?: string | null
+          status?: string | null
+          task_type?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string | null
+          process_id?: string | null
+          status?: string | null
+          task_type?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_tasks_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_logs: {
         Row: {
           company_id: string | null
@@ -1869,8 +1922,10 @@ export type Database = {
       }
       processes: {
         Row: {
+          automation_status: string | null
           company_id: string
           completed_at: string | null
+          completion_percentage: number | null
           compliance_score: number | null
           compliance_status: string | null
           created_at: string
@@ -1882,7 +1937,10 @@ export type Database = {
           id: string
           is_blocked: boolean | null
           is_draft: boolean | null
+          last_automation_run: string | null
+          missing_signatures_count: number | null
           notes: string | null
+          pending_documents_count: number | null
           priority: string
           process_type: string
           process_type_id: string | null
@@ -1896,8 +1954,10 @@ export type Database = {
           vessel_id: string | null
         }
         Insert: {
+          automation_status?: string | null
           company_id: string
           completed_at?: string | null
+          completion_percentage?: number | null
           compliance_score?: number | null
           compliance_status?: string | null
           created_at?: string
@@ -1909,7 +1969,10 @@ export type Database = {
           id?: string
           is_blocked?: boolean | null
           is_draft?: boolean | null
+          last_automation_run?: string | null
+          missing_signatures_count?: number | null
           notes?: string | null
+          pending_documents_count?: number | null
           priority?: string
           process_type: string
           process_type_id?: string | null
@@ -1923,8 +1986,10 @@ export type Database = {
           vessel_id?: string | null
         }
         Update: {
+          automation_status?: string | null
           company_id?: string
           completed_at?: string | null
+          completion_percentage?: number | null
           compliance_score?: number | null
           compliance_status?: string | null
           created_at?: string
@@ -1936,7 +2001,10 @@ export type Database = {
           id?: string
           is_blocked?: boolean | null
           is_draft?: boolean | null
+          last_automation_run?: string | null
+          missing_signatures_count?: number | null
           notes?: string | null
+          pending_documents_count?: number | null
           priority?: string
           process_type?: string
           process_type_id?: string | null
