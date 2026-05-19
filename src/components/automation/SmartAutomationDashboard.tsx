@@ -88,6 +88,26 @@ export const SmartAutomationDashboard: React.FC<SmartAutomationDashboardProps> =
                 </div>
               </div>
             </div>
+            <div className="flex gap-2 pt-2">
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="flex-1 bg-primary"
+                onClick={handleBatchGenerate}
+                disabled={isLoading || automationState?.is_ready_for_generation === false}
+              >
+                <Zap className="h-3 w-3 mr-2" /> Gerar Documentos em Lote
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1"
+                onClick={handleCreatePackage}
+                disabled={isLoading}
+              >
+                <Package className="h-3 w-3 mr-2" /> Criar Pacote ZIP
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
