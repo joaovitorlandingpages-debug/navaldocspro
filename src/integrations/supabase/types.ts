@@ -182,6 +182,57 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_history: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string
+          document_id: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          process_id: string | null
+          severity: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          document_id?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          process_id?: string | null
+          severity?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          document_id?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          process_id?: string | null
+          severity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_history_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_history_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crew_members: {
         Row: {
           cir_number: string | null
@@ -742,6 +793,7 @@ export type Database = {
       documents: {
         Row: {
           company_id: string
+          compliance_status: string | null
           created_at: string
           customer_id: string | null
           document_type: string
@@ -750,13 +802,16 @@ export type Database = {
           file_url: string | null
           id: string
           issue_date: string | null
+          ocr_confidence_alerts: Json | null
           process_id: string | null
           status: string
           updated_at: string
+          validation_errors: Json | null
           vessel_id: string | null
         }
         Insert: {
           company_id: string
+          compliance_status?: string | null
           created_at?: string
           customer_id?: string | null
           document_type: string
@@ -765,13 +820,16 @@ export type Database = {
           file_url?: string | null
           id?: string
           issue_date?: string | null
+          ocr_confidence_alerts?: Json | null
           process_id?: string | null
           status?: string
           updated_at?: string
+          validation_errors?: Json | null
           vessel_id?: string | null
         }
         Update: {
           company_id?: string
+          compliance_status?: string | null
           created_at?: string
           customer_id?: string | null
           document_type?: string
@@ -780,9 +838,11 @@ export type Database = {
           file_url?: string | null
           id?: string
           issue_date?: string | null
+          ocr_confidence_alerts?: Json | null
           process_id?: string | null
           status?: string
           updated_at?: string
+          validation_errors?: Json | null
           vessel_id?: string | null
         }
         Relationships: [
@@ -917,6 +977,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      maritime_compliance_rules: {
+        Row: {
+          action_params: Json | null
+          condition_logic: Json
+          created_at: string | null
+          entity_type: string
+          id: string
+          is_active: boolean | null
+          required_action: string
+          rule_description: string | null
+          rule_name: string
+        }
+        Insert: {
+          action_params?: Json | null
+          condition_logic: Json
+          created_at?: string | null
+          entity_type: string
+          id?: string
+          is_active?: boolean | null
+          required_action: string
+          rule_description?: string | null
+          rule_name: string
+        }
+        Update: {
+          action_params?: Json | null
+          condition_logic?: Json
+          created_at?: string | null
+          entity_type?: string
+          id?: string
+          is_active?: boolean | null
+          required_action?: string
+          rule_description?: string | null
+          rule_name?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -1497,6 +1593,8 @@ export type Database = {
         Row: {
           company_id: string
           completed_at: string | null
+          compliance_score: number | null
+          compliance_status: string | null
           created_at: string
           customer_id: string
           draft_data: Json | null
@@ -1504,6 +1602,7 @@ export type Database = {
           finalized_at: string | null
           finalized_by: string | null
           id: string
+          is_blocked: boolean | null
           is_draft: boolean | null
           notes: string | null
           priority: string
@@ -1515,11 +1614,14 @@ export type Database = {
           status: string
           target_completion_at: string | null
           updated_at: string
+          validation_errors: Json | null
           vessel_id: string | null
         }
         Insert: {
           company_id: string
           completed_at?: string | null
+          compliance_score?: number | null
+          compliance_status?: string | null
           created_at?: string
           customer_id: string
           draft_data?: Json | null
@@ -1527,6 +1629,7 @@ export type Database = {
           finalized_at?: string | null
           finalized_by?: string | null
           id?: string
+          is_blocked?: boolean | null
           is_draft?: boolean | null
           notes?: string | null
           priority?: string
@@ -1538,11 +1641,14 @@ export type Database = {
           status?: string
           target_completion_at?: string | null
           updated_at?: string
+          validation_errors?: Json | null
           vessel_id?: string | null
         }
         Update: {
           company_id?: string
           completed_at?: string | null
+          compliance_score?: number | null
+          compliance_status?: string | null
           created_at?: string
           customer_id?: string
           draft_data?: Json | null
@@ -1550,6 +1656,7 @@ export type Database = {
           finalized_at?: string | null
           finalized_by?: string | null
           id?: string
+          is_blocked?: boolean | null
           is_draft?: boolean | null
           notes?: string | null
           priority?: string
@@ -1561,6 +1668,7 @@ export type Database = {
           status?: string
           target_completion_at?: string | null
           updated_at?: string
+          validation_errors?: Json | null
           vessel_id?: string | null
         }
         Relationships: [
