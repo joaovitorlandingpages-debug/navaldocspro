@@ -118,6 +118,11 @@ function OperationsCenterPage() {
       <OperationalCharts />
 
       <div className="grid lg:grid-cols-12 gap-8">
+        {/* Inteligência IA (4 colunas) */}
+        <div className="lg:col-span-4">
+           <IntelligencePanel />
+        </div>
+
         {/* Pipeline Operacional (8 colunas) */}
         <div className="lg:col-span-8 space-y-6">
           <div className="flex items-center justify-between">
