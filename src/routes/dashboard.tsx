@@ -382,11 +382,28 @@ export function RouteContent() {
         </div>
 
         <div className="space-y-6">
-           <div className="flex items-center justify-between">
-              <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
-                <Activity className="h-4 w-4 text-primary" /> Fila Operacional
-              </h2>
-           </div>
+          <div className="bg-navy p-6 rounded-[2rem] text-white shadow-xl relative overflow-hidden group">
+             <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                <Database className="h-40 w-40" />
+             </div>
+             <div className="relative z-10">
+                <Badge className="bg-primary/20 text-primary border-none mb-4 uppercase text-[9px]">Base Documental</Badge>
+                <h3 className="text-lg font-bold mb-2">Base DPC 2026</h3>
+                <p className="text-xs text-slate-400 mb-6">Templates oficiais e regras de validação atualizados.</p>
+                <Link to="/dashboard/documents-base">
+                   <button className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                      <FolderOpen className="h-4 w-4" /> Acessar Repositório
+                   </button>
+                </Link>
+             </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
+              <Activity className="h-4 w-4 text-primary" /> Fila Operacional
+            </h2>
+          </div>
+
            
            <Card className="p-6 border-slate-100 shadow-sm space-y-4">
               {[
