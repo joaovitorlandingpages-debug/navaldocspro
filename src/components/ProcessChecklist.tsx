@@ -3,12 +3,13 @@ import {
   FileText, Check, Clock, AlertCircle, 
   Plus, Download, Eye, FileCheck, 
   Loader2, AlertTriangle, ShieldCheck, Signature,
-  Zap, Info, Ban
+  Zap, Info, Ban, FolderArchive, Package
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useProcessRequirements } from "@/hooks/useProcessRequirements";
+import { useProcessPackage } from "@/hooks/useProcessPackages";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
@@ -21,10 +22,12 @@ import {
 interface ProcessChecklistProps {
   processId: string;
   processTypeId?: string;
+  processTypeSlug?: string;
 }
 
-export function ProcessChecklist({ processId, processTypeId }: ProcessChecklistProps) {
+export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: ProcessChecklistProps) {
   const { requirements, isLoading: loadingReqs } = useProcessRequirements(processTypeId);
+  const { pkg, isLoading: loadingPkg } = useProcessPackage(processTypeSlug);
   const [documents, setDocuments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -91,7 +94,14 @@ export function ProcessChecklist({ processId, processTypeId }: ProcessChecklistP
             style={{ width: `${calculateProgress()}%` }}
           />
         </div>
-        <p className="text-[10px] text-slate-400 italic mt-2">Validação automática baseada em regras marítimas e OCR.</p>
+        <div className="flex justify-between items-center mt-2">
+          <p className="text-[10px] text-slate-400 italic">Validação automática baseada em regras marítimas e OCR.</p>
+          {calculateProgress() === 100 && (
+            <Button size="sm" className="bg-navy hover:bg-navy/90 text-white font-black text-[9px] uppercase tracking-widest h-8 gap-2 animate-bounce">
+              <FolderArchive className="h-3.5 w-3.5" /> Gerar Pacote Documental
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">

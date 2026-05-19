@@ -576,6 +576,96 @@ export type Database = {
           },
         ]
       }
+      document_process_package_items: {
+        Row: {
+          conditional_rule: Json | null
+          created_at: string | null
+          document_role: string
+          document_template_id: string | null
+          has_expiration: boolean | null
+          id: string
+          is_required: boolean | null
+          package_id: string | null
+          requires_ocr: boolean | null
+          requires_signature: boolean | null
+          sort_order: number | null
+          validation_rules: Json | null
+        }
+        Insert: {
+          conditional_rule?: Json | null
+          created_at?: string | null
+          document_role: string
+          document_template_id?: string | null
+          has_expiration?: boolean | null
+          id?: string
+          is_required?: boolean | null
+          package_id?: string | null
+          requires_ocr?: boolean | null
+          requires_signature?: boolean | null
+          sort_order?: number | null
+          validation_rules?: Json | null
+        }
+        Update: {
+          conditional_rule?: Json | null
+          created_at?: string | null
+          document_role?: string
+          document_template_id?: string | null
+          has_expiration?: boolean | null
+          id?: string
+          is_required?: boolean | null
+          package_id?: string | null
+          requires_ocr?: boolean | null
+          requires_signature?: boolean | null
+          sort_order?: number | null
+          validation_rules?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_process_package_items_document_template_id_fkey"
+            columns: ["document_template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_process_package_items_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "document_process_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_process_packages: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          process_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          process_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          process_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       document_process_rules: {
         Row: {
           created_at: string | null

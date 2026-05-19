@@ -6,7 +6,8 @@ import {
   CreditCard, Globe, HeartPulse, Wrench, 
   Briefcase, CheckCircle2, AlertCircle, Clock,
   ChevronRight, MoreVertical, Edit, Trash2,
-  Copy, Download, Eye, Zap, Database, LayoutDashboard
+  Copy, Download, Eye, Zap, Database, LayoutDashboard,
+  Package, Check, Settings
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,58 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { DocumentCategory, DocumentTemplate } from "@/types/document";
 import { DocumentDashboard } from "@/components/documents/DocumentDashboard";
+import { useProcessPackages } from "@/hooks/useProcessPackages";
+
+function ProcessPackagesGrid() {
+  const { packages, isLoading } = useProcessPackages();
+
+  if (isLoading) return <div className="p-8 text-center animate-pulse">Carregando pacotes...</div>;
+
+  return (
+    <>
+      {packages?.map((pkg: any) => (
+        <Card key={pkg.id} className="border-slate-100 hover:shadow-lg transition-all overflow-hidden group">
+          <CardHeader className="pb-3 bg-slate-50/50">
+            <div className="flex justify-between items-start mb-2">
+              <Badge variant="outline" className="text-[9px] font-black uppercase bg-white">{pkg.process_type}</Badge>
+              <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                <Package className="h-4 w-4" />
+              </div>
+            </div>
+            <CardTitle className="text-base font-bold text-navy">{pkg.name}</CardTitle>
+            <CardDescription className="text-xs">{pkg.description}</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-4">
+            <div className="space-y-2">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Documentos Estruturados</p>
+              <div className="space-y-1.5">
+                {pkg.items?.slice(0, 4).map((item: any) => (
+                  <div key={item.id} className="flex items-center justify-between text-xs font-medium text-slate-600">
+                    <div className="flex items-center gap-2">
+                      <div className={`h-1.5 w-1.5 rounded-full ${item.document_role === 'entrada' ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+                      <span className="truncate max-w-[150px]">{item.template?.name}</span>
+                    </div>
+                    {item.is_required && <Check className="h-3 w-3 text-emerald-500" />}
+                  </div>
+                ))}
+                {(pkg.items?.length || 0) > 4 && (
+                  <p className="text-[9px] text-primary font-bold uppercase mt-1">+{pkg.items.length - 4} documentos</p>
+                )}
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" className="w-full text-[10px] font-black uppercase tracking-widest gap-2 hover:bg-primary/5">
+              <Settings className="h-3.5 w-3.5" /> Editar Estrutura
+            </Button>
+          </CardContent>
+        </Card>
+      ))}
+      <Card className="border-dashed border-2 border-slate-200 hover:bg-slate-50 cursor-pointer flex flex-col items-center justify-center py-10 min-h-[250px] transition-all">
+        <Plus className="h-10 w-10 text-slate-300 mb-2" />
+        <p className="text-xs font-black uppercase text-slate-400 tracking-widest">Novo Pacote Operacional</p>
+      </Card>
+    </>
+  );
+}
 
 export default function DocumentBase() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -159,10 +212,19 @@ export default function DocumentBase() {
           <TabsTrigger value="dashboard" className="rounded-lg py-2.5 px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-bold text-xs uppercase tracking-widest gap-2">
             <LayoutDashboard className="h-4 w-4" /> Monitoramento Operacional
           </TabsTrigger>
+          <TabsTrigger value="packages" className="rounded-lg py-2.5 px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-bold text-xs uppercase tracking-widest gap-2">
+            <Package className="h-4 w-4" /> Pacotes por Processo
+          </TabsTrigger>
           <TabsTrigger value="rules" className="rounded-lg py-2.5 px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-bold text-xs uppercase tracking-widest gap-2">
             <Shield className="h-4 w-4" /> Regras e Checklist
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="packages" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <ProcessPackagesGrid />
+          </div>
+        </TabsContent>
 
         <TabsContent value="base">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
