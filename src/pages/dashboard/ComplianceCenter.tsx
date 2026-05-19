@@ -30,9 +30,9 @@ export default function ComplianceCenter() {
       if (error) throw error;
       
       const total = processes.length;
-      const conforme = processes.filter(p => p.compliance_status === 'conforme').length;
-      const irregular = processes.filter(p => ['incompleto', 'divergente', 'reprovado'].includes(p.compliance_status)).length;
-      const score = total > 0 ? processes.reduce((acc, p) => acc + (p.compliance_score || 0), 0) / total : 0;
+      const conforme = processes.filter((p: any) => p.compliance_status === 'conforme').length;
+      const irregular = processes.filter((p: any) => ['incompleto', 'divergente', 'reprovado'].includes(p.compliance_status)).length;
+      const score = total > 0 ? processes.reduce((acc: number, p: any) => acc + (p.compliance_score || 0), 0) / total : 0;
       
       return { total, conforme, irregular, score };
     },
