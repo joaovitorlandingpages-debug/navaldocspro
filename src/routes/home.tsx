@@ -76,7 +76,7 @@ function Index() {
                   A era da automação <span className="text-primary italic">operacional</span> chegou.
                 </h1>
                 <p className="text-xl text-slate-600 max-w-xl leading-relaxed">
-                  NavalDocs Pro: A plataforma Enterprise que transforma burocracia complexa em fluxos de trabalho inteligentes e automatizados.
+                  A central operacional naval definitiva que unifica OCR inteligente, automação jurídica e gestão técnica em uma única plataforma Enterprise.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link to="/auth/signup" className="bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">
