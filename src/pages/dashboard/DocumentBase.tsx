@@ -159,10 +159,19 @@ export default function DocumentBase() {
           <TabsTrigger value="dashboard" className="rounded-lg py-2.5 px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-bold text-xs uppercase tracking-widest gap-2">
             <LayoutDashboard className="h-4 w-4" /> Monitoramento Operacional
           </TabsTrigger>
+          <TabsTrigger value="packages" className="rounded-lg py-2.5 px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-bold text-xs uppercase tracking-widest gap-2">
+            <Package className="h-4 w-4" /> Pacotes por Processo
+          </TabsTrigger>
           <TabsTrigger value="rules" className="rounded-lg py-2.5 px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-bold text-xs uppercase tracking-widest gap-2">
             <Shield className="h-4 w-4" /> Regras e Checklist
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="packages" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <ProcessPackagesGrid />
+          </div>
+        </TabsContent>
 
         <TabsContent value="base">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
