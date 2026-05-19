@@ -12,6 +12,7 @@ import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { NewProcessProvider } from "@/hooks/useNewProcess";
 import { PlanLimitProvider } from "@/hooks/usePlanLimits";
+import { FeedbackButton } from "@/components/FeedbackButton";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 function NotFoundComponent() {
@@ -132,6 +133,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
             <PlanLimitProvider>
               <NewProcessProvider>
                 {children}
+                <FeedbackButton />
               </NewProcessProvider>
             </PlanLimitProvider>
           </ErrorBoundary>
