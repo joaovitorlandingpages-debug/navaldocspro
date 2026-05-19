@@ -151,6 +151,7 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean | null
+          is_demo: boolean | null
           logo_url: string | null
           name: string
           onboarding_status: string | null
@@ -166,6 +167,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean | null
+          is_demo?: boolean | null
           logo_url?: string | null
           name: string
           onboarding_status?: string | null
@@ -181,6 +183,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean | null
+          is_demo?: boolean | null
           logo_url?: string | null
           name?: string
           onboarding_status?: string | null
@@ -1061,6 +1064,48 @@ export type Database = {
           },
         ]
       }
+      enterprise_audit_logs: {
+        Row: {
+          action: string
+          company_id: string | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          new_data: Json | null
+          old_data: Json | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          company_id?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          company_id?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       generated_documents: {
         Row: {
           company_id: string | null
@@ -1363,6 +1408,7 @@ export type Database = {
       ocr_jobs: {
         Row: {
           applied_at: string | null
+          batch_id: string | null
           company_id: string | null
           comparison_data: Json | null
           confidence_by_field: Json | null
@@ -1374,16 +1420,19 @@ export type Database = {
           id: string
           identified_document_type: string | null
           is_applied: boolean | null
+          processing_progress: number | null
           processing_time: number | null
           provider_used: string | null
           reviewed_by: string | null
           status: string
           suggested_actions: Json | null
+          total_pages: number | null
           updated_at: string
           uploaded_file_id: string | null
         }
         Insert: {
           applied_at?: string | null
+          batch_id?: string | null
           company_id?: string | null
           comparison_data?: Json | null
           confidence_by_field?: Json | null
@@ -1395,16 +1444,19 @@ export type Database = {
           id?: string
           identified_document_type?: string | null
           is_applied?: boolean | null
+          processing_progress?: number | null
           processing_time?: number | null
           provider_used?: string | null
           reviewed_by?: string | null
           status?: string
           suggested_actions?: Json | null
+          total_pages?: number | null
           updated_at?: string
           uploaded_file_id?: string | null
         }
         Update: {
           applied_at?: string | null
+          batch_id?: string | null
           company_id?: string | null
           comparison_data?: Json | null
           confidence_by_field?: Json | null
@@ -1416,11 +1468,13 @@ export type Database = {
           id?: string
           identified_document_type?: string | null
           is_applied?: boolean | null
+          processing_progress?: number | null
           processing_time?: number | null
           provider_used?: string | null
           reviewed_by?: string | null
           status?: string
           suggested_actions?: Json | null
+          total_pages?: number | null
           updated_at?: string
           uploaded_file_id?: string | null
         }
@@ -2694,6 +2748,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_readiness_scores: {
+        Row: {
+          category: string
+          details: Json | null
+          id: string
+          last_checked: string | null
+          score: number
+          status: string
+        }
+        Insert: {
+          category: string
+          details?: Json | null
+          id?: string
+          last_checked?: string | null
+          score?: number
+          status?: string
+        }
+        Update: {
+          category?: string
+          details?: Json | null
+          id?: string
+          last_checked?: string | null
+          score?: number
+          status?: string
+        }
+        Relationships: []
       }
       tickets: {
         Row: {
