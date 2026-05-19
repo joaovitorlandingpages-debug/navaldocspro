@@ -151,162 +151,199 @@ export default function DocumentBase() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Sidebar Categories */}
-        <aside className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder="Buscar categoria..." 
-              className="pl-10 h-10 bg-white border-slate-200"
-            />
-          </div>
-          
-          <div className="space-y-1">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
-                !selectedCategory ? "bg-primary text-white shadow-md shadow-primary/20" : "hover:bg-slate-100 text-slate-600"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <FolderOpen className={`h-4 w-4 ${!selectedCategory ? "text-white" : "text-primary"}`} />
-                <span className="text-xs font-bold uppercase tracking-wider">Todos os Módulos</span>
-              </div>
-              <Badge variant={!selectedCategory ? "outline" : "secondary"} className="text-[9px] border-white/20">
-                {templates?.length || 0}
-              </Badge>
-            </button>
+      <Tabs defaultValue="base" className="space-y-6">
+        <TabsList className="bg-white border border-slate-200 p-1 rounded-xl h-auto flex-wrap sm:flex-nowrap">
+          <TabsTrigger value="base" className="rounded-lg py-2.5 px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-bold text-xs uppercase tracking-widest gap-2">
+            <Database className="h-4 w-4" /> Base de Templates
+          </TabsTrigger>
+          <TabsTrigger value="dashboard" className="rounded-lg py-2.5 px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-bold text-xs uppercase tracking-widest gap-2">
+            <LayoutDashboard className="h-4 w-4" /> Monitoramento Operacional
+          </TabsTrigger>
+          <TabsTrigger value="rules" className="rounded-lg py-2.5 px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-bold text-xs uppercase tracking-widest gap-2">
+            <Shield className="h-4 w-4" /> Regras e Checklist
+          </TabsTrigger>
+        </TabsList>
 
-            {categories?.map((cat: DocumentCategory) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
-                  selectedCategory === cat.id ? "bg-navy text-white shadow-md shadow-navy/20" : "hover:bg-slate-100 text-slate-600"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-4 w-4 opacity-70">
-                    {getIcon(cat.icon || "")}
-                  </div>
-                  <span className="text-xs font-bold uppercase tracking-wider truncate max-w-[150px]">{cat.name}</span>
-                </div>
-                <Badge variant={selectedCategory === cat.id ? "outline" : "secondary"} className="text-[9px] border-white/20">
-                  {templates?.filter((t: DocumentTemplate) => t.category_id === cat.id).length || 0}
-                </Badge>
-              </button>
-            ))}
-          </div>
-        </aside>
-
-        {/* Templates Grid */}
-        <div className="lg:col-span-3 space-y-6">
-          <div className="flex items-center justify-between gap-4">
-            <div className="relative flex-grow max-w-md">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <Input 
-                placeholder="Buscar template por nome ou descrição..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-10 bg-white border-slate-200"
-              />
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="h-8 border-slate-200 px-3 bg-white text-navy font-bold uppercase text-[9px]">
-                {filteredTemplates?.length || 0} Templates
-              </Badge>
-              <div className="flex border border-slate-200 rounded-lg overflow-hidden h-10">
-                <button className="px-3 bg-slate-50 text-navy border-r border-slate-200">
-                  <FolderOpen className="h-4 w-4" />
-                </button>
-                <button className="px-3 bg-white text-slate-400 hover:bg-slate-50">
-                  <Eye className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredTemplates?.map((template: any) => (
-              <Card key={template.id} className="group hover:shadow-xl transition-all duration-300 border-slate-100 overflow-hidden relative">
-                <div 
-                  className="h-1.5 w-full absolute top-0 left-0" 
-                  style={{ backgroundColor: template.category_info?.color || '#3b82f6' }}
+        <TabsContent value="base">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Sidebar Categories */}
+            <aside className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                <Input 
+                  placeholder="Buscar categoria..." 
+                  className="pl-10 h-10 bg-white border-slate-200"
                 />
-                
-                <CardHeader className="pb-3 pt-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter" style={{ color: template.category_info?.color, borderColor: (template.category_info?.color || '#3b82f6') + '40' }}>
-                      {template.category || 'Sem Categoria'}
-                    </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem className="gap-2 font-bold text-xs uppercase cursor-pointer">
-                          <Edit className="h-3.5 w-3.5" /> Editar Template
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2 font-bold text-xs uppercase cursor-pointer">
-                          <Copy className="h-3.5 w-3.5" /> Duplicar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2 font-bold text-xs uppercase cursor-pointer text-red-600">
-                          <Trash2 className="h-3.5 w-3.5" /> Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+              </div>
+              
+              <div className="space-y-1">
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
+                    !selectedCategory ? "bg-primary text-white shadow-md shadow-primary/20" : "hover:bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <FolderOpen className={`h-4 w-4 ${!selectedCategory ? "text-white" : "text-primary"}`} />
+                    <span className="text-xs font-bold uppercase tracking-wider">Todos os Módulos</span>
                   </div>
-                  <CardTitle className="text-base font-bold text-navy group-hover:text-primary transition-colors">{template.name}</CardTitle>
-                  <CardDescription className="text-xs line-clamp-2 min-h-[32px]">{template.description}</CardDescription>
-                </CardHeader>
-                
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="h-3 w-3" /> v{template.version || 1.0}
+                  <Badge variant={!selectedCategory ? "outline" : "secondary"} className="text-[9px] border-white/20">
+                    {templates?.length || 0}
+                  </Badge>
+                </button>
+
+                {categories?.map((cat: DocumentCategory) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
+                      selectedCategory === cat.id ? "bg-navy text-white shadow-md shadow-navy/20" : "hover:bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-4 w-4 opacity-70">
+                        {getIcon(cat.icon || "")}
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Database className="h-3 w-3" /> {template.ocr_enabled ? 'OCR ATIVO' : 'MANUAL'}
-                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider truncate max-w-[150px]">{cat.name}</span>
                     </div>
+                    <Badge variant={selectedCategory === cat.id ? "outline" : "secondary"} className="text-[9px] border-white/20">
+                      {templates?.filter((t: DocumentTemplate) => t.category_id === cat.id).length || 0}
+                    </Badge>
+                  </button>
+                ))}
+              </div>
+            </aside>
+
+            {/* Templates Grid */}
+            <div className="lg:col-span-3 space-y-6">
+              <div className="flex items-center justify-between gap-4">
+                <div className="relative flex-grow max-w-md">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                  <Input 
+                    placeholder="Buscar template por nome ou descrição..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-10 bg-white border-slate-200"
+                  />
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="h-8 border-slate-200 px-3 bg-white text-navy font-bold uppercase text-[9px]">
+                    {filteredTemplates?.length || 0} Templates
+                  </Badge>
+                  <div className="flex border border-slate-200 rounded-lg overflow-hidden h-10">
+                    <button className="px-3 bg-slate-50 text-navy border-r border-slate-200">
+                      <FolderOpen className="h-4 w-4" />
+                    </button>
+                    <button className="px-3 bg-white text-slate-400 hover:bg-slate-50">
+                      <Eye className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredTemplates?.map((template: any) => (
+                  <Card key={template.id} className="group hover:shadow-xl transition-all duration-300 border-slate-100 overflow-hidden relative">
+                    <div 
+                      className="h-1.5 w-full absolute top-0 left-0" 
+                      style={{ backgroundColor: template.category_info?.color || '#3b82f6' }}
+                    />
                     
-                    <div className="pt-2 flex gap-2">
-                      <Button size="sm" variant="outline" className="flex-grow text-[9px] font-black uppercase tracking-widest border-slate-200">
-                        <Eye className="h-3 w-3 mr-1" /> Preview
-                      </Button>
-                      <Button size="sm" className="flex-grow text-[9px] font-black uppercase tracking-widest bg-navy hover:bg-navy/90">
-                        <Download className="h-3 w-3 mr-1" /> PDF
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-                
-                {template.ocr_enabled && (
-                  <div className="absolute top-6 right-10">
-                    <Badge className="bg-amber-500/10 text-amber-600 border-none animate-pulse">
-                      <Zap className="h-3 w-3 mr-1" /> AI
-                    </Badge>
+                    <CardHeader className="pb-3 pt-6">
+                      <div className="flex justify-between items-start mb-3">
+                        <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter" style={{ color: template.category_info?.color, borderColor: (template.category_info?.color || '#3b82f6') + '40' }}>
+                          {template.category || 'Sem Categoria'}
+                        </Badge>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem className="gap-2 font-bold text-xs uppercase cursor-pointer">
+                              <Edit className="h-3.5 w-3.5" /> Editar Template
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2 font-bold text-xs uppercase cursor-pointer">
+                              <Copy className="h-3.5 w-3.5" /> Duplicar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2 font-bold text-xs uppercase cursor-pointer text-red-600">
+                              <Trash2 className="h-3.5 w-3.5" /> Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      <CardTitle className="text-base font-bold text-navy group-hover:text-primary transition-colors">{template.name}</CardTitle>
+                      <CardDescription className="text-xs line-clamp-2 min-h-[32px]">{template.description}</CardDescription>
+                    </CardHeader>
+                    
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="h-3 w-3" /> v{template.version || 1.0}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Database className="h-3 w-3" /> {template.ocr_enabled ? 'OCR ATIVO' : 'MANUAL'}
+                          </div>
+                        </div>
+                        
+                        <div className="pt-2 flex gap-2">
+                          <Button size="sm" variant="outline" className="flex-grow text-[9px] font-black uppercase tracking-widest border-slate-200">
+                            <Eye className="h-3 w-3 mr-1" /> Preview
+                          </Button>
+                          <Button size="sm" className="flex-grow text-[9px] font-black uppercase tracking-widest bg-navy hover:bg-navy/90">
+                            <Download className="h-3 w-3 mr-1" /> PDF
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                    
+                    {template.ocr_enabled && (
+                      <div className="absolute top-6 right-10">
+                        <Badge className="bg-amber-500/10 text-amber-600 border-none animate-pulse">
+                          <Zap className="h-3 w-3 mr-1" /> AI
+                        </Badge>
+                      </div>
+                    )}
+                  </Card>
+                ))}
+
+                {filteredTemplates?.length === 0 && (
+                  <div className="col-span-full py-20 flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200">
+                    <FileText className="h-16 w-16 mb-4 opacity-20" />
+                    <h3 className="text-lg font-bold text-navy">Nenhum template encontrado</h3>
+                    <p className="text-xs max-w-xs text-center mt-1 font-medium">Não encontramos templates com os critérios de busca aplicados.</p>
+                    <Button className="mt-6 bg-primary" onClick={() => setSearchQuery("")}>Limpar Filtros</Button>
                   </div>
                 )}
-              </Card>
-            ))}
-
-            {filteredTemplates?.length === 0 && (
-              <div className="col-span-full py-20 flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200">
-                <FileText className="h-16 w-16 mb-4 opacity-20" />
-                <h3 className="text-lg font-bold text-navy">Nenhum template encontrado</h3>
-                <p className="text-xs max-w-xs text-center mt-1 font-medium">Não encontramos templates com os critérios de busca aplicados.</p>
-                <Button className="mt-6 bg-primary" onClick={() => setSearchQuery("")}>Limpar Filtros</Button>
               </div>
-            )}
+            </div>
           </div>
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="dashboard" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <DocumentDashboard />
+        </TabsContent>
+
+        <TabsContent value="rules" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <Card className="border-slate-100 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-sm font-black uppercase tracking-widest text-navy">Configuração de Regras Operacionais</CardTitle>
+              <CardDescription className="text-xs">Defina quais documentos são obrigatórios para cada tipo de processo.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="py-20 flex flex-col items-center justify-center text-slate-400">
+                <Shield className="h-16 w-16 mb-4 opacity-20" />
+                <h3 className="text-lg font-bold text-navy">Módulo de Regras</h3>
+                <p className="text-xs max-w-xs text-center mt-1 font-medium">Este módulo permite vincular templates a processos com regras de validação automática.</p>
+                <Button className="mt-6 bg-primary">Configurar Primeira Regra</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
