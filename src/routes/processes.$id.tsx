@@ -368,7 +368,36 @@ function ProcessDetail() {
                   </div>
                </TabsContent>
 
-               <TabsContent value="comments" className="animate-in fade-in duration-300">
+                <TabsContent value="gen_docs" className="animate-in fade-in duration-300">
+                   <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                      <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2 mb-6">
+                        <FilePlus className="h-5 w-5 text-primary" /> Documentos de Saída
+                      </h3>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {process?.compliance_status === 'conforme' ? (
+                          <p className="col-span-full text-sm text-slate-500 mb-4 italic">Todos os requisitos foram validados. Você pode gerar o pacote completo.</p>
+                        ) : (
+                          <div className="col-span-full p-4 bg-amber-50 rounded-xl border border-amber-100 mb-4 flex items-center gap-3">
+                             <AlertTriangle className="h-4 w-4 text-amber-600" />
+                             <p className="text-[11px] text-amber-700 font-bold uppercase">Conformidade pendente: Geração limitada a rascunhos.</p>
+                          </div>
+                        )}
+                        
+                        <Card className="p-4 border-slate-100 hover:border-primary/20 transition-all cursor-pointer group" onClick={async () => {
+                           const { data } = await supabase.from('document_templates').select('*').eq('name', 'Requerimento DPC-2211').single();
+                           setSelectedTemplateForGen(data);
+                        }}>
+                           <div className="flex justify-between items-start mb-2">
+                              <Badge className="bg-slate-100 text-slate-500 border-none uppercase text-[8px]">Rascunho</Badge>
+                              <FileText className="h-4 w-4 text-primary opacity-40 group-hover:opacity-100" />
+                           </div>
+                           <h4 className="text-sm font-bold text-navy uppercase tracking-tight">Requerimento Geral</h4>
+                           <p className="text-[10px] text-slate-400 mt-1">DPC-2211 (Padrão Marinha)</p>
+                        </Card>
+                      </div>
+                   </div>
+                </TabsContent>
+
                   <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col h-[600px] overflow-hidden">
                     <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
                       <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
