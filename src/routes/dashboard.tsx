@@ -5,7 +5,7 @@ import {
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
-  Database, FolderOpen
+  Database, FolderOpen, Library
 } from "lucide-react";
 import { useState, useEffect, Suspense, lazy, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
