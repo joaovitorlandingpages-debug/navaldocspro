@@ -16,6 +16,7 @@ import {
   MoreVertical,
   CheckCircle2
 } from "lucide-react";
+import { OperationalCharts } from "@/components/OperationalCharts";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
