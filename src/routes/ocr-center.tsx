@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { OCRUpload } from "@/components/ocr/OCRUpload";
 import { OCRHistory } from "@/components/ocr/OCRHistory";
 import { OCRReview } from "@/components/ocr/OCRReview";
+import { BatchOCRQueue } from "@/components/ocr/BatchOCRQueue";
 import { OCRJob, useOCR } from "@/hooks/useOCR";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
