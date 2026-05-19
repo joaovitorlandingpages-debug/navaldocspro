@@ -1520,6 +1520,67 @@ export type Database = {
           },
         ]
       }
+      operational_alerts: {
+        Row: {
+          alert_type: string
+          company_id: string | null
+          created_at: string | null
+          description: string
+          document_id: string | null
+          field_ref: string | null
+          id: string
+          process_id: string | null
+          resolved_at: string | null
+          severity: string | null
+        }
+        Insert: {
+          alert_type: string
+          company_id?: string | null
+          created_at?: string | null
+          description: string
+          document_id?: string | null
+          field_ref?: string | null
+          id?: string
+          process_id?: string | null
+          resolved_at?: string | null
+          severity?: string | null
+        }
+        Update: {
+          alert_type?: string
+          company_id?: string | null
+          created_at?: string | null
+          description?: string
+          document_id?: string | null
+          field_ref?: string | null
+          id?: string
+          process_id?: string | null
+          resolved_at?: string | null
+          severity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_alerts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operational_alerts_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operational_alerts_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       operational_insights: {
         Row: {
           action_label: string | null
@@ -1955,6 +2016,54 @@ export type Database = {
           },
         ]
       }
+      process_insights: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          id: string
+          is_resolved: boolean | null
+          message: string
+          metadata: Json | null
+          process_id: string | null
+          type: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          message: string
+          metadata?: Json | null
+          process_id?: string | null
+          type: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          message?: string
+          metadata?: Json | null
+          process_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_insights_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_insights_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_sla_history: {
         Row: {
           created_at: string | null
@@ -2082,18 +2191,21 @@ export type Database = {
           is_blocked: boolean | null
           is_draft: boolean | null
           is_favorite: boolean | null
+          kanban_stage: string | null
           last_accessed_at: string | null
           last_automation_run: string | null
           missing_signatures_count: number | null
           notes: string | null
           pending_documents_count: number | null
           priority: string
+          priority_score: number | null
           process_type: string
           process_type_id: string | null
           protocol_at: string | null
           protocol_number: string | null
           responsible_id: string | null
           sla_deadline: string | null
+          sla_limit_at: string | null
           sla_status: string | null
           stalled_since: string | null
           started_at: string | null
@@ -2123,18 +2235,21 @@ export type Database = {
           is_blocked?: boolean | null
           is_draft?: boolean | null
           is_favorite?: boolean | null
+          kanban_stage?: string | null
           last_accessed_at?: string | null
           last_automation_run?: string | null
           missing_signatures_count?: number | null
           notes?: string | null
           pending_documents_count?: number | null
           priority?: string
+          priority_score?: number | null
           process_type: string
           process_type_id?: string | null
           protocol_at?: string | null
           protocol_number?: string | null
           responsible_id?: string | null
           sla_deadline?: string | null
+          sla_limit_at?: string | null
           sla_status?: string | null
           stalled_since?: string | null
           started_at?: string | null
@@ -2164,18 +2279,21 @@ export type Database = {
           is_blocked?: boolean | null
           is_draft?: boolean | null
           is_favorite?: boolean | null
+          kanban_stage?: string | null
           last_accessed_at?: string | null
           last_automation_run?: string | null
           missing_signatures_count?: number | null
           notes?: string | null
           pending_documents_count?: number | null
           priority?: string
+          priority_score?: number | null
           process_type?: string
           process_type_id?: string | null
           protocol_at?: string | null
           protocol_number?: string | null
           responsible_id?: string | null
           sla_deadline?: string | null
+          sla_limit_at?: string | null
           sla_status?: string | null
           stalled_since?: string | null
           started_at?: string | null
