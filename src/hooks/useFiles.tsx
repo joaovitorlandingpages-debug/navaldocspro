@@ -192,6 +192,12 @@ export const useFiles = (filters?: { customerId?: string; vesselId?: string; pro
         .single();
 
       if (error) throw error;
+
+      // Trigger automation engine if processId is present
+      if (data.process_id) {
+        DocumentAutomationEngine.processOCRExtraction(data.id, mockData);
+      }
+
       return data;
     },
     onSuccess: () => {
