@@ -2,13 +2,12 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ProcessAutomationState } from "@/types/process";
 import { DocumentAutomationEngine } from "@/services/automation/documentAutomationEngine";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export function useProcessAutomation(processId?: string) {
   const [automationState, setAutomationState] = useState<ProcessAutomationState | null>(null);
   const [logs, setLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
   const fetchAutomationState = async () => {
     if (!processId) return;
