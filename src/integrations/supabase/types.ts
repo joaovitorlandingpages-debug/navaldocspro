@@ -576,6 +576,53 @@ export type Database = {
           },
         ]
       }
+      document_library_imports: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          error_log: Json | null
+          id: string
+          import_type: string
+          raw_payload: Json | null
+          status: string | null
+          success_count: number | null
+          total_items: number | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          error_log?: Json | null
+          id?: string
+          import_type: string
+          raw_payload?: Json | null
+          status?: string | null
+          success_count?: number | null
+          total_items?: number | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          error_log?: Json | null
+          id?: string
+          import_type?: string
+          raw_payload?: Json | null
+          status?: string | null
+          success_count?: number | null
+          total_items?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_library_imports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_process_package_items: {
         Row: {
           conditional_rule: Json | null
@@ -779,13 +826,18 @@ export type Database = {
           file_type: string | null
           id: string
           is_active: boolean | null
+          metadata: Json | null
           name: string
           ocr_enabled: boolean | null
           process_type: string | null
+          region_tag: string | null
+          source_origin: string | null
           template_file_url: string | null
           updated_at: string
+          validation_status: string | null
           version: number | null
           version_notes: string | null
+          version_number: number | null
         }
         Insert: {
           category?: string | null
@@ -798,13 +850,18 @@ export type Database = {
           file_type?: string | null
           id?: string
           is_active?: boolean | null
+          metadata?: Json | null
           name: string
           ocr_enabled?: boolean | null
           process_type?: string | null
+          region_tag?: string | null
+          source_origin?: string | null
           template_file_url?: string | null
           updated_at?: string
+          validation_status?: string | null
           version?: number | null
           version_notes?: string | null
+          version_number?: number | null
         }
         Update: {
           category?: string | null
@@ -817,13 +874,18 @@ export type Database = {
           file_type?: string | null
           id?: string
           is_active?: boolean | null
+          metadata?: Json | null
           name?: string
           ocr_enabled?: boolean | null
           process_type?: string | null
+          region_tag?: string | null
+          source_origin?: string | null
           template_file_url?: string | null
           updated_at?: string
+          validation_status?: string | null
           version?: number | null
           version_notes?: string | null
+          version_number?: number | null
         }
         Relationships: [
           {
