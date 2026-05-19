@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
+import { DocumentValidationEngine } from "@/services/validationEngine"; 
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DocumentPreviewEditorProps {
@@ -23,20 +24,10 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
   const [status, setStatus] = useState<'rascunho' | 'auto_preenchido' | 'em_revisao' | 'aprovado'>('rascunho');
 
   useEffect(() => {
-    // Simular preenchimento automático inicial
     if (template?.base_content) {
-      // Importar DocumentAutoFiller dinamicamente para evitar circular dependecy se necessário
-      // Aqui usamos direto a classe recém criada
-      import("@/services/documentAutoFiller").then(({ DocumentAutoFiller }) => {
-        const filled = DocumentAutoFiller.fill(template.base_content, {
-          customer: processData.customer,
-          vessel: processData.vessel,
-          process: processData,
-          company: processData.company
-        });
-        setContent(filled);
-        setStatus('auto_preenchido');
-      });
+      const filled = DocumentValidationEngine.fillPlaceholder(template.base_content, processData);
+      setContent(filled);
+      setStatus('auto_preenchido');
     }
   }, [template, processData]);
 
@@ -147,7 +138,7 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                 <div className="space-y-2">
                    <p className="text-[10px] font-black uppercase text-navy">Campos Mapeados</p>
                    <div className="flex items-center justify-between text-xs font-bold text-emerald-600">
-                      <span>12 Campos OK</span>
+                      <span>Validação OK</span>
                       <CheckCircle2 className="h-3 w-3" />
                    </div>
                 </div>
