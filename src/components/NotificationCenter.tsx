@@ -1,21 +1,10 @@
-import { Bell, X, Info, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
-
-interface Notification {
-  id: string;
-  title: string;
-  desc: string;
-  time: string;
-  type: 'info' | 'warning' | 'success' | 'urgent';
-  read: boolean;
-}
+import { Bell, X, Info, AlertTriangle, CheckCircle2, Clock, Loader2 } from "lucide-react";
+import { useNotifications } from "@/hooks/useNotifications";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const notifications: Notification[] = [
-    { id: "1", title: "GRU Validada", desc: "A GRU do processo PR-2024-001 foi identificada pelo OCR.", time: "2 min atrás", type: 'success', read: false },
-    { id: "2", title: "Prazo Vencendo", desc: "Vistoria Phoenix vence em 3 dias.", time: "1h atrás", type: 'urgent', read: false },
-    { id: "3", title: "Novo Documento", desc: "Cliente Ricardo anexou a CNH.", time: "3h atrás", type: 'info', read: true },
-    { id: "4", title: "Falha na Automação", desc: "Erro ao enviar e-mail para o Porto.", time: "5h atrás", type: 'warning', read: true },
-  ];
+  const { notifications, loading, markAsRead, markAllAsRead } = useNotifications();
 
   if (!isOpen) return null;
 
