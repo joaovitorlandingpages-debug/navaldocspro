@@ -132,6 +132,8 @@ export class DocumentValidationEngine {
       customer_cpf: data.customer?.cpf_cnpj,
       vessel_name: data.vessel?.name,
       vessel_id: data.vessel?.tie || data.vessel?.registration_number,
+      company_name: data.company?.name || "NavalDocs Pro",
+      process_type: data.process_type
     };
 
     Object.keys(mappings).forEach(key => {
