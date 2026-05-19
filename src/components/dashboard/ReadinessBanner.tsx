@@ -16,7 +16,7 @@ export function ReadinessBanner() {
   });
 
   const averageScore = scores 
-    ? Math.round(scores.reduce((acc, curr) => acc + curr.score, 0) / scores.length) 
+    ? Math.round(scores.reduce((acc: number, curr: any) => acc + curr.score, 0) / scores.length) 
     : 0;
 
   if (isLoading) return <Skeleton className="h-40 w-full rounded-[2.5rem]" />;
@@ -45,7 +45,7 @@ export function ReadinessBanner() {
           </div>
        </div>
        <div className="flex-grow grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 w-full">
-          {scores?.map((s) => (
+          {scores?.map((s: any) => (
              <div key={s.id} className="text-center group">
                 <p className="text-[8px] font-black uppercase text-slate-400 mb-2 truncate group-hover:text-primary transition-colors">{s.category}</p>
                 <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
