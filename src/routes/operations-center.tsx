@@ -16,6 +16,7 @@ import {
   MoreVertical,
   CheckCircle2
 } from "lucide-react";
+import { OperationalCharts } from "@/components/OperationalCharts";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
@@ -111,6 +112,9 @@ function OperationsCenterPage() {
           </Card>
         ))}
       </div>
+      
+      {/* Visual Analytics Section */}
+      <OperationalCharts />
 
       <div className="grid lg:grid-cols-12 gap-8">
         {/* Pipeline Operacional (8 colunas) */}

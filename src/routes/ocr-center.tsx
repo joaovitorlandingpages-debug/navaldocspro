@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { OCRUpload } from "@/components/ocr/OCRUpload";
 import { OCRHistory } from "@/components/ocr/OCRHistory";
 import { OCRReview } from "@/components/ocr/OCRReview";
+import { BatchOCRQueue } from "@/components/ocr/BatchOCRQueue";
 import { OCRJob, useOCR } from "@/hooks/useOCR";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -107,6 +108,10 @@ function OCRCenterPage() {
             <div className="mt-6">
               <TabsContent value="upload" className="mt-0 focus-visible:outline-none">
                 <OCRUpload companyId={profile?.company_id || ""} />
+                
+                <div className="mt-6">
+                  <BatchOCRQueue jobs={jobs || []} />
+                </div>
                 
                 <div className="mt-6 p-4 bg-navy rounded-2xl text-white shadow-xl shadow-navy/20">
                    <div className="flex items-center gap-3 mb-3">

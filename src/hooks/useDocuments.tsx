@@ -387,6 +387,20 @@ export const useDocuments = () => {
     },
   });
 
+  const toggleFavorite = useMutation({
+    mutationFn: async ({ id, table, is_favorite }: { id: string, table: 'documents' | 'processes' | 'document_templates', is_favorite: boolean }) => {
+      const { error } = await supabase
+        .from(table as any)
+        .update({ is_favorite })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [variables.table === 'document_templates' ? "document-templates" : "generated-documents"] });
+      toast.success(variables.is_favorite ? "Adicionado aos favoritos" : "Removido dos favoritos");
+    },
+  });
+
   const getSignedUrl = async (bucket: string, path: string) => {
     const { data, error } = await supabase.storage
       .from(bucket)
@@ -411,6 +425,7 @@ export const useDocuments = () => {
     deleteTemplate,
     toggleTemplateActive,
     duplicateTemplate,
+    toggleFavorite,
     getSignedUrl,
   };
 };

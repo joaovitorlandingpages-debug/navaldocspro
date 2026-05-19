@@ -92,6 +92,46 @@ export function useOCR() {
   });
 
 
+  const createBatchJobs = useMutation({
+    mutationFn: async ({ 
+      files, 
+      companyId, 
+      docType 
+    }: { 
+      files: { file: File, id: string }[]; 
+      companyId: string; 
+      docType: string;
+    }) => {
+      const results = [];
+      for (const fileObj of files) {
+        const { data, error } = await supabase
+          .from("ocr_jobs")
+          .insert({
+            uploaded_file_id: fileObj.id,
+            company_id: companyId,
+            document_type: docType,
+            status: 'pending'
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        // Invoke edge function for each job
+        supabase.functions.invoke('process-ocr-document', {
+          body: { jobId: data.id }
+        }).catch((err: any) => console.error("Batch Job Invoke Error:", err));
+        
+        results.push(data);
+      }
+      return results;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ocr-jobs"] });
+      toast.success("Lote enviado para processamento!");
+    },
+  });
+
   const updateJobStatus = useMutation({
     mutationFn: async ({ jobId, status, extractedData }: { jobId: string; status: string; extractedData?: any }) => {
       const updateData: any = { status };
@@ -113,6 +153,7 @@ export function useOCR() {
     jobs,
     isLoading,
     createJob,
+    createBatchJobs,
     updateJobStatus,
   };
 }

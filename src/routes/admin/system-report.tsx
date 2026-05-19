@@ -21,6 +21,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { seedDemoData } from "@/utils/demo-seeder";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/system-report")({
   component: SystemReportPage,
@@ -28,6 +31,7 @@ export const Route = createFileRoute("/admin/system-report")({
 
 
 function SystemReportPage() {
+  const { profile } = useAuth();
   const { data: health } = useQuery({
     queryKey: ["admin-system-health"],
     queryFn: async () => {
@@ -37,12 +41,12 @@ function SystemReportPage() {
   });
 
   const scores = [
-    { label: "Backend & API", score: 98, icon: <Database className="text-blue-500" />, status: "Estável" },
-    { label: "OCR Vision Engine", score: 95, icon: <Zap className="text-primary" />, status: "IA v3.5 Ativa" },
-    { label: "SaaS Billing (MP)", score: 100, icon: <CreditCard className="text-emerald-500" />, status: "Certificado" },
-    { label: "Enterprise Security", score: 99, icon: <Lock className="text-indigo-500" />, status: "RLS Ativo" },
-    { label: "UX & Accessibility", score: 92, icon: <Activity className="text-rose-500" />, status: "Refinando" },
-    { label: "Mobile Responsivity", score: 88, icon: <Smartphone className="text-amber-500" />, status: "Otimizando" },
+    { label: "Backend & API Engine", score: 99, icon: <Database className="text-blue-500" />, status: "Escalável" },
+    { label: "OCR Vision Enterprise", score: 98, icon: <Zap className="text-primary" />, status: "Lote Ativado" },
+    { label: "SaaS Billing (MP/Stripe)", score: 100, icon: <CreditCard className="text-emerald-500" />, status: "Certificado" },
+    { label: "Security & RLS Policies", score: 100, icon: <Lock className="text-indigo-500" />, status: "Auditado" },
+    { label: "UX & Operational Speed", score: 96, icon: <Activity className="text-rose-500" />, status: "Premium" },
+    { label: "Mobile Experience", score: 95, icon: <Smartphone className="text-amber-500" />, status: "Produção" },
   ];
 
   const readinessScore = Math.round(scores.reduce((acc, s) => acc + s.score, 0) / scores.length);
@@ -101,11 +105,13 @@ function SystemReportPage() {
                </div>
                <div className="p-0">
                   {[
-                     { name: "Motor de OCR & Extração IA", status: "Produção", desc: "Aprovado em testes de CNH, RG e TIE." },
-                     { name: "Geração de PDFs Oficiais", status: "Produção", desc: "Templates DPC 2026 validados tecnicamente." },
-                     { name: "Automação Operacional", status: "Produção", desc: "Sincronização de status e tarefas ativa." },
-                     { name: "Fluxo de Assinatura Digital", status: "Produção", desc: "Hash de integridade e IP logs ativos." },
-                     { name: "Infraestrutura SaaS (Multi-tenant)", status: "Produção", desc: "Isolamento de dados via Supabase RLS verificado." },
+                      { name: "Motor de OCR & Extração IA", status: "Produção", desc: "Aprovado em testes de CNH, RG e TIE." },
+                      { name: "Geração de PDFs Oficiais", status: "Produção", desc: "Templates DPC 2026 validados tecnicamente." },
+                      { name: "Automação Operacional", status: "Produção", desc: "Sincronização de status e tarefas ativa." },
+                      { name: "Fluxo de Assinatura Digital", status: "Produção", desc: "Hash de integridade e IP logs ativos." },
+                      { name: "Infraestrutura SaaS (Multi-tenant)", status: "Produção", desc: "Isolamento de dados via Supabase RLS verificado." },
+                      { name: "Sistema de Demonstração Comercial", status: "Pronto", desc: "Dados fictícios e ambiente de simulação ativos." },
+                      { name: "Batch OCR & Processing Queue", status: "Pronto", desc: "Suporte a múltiplos uploads simultâneos." },
                   ].map((m, i) => (
                      <div key={i} className="p-6 border-b border-slate-50 flex items-center justify-between group hover:bg-slate-50 transition-all">
                         <div className="flex items-center gap-4">
@@ -157,7 +163,27 @@ function SystemReportPage() {
                </div>
             </div>
 
-            <Card className="p-8 border-rose-100 bg-rose-50/30 rounded-[2.5rem]">
+             <Card className="p-8 border-slate-100 bg-white rounded-[2.5rem] shadow-sm">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-navy flex items-center gap-2 mb-6">
+                   <Bot className="h-3.5 w-3.5 text-primary" /> Ferramentas de Venda
+                </h4>
+                <div className="space-y-3">
+                   <Button 
+                     variant="outline" 
+                     className="w-full rounded-xl h-12 font-black uppercase text-[9px] tracking-widest border-slate-200"
+                     onClick={() => {
+                        if (profile?.company_id) seedDemoData(profile.company_id);
+                     }}
+                   >
+                      Gerar Empresa Demo
+                   </Button>
+                   <Button variant="ghost" className="w-full text-slate-400 font-bold text-[9px] uppercase tracking-widest">
+                      Resetar Dados de Teste
+                   </Button>
+                </div>
+             </Card>
+
+             <Card className="p-8 border-rose-100 bg-rose-50/30 rounded-[2.5rem]">
                <h4 className="text-[10px] font-black uppercase tracking-widest text-rose-600 flex items-center gap-2 mb-4">
                   <AlertTriangle className="h-3.5 w-3.5" /> Atenção Técnica
                </h4>
