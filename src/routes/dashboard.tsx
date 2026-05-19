@@ -431,10 +431,10 @@ export function RouteContent() {
 
       {/* Operational Critical Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <div className="bg-white p-6 rounded-3xl border-2 border-red-100 shadow-sm hover:shadow-md transition-all group">
+        <Link to="/dashboard/compliance-center" className="bg-white p-6 rounded-3xl border-2 border-red-100 shadow-sm hover:shadow-md transition-all group">
            <div className="flex justify-between items-start mb-4">
               <div className="p-3 bg-red-50 rounded-2xl group-hover:bg-red-500 group-hover:text-white transition-all text-red-600">
-                 <AlertCircle className="h-5 w-5" />
+                 <ShieldCheck className="h-5 w-5" />
               </div>
               <Badge className="bg-red-100 text-red-700 border-none text-[9px]">Urgente</Badge>
            </div>
