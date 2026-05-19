@@ -6,7 +6,7 @@ import {
   CreditCard, Globe, HeartPulse, Wrench, 
   Briefcase, CheckCircle2, AlertCircle, Clock,
   ChevronRight, MoreVertical, Edit, Trash2,
-  Copy, Download, Eye, Zap, Database
+  Copy, Download, Eye, Zap, Database, LayoutDashboard
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { DocumentCategory, DocumentTemplate } from "@/types/document";
+import { DocumentDashboard } from "@/components/documents/DocumentDashboard";
 
 export default function DocumentBase() {
   const [searchQuery, setSearchQuery] = useState("");
