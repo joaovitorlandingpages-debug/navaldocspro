@@ -178,66 +178,6 @@ function OperationsCenterPage() {
           </div>
         </div>
 
-        {/* Sidebar Operacional (4 colunas) */}
-        <div className="lg:col-span-4 space-y-8">
-          {/* Tarefas da IA */}
-          <Card className="p-6 border-none shadow-sm rounded-[2.5rem] bg-navy text-white relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-bl-[80px] -mr-6 -mt-6"></div>
-             <h3 className="text-xs font-black uppercase tracking-widest mb-6 flex items-center gap-2">
-                <Zap className="h-4 w-4 text-primary" /> Sugestões da IA
-             </h3>
-
-             <div className="space-y-4">
-                {tasks?.length === 0 ? (
-                  <p className="text-[10px] text-slate-400 italic">Nenhuma tarefa automatizada no momento.</p>
-                ) : (
-                  tasks?.slice(0, 5).map((task: any) => (
-                    <div key={task.id} className="p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group">
-                       <div className="flex justify-between items-start mb-2">
-                          <Badge variant="outline" className={`text-[8px] font-black border-none px-2 ${
-                            task.priority === 'critical' ? 'bg-red-500 text-white' : 'bg-primary/20 text-primary'
-                          }`}>
-                             {task.priority}
-                          </Badge>
-                          <MoreVertical className="h-3 w-3 text-white/20 group-hover:text-white transition-colors" />
-                       </div>
-                       <h5 className="text-[11px] font-bold mb-1">{task.title}</h5>
-                       <p className="text-[9px] text-white/50 leading-relaxed truncate">{task.description}</p>
-                       <div className="mt-3 flex justify-end">
-                          <Button size="sm" variant="ghost" className="h-7 text-[8px] font-black uppercase text-primary hover:bg-white/5 px-2">
-                             Resolver <ArrowRight className="ml-1 h-3 w-3" />
-                          </Button>
-                       </div>
-                    </div>
-                  ))
-                )}
-             </div>
-          </Card>
-
-          {/* Timeline de Automação */}
-          <div className="space-y-4">
-             <h3 className="text-xs font-black uppercase tracking-widest text-navy flex items-center gap-2">
-                <Clock className="h-4 w-4 text-primary" /> Atividade Automática
-             </h3>
-             <Card className="p-6 border-slate-100 rounded-[2rem] bg-white">
-                <ScrollArea className="h-[300px] pr-4">
-                   <div className="space-y-6">
-                      {[1, 2, 3, 4, 5].map((_, i) => (
-                        <div key={i} className="flex gap-4 relative">
-                           {i !== 4 && <div className="absolute left-[9px] top-6 bottom-[-24px] w-[2px] bg-slate-50"></div>}
-                           <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 z-10">
-                              <Zap className="h-2.5 w-2.5 text-primary" />
-                           </div>
-                           <div>
-                              <p className="text-[11px] font-bold text-navy leading-tight">OCR validado com sucesso</p>
-                              <p className="text-[9px] text-slate-400 font-medium">Processo PR-2024-00{i} • 14:2{i}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </ScrollArea>
-             </Card>
-          </div>
         </div>
       </div>
     </div>
