@@ -120,7 +120,7 @@ export function useOCR() {
         // Invoke edge function for each job
         supabase.functions.invoke('process-ocr-document', {
           body: { jobId: data.id }
-        }).catch(err => console.error("Batch Job Invoke Error:", err));
+        }).catch((err: any) => console.error("Batch Job Invoke Error:", err));
         
         results.push(data);
       }
