@@ -108,16 +108,19 @@ function AICenterPage() {
          <div className="w-full md:w-80 bg-slate-50 border-r border-slate-100 p-8">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-8">Sugestões de IA</h4>
             <div className="space-y-4">
-               {[
-                 { title: "Resumir Processo #2024-001", icon: <MessageSquare className="h-4 w-4" /> },
-                 { title: "Verificar Pendências DPC", icon: <ShieldCheck className="h-4 w-4" /> },
-                 { title: "Gerar ART Automática", icon: <Lightbulb className="h-4 w-4" /> },
-               ].map((item, i) => (
-                 <button key={i} className="w-full p-4 bg-white border border-slate-100 rounded-2xl text-left hover:border-primary hover:shadow-md transition-all group flex items-center gap-3">
-                    <div className="text-slate-400 group-hover:text-primary transition-colors">{item.icon}</div>
-                    <span className="text-[11px] font-bold text-navy">{item.title}</span>
-                 </button>
-               ))}
+                {[
+                  { title: "Resumir Processo Ativo", icon: <MessageSquare className="h-4 w-4" /> },
+                  { title: "Verificar Pendências Técnicas", icon: <ShieldCheck className="h-4 w-4" /> },
+                  { title: "Sugerir Automação de Documento", icon: <Lightbulb className="h-4 w-4" /> },
+                  { title: "Analista de Riscos de Prazo", icon: <Brain className="h-4 w-4" /> },
+                ].map((item, i) => (
+                  <button key={i} className="w-full p-4 bg-white border border-slate-100 rounded-2xl text-left hover:border-primary hover:shadow-md transition-all group flex items-center gap-3">
+                    <div className="h-8 w-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                       {item.icon}
+                    </div>
+                    <span className="text-[11px] font-black text-navy uppercase tracking-tight">{item.title}</span>
+                  </button>
+                ))}
             </div>
 
             <div className="mt-12 p-6 bg-navy text-white rounded-[2rem] shadow-lg relative overflow-hidden">
