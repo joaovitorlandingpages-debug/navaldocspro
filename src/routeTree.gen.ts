@@ -39,6 +39,7 @@ import { Route as BillingFailureRouteImport } from './routes/billing.failure'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AnalyticsOperationsRouteImport } from './routes/analytics.operations'
+import { Route as AnalyticsOcrRouteImport } from './routes/analytics.ocr'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
@@ -199,6 +200,11 @@ const AnalyticsOperationsRoute = AnalyticsOperationsRouteImport.update({
   path: '/operations',
   getParentRoute: () => AnalyticsRoute,
 } as any)
+const AnalyticsOcrRoute = AnalyticsOcrRouteImport.update({
+  id: '/ocr',
+  path: '/ocr',
+  getParentRoute: () => AnalyticsRoute,
+} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -356,6 +364,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -399,6 +408,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/system-report'
     | '/admin/users'
+    | '/analytics/ocr'
     | '/analytics/operations'
     | '/auth/login'
     | '/auth/signup'
@@ -438,6 +448,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/system-report'
     | '/admin/users'
+    | '/analytics/ocr'
     | '/analytics/operations'
     | '/auth/login'
     | '/auth/signup'
@@ -479,6 +490,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/system-report'
     | '/admin/users'
+    | '/analytics/ocr'
     | '/analytics/operations'
     | '/auth/login'
     | '/auth/signup'
@@ -732,6 +744,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalyticsOperationsRouteImport
       parentRoute: typeof AnalyticsRoute
     }
+    '/analytics/ocr': {
+      id: '/analytics/ocr'
+      path: '/ocr'
+      fullPath: '/analytics/ocr'
+      preLoaderRoute: typeof AnalyticsOcrRouteImport
+      parentRoute: typeof AnalyticsRoute
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/users'
@@ -827,10 +846,12 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AnalyticsRouteChildren {
+  AnalyticsOcrRoute: typeof AnalyticsOcrRoute
   AnalyticsOperationsRoute: typeof AnalyticsOperationsRoute
 }
 
 const AnalyticsRouteChildren: AnalyticsRouteChildren = {
+  AnalyticsOcrRoute: AnalyticsOcrRoute,
   AnalyticsOperationsRoute: AnalyticsOperationsRoute,
 }
 

@@ -76,11 +76,11 @@ function AnalyticsPage() {
       </div>
 
       {/* Tabs for different analytics views */}
-      <div className="flex gap-4 border-b border-slate-200 pb-4">
-        <Link to="/analytics" activeProps={{ className: "text-primary border-primary" }} className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all">Geral</Link>
-        <Link to="/analytics/operations" activeProps={{ className: "text-primary border-primary" }} className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all">Operacional</Link>
-        <button className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all opacity-50 cursor-not-allowed">Billing (Pro)</button>
-        <button className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all opacity-50 cursor-not-allowed">OCR Analytics (Pro)</button>
+      <div className="flex gap-4 border-b border-slate-200 pb-4 overflow-x-auto custom-scrollbar">
+        <Link to="/analytics" activeProps={{ className: "text-primary border-primary" }} className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all whitespace-nowrap">Geral</Link>
+        <Link to="/analytics/operations" activeProps={{ className: "text-primary border-primary" }} className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all whitespace-nowrap">Operacional</Link>
+        <Link to="/analytics/ocr" activeProps={{ className: "text-primary border-primary" }} className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all whitespace-nowrap">OCR Analytics</Link>
+        <button className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all opacity-50 cursor-not-allowed whitespace-nowrap">Billing (Pro)</button>
       </div>
 
       {/* Hero Stats */}
