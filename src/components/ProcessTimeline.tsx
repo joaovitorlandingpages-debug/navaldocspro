@@ -22,6 +22,9 @@ export function ProcessTimeline({ events }: { events: TimelineEvent[] }) {
             {event.type === 'signature' && <FileText className="w-5 h-5" />}
             {event.type === 'protocol' && <Clock className="w-5 h-5" />}
             {event.type === 'completion' && <CheckCircle2 className="w-5 h-5" />}
+            {event.type === 'validation_passed' && <ShieldCheck className="w-5 h-5 text-emerald-500" />}
+            {event.type === 'error_detected' && <AlertCircle className="w-5 h-5 text-red-500" />}
+            {event.type === 'inconsistency_found' && <Zap className="w-5 h-5 text-amber-500" />}
           </div>
           {/* Content */}
           <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm transition-all group-hover:shadow-md group-hover:border-primary/20">
