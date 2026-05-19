@@ -39,13 +39,27 @@ function ProcessDetail() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const { data: complianceHistory } = useQuery({
+    queryKey: ["compliance-history", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('compliance_history')
+        .select('*')
+        .eq('process_id', id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
   const fetchProcess = async () => {
     const { data } = await supabase
       .from('processes')
       .select(`
         *,
-        customer:customers(id, name),
-        vessel:vessels(id, name)
+        customer:customers(id, name, cpf_cnpj),
+        vessel:vessels(id, name, activity, has_radio, gross_tonnage)
       `)
       .eq('id', id)
       .single();
