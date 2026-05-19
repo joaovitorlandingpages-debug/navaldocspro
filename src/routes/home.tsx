@@ -27,7 +27,7 @@ function Index() {
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-2">
               <Anchor className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold tracking-tight text-navy">NavalDocs <span className="text-primary font-black">Pro</span></span>
+              <span className="text-xl font-black tracking-tighter text-navy uppercase">NavalDocs <span className="text-primary">Pro</span></span>
             </div>
             
             {/* Desktop Nav */}
@@ -68,15 +68,15 @@ function Index() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div className="space-y-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
-                  <Ship className="h-3 w-3" />
-                  SaaS nº 1 em Gestão Naval
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest shadow-sm">
+                  <Zap className="h-3 w-3 animate-pulse" />
+                  Inteligência Artificial Naval de Nível Nacional
                 </div>
-                <h1 className="text-5xl lg:text-7xl font-extrabold text-navy leading-tight">
-                  Automatize a burocracia <span className="text-primary italic">naval</span>.
+                <h1 className="text-5xl lg:text-7xl font-black text-navy leading-[1.1] tracking-tighter">
+                  A era da automação <span className="text-primary italic">operacional</span> chegou.
                 </h1>
-                <p className="text-xl text-muted-foreground max-w-xl">
-                  A plataforma definitiva para engenheiros, despachantes e empresas navais gerenciarem embarcações, processos e documentos em um só lugar.
+                <p className="text-xl text-slate-600 max-w-xl leading-relaxed">
+                  NavalDocs Pro: A plataforma Enterprise que transforma burocracia complexa em fluxos de trabalho inteligentes e automatizados.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link to="/auth/signup" className="bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">

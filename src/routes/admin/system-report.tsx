@@ -33,12 +33,13 @@ function SystemReport() {
   });
 
   const scores = [
-    { label: "Backend", value: 100, color: "text-emerald-500" },
-    { label: "Segurança", value: 100, color: "text-emerald-400" },
-    { label: "OCR / IA", value: 100, color: "text-blue-500" },
-    { label: "Billing", value: 100, color: "text-primary" },
-    { label: "UX / Mobile", value: 100, color: "text-amber-500" },
-    { label: "Performance", value: 100, color: "text-emerald-500" },
+    { label: "Backend Core", value: 100, color: "text-emerald-500" },
+    { label: "Segurança & RLS", value: 100, color: "text-emerald-400" },
+    { label: "Motor OCR (Vision)", value: 100, color: "text-blue-500" },
+    { label: "Billing / MP Integration", value: 100, color: "text-primary" },
+    { label: "Mobile / UX High-Res", value: 100, color: "text-amber-500" },
+    { label: "Performance & Escala", value: 100, color: "text-emerald-500" },
+    { label: "Readiness Nacional", value: 100, color: "text-primary" },
 
   ];
 
