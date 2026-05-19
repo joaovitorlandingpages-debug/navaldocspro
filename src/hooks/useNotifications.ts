@@ -46,7 +46,7 @@ export function useNotifications() {
         event: 'INSERT', 
         schema: 'public', 
         table: 'notifications' 
-      }, (payload) => {
+      }, (payload: any) => {
         setNotifications(prev => [payload.new as Notification, ...prev]);
         toast(payload.new.title, {
           description: payload.new.message,
