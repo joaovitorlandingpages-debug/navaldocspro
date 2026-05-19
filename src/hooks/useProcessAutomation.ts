@@ -78,7 +78,7 @@ export function useProcessAutomation(processId?: string) {
         schema: 'public',
         table: 'process_automation_state',
         filter: `process_id=eq.${processId}`
-      }, (payload) => {
+      }, (payload: any) => {
         setAutomationState(payload.new as unknown as ProcessAutomationState);
       })
       .subscribe();
