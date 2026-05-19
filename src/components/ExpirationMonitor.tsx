@@ -19,15 +19,30 @@ export function ExpirationMonitor() {
       const in30Days = new Date();
       in30Days.setDate(in30Days.getDate() + 30);
       
-      const { data, error } = await supabase
+      // Fetch from both generated_documents and documents (certificates)
+      const { data: generated, error: genError } = await supabase
         .from("generated_documents")
-        .select("*, vessels(name), customers(name)")
+        .select("id, name, expiry_date, vessels(name), customers(name)")
         .lte("expiry_date", in30Days.toISOString())
         .gte("expiry_date", today)
         .order("expiry_date", { ascending: true });
 
-      if (error) throw error;
-      return data;
+      const { data: certs, error: certError } = await supabase
+        .from("documents")
+        .select("id, document_type, expiry_date, vessels(name), customers(name)")
+        .lte("expiry_date", in30Days.toISOString())
+        .gte("expiry_date", today)
+        .order("expiry_date", { ascending: true });
+
+      if (genError) throw genError;
+      if (certError) throw certError;
+
+      const combined = [
+        ...(generated || []).map((d: any) => ({ ...d, type: 'generated' })),
+        ...(certs || []).map((d: any) => ({ ...d, name: d.document_type, type: 'certificate' }))
+      ];
+
+      return combined.sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime());
     }
   });
 
