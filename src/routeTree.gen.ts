@@ -17,6 +17,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as OcrReviewCenterRouteImport } from './routes/ocr-review-center'
 import { Route as OcrCenterRouteImport } from './routes/ocr-center'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as DocumentsRouteImport } from './routes/documents'
@@ -91,6 +92,11 @@ const PlansRoute = PlansRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OcrReviewCenterRoute = OcrReviewCenterRouteImport.update({
+  id: '/ocr-review-center',
+  path: '/ocr-review-center',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OcrCenterRoute = OcrCenterRouteImport.update({
@@ -283,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
   '/ocr-center': typeof OcrCenterRoute
+  '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
@@ -326,6 +333,7 @@ export interface FileRoutesByTo {
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
   '/ocr-center': typeof OcrCenterRoute
+  '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
@@ -372,6 +380,7 @@ export interface FileRoutesById {
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
   '/ocr-center': typeof OcrCenterRoute
+  '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
@@ -419,6 +428,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/home'
     | '/ocr-center'
+    | '/ocr-review-center'
     | '/onboarding'
     | '/plans'
     | '/processes'
@@ -462,6 +472,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/home'
     | '/ocr-center'
+    | '/ocr-review-center'
     | '/onboarding'
     | '/plans'
     | '/processes'
@@ -507,6 +518,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/home'
     | '/ocr-center'
+    | '/ocr-review-center'
     | '/onboarding'
     | '/plans'
     | '/processes'
@@ -553,6 +565,7 @@ export interface RootRouteChildren {
   DocumentsRoute: typeof DocumentsRoute
   HomeRoute: typeof HomeRoute
   OcrCenterRoute: typeof OcrCenterRoute
+  OcrReviewCenterRoute: typeof OcrReviewCenterRoute
   OnboardingRoute: typeof OnboardingRoute
   PlansRoute: typeof PlansRoute
   ProcessesRoute: typeof ProcessesRouteWithChildren
@@ -625,6 +638,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ocr-review-center': {
+      id: '/ocr-review-center'
+      path: '/ocr-review-center'
+      fullPath: '/ocr-review-center'
+      preLoaderRoute: typeof OcrReviewCenterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ocr-center': {
@@ -960,6 +980,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocumentsRoute: DocumentsRoute,
   HomeRoute: HomeRoute,
   OcrCenterRoute: OcrCenterRoute,
+  OcrReviewCenterRoute: OcrReviewCenterRoute,
   OnboardingRoute: OnboardingRoute,
   PlansRoute: PlansRoute,
   ProcessesRoute: ProcessesRouteWithChildren,
