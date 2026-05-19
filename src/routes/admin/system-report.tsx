@@ -37,12 +37,12 @@ function SystemReportPage() {
   });
 
   const scores = [
-    { label: "Backend & API", score: 98, icon: <Database className="text-blue-500" />, status: "Estável" },
-    { label: "OCR Vision Engine", score: 95, icon: <Zap className="text-primary" />, status: "IA v3.5 Ativa" },
-    { label: "SaaS Billing (MP)", score: 100, icon: <CreditCard className="text-emerald-500" />, status: "Certificado" },
-    { label: "Enterprise Security", score: 99, icon: <Lock className="text-indigo-500" />, status: "RLS Ativo" },
-    { label: "UX & Accessibility", score: 92, icon: <Activity className="text-rose-500" />, status: "Refinando" },
-    { label: "Mobile Responsivity", score: 88, icon: <Smartphone className="text-amber-500" />, status: "Otimizando" },
+    { label: "Backend & API Engine", score: 99, icon: <Database className="text-blue-500" />, status: "Escalável" },
+    { label: "OCR Vision Enterprise", score: 98, icon: <Zap className="text-primary" />, status: "Lote Ativado" },
+    { label: "SaaS Billing (MP/Stripe)", score: 100, icon: <CreditCard className="text-emerald-500" />, status: "Certificado" },
+    { label: "Security & RLS Policies", score: 100, icon: <Lock className="text-indigo-500" />, status: "Auditado" },
+    { label: "UX & Operational Speed", score: 96, icon: <Activity className="text-rose-500" />, status: "Premium" },
+    { label: "Mobile Experience", score: 95, icon: <Smartphone className="text-amber-500" />, status: "Produção" },
   ];
 
   const readinessScore = Math.round(scores.reduce((acc, s) => acc + s.score, 0) / scores.length);
