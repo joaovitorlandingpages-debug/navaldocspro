@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, AlertCircle, Clock, FileText, ArrowRight, Zap, History } from "lucide-react";
+import { CheckCircle2, AlertCircle, Clock, FileText, ArrowRight, Zap, History, Download, Package } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { BatchGenerationService } from "@/services/automation/batchGenerationService";
 
 interface SmartAutomationDashboardProps {
   processId: string;
