@@ -4,8 +4,10 @@ import {
   Clock, CheckCircle2, AlertCircle, MoreHorizontal, 
   Download, Share2, PlayCircle, MessageSquare, Plus,
   FileCheck, History, Info, Zap, Bot, Eye, Trash2,
-  Image as ImageIcon, Send, Loader2, Target, Ban
+  Image as ImageIcon, Send, Loader2, Target, Ban,
+  FilePlus, RefreshCw, ChevronLeft, AlertTriangle
 } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,6 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ProcessChecklist } from "@/components/ProcessChecklist";
 import { SmartAutomationDashboard } from "@/components/automation/SmartAutomationDashboard";
 import { ProcessTimeline } from "@/components/ProcessTimeline";
+import { DocumentPreviewEditor } from "@/components/documents/DocumentPreviewEditor";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
@@ -39,6 +42,9 @@ function ProcessDetail() {
   const [newComment, setNewComment] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [selectedTemplateForGen, setSelectedTemplateForGen] = useState<any | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const { data: complianceHistory } = useQuery({
     queryKey: ["compliance-history", id],
@@ -92,8 +98,14 @@ function ProcessDetail() {
       )
       .subscribe();
 
+    const handleGenEvent = (e: any) => {
+      setSelectedTemplateForGen(e.detail);
+    };
+    window.addEventListener('generate-document', handleGenEvent);
+
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener('generate-document', handleGenEvent);
     };
   }, [id]);
 
@@ -137,6 +149,24 @@ function ProcessDetail() {
     { id: "1", type: "creation", user: "Ricardo Almeida", description: "Processo aberto no sistema.", date: process?.created_at || "2026-05-10T09:45:00Z" },
     { id: "2", type: "update", user: "Ricardo Almeida", description: "Cliente vinculado e embarcação selecionada.", date: process?.created_at || "2026-05-10T10:15:00Z" },
   ];
+
+  if (selectedTemplateForGen) {
+    return (
+      <div className="max-w-7xl mx-auto p-8">
+        <DocumentPreviewEditor 
+          template={selectedTemplateForGen}
+          processData={process}
+          onSave={(finalContent) => {
+            setSelectedTemplateForGen(null);
+            // Simular salvamento
+            toast.success("Documento finalizado e anexado.");
+            fetchProcess();
+          }}
+          onCancel={() => setSelectedTemplateForGen(null)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20 max-w-7xl mx-auto">
@@ -211,19 +241,22 @@ function ProcessDetail() {
 
       <div className="grid lg:grid-cols-3 gap-8">
          <div className="lg:col-span-2 space-y-8">
-            <Tabs defaultValue="overview" className="w-full">
-               <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex-wrap h-auto">
-                  <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geral</TabsTrigger>
-                  <TabsTrigger value="automation" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                    <Zap className="h-3 w-3" /> Automação IA
-                  </TabsTrigger>
-                  <TabsTrigger value="requirements" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Checklist</TabsTrigger>
-                  <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Arquivos</TabsTrigger>
-                  <TabsTrigger value="comments" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
-                    Notas {comments.length > 0 && <span className="bg-primary text-white text-[10px] px-1.5 rounded-full">{comments.length}</span>}
-                  </TabsTrigger>
-                  <TabsTrigger value="history" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Histórico</TabsTrigger>
-               </TabsList>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex-wrap h-auto">
+                   <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geral</TabsTrigger>
+                   <TabsTrigger value="automation" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                     <Zap className="h-3 w-3" /> Automação IA
+                   </TabsTrigger>
+                   <TabsTrigger value="requirements" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Checklist</TabsTrigger>
+                   <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Arquivos</TabsTrigger>
+                   <TabsTrigger value="gen_docs" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
+                     Gerados {process?.compliance_status === 'conforme' && <span className="h-2 w-2 bg-emerald-500 rounded-full animate-ping" />}
+                   </TabsTrigger>
+                   <TabsTrigger value="comments" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
+                     Notas {comments.length > 0 && <span className="bg-primary text-white text-[10px] px-1.5 rounded-full">{comments.length}</span>}
+                   </TabsTrigger>
+                   <TabsTrigger value="history" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Histórico</TabsTrigger>
+                </TabsList>
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
                   <div className="grid md:grid-cols-2 gap-6">
@@ -336,7 +369,36 @@ function ProcessDetail() {
                   </div>
                </TabsContent>
 
-               <TabsContent value="comments" className="animate-in fade-in duration-300">
+                <TabsContent value="gen_docs" className="animate-in fade-in duration-300">
+                   <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                      <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2 mb-6">
+                        <FilePlus className="h-5 w-5 text-primary" /> Documentos de Saída
+                      </h3>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {process?.compliance_status === 'conforme' ? (
+                          <p className="col-span-full text-sm text-slate-500 mb-4 italic">Todos os requisitos foram validados. Você pode gerar o pacote completo.</p>
+                        ) : (
+                          <div className="col-span-full p-4 bg-amber-50 rounded-xl border border-amber-100 mb-4 flex items-center gap-3">
+                             <AlertTriangle className="h-4 w-4 text-amber-600" />
+                             <p className="text-[11px] text-amber-700 font-bold uppercase">Conformidade pendente: Geração limitada a rascunhos.</p>
+                          </div>
+                        )}
+                        
+                        <Card className="p-4 border-slate-100 hover:border-primary/20 transition-all cursor-pointer group" onClick={async () => {
+                           const { data } = await supabase.from('document_templates').select('*').eq('name', 'Requerimento DPC-2211').single();
+                           setSelectedTemplateForGen(data);
+                        }}>
+                           <div className="flex justify-between items-start mb-2">
+                              <Badge className="bg-slate-100 text-slate-500 border-none uppercase text-[8px]">Rascunho</Badge>
+                              <FileText className="h-4 w-4 text-primary opacity-40 group-hover:opacity-100" />
+                           </div>
+                           <h4 className="text-sm font-bold text-navy uppercase tracking-tight">Requerimento Geral</h4>
+                           <p className="text-[10px] text-slate-400 mt-1">DPC-2211 (Padrão Marinha)</p>
+                        </Card>
+                      </div>
+                   </div>
+                </TabsContent>
+                <TabsContent value="comments" className="animate-in fade-in duration-300">
                   <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col h-[600px] overflow-hidden">
                     <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
                       <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
@@ -406,8 +468,17 @@ function ProcessDetail() {
             <div className="bg-navy p-8 rounded-[2.5rem] text-white shadow-xl shadow-navy/20">
                <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6">Ações Rápidas</h3>
                <div className="space-y-3">
-                  <Button className="w-full bg-primary hover:opacity-90 text-white h-12 rounded-2xl font-bold gap-2">
-                     <FileCheck className="h-4 w-4" /> Validar Documentos
+                  <Button 
+                    className="w-full bg-primary hover:opacity-90 text-white h-12 rounded-2xl font-bold gap-2"
+                    onClick={async () => {
+                      setIsGenerating(true);
+                      const { data } = await supabase.from('document_templates').select('*').eq('name', 'Requerimento DPC-2211').single();
+                      setSelectedTemplateForGen(data);
+                      setIsGenerating(false);
+                    }}
+                  >
+                     {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FilePlus className="h-4 w-4" />} 
+                     Gerar Requerimento
                   </Button>
                   <Button variant="outline" className="w-full h-12 rounded-2xl font-bold gap-2 border-white/10 text-white hover:bg-white/5">
                      <PlayCircle className="h-4 w-4" /> Iniciar Automação

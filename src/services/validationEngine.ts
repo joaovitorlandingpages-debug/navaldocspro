@@ -124,4 +124,23 @@ export class DocumentValidationEngine {
     if (cleanCnpj.length !== 14) return false;
     return true;
   }
+
+  static fillPlaceholder(content: string, data: any): string {
+    let filled = content;
+    const mappings: any = {
+      customer_name: data.customer?.name,
+      customer_cpf: data.customer?.cpf_cnpj,
+      vessel_name: data.vessel?.name,
+      vessel_id: data.vessel?.tie || data.vessel?.registration_number,
+      company_name: data.company?.name || "NavalDocs Pro",
+      process_type: data.process_type
+    };
+
+    Object.keys(mappings).forEach(key => {
+      const value = mappings[key] || `[${key.toUpperCase()} PENDENTE]`;
+      filled = filled.replace(new RegExp(`{{${key}}}`, 'g'), value);
+    });
+
+    return filled;
+  }
 }
