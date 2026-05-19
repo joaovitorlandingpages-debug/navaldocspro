@@ -96,27 +96,51 @@ function Index() {
                 </div>
               </div>
               <div className="relative">
-                <div className="aspect-[4/3] rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden group">
-                   <div className="h-8 bg-slate-100 border-b flex items-center px-4 gap-1.5">
-                      <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
-                      <div className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
-                      <div className="h-2.5 w-2.5 rounded-full bg-green-400" />
-                   </div>
-                   <div className="p-6 space-y-4">
-                      <div className="h-12 w-1/3 bg-slate-100 rounded-md animate-pulse" />
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="h-24 bg-primary/5 rounded-lg" />
-                        <div className="h-24 bg-primary/5 rounded-lg" />
-                        <div className="h-24 bg-primary/5 rounded-lg" />
+                <div className="aspect-[4/3] rounded-[3rem] bg-white shadow-2xl border border-slate-100 overflow-hidden group">
+                   <div className="h-10 bg-slate-50 border-b flex items-center px-6 gap-2">
+                      <div className="h-3 w-3 rounded-full bg-rose-400" />
+                      <div className="h-3 w-3 rounded-full bg-amber-400" />
+                      <div className="h-3 w-3 rounded-full bg-emerald-400" />
+                      <div className="ml-auto flex items-center gap-2">
+                         <div className="h-4 w-20 bg-slate-200 rounded-full animate-pulse" />
                       </div>
-                      <div className="h-48 bg-slate-50 rounded-lg border border-dashed border-slate-200 flex items-center justify-center text-slate-300">
-                        Visualização do Dashboard
+                   </div>
+                   <div className="p-8 space-y-6">
+                      <div className="flex items-center justify-between">
+                         <div className="h-8 w-40 bg-slate-100 rounded-xl" />
+                         <div className="h-6 w-20 bg-primary/10 rounded-full" />
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="h-28 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center justify-center gap-2">
+                           <Zap className="h-5 w-5 text-primary" />
+                           <div className="h-2 w-12 bg-slate-200 rounded-full" />
+                        </div>
+                        <div className="h-28 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center justify-center gap-2">
+                           <FileText className="h-5 w-5 text-blue-500" />
+                           <div className="h-2 w-12 bg-slate-200 rounded-full" />
+                        </div>
+                        <div className="h-28 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center justify-center gap-2">
+                           <Activity className="h-5 w-5 text-emerald-500" />
+                           <div className="h-2 w-12 bg-slate-200 rounded-full" />
+                        </div>
+                      </div>
+                      <div className="h-40 bg-navy/5 rounded-[2rem] border-2 border-dashed border-primary/20 flex flex-col items-center justify-center text-center p-6">
+                        <Zap className="h-8 w-8 text-primary animate-pulse mb-2" />
+                        <p className="text-[10px] font-black uppercase text-navy/40 tracking-widest">IA Processando Documento Naval...</p>
                       </div>
                    </div>
                 </div>
-                <div className="absolute -bottom-6 -left-6 bg-navy text-white p-6 rounded-xl shadow-xl hidden lg:block">
-                  <p className="text-3xl font-bold">98%</p>
-                  <p className="text-xs opacity-70">Redução em erros de documentação</p>
+                <div className="absolute -bottom-8 -left-8 bg-navy text-white p-8 rounded-[2rem] shadow-2xl hidden lg:block animate-in slide-in-from-left duration-700">
+                  <div className="flex items-center gap-4 mb-4">
+                     <div className="h-10 w-10 bg-primary/20 rounded-xl flex items-center justify-center">
+                        <CheckCircle className="text-primary h-6 w-6" />
+                     </div>
+                     <div>
+                        <p className="text-2xl font-black">98.5%</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-primary">Precisão OCR</p>
+                     </div>
+                  </div>
+                  <p className="text-[11px] text-white/50 leading-relaxed font-medium">Validado contra normas<br />DPC e Marinha do Brasil.</p>
                 </div>
               </div>
             </div>
