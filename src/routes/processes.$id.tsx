@@ -41,6 +41,9 @@ function ProcessDetail() {
   const [newComment, setNewComment] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [selectedTemplateForGen, setSelectedTemplateForGen] = useState<any | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const { data: complianceHistory } = useQuery({
     queryKey: ["compliance-history", id],
