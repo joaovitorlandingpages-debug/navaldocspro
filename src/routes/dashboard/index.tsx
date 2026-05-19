@@ -4,8 +4,9 @@ import {
   ArrowRight, Calendar, User, Ship, AlertCircle, Loader2,
   Filter, LayoutGrid, List, CheckCircle2, Clock, 
   ChevronRight, MoreVertical, LayoutDashboard,
-  Timer, AlertTriangle, FileText, Zap
+  Timer, AlertTriangle, FileText, Zap, Star
 } from "lucide-react";
+import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
