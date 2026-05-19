@@ -163,7 +163,27 @@ function SystemReportPage() {
                </div>
             </div>
 
-            <Card className="p-8 border-rose-100 bg-rose-50/30 rounded-[2.5rem]">
+             <Card className="p-8 border-slate-100 bg-white rounded-[2.5rem] shadow-sm">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-navy flex items-center gap-2 mb-6">
+                   <Bot className="h-3.5 w-3.5 text-primary" /> Ferramentas de Venda
+                </h4>
+                <div className="space-y-3">
+                   <Button 
+                     variant="outline" 
+                     className="w-full rounded-xl h-12 font-black uppercase text-[9px] tracking-widest border-slate-200"
+                     onClick={() => {
+                        if (profile?.company_id) seedDemoData(profile.company_id);
+                     }}
+                   >
+                      Gerar Empresa Demo
+                   </Button>
+                   <Button variant="ghost" className="w-full text-slate-400 font-bold text-[9px] uppercase tracking-widest">
+                      Resetar Dados de Teste
+                   </Button>
+                </div>
+             </Card>
+
+             <Card className="p-8 border-rose-100 bg-rose-50/30 rounded-[2.5rem]">
                <h4 className="text-[10px] font-black uppercase tracking-widest text-rose-600 flex items-center gap-2 mb-4">
                   <AlertTriangle className="h-3.5 w-3.5" /> Atenção Técnica
                </h4>
