@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { 
   TrendingUp, Activity, Users, Clock, 
   FileText, Zap, BarChart3, PieChart, 
@@ -66,15 +66,21 @@ function AnalyticsPage() {
           <p className="text-slate-500 font-medium italic">Inteligência de dados e performance operacional em tempo real.</p>
         </div>
         <div className="flex gap-3">
-           <div className="flex bg-white p-1 rounded-xl border border-slate-200">
-              <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-navy text-white rounded-lg">7 Dias</button>
-              <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-navy transition-all">30 Dias</button>
-              <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-navy transition-all">Anual</button>
-           </div>
-           <button className="bg-primary text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
-              <FileText className="h-4 w-4" /> Exportar Relatório
-           </button>
+            <Link to="/analytics/operations" className="bg-white border border-slate-200 text-navy px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all">
+               Operacional
+            </Link>
+            <button className="bg-primary text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+               <FileText className="h-4 w-4" /> Exportar Relatório
+            </button>
         </div>
+      </div>
+
+      {/* Tabs for different analytics views */}
+      <div className="flex gap-4 border-b border-slate-200 pb-4 overflow-x-auto custom-scrollbar">
+        <Link to="/analytics" activeProps={{ className: "text-primary border-primary" }} className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all whitespace-nowrap">Geral</Link>
+        <Link to="/analytics/operations" activeProps={{ className: "text-primary border-primary" }} className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all whitespace-nowrap">Operacional</Link>
+        <Link to="/analytics/ocr" activeProps={{ className: "text-primary border-primary" }} className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all whitespace-nowrap">OCR Analytics</Link>
+        <button className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all opacity-50 cursor-not-allowed whitespace-nowrap">Billing (Pro)</button>
       </div>
 
       {/* Hero Stats */}

@@ -4,7 +4,7 @@ import {
   Clock, CheckCircle2, AlertCircle, MoreHorizontal, 
   Download, Share2, PlayCircle, MessageSquare, Plus,
   FileCheck, History, Info, Zap, Bot, Eye, Trash2,
-  Image as ImageIcon, Send, Loader2
+  Image as ImageIcon, Send, Loader2, Target
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
 import { ProcessChecklist } from "@/components/ProcessChecklist";
 import { SmartAutomationDashboard } from "@/components/automation/SmartAutomationDashboard";
+import { ProcessTimeline } from "@/components/ProcessTimeline";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
@@ -111,14 +112,12 @@ function ProcessDetail() {
     }
   };
 
-  const timeline = [
-    { title: "Processo criado", date: "10/05/2026 - 09:45", user: "Ricardo Almeida", icon: <Plus className="h-3 w-3" />, color: "bg-blue-500" },
-    { title: "Cliente vinculado", date: "10/05/2026 - 10:15", user: "Ricardo Almeida", icon: <User className="h-3 w-3" />, color: "bg-purple-500" },
-    { title: "OCR: Dados Extraídos", date: "10/05/2026 - 10:16", user: "Sistema IA", desc: "CNH processada e campos preenchidos automaticamente.", icon: <Zap className="h-3 w-3" />, color: "bg-amber-500" },
-    { title: "Doc: Procuração Gerada", date: "10/05/2026 - 10:17", user: "Sistema", desc: "Template de procuração preenchido com dados do cliente.", icon: <Bot className="h-3 w-3" />, color: "bg-indigo-500" },
-    { title: "Documento enviado", date: "11/05/2026 - 14:20", user: "Sistema", desc: "Link de assinatura enviado via WhatsApp.", icon: <FileText className="h-3 w-3" />, color: "bg-blue-400" },
-    { title: "GRU anexada", date: "12/05/2026 - 08:30", user: "Cliente", icon: <FileText className="h-3 w-3" />, color: "bg-green-500" },
-    { title: "Documento validado", date: "12/05/2026 - 11:00", user: "Admin", desc: "RG e CPF validados com sucesso.", icon: <FileCheck className="h-3 w-3" />, color: "bg-cyan-500" },
+  const timelineEvents: any[] = [
+    { id: "1", type: "creation", user: "Ricardo Almeida", description: "Processo aberto no sistema.", date: "2026-05-10T09:45:00Z" },
+    { id: "2", type: "update", user: "Ricardo Almeida", description: "Cliente vinculado e embarcação selecionada.", date: "2026-05-10T10:15:00Z" },
+    { id: "3", type: "update", user: "Sistema IA", description: "OCR: CNH processada e campos preenchidos automaticamente.", date: "2026-05-10T10:16:00Z" },
+    { id: "4", type: "signature", user: "Eng. Mariana", description: "Procuração assinada digitalmente.", date: "2026-05-10T14:20:00Z" },
+    { id: "5", type: "protocol", user: "Sistema", description: "Processo enviado para protocolo na Marinha.", date: "2026-05-11T08:30:00Z" },
   ];
 
   return (
@@ -226,11 +225,23 @@ function ProcessDetail() {
                      <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between">
                         <div>
                            <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
-                              <CheckCircle2 className="h-5 w-5 text-green-500" /> Resumo do Status
+                              <Target className="h-5 w-5 text-primary" /> Progresso do SLA
                            </h3>
-                           <p className="text-sm font-medium text-slate-500 mb-4">Acompanhe o status geral da documentação na aba Checklist Inteligente.</p>
+                           <div className="space-y-4">
+                              <div className="flex justify-between items-end">
+                                 <div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status do Prazo</p>
+                                    <p className="text-sm font-bold text-navy">No prazo operacional</p>
+                                 </div>
+                                 <p className="text-xs font-black text-primary uppercase">80%</p>
+                              </div>
+                              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                 <div className="h-full bg-primary rounded-full" style={{ width: '80%' }} />
+                              </div>
+                              <p className="text-[10px] text-slate-400 italic">Previsão de conclusão em 2 dias úteis.</p>
+                           </div>
                         </div>
-                        <div className="bg-slate-50 p-4 rounded-2xl">
+                        <div className="bg-slate-50 p-4 rounded-2xl mt-6">
                            <p className="text-xs text-slate-500 leading-relaxed font-medium">{process?.notes || "Nenhuma observação interna registrada."}</p>
                         </div>
                      </div>
@@ -347,24 +358,11 @@ function ProcessDetail() {
                </TabsContent>
 
                <TabsContent value="history" className="animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                    <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-8 flex items-center gap-2">
-                       <History className="h-5 w-5 text-primary" /> Linha do Tempo
+                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+                    <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-10 flex items-center gap-2">
+                       <History className="h-5 w-5 text-primary" /> Histórico Inteligente
                     </h3>
-                    <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-slate-100">
-                       {timeline.map((item, idx) => (
-                          <div key={idx} className="relative flex items-center gap-6 group">
-                             <div className={`h-10 w-10 rounded-xl ${item.color} text-white flex items-center justify-center z-10 shadow-lg border-4 border-white group-hover:scale-110 transition-transform`}>
-                                {item.icon}
-                             </div>
-                             <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.date}</span>
-                                <h4 className="text-sm font-bold text-navy">{item.title}</h4>
-                                <p className="text-[11px] font-medium text-slate-500">{item.user} • {item.desc || "Operação realizada com sucesso."}</p>
-                             </div>
-                          </div>
-                       ))}
-                    </div>
+                    <ProcessTimeline events={timelineEvents} />
                   </div>
                </TabsContent>
             </Tabs>

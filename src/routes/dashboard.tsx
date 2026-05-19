@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { Badge } from "@/components/ui/badge";
-
+import { Card } from "@/components/ui/card";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useQuery } from "@tanstack/react-query";
 
@@ -95,6 +95,7 @@ function DashboardLayout() {
   const navItems = [
     { name: "Operacional", icon: <LayoutDashboard className="h-5 w-5 text-primary" />, path: "/dashboard" },
     { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
+    { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
     { name: "Central IA", icon: <Zap className="h-5 w-5" />, path: "/ai-center" },
     { name: "Agenda", icon: <CalendarIcon className="h-5 w-5" />, path: "/calendar" },
     { name: "Automação", icon: <Cpu className="h-5 w-5" />, path: "/automation" },
@@ -329,6 +330,77 @@ export function RouteContent() {
         </div>
       </div>
 
+
+      {/* Intelligence & Recommendations */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" /> Sugestões Inteligentes
+            </h2>
+            <button className="text-[10px] font-black uppercase text-primary hover:underline">Ver Todas</button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div className="bg-navy text-white p-6 rounded-[2rem] border border-white/5 shadow-xl relative overflow-hidden group">
+                <div className="absolute -right-10 -bottom-10 opacity-5 group-hover:scale-110 transition-transform duration-700">
+                   <Target className="h-40 w-40" />
+                </div>
+                <div className="relative z-10">
+                   <Badge className="bg-primary/20 text-primary border-none mb-4 uppercase text-[9px]">Pronto para Geração</Badge>
+                   <h3 className="text-lg font-bold mb-2">Processo PR-2024-08</h3>
+                   <p className="text-xs text-slate-400 mb-6">Todos os dados e documentos foram validados pelo OCR.</p>
+                   <button className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                      <FilePlus className="h-4 w-4" /> Gerar Documentos
+                   </button>
+                </div>
+             </div>
+
+             <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                <div className="absolute -right-10 -bottom-10 opacity-5 group-hover:scale-110 transition-transform duration-700 text-amber-500">
+                   <AlertTriangle className="h-40 w-40" />
+                </div>
+                <div className="relative z-10">
+                   <Badge className="bg-amber-100 text-amber-600 border-none mb-4 uppercase text-[9px]">Assinatura Pendente</Badge>
+                   <h3 className="text-lg font-bold text-navy mb-2">Protocolo Anatel</h3>
+                   <p className="text-xs text-slate-400 mb-6">Aguardando assinatura digital do Engenheiro Responsável.</p>
+                   <button className="w-full bg-slate-100 text-navy py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
+                      <Bell className="h-4 w-4" /> Notificar Responsável
+                   </button>
+                </div>
+             </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+           <div className="flex items-center justify-between">
+              <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
+                <Activity className="h-4 w-4 text-primary" /> Fila Operacional
+              </h2>
+           </div>
+           
+           <Card className="p-6 border-slate-100 shadow-sm space-y-4">
+              {[
+                { label: "OCR: Certificado.pdf", status: "processando", progress: 65 },
+                { label: "Geração: Requerimento", status: "na fila", progress: 0 },
+                { label: "Assinatura: Contrato", status: "enviado", progress: 100 },
+              ].map((item, i) => (
+                <div key={i} className="space-y-2">
+                   <div className="flex justify-between items-center text-[10px] font-bold">
+                      <span className="text-slate-600 uppercase tracking-widest">{item.label}</span>
+                      <span className={`${item.status === 'processando' ? 'text-primary' : item.status === 'enviado' ? 'text-emerald-500' : 'text-slate-400'} uppercase tracking-tighter`}>{item.status}</span>
+                   </div>
+                   <div className="h-1 w-full bg-slate-50 rounded-full overflow-hidden">
+                      <div className={`h-full ${item.status === 'processando' ? 'bg-primary animate-pulse' : item.status === 'enviado' ? 'bg-emerald-500' : 'bg-slate-200'}`} style={{ width: `${item.progress || 10}%` }} />
+                   </div>
+                </div>
+              ))}
+              <button className="w-full mt-2 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-navy border-t border-slate-50">Gerenciar Filas</button>
+           </Card>
+        </div>
+      </div>
+
+      <div className="h-px bg-slate-200 my-8" />
 
       {/* Operational Critical Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
