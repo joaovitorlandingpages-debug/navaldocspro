@@ -95,6 +95,7 @@ function DashboardLayout() {
   const navItems = [
     { name: "Operacional", icon: <LayoutDashboard className="h-5 w-5 text-primary" />, path: "/dashboard" },
     { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
+    { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
     { name: "Central IA", icon: <Zap className="h-5 w-5" />, path: "/ai-center" },
     { name: "Agenda", icon: <CalendarIcon className="h-5 w-5" />, path: "/calendar" },
     { name: "Automação", icon: <Cpu className="h-5 w-5" />, path: "/automation" },
