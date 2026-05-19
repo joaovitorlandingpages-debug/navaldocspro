@@ -191,23 +191,42 @@ function SupportPage() {
         </div>
 
         <div className="space-y-8">
-           <div className="bg-gradient-to-br from-navy to-slate-800 p-8 rounded-[2rem] text-white shadow-xl">
-              <h3 className="text-xl font-bold mb-4">Documentação Pro</h3>
-              <p className="text-white/70 text-sm mb-6">Acesse o manual completo e tutoriais em vídeo para dominar todas as ferramentas.</p>
-              <button className="w-full bg-white/10 hover:bg-white/20 p-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all">
-                 Ver Documentação <ExternalLink className="h-4 w-4" />
-              </button>
+           <div className="bg-gradient-to-br from-navy to-slate-800 p-8 rounded-[2rem] text-white shadow-xl group overflow-hidden relative">
+              <BookOpen className="absolute -right-8 -bottom-8 h-40 w-40 text-white/5 group-hover:scale-110 transition-transform duration-500" />
+              <div className="relative z-10">
+                <h3 className="text-xl font-bold mb-4">Central de Conhecimento</h3>
+                <p className="text-white/70 text-sm mb-6">Acesse guias detalhados, vídeos de treinamento e templates oficiais navais.</p>
+                <button className="w-full bg-white/10 hover:bg-white/20 p-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all">
+                   Acessar Academy <ExternalLink className="h-4 w-4" />
+                </button>
+              </div>
            </div>
 
-           <div className="bg-slate-100 p-8 rounded-[2rem]">
-              <h3 className="text-navy font-bold mb-4">Comunidade & Status</h3>
+           <div className="bg-slate-100 p-8 rounded-[2.5rem] border border-slate-200/50">
+              <h3 className="text-navy font-bold mb-6 flex items-center gap-2">
+                 <LifeBuoy className="h-5 w-5 text-primary" /> Atendimento Humano
+              </h3>
               <div className="space-y-4">
-                 <Link to="/status" className="flex items-center justify-between text-sm font-bold text-slate-600 hover:text-primary transition-all">
-                    Status do Sistema <span className="h-2 w-2 bg-emerald-500 rounded-full" />
+                 <div className="p-4 bg-white rounded-2xl flex items-center gap-3">
+                    <div className="h-8 w-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+                       <MessageCircle className="h-4 w-4 text-emerald-500" />
+                    </div>
+                    <div>
+                       <p className="text-[10px] font-black uppercase text-slate-400">WhatsApp Premium</p>
+                       <p className="text-xs font-bold text-navy">Falar com Consultor</p>
+                    </div>
+                 </div>
+                 <Link to="/status" className="flex items-center justify-between p-4 bg-white rounded-2xl group">
+                    <div className="flex items-center gap-3">
+                       <div className="h-8 w-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                          <Activity className="h-4 w-4 text-blue-500" />
+                       </div>
+                       <span className="text-xs font-bold text-navy">Status Global</span>
+                    </div>
+                    <span className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
                  </Link>
-                 <div className="h-px bg-slate-200" />
-                 <p className="text-[10px] text-slate-400 font-bold uppercase">Tempo médio de resposta: 2h</p>
               </div>
+              <p className="mt-6 text-[10px] text-slate-400 font-bold uppercase text-center">Horário: Seg-Sex, 08h às 18h</p>
            </div>
         </div>
       </div>
