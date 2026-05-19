@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VesselsRouteImport } from './routes/vessels'
+import { Route as SystemMonitorRouteImport } from './routes/system-monitor'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -51,6 +52,11 @@ import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
   path: '/vessels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SystemMonitorRoute = SystemMonitorRouteImport.update({
+  id: '/system-monitor',
+  path: '/system-monitor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SupportRoute = SupportRouteImport.update({
@@ -258,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
+  '/system-monitor': typeof SystemMonitorRoute
   '/vessels': typeof VesselsRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
@@ -296,6 +303,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
+  '/system-monitor': typeof SystemMonitorRoute
   '/vessels': typeof VesselsRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
@@ -337,6 +345,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
+  '/system-monitor': typeof SystemMonitorRoute
   '/vessels': typeof VesselsRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
@@ -379,6 +388,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/status'
     | '/support'
+    | '/system-monitor'
     | '/vessels'
     | '/admin/automation'
     | '/admin/billing'
@@ -417,6 +427,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/status'
     | '/support'
+    | '/system-monitor'
     | '/vessels'
     | '/admin/automation'
     | '/admin/billing'
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/status'
     | '/support'
+    | '/system-monitor'
     | '/vessels'
     | '/admin/automation'
     | '/admin/billing'
@@ -498,6 +510,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   StatusRoute: typeof StatusRoute
   SupportRoute: typeof SupportRoute
+  SystemMonitorRoute: typeof SystemMonitorRoute
   VesselsRoute: typeof VesselsRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthSignupRoute: typeof AuthSignupRoute
@@ -514,6 +527,13 @@ declare module '@tanstack/react-router' {
       path: '/vessels'
       fullPath: '/vessels'
       preLoaderRoute: typeof VesselsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/system-monitor': {
+      id: '/system-monitor'
+      path: '/system-monitor'
+      fullPath: '/system-monitor'
+      preLoaderRoute: typeof SystemMonitorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/support': {
@@ -861,6 +881,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   StatusRoute: StatusRoute,
   SupportRoute: SupportRoute,
+  SystemMonitorRoute: SystemMonitorRoute,
   VesselsRoute: VesselsRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthSignupRoute: AuthSignupRoute,
