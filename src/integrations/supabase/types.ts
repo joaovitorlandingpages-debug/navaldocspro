@@ -152,11 +152,13 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_demo: boolean | null
+          is_pilot: boolean | null
           logo_url: string | null
           name: string
           onboarding_status: string | null
           onboarding_step: number | null
           phone: string | null
+          pilot_feedback_score: number | null
           plan: string | null
           updated_at: string
         }
@@ -168,11 +170,13 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_demo?: boolean | null
+          is_pilot?: boolean | null
           logo_url?: string | null
           name: string
           onboarding_status?: string | null
           onboarding_step?: number | null
           phone?: string | null
+          pilot_feedback_score?: number | null
           plan?: string | null
           updated_at?: string
         }
@@ -184,11 +188,13 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_demo?: boolean | null
+          is_pilot?: boolean | null
           logo_url?: string | null
           name?: string
           onboarding_status?: string | null
           onboarding_step?: number | null
           phone?: string | null
+          pilot_feedback_score?: number | null
           plan?: string | null
           updated_at?: string
         }
@@ -845,6 +851,7 @@ export type Database = {
           ocr_enabled: boolean | null
           process_type: string | null
           region_tag: string | null
+          regional_scope: string | null
           source_origin: string | null
           template_file_url: string | null
           updated_at: string
@@ -871,6 +878,7 @@ export type Database = {
           ocr_enabled?: boolean | null
           process_type?: string | null
           region_tag?: string | null
+          regional_scope?: string | null
           source_origin?: string | null
           template_file_url?: string | null
           updated_at?: string
@@ -897,6 +905,7 @@ export type Database = {
           ocr_enabled?: boolean | null
           process_type?: string | null
           region_tag?: string | null
+          regional_scope?: string | null
           source_origin?: string | null
           template_file_url?: string | null
           updated_at?: string
@@ -1634,6 +1643,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      operational_feedback: {
+        Row: {
+          context_url: string | null
+          created_at: string | null
+          description: string
+          id: string
+          severity: string | null
+          status: string | null
+          subject: string | null
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          context_url?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          severity?: string | null
+          status?: string | null
+          subject?: string | null
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          context_url?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          severity?: string | null
+          status?: string | null
+          subject?: string | null
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       operational_insights: {
         Row: {
@@ -2412,7 +2457,9 @@ export type Database = {
           email: string | null
           id: string
           is_demo_user: boolean | null
+          is_pilot: boolean | null
           name: string | null
+          onboarding_checklist: Json | null
           phone: string | null
           role: string | null
           updated_at: string
@@ -2423,7 +2470,9 @@ export type Database = {
           email?: string | null
           id: string
           is_demo_user?: boolean | null
+          is_pilot?: boolean | null
           name?: string | null
+          onboarding_checklist?: Json | null
           phone?: string | null
           role?: string | null
           updated_at?: string
@@ -2434,7 +2483,9 @@ export type Database = {
           email?: string | null
           id?: string
           is_demo_user?: boolean | null
+          is_pilot?: boolean | null
           name?: string | null
+          onboarding_checklist?: Json | null
           phone?: string | null
           role?: string | null
           updated_at?: string
@@ -2647,6 +2698,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_changelog: {
+        Row: {
+          changes: Json
+          created_at: string | null
+          description: string | null
+          id: string
+          is_published: boolean | null
+          title: string
+          version: string
+        }
+        Insert: {
+          changes?: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_published?: boolean | null
+          title: string
+          version: string
+        }
+        Update: {
+          changes?: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_published?: boolean | null
+          title?: string
+          version?: string
+        }
+        Relationships: []
       }
       system_health: {
         Row: {
@@ -2915,6 +2996,36 @@ export type Database = {
           },
         ]
       }
+      usage_analytics: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          module_name: string
+          time_saved_minutes: number | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          module_name: string
+          time_saved_minutes?: number | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          module_name?: string
+          time_saved_minutes?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       vessel_engines: {
         Row: {
           brand: string | null
@@ -3036,6 +3147,15 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      track_usage: {
+        Args: {
+          p_action: string
+          p_meta?: Json
+          p_module: string
+          p_time_saved?: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

@@ -270,6 +270,7 @@ export default function DocumentLibraryAdmin() {
                    <TableHead className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Categoria</TableHead>
                    <TableHead className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Origem / Status</TableHead>
                    <TableHead className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Versão</TableHead>
+                   <TableHead className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Região</TableHead>
                    <TableHead className="text-right text-[10px] font-black uppercase text-slate-500 tracking-widest">Ações</TableHead>
                 </TableRow>
              </TableHeader>
@@ -300,7 +301,12 @@ export default function DocumentLibraryAdmin() {
                        <div className="flex flex-col">
                           <span className="text-xs font-bold text-navy">v{template.version_number || '1.0'}</span>
                           <span className="text-[9px] text-slate-400 uppercase font-bold">{new Date(template.updated_at).toLocaleDateString()}</span>
-                       </div>
+                        </div>
+                    </TableCell>
+                    <TableCell>
+                       <Badge variant="outline" className="text-[9px] font-bold uppercase border-slate-200">
+                          {template.regional_scope || 'Nacional'}
+                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">

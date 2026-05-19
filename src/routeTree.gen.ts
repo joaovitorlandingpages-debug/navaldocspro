@@ -25,6 +25,7 @@ import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AutomationRouteImport } from './routes/automation'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
@@ -51,6 +52,7 @@ import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
 import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
+import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
 import { Route as AdminBillingRouteImport } from './routes/admin/billing'
 import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
 
@@ -132,6 +134,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const CustomersRoute = CustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalendarRoute = CalendarRouteImport.update({
@@ -265,6 +272,11 @@ const AdminCompaniesRoute = AdminCompaniesRouteImport.update({
   path: '/companies',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCommercialRoute = AdminCommercialRouteImport.update({
+  id: '/commercial',
+  path: '/commercial',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBillingRoute = AdminBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
@@ -283,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
   '/calendar': typeof CalendarRoute
+  '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/document-generator': typeof DocumentGeneratorRoute
@@ -301,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/vessels': typeof VesselsRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
@@ -328,6 +342,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
   '/calendar': typeof CalendarRoute
+  '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
@@ -345,6 +360,7 @@ export interface FileRoutesByTo {
   '/vessels': typeof VesselsRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
@@ -374,6 +390,7 @@ export interface FileRoutesById {
   '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
   '/calendar': typeof CalendarRoute
+  '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/document-generator': typeof DocumentGeneratorRoute
@@ -392,6 +409,7 @@ export interface FileRoutesById {
   '/vessels': typeof VesselsRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
@@ -422,6 +440,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/automation'
     | '/calendar'
+    | '/changelog'
     | '/customers'
     | '/dashboard'
     | '/document-generator'
@@ -440,6 +459,7 @@ export interface FileRouteTypes {
     | '/vessels'
     | '/admin/automation'
     | '/admin/billing'
+    | '/admin/commercial'
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
@@ -467,6 +487,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/automation'
     | '/calendar'
+    | '/changelog'
     | '/customers'
     | '/document-generator'
     | '/documents'
@@ -484,6 +505,7 @@ export interface FileRouteTypes {
     | '/vessels'
     | '/admin/automation'
     | '/admin/billing'
+    | '/admin/commercial'
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
@@ -512,6 +534,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/automation'
     | '/calendar'
+    | '/changelog'
     | '/customers'
     | '/dashboard'
     | '/document-generator'
@@ -530,6 +553,7 @@ export interface FileRouteTypes {
     | '/vessels'
     | '/admin/automation'
     | '/admin/billing'
+    | '/admin/commercial'
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
@@ -559,6 +583,7 @@ export interface RootRouteChildren {
   AnalyticsRoute: typeof AnalyticsRouteWithChildren
   AutomationRoute: typeof AutomationRoute
   CalendarRoute: typeof CalendarRoute
+  ChangelogRoute: typeof ChangelogRoute
   CustomersRoute: typeof CustomersRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
@@ -695,6 +720,13 @@ declare module '@tanstack/react-router' {
       path: '/customers'
       fullPath: '/customers'
       preLoaderRoute: typeof CustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calendar': {
@@ -879,6 +911,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCompaniesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/commercial': {
+      id: '/admin/commercial'
+      path: '/commercial'
+      fullPath: '/admin/commercial'
+      preLoaderRoute: typeof AdminCommercialRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/billing': {
       id: '/admin/billing'
       path: '/billing'
@@ -899,6 +938,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminAutomationRoute: typeof AdminAutomationRoute
   AdminBillingRoute: typeof AdminBillingRoute
+  AdminCommercialRoute: typeof AdminCommercialRoute
   AdminCompaniesRoute: typeof AdminCompaniesRoute
   AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
@@ -912,6 +952,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAutomationRoute: AdminAutomationRoute,
   AdminBillingRoute: AdminBillingRoute,
+  AdminCommercialRoute: AdminCommercialRoute,
   AdminCompaniesRoute: AdminCompaniesRoute,
   AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
@@ -973,6 +1014,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsRoute: AnalyticsRouteWithChildren,
   AutomationRoute: AutomationRoute,
   CalendarRoute: CalendarRoute,
+  ChangelogRoute: ChangelogRoute,
   CustomersRoute: CustomersRoute,
   DashboardRoute: DashboardRouteWithChildren,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
@@ -999,3 +1041,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
