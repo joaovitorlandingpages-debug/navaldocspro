@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/badge"; // This might be wrong, checking imports
+import { Badge } from "@/components/ui/badge";
 import { 
   Zap, 
   BrainCircuit, 
