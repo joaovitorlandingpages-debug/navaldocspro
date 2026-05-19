@@ -53,10 +53,7 @@ export function useProcessAutomation(processId?: string) {
     const newState = await DocumentAutomationEngine.analyzeProcess(processId);
     if (newState) {
       setAutomationState(newState);
-      toast({
-        title: "Análise concluída",
-        description: "O motor de automação atualizou os requisitos do processo.",
-      });
+      toast.success("Análise concluída: O motor de automação atualizou os requisitos do processo.");
       fetchAutomationState(); // Refresh logs too
     }
     setIsLoading(false);
