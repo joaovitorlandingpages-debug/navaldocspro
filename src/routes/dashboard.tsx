@@ -336,10 +336,19 @@ export function RouteContent() {
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
-              <Zap className="h-4 w-4 text-primary" /> Sugestões Inteligentes
+              <Zap className="h-4 w-4 text-primary" /> Inteligência Operacional
             </h2>
-            <button className="text-[10px] font-black uppercase text-primary hover:underline">Ver Todas</button>
+            <div className="flex items-center gap-3">
+               <div className="flex flex-col items-end">
+                  <p className="text-[10px] font-black uppercase text-slate-400">Readiness Score</p>
+                  <p className="text-xs font-bold text-navy">94.2%</p>
+               </div>
+               <div className="h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-primary w-[94.2%]"></div>
+               </div>
+            </div>
           </div>
+
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <div className="bg-navy text-white p-6 rounded-[2rem] border border-white/5 shadow-xl relative overflow-hidden group">
