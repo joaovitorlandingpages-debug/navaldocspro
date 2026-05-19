@@ -25,7 +25,7 @@ interface ProcessChecklistProps {
 
 export function ProcessChecklist({ processId, processTypeId }: ProcessChecklistProps) {
   const { requirements, isLoading: loadingReqs } = useProcessRequirements(processTypeId);
-  const [uploadedDocs, setUploadedDocs] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -33,12 +33,12 @@ export function ProcessChecklist({ processId, processTypeId }: ProcessChecklistP
       setIsLoading(true);
       try {
         const { data, error } = await supabase
-          .from('uploaded_files')
+          .from('documents')
           .select('*')
           .eq('process_id', processId);
         
         if (error) throw error;
-        setUploadedDocs(data || []);
+        setDocuments(data || []);
       } catch (err) {
         console.error("Error fetching documents:", err);
       } finally {
@@ -49,20 +49,14 @@ export function ProcessChecklist({ processId, processTypeId }: ProcessChecklistP
     if (processId) fetchDocs();
   }, [processId]);
 
-  const getDocForRequirement = (templateId: string) => {
-    // This logic might need refinement depending on how we match uploaded docs to templates
-    // For now, let's assume document_type matches template name or we have a template_id in documents (we should add it)
-    return uploadedDocs.find(d => d.document_type === requirements.find(r => r.template_id === templateId)?.template?.name);
-  };
-
   const calculateProgress = () => {
     if (requirements.length === 0) return 0;
     const mandatory = requirements.filter(r => r.is_mandatory);
     if (mandatory.length === 0) return 100;
     
     const completedMandatory = mandatory.filter(r => {
-      const doc = uploadedDocs.find(d => d.category === r.template?.name || d.file_name.includes(r.template?.name || ''));
-      return doc && doc.status === 'validado';
+      const doc = documents.find(d => d.document_type === r.template?.name || d.file_name?.includes(r.template?.name || ''));
+      return doc && doc.compliance_status === 'conforme';
     });
     
     return Math.round((completedMandatory.length / mandatory.length) * 100);
