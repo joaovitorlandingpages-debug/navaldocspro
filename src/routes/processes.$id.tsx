@@ -112,14 +112,12 @@ function ProcessDetail() {
     }
   };
 
-  const timeline = [
-    { title: "Processo criado", date: "10/05/2026 - 09:45", user: "Ricardo Almeida", icon: <Plus className="h-3 w-3" />, color: "bg-blue-500" },
-    { title: "Cliente vinculado", date: "10/05/2026 - 10:15", user: "Ricardo Almeida", icon: <User className="h-3 w-3" />, color: "bg-purple-500" },
-    { title: "OCR: Dados Extraídos", date: "10/05/2026 - 10:16", user: "Sistema IA", desc: "CNH processada e campos preenchidos automaticamente.", icon: <Zap className="h-3 w-3" />, color: "bg-amber-500" },
-    { title: "Doc: Procuração Gerada", date: "10/05/2026 - 10:17", user: "Sistema", desc: "Template de procuração preenchido com dados do cliente.", icon: <Bot className="h-3 w-3" />, color: "bg-indigo-500" },
-    { title: "Documento enviado", date: "11/05/2026 - 14:20", user: "Sistema", desc: "Link de assinatura enviado via WhatsApp.", icon: <FileText className="h-3 w-3" />, color: "bg-blue-400" },
-    { title: "GRU anexada", date: "12/05/2026 - 08:30", user: "Cliente", icon: <FileText className="h-3 w-3" />, color: "bg-green-500" },
-    { title: "Documento validado", date: "12/05/2026 - 11:00", user: "Admin", desc: "RG e CPF validados com sucesso.", icon: <FileCheck className="h-3 w-3" />, color: "bg-cyan-500" },
+  const timelineEvents: any[] = [
+    { id: "1", type: "creation", user: "Ricardo Almeida", description: "Processo aberto no sistema.", date: "2026-05-10T09:45:00Z" },
+    { id: "2", type: "update", user: "Ricardo Almeida", description: "Cliente vinculado e embarcação selecionada.", date: "2026-05-10T10:15:00Z" },
+    { id: "3", type: "update", user: "Sistema IA", description: "OCR: CNH processada e campos preenchidos automaticamente.", date: "2026-05-10T10:16:00Z" },
+    { id: "4", type: "signature", user: "Eng. Mariana", description: "Procuração assinada digitalmente.", date: "2026-05-10T14:20:00Z" },
+    { id: "5", type: "protocol", user: "Sistema", description: "Processo enviado para protocolo na Marinha.", date: "2026-05-11T08:30:00Z" },
   ];
 
   return (
