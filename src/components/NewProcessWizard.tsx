@@ -116,8 +116,12 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   };
 
   const handleCreateProcess = async () => {
-    if (!profile?.company_id) return;
+    if (!profile?.company_id) {
+      toast.error("Vínculo empresarial não encontrado. Conclua o onboarding.");
+      return;
+    }
     
+    console.log("Creating process for company:", profile.company_id);
     setIsSubmitting(true);
     try {
       // 1. Create the process with the correctly formatted process_type_id if applicable
