@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
+import { DocumentCategory, DocumentTemplate } from "@/types/document";
 
 export default function DocumentBase() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,7 +36,7 @@ export default function DocumentBase() {
         .select("*")
         .order("name");
       if (error) throw error;
-      return data;
+      return data as DocumentCategory[];
     }
   });
 
@@ -56,13 +57,13 @@ export default function DocumentBase() {
       
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return data as (DocumentTemplate & { category_info: any })[];
     }
   });
 
-  const filteredTemplates = templates?.filter(t => 
+  const filteredTemplates = templates?.filter((t: DocumentTemplate) => 
     t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const getIcon = (iconName: string) => {
@@ -130,7 +131,7 @@ export default function DocumentBase() {
               <Zap className="h-4 w-4 text-amber-500" />
             </div>
             <h3 className="text-2xl font-bold text-navy">
-              {templates?.filter(t => t.ocr_enabled).length || 0}
+              {templates?.filter((t: DocumentTemplate) => t.ocr_enabled).length || 0}
             </h3>
             <div className="mt-2">
               <Progress value={85} className="h-1" />
@@ -176,7 +177,7 @@ export default function DocumentBase() {
               </Badge>
             </button>
 
-            {categories?.map((cat) => (
+            {categories?.map((cat: DocumentCategory) => (
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
@@ -186,12 +187,12 @@ export default function DocumentBase() {
               >
                 <div className="flex items-center gap-3">
                   <div className="h-4 w-4 opacity-70">
-                    {getIcon(cat.icon)}
+                    {getIcon(cat.icon || "")}
                   </div>
                   <span className="text-xs font-bold uppercase tracking-wider truncate max-w-[150px]">{cat.name}</span>
                 </div>
                 <Badge variant={selectedCategory === cat.id ? "outline" : "secondary"} className="text-[9px] border-white/20">
-                  {templates?.filter(t => t.category_id === cat.id).length || 0}
+                  {templates?.filter((t: DocumentTemplate) => t.category_id === cat.id).length || 0}
                 </Badge>
               </button>
             ))}
@@ -227,7 +228,7 @@ export default function DocumentBase() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredTemplates?.map((template) => (
+            {filteredTemplates?.map((template: any) => (
               <Card key={template.id} className="group hover:shadow-xl transition-all duration-300 border-slate-100 overflow-hidden relative">
                 <div 
                   className="h-1.5 w-full absolute top-0 left-0" 
@@ -236,7 +237,7 @@ export default function DocumentBase() {
                 
                 <CardHeader className="pb-3 pt-6">
                   <div className="flex justify-between items-start mb-3">
-                    <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter" style={{ color: template.category_info?.color, borderColor: template.category_info?.color + '40' }}>
+                    <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter" style={{ color: template.category_info?.color, borderColor: (template.category_info?.color || '#3b82f6') + '40' }}>
                       {template.category || 'Sem Categoria'}
                     </Badge>
                     <DropdownMenu>
