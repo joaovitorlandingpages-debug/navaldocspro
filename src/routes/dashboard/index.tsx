@@ -223,85 +223,93 @@ function OperationsCenter() {
           ) : (
             <div className="grid grid-cols-1 gap-4">
               {filteredProcesses.map((p) => {
-                const auto = p.automation?.[0];
-                const checklist = auto?.checklist_status || [];
-                const mandatoryItems = checklist.filter((i: any) => i.is_mandatory);
-                const completedMandatory = mandatoryItems.filter((i: any) => i.status === 'validated' || i.status === 'uploaded').length;
-                const progress = mandatoryItems.length > 0 ? (completedMandatory / mandatoryItems.length) * 100 : 0;
+                const progress = p.completion_percentage || 0;
 
                 return (
-                  <Card key={p.id} className="bg-white border-slate-100 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all group overflow-hidden">
+                  <Card key={p.id} className={`bg-white border-slate-100 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all group overflow-hidden relative ${p.is_favorite ? 'ring-2 ring-primary/10' : ''}`}>
                     <CardContent className="p-0">
                       <div className="flex flex-col lg:flex-row">
-                        <div className="lg:w-1/4 p-6 border-b lg:border-b-0 lg:border-r border-slate-50">
+                        <div className="lg:w-1/4 p-6 border-b lg:border-b-0 lg:border-r border-slate-50 relative">
+                           <button 
+                             onClick={() => toggleFavorite(p.id, p.is_favorite)}
+                             className={`absolute top-4 right-4 h-8 w-8 rounded-full flex items-center justify-center transition-all ${p.is_favorite ? 'text-amber-500 bg-amber-50' : 'text-slate-200 hover:text-amber-500 hover:bg-amber-50'}`}
+                           >
+                              <Star className={`h-4 w-4 ${p.is_favorite ? 'fill-current' : ''}`} />
+                           </button>
+                           
                            <div className="flex items-center justify-between mb-4">
-                              <Badge className={`${getStatusColor(p.status)} border text-[9px] uppercase font-black`}>
+                              <Badge className={`${getStatusColor(p.status)} border text-[9px] uppercase font-black px-3 py-1 rounded-full`}>
                                 {p.status}
                               </Badge>
-                              {p.priority === 'high' && <Badge className="bg-red-500 text-white border-none text-[8px] uppercase">Urgente</Badge>}
                            </div>
-                           <h4 className="text-sm font-black text-navy group-hover:text-primary transition-colors line-clamp-2 uppercase leading-tight">{p.process_type}</h4>
-                           <p className="text-[10px] text-slate-400 font-mono mt-2">ID: {p.id.substring(0, 8)}</p>
+                           <h4 className="text-sm font-black text-navy group-hover:text-primary transition-colors line-clamp-2 uppercase leading-tight pr-8">{p.process_type}</h4>
                            
-                           {p.protocol_number && (
-                             <div className="mt-4 p-2 bg-navy rounded-lg text-white flex items-center justify-between">
-                                <span className="text-[9px] font-black uppercase opacity-50">Protocolo</span>
-                                <span className="text-xs font-mono font-bold">{p.protocol_number}</span>
-                             </div>
-                           )}
+                           <div className="flex gap-2 mt-3">
+                              {p.priority === 'urgent' || p.priority === 'critical' ? (
+                                <Badge className="bg-red-500 text-white border-none text-[8px] uppercase font-black">Crítico</Badge>
+                              ) : null}
+                              {p.tags?.map((tag: string) => (
+                                <Badge key={tag} variant="outline" className="text-[8px] uppercase border-slate-200">{tag}</Badge>
+                              ))}
+                           </div>
                         </div>
 
                         <div className="lg:w-1/3 p-6 space-y-4 border-b lg:border-b-0 lg:border-r border-slate-50 bg-slate-50/30">
                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm group-hover:border-primary/20 transition-all">
+                              <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm group-hover:scale-110 transition-all">
                                  <User className="h-5 w-5" />
                               </div>
-                              <div>
+                              <div className="min-w-0">
                                  <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Cliente</p>
-                                 <p className="text-xs font-bold text-navy">{p.customers?.name || "N/A"}</p>
+                                 <p className="text-xs font-bold text-navy truncate">{p.customers?.name || "N/A"}</p>
                               </div>
                            </div>
                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm group-hover:border-cyan-200 transition-all">
+                              <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm group-hover:scale-110 transition-all">
                                  <Ship className="h-5 w-5" />
                               </div>
-                              <div>
+                              <div className="min-w-0">
                                  <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Embarcação</p>
-                                 <p className="text-xs font-bold text-navy">{p.vessels?.name || "Não vinculada"}</p>
+                                 <p className="text-xs font-bold text-navy truncate">{p.vessels?.name || "Não vinculada"}</p>
                               </div>
                            </div>
                         </div>
 
-                        <div className="lg:w-1/3 p-6 space-y-4">
+                        <div className="lg:w-1/3 p-6 flex flex-col justify-center space-y-4">
                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
-                              <span className="text-slate-400">Progresso Documental</span>
-                              <span className="text-navy">{Math.round(progress)}%</span>
+                              <div className="flex items-center gap-1.5">
+                                 <Zap className={`h-3 w-3 ${progress === 100 ? 'text-green-500' : 'text-primary'}`} />
+                                 <span className="text-slate-400">Eficiência Operacional</span>
+                              </div>
+                              <span className="text-navy font-black">{Math.round(progress)}%</span>
                            </div>
-                           <Progress value={progress} className="h-1.5" />
+                           <Progress value={progress} className={`h-2 rounded-full ${progress === 100 ? 'bg-green-100' : ''}`} />
                            
-                           <div className="grid grid-cols-2 gap-2 mt-4">
-                              <div className={`p-2 rounded-lg border text-center ${auto?.is_ready_for_generation ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
-                                 <p className="text-[8px] font-black uppercase text-slate-400">Checklist</p>
-                                 <p className={`text-[10px] font-bold ${auto?.is_ready_for_generation ? 'text-emerald-600' : 'text-slate-600'}`}>
-                                    {auto?.is_ready_for_generation ? 'Completo' : 'Pendente'}
-                                 </p>
-                              </div>
-                              <div className={`p-2 rounded-lg border text-center ${p.status === 'signed' ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
-                                 <p className="text-[8px] font-black uppercase text-slate-400">Assinaturas</p>
-                                 <p className={`text-[10px] font-bold ${p.status === 'signed' ? 'text-emerald-600' : 'text-slate-600'}`}>
-                                    {p.status === 'signed' ? 'Concluídas' : 'Pendente'}
-                                 </p>
-                              </div>
+                           <div className="flex items-center justify-between pt-2">
+                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                {p.protocol_number ? `Protocolo: ${p.protocol_number}` : 'Aguardando Protocolo'}
+                              </p>
+                              {p.sla_status === 'warning' && <AlertTriangle className="h-3.5 w-3.5 text-amber-500 animate-pulse" />}
                            </div>
                         </div>
 
                         <div className="lg:w-1/12 p-6 flex lg:flex-col justify-between items-center bg-slate-50/50">
-                           <button className="h-10 w-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/30 transition-all shadow-sm">
-                              <MoreVertical className="h-5 w-5" />
-                           </button>
+                           <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                 <button className="h-10 w-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary transition-all shadow-sm">
+                                    <MoreVertical className="h-5 w-5" />
+                                 </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                                 <DropdownMenuItem className="text-xs font-bold gap-2"><Edit3 className="h-4 w-4" /> Editar Processo</DropdownMenuItem>
+                                 <DropdownMenuItem className="text-xs font-bold gap-2"><Star className="h-4 w-4" /> Alternar Favorito</DropdownMenuItem>
+                                 <DropdownMenuItem className="text-xs font-bold gap-2 text-red-600"><Trash2 className="h-4 w-4" /> Excluir</DropdownMenuItem>
+                              </DropdownMenuContent>
+                           </DropdownMenu>
+
                            <Link to={`/processes/${p.id}`} className="lg:mt-auto">
-                              <button className="h-10 w-10 bg-primary text-white rounded-xl flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/20">
-                                 <ArrowRight className="h-5 w-5" />
+                              <button className="h-10 w-10 bg-navy text-white rounded-xl flex items-center justify-center hover:bg-primary transition-all shadow-lg shadow-navy/20">
+                                 <ChevronRight className="h-5 w-5" />
                               </button>
                            </Link>
                         </div>
