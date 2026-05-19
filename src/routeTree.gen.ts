@@ -37,6 +37,7 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as DebugSystemRouteImport } from './routes/debug.system'
+import { Route as DebugAuthRouteImport } from './routes/debug.auth'
 import { Route as DashboardDocumentsBaseRouteImport } from './routes/dashboard/documents-base'
 import { Route as DashboardComplianceCenterRouteImport } from './routes/dashboard/compliance-center'
 import { Route as BillingSuccessRouteImport } from './routes/billing.success'
@@ -50,6 +51,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
+import { Route as AdminGlobalRouteImport } from './routes/admin/global'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
 import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
@@ -197,6 +199,11 @@ const DebugSystemRoute = DebugSystemRouteImport.update({
   path: '/debug/system',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DebugAuthRoute = DebugAuthRouteImport.update({
+  id: '/debug/auth',
+  path: '/debug/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardDocumentsBaseRoute = DashboardDocumentsBaseRouteImport.update({
   id: '/documents-base',
   path: '/documents-base',
@@ -263,6 +270,11 @@ const AdminLogsRoute = AdminLogsRouteImport.update({
   path: '/logs',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminGlobalRoute = AdminGlobalRouteImport.update({
+  id: '/global',
+  path: '/global',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDocumentsRoute = AdminDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
@@ -325,6 +337,7 @@ export interface FileRoutesByFullPath {
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
+  '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
@@ -338,6 +351,7 @@ export interface FileRoutesByFullPath {
   '/billing/success': typeof BillingSuccessRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -372,6 +386,7 @@ export interface FileRoutesByTo {
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
+  '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
@@ -385,6 +400,7 @@ export interface FileRoutesByTo {
   '/billing/success': typeof BillingSuccessRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin': typeof AdminIndexRoute
@@ -422,6 +438,7 @@ export interface FileRoutesById {
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
+  '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
@@ -435,6 +452,7 @@ export interface FileRoutesById {
   '/billing/success': typeof BillingSuccessRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -473,6 +491,7 @@ export interface FileRouteTypes {
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
+    | '/admin/global'
     | '/admin/logs'
     | '/admin/settings'
     | '/admin/system-report'
@@ -486,6 +505,7 @@ export interface FileRouteTypes {
     | '/billing/success'
     | '/dashboard/compliance-center'
     | '/dashboard/documents-base'
+    | '/debug/auth'
     | '/debug/system'
     | '/processes/$id'
     | '/admin/'
@@ -520,6 +540,7 @@ export interface FileRouteTypes {
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
+    | '/admin/global'
     | '/admin/logs'
     | '/admin/settings'
     | '/admin/system-report'
@@ -533,6 +554,7 @@ export interface FileRouteTypes {
     | '/billing/success'
     | '/dashboard/compliance-center'
     | '/dashboard/documents-base'
+    | '/debug/auth'
     | '/debug/system'
     | '/processes/$id'
     | '/admin'
@@ -569,6 +591,7 @@ export interface FileRouteTypes {
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
+    | '/admin/global'
     | '/admin/logs'
     | '/admin/settings'
     | '/admin/system-report'
@@ -582,6 +605,7 @@ export interface FileRouteTypes {
     | '/billing/success'
     | '/dashboard/compliance-center'
     | '/dashboard/documents-base'
+    | '/debug/auth'
     | '/debug/system'
     | '/processes/$id'
     | '/admin/'
@@ -618,6 +642,7 @@ export interface RootRouteChildren {
   BillingFailureRoute: typeof BillingFailureRoute
   BillingSubscriptionRoute: typeof BillingSubscriptionRoute
   BillingSuccessRoute: typeof BillingSuccessRoute
+  DebugAuthRoute: typeof DebugAuthRoute
   DebugSystemRoute: typeof DebugSystemRoute
 }
 
@@ -819,6 +844,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DebugSystemRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/debug/auth': {
+      id: '/debug/auth'
+      path: '/debug/auth'
+      fullPath: '/debug/auth'
+      preLoaderRoute: typeof DebugAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/documents-base': {
       id: '/dashboard/documents-base'
       path: '/documents-base'
@@ -910,6 +942,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLogsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/global': {
+      id: '/admin/global'
+      path: '/global'
+      fullPath: '/admin/global'
+      preLoaderRoute: typeof AdminGlobalRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/documents': {
       id: '/admin/documents'
       path: '/documents'
@@ -962,6 +1001,7 @@ interface AdminRouteChildren {
   AdminCompaniesRoute: typeof AdminCompaniesRoute
   AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
+  AdminGlobalRoute: typeof AdminGlobalRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSystemReportRoute: typeof AdminSystemReportRoute
@@ -976,6 +1016,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCompaniesRoute: AdminCompaniesRoute,
   AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
+  AdminGlobalRoute: AdminGlobalRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSystemReportRoute: AdminSystemReportRoute,
@@ -1057,6 +1098,7 @@ const rootRouteChildren: RootRouteChildren = {
   BillingFailureRoute: BillingFailureRoute,
   BillingSubscriptionRoute: BillingSubscriptionRoute,
   BillingSuccessRoute: BillingSuccessRoute,
+  DebugAuthRoute: DebugAuthRoute,
   DebugSystemRoute: DebugSystemRoute,
 }
 export const routeTree = rootRouteImport

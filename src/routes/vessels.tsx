@@ -98,8 +98,12 @@ function Vessels() {
 
   const handleCreateVessel = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!companyId || !formData.customer_id) {
-      toast.error("Selecione um cliente");
+    if (!companyId) {
+      toast.error("Erro: Empresa não identificada.");
+      return;
+    }
+    if (!formData.customer_id) {
+      toast.error("Selecione um cliente para vincular a embarcação");
       return;
     }
     setIsSubmitting(true);
