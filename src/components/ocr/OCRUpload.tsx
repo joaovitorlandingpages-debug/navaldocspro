@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, Camera, FileText, CheckCircle2, Loader2, X, Info, Zap } from "lucide-react";
+import { Upload, Camera, FileText, CheckCircle2, Loader2, X, Info, Zap, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useOCR } from "@/hooks/useOCR";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { Progress } from "@/components/ui/progress";
 
 interface OCRUploadProps {
   companyId: string;
@@ -14,20 +15,27 @@ interface OCRUploadProps {
 
 export function OCRUpload({ companyId }: OCRUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [docType, setDocType] = useState<string>("AUTO_DETECT");
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { createJob } = useOCR();
+  const { createBatchJobs } = useOCR();
   const { checkLimit } = usePlanLimits();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      processFile(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setSelectedFiles(prev => [...prev, ...files]);
     }
   };
 
-  const processFile = async (file: File) => {
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const processBatch = async () => {
+    if (selectedFiles.length === 0) return;
+
     const limitStatus = await checkLimit('ocr');
     if (limitStatus.reached) {
       toast.error("Limite atingido", {
@@ -37,71 +45,76 @@ export function OCRUpload({ companyId }: OCRUploadProps) {
     }
 
     setIsUploading(true);
-    setPreview(URL.createObjectURL(file));
+    setUploadProgress(10);
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      const filePath = `${companyId}/ocr/${fileName}`;
+      const uploadedFilesInfo = [];
+      
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `${companyId}/ocr/${fileName}`;
 
-      // 1. Upload to bucket
-      const { error: uploadError } = await supabase.storage
-        .from('ocr-documents')
-        .upload(filePath, file);
+        // 1. Upload to bucket
+        const { error: uploadError } = await supabase.storage
+          .from('ocr-documents')
+          .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-      // 2. Register in uploaded_files
-      const { data: fileData, error: dbError } = await supabase
-        .from('uploaded_files')
-        .insert({
-          company_id: companyId,
-          file_name: file.name,
-          file_url: filePath,
-          category: 'ocr_analysis',
-          file_type: file.type,
-          file_size: file.size,
-          status: 'pending'
-        })
-        .select()
-        .single();
+        // 2. Register in uploaded_files
+        const { data: fileData, error: dbError } = await supabase
+          .from('uploaded_files')
+          .insert({
+            company_id: companyId,
+            file_name: file.name,
+            file_url: filePath,
+            category: 'ocr_analysis',
+            file_type: file.type,
+            file_size: file.size,
+            status: 'pending'
+          })
+          .select()
+          .single();
 
-      if (dbError) throw dbError;
+        if (dbError) throw dbError;
+        uploadedFilesInfo.push({ file, id: fileData.id });
+        
+        setUploadProgress(10 + ((i + 1) / selectedFiles.length) * 80);
+      }
 
-      // 3. Create OCR Job
-      await createJob.mutateAsync({
-        fileId: fileData.id,
+      // 3. Create Batch OCR Jobs
+      await createBatchJobs.mutateAsync({
+        files: uploadedFilesInfo,
         companyId: companyId,
         docType: docType
       });
 
-      toast.success("Enviado para análise inteligente!");
+      setUploadProgress(100);
+      toast.success(`${selectedFiles.length} documentos enviados para análise inteligente!`);
+      setSelectedFiles([]);
     } catch (error: any) {
-      toast.error("Erro no upload: " + error.message);
-      setPreview(null);
+      toast.error("Erro no processamento em lote: " + error.message);
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
-  };
-
-  const clearPreview = () => {
-    setPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
     <Card className="p-8 border-dashed border-2 bg-slate-50/50 hover:bg-slate-50 transition-all group rounded-[2.5rem] relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -mr-10 -mt-10 group-hover:bg-primary/10 transition-colors"></div>
       
-      {!preview ? (
+      {selectedFiles.length === 0 ? (
         <div className="flex flex-col items-center justify-center space-y-6 py-8 text-center relative z-10">
           <div className="h-24 w-24 bg-white rounded-3xl shadow-xl shadow-primary/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 border border-slate-100">
             <Upload className="h-10 w-10 text-primary" />
           </div>
           <div className="space-y-2">
-            <h4 className="text-xl font-black text-navy uppercase tracking-tight">IA Scanner Naval</h4>
+            <h4 className="text-xl font-black text-navy uppercase tracking-tight">IA Scanner Naval Multi-Doc</h4>
             <p className="text-xs text-slate-500 max-w-xs mx-auto font-medium">
-              Extraia dados técnicos e pessoais de documentos oficiais com 98% de precisão.
+              Envie um ou múltiplos documentos de uma vez. Nossa IA fará o resto.
             </p>
           </div>
 
@@ -130,7 +143,7 @@ export function OCRUpload({ companyId }: OCRUploadProps) {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
                 >
-                  <FileText className="h-4 w-4" /> Selecionar Arquivo
+                  <FileText className="h-4 w-4" /> Selecionar Arquivos
                 </Button>
                 <Button 
                   variant="outline"
@@ -146,61 +159,71 @@ export function OCRUpload({ companyId }: OCRUploadProps) {
             type="file" 
             ref={fileInputRef} 
             className="hidden" 
+            multiple
             accept="image/*,application/pdf"
             onChange={handleFileSelect}
           />
-
-          <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full border border-blue-100">
-             <Zap className="h-3 w-3 text-blue-500" />
-             <p className="text-[9px] font-black text-blue-700 uppercase tracking-widest">Processamento Criptografado</p>
-          </div>
         </div>
       ) : (
-        <div className="relative rounded-[2rem] overflow-hidden aspect-video bg-navy flex items-center justify-center border-4 border-white shadow-2xl">
-          <img src={preview} alt="Preview" className="max-h-full max-w-full object-contain opacity-40 blur-[2px]" />
-          
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-white space-y-6">
-            {isUploading ? (
-              <>
-                <div className="relative">
-                   <Loader2 className="h-16 w-16 animate-spin text-primary opacity-50" />
-                   <Zap className="h-6 w-6 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
-                </div>
-                <div className="text-center space-y-1">
-                   <p className="text-sm font-black uppercase tracking-[0.2em]">Otimizando Imagem</p>
-                   <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Extraindo metadados via Visão Computacional...</p>
-                </div>
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="h-16 w-16 text-green-500 animate-in zoom-in-50 duration-500" />
-                <div className="text-center space-y-1">
-                   <p className="text-sm font-black uppercase tracking-[0.2em]">Upload Concluído</p>
-                   <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest text-center">IA identificou o documento como: <span className="text-primary">{docType}</span></p>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="absolute top-6 right-6 text-white hover:bg-white/10 rounded-full h-10 w-10"
-                  onClick={clearPreview}
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-                <div className="pt-4">
-                   <Button className="bg-white text-navy rounded-xl h-10 px-8 font-black uppercase text-[10px] tracking-widest" onClick={clearPreview}>
-                      Processar Outro
-                   </Button>
-                </div>
-              </>
-            )}
+        <div className="space-y-6 relative z-10">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
+              <ListChecks className="h-4 w-4 text-primary" /> Arquivos Selecionados ({selectedFiles.length})
+            </h4>
+            <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase text-red-500" onClick={() => setSelectedFiles([])}>
+              Limpar Tudo
+            </Button>
           </div>
 
-          {/* Scanning Line Animation */}
+          <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+            {selectedFiles.map((file, idx) => (
+              <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100 group/item">
+                <div className="flex items-center gap-3 truncate">
+                  <div className="h-8 w-8 bg-slate-50 rounded flex items-center justify-center shrink-0">
+                    <FileText className="h-4 w-4 text-slate-400" />
+                  </div>
+                  <span className="text-[11px] font-bold text-navy truncate">{file.name}</span>
+                </div>
+                <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover/item:opacity-100 transition-opacity" onClick={() => removeFile(idx)}>
+                  <X className="h-3.5 w-3.5 text-slate-400" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
           {isUploading && (
-            <div className="absolute top-0 left-0 w-full h-[2px] bg-primary shadow-[0_0_20px_rgba(var(--primary),1)] animate-scan z-20"></div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-[9px] font-black uppercase text-slate-400">
+                <span>Enviando para Nuvem...</span>
+                <span>{Math.round(uploadProgress)}%</span>
+              </div>
+              <Progress value={uploadProgress} className="h-1.5" />
+            </div>
           )}
+
+          <div className="pt-4 flex gap-3">
+             <Button 
+               variant="outline" 
+               className="flex-1 rounded-xl h-12 font-black uppercase text-[10px] tracking-widest"
+               onClick={() => fileInputRef.current?.click()}
+               disabled={isUploading}
+             >
+               Adicionar Mais
+             </Button>
+             <Button 
+               className="flex-1 bg-navy text-white rounded-xl h-12 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-navy/20 gap-2"
+               onClick={processBatch}
+               disabled={isUploading}
+             >
+               {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4 text-primary" />}
+               Iniciar OCR Lote
+             </Button>
+          </div>
         </div>
       )}
+
+      {/* Background decoration */}
+      <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-navy/5 rounded-tr-[100px] group-hover:bg-navy/10 transition-colors"></div>
     </Card>
   );
 }
