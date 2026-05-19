@@ -143,6 +143,24 @@ function ProcessDetail() {
     { id: "2", type: "update", user: "Ricardo Almeida", description: "Cliente vinculado e embarcação selecionada.", date: process?.created_at || "2026-05-10T10:15:00Z" },
   ];
 
+  if (selectedTemplateForGen) {
+    return (
+      <div className="max-w-7xl mx-auto p-8">
+        <DocumentPreviewEditor 
+          template={selectedTemplateForGen}
+          processData={process}
+          onSave={(finalContent) => {
+            setSelectedTemplateForGen(null);
+            // Simular salvamento
+            toast.success("Documento finalizado e anexado.");
+            fetchProcess();
+          }}
+          onCancel={() => setSelectedTemplateForGen(null)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20 max-w-7xl mx-auto">
       {/* Header */}
