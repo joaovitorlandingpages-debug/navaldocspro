@@ -320,9 +320,14 @@ function Index() {
                  </ul>
               </div>
            </div>
-           <div className="pt-8 border-t border-slate-800 text-center text-xs">
-              <p>&copy; {new Date().getFullYear()} NavalDocs Pro - Todos os direitos reservados. Marinha do Brasil e DPC são marcas registradas de seus respectivos órgãos.</p>
-           </div>
+            <div className="pt-8 border-t border-slate-800 text-center text-[10px] space-y-2">
+               <p className="opacity-40">&copy; {new Date().getFullYear()} NavalDocs Pro - Todos os direitos reservados. Marinha do Brasil e DPC são marcas registradas de seus respectivos órgãos.</p>
+               <div className="flex justify-center items-center gap-4 opacity-30 uppercase tracking-[0.2em] font-black">
+                  <span>v15.0 Absolute Enterprise</span>
+                  <div className="h-1 w-1 bg-primary rounded-full" />
+                  <span>Gold Stable Release</span>
+               </div>
+            </div>
         </div>
       </footer>
     </div>

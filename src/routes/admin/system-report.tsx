@@ -113,8 +113,9 @@ function SystemReportPage() {
                       { name: "Fluxo de Assinatura Digital", status: "Produção", desc: "Hash de integridade e IP logs ativos." },
                       { name: "Infraestrutura SaaS (Multi-tenant)", status: "Produção", desc: "Isolamento de dados via Supabase RLS verificado." },
                       { name: "Sistema de Demonstração Comercial", status: "Pronto", desc: "Dados fictícios e ambiente de simulação ativos." },
-                      { name: "Batch OCR & Processing Queue", status: "Pronto", desc: "Suporte a múltiplos uploads simultâneos." },
-                  ].map((m, i) => (
+                       { name: "Batch OCR & Processing Queue", status: "Pronto", desc: "Suporte a múltiplos uploads simultâneos." },
+                       { name: "Consolidação Global (v15.0)", status: "Pronto", desc: "Arquitetura e performance validadas para escala nacional." },
+                   ].map((m, i) => (
                      <div key={i} className="p-6 border-b border-slate-50 flex items-center justify-between group hover:bg-slate-50 transition-all">
                         <div className="flex items-center gap-4">
                            <div className="h-10 w-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center">
