@@ -53,18 +53,20 @@ export function FeedbackButton() {
 
   return (
     <>
-      <button 
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-8 left-8 z-[90] bg-navy text-white p-4 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all group"
-      >
-        <MessageSquare className="h-6 w-6" />
-        <span className="absolute left-full ml-4 bg-navy text-white text-[10px] font-black uppercase tracking-widest py-2 px-4 rounded-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-all whitespace-nowrap">
-          Feedback Operacional
-        </span>
-      </button>
+      {!profile || window.location.pathname.startsWith('/auth') ? null : (
+        <button 
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-8 left-4 md:left-8 z-[80] bg-navy text-white p-4 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all group"
+        >
+          <MessageSquare className="h-6 w-6" />
+          <span className="absolute left-full ml-4 bg-navy text-white text-[10px] font-black uppercase tracking-widest py-2 px-4 rounded-xl opacity-0 md:group-hover:opacity-100 pointer-events-none transition-all whitespace-nowrap">
+            Feedback Operacional
+          </span>
+        </button>
+      )}
 
       {isOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-navy/20 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-navy/20 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="bg-navy p-8 text-white relative">
               <button 

@@ -26,8 +26,21 @@ interface Insight {
 }
 
 export function IntelligentAssistant({ processId }: { processId?: string }) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const { data: profile } = useQuery({
+    queryKey: ['auth-profile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      return data;
+    }
+  });
+
+  const isAuthPage = typeof window !== 'undefined' && (window.location.pathname.startsWith('/auth') || window.location.pathname === '/');
+
+  if (!profile || isAuthPage) return null;
 
   const { data: insights } = useQuery({
     queryKey: ['operational_insights', processId],
@@ -71,17 +84,17 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
   if (!isOpen) return (
     <button 
       onClick={() => setIsOpen(true)}
-      className="fixed bottom-24 right-8 z-[100] bg-primary text-navy p-4 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all group animate-in zoom-in duration-300"
+      className="fixed bottom-24 right-4 md:right-8 z-[80] bg-primary text-navy p-4 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all group animate-in zoom-in duration-300"
     >
       <Bot className="h-6 w-6" />
-      <span className="absolute right-full mr-4 bg-navy text-white text-[10px] font-black uppercase tracking-widest py-2 px-4 rounded-xl opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap">
+      <span className="absolute right-full mr-4 bg-navy text-white text-[10px] font-black uppercase tracking-widest py-2 px-4 rounded-xl opacity-0 md:group-hover:opacity-100 transition-all whitespace-nowrap pointer-events-none">
         Assistente Naval IA
       </span>
     </button>
   );
 
   return (
-    <div className={`fixed bottom-24 right-8 z-[100] w-full max-w-sm bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden transition-all duration-500 animate-in slide-in-from-bottom-8 ${isMinimized ? 'h-20' : 'h-auto'}`}>
+    <div className={`fixed bottom-8 right-4 md:bottom-24 md:right-8 z-[80] w-[calc(100%-2rem)] max-w-sm bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden transition-all duration-500 animate-in slide-in-from-bottom-8 ${isMinimized ? 'h-20' : 'h-auto max-h-[80vh] md:max-h-none'}`}>
        <div className="bg-navy p-6 text-white relative flex items-center justify-between">
           <div className="flex items-center gap-4">
              <div className="h-10 w-10 bg-primary/20 rounded-xl flex items-center justify-center relative">
