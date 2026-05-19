@@ -4,7 +4,7 @@ import {
   Clock, CheckCircle2, AlertCircle, MoreHorizontal, 
   Download, Share2, PlayCircle, MessageSquare, Plus,
   FileCheck, History, Info, Zap, Bot, Eye, Trash2,
-  Image as ImageIcon, Send, Loader2, Target
+  Image as ImageIcon, Send, Loader2, Target, Ban
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
