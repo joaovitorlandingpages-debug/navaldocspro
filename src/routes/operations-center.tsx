@@ -112,6 +112,9 @@ function OperationsCenterPage() {
           </Card>
         ))}
       </div>
+      
+      {/* Visual Analytics Section */}
+      <OperationalCharts />
 
       <div className="grid lg:grid-cols-12 gap-8">
         {/* Pipeline Operacional (8 colunas) */}
