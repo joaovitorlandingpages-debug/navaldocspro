@@ -96,6 +96,7 @@ function DashboardLayout() {
   const navItems = [
     { name: "Operacional", icon: <LayoutDashboard className="h-5 w-5 text-primary" />, path: "/dashboard" },
     { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
+    { name: "Compliance", icon: <ShieldCheck className="h-5 w-5 text-emerald-500" />, path: "/dashboard/compliance-center" },
     { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
     { name: "Central IA", icon: <Zap className="h-5 w-5" />, path: "/ai-center" },
     { name: "Automação", icon: <Cpu className="h-5 w-5" />, path: "/automation" },
@@ -103,7 +104,7 @@ function DashboardLayout() {
     { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
     { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
-    { name: "Base Documental", icon: <Database className="h-5 w-5 text-primary" />, path: "/dashboard/documents-base" },
+    { name: "Base Documental", icon: <Database className="h-5 w-5" />, path: "/dashboard/documents-base" },
     { name: "Meus Arquivos", icon: <FileText className="h-5 w-5" />, path: "/documents" },
     { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
     { name: "Assinatura", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
