@@ -175,7 +175,7 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
                           <FileCheck className="h-4 w-4" />
                         </Button>
                       </>
-                    ) : req.document_role === 'gerado' ? (
+                    ) : (req.document_role as string) === 'gerado' ? (
                       <Button 
                         variant="outline" 
                         size="sm" 
