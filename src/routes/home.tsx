@@ -123,34 +123,44 @@ function Index() {
           </div>
         </section>
 
-        {/* Problems/Solutions */}
+        {/* Features Grid */}
         <section id="solucao" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-4 mb-16">
-            <h2 className="text-3xl lg:text-5xl font-bold text-navy">Chega de planilhas e pastas físicas</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Desenvolvemos as ferramentas certas para quem lida com a complexidade do mar todos os dias.</p>
+          <div className="text-center space-y-4 mb-20">
+            <h2 className="text-3xl lg:text-5xl font-black text-navy uppercase tracking-tighter">O Ecossistema Naval Completo</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Desenvolvemos o primeiro sistema operacional brasileiro focado 100% na eficiência marítima.</p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-8 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mb-6">
-                <FileText className="h-6 w-6" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="p-8 rounded-[2rem] bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+              <div className="h-14 w-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                <Zap className="h-7 w-7" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Automação de Documentos</h3>
-              <p className="text-muted-foreground">Gere memoriais descritivos, ARTs e certificados com apenas alguns cliques usando templates inteligentes.</p>
+              <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-3">OCR Vision IA</h3>
+              <p className="text-sm text-slate-500 leading-relaxed font-medium">Extração automática de dados de CNH, RG, TIE e Notas Fiscais com 98% de precisão.</p>
             </div>
-            <div className="p-8 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mb-6">
-                <Ship className="h-6 w-6" />
+
+            <div className="p-8 rounded-[2rem] bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+              <div className="h-14 w-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 transition-transform">
+                <Cpu className="h-7 w-7" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Gestão de Embarcações</h3>
-              <p className="text-muted-foreground">Controle histórico, vistorias e datas de renovação de toda a frota dos seus clientes em tempo real.</p>
+              <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-3">Automação de Fluxo</h3>
+              <p className="text-sm text-slate-500 leading-relaxed font-medium">Motor de regras que gera tarefas e documentos automaticamente conforme o progresso.</p>
             </div>
-            <div className="p-8 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mb-6">
-                <Users className="h-6 w-6" />
+
+            <div className="p-8 rounded-[2rem] bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+              <div className="h-14 w-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 mb-6 group-hover:scale-110 transition-transform">
+                <FileText className="h-7 w-7" />
               </div>
-              <h3 className="text-xl font-bold mb-3">CRM para Despachantes</h3>
-              <p className="text-muted-foreground">Acompanhe o status de cada processo na Marinha e mantenha seus clientes informados automaticamente.</p>
+              <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-3">Gerador Pro</h3>
+              <p className="text-sm text-slate-500 leading-relaxed font-medium">Criação instantânea de memoriais descritivos e requerimentos DPC com dados oficiais.</p>
+            </div>
+
+            <div className="p-8 rounded-[2rem] bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+              <div className="h-14 w-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-600 mb-6 group-hover:scale-110 transition-transform">
+                <Activity className="h-7 w-7" />
+              </div>
+              <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-3">Torre de Controle</h3>
+              <p className="text-sm text-slate-500 leading-relaxed font-medium">Monitoramento em tempo real de SLAs, prazos e produtividade da sua equipe técnica.</p>
             </div>
           </div>
         </section>
