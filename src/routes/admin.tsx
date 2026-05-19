@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, Navigate } from "@tanstack/react-router";
 import { 
   ShieldCheck, 
   Users, 
@@ -19,7 +19,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Navigate } from "@tanstack/react-router";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
