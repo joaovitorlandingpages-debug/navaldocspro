@@ -42,15 +42,14 @@ function DashboardLayout() {
   const [quotaWarnings, setQuotaWarnings] = useState<string[]>([]);
   const navigate = useNavigate();
 
-
   useEffect(() => {
     if (!loading) {
       if (!profile) {
+        console.log("No profile found, redirecting to login...");
         navigate({ to: "/auth/login" });
       } else if (profile.companies?.onboarding_status === 'pending' && window.location.pathname !== '/onboarding') {
         navigate({ to: "/onboarding" });
       } else if (profile.companies?.onboarding_status === 'completed') {
-        // If just completed but maybe still on low step or first login
         const hasSeenTour = localStorage.getItem(`tour_seen_${profile.company_id}`);
         if (!hasSeenTour) {
           setShowTour(true);
@@ -58,6 +57,17 @@ function DashboardLayout() {
       }
     }
   }, [profile, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-navy gap-4">
+        <Anchor className="h-12 w-12 text-primary animate-spin" />
+        <p className="text-white/60 text-xs font-black uppercase tracking-widest animate-pulse">Sincronizando Operações...</p>
+      </div>
+    );
+  }
+
+  if (!profile) return null; // Prevent flash of content before redirect
 
   useEffect(() => {
     const checkAllLimits = async () => {
