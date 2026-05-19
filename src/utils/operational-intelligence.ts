@@ -9,12 +9,12 @@ export async function checkOperationalAnomalies(processId: string, companyId: st
 
     if (!documents || documents.length === 0) return;
 
-    const anomalies = [];
+    const anomalies: any[] = [];
 
     // 1. Detect Divergent Motor Numbers in OCR Data
     const motorNumbers = documents
-      .filter(d => d.extracted_data && d.extracted_data.motor_number)
-      .map(d => d.extracted_data.motor_number);
+      .filter((d: any) => d.extracted_data && d.extracted_data.motor_number)
+      .map((d: any) => d.extracted_data.motor_number);
     
     if (new Set(motorNumbers).size > 1) {
       anomalies.push({
@@ -27,7 +27,7 @@ export async function checkOperationalAnomalies(processId: string, companyId: st
 
     // 2. Detect Expired Documents
     const now = new Date();
-    documents.forEach(doc => {
+    documents.forEach((doc: any) => {
       if (doc.expiry_date && new Date(doc.expiry_date) < now) {
         anomalies.push({
           alert_type: 'expired',
@@ -39,7 +39,7 @@ export async function checkOperationalAnomalies(processId: string, companyId: st
     });
 
     // 3. Detect Missing GRU
-    const hasGru = documents.some(d => d.document_type === 'FINANCIAL_GRU');
+    const hasGru = documents.some((d: any) => d.document_type === 'FINANCIAL_GRU');
     if (!hasGru) {
       anomalies.push({
         alert_type: 'missing_data',
