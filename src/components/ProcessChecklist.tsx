@@ -3,12 +3,13 @@ import {
   FileText, Check, Clock, AlertCircle, 
   Plus, Download, Eye, FileCheck, 
   Loader2, AlertTriangle, ShieldCheck, Signature,
-  Zap, Info, Ban
+  Zap, Info, Ban, FolderArchive, Package
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useProcessRequirements } from "@/hooks/useProcessRequirements";
+import { useProcessPackage } from "@/hooks/useProcessPackages";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
@@ -21,10 +22,12 @@ import {
 interface ProcessChecklistProps {
   processId: string;
   processTypeId?: string;
+  processTypeSlug?: string;
 }
 
-export function ProcessChecklist({ processId, processTypeId }: ProcessChecklistProps) {
+export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: ProcessChecklistProps) {
   const { requirements, isLoading: loadingReqs } = useProcessRequirements(processTypeId);
+  const { pkg, isLoading: loadingPkg } = useProcessPackage(processTypeSlug);
   const [documents, setDocuments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
