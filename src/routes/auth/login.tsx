@@ -24,15 +24,29 @@ function LoginComponent() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
 
+      // Buscar perfil para redirecionamento correto
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', authData.user.id)
+        .maybeSingle();
+
       toast.success("Login realizado com sucesso!");
-      navigate({ to: "/dashboard" });
+
+      if (profile?.role === 'admin_master_global') {
+        navigate({ to: "/admin" }); // Redirecionando para /admin enquanto /admin/global não existe ou é o mesmo
+      } else if (profile?.role === 'admin_master') {
+        navigate({ to: "/admin" });
+      } else {
+        navigate({ to: "/dashboard" });
+      }
     } catch (error: any) {
       toast.error(error.message || "Erro ao realizar login");
     } finally {
