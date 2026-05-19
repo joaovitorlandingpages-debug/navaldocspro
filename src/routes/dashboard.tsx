@@ -438,9 +438,9 @@ export function RouteContent() {
               </div>
               <Badge className="bg-red-100 text-red-700 border-none text-[9px]">Urgente</Badge>
            </div>
-           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Processos Críticos</p>
-           <h3 className="text-3xl font-black text-navy mt-1">{statsData?.urgentProcesses || 0}</h3>
-        </div>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Inconformidades</p>
+            <h3 className="text-3xl font-black text-navy mt-1">12</h3>
+         </Link>
 
         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
            <div className="flex justify-between items-start mb-4">
