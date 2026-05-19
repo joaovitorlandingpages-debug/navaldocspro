@@ -13,7 +13,8 @@ import {
   FileText,
   Zap,
   Globe,
-  CheckCircle2
+  CheckCircle2,
+  TrendingUp
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -45,6 +46,7 @@ function AdminLayout() {
 
   const adminNavItems = [
     { name: "Global Ops", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },
+    { name: "Comercial", icon: <TrendingUp className="h-5 w-5" />, path: "/admin/commercial" },
     { name: "Empresas", icon: <Building className="h-5 w-5" />, path: "/admin/companies" },
     { name: "Billing Global", icon: <CreditCard className="h-5 w-5" />, path: "/admin/billing" },
     { name: "Biblioteca Master", icon: <FileText className="h-5 w-5" />, path: "/admin/document-library" },
