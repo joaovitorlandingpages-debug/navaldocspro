@@ -105,6 +105,13 @@ export const useFiles = (filters?: { customerId?: string; vesselId?: string; pro
         .single();
 
       if (error) throw error;
+
+      // Trigger automation engine if processId is present
+      if (processId) {
+        DocumentAutomationEngine.analyzeProcess(processId);
+        DocumentAutomationEngine.logEvent(processId, 'upload_complete', `Novo arquivo enviado: ${file.name}`);
+      }
+
       return data;
     },
     onSuccess: () => {
