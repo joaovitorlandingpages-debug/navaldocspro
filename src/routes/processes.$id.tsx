@@ -225,11 +225,23 @@ function ProcessDetail() {
                      <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between">
                         <div>
                            <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
-                              <CheckCircle2 className="h-5 w-5 text-green-500" /> Resumo do Status
+                              <Target className="h-5 w-5 text-primary" /> Progresso do SLA
                            </h3>
-                           <p className="text-sm font-medium text-slate-500 mb-4">Acompanhe o status geral da documentação na aba Checklist Inteligente.</p>
+                           <div className="space-y-4">
+                              <div className="flex justify-between items-end">
+                                 <div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status do Prazo</p>
+                                    <p className="text-sm font-bold text-navy">No prazo operacional</p>
+                                 </div>
+                                 <p className="text-xs font-black text-primary uppercase">80%</p>
+                              </div>
+                              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                 <div className="h-full bg-primary rounded-full" style={{ width: '80%' }} />
+                              </div>
+                              <p className="text-[10px] text-slate-400 italic">Previsão de conclusão em 2 dias úteis.</p>
+                           </div>
                         </div>
-                        <div className="bg-slate-50 p-4 rounded-2xl">
+                        <div className="bg-slate-50 p-4 rounded-2xl mt-6">
                            <p className="text-xs text-slate-500 leading-relaxed font-medium">{process?.notes || "Nenhuma observação interna registrada."}</p>
                         </div>
                      </div>
