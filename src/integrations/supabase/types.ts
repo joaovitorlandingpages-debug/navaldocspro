@@ -959,12 +959,15 @@ export type Database = {
           extracted_data: Json | null
           file_url: string | null
           id: string
+          is_favorite: boolean | null
           issue_date: string | null
           ocr_confidence_alerts: Json | null
           process_id: string | null
           status: string
+          thumbnail_url: string | null
           updated_at: string
           validation_errors: Json | null
+          version_history: Json | null
           vessel_id: string | null
         }
         Insert: {
@@ -977,12 +980,15 @@ export type Database = {
           extracted_data?: Json | null
           file_url?: string | null
           id?: string
+          is_favorite?: boolean | null
           issue_date?: string | null
           ocr_confidence_alerts?: Json | null
           process_id?: string | null
           status?: string
+          thumbnail_url?: string | null
           updated_at?: string
           validation_errors?: Json | null
+          version_history?: Json | null
           vessel_id?: string | null
         }
         Update: {
@@ -995,12 +1001,15 @@ export type Database = {
           extracted_data?: Json | null
           file_url?: string | null
           id?: string
+          is_favorite?: boolean | null
           issue_date?: string | null
           ocr_confidence_alerts?: Json | null
           process_id?: string | null
           status?: string
+          thumbnail_url?: string | null
           updated_at?: string
           validation_errors?: Json | null
+          version_history?: Json | null
           vessel_id?: string | null
         }
         Relationships: [
@@ -2022,6 +2031,7 @@ export type Database = {
           id: string
           is_blocked: boolean | null
           is_draft: boolean | null
+          is_favorite: boolean | null
           last_automation_run: string | null
           missing_signatures_count: number | null
           notes: string | null
@@ -2037,6 +2047,7 @@ export type Database = {
           stalled_since: string | null
           started_at: string | null
           status: string
+          tags: string[] | null
           target_completion_at: string | null
           technical_manager_id: string | null
           updated_at: string
@@ -2059,6 +2070,7 @@ export type Database = {
           id?: string
           is_blocked?: boolean | null
           is_draft?: boolean | null
+          is_favorite?: boolean | null
           last_automation_run?: string | null
           missing_signatures_count?: number | null
           notes?: string | null
@@ -2074,6 +2086,7 @@ export type Database = {
           stalled_since?: string | null
           started_at?: string | null
           status?: string
+          tags?: string[] | null
           target_completion_at?: string | null
           technical_manager_id?: string | null
           updated_at?: string
@@ -2096,6 +2109,7 @@ export type Database = {
           id?: string
           is_blocked?: boolean | null
           is_draft?: boolean | null
+          is_favorite?: boolean | null
           last_automation_run?: string | null
           missing_signatures_count?: number | null
           notes?: string | null
@@ -2111,6 +2125,7 @@ export type Database = {
           stalled_since?: string | null
           started_at?: string | null
           status?: string
+          tags?: string[] | null
           target_completion_at?: string | null
           technical_manager_id?: string | null
           updated_at?: string
@@ -2748,6 +2763,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      duplicate_document: { Args: { doc_id: string }; Returns: string }
       get_system_readiness: { Args: never; Returns: Json }
       is_admin_master: { Args: never; Returns: boolean }
       log_system_event: {
@@ -2760,6 +2776,8 @@ export type Database = {
         }
         Returns: undefined
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       [_ in never]: never
