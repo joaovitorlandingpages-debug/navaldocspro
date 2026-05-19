@@ -44,8 +44,8 @@ export class DocumentAutomationEngine {
         .eq('process_id', processId);
 
       // 4. Construir Status do Checklist
-      const checklist_status = requirements.map(req => {
-        const existingDoc = documents?.find(d => d.document_type === req.template.name);
+      const checklist_status = requirements.map((req: any) => {
+        const existingDoc = documents?.find((d: any) => d.document_type === req.template.name);
         return {
           template_id: req.template_id,
           name: req.template.name,
