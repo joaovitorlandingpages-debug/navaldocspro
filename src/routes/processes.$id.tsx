@@ -186,7 +186,10 @@ function ProcessDetail() {
             <Tabs defaultValue="overview" className="w-full">
                <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex-wrap h-auto">
                   <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geral</TabsTrigger>
-                  <TabsTrigger value="requirements" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Checklist Inteligente</TabsTrigger>
+                  <TabsTrigger value="automation" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                    <Zap className="h-3 w-3" /> Automação IA
+                  </TabsTrigger>
+                  <TabsTrigger value="requirements" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Checklist</TabsTrigger>
                   <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Arquivos</TabsTrigger>
                   <TabsTrigger value="comments" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
                     Notas {comments.length > 0 && <span className="bg-primary text-white text-[10px] px-1.5 rounded-full">{comments.length}</span>}
