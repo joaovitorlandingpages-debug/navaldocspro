@@ -42,26 +42,33 @@ function OperationsCenter() {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
-  useEffect(() => {
-    const fetchProcesses = async () => {
-      if (!profile?.company_id) return;
-      
-      setIsLoading(true);
+  const fetchProcesses = async () => {
+    if (!profile?.company_id) return;
+    
+    setIsLoading(true);
+    try {
       const { data, error } = await supabase
         .from('processes')
         .select(`
           *,
           customers(name),
-          vessels(name),
-          automation:process_automation_state(*)
+          vessels(name)
         `)
         .eq('company_id', profile.company_id)
+        .order('is_favorite', { ascending: false })
+        .order('priority', { ascending: false })
         .order('updated_at', { ascending: false });
       
+      if (error) throw error;
       if (data) setProcesses(data);
+    } catch (err: any) {
+      console.error("Error fetching processes:", err);
+    } finally {
       setIsLoading(false);
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchProcesses();
   }, [profile?.company_id]);
 
