@@ -37,6 +37,7 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as DebugSystemRouteImport } from './routes/debug.system'
+import { Route as DebugAuthRouteImport } from './routes/debug.auth'
 import { Route as DashboardDocumentsBaseRouteImport } from './routes/dashboard/documents-base'
 import { Route as DashboardComplianceCenterRouteImport } from './routes/dashboard/compliance-center'
 import { Route as BillingSuccessRouteImport } from './routes/billing.success'
@@ -197,6 +198,11 @@ const DebugSystemRoute = DebugSystemRouteImport.update({
   path: '/debug/system',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DebugAuthRoute = DebugAuthRouteImport.update({
+  id: '/debug/auth',
+  path: '/debug/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardDocumentsBaseRoute = DashboardDocumentsBaseRouteImport.update({
   id: '/documents-base',
   path: '/documents-base',
@@ -338,6 +344,7 @@ export interface FileRoutesByFullPath {
   '/billing/success': typeof BillingSuccessRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -385,6 +392,7 @@ export interface FileRoutesByTo {
   '/billing/success': typeof BillingSuccessRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin': typeof AdminIndexRoute
@@ -435,6 +443,7 @@ export interface FileRoutesById {
   '/billing/success': typeof BillingSuccessRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -486,6 +495,7 @@ export interface FileRouteTypes {
     | '/billing/success'
     | '/dashboard/compliance-center'
     | '/dashboard/documents-base'
+    | '/debug/auth'
     | '/debug/system'
     | '/processes/$id'
     | '/admin/'
@@ -533,6 +543,7 @@ export interface FileRouteTypes {
     | '/billing/success'
     | '/dashboard/compliance-center'
     | '/dashboard/documents-base'
+    | '/debug/auth'
     | '/debug/system'
     | '/processes/$id'
     | '/admin'
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '/billing/success'
     | '/dashboard/compliance-center'
     | '/dashboard/documents-base'
+    | '/debug/auth'
     | '/debug/system'
     | '/processes/$id'
     | '/admin/'
@@ -618,6 +630,7 @@ export interface RootRouteChildren {
   BillingFailureRoute: typeof BillingFailureRoute
   BillingSubscriptionRoute: typeof BillingSubscriptionRoute
   BillingSuccessRoute: typeof BillingSuccessRoute
+  DebugAuthRoute: typeof DebugAuthRoute
   DebugSystemRoute: typeof DebugSystemRoute
 }
 
@@ -817,6 +830,13 @@ declare module '@tanstack/react-router' {
       path: '/debug/system'
       fullPath: '/debug/system'
       preLoaderRoute: typeof DebugSystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/debug/auth': {
+      id: '/debug/auth'
+      path: '/debug/auth'
+      fullPath: '/debug/auth'
+      preLoaderRoute: typeof DebugAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/documents-base': {
@@ -1057,18 +1077,9 @@ const rootRouteChildren: RootRouteChildren = {
   BillingFailureRoute: BillingFailureRoute,
   BillingSubscriptionRoute: BillingSubscriptionRoute,
   BillingSuccessRoute: BillingSuccessRoute,
+  DebugAuthRoute: DebugAuthRoute,
   DebugSystemRoute: DebugSystemRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -15,7 +15,7 @@ function AuthDebugPage() {
   const [sessionLoading, setSessionLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: any } }) => {
       setSession(session);
       setSessionLoading(false);
     });
