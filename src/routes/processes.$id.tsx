@@ -429,8 +429,17 @@ function ProcessDetail() {
             <div className="bg-navy p-8 rounded-[2.5rem] text-white shadow-xl shadow-navy/20">
                <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6">Ações Rápidas</h3>
                <div className="space-y-3">
-                  <Button className="w-full bg-primary hover:opacity-90 text-white h-12 rounded-2xl font-bold gap-2">
-                     <FileCheck className="h-4 w-4" /> Validar Documentos
+                  <Button 
+                    className="w-full bg-primary hover:opacity-90 text-white h-12 rounded-2xl font-bold gap-2"
+                    onClick={async () => {
+                      setIsGenerating(true);
+                      const { data } = await supabase.from('document_templates').select('*').eq('name', 'Requerimento DPC-2211').single();
+                      setSelectedTemplateForGen(data);
+                      setIsGenerating(false);
+                    }}
+                  >
+                     {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FilePlus className="h-4 w-4" />} 
+                     Gerar Requerimento
                   </Button>
                   <Button variant="outline" className="w-full h-12 rounded-2xl font-bold gap-2 border-white/10 text-white hover:bg-white/5">
                      <PlayCircle className="h-4 w-4" /> Iniciar Automação
