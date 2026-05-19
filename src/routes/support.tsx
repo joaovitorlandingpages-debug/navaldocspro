@@ -8,7 +8,7 @@ import {
   HelpCircle, MessageCircle, Bug, Lightbulb, 
   Search, ExternalLink, ChevronRight, Send,
   LifeBuoy, BookOpen, Clock, CheckCircle2,
-  AlertCircle
+  AlertCircle, Activity
 } from "lucide-react";
 
 export const Route = createFileRoute("/support")({
