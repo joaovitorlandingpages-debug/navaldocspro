@@ -397,7 +397,7 @@ function ProcessDetail() {
                       </div>
                    </div>
                 </TabsContent>
-
+                <TabsContent value="comments" className="animate-in fade-in duration-300">
                   <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col h-[600px] overflow-hidden">
                     <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
                       <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
