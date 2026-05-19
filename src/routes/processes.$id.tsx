@@ -5,8 +5,9 @@ import {
   Download, Share2, PlayCircle, MessageSquare, Plus,
   FileCheck, History, Info, Zap, Bot, Eye, Trash2,
   Image as ImageIcon, Send, Loader2, Target, Ban,
-  FilePlus, RefreshCw, ChevronLeft
+  FilePlus, RefreshCw, ChevronLeft, AlertTriangle
 } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
