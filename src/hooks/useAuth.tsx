@@ -17,13 +17,10 @@ export const useAuth = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (mounted) {
           setUser(session?.user ?? null);
-          // Only stop loading if there's no user (no profile to fetch)
-          if (!session?.user) {
-            setLoading(false);
-          }
         }
       } catch (err) {
         console.error("Initial auth session error:", err);
+      } finally {
         if (mounted) setLoading(false);
       }
     };
