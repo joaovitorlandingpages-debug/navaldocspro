@@ -29,6 +29,15 @@ export const SmartAutomationDashboard: React.FC<SmartAutomationDashboardProps> =
   const completedMandatory = mandatoryItems.filter(i => i.status === 'validated' || i.status === 'uploaded').length;
   const progress = mandatoryItems.length > 0 ? (completedMandatory / mandatoryItems.length) * 100 : 0;
 
+  const handleBatchGenerate = async () => {
+    await BatchGenerationService.generateAllMissing(processId);
+    reanalyze();
+  };
+
+  const handleCreatePackage = async () => {
+    await BatchGenerationService.createProcessPackage(processId);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header com Status Inteligente */}
