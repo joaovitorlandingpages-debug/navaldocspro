@@ -109,6 +109,10 @@ function OCRCenterPage() {
               <TabsContent value="upload" className="mt-0 focus-visible:outline-none">
                 <OCRUpload companyId={profile?.company_id || ""} />
                 
+                <div className="mt-6">
+                  <BatchOCRQueue jobs={jobs || []} />
+                </div>
+                
                 <div className="mt-6 p-4 bg-navy rounded-2xl text-white shadow-xl shadow-navy/20">
                    <div className="flex items-center gap-3 mb-3">
                       <div className="h-8 w-8 bg-white/10 rounded-lg flex items-center justify-center">
