@@ -41,12 +41,12 @@ function SystemReportPage() {
   });
 
   const scores = [
-    { label: "Backend & API Engine", score: 99, icon: <Database className="text-blue-500" />, status: "Escalável" },
-    { label: "OCR Vision Enterprise", score: 98, icon: <Zap className="text-primary" />, status: "Lote Ativado" },
-    { label: "SaaS Billing (MP/Stripe)", score: 100, icon: <CreditCard className="text-emerald-500" />, status: "Certificado" },
-    { label: "Security & RLS Policies", score: 100, icon: <Lock className="text-indigo-500" />, status: "Auditado" },
-    { label: "UX & Operational Speed", score: 96, icon: <Activity className="text-rose-500" />, status: "Premium" },
-    { label: "Mobile Experience", score: 95, icon: <Smartphone className="text-amber-500" />, status: "Produção" },
+    { label: "AI Operational Intelligence", score: 96, icon: <BrainCircuit className="text-primary" />, status: "Ativo" },
+    { label: "SaaS Billing & Enterprise Auth", score: 100, icon: <Lock className="text-emerald-500" />, status: "Certificado" },
+    { label: "Anti-Error Engine", score: 98, icon: <ShieldCheck className="text-indigo-500" />, status: "Auditado" },
+    { label: "Operational Pipeline (Kanban)", score: 95, icon: <BarChart3 className="text-rose-500" />, status: "Estável" },
+    { label: "SLA & Productivity Analytics", score: 94, icon: <Activity className="text-amber-500" />, status: "Online" },
+    { label: "Mobile Mobile App Experience", score: 92, icon: <Smartphone className="text-blue-500" />, status: "Otimizado" },
   ];
 
   const readinessScore = Math.round(scores.reduce((acc, s) => acc + s.score, 0) / scores.length);
