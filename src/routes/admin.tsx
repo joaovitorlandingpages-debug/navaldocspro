@@ -35,8 +35,8 @@ function AdminLayout() {
     );
   }
 
-  // Permissão estrita para Admin Master
-  if (profile?.role !== 'admin_master') {
+  // Permissão estrita para Admin Master Global ou Admin Master
+  if (profile?.role !== 'admin_master' && profile?.role !== 'admin_master_global') {
     return <Navigate to="/dashboard" />;
   }
 
