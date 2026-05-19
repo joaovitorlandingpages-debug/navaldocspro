@@ -403,6 +403,57 @@ export type Database = {
         }
         Relationships: []
       }
+      document_checklists: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          document_id: string | null
+          id: string
+          is_mandatory: boolean | null
+          item_name: string
+          notes: string | null
+          process_id: string | null
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          is_mandatory?: boolean | null
+          item_name: string
+          notes?: string | null
+          process_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          is_mandatory?: boolean | null
+          item_name?: string
+          notes?: string | null
+          process_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_checklists_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_checklists_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_fields: {
         Row: {
           alignment: string | null
@@ -467,6 +518,107 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "document_fields_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_process_rules: {
+        Row: {
+          created_at: string | null
+          expiry_monitoring: boolean | null
+          id: string
+          ocr_required: boolean | null
+          process_type_id: string | null
+          rule_type: string
+          signature_required: boolean | null
+          template_id: string | null
+          trigger_condition: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          expiry_monitoring?: boolean | null
+          id?: string
+          ocr_required?: boolean | null
+          process_type_id?: string | null
+          rule_type: string
+          signature_required?: boolean | null
+          template_id?: string | null
+          trigger_condition?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          expiry_monitoring?: boolean | null
+          id?: string
+          ocr_required?: boolean | null
+          process_type_id?: string | null
+          rule_type?: string
+          signature_required?: boolean | null
+          template_id?: string | null
+          trigger_condition?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_process_rules_process_type_id_fkey"
+            columns: ["process_type_id"]
+            isOneToOne: false
+            referencedRelation: "process_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_process_rules_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_template_fields: {
+        Row: {
+          created_at: string | null
+          field_key: string
+          field_label: string
+          field_type: string
+          id: string
+          is_required: boolean | null
+          mapping_path: string | null
+          options: Json | null
+          position_config: Json | null
+          template_id: string | null
+          validation_rules: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          field_key: string
+          field_label: string
+          field_type: string
+          id?: string
+          is_required?: boolean | null
+          mapping_path?: string | null
+          options?: Json | null
+          position_config?: Json | null
+          template_id?: string | null
+          validation_rules?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          field_key?: string
+          field_label?: string
+          field_type?: string
+          id?: string
+          is_required?: boolean | null
+          mapping_path?: string | null
+          options?: Json | null
+          position_config?: Json | null
+          template_id?: string | null
+          validation_rules?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_template_fields_template_id_fkey"
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "document_templates"
@@ -545,6 +697,44 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_versions: {
+        Row: {
+          change_summary: string | null
+          created_at: string | null
+          created_by: string | null
+          document_id: string | null
+          file_url: string
+          id: string
+          version_number: number
+        }
+        Insert: {
+          change_summary?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          document_id?: string | null
+          file_url: string
+          id?: string
+          version_number: number
+        }
+        Update: {
+          change_summary?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          document_id?: string | null
+          file_url?: string
+          id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
             referencedColumns: ["id"]
           },
         ]

@@ -4,7 +4,8 @@ import {
   FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
-  AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning
+  AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
+  Database, FolderOpen
 } from "lucide-react";
 import { useState, useEffect, Suspense, lazy, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -97,17 +98,16 @@ function DashboardLayout() {
     { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
     { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
     { name: "Central IA", icon: <Zap className="h-5 w-5" />, path: "/ai-center" },
-    { name: "Agenda", icon: <CalendarIcon className="h-5 w-5" />, path: "/calendar" },
     { name: "Automação", icon: <Cpu className="h-5 w-5" />, path: "/automation" },
     { name: "Central OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
     { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
     { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
-    { name: "Biblioteca", icon: <FileText className="h-5 w-5" />, path: "/documents" },
+    { name: "Base Documental", icon: <Database className="h-5 w-5 text-primary" />, path: "/dashboard/documents-base" },
+    { name: "Meus Arquivos", icon: <FileText className="h-5 w-5" />, path: "/documents" },
     { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
     { name: "Assinatura", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
-    { name: "Suporte", icon: <HelpCircle className="h-5 w-5" />, path: "/support" },
   ];
 
   return (
@@ -336,10 +336,19 @@ export function RouteContent() {
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
-              <Zap className="h-4 w-4 text-primary" /> Sugestões Inteligentes
+              <Zap className="h-4 w-4 text-primary" /> Inteligência Operacional
             </h2>
-            <button className="text-[10px] font-black uppercase text-primary hover:underline">Ver Todas</button>
+            <div className="flex items-center gap-3">
+               <div className="flex flex-col items-end">
+                  <p className="text-[10px] font-black uppercase text-slate-400">Readiness Score</p>
+                  <p className="text-xs font-bold text-navy">94.2%</p>
+               </div>
+               <div className="h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-primary w-[94.2%]"></div>
+               </div>
+            </div>
           </div>
+
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <div className="bg-navy text-white p-6 rounded-[2rem] border border-white/5 shadow-xl relative overflow-hidden group">
@@ -373,11 +382,28 @@ export function RouteContent() {
         </div>
 
         <div className="space-y-6">
-           <div className="flex items-center justify-between">
-              <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
-                <Activity className="h-4 w-4 text-primary" /> Fila Operacional
-              </h2>
-           </div>
+          <div className="bg-navy p-6 rounded-[2rem] text-white shadow-xl relative overflow-hidden group">
+             <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                <Database className="h-40 w-40" />
+             </div>
+             <div className="relative z-10">
+                <Badge className="bg-primary/20 text-primary border-none mb-4 uppercase text-[9px]">Base Documental</Badge>
+                <h3 className="text-lg font-bold mb-2">Base DPC 2026</h3>
+                <p className="text-xs text-slate-400 mb-6">Templates oficiais e regras de validação atualizados.</p>
+                <Link to="/dashboard/documents-base">
+                   <button className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                      <FolderOpen className="h-4 w-4" /> Acessar Repositório
+                   </button>
+                </Link>
+             </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
+              <Activity className="h-4 w-4 text-primary" /> Fila Operacional
+            </h2>
+          </div>
+
            
            <Card className="p-6 border-slate-100 shadow-sm space-y-4">
               {[
