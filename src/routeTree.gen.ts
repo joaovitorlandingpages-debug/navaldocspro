@@ -25,6 +25,7 @@ import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AutomationRouteImport } from './routes/automation'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
@@ -133,6 +134,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const CustomersRoute = CustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalendarRoute = CalendarRouteImport.update({
@@ -289,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
   '/calendar': typeof CalendarRoute
+  '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/document-generator': typeof DocumentGeneratorRoute
@@ -335,6 +342,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
   '/calendar': typeof CalendarRoute
+  '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
@@ -382,6 +390,7 @@ export interface FileRoutesById {
   '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
   '/calendar': typeof CalendarRoute
+  '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/document-generator': typeof DocumentGeneratorRoute
@@ -431,6 +440,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/automation'
     | '/calendar'
+    | '/changelog'
     | '/customers'
     | '/dashboard'
     | '/document-generator'
@@ -477,6 +487,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/automation'
     | '/calendar'
+    | '/changelog'
     | '/customers'
     | '/document-generator'
     | '/documents'
@@ -523,6 +534,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/automation'
     | '/calendar'
+    | '/changelog'
     | '/customers'
     | '/dashboard'
     | '/document-generator'
@@ -571,6 +583,7 @@ export interface RootRouteChildren {
   AnalyticsRoute: typeof AnalyticsRouteWithChildren
   AutomationRoute: typeof AutomationRoute
   CalendarRoute: typeof CalendarRoute
+  ChangelogRoute: typeof ChangelogRoute
   CustomersRoute: typeof CustomersRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
@@ -707,6 +720,13 @@ declare module '@tanstack/react-router' {
       path: '/customers'
       fullPath: '/customers'
       preLoaderRoute: typeof CustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calendar': {
@@ -994,6 +1014,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsRoute: AnalyticsRouteWithChildren,
   AutomationRoute: AutomationRoute,
   CalendarRoute: CalendarRoute,
+  ChangelogRoute: ChangelogRoute,
   CustomersRoute: CustomersRoute,
   DashboardRoute: DashboardRouteWithChildren,
   DocumentGeneratorRoute: DocumentGeneratorRoute,

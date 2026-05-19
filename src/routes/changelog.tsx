@@ -72,7 +72,7 @@ function ChangelogPage() {
       </header>
 
       <div className="relative space-y-12 before:absolute before:left-[1.25rem] before:top-4 before:bottom-4 before:w-px before:bg-slate-100">
-        {releases?.map((release, i) => (
+        {releases?.map((release: any, i: number) => (
           <div key={i} className="relative pl-12 group">
             <div className="absolute left-0 top-1.5 h-10 w-10 bg-white border-2 border-slate-100 rounded-2xl flex items-center justify-center z-10 group-hover:border-primary transition-all duration-500 group-hover:scale-110">
                <Tag className="h-5 w-5 text-slate-400 group-hover:text-primary transition-all" />
