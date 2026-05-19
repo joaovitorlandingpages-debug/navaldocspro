@@ -60,37 +60,61 @@ function SystemMonitor() {
         ))}
       </div>
 
-      <div className="bg-navy text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden">
-         <div className="absolute top-0 right-0 p-10 opacity-5">
-            <Server className="h-64 w-64" />
-         </div>
-         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10">
-            <div>
-               <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-8 text-primary">Fila de Processamento</h4>
-               <div className="space-y-6">
-                  {[
-                     { label: "OCR Jobs Pendentes", value: 0 },
-                     { label: "PDFs na Fila", value: 2 },
-                     { label: "Notificações em Envio", value: 45 },
-                  ].map((row, i) => (
-                     <div key={i} className="flex justify-between items-center border-b border-white/5 pb-4">
-                        <span className="text-slate-400 font-bold">{row.label}</span>
-                        <span className="text-2xl font-black">{row.value}</span>
-                     </div>
-                  ))}
-               </div>
-            </div>
-            <div className="bg-white/5 border border-white/10 p-8 rounded-3xl backdrop-blur-sm">
-               <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-rose-400" /> Logs Críticos Recentes
-               </h4>
-               <div className="space-y-4 font-mono text-[10px]">
-                  <p className="text-slate-400 border-l-2 border-emerald-500 pl-4 py-1">[10:45:22] System Health Check: All systems nominal.</p>
-                  <p className="text-slate-400 border-l-2 border-primary pl-4 py-1">[10:42:01] Edge Function 'auth-hook' executed in 45ms.</p>
-                  <p className="text-rose-400 border-l-2 border-rose-500 pl-4 py-1 bg-rose-500/5">[09:12:44] WARNING: Mercado Pago latency exceeded 500ms.</p>
-               </div>
-            </div>
-         </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-navy text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden h-full">
+           <div className="absolute top-0 right-0 p-10 opacity-5">
+              <Server className="h-64 w-64" />
+           </div>
+           <div className="relative z-10">
+              <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-8 text-primary">Fila de Processamento</h4>
+              <div className="space-y-6">
+                 {[
+                    { label: "OCR Jobs Pendentes", value: 0 },
+                    { label: "PDFs na Fila", value: 2 },
+                    { label: "Notificações em Envio", value: 45 },
+                 ].map((row, i) => (
+                    <div key={i} className="flex justify-between items-center border-b border-white/5 pb-4">
+                       <span className="text-slate-400 font-bold">{row.label}</span>
+                       <span className="text-2xl font-black">{row.value}</span>
+                    </div>
+                 ))}
+              </div>
+           </div>
+        </div>
+
+        <div className="space-y-8">
+           <Card className="p-8 border-slate-100 shadow-sm">
+              <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2 text-navy">
+                 <ShieldCheck className="h-4 w-4 text-emerald-500" /> Segurança Enterprise
+              </h4>
+              <div className="space-y-4">
+                 {[
+                   { event: "Login bem sucedido", user: "ricardo@navaldocs.com", ip: "192.168.1.1", time: "2 min atrás" },
+                   { event: "Assinatura Digital", user: "mariana@navaldocs.com", ip: "192.168.1.45", time: "15 min atrás" },
+                   { event: "Tentativa de acesso inválida", user: "desconhecido", ip: "45.12.33.1", time: "1h atrás", warning: true },
+                 ].map((log, i) => (
+                   <div key={i} className={`p-4 rounded-xl border ${log.warning ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-100'} flex justify-between items-center`}>
+                      <div>
+                         <p className={`text-xs font-bold ${log.warning ? 'text-rose-700' : 'text-navy'}`}>{log.event}</p>
+                         <p className="text-[10px] text-slate-400 font-medium">{log.user} • {log.ip}</p>
+                      </div>
+                      <span className="text-[10px] font-black text-slate-300 uppercase">{log.time}</span>
+                   </div>
+                 ))}
+              </div>
+           </Card>
+
+           <div className="bg-white border border-slate-100 p-8 rounded-[2rem] shadow-sm">
+              <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2 text-navy">
+                 <Activity className="h-4 w-4 text-primary" /> Logs de Sistema (Live)
+              </h4>
+              <div className="space-y-3 font-mono text-[10px]">
+                 <p className="text-slate-500 border-l-2 border-emerald-500 pl-4 py-1">[10:45:22] System Health Check: All systems nominal.</p>
+                 <p className="text-slate-500 border-l-2 border-primary pl-4 py-1">[10:42:01] Edge Function 'auth-hook' executed in 45ms.</p>
+                 <p className="text-rose-500 border-l-2 border-rose-500 pl-4 py-1 bg-rose-500/5">[09:12:44] WARNING: Mercado Pago latency exceeded 500ms.</p>
+              </div>
+           </div>
+        </div>
       </div>
     </div>
   );
