@@ -50,9 +50,9 @@ export function WelcomeTour({
           <div className="p-2 bg-primary/20 rounded-lg">
             <Rocket className="h-5 w-5 text-primary" />
           </div>
-          <h3 className="font-bold uppercase tracking-widest text-sm">Guia de Boas-vindas</h3>
+          <h3 className="font-bold uppercase tracking-widest text-sm">Guia de Implementação Enterprise</h3>
         </div>
-        <p className="text-xs text-white/60 mb-4 font-medium">Complete as etapas para dominar o NavalDocs Pro.</p>
+        <p className="text-xs text-white/60 mb-4 font-medium">Siga os passos para ativar sua central operacional v15.0.</p>
         <div className="space-y-2">
            <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter text-primary">
               <span>Progresso de Setup</span>

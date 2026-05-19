@@ -70,13 +70,13 @@ function Index() {
               <div className="space-y-8">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest shadow-sm">
                   <Zap className="h-3 w-3 animate-pulse" />
-                  Inteligência Artificial Naval de Nível Nacional
+                  Inteligência Operacional de Nível Nacional
                 </div>
                 <h1 className="text-5xl lg:text-7xl font-black text-navy leading-[1.1] tracking-tighter">
-                  A era da automação <span className="text-primary italic">operacional</span> chegou.
+                  O sistema operacional <span className="text-primary italic">definitivo</span> da marinha brasileira.
                 </h1>
                 <p className="text-xl text-slate-600 max-w-xl leading-relaxed">
-                  A central operacional naval definitiva que unifica OCR inteligente, automação jurídica e gestão técnica em uma única plataforma Enterprise.
+                  Transforme seu escritório naval em uma central de inteligência automatizada com OCR avançado e gestão enterprise 360°.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link to="/auth/signup" className="bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">

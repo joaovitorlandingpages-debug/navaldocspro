@@ -58,8 +58,8 @@ function SystemReportPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
            <div className="flex items-center gap-2 mb-2">
-              <Badge className="bg-primary text-white font-black uppercase text-[9px] tracking-widest px-3 py-1">Auditoria Enterprise</Badge>
-              <Badge variant="outline" className="text-slate-400 border-slate-200 uppercase text-[9px] font-black">v10.0 Final</Badge>
+              <Badge className="bg-primary text-white font-black uppercase text-[9px] tracking-widest px-3 py-1">Auditoria Enterprise Global</Badge>
+              <Badge variant="outline" className="text-slate-400 border-slate-200 uppercase text-[9px] font-black">v15.0 Final Gold</Badge>
            </div>
            <h1 className="text-4xl font-black text-navy tracking-tight uppercase flex items-center gap-4">
               <ShieldCheck className="text-primary h-10 w-10" /> Readiness Report

@@ -109,9 +109,10 @@ function SystemMonitor() {
                  <Activity className="h-4 w-4 text-primary" /> Logs de Sistema (Live)
               </h4>
               <div className="space-y-3 font-mono text-[10px]">
-                 <p className="text-slate-500 border-l-2 border-emerald-500 pl-4 py-1">[10:45:22] System Health Check: All systems nominal.</p>
-                 <p className="text-slate-500 border-l-2 border-primary pl-4 py-1">[10:42:01] Edge Function 'auth-hook' executed in 45ms.</p>
-                 <p className="text-rose-500 border-l-2 border-rose-500 pl-4 py-1 bg-rose-500/5">[09:12:44] WARNING: Mercado Pago latency exceeded 500ms.</p>
+                 <p className="text-slate-500 border-l-2 border-emerald-500 pl-4 py-1">[10:55:12] Infra Consolidation: SUCCESS - v15.0 Gold deployed.</p>
+                 <p className="text-slate-500 border-l-2 border-emerald-500 pl-4 py-1">[10:52:01] System Health: ALL MODULES NOMINAL.</p>
+                 <p className="text-emerald-500 border-l-2 border-emerald-500 pl-4 py-1 bg-emerald-500/5">[10:45:22] System Health Check: All systems operational.</p>
+                 <p className="text-slate-500 border-l-2 border-primary pl-4 py-1">[10:42:01] Edge Function 'auth-hook' executed in 42ms.</p>
               </div>
            </div>
         </div>
