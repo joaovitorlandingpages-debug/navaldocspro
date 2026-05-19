@@ -159,6 +159,14 @@ function OperationsCenterPage() {
 
                        <div className="flex items-center gap-6">
                           <div className="text-right hidden sm:block">
+                             <div className="flex gap-1 mb-1 justify-end">
+                                {process.is_blocked && (
+                                   <Badge className="bg-red-500 text-white border-none text-[7px] font-black uppercase px-1.5 h-4">Bloqueado</Badge>
+                                )}
+                                {process.sla_status === 'warning' && (
+                                   <Badge className="bg-amber-500 text-white border-none text-[7px] font-black uppercase px-1.5 h-4">SLA Alerta</Badge>
+                                )}
+                             </div>
                              <Badge className={`uppercase text-[8px] font-black ${
                                process.status === 'completed' ? 'bg-green-100 text-green-700' : 
                                process.status === 'waiting_protocol' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
