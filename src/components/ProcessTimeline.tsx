@@ -1,10 +1,10 @@
-import { Clock, User, Edit3, CheckCircle2, FileText, Anchor } from "lucide-react";
+import { Clock, User, Edit3, CheckCircle2, FileText, Anchor, ShieldCheck, AlertCircle, Zap } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface TimelineEvent {
   id: string;
-  type: 'creation' | 'update' | 'signature' | 'protocol' | 'completion';
+  type: 'creation' | 'update' | 'signature' | 'protocol' | 'completion' | 'validation_passed' | 'error_detected' | 'inconsistency_found';
   user: string;
   description: string;
   date: string;
