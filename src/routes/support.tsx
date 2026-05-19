@@ -3,9 +3,12 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { 
   HelpCircle, MessageCircle, Bug, Lightbulb, 
-  Search, ExternalLink, ChevronRight, Send 
+  Search, ExternalLink, ChevronRight, Send,
+  LifeBuoy, BookOpen, Clock, CheckCircle2,
+  AlertCircle
 } from "lucide-react";
 
 export const Route = createFileRoute("/support")({
@@ -14,8 +17,22 @@ export const Route = createFileRoute("/support")({
 
 function SupportPage() {
   const { profile } = useAuth();
-  const [ticket, setTicket] = useState({ title: "", description: "", type: "support" });
+  const [ticket, setTicket] = useState({ title: "", description: "", type: "support", category: "technical" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: userTickets, refetch } = useQuery({
+    queryKey: ["user_support_tickets", profile?.id],
+    queryFn: async () => {
+      if (!profile) return [];
+      const { data } = await supabase
+        .from("tickets")
+        .select("*")
+        .eq("user_id", profile.id)
+        .order("created_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!profile,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,14 +45,17 @@ function SupportPage() {
         company_id: profile.company_id,
         title: ticket.title,
         description: ticket.description,
-        type: ticket.type
+        type: ticket.type,
+        category: ticket.category,
+        status: 'open'
       });
 
       if (error) throw error;
-      toast.success("Feedback enviado com sucesso!");
-      setTicket({ title: "", description: "", type: "support" });
+      toast.success("Chamado aberto com sucesso!");
+      setTicket({ title: "", description: "", type: "support", category: "technical" });
+      refetch();
     } catch (error) {
-      toast.error("Erro ao enviar feedback.");
+      toast.error("Erro ao abrir chamado.");
     } finally {
       setIsSubmitting(false);
     }
@@ -119,7 +139,40 @@ function SupportPage() {
             </form>
           </section>
 
-          <section className="space-y-4">
+          <section className="space-y-6">
+             <div className="flex justify-between items-center">
+                <h2 className="text-lg font-bold text-navy flex items-center gap-2">
+                   <Clock className="h-5 w-5 text-indigo-500" /> Meus Chamados Recentes
+                </h2>
+                <span className="text-[10px] font-black uppercase text-slate-400">Total: {userTickets?.length || 0}</span>
+             </div>
+             
+             <div className="space-y-3">
+                {userTickets?.slice(0, 3).map((t: any) => (
+                  <div key={t.id} className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
+                     <div className="flex items-center gap-4">
+                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${t.status === 'open' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                           {t.status === 'open' ? <Clock className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
+                        </div>
+                        <div>
+                           <p className="text-sm font-bold text-navy">{t.title}</p>
+                           <p className="text-[10px] text-slate-400 font-bold uppercase">{new Date(t.created_at).toLocaleDateString()}</p>
+                        </div>
+                     </div>
+                     <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full ${t.status === 'open' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                        {t.status}
+                     </span>
+                  </div>
+                ))}
+                {(!userTickets || userTickets.length === 0) && (
+                  <div className="text-center py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                     <p className="text-sm text-slate-400 font-medium">Você ainda não abriu nenhum chamado.</p>
+                  </div>
+                )}
+             </div>
+          </section>
+
+          <section className="space-y-4 pt-4">
              <h2 className="text-lg font-bold text-navy flex items-center gap-2">
                 <Lightbulb className="h-5 w-5 text-amber-500" /> FAQ Sugerido
              </h2>
