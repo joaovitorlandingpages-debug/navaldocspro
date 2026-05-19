@@ -120,7 +120,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      // 1. Create the process
+      const { data: processData, error: processError } = await supabase
         .from('processes')
         .insert({
           company_id: profile.company_id,
@@ -130,11 +131,32 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           process_type_id: formData.typeId,
           status: 'pending',
           priority: 'medium',
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (processError) throw processError;
 
-      toast.success("Processo criado com sucesso!");
+      // 2. Generate checklist automatically based on requirements
+      if (requirements && requirements.length > 0) {
+        const checklistItems = requirements.map((req: any) => ({
+          process_id: processData.id,
+          item_name: req.template?.name || "Documento sem nome",
+          is_mandatory: req.is_mandatory,
+          status: 'pending',
+        }));
+
+        const { error: checklistError } = await supabase
+          .from('document_checklists')
+          .insert(checklistItems);
+        
+        if (checklistError) {
+          console.error("Error creating checklist:", checklistError);
+          // Don't fail the whole process creation if checklist fails, but log it
+        }
+      }
+
+      toast.success("Processo e checklist operacional criados!");
       clearDraft();
       onClose();
     } catch (err: any) {
