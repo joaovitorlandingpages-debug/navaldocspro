@@ -86,7 +86,10 @@ function Customers() {
 
   const handleCreateCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!companyId) return;
+    if (!companyId) {
+      toast.error("Erro: Empresa não identificada.");
+      return;
+    }
     setIsSubmitting(true);
 
     try {
