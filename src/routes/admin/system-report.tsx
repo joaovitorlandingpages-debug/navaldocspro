@@ -12,7 +12,8 @@ import {
   ArrowRight,
   RefreshCw,
   BarChart3,
-  Bot
+  Bot,
+  BrainCircuit
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
