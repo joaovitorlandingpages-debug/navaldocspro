@@ -2,13 +2,16 @@ export interface Document {
   id: string;
   document_type: string;
   file_url: string | null;
+  file_name?: string;
   status: string;
+  compliance_status?: 'conforme' | 'incompleto' | 'pendente' | 'divergente' | 'vencido' | 'reprovado';
   expiry_date: string | null;
   issue_date: string | null;
   process_id: string | null;
   customer_id: string | null;
   vessel_id: string | null;
   company_id: string;
+  validation_errors?: any[];
   created_at: string;
   updated_at: string;
 }

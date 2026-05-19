@@ -4,7 +4,7 @@ import {
   Clock, CheckCircle2, AlertCircle, MoreHorizontal, 
   Download, Share2, PlayCircle, MessageSquare, Plus,
   FileCheck, History, Info, Zap, Bot, Eye, Trash2,
-  Image as ImageIcon, Send, Loader2, Target
+  Image as ImageIcon, Send, Loader2, Target, Ban
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useFiles } from "@/hooks/useFiles";
 import { FileUploader } from "@/components/FileUploader";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,13 +40,27 @@ function ProcessDetail() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const { data: complianceHistory } = useQuery({
+    queryKey: ["compliance-history", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('compliance_history')
+        .select('*')
+        .eq('process_id', id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
   const fetchProcess = async () => {
     const { data } = await supabase
       .from('processes')
       .select(`
         *,
-        customer:customers(id, name),
-        vessel:vessels(id, name)
+        customer:customers(id, name, cpf_cnpj),
+        vessel:vessels(id, name, activity, has_radio, gross_tonnage)
       `)
       .eq('id', id)
       .single();
@@ -112,12 +127,15 @@ function ProcessDetail() {
     }
   };
 
-  const timelineEvents: any[] = [
-    { id: "1", type: "creation", user: "Ricardo Almeida", description: "Processo aberto no sistema.", date: "2026-05-10T09:45:00Z" },
-    { id: "2", type: "update", user: "Ricardo Almeida", description: "Cliente vinculado e embarcação selecionada.", date: "2026-05-10T10:15:00Z" },
-    { id: "3", type: "update", user: "Sistema IA", description: "OCR: CNH processada e campos preenchidos automaticamente.", date: "2026-05-10T10:16:00Z" },
-    { id: "4", type: "signature", user: "Eng. Mariana", description: "Procuração assinada digitalmente.", date: "2026-05-10T14:20:00Z" },
-    { id: "5", type: "protocol", user: "Sistema", description: "Processo enviado para protocolo na Marinha.", date: "2026-05-11T08:30:00Z" },
+  const timelineEvents: any[] = complianceHistory?.map((event: any) => ({
+    id: event.id,
+    type: event.event_type as any,
+    user: "Sistema IA",
+    description: event.description,
+    date: event.created_at
+  })) || [
+    { id: "1", type: "creation", user: "Ricardo Almeida", description: "Processo aberto no sistema.", date: process?.created_at || "2026-05-10T09:45:00Z" },
+    { id: "2", type: "update", user: "Ricardo Almeida", description: "Cliente vinculado e embarcação selecionada.", date: process?.created_at || "2026-05-10T10:15:00Z" },
   ];
 
   return (
@@ -173,7 +191,18 @@ function ProcessDetail() {
               <Button variant="outline" className="flex-1 md:flex-none h-11 rounded-xl gap-2 font-bold border-slate-200">
                  <Download className="h-4 w-4" /> Gerar PDF
               </Button>
-              <Button className="flex-1 md:flex-none bg-primary text-white h-11 rounded-xl gap-2 font-bold hover:opacity-90 shadow-lg shadow-primary/20">
+              <Button 
+                className="flex-1 md:flex-none bg-primary text-white h-11 rounded-xl gap-2 font-bold hover:opacity-90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={process?.compliance_status !== 'conforme' || process?.is_blocked}
+                onClick={() => {
+                  if (process?.compliance_status === 'conforme') {
+                    toast.success("Processo finalizado com sucesso!");
+                  } else {
+                    toast.error("O processo não pode ser finalizado. Verifique as inconformidades.");
+                  }
+                }}
+              >
+                 {process?.compliance_status === 'conforme' ? <CheckCircle2 className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
                  Finalizar Processo
               </Button>
            </div>
@@ -208,8 +237,12 @@ function ProcessDetail() {
                               <span className="text-sm font-bold text-navy">{process?.process_type || "---"}</span>
                            </div>
                            <div className="flex justify-between py-3 border-b border-slate-50">
-                              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Responsável</span>
-                              <span className="text-sm font-bold text-navy">Ricardo Almeida</span>
+                              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Conformidade</span>
+                              <Badge variant="outline" className={`text-[10px] font-black uppercase tracking-widest border-none ${
+                                process?.compliance_status === 'conforme' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                              }`}>
+                                {process?.compliance_status || 'Pendente'}
+                              </Badge>
                            </div>
                            <div className="flex justify-between py-3 border-b border-slate-50">
                               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Prazo</span>

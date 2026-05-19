@@ -37,22 +37,30 @@ export interface Process {
   process_type: string;
   process_type_id?: string;
   status: string;
+  compliance_status?: 'conforme' | 'incompleto' | 'pendente' | 'divergente' | 'vencido' | 'reprovado';
+  compliance_score?: number;
   customer_id: string;
   vessel_id?: string;
   due_date?: string;
   priority: string;
+  is_blocked?: boolean;
+  validation_errors?: any[];
   customer?: {
+    id: string;
     name: string;
     cpf_cnpj?: string;
     email?: string;
     phone?: string;
   };
   vessel?: {
+    id: string;
     name: string;
     tie?: string;
     hull_number?: string;
     vessel_type?: string;
     activity?: string;
+    has_radio?: boolean;
+    gross_tonnage?: number;
   };
 }
 

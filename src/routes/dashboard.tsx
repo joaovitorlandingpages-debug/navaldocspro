@@ -96,6 +96,7 @@ function DashboardLayout() {
   const navItems = [
     { name: "Operacional", icon: <LayoutDashboard className="h-5 w-5 text-primary" />, path: "/dashboard" },
     { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
+    { name: "Compliance", icon: <ShieldCheck className="h-5 w-5 text-emerald-500" />, path: "/dashboard/compliance-center" },
     { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
     { name: "Central IA", icon: <Zap className="h-5 w-5" />, path: "/ai-center" },
     { name: "Automação", icon: <Cpu className="h-5 w-5" />, path: "/automation" },
@@ -103,7 +104,7 @@ function DashboardLayout() {
     { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
     { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
-    { name: "Base Documental", icon: <Database className="h-5 w-5 text-primary" />, path: "/dashboard/documents-base" },
+    { name: "Base Documental", icon: <Database className="h-5 w-5" />, path: "/dashboard/documents-base" },
     { name: "Meus Arquivos", icon: <FileText className="h-5 w-5" />, path: "/documents" },
     { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
     { name: "Assinatura", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
@@ -430,16 +431,16 @@ export function RouteContent() {
 
       {/* Operational Critical Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <div className="bg-white p-6 rounded-3xl border-2 border-red-100 shadow-sm hover:shadow-md transition-all group">
+        <Link to="/dashboard/compliance-center" className="bg-white p-6 rounded-3xl border-2 border-red-100 shadow-sm hover:shadow-md transition-all group">
            <div className="flex justify-between items-start mb-4">
               <div className="p-3 bg-red-50 rounded-2xl group-hover:bg-red-500 group-hover:text-white transition-all text-red-600">
-                 <AlertCircle className="h-5 w-5" />
+                 <ShieldCheck className="h-5 w-5" />
               </div>
               <Badge className="bg-red-100 text-red-700 border-none text-[9px]">Urgente</Badge>
            </div>
-           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Processos Críticos</p>
-           <h3 className="text-3xl font-black text-navy mt-1">{statsData?.urgentProcesses || 0}</h3>
-        </div>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Inconformidades</p>
+            <h3 className="text-3xl font-black text-navy mt-1">12</h3>
+         </Link>
 
         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
            <div className="flex justify-between items-start mb-4">

@@ -12,7 +12,8 @@ import {
   Anchor,
   MapPin,
   Calendar,
-  FileText
+  FileText,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OCRJob, useOCR } from "@/hooks/useOCR";
 import { toast } from "sonner";
+import { DocumentValidationEngine } from "@/services/validationEngine";
 
 interface OCRResultsReviewProps {
   job: OCRJob;
@@ -49,29 +51,46 @@ export function OCRResultsReview({ job }: OCRResultsReviewProps) {
     }
   };
 
-  const renderField = (label: string, value: string, icon: any, fieldKey: string) => (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5">
-          {icon} {label}
-        </Label>
-        {isEditing && <span className="text-[9px] font-bold text-primary animate-pulse">Editando</span>}
-      </div>
-      
-      {isEditing ? (
-        <Input 
-          value={value || ''} 
-          onChange={(e) => setEditedData({...editedData, [fieldKey]: e.target.value})}
-          className="h-11 bg-white border-slate-200 rounded-xl text-sm font-bold text-navy focus:ring-primary/20"
-        />
-      ) : (
-        <div className="group relative p-3.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between hover:bg-white hover:border-primary/30 transition-all">
-          <span className="text-sm font-bold text-navy truncate">{value || "Não detectado"}</span>
-          <CheckCircle2 className={`h-4 w-4 ${value ? "text-green-500" : "text-slate-200"}`} />
+  const renderField = (label: string, value: string, icon: any, fieldKey: string) => {
+    let hasValidationError = false;
+    let validationMessage = "";
+
+    if (fieldKey === 'doc_number' && value) {
+      if (!DocumentValidationEngine.isValidCPF(value) && !DocumentValidationEngine.isValidCNPJ(value)) {
+        hasValidationError = true;
+        validationMessage = "Formato de documento inválido";
+      }
+    }
+
+    return (
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <Label className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${hasValidationError ? "text-red-500" : "text-slate-400"}`}>
+            {icon} {label}
+          </Label>
+          {isEditing && <span className="text-[9px] font-bold text-primary animate-pulse">Editando</span>}
+          {hasValidationError && <Badge variant="destructive" className="text-[8px] h-4 uppercase">{validationMessage}</Badge>}
         </div>
-      )}
-    </div>
-  );
+        
+        {isEditing ? (
+          <Input 
+            value={value || ''} 
+            onChange={(e) => setEditedData({...editedData, [fieldKey]: e.target.value})}
+            className={`h-11 bg-white border-slate-200 rounded-xl text-sm font-bold text-navy focus:ring-primary/20 ${hasValidationError ? "border-red-300 ring-red-100" : ""}`}
+          />
+        ) : (
+          <div className={`group relative p-3.5 rounded-xl border flex items-center justify-between transition-all ${
+            hasValidationError ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-100 hover:bg-white hover:border-primary/30"
+          }`}>
+            <span className={`text-sm font-bold truncate ${hasValidationError ? "text-red-700" : "text-navy"}`}>
+              {value || "Não detectado"}
+            </span>
+            {hasValidationError ? <AlertTriangle className="h-4 w-4 text-red-500" /> : <CheckCircle2 className={`h-4 w-4 ${value ? "text-green-500" : "text-slate-200"}`} />}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <Card className="overflow-hidden border-none shadow-2xl rounded-[2.5rem] bg-white">
