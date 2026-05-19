@@ -11,6 +11,12 @@ export interface OCRJob {
   confidence_score: number;
   processing_time: number;
   document_type: string;
+  identified_document_type?: string;
+  comparison_data?: any;
+  suggested_actions?: any[];
+  is_applied?: boolean;
+  applied_at?: string;
+  error_message?: string;
   created_at: string;
   uploaded_files?: {
     file_name: string;

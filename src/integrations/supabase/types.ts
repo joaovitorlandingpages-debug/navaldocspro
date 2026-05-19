@@ -1291,7 +1291,9 @@ export type Database = {
       }
       ocr_jobs: {
         Row: {
+          applied_at: string | null
           company_id: string | null
+          comparison_data: Json | null
           confidence_by_field: Json | null
           confidence_score: number | null
           created_at: string
@@ -1299,15 +1301,20 @@ export type Database = {
           error_message: string | null
           extracted_data: Json | null
           id: string
+          identified_document_type: string | null
+          is_applied: boolean | null
           processing_time: number | null
           provider_used: string | null
           reviewed_by: string | null
           status: string
+          suggested_actions: Json | null
           updated_at: string
           uploaded_file_id: string | null
         }
         Insert: {
+          applied_at?: string | null
           company_id?: string | null
+          comparison_data?: Json | null
           confidence_by_field?: Json | null
           confidence_score?: number | null
           created_at?: string
@@ -1315,15 +1322,20 @@ export type Database = {
           error_message?: string | null
           extracted_data?: Json | null
           id?: string
+          identified_document_type?: string | null
+          is_applied?: boolean | null
           processing_time?: number | null
           provider_used?: string | null
           reviewed_by?: string | null
           status?: string
+          suggested_actions?: Json | null
           updated_at?: string
           uploaded_file_id?: string | null
         }
         Update: {
+          applied_at?: string | null
           company_id?: string | null
+          comparison_data?: Json | null
           confidence_by_field?: Json | null
           confidence_score?: number | null
           created_at?: string
@@ -1331,10 +1343,13 @@ export type Database = {
           error_message?: string | null
           extracted_data?: Json | null
           id?: string
+          identified_document_type?: string | null
+          is_applied?: boolean | null
           processing_time?: number | null
           provider_used?: string | null
           reviewed_by?: string | null
           status?: string
+          suggested_actions?: Json | null
           updated_at?: string
           uploaded_file_id?: string | null
         }
@@ -1351,6 +1366,41 @@ export type Database = {
             columns: ["uploaded_file_id"]
             isOneToOne: false
             referencedRelation: "uploaded_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ocr_timeline_events: {
+        Row: {
+          created_at: string | null
+          event_message: string | null
+          event_type: string
+          id: string
+          job_id: string | null
+          metadata: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_message?: string | null
+          event_type: string
+          id?: string
+          job_id?: string | null
+          metadata?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          event_message?: string | null
+          event_type?: string
+          id?: string
+          job_id?: string | null
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ocr_timeline_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "ocr_jobs"
             referencedColumns: ["id"]
           },
         ]
