@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { 
   ClipboardList, Search, Plus, MoreHorizontal, 
-  ArrowRight, Calendar, User, Ship, AlertCircle, Loader2 
+  ArrowRight, Calendar, User, Ship, AlertCircle, Loader2, CheckCircle2 
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -54,11 +54,12 @@ function Processes() {
   }, []);
 
   const columns = [
-    { id: "pending", title: "Pendente", color: "bg-red-500" },
-    { id: "review", title: "Em Análise", color: "bg-blue-500" },
-    { id: "in_progress", title: "Em Andamento", color: "bg-amber-500" },
-    { id: "waiting_docs", title: "Aguardando Docs", color: "bg-purple-500" },
-    { id: "completed", title: "Concluído", color: "bg-green-500" },
+    { id: "pending", title: "Novo / Triagem", color: "bg-red-500" },
+    { id: "in_progress", title: "Em Análise IA", color: "bg-blue-500" },
+    { id: "waiting_docs", title: "Pendência Docs", color: "bg-amber-500" },
+    { id: "waiting_protocol", title: "Pronto Protocolo", color: "bg-indigo-500" },
+    { id: "protocolado", title: "Protocolado", color: "bg-cyan-500" },
+    { id: "completed", title: "Finalizado", color: "bg-green-500" },
   ];
 
   return (
@@ -157,8 +158,17 @@ function Processes() {
                       <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
                         <Calendar className="h-3.5 w-3.5 text-red-400" /> {p.due_date ? new Date(p.due_date).toLocaleDateString('pt-BR') : "S/ data"}
                       </div>
-                      <div className="h-8 w-8 rounded-xl bg-navy text-white flex items-center justify-center text-[10px] font-black shadow-lg border-2 border-white">
-                        {p.priority === 'high' ? '!!!' : 'U'}
+                      <div className="flex gap-1.5">
+                         <div className={`h-8 w-8 rounded-xl flex items-center justify-center text-[10px] font-black shadow-lg border-2 border-white ${
+                            p.priority === 'urgent' || p.priority === 'critical' ? 'bg-red-500 text-white' : 'bg-navy text-white'
+                         }`}>
+                           {p.priority === 'urgent' ? '!!!' : p.priority === 'critical' ? 'RT' : 'P'}
+                         </div>
+                         {p.completion_percentage === 100 && (
+                            <div className="h-8 w-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg border-2 border-white">
+                               <CheckCircle2 className="h-4 w-4" />
+                            </div>
+                         )}
                       </div>
                     </div>
                   </Link>

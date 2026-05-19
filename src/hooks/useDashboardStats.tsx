@@ -46,7 +46,7 @@ export const useDashboardStats = () => {
         supabase.from("processes").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).neq("status", "completed"),
         supabase.from("generated_documents").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id),
         supabase.from("ocr_usage").select("total_jobs").eq("company_id", profile.company_id).eq("month", new Date().getMonth() + 1).maybeSingle(),
-        supabase.from("processes").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).eq("priority", "high").neq("status", "completed"),
+        supabase.from("processes").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).in("priority", ["urgent", "critical"]).neq("status", "completed"),
         supabase.from("generated_documents").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).lte("expiry_date", nextMonth.toISOString()).gte("expiry_date", today.toISOString())
       ]);
 
