@@ -63,9 +63,9 @@ function OperationsCenterPage() {
 
   const stats = [
     { label: "Fluxos Ativos", value: processes?.length || "0", icon: <Activity className="text-blue-500" />, trend: "Operação Nominal" },
-    { label: "Pendências Críticas", value: tasks?.filter(t => t.priority === 'critical' || t.priority === 'high').length || "0", icon: <AlertCircle className="text-red-500" />, trend: "Ação Imediata" },
+    { label: "Pendências Críticas", value: tasks?.filter((t: any) => t.priority === 'critical' || t.priority === 'high').length || "0", icon: <AlertCircle className="text-red-500" />, trend: "Ação Imediata" },
     { label: "Automação Hoje", value: "142", icon: <Cpu className="text-primary" />, trend: "Eficiência +40%" },
-    { label: "Prontos p/ Protocolo", value: processes?.filter(p => p.completion_percentage === 100).length || "0", icon: <CheckCircle2 className="text-green-500" />, trend: "Fluxo Finalizado" },
+    { label: "Prontos p/ Protocolo", value: processes?.filter((p: any) => p.completion_percentage === 100).length || "0", icon: <CheckCircle2 className="text-green-500" />, trend: "Fluxo Finalizado" },
   ];
 
   return (
