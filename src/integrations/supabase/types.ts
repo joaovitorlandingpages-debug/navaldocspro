@@ -230,6 +230,69 @@ export type Database = {
           },
         ]
       }
+      digital_signatures: {
+        Row: {
+          company_id: string
+          document_id: string | null
+          id: string
+          ip_address: string | null
+          is_valid: boolean | null
+          signature_data: string | null
+          signature_type: string
+          signed_at: string | null
+          signer_name: string
+          signer_role: string | null
+          user_agent: string | null
+          user_id: string | null
+          verification_hash: string | null
+        }
+        Insert: {
+          company_id: string
+          document_id?: string | null
+          id?: string
+          ip_address?: string | null
+          is_valid?: boolean | null
+          signature_data?: string | null
+          signature_type: string
+          signed_at?: string | null
+          signer_name: string
+          signer_role?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          verification_hash?: string | null
+        }
+        Update: {
+          company_id?: string
+          document_id?: string | null
+          id?: string
+          ip_address?: string | null
+          is_valid?: boolean | null
+          signature_data?: string | null
+          signature_type?: string
+          signed_at?: string | null
+          signer_name?: string
+          signer_role?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          verification_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_signatures_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_signatures_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "generated_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_audit_logs: {
         Row: {
           action: string
@@ -526,9 +589,13 @@ export type Database = {
           metadata: Json | null
           name: string
           process_id: string | null
+          qr_code_url: string | null
+          signature_status: string | null
+          signed_file_url: string | null
           status: string
           template_id: string | null
           updated_at: string
+          verification_code: string | null
           vessel_id: string | null
         }
         Insert: {
@@ -543,9 +610,13 @@ export type Database = {
           metadata?: Json | null
           name: string
           process_id?: string | null
+          qr_code_url?: string | null
+          signature_status?: string | null
+          signed_file_url?: string | null
           status?: string
           template_id?: string | null
           updated_at?: string
+          verification_code?: string | null
           vessel_id?: string | null
         }
         Update: {
@@ -560,9 +631,13 @@ export type Database = {
           metadata?: Json | null
           name?: string
           process_id?: string | null
+          qr_code_url?: string | null
+          signature_status?: string | null
+          signed_file_url?: string | null
           status?: string
           template_id?: string | null
           updated_at?: string
+          verification_code?: string | null
           vessel_id?: string | null
         }
         Relationships: [
@@ -1081,12 +1156,16 @@ export type Database = {
           customer_id: string
           draft_data: Json | null
           due_date: string | null
+          finalized_at: string | null
+          finalized_by: string | null
           id: string
           is_draft: boolean | null
           notes: string | null
           priority: string
           process_type: string
           process_type_id: string | null
+          protocol_at: string | null
+          protocol_number: string | null
           status: string
           updated_at: string
           vessel_id: string | null
@@ -1097,12 +1176,16 @@ export type Database = {
           customer_id: string
           draft_data?: Json | null
           due_date?: string | null
+          finalized_at?: string | null
+          finalized_by?: string | null
           id?: string
           is_draft?: boolean | null
           notes?: string | null
           priority?: string
           process_type: string
           process_type_id?: string | null
+          protocol_at?: string | null
+          protocol_number?: string | null
           status?: string
           updated_at?: string
           vessel_id?: string | null
@@ -1113,12 +1196,16 @@ export type Database = {
           customer_id?: string
           draft_data?: Json | null
           due_date?: string | null
+          finalized_at?: string | null
+          finalized_by?: string | null
           id?: string
           is_draft?: boolean | null
           notes?: string | null
           priority?: string
           process_type?: string
           process_type_id?: string | null
+          protocol_at?: string | null
+          protocol_number?: string | null
           status?: string
           updated_at?: string
           vessel_id?: string | null
