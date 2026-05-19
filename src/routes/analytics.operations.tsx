@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { 
   TrendingUp, Activity, Target, Clock, BarChart3, 
   ArrowUpRight, AlertTriangle, FileText, Layers, Ship, 
-  Users, ChevronRight, Filter
+  Users, ChevronRight, Filter, Zap, CheckCircle2, ShieldCheck,
+  DollarSign
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -32,12 +33,16 @@ function AnalyticsOperations() {
         {[
           { label: "Tempo Médio/Processo", value: "4.2 dias", trend: "-12h", positive: true, icon: <Clock /> },
           { label: "Taxa de Automação", value: "84%", trend: "+5%", positive: true, icon: <Target /> },
-          { label: "Processos Travados", value: "12", trend: "+2", positive: false, icon: <AlertTriangle /> },
+          { label: "Horas Economizadas", value: "450h", trend: "+24h", positive: true, icon: <Zap /> },
+          { label: "Processos Concluídos", value: "1,240", trend: "+85", positive: true, icon: <CheckCircle2 /> },
           { label: "Eficiência de OCR", value: "98.2%", trend: "+0.5%", positive: true, icon: <Activity /> },
+          { label: "Redução de Erros", value: "62%", trend: "+12%", positive: true, icon: <ShieldCheck /> },
+          { label: "Produtividade Equipe", value: "94%", trend: "+2%", positive: true, icon: <Users /> },
+          { label: "GRU Automatizadas", value: "320", trend: "+45", positive: true, icon: <DollarSign /> },
         ].map((stat, i) => (
-          <Card key={i} className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm">
+          <Card key={i} className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm hover:shadow-md transition-all group">
              <div className="flex items-center gap-4 mb-4">
-                <div className="p-3 bg-slate-50 rounded-xl text-primary">{stat.icon}</div>
+                <div className="p-3 bg-slate-50 rounded-xl text-primary group-hover:scale-110 transition-transform">{stat.icon}</div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
              </div>
              <h3 className="text-3xl font-black text-navy">{stat.value}</h3>
