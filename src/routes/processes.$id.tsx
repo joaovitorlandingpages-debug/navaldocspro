@@ -237,8 +237,12 @@ function ProcessDetail() {
                               <span className="text-sm font-bold text-navy">{process?.process_type || "---"}</span>
                            </div>
                            <div className="flex justify-between py-3 border-b border-slate-50">
-                              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Responsável</span>
-                              <span className="text-sm font-bold text-navy">Ricardo Almeida</span>
+                              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Conformidade</span>
+                              <Badge variant="outline" className={`text-[10px] font-black uppercase tracking-widest border-none ${
+                                process?.compliance_status === 'conforme' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                              }`}>
+                                {process?.compliance_status || 'Pendente'}
+                              </Badge>
                            </div>
                            <div className="flex justify-between py-3 border-b border-slate-50">
                               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Prazo</span>
