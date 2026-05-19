@@ -346,24 +346,11 @@ function ProcessDetail() {
                </TabsContent>
 
                <TabsContent value="history" className="animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                    <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-8 flex items-center gap-2">
-                       <History className="h-5 w-5 text-primary" /> Linha do Tempo
+                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+                    <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-10 flex items-center gap-2">
+                       <History className="h-5 w-5 text-primary" /> Histórico Inteligente
                     </h3>
-                    <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-slate-100">
-                       {timeline.map((item, idx) => (
-                          <div key={idx} className="relative flex items-center gap-6 group">
-                             <div className={`h-10 w-10 rounded-xl ${item.color} text-white flex items-center justify-center z-10 shadow-lg border-4 border-white group-hover:scale-110 transition-transform`}>
-                                {item.icon}
-                             </div>
-                             <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.date}</span>
-                                <h4 className="text-sm font-bold text-navy">{item.title}</h4>
-                                <p className="text-[11px] font-medium text-slate-500">{item.user} • {item.desc || "Operação realizada com sucesso."}</p>
-                             </div>
-                          </div>
-                       ))}
-                    </div>
+                    <ProcessTimeline events={timelineEvents} />
                   </div>
                </TabsContent>
             </Tabs>
