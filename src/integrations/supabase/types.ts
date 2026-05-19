@@ -816,11 +816,13 @@ export type Database = {
       }
       document_templates: {
         Row: {
+          base_content: string | null
           category: string | null
           category_id: string | null
           company_id: string | null
           created_at: string
           description: string | null
+          document_structure: Json | null
           document_type_io: string | null
           fields_config: Json | null
           file_type: string | null
@@ -840,11 +842,13 @@ export type Database = {
           version_number: number | null
         }
         Insert: {
+          base_content?: string | null
           category?: string | null
           category_id?: string | null
           company_id?: string | null
           created_at?: string
           description?: string | null
+          document_structure?: Json | null
           document_type_io?: string | null
           fields_config?: Json | null
           file_type?: string | null
@@ -864,11 +868,13 @@ export type Database = {
           version_number?: number | null
         }
         Update: {
+          base_content?: string | null
           category?: string | null
           category_id?: string | null
           company_id?: string | null
           created_at?: string
           description?: string | null
+          document_structure?: Json | null
           document_type_io?: string | null
           fields_config?: Json | null
           file_type?: string | null
@@ -1126,6 +1132,76 @@ export type Database = {
             columns: ["vessel_id"]
             isOneToOne: false
             referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      generated_documents_instances: {
+        Row: {
+          company_id: string | null
+          content_html: string | null
+          created_at: string | null
+          document_name: string
+          file_url: string | null
+          id: string
+          last_edited_by: string | null
+          mapped_data: Json | null
+          process_id: string | null
+          status: string | null
+          template_id: string | null
+          updated_at: string | null
+          version_number: number | null
+        }
+        Insert: {
+          company_id?: string | null
+          content_html?: string | null
+          created_at?: string | null
+          document_name: string
+          file_url?: string | null
+          id?: string
+          last_edited_by?: string | null
+          mapped_data?: Json | null
+          process_id?: string | null
+          status?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+          version_number?: number | null
+        }
+        Update: {
+          company_id?: string | null
+          content_html?: string | null
+          created_at?: string | null
+          document_name?: string
+          file_url?: string | null
+          id?: string
+          last_edited_by?: string | null
+          mapped_data?: Json | null
+          process_id?: string | null
+          status?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+          version_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_documents_instances_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_documents_instances_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_documents_instances_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
             referencedColumns: ["id"]
           },
         ]
