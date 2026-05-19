@@ -121,7 +121,7 @@ function DashboardLayout() {
         <div className="p-6 flex flex-col gap-1 border-b border-white/5">
           <div className="flex items-center gap-3">
             <Anchor className="h-8 w-8 text-primary flex-shrink-0" />
-            {isSidebarOpen && <span className="font-bold text-xl tracking-tight">NavalDocs</span>}
+            {isSidebarOpen && <span className="font-bold text-xl tracking-tight text-white">NavalDocs</span>}
           </div>
           {isSidebarOpen && (
             <div className="mt-2 px-1">
