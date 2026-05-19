@@ -49,6 +49,41 @@ export type Database = {
           },
         ]
       }
+      automation_logs: {
+        Row: {
+          created_at: string | null
+          description: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          process_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          process_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          process_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_logs_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           cnpj: string | null
@@ -405,6 +440,7 @@ export type Database = {
           customer_id: string | null
           document_type: string
           expiry_date: string | null
+          extracted_data: Json | null
           file_url: string | null
           id: string
           issue_date: string | null
@@ -419,6 +455,7 @@ export type Database = {
           customer_id?: string | null
           document_type: string
           expiry_date?: string | null
+          extracted_data?: Json | null
           file_url?: string | null
           id?: string
           issue_date?: string | null
@@ -433,6 +470,7 @@ export type Database = {
           customer_id?: string | null
           document_type?: string
           expiry_date?: string | null
+          extracted_data?: Json | null
           file_url?: string | null
           id?: string
           issue_date?: string | null
@@ -818,6 +856,50 @@ export type Database = {
         }
         Relationships: []
       }
+      process_automation_state: {
+        Row: {
+          checklist_status: Json | null
+          data_completeness: Json | null
+          id: string
+          is_ready_for_generation: boolean | null
+          last_analyzed_at: string | null
+          next_suggested_steps: string[] | null
+          pending_items: string[] | null
+          process_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          checklist_status?: Json | null
+          data_completeness?: Json | null
+          id?: string
+          is_ready_for_generation?: boolean | null
+          last_analyzed_at?: string | null
+          next_suggested_steps?: string[] | null
+          pending_items?: string[] | null
+          process_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          checklist_status?: Json | null
+          data_completeness?: Json | null
+          id?: string
+          is_ready_for_generation?: boolean | null
+          last_analyzed_at?: string | null
+          next_suggested_steps?: string[] | null
+          pending_items?: string[] | null
+          process_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_automation_state_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_comments: {
         Row: {
           company_id: string | null
@@ -955,6 +1037,7 @@ export type Database = {
       }
       process_types: {
         Row: {
+          automation_rules: Json | null
           category: string | null
           created_at: string
           description: string | null
@@ -965,6 +1048,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          automation_rules?: Json | null
           category?: string | null
           created_at?: string
           description?: string | null
@@ -975,6 +1059,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          automation_rules?: Json | null
           category?: string | null
           created_at?: string
           description?: string | null

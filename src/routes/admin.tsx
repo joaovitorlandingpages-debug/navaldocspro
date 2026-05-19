@@ -10,7 +10,8 @@ import {
   LogOut,
   CreditCard,
   History,
-  FileText
+  FileText,
+  Zap
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -47,6 +48,7 @@ function AdminLayout() {
     { name: "Templates Oficiais", icon: <FileText className="h-5 w-5" />, path: "/admin/documents" },
     { name: "Usuários Global", icon: <Users className="h-5 w-5" />, path: "/admin/users" },
     { name: "Logs de Sistema", icon: <Activity className="h-5 w-5" />, path: "/admin/logs" },
+    { name: "Automação IA", icon: <Zap className="h-5 w-5" />, path: "/admin/automation" },
     { name: "Teste de Pagamento", icon: <CreditCard className="h-5 w-5" />, path: "/admin/payment-test" },
     { name: "Relatório Técnico", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/system-report" },
     { name: "Configurações", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },

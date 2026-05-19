@@ -20,6 +20,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
 import { ProcessChecklist } from "@/components/ProcessChecklist";
+import { SmartAutomationDashboard } from "@/components/automation/SmartAutomationDashboard";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
@@ -185,7 +186,10 @@ function ProcessDetail() {
             <Tabs defaultValue="overview" className="w-full">
                <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex-wrap h-auto">
                   <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geral</TabsTrigger>
-                  <TabsTrigger value="requirements" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Checklist Inteligente</TabsTrigger>
+                  <TabsTrigger value="automation" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                    <Zap className="h-3 w-3" /> Automação IA
+                  </TabsTrigger>
+                  <TabsTrigger value="requirements" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Checklist</TabsTrigger>
                   <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Arquivos</TabsTrigger>
                   <TabsTrigger value="comments" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
                     Notas {comments.length > 0 && <span className="bg-primary text-white text-[10px] px-1.5 rounded-full">{comments.length}</span>}
@@ -231,6 +235,10 @@ function ProcessDetail() {
                         </div>
                      </div>
                   </div>
+               </TabsContent>
+
+               <TabsContent value="automation" className="space-y-8 animate-in fade-in duration-300">
+                  <SmartAutomationDashboard processId={id} />
                </TabsContent>
 
                <TabsContent value="requirements" className="space-y-8 animate-in fade-in duration-300">

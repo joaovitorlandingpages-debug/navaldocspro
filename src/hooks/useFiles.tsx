@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { DocumentAutomationEngine } from "@/services/automation/documentAutomationEngine";
 
 export interface UploadedFile {
   id: string;
@@ -104,6 +105,13 @@ export const useFiles = (filters?: { customerId?: string; vesselId?: string; pro
         .single();
 
       if (error) throw error;
+
+      // Trigger automation engine if processId is present
+      if (processId) {
+        DocumentAutomationEngine.analyzeProcess(processId);
+        DocumentAutomationEngine.logEvent(processId, 'upload_complete', `Novo arquivo enviado: ${file.name}`);
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -184,6 +192,12 @@ export const useFiles = (filters?: { customerId?: string; vesselId?: string; pro
         .single();
 
       if (error) throw error;
+
+      // Trigger automation engine if processId is present
+      if (data.process_id) {
+        DocumentAutomationEngine.processOCRExtraction(data.id, mockData);
+      }
+
       return data;
     },
     onSuccess: () => {
