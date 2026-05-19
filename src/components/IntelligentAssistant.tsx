@@ -28,7 +28,7 @@ interface Insight {
 export function IntelligentAssistant({ processId }: { processId?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const { profile } = useQuery({
+  const { data: profile } = useQuery({
     queryKey: ['auth-profile'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
