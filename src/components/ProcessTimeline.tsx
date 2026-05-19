@@ -1,13 +1,14 @@
-import { Clock, User, Edit3, CheckCircle2, FileText, Anchor, ShieldCheck, AlertCircle, Zap } from "lucide-react";
+import { Clock, User, Edit3, CheckCircle2, FileText, Anchor, ShieldCheck, AlertCircle, Zap, Cpu, FilePlus, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface TimelineEvent {
   id: string;
-  type: 'creation' | 'update' | 'signature' | 'protocol' | 'completion' | 'validation_passed' | 'error_detected' | 'inconsistency_found';
+  type: 'creation' | 'update' | 'signature' | 'protocol' | 'completion' | 'validation_passed' | 'error_detected' | 'inconsistency_found' | 'ocr_processed' | 'document_generated' | 'auto_fill';
   user: string;
   description: string;
   date: string;
+  metadata?: any;
 }
 
 export function ProcessTimeline({ events }: { events: TimelineEvent[] }) {
@@ -25,6 +26,9 @@ export function ProcessTimeline({ events }: { events: TimelineEvent[] }) {
             {event.type === 'validation_passed' && <ShieldCheck className="w-5 h-5 text-emerald-500" />}
             {event.type === 'error_detected' && <AlertCircle className="w-5 h-5 text-red-500" />}
             {event.type === 'inconsistency_found' && <Zap className="w-5 h-5 text-amber-500" />}
+            {event.type === 'ocr_processed' && <Cpu className="w-5 h-5 text-primary" />}
+            {event.type === 'document_generated' && <FilePlus className="w-5 h-5 text-blue-500" />}
+            {event.type === 'auto_fill' && <Sparkles className="w-5 h-5 text-purple-500" />}
           </div>
           {/* Content */}
           <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm transition-all group-hover:shadow-md group-hover:border-primary/20">

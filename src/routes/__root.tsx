@@ -13,6 +13,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { NewProcessProvider } from "@/hooks/useNewProcess";
 import { PlanLimitProvider } from "@/hooks/usePlanLimits";
 import { FeedbackButton } from "@/components/FeedbackButton";
+import { IntelligentAssistant } from "@/components/IntelligentAssistant";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 function NotFoundComponent() {
@@ -134,6 +135,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
               <NewProcessProvider>
                 {children}
                 <FeedbackButton />
+                <IntelligentAssistant />
               </NewProcessProvider>
             </PlanLimitProvider>
           </ErrorBoundary>

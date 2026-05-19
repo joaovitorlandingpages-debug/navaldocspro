@@ -27,6 +27,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as AutomationCenterRouteImport } from './routes/automation-center'
 import { Route as AutomationRouteImport } from './routes/automation'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AiCenterRouteImport } from './routes/ai-center'
@@ -144,6 +145,11 @@ const ChangelogRoute = ChangelogRouteImport.update({
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AutomationCenterRoute = AutomationCenterRouteImport.update({
+  id: '/automation-center',
+  path: '/automation-center',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AutomationRoute = AutomationRouteImport.update({
@@ -294,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
+  '/automation-center': typeof AutomationCenterRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
@@ -341,6 +348,7 @@ export interface FileRoutesByTo {
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
+  '/automation-center': typeof AutomationCenterRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
@@ -389,6 +397,7 @@ export interface FileRoutesById {
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
+  '/automation-center': typeof AutomationCenterRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
@@ -439,6 +448,7 @@ export interface FileRouteTypes {
     | '/ai-center'
     | '/analytics'
     | '/automation'
+    | '/automation-center'
     | '/calendar'
     | '/changelog'
     | '/customers'
@@ -486,6 +496,7 @@ export interface FileRouteTypes {
     | '/ai-center'
     | '/analytics'
     | '/automation'
+    | '/automation-center'
     | '/calendar'
     | '/changelog'
     | '/customers'
@@ -533,6 +544,7 @@ export interface FileRouteTypes {
     | '/ai-center'
     | '/analytics'
     | '/automation'
+    | '/automation-center'
     | '/calendar'
     | '/changelog'
     | '/customers'
@@ -582,6 +594,7 @@ export interface RootRouteChildren {
   AiCenterRoute: typeof AiCenterRoute
   AnalyticsRoute: typeof AnalyticsRouteWithChildren
   AutomationRoute: typeof AutomationRoute
+  AutomationCenterRoute: typeof AutomationCenterRoute
   CalendarRoute: typeof CalendarRoute
   ChangelogRoute: typeof ChangelogRoute
   CustomersRoute: typeof CustomersRoute
@@ -734,6 +747,13 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/automation-center': {
+      id: '/automation-center'
+      path: '/automation-center'
+      fullPath: '/automation-center'
+      preLoaderRoute: typeof AutomationCenterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/automation': {
@@ -1013,6 +1033,7 @@ const rootRouteChildren: RootRouteChildren = {
   AiCenterRoute: AiCenterRoute,
   AnalyticsRoute: AnalyticsRouteWithChildren,
   AutomationRoute: AutomationRoute,
+  AutomationCenterRoute: AutomationCenterRoute,
   CalendarRoute: CalendarRoute,
   ChangelogRoute: ChangelogRoute,
   CustomersRoute: CustomersRoute,

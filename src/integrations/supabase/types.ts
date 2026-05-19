@@ -58,6 +58,57 @@ export type Database = {
           },
         ]
       }
+      anti_error_logs: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          description: string | null
+          error_type: string
+          id: string
+          is_prevented: boolean | null
+          metadata: Json | null
+          process_id: string | null
+          severity: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          error_type: string
+          id?: string
+          is_prevented?: boolean | null
+          metadata?: Json | null
+          process_id?: string | null
+          severity?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          error_type?: string
+          id?: string
+          is_prevented?: boolean | null
+          metadata?: Json | null
+          process_id?: string | null
+          severity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anti_error_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anti_error_logs_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -139,6 +190,47 @@ export type Database = {
             columns: ["process_id"]
             isOneToOne: false
             referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_statistics: {
+        Row: {
+          company_id: string | null
+          failed_executions: number | null
+          id: string
+          last_updated: string | null
+          module_name: string
+          successful_executions: number | null
+          time_saved_seconds: number | null
+          total_executions: number | null
+        }
+        Insert: {
+          company_id?: string | null
+          failed_executions?: number | null
+          id?: string
+          last_updated?: string | null
+          module_name: string
+          successful_executions?: number | null
+          time_saved_seconds?: number | null
+          total_executions?: number | null
+        }
+        Update: {
+          company_id?: string | null
+          failed_executions?: number | null
+          id?: string
+          last_updated?: string | null
+          module_name?: string
+          successful_executions?: number | null
+          time_saved_seconds?: number | null
+          total_executions?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_statistics_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -2274,6 +2366,8 @@ export type Database = {
       }
       processes: {
         Row: {
+          automation_level: number | null
+          automation_metadata: Json | null
           automation_status: string | null
           company_id: string
           completed_at: string | null
@@ -2284,6 +2378,7 @@ export type Database = {
           customer_id: string
           draft_data: Json | null
           due_date: string | null
+          efficiency_score: number | null
           finalized_at: string | null
           finalized_by: string | null
           id: string
@@ -2318,6 +2413,8 @@ export type Database = {
           vessel_id: string | null
         }
         Insert: {
+          automation_level?: number | null
+          automation_metadata?: Json | null
           automation_status?: string | null
           company_id: string
           completed_at?: string | null
@@ -2328,6 +2425,7 @@ export type Database = {
           customer_id: string
           draft_data?: Json | null
           due_date?: string | null
+          efficiency_score?: number | null
           finalized_at?: string | null
           finalized_by?: string | null
           id?: string
@@ -2362,6 +2460,8 @@ export type Database = {
           vessel_id?: string | null
         }
         Update: {
+          automation_level?: number | null
+          automation_metadata?: Json | null
           automation_status?: string | null
           company_id?: string
           completed_at?: string | null
@@ -2372,6 +2472,7 @@ export type Database = {
           customer_id?: string
           draft_data?: Json | null
           due_date?: string | null
+          efficiency_score?: number | null
           finalized_at?: string | null
           finalized_by?: string | null
           id?: string
