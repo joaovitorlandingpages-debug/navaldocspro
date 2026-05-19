@@ -33,6 +33,7 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as DebugSystemRouteImport } from './routes/debug.system'
+import { Route as DashboardDocumentsBaseRouteImport } from './routes/dashboard/documents-base'
 import { Route as BillingSuccessRouteImport } from './routes/billing.success'
 import { Route as BillingSubscriptionRouteImport } from './routes/billing.subscription'
 import { Route as BillingFailureRouteImport } from './routes/billing.failure'
@@ -170,6 +171,11 @@ const DebugSystemRoute = DebugSystemRouteImport.update({
   path: '/debug/system',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardDocumentsBaseRoute = DashboardDocumentsBaseRouteImport.update({
+  id: '/documents-base',
+  path: '/documents-base',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const BillingSuccessRoute = BillingSuccessRouteImport.update({
   id: '/billing/success',
   path: '/billing/success',
@@ -288,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/billing/failure': typeof BillingFailureRoute
   '/billing/subscription': typeof BillingSubscriptionRoute
   '/billing/success': typeof BillingSuccessRoute
+  '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -328,6 +335,7 @@ export interface FileRoutesByTo {
   '/billing/failure': typeof BillingFailureRoute
   '/billing/subscription': typeof BillingSubscriptionRoute
   '/billing/success': typeof BillingSuccessRoute
+  '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin': typeof AdminIndexRoute
@@ -371,6 +379,7 @@ export interface FileRoutesById {
   '/billing/failure': typeof BillingFailureRoute
   '/billing/subscription': typeof BillingSubscriptionRoute
   '/billing/success': typeof BillingSuccessRoute
+  '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -415,6 +424,7 @@ export interface FileRouteTypes {
     | '/billing/failure'
     | '/billing/subscription'
     | '/billing/success'
+    | '/dashboard/documents-base'
     | '/debug/system'
     | '/processes/$id'
     | '/admin/'
@@ -455,6 +465,7 @@ export interface FileRouteTypes {
     | '/billing/failure'
     | '/billing/subscription'
     | '/billing/success'
+    | '/dashboard/documents-base'
     | '/debug/system'
     | '/processes/$id'
     | '/admin'
@@ -497,6 +508,7 @@ export interface FileRouteTypes {
     | '/billing/failure'
     | '/billing/subscription'
     | '/billing/success'
+    | '/dashboard/documents-base'
     | '/debug/system'
     | '/processes/$id'
     | '/admin/'
@@ -702,6 +714,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DebugSystemRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/documents-base': {
+      id: '/dashboard/documents-base'
+      path: '/documents-base'
+      fullPath: '/dashboard/documents-base'
+      preLoaderRoute: typeof DashboardDocumentsBaseRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/billing/success': {
       id: '/billing/success'
       path: '/billing/success'
@@ -860,10 +879,12 @@ const AnalyticsRouteWithChildren = AnalyticsRoute._addFileChildren(
 )
 
 interface DashboardRouteChildren {
+  DashboardDocumentsBaseRoute: typeof DashboardDocumentsBaseRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardDocumentsBaseRoute: DashboardDocumentsBaseRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 

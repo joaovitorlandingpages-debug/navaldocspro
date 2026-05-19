@@ -97,17 +97,16 @@ function DashboardLayout() {
     { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
     { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
     { name: "Central IA", icon: <Zap className="h-5 w-5" />, path: "/ai-center" },
-    { name: "Agenda", icon: <CalendarIcon className="h-5 w-5" />, path: "/calendar" },
     { name: "Automação", icon: <Cpu className="h-5 w-5" />, path: "/automation" },
     { name: "Central OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
     { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
     { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
-    { name: "Biblioteca", icon: <FileText className="h-5 w-5" />, path: "/documents" },
+    { name: "Base Documental", icon: <Database className="h-5 w-5 text-primary" />, path: "/dashboard/documents-base" },
+    { name: "Meus Arquivos", icon: <FileText className="h-5 w-5" />, path: "/documents" },
     { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
     { name: "Assinatura", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
-    { name: "Suporte", icon: <HelpCircle className="h-5 w-5" />, path: "/support" },
   ];
 
   return (
