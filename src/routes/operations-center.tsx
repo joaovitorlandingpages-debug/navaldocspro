@@ -17,6 +17,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { OperationalCharts } from "@/components/OperationalCharts";
+import { IntelligencePanel } from "@/components/IntelligencePanel";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
