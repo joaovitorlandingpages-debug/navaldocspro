@@ -49,6 +49,56 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          company_id: string | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          new_data: Json | null
+          old_data: Json | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          company_id?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          company_id?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automation_logs: {
         Row: {
           created_at: string | null
@@ -678,6 +728,53 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string
+          priority: string
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message: string
+          priority?: string
+          title: string
+          type?: string
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string
+          priority?: string
+          title?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ocr_jobs: {
         Row: {
           company_id: string | null
@@ -784,6 +881,63 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operational_insights: {
+        Row: {
+          action_label: string | null
+          action_url: string | null
+          company_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_resolved: boolean | null
+          process_id: string | null
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          action_label?: string | null
+          action_url?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          process_id?: string | null
+          title: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          action_label?: string | null
+          action_url?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          process_id?: string | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_insights_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operational_insights_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
             referencedColumns: ["id"]
           },
         ]
@@ -1152,6 +1306,7 @@ export type Database = {
       processes: {
         Row: {
           company_id: string
+          completed_at: string | null
           created_at: string
           customer_id: string
           draft_data: Json | null
@@ -1166,12 +1321,15 @@ export type Database = {
           process_type_id: string | null
           protocol_at: string | null
           protocol_number: string | null
+          started_at: string | null
           status: string
+          target_completion_at: string | null
           updated_at: string
           vessel_id: string | null
         }
         Insert: {
           company_id: string
+          completed_at?: string | null
           created_at?: string
           customer_id: string
           draft_data?: Json | null
@@ -1186,12 +1344,15 @@ export type Database = {
           process_type_id?: string | null
           protocol_at?: string | null
           protocol_number?: string | null
+          started_at?: string | null
           status?: string
+          target_completion_at?: string | null
           updated_at?: string
           vessel_id?: string | null
         }
         Update: {
           company_id?: string
+          completed_at?: string | null
           created_at?: string
           customer_id?: string
           draft_data?: Json | null
@@ -1206,7 +1367,9 @@ export type Database = {
           process_type_id?: string | null
           protocol_at?: string | null
           protocol_number?: string | null
+          started_at?: string | null
           status?: string
+          target_completion_at?: string | null
           updated_at?: string
           vessel_id?: string | null
         }
@@ -1278,6 +1441,91 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      queue_items: {
+        Row: {
+          company_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          payload: Json | null
+          started_at: string | null
+          status: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          started_at?: string | null
+          status?: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          started_at?: string | null
+          status?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "queue_items_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sla_configs: {
+        Row: {
+          created_at: string | null
+          critical_threshold_days: number
+          id: string
+          process_type_id: string | null
+          target_days: number
+          updated_at: string | null
+          warning_threshold_days: number
+        }
+        Insert: {
+          created_at?: string | null
+          critical_threshold_days?: number
+          id?: string
+          process_type_id?: string | null
+          target_days?: number
+          updated_at?: string | null
+          warning_threshold_days?: number
+        }
+        Update: {
+          created_at?: string | null
+          critical_threshold_days?: number
+          id?: string
+          process_type_id?: string | null
+          target_days?: number
+          updated_at?: string | null
+          warning_threshold_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sla_configs_process_type_id_fkey"
+            columns: ["process_type_id"]
+            isOneToOne: false
+            referencedRelation: "process_types"
             referencedColumns: ["id"]
           },
         ]
