@@ -179,6 +179,14 @@ function SystemReportPage() {
                    >
                       Gerar Empresa Demo
                    </Button>
+                   <Button 
+                     className="w-full bg-navy text-white rounded-xl h-12 font-black uppercase text-[9px] tracking-widest"
+                     onClick={() => {
+                        if (profile?.company_id) seedAdvancedDemo(profile.company_id);
+                     }}
+                   >
+                      Gerar Inteligência Demo
+                   </Button>
                    <Button variant="ghost" className="w-full text-slate-400 font-bold text-[9px] uppercase tracking-widest">
                       Resetar Dados de Teste
                    </Button>
