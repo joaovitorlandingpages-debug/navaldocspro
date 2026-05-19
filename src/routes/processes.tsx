@@ -54,11 +54,12 @@ function Processes() {
   }, []);
 
   const columns = [
-    { id: "pending", title: "Pendente", color: "bg-red-500" },
-    { id: "review", title: "Em Análise", color: "bg-blue-500" },
-    { id: "in_progress", title: "Em Andamento", color: "bg-amber-500" },
-    { id: "waiting_docs", title: "Aguardando Docs", color: "bg-purple-500" },
-    { id: "completed", title: "Concluído", color: "bg-green-500" },
+    { id: "pending", title: "Novo / Triagem", color: "bg-red-500" },
+    { id: "in_progress", title: "Em Análise IA", color: "bg-blue-500" },
+    { id: "waiting_docs", title: "Pendência Docs", color: "bg-amber-500" },
+    { id: "waiting_protocol", title: "Pronto Protocolo", color: "bg-indigo-500" },
+    { id: "protocolado", title: "Protocolado", color: "bg-cyan-500" },
+    { id: "completed", title: "Finalizado", color: "bg-green-500" },
   ];
 
   return (
