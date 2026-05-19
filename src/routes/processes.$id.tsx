@@ -237,6 +237,10 @@ function ProcessDetail() {
                   </div>
                </TabsContent>
 
+               <TabsContent value="automation" className="space-y-8 animate-in fade-in duration-300">
+                  <SmartAutomationDashboard processId={id} />
+               </TabsContent>
+
                <TabsContent value="requirements" className="space-y-8 animate-in fade-in duration-300">
                   <ProcessChecklist processId={id} processTypeId={process?.process_type_id} />
                </TabsContent>
