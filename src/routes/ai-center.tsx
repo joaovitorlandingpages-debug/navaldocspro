@@ -10,7 +10,8 @@ import {
   Bot,
   AlertTriangle,
   History,
-  Timer
+  Timer,
+  CheckCircle2
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
@@ -20,7 +21,7 @@ import { IntelligencePanel } from "@/components/IntelligencePanel";
 import { OperationalCharts } from "@/components/OperationalCharts";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-export const Route = createFileRoute("/ai-operations-center")({
+export const Route = createFileRoute("/ai-center")({
   component: AIOperationsCenterPage,
 });
 
