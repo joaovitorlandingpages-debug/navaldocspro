@@ -34,19 +34,19 @@ export function DocumentDashboard() {
     enabled: !!profile?.company_id
   });
 
-  const expiringSoon = documents?.filter(doc => {
+  const expiringSoon = documents?.filter((doc: any) => {
     if (!doc.expiry_date) return false;
     const expiryDate = new Date(doc.expiry_date);
     const thirtyDaysFromNow = addDays(new Date(), 30);
     return isAfter(expiryDate, new Date()) && isBefore(expiryDate, thirtyDaysFromNow);
   }) || [];
 
-  const expired = documents?.filter(doc => {
+  const expired = documents?.filter((doc: any) => {
     if (!doc.expiry_date) return false;
     return isBefore(new Date(doc.expiry_date), new Date());
   }) || [];
 
-  const criticalCertificates = documents?.filter(doc => 
+  const criticalCertificates = documents?.filter((doc: any) => 
     ['CSN', 'Borda Livre', 'DPEM'].includes(doc.document_type) && 
     (doc.status === 'expired' || isBefore(new Date(doc.expiry_date || ''), addDays(new Date(), 15)))
   ) || [];
