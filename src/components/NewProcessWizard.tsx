@@ -146,7 +146,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         .single();
 
       // 3. Generate checklist based on package or requirements
-      const checklistItems = [];
+      const checklistItems: any[] = [];
       
       if (pkg && pkg.items && pkg.items.length > 0) {
         pkg.items.forEach((item: any) => {
