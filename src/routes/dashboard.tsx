@@ -569,7 +569,9 @@ export function RouteContent() {
                   <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
             </div>
             
-            <ActivityFeed />
+            <div className="mt-8">
+               <EnterpriseAuditFeed />
+            </div>
          </div>
 
             {/* Recent Processes */}
