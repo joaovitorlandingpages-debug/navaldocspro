@@ -38,58 +38,70 @@ export function WelcomeTour({
   const progress = (completedCount / steps.length) * 100;
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-md w-full fixed bottom-8 right-8 z-[100]">
-      <div className="bg-navy p-6 text-white relative">
+    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-md w-full fixed bottom-8 right-8 z-[100] ring-1 ring-navy/5">
+      <div className="bg-navy p-8 text-white relative overflow-hidden group">
+        <Rocket className="absolute -right-8 -top-8 h-32 w-32 text-white/5 group-hover:scale-110 transition-transform duration-700" />
         <button 
           onClick={() => { setIsOpen(false); onClose(); }}
-          className="absolute top-4 right-4 text-white/40 hover:text-white transition-all"
+          className="absolute top-6 right-6 text-white/40 hover:text-white transition-all z-10"
         >
-          <X className="h-5 w-5" />
+          <X className="h-6 w-6" />
         </button>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-primary/20 rounded-lg">
-            <Rocket className="h-5 w-5 text-primary" />
+        <div className="flex items-center gap-4 mb-6 relative z-10">
+          <div className="p-3 bg-primary/20 rounded-2xl">
+            <Rocket className="h-6 w-6 text-primary" />
           </div>
-          <h3 className="font-bold uppercase tracking-widest text-sm">Guia de Implementação Enterprise</h3>
+          <div>
+            <h3 className="font-black uppercase tracking-widest text-xs text-primary">Onboarding Premium</h3>
+            <h2 className="text-xl font-bold leading-tight">Configuração Inicial</h2>
+          </div>
         </div>
-        <p className="text-xs text-white/60 mb-4 font-medium">Siga os passos para ativar sua central operacional v15.0.</p>
-        <div className="space-y-2">
-           <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter text-primary">
-              <span>Progresso de Setup</span>
-              <span>{Math.round(progress)}%</span>
+        <div className="space-y-3 relative z-10">
+           <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
+              <span>Status de Implantação</span>
+              <span className="text-primary">{Math.round(progress)}%</span>
            </div>
-           <Progress value={progress} className="h-1.5 bg-white/10" />
+           <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-1000" 
+                style={{ width: `${progress}%` }}
+              />
+           </div>
         </div>
       </div>
 
-      <div className="p-6 space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
+      <div className="p-8 space-y-5 max-h-[400px] overflow-y-auto custom-scrollbar bg-white">
         {steps.map((step) => (
-          <div key={step.id} className="flex gap-4 items-start group">
+          <div key={step.id} className="flex gap-5 items-start group">
             <div className="mt-1">
               {step.completed ? (
-                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                <div className="h-6 w-6 bg-emerald-50 rounded-lg flex items-center justify-center">
+                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                </div>
               ) : (
-                <Circle className="h-5 w-5 text-slate-200 group-hover:text-primary transition-all" />
+                <div className="h-6 w-6 border-2 border-slate-100 rounded-lg flex items-center justify-center group-hover:border-primary/40 transition-all">
+                   <Circle className="h-3 w-3 text-slate-200 group-hover:text-primary transition-all" />
+                </div>
               )}
             </div>
             <div className="flex-grow">
-              <h4 className={`text-sm font-bold ${step.completed ? 'text-slate-400 line-through' : 'text-navy'}`}>
+              <h4 className={`text-sm font-bold tracking-tight ${step.completed ? 'text-slate-300' : 'text-navy'}`}>
                 {step.title}
               </h4>
-              <p className="text-[10px] text-slate-400 font-medium">{step.description}</p>
+              <p className="text-[10px] text-slate-400 font-medium leading-relaxed">{step.description}</p>
             </div>
             {!step.completed && (
-              <ChevronRight className="h-4 w-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+              <ChevronRight className="h-4 w-4 text-slate-200 opacity-0 group-hover:opacity-100 transition-all" />
             )}
           </div>
         ))}
       </div>
 
-      <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+      <div className="p-8 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
          <button className="flex items-center gap-2 text-[10px] font-black uppercase text-navy hover:text-primary transition-all">
-            <PlayCircle className="h-4 w-4" /> Ver Tutorial
+            <PlayCircle className="h-5 w-5" /> Ver Vídeo Tutorial
          </button>
-         <Button size="sm" className="bg-primary text-[10px] font-black uppercase tracking-widest">
+         <Button className="bg-navy text-[10px] font-black uppercase tracking-widest px-6 py-5 rounded-2xl shadow-xl hover:opacity-90 transition-all">
             Próximo Passo
          </Button>
       </div>
