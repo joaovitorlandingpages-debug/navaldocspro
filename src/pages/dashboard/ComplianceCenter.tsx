@@ -144,7 +144,57 @@ export default function ComplianceCenter() {
           <TabsTrigger value="monitor" className="rounded-lg py-2.5 px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-bold text-xs uppercase tracking-widest gap-2">
             <Activity className="h-4 w-4" /> Monitor de Vencimentos
           </TabsTrigger>
+          {profile?.role === 'admin_master' && (
+            <TabsTrigger value="admin" className="rounded-lg py-2.5 px-6 data-[state=active]:bg-amber-500 data-[state=active]:text-white font-bold text-xs uppercase tracking-widest gap-2">
+              <Shield className="h-4 w-4" /> Gestão Master
+            </TabsTrigger>
+          )}
         </TabsList>
+
+        <TabsContent value="admin" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <Card className="border-slate-100 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-sm font-black uppercase tracking-widest text-navy">Painel de Controle de Regras Globais</CardTitle>
+              <CardDescription className="text-xs">Configure validações obrigatórias e critérios de bloqueio para toda a rede NavalDocs.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="p-6 rounded-[2rem] bg-slate-50 border border-slate-100">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-navy mb-4">Políticas de Bloqueio</h4>
+                    <div className="space-y-3">
+                      {[
+                        { label: "Bloquear finalização sem OCR validado", checked: true },
+                        { label: "Bloquear geração sem CPF/CNPJ válido", checked: true },
+                        { label: "Exigir assinatura digital em procurações", checked: true },
+                        { label: "Alertar divergência de nome (Documento vs Cadastro)", checked: true },
+                      ].map((item, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100">
+                          <span className="text-xs font-bold text-slate-600">{item.label}</span>
+                          <div className={`w-10 h-6 rounded-full p-1 transition-colors ${item.checked ? 'bg-primary' : 'bg-slate-200'}`}>
+                            <div className={`w-4 h-4 bg-white rounded-full transition-transform ${item.checked ? 'translate-x-4' : 'translate-x-0'}`} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="p-6 rounded-[2rem] bg-amber-50/50 border border-amber-100">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-amber-800 mb-4">Critérios de Rigor Operacional</h4>
+                    <div className="space-y-4">
+                       <p className="text-[10px] text-amber-700 font-medium leading-relaxed italic">
+                         Configurações de Admin Master afetam todos os usuários. Alterações aqui são registradas nos logs de auditoria de sistema.
+                       </p>
+                       <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white font-black uppercase tracking-widest text-[10px] h-11 rounded-xl">
+                          Salvar Configurações Master
+                       </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="issues">
           <div className="space-y-4">
