@@ -38,7 +38,7 @@ export function WelcomeTour({
   const progress = (completedCount / steps.length) * 100;
 
   return (
-    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-md w-full fixed bottom-8 right-8 z-[100] ring-1 ring-navy/5">
+    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-md w-full fixed bottom-4 right-4 md:bottom-8 md:right-8 z-[90] ring-1 ring-navy/5">
       <div className="bg-navy p-8 text-white relative overflow-hidden group">
         <Rocket className="absolute -right-8 -top-8 h-32 w-32 text-white/5 group-hover:scale-110 transition-transform duration-700" />
         <button 
