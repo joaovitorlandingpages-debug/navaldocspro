@@ -2748,6 +2748,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_system_readiness: { Args: never; Returns: Json }
       is_admin_master: { Args: never; Returns: boolean }
       log_system_event: {
         Args: {
