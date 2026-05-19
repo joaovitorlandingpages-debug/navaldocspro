@@ -1852,6 +1852,47 @@ export type Database = {
           },
         ]
       }
+      process_sla_history: {
+        Row: {
+          created_at: string | null
+          duration_minutes: number | null
+          entered_at: string | null
+          exited_at: string | null
+          id: string
+          is_breached: boolean | null
+          process_id: string | null
+          stage: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration_minutes?: number | null
+          entered_at?: string | null
+          exited_at?: string | null
+          id?: string
+          is_breached?: boolean | null
+          process_id?: string | null
+          stage: string
+        }
+        Update: {
+          created_at?: string | null
+          duration_minutes?: number | null
+          entered_at?: string | null
+          exited_at?: string | null
+          id?: string
+          is_breached?: boolean | null
+          process_id?: string | null
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_sla_history_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_type_requirements: {
         Row: {
           created_at: string | null
@@ -1946,9 +1987,14 @@ export type Database = {
           process_type_id: string | null
           protocol_at: string | null
           protocol_number: string | null
+          responsible_id: string | null
+          sla_deadline: string | null
+          sla_status: string | null
+          stalled_since: string | null
           started_at: string | null
           status: string
           target_completion_at: string | null
+          technical_manager_id: string | null
           updated_at: string
           validation_errors: Json | null
           vessel_id: string | null
@@ -1978,9 +2024,14 @@ export type Database = {
           process_type_id?: string | null
           protocol_at?: string | null
           protocol_number?: string | null
+          responsible_id?: string | null
+          sla_deadline?: string | null
+          sla_status?: string | null
+          stalled_since?: string | null
           started_at?: string | null
           status?: string
           target_completion_at?: string | null
+          technical_manager_id?: string | null
           updated_at?: string
           validation_errors?: Json | null
           vessel_id?: string | null
@@ -2010,9 +2061,14 @@ export type Database = {
           process_type_id?: string | null
           protocol_at?: string | null
           protocol_number?: string | null
+          responsible_id?: string | null
+          sla_deadline?: string | null
+          sla_status?: string | null
+          stalled_since?: string | null
           started_at?: string | null
           status?: string
           target_completion_at?: string | null
+          technical_manager_id?: string | null
           updated_at?: string
           validation_errors?: Json | null
           vessel_id?: string | null
@@ -2037,6 +2093,20 @@ export type Database = {
             columns: ["process_type_id"]
             isOneToOne: false
             referencedRelation: "process_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processes_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processes_technical_manager_id_fkey"
+            columns: ["technical_manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -2264,6 +2334,33 @@ export type Database = {
           status?: string
           updated_at?: string | null
           uptime_percentage?: number | null
+        }
+        Relationships: []
+      }
+      system_health_status: {
+        Row: {
+          id: string
+          last_check: string | null
+          latency_ms: number | null
+          message: string | null
+          service_name: string
+          status: string
+        }
+        Insert: {
+          id?: string
+          last_check?: string | null
+          latency_ms?: number | null
+          message?: string | null
+          service_name: string
+          status: string
+        }
+        Update: {
+          id?: string
+          last_check?: string | null
+          latency_ms?: number | null
+          message?: string | null
+          service_name?: string
+          status?: string
         }
         Relationships: []
       }
