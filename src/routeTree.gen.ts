@@ -37,6 +37,7 @@ import { Route as BillingSubscriptionRouteImport } from './routes/billing.subscr
 import { Route as BillingFailureRouteImport } from './routes/billing.failure'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AnalyticsOperationsRouteImport } from './routes/analytics.operations'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
@@ -187,6 +188,11 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   path: '/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnalyticsOperationsRoute = AnalyticsOperationsRouteImport.update({
+  id: '/operations',
+  path: '/operations',
+  getParentRoute: () => AnalyticsRoute,
+} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -237,7 +243,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/ai-center': typeof AiCenterRoute
-  '/analytics': typeof AnalyticsRoute
+  '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
   '/calendar': typeof CalendarRoute
   '/customers': typeof CustomersRoute
@@ -262,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/analytics/operations': typeof AnalyticsOperationsRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
   '/billing/failure': typeof BillingFailureRoute
@@ -275,7 +282,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ai-center': typeof AiCenterRoute
-  '/analytics': typeof AnalyticsRoute
+  '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
   '/calendar': typeof CalendarRoute
   '/customers': typeof CustomersRoute
@@ -299,6 +306,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/analytics/operations': typeof AnalyticsOperationsRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
   '/billing/failure': typeof BillingFailureRoute
@@ -314,7 +322,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/ai-center': typeof AiCenterRoute
-  '/analytics': typeof AnalyticsRoute
+  '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
   '/calendar': typeof CalendarRoute
   '/customers': typeof CustomersRoute
@@ -339,6 +347,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/analytics/operations': typeof AnalyticsOperationsRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
   '/billing/failure': typeof BillingFailureRoute
@@ -380,6 +389,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/system-report'
     | '/admin/users'
+    | '/analytics/operations'
     | '/auth/login'
     | '/auth/signup'
     | '/billing/failure'
@@ -417,6 +427,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/system-report'
     | '/admin/users'
+    | '/analytics/operations'
     | '/auth/login'
     | '/auth/signup'
     | '/billing/failure'
@@ -456,6 +467,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/system-report'
     | '/admin/users'
+    | '/analytics/operations'
     | '/auth/login'
     | '/auth/signup'
     | '/billing/failure'
@@ -471,7 +483,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AiCenterRoute: typeof AiCenterRoute
-  AnalyticsRoute: typeof AnalyticsRoute
+  AnalyticsRoute: typeof AnalyticsRouteWithChildren
   AutomationRoute: typeof AutomationRoute
   CalendarRoute: typeof CalendarRoute
   CustomersRoute: typeof CustomersRoute
@@ -693,6 +705,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/analytics/operations': {
+      id: '/analytics/operations'
+      path: '/operations'
+      fullPath: '/analytics/operations'
+      preLoaderRoute: typeof AnalyticsOperationsRouteImport
+      parentRoute: typeof AnalyticsRoute
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/users'
@@ -787,6 +806,18 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface AnalyticsRouteChildren {
+  AnalyticsOperationsRoute: typeof AnalyticsOperationsRoute
+}
+
+const AnalyticsRouteChildren: AnalyticsRouteChildren = {
+  AnalyticsOperationsRoute: AnalyticsOperationsRoute,
+}
+
+const AnalyticsRouteWithChildren = AnalyticsRoute._addFileChildren(
+  AnalyticsRouteChildren,
+)
+
 interface DashboardRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
@@ -815,7 +846,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AiCenterRoute: AiCenterRoute,
-  AnalyticsRoute: AnalyticsRoute,
+  AnalyticsRoute: AnalyticsRouteWithChildren,
   AutomationRoute: AutomationRoute,
   CalendarRoute: CalendarRoute,
   CustomersRoute: CustomersRoute,
