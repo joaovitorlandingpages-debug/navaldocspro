@@ -37,7 +37,12 @@ export class DocumentAutomationEngine {
         return null;
       }
 
-      // 3. Buscar documentos atuais vinculados ao processo
+      // 3. Buscar documentos atuais vinculados ao processo (nas tabelas uploaded_files e documents)
+      const { data: uploadedFiles, error: uploadError } = await supabase
+        .from('uploaded_files')
+        .select('*')
+        .eq('process_id', processId);
+
       const { data: documents, error: docError } = await supabase
         .from('documents')
         .select('*')
@@ -45,13 +50,18 @@ export class DocumentAutomationEngine {
 
       // 4. Construir Status do Checklist
       const checklist_status = requirements.map((req: any) => {
+        // Busca tanto em documentos formais quanto em uploads
         const existingDoc = documents?.find((d: any) => d.document_type === req.template.name);
+        const existingUpload = uploadedFiles?.find((u: any) => u.category === req.template.name || u.file_name.includes(req.template.name));
+        
+        const finalDoc = existingDoc || existingUpload;
+
         return {
           template_id: req.template_id,
           name: req.template.name,
           is_mandatory: req.is_mandatory,
-          status: existingDoc ? (existingDoc.status === 'Validado' ? 'validated' : 'uploaded') : 'missing',
-          document_id: existingDoc?.id
+          status: finalDoc ? (finalDoc.status === 'validated' || finalDoc.status === 'validado' ? 'validated' : 'uploaded') : 'missing',
+          document_id: finalDoc?.id
         };
       }) as ProcessAutomationState['checklist_status'];
 
