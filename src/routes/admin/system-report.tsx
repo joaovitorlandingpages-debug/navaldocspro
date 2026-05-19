@@ -31,6 +31,7 @@ export const Route = createFileRoute("/admin/system-report")({
 
 
 function SystemReportPage() {
+  const { profile } = useAuth();
   const { data: health } = useQuery({
     queryKey: ["admin-system-health"],
     queryFn: async () => {
