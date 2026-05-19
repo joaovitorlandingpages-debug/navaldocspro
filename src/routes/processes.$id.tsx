@@ -24,6 +24,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ProcessChecklist } from "@/components/ProcessChecklist";
 import { SmartAutomationDashboard } from "@/components/automation/SmartAutomationDashboard";
 import { ProcessTimeline } from "@/components/ProcessTimeline";
+import { DocumentPreviewEditor } from "@/components/documents/DocumentPreviewEditor";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
