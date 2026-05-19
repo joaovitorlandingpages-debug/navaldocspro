@@ -35,24 +35,22 @@ function AdminLayout() {
     );
   }
 
-  // Permissão estrita para Admin Master
-  if (profile?.role !== 'admin_master') {
+  // Permissão estrita para Admin Master Global ou Admin Master
+  if (profile?.role !== 'admin_master' && profile?.role !== 'admin_master_global') {
     return <Navigate to="/dashboard" />;
   }
 
 
   const adminNavItems = [
-    { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },
+    { name: "Global Ops", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },
     { name: "Empresas", icon: <Building className="h-5 w-5" />, path: "/admin/companies" },
-    { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/admin/billing" },
-    { name: "Templates Oficiais", icon: <FileText className="h-5 w-5" />, path: "/admin/documents" },
-    { name: "Usuários Global", icon: <Users className="h-5 w-5" />, path: "/admin/users" },
-    { name: "Logs de Sistema", icon: <Activity className="h-5 w-5" />, path: "/admin/logs" },
-    { name: "Automação IA", icon: <Zap className="h-5 w-5" />, path: "/admin/automation" },
-    { name: "Teste de Pagamento", icon: <CreditCard className="h-5 w-5" />, path: "/admin/payment-test" },
-    { name: "Relatório Técnico", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/system-report" },
-    { name: "Configurações", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },
-
+    { name: "Billing Global", icon: <CreditCard className="h-5 w-5" />, path: "/admin/billing" },
+    { name: "Biblioteca Master", icon: <FileText className="h-5 w-5" />, path: "/admin/document-library" },
+    { name: "Users Master", icon: <Users className="h-5 w-5" />, path: "/admin/users" },
+    { name: "Audit Logs", icon: <History className="h-5 w-5" />, path: "/admin/logs" },
+    { name: "Engine Rules", icon: <Zap className="h-5 w-5" />, path: "/admin/automation" },
+    { name: "System Report", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/system-report" },
+    { name: "Control Center", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },
   ];
 
   return (
