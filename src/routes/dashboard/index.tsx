@@ -4,7 +4,7 @@ import {
   ArrowRight, Calendar, User, Ship, AlertCircle, Loader2,
   Filter, LayoutGrid, List, CheckCircle2, Clock, 
   ChevronRight, MoreVertical, LayoutDashboard,
-  Timer, AlertTriangle, FileText, Zap, Star
+  Timer, AlertTriangle, FileText, Zap, Star, Edit3, Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
