@@ -9,8 +9,6 @@ import {
 } from "lucide-react";
 import { useState, useEffect, Suspense, lazy, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
-
-
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { WelcomeTour } from "@/components/WelcomeTour";
@@ -25,6 +23,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useQuery } from "@tanstack/react-query";
+import { ReadinessBanner } from "@/components/dashboard/ReadinessBanner";
+import { EnterpriseAuditFeed } from "@/components/dashboard/EnterpriseAuditFeed";
 
 
 
