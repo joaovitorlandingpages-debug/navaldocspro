@@ -97,8 +97,14 @@ function ProcessDetail() {
       )
       .subscribe();
 
+    const handleGenEvent = (e: any) => {
+      setSelectedTemplateForGen(e.detail);
+    };
+    window.addEventListener('generate-document', handleGenEvent);
+
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener('generate-document', handleGenEvent);
     };
   }, [id]);
 
