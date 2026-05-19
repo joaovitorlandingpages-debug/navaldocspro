@@ -127,12 +127,15 @@ function ProcessDetail() {
     }
   };
 
-  const timelineEvents: any[] = [
-    { id: "1", type: "creation", user: "Ricardo Almeida", description: "Processo aberto no sistema.", date: "2026-05-10T09:45:00Z" },
-    { id: "2", type: "update", user: "Ricardo Almeida", description: "Cliente vinculado e embarcação selecionada.", date: "2026-05-10T10:15:00Z" },
-    { id: "3", type: "update", user: "Sistema IA", description: "OCR: CNH processada e campos preenchidos automaticamente.", date: "2026-05-10T10:16:00Z" },
-    { id: "4", type: "signature", user: "Eng. Mariana", description: "Procuração assinada digitalmente.", date: "2026-05-10T14:20:00Z" },
-    { id: "5", type: "protocol", user: "Sistema", description: "Processo enviado para protocolo na Marinha.", date: "2026-05-11T08:30:00Z" },
+  const timelineEvents: any[] = complianceHistory?.map((event: any) => ({
+    id: event.id,
+    type: event.event_type as any,
+    user: "Sistema IA",
+    description: event.description,
+    date: event.created_at
+  })) || [
+    { id: "1", type: "creation", user: "Ricardo Almeida", description: "Processo aberto no sistema.", date: process?.created_at || "2026-05-10T09:45:00Z" },
+    { id: "2", type: "update", user: "Ricardo Almeida", description: "Cliente vinculado e embarcação selecionada.", date: process?.created_at || "2026-05-10T10:15:00Z" },
   ];
 
   return (
