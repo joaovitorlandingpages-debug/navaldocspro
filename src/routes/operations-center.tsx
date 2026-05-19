@@ -177,8 +177,6 @@ function OperationsCenterPage() {
              )}
           </div>
         </div>
-
-        </div>
       </div>
     </div>
   );
