@@ -74,31 +74,45 @@ function OperationsCenter() {
 
   const stats = {
     total: processes.length,
-    urgent: processes.filter(p => p.priority === 'high').length,
-    pending_docs: processes.filter(p => p.status === 'pending' || p.status === 'waiting_docs').length,
-    ready_to_protocol: processes.filter(p => p.automation?.[0]?.is_ready_for_generation).length,
-    finalized: processes.filter(p => p.status === 'finalized' || p.status === 'completed').length,
+    urgent: processes.filter(p => p.priority === 'urgent' || p.priority === 'critical').length,
+    pending_docs: processes.filter(p => p.completion_percentage < 100).length,
+    ready_to_protocol: processes.filter(p => p.completion_percentage === 100 && p.status !== 'completed').length,
+    finalized: processes.filter(p => p.status === 'completed' || p.status === 'finalized').length,
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-amber-100 text-amber-700 border-amber-200';
       case 'in_progress': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'waiting_docs': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'protocolado': return 'bg-cyan-100 text-cyan-700 border-cyan-200';
-      case 'completed': 
-      case 'finalized': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'waiting_protocol': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+      case 'ready_for_protocol': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'completed': return 'bg-green-100 text-green-700 border-green-200';
       default: return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
   const filteredProcesses = processes.filter(p => {
     if (filter === 'all') return true;
-    if (filter === 'urgent') return p.priority === 'high';
-    if (filter === 'ready') return p.automation?.[0]?.is_ready_for_generation;
-    if (filter === 'pending_docs') return p.status === 'waiting_docs' || p.status === 'pending';
+    if (filter === 'urgent') return p.priority === 'urgent' || p.priority === 'critical';
+    if (filter === 'ready') return p.completion_percentage === 100;
+    if (filter === 'pending_docs') return p.completion_percentage < 100;
+    if (filter === 'finalized') return p.status === 'completed' || p.status === 'finalized';
     return p.status === filter;
   });
+
+  const toggleFavorite = async (id: string, isFavorite: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('processes')
+        .update({ is_favorite: !isFavorite })
+        .eq('id', id);
+      if (error) throw error;
+      setProcesses(prev => prev.map(p => p.id === id ? { ...p, is_favorite: !isFavorite } : p));
+      toast.success(isFavorite ? "Removido dos favoritos" : "Adicionado aos favoritos");
+    } catch (err: any) {
+      toast.error("Erro ao atualizar favorito");
+    }
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
