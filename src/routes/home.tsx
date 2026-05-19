@@ -159,8 +159,8 @@ function Index() {
               <div className="h-14 w-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
                 <Zap className="h-7 w-7" />
               </div>
-              <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-3">OCR Vision IA</h3>
-              <p className="text-sm text-slate-500 leading-relaxed font-medium">Extração automática de dados de CNH, RG, TIE e Notas Fiscais com 98% de precisão.</p>
+              <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-3">Enterprise OCR</h3>
+              <p className="text-sm text-slate-500 leading-relaxed font-medium">Extração automática em lote de CNH, RG, TIE e Notas Fiscais com múltiplos uploads simultâneos.</p>
             </div>
 
             <div className="p-8 rounded-[2rem] bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
