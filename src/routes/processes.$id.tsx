@@ -173,7 +173,18 @@ function ProcessDetail() {
               <Button variant="outline" className="flex-1 md:flex-none h-11 rounded-xl gap-2 font-bold border-slate-200">
                  <Download className="h-4 w-4" /> Gerar PDF
               </Button>
-              <Button className="flex-1 md:flex-none bg-primary text-white h-11 rounded-xl gap-2 font-bold hover:opacity-90 shadow-lg shadow-primary/20">
+              <Button 
+                className="flex-1 md:flex-none bg-primary text-white h-11 rounded-xl gap-2 font-bold hover:opacity-90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={process?.compliance_status !== 'conforme' || process?.is_blocked}
+                onClick={() => {
+                  if (process?.compliance_status === 'conforme') {
+                    toast.success("Processo finalizado com sucesso!");
+                  } else {
+                    toast.error("O processo não pode ser finalizado. Verifique as inconformidades.");
+                  }
+                }}
+              >
+                 {process?.compliance_status === 'conforme' ? <CheckCircle2 className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
                  Finalizar Processo
               </Button>
            </div>
