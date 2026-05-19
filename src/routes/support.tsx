@@ -125,12 +125,12 @@ function SupportPage() {
              </h2>
              <div className="grid gap-3">
                 {faqs.map((f, i) => (
-                  <div key={i} className="bg-white p-6 rounded-2xl border border-slate-100 group cursor-pointer hover:border-primary/20 transition-all">
+                  <div key={i} className="bg-white p-6 rounded-2xl border border-slate-100 group cursor-pointer hover:border-primary/40 hover:shadow-lg transition-all">
                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-bold text-navy">{f.q}</h4>
+                        <h4 className="font-black text-navy uppercase text-xs tracking-tight">{f.q}</h4>
                         <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-primary transition-all" />
                      </div>
-                     <p className="text-sm text-slate-500">{f.a}</p>
+                     <p className="text-sm text-slate-500 font-medium">{f.a}</p>
                   </div>
                 ))}
              </div>
