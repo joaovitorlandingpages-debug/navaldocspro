@@ -20,6 +20,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
 import { ProcessChecklist } from "@/components/ProcessChecklist";
+import { SmartAutomationDashboard } from "@/components/automation/SmartAutomationDashboard";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
