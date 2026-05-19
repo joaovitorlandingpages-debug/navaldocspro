@@ -152,11 +152,13 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_demo: boolean | null
+          is_pilot: boolean | null
           logo_url: string | null
           name: string
           onboarding_status: string | null
           onboarding_step: number | null
           phone: string | null
+          pilot_feedback_score: number | null
           plan: string | null
           updated_at: string
         }
@@ -168,11 +170,13 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_demo?: boolean | null
+          is_pilot?: boolean | null
           logo_url?: string | null
           name: string
           onboarding_status?: string | null
           onboarding_step?: number | null
           phone?: string | null
+          pilot_feedback_score?: number | null
           plan?: string | null
           updated_at?: string
         }
@@ -184,11 +188,13 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_demo?: boolean | null
+          is_pilot?: boolean | null
           logo_url?: string | null
           name?: string
           onboarding_status?: string | null
           onboarding_step?: number | null
           phone?: string | null
+          pilot_feedback_score?: number | null
           plan?: string | null
           updated_at?: string
         }
@@ -845,6 +851,7 @@ export type Database = {
           ocr_enabled: boolean | null
           process_type: string | null
           region_tag: string | null
+          regional_scope: string | null
           source_origin: string | null
           template_file_url: string | null
           updated_at: string
@@ -871,6 +878,7 @@ export type Database = {
           ocr_enabled?: boolean | null
           process_type?: string | null
           region_tag?: string | null
+          regional_scope?: string | null
           source_origin?: string | null
           template_file_url?: string | null
           updated_at?: string
@@ -897,6 +905,7 @@ export type Database = {
           ocr_enabled?: boolean | null
           process_type?: string | null
           region_tag?: string | null
+          regional_scope?: string | null
           source_origin?: string | null
           template_file_url?: string | null
           updated_at?: string
