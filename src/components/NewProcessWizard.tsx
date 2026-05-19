@@ -120,7 +120,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     
     setIsSubmitting(true);
     try {
-      // 1. Create the process
+      // 1. Create the process with the correctly formatted process_type_id if applicable
       const { data: processData, error: processError } = await supabase
         .from('processes')
         .insert({
@@ -131,32 +131,60 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           process_type_id: formData.typeId,
           status: 'pending',
           priority: 'medium',
+          compliance_status: 'incompleto'
         })
         .select()
         .single();
 
       if (processError) throw processError;
 
-      // 2. Generate checklist automatically based on requirements
-      if (requirements && requirements.length > 0) {
-        const checklistItems = requirements.map((req: any) => ({
-          process_id: processData.id,
-          item_name: req.template?.name || "Documento sem nome",
-          is_mandatory: req.is_mandatory,
-          status: 'pending',
-        }));
+      // 2. Load package items to create checklist
+      const { data: pkg } = await supabase
+        .from('document_process_packages')
+        .select('*, items:document_process_package_items(*, template:document_templates(name))')
+        .eq('process_type', formData.type.toLowerCase().replace(/\s+/g, '_'))
+        .single();
 
+      // 3. Generate checklist based on package or requirements
+      const checklistItems = [];
+      
+      if (pkg && pkg.items && pkg.items.length > 0) {
+        pkg.items.forEach((item: any) => {
+          checklistItems.push({
+            process_id: processData.id,
+            item_name: item.template?.name || "Documento",
+            is_mandatory: item.is_required,
+            status: 'pending',
+          });
+        });
+      } else if (requirements && requirements.length > 0) {
+        requirements.forEach((req: any) => {
+          checklistItems.push({
+            process_id: processData.id,
+            item_name: req.template?.name || "Documento sem nome",
+            is_mandatory: req.is_mandatory,
+            status: 'pending',
+          });
+        });
+      }
+
+      if (checklistItems.length > 0) {
         const { error: checklistError } = await supabase
           .from('document_checklists')
           .insert(checklistItems);
         
-        if (checklistError) {
-          console.error("Error creating checklist:", checklistError);
-          // Don't fail the whole process creation if checklist fails, but log it
-        }
+        if (checklistError) console.error("Error creating checklist:", checklistError);
       }
 
-      toast.success("Processo e checklist operacional criados!");
+      // 4. Register creation in compliance history
+      await supabase.from('compliance_history').insert({
+        process_id: processData.id,
+        event_type: 'creation',
+        description: `Processo de ${formData.type} iniciado. Checklist automático gerado com ${checklistItems.length} itens.`,
+        severity: 'info'
+      });
+
+      toast.success("Processo e pacote documental configurados!");
       clearDraft();
       onClose();
     } catch (err: any) {
