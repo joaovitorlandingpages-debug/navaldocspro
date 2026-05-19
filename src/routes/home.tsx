@@ -70,13 +70,13 @@ function Index() {
               <div className="space-y-8">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest shadow-sm">
                   <Zap className="h-3 w-3 animate-pulse" />
-                  Inteligência Artificial Naval de Nível Nacional
+                  Inteligência Operacional de Nível Nacional
                 </div>
                 <h1 className="text-5xl lg:text-7xl font-black text-navy leading-[1.1] tracking-tighter">
-                  A era da automação <span className="text-primary italic">operacional</span> chegou.
+                  O sistema operacional <span className="text-primary italic">definitivo</span> da marinha brasileira.
                 </h1>
                 <p className="text-xl text-slate-600 max-w-xl leading-relaxed">
-                  A central operacional naval definitiva que unifica OCR inteligente, automação jurídica e gestão técnica em uma única plataforma Enterprise.
+                  Transforme seu escritório naval em uma central de inteligência automatizada com OCR avançado e gestão enterprise 360°.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link to="/auth/signup" className="bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">
@@ -320,9 +320,14 @@ function Index() {
                  </ul>
               </div>
            </div>
-           <div className="pt-8 border-t border-slate-800 text-center text-xs">
-              <p>&copy; {new Date().getFullYear()} NavalDocs Pro - Todos os direitos reservados. Marinha do Brasil e DPC são marcas registradas de seus respectivos órgãos.</p>
-           </div>
+            <div className="pt-8 border-t border-slate-800 text-center text-[10px] space-y-2">
+               <p className="opacity-40">&copy; {new Date().getFullYear()} NavalDocs Pro - Todos os direitos reservados. Marinha do Brasil e DPC são marcas registradas de seus respectivos órgãos.</p>
+               <div className="flex justify-center items-center gap-4 opacity-30 uppercase tracking-[0.2em] font-black">
+                  <span>v15.0 Absolute Enterprise</span>
+                  <div className="h-1 w-1 bg-primary rounded-full" />
+                  <span>Gold Stable Release</span>
+               </div>
+            </div>
         </div>
       </footer>
     </div>

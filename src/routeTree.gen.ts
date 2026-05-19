@@ -47,7 +47,6 @@ import { Route as AnalyticsOcrRouteImport } from './routes/analytics.ocr'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
-import { Route as AdminPaymentTestRouteImport } from './routes/admin/payment-test'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
@@ -246,11 +245,6 @@ const AdminSettingsRoute = AdminSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminPaymentTestRoute = AdminPaymentTestRouteImport.update({
-  id: '/payment-test',
-  path: '/payment-test',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminLogsRoute = AdminLogsRouteImport.update({
   id: '/logs',
   path: '/logs',
@@ -311,7 +305,6 @@ export interface FileRoutesByFullPath {
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
-  '/admin/payment-test': typeof AdminPaymentTestRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
@@ -356,7 +349,6 @@ export interface FileRoutesByTo {
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
-  '/admin/payment-test': typeof AdminPaymentTestRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
@@ -404,7 +396,6 @@ export interface FileRoutesById {
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/logs': typeof AdminLogsRoute
-  '/admin/payment-test': typeof AdminPaymentTestRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
@@ -453,7 +444,6 @@ export interface FileRouteTypes {
     | '/admin/document-library'
     | '/admin/documents'
     | '/admin/logs'
-    | '/admin/payment-test'
     | '/admin/settings'
     | '/admin/system-report'
     | '/admin/users'
@@ -498,7 +488,6 @@ export interface FileRouteTypes {
     | '/admin/document-library'
     | '/admin/documents'
     | '/admin/logs'
-    | '/admin/payment-test'
     | '/admin/settings'
     | '/admin/system-report'
     | '/admin/users'
@@ -545,7 +534,6 @@ export interface FileRouteTypes {
     | '/admin/document-library'
     | '/admin/documents'
     | '/admin/logs'
-    | '/admin/payment-test'
     | '/admin/settings'
     | '/admin/system-report'
     | '/admin/users'
@@ -863,13 +851,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/payment-test': {
-      id: '/admin/payment-test'
-      path: '/payment-test'
-      fullPath: '/admin/payment-test'
-      preLoaderRoute: typeof AdminPaymentTestRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/logs': {
       id: '/admin/logs'
       path: '/logs'
@@ -922,7 +903,6 @@ interface AdminRouteChildren {
   AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminLogsRoute: typeof AdminLogsRoute
-  AdminPaymentTestRoute: typeof AdminPaymentTestRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSystemReportRoute: typeof AdminSystemReportRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -936,7 +916,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
   AdminLogsRoute: AdminLogsRoute,
-  AdminPaymentTestRoute: AdminPaymentTestRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSystemReportRoute: AdminSystemReportRoute,
   AdminUsersRoute: AdminUsersRoute,

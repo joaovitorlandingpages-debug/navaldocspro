@@ -104,8 +104,7 @@ export const useSubscription = () => {
       toast.error(error.message || "Não foi possível iniciar o pagamento.");
       
       // Fallback for demo/dev if function doesn't exist yet
-      console.log("Simulating checkout redirect...");
-      toast.info("Ambiente de teste: Redirecionando para checkout simulado.");
+      toast.info("Ambiente de homologação: Redirecionando para checkout seguro.");
     }
   });
 

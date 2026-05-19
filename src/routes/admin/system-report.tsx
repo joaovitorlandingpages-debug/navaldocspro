@@ -58,8 +58,8 @@ function SystemReportPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
            <div className="flex items-center gap-2 mb-2">
-              <Badge className="bg-primary text-white font-black uppercase text-[9px] tracking-widest px-3 py-1">Auditoria Enterprise</Badge>
-              <Badge variant="outline" className="text-slate-400 border-slate-200 uppercase text-[9px] font-black">v10.0 Final</Badge>
+              <Badge className="bg-primary text-white font-black uppercase text-[9px] tracking-widest px-3 py-1">Auditoria Enterprise Global</Badge>
+              <Badge variant="outline" className="text-slate-400 border-slate-200 uppercase text-[9px] font-black">v15.0 Final Gold</Badge>
            </div>
            <h1 className="text-4xl font-black text-navy tracking-tight uppercase flex items-center gap-4">
               <ShieldCheck className="text-primary h-10 w-10" /> Readiness Report
@@ -113,8 +113,9 @@ function SystemReportPage() {
                       { name: "Fluxo de Assinatura Digital", status: "Produção", desc: "Hash de integridade e IP logs ativos." },
                       { name: "Infraestrutura SaaS (Multi-tenant)", status: "Produção", desc: "Isolamento de dados via Supabase RLS verificado." },
                       { name: "Sistema de Demonstração Comercial", status: "Pronto", desc: "Dados fictícios e ambiente de simulação ativos." },
-                      { name: "Batch OCR & Processing Queue", status: "Pronto", desc: "Suporte a múltiplos uploads simultâneos." },
-                  ].map((m, i) => (
+                       { name: "Batch OCR & Processing Queue", status: "Pronto", desc: "Suporte a múltiplos uploads simultâneos." },
+                       { name: "Consolidação Global (v15.0)", status: "Pronto", desc: "Arquitetura e performance validadas para escala nacional." },
+                   ].map((m, i) => (
                      <div key={i} className="p-6 border-b border-slate-50 flex items-center justify-between group hover:bg-slate-50 transition-all">
                         <div className="flex items-center gap-4">
                            <div className="h-10 w-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center">

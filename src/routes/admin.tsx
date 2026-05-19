@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, Navigate } from "@tanstack/react-router";
 import { 
   ShieldCheck, 
   Users, 
@@ -11,13 +11,15 @@ import {
   CreditCard,
   History,
   FileText,
-  Zap
+  Zap,
+  Globe,
+  CheckCircle2
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Navigate } from "@tanstack/react-router";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -137,10 +139,15 @@ export function AdminDashboardView() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Overview Global</h1>
-        <p className="text-slate-500 font-medium">Controle total da infraestrutura e negócios NavalDocs Pro.</p>
+    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Overview Global</h1>
+          <p className="text-slate-500 font-medium">Controle total da infraestrutura e negócios NavalDocs Pro.</p>
+        </div>
+        <Badge className="bg-emerald-100 text-emerald-700 border-none font-black uppercase text-[10px] tracking-widest py-2 px-4">
+          v15.0 Consolidado
+        </Badge>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
