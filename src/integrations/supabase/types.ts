@@ -17,26 +17,35 @@ export type Database = {
       activity_logs: {
         Row: {
           action: string
+          category: string | null
           company_id: string
           created_at: string
           id: string
           module: string
+          source_ip: string | null
+          user_agent: string | null
           user_id: string | null
         }
         Insert: {
           action: string
+          category?: string | null
           company_id: string
           created_at?: string
           id?: string
           module: string
+          source_ip?: string | null
+          user_agent?: string | null
           user_id?: string | null
         }
         Update: {
           action?: string
+          category?: string | null
           company_id?: string
           created_at?: string
           id?: string
           module?: string
+          source_ip?: string | null
+          user_agent?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -950,6 +959,8 @@ export type Database = {
       }
       documents: {
         Row: {
+          batch_id: string | null
+          batch_status: string | null
           company_id: string
           compliance_status: string | null
           created_at: string
@@ -961,6 +972,7 @@ export type Database = {
           id: string
           is_favorite: boolean | null
           issue_date: string | null
+          last_accessed_at: string | null
           ocr_confidence_alerts: Json | null
           process_id: string | null
           status: string
@@ -971,6 +983,8 @@ export type Database = {
           vessel_id: string | null
         }
         Insert: {
+          batch_id?: string | null
+          batch_status?: string | null
           company_id: string
           compliance_status?: string | null
           created_at?: string
@@ -982,6 +996,7 @@ export type Database = {
           id?: string
           is_favorite?: boolean | null
           issue_date?: string | null
+          last_accessed_at?: string | null
           ocr_confidence_alerts?: Json | null
           process_id?: string | null
           status?: string
@@ -992,6 +1007,8 @@ export type Database = {
           vessel_id?: string | null
         }
         Update: {
+          batch_id?: string | null
+          batch_status?: string | null
           company_id?: string
           compliance_status?: string | null
           created_at?: string
@@ -1003,6 +1020,7 @@ export type Database = {
           id?: string
           is_favorite?: boolean | null
           issue_date?: string | null
+          last_accessed_at?: string | null
           ocr_confidence_alerts?: Json | null
           process_id?: string | null
           status?: string
@@ -1758,6 +1776,38 @@ export type Database = {
         }
         Relationships: []
       }
+      process_assignees: {
+        Row: {
+          created_at: string | null
+          id: string
+          process_id: string | null
+          role: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          process_id?: string | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          process_id?: string | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_assignees_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_automation_state: {
         Row: {
           checklist_status: Json | null
@@ -2032,6 +2082,7 @@ export type Database = {
           is_blocked: boolean | null
           is_draft: boolean | null
           is_favorite: boolean | null
+          last_accessed_at: string | null
           last_automation_run: string | null
           missing_signatures_count: number | null
           notes: string | null
@@ -2050,6 +2101,7 @@ export type Database = {
           tags: string[] | null
           target_completion_at: string | null
           technical_manager_id: string | null
+          title: string | null
           updated_at: string
           validation_errors: Json | null
           vessel_id: string | null
@@ -2071,6 +2123,7 @@ export type Database = {
           is_blocked?: boolean | null
           is_draft?: boolean | null
           is_favorite?: boolean | null
+          last_accessed_at?: string | null
           last_automation_run?: string | null
           missing_signatures_count?: number | null
           notes?: string | null
@@ -2089,6 +2142,7 @@ export type Database = {
           tags?: string[] | null
           target_completion_at?: string | null
           technical_manager_id?: string | null
+          title?: string | null
           updated_at?: string
           validation_errors?: Json | null
           vessel_id?: string | null
@@ -2110,6 +2164,7 @@ export type Database = {
           is_blocked?: boolean | null
           is_draft?: boolean | null
           is_favorite?: boolean | null
+          last_accessed_at?: string | null
           last_automation_run?: string | null
           missing_signatures_count?: number | null
           notes?: string | null
@@ -2128,6 +2183,7 @@ export type Database = {
           tags?: string[] | null
           target_completion_at?: string | null
           technical_manager_id?: string | null
+          title?: string | null
           updated_at?: string
           validation_errors?: Json | null
           vessel_id?: string | null
@@ -2183,6 +2239,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          is_demo_user: boolean | null
           name: string | null
           phone: string | null
           role: string | null
@@ -2193,6 +2250,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id: string
+          is_demo_user?: boolean | null
           name?: string | null
           phone?: string | null
           role?: string | null
@@ -2203,6 +2261,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_demo_user?: boolean | null
           name?: string | null
           phone?: string | null
           role?: string | null
