@@ -23,6 +23,7 @@ import { Route as OcrReviewCenterRouteImport } from './routes/ocr-review-center'
 import { Route as OcrCenterRouteImport } from './routes/ocr-center'
 import { Route as LogsRouteImport } from './routes/logs'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as GettingStartedRouteImport } from './routes/getting-started'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
 import { Route as DebugAuthPublicRouteImport } from './routes/debug-auth-public'
@@ -134,6 +135,11 @@ const LogsRoute = LogsRouteImport.update({
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GettingStartedRoute = GettingStartedRouteImport.update({
+  id: '/getting-started',
+  path: '/getting-started',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocumentsRoute = DocumentsRouteImport.update({
@@ -366,6 +372,7 @@ export interface FileRoutesByFullPath {
   '/debug-auth-public': typeof DebugAuthPublicRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
   '/logs': typeof LogsRoute
   '/ocr-center': typeof OcrCenterRoute
@@ -422,6 +429,7 @@ export interface FileRoutesByTo {
   '/debug-auth-public': typeof DebugAuthPublicRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
   '/logs': typeof LogsRoute
   '/ocr-center': typeof OcrCenterRoute
@@ -481,6 +489,7 @@ export interface FileRoutesById {
   '/debug-auth-public': typeof DebugAuthPublicRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
   '/logs': typeof LogsRoute
   '/ocr-center': typeof OcrCenterRoute
@@ -541,6 +550,7 @@ export interface FileRouteTypes {
     | '/debug-auth-public'
     | '/document-generator'
     | '/documents'
+    | '/getting-started'
     | '/home'
     | '/logs'
     | '/ocr-center'
@@ -597,6 +607,7 @@ export interface FileRouteTypes {
     | '/debug-auth-public'
     | '/document-generator'
     | '/documents'
+    | '/getting-started'
     | '/home'
     | '/logs'
     | '/ocr-center'
@@ -655,6 +666,7 @@ export interface FileRouteTypes {
     | '/debug-auth-public'
     | '/document-generator'
     | '/documents'
+    | '/getting-started'
     | '/home'
     | '/logs'
     | '/ocr-center'
@@ -714,6 +726,7 @@ export interface RootRouteChildren {
   DebugAuthPublicRoute: typeof DebugAuthPublicRoute
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
+  GettingStartedRoute: typeof GettingStartedRoute
   HomeRoute: typeof HomeRoute
   LogsRoute: typeof LogsRoute
   OcrCenterRoute: typeof OcrCenterRoute
@@ -835,6 +848,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/getting-started': {
+      id: '/getting-started'
+      path: '/getting-started'
+      fullPath: '/getting-started'
+      preLoaderRoute: typeof GettingStartedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/documents': {
@@ -1226,6 +1246,7 @@ const rootRouteChildren: RootRouteChildren = {
   DebugAuthPublicRoute: DebugAuthPublicRoute,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
+  GettingStartedRoute: GettingStartedRoute,
   HomeRoute: HomeRoute,
   LogsRoute: LogsRoute,
   OcrCenterRoute: OcrCenterRoute,
