@@ -16,10 +16,12 @@ import { Route as StatusRouteImport } from './routes/status'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PlansRouteImport } from './routes/plans'
+import { Route as PerformanceCenterRouteImport } from './routes/performance-center'
 import { Route as OperationsCenterRouteImport } from './routes/operations-center'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as OcrReviewCenterRouteImport } from './routes/ocr-review-center'
 import { Route as OcrCenterRouteImport } from './routes/ocr-center'
+import { Route as LogsRouteImport } from './routes/logs'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
@@ -99,6 +101,11 @@ const PlansRoute = PlansRouteImport.update({
   path: '/plans',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PerformanceCenterRoute = PerformanceCenterRouteImport.update({
+  id: '/performance-center',
+  path: '/performance-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OperationsCenterRoute = OperationsCenterRouteImport.update({
   id: '/operations-center',
   path: '/operations-center',
@@ -117,6 +124,11 @@ const OcrReviewCenterRoute = OcrReviewCenterRouteImport.update({
 const OcrCenterRoute = OcrCenterRouteImport.update({
   id: '/ocr-center',
   path: '/ocr-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LogsRoute = LogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeRoute = HomeRouteImport.update({
@@ -355,10 +367,12 @@ export interface FileRoutesByFullPath {
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
+  '/logs': typeof LogsRoute
   '/ocr-center': typeof OcrCenterRoute
   '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/operations-center': typeof OperationsCenterRoute
+  '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
@@ -409,10 +423,12 @@ export interface FileRoutesByTo {
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
+  '/logs': typeof LogsRoute
   '/ocr-center': typeof OcrCenterRoute
   '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/operations-center': typeof OperationsCenterRoute
+  '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
@@ -466,10 +482,12 @@ export interface FileRoutesById {
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
+  '/logs': typeof LogsRoute
   '/ocr-center': typeof OcrCenterRoute
   '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/operations-center': typeof OperationsCenterRoute
+  '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/settings': typeof SettingsRoute
@@ -524,10 +542,12 @@ export interface FileRouteTypes {
     | '/document-generator'
     | '/documents'
     | '/home'
+    | '/logs'
     | '/ocr-center'
     | '/ocr-review-center'
     | '/onboarding'
     | '/operations-center'
+    | '/performance-center'
     | '/plans'
     | '/processes'
     | '/settings'
@@ -578,10 +598,12 @@ export interface FileRouteTypes {
     | '/document-generator'
     | '/documents'
     | '/home'
+    | '/logs'
     | '/ocr-center'
     | '/ocr-review-center'
     | '/onboarding'
     | '/operations-center'
+    | '/performance-center'
     | '/plans'
     | '/processes'
     | '/settings'
@@ -634,10 +656,12 @@ export interface FileRouteTypes {
     | '/document-generator'
     | '/documents'
     | '/home'
+    | '/logs'
     | '/ocr-center'
     | '/ocr-review-center'
     | '/onboarding'
     | '/operations-center'
+    | '/performance-center'
     | '/plans'
     | '/processes'
     | '/settings'
@@ -691,10 +715,12 @@ export interface RootRouteChildren {
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
   HomeRoute: typeof HomeRoute
+  LogsRoute: typeof LogsRoute
   OcrCenterRoute: typeof OcrCenterRoute
   OcrReviewCenterRoute: typeof OcrReviewCenterRoute
   OnboardingRoute: typeof OnboardingRoute
   OperationsCenterRoute: typeof OperationsCenterRoute
+  PerformanceCenterRoute: typeof PerformanceCenterRoute
   PlansRoute: typeof PlansRoute
   ProcessesRoute: typeof ProcessesRouteWithChildren
   SettingsRoute: typeof SettingsRoute
@@ -762,6 +788,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlansRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/performance-center': {
+      id: '/performance-center'
+      path: '/performance-center'
+      fullPath: '/performance-center'
+      preLoaderRoute: typeof PerformanceCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/operations-center': {
       id: '/operations-center'
       path: '/operations-center'
@@ -788,6 +821,13 @@ declare module '@tanstack/react-router' {
       path: '/ocr-center'
       fullPath: '/ocr-center'
       preLoaderRoute: typeof OcrCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logs': {
+      id: '/logs'
+      path: '/logs'
+      fullPath: '/logs'
+      preLoaderRoute: typeof LogsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/home': {
@@ -1187,10 +1227,12 @@ const rootRouteChildren: RootRouteChildren = {
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
   HomeRoute: HomeRoute,
+  LogsRoute: LogsRoute,
   OcrCenterRoute: OcrCenterRoute,
   OcrReviewCenterRoute: OcrReviewCenterRoute,
   OnboardingRoute: OnboardingRoute,
   OperationsCenterRoute: OperationsCenterRoute,
+  PerformanceCenterRoute: PerformanceCenterRoute,
   PlansRoute: PlansRoute,
   ProcessesRoute: ProcessesRouteWithChildren,
   SettingsRoute: SettingsRoute,
@@ -1209,13 +1251,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
