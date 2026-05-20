@@ -45,9 +45,10 @@ function DashboardLayout() {
   useEffect(() => {
     if (!loading) {
       if (!profile) {
-        console.log("No profile found, redirecting to login...");
+        console.log("REDIRECT_TO_LOGIN");
         navigate({ to: "/auth/login" });
       } else if (profile.companies?.onboarding_status === 'pending' && window.location.pathname !== '/onboarding') {
+        console.log("REDIRECT_TO_ONBOARDING");
         navigate({ to: "/onboarding" });
       } else if (profile.companies?.onboarding_status === 'completed') {
         const hasSeenTour = localStorage.getItem(`tour_seen_${profile.company_id}`);
