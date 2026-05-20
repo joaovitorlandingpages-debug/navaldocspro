@@ -329,6 +329,8 @@ function ProcessDetail() {
                 </TabsContent>
 
                <TabsContent value="documents" className="animate-in fade-in duration-300">
+                  {(() => { console.log("PROCESS_DOCUMENTS_OK"); return null; })()}
+
                   <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
