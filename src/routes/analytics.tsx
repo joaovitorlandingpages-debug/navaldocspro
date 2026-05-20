@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { BackButton } from "@/components/BackButton";
 
 export const Route = createFileRoute("/analytics")({
   component: AnalyticsPage,
@@ -79,6 +80,7 @@ function AnalyticsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
+      <BackButton className="w-fit lg:hidden" />
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-4xl font-black text-navy tracking-tight uppercase">Analytics Executivo</h1>
