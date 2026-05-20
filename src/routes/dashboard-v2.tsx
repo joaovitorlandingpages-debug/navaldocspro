@@ -4,17 +4,22 @@ import {
   LogOut, Plus, Menu, LayoutGrid, Activity, FileText, FilePlus, 
   Library, Zap, ShieldCheck, DollarSign, BarChart3, Settings,
   Building2, UserCog, ScrollText, History, ShieldAlert, MonitorPlay,
-  CreditCard, Briefcase
+  CreditCard, Briefcase, TrendingUp
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useNewProcess } from "@/hooks/useNewProcess";
+import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidgets";
+import { ActivityFeed } from "@/components/ActivityFeed";
+import { OperationalCharts } from "@/components/OperationalCharts";
 
 export const Route = createFileRoute("/dashboard-v2")({
   component: () => (
@@ -172,6 +177,22 @@ function DashboardV2Content() {
   const { profile } = useAuth();
   const { data: stats, isLoading } = useDashboardStats();
   const { setIsNewProcessOpen } = useNewProcess();
+  
+  const { data: recentDocs } = useQuery({
+    queryKey: ["recent-documents-dashboard-v2", profile?.company_id],
+    queryFn: async () => {
+      if (!profile?.company_id) return [];
+      const { data, error } = await supabase
+        .from("documents")
+        .select("*, processes(id, process_type)")
+        .eq("company_id", profile.company_id)
+        .order("created_at", { ascending: false })
+        .limit(4);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.company_id
+  });
 
   useEffect(() => {
     if (!isLoading) {
