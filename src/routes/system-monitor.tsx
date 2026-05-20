@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { 
   ShieldCheck, Database, Zap, MonitorCheck, 
   AlertCircle, Activity, Globe, Server, 
@@ -6,12 +6,25 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/system-monitor")({
   component: SystemMonitor,
 });
 
 function SystemMonitor() {
+  const { profile, loading } = useAuth();
+
+  useEffect(() => {
+    console.log("GLOBAL_MONITOR_OK");
+  }, []);
+
+  if (loading) return null;
+  if (profile?.role !== 'admin_master_global' && profile?.email !== 'joaovitor.f0725@gmail.com') {
+    return <Navigate to="/dashboard-v2" />;
+  }
+
   const services = [
     { name: "Supabase Database", status: "online", latency: "24ms", icon: <Database /> },
     { name: "OCR Engine (Google Vision)", status: "online", latency: "145ms", icon: <Zap /> },
