@@ -24,5 +24,12 @@ function RedirectToIndex() {
     checkSession();
   }, [navigate]);
 
-  return null;
+  return (
+    <div className="h-screen w-full flex items-center justify-center bg-[#000B18]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Iniciando sistema...</p>
+      </div>
+    </div>
+  );
 }

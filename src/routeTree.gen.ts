@@ -30,6 +30,7 @@ import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AutomationCenterRouteImport } from './routes/automation-center'
 import { Route as AutomationRouteImport } from './routes/automation'
+import { Route as AuthDebugRouteImport } from './routes/auth-debug'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AiCenterRouteImport } from './routes/ai-center'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -163,6 +164,11 @@ const AutomationCenterRoute = AutomationCenterRouteImport.update({
 const AutomationRoute = AutomationRouteImport.update({
   id: '/automation',
   path: '/automation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthDebugRoute = AuthDebugRouteImport.update({
+  id: '/auth-debug',
+  path: '/auth-debug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyticsRoute = AnalyticsRouteImport.update({
@@ -317,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
+  '/auth-debug': typeof AuthDebugRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
   '/calendar': typeof CalendarRoute
@@ -368,6 +375,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
+  '/auth-debug': typeof AuthDebugRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
   '/calendar': typeof CalendarRoute
@@ -420,6 +428,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
+  '/auth-debug': typeof AuthDebugRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
   '/calendar': typeof CalendarRoute
@@ -474,6 +483,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ai-center'
     | '/analytics'
+    | '/auth-debug'
     | '/automation'
     | '/automation-center'
     | '/calendar'
@@ -525,6 +535,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ai-center'
     | '/analytics'
+    | '/auth-debug'
     | '/automation'
     | '/automation-center'
     | '/calendar'
@@ -576,6 +587,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ai-center'
     | '/analytics'
+    | '/auth-debug'
     | '/automation'
     | '/automation-center'
     | '/calendar'
@@ -629,6 +641,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AiCenterRoute: typeof AiCenterRoute
   AnalyticsRoute: typeof AnalyticsRouteWithChildren
+  AuthDebugRoute: typeof AuthDebugRoute
   AutomationRoute: typeof AutomationRoute
   AutomationCenterRoute: typeof AutomationCenterRoute
   CalendarRoute: typeof CalendarRoute
@@ -806,6 +819,13 @@ declare module '@tanstack/react-router' {
       path: '/automation'
       fullPath: '/automation'
       preLoaderRoute: typeof AutomationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth-debug': {
+      id: '/auth-debug'
+      path: '/auth-debug'
+      fullPath: '/auth-debug'
+      preLoaderRoute: typeof AuthDebugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/analytics': {
@@ -1093,6 +1113,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AiCenterRoute: AiCenterRoute,
   AnalyticsRoute: AnalyticsRouteWithChildren,
+  AuthDebugRoute: AuthDebugRoute,
   AutomationRoute: AutomationRoute,
   AutomationCenterRoute: AutomationCenterRoute,
   CalendarRoute: CalendarRoute,

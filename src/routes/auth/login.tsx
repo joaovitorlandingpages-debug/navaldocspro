@@ -31,25 +31,9 @@ function LoginComponent() {
 
       if (error) throw error;
 
-      // Buscar perfil para redirecionamento correto
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', authData.user.id)
-        .maybeSingle();
-
       toast.success("Login realizado com sucesso!");
-
-      if (profile?.role === 'admin_master_global') {
-        console.log("REDIRECT_TO_ADMIN_GLOBAL");
-        navigate({ to: "/admin" }); // Assuming global is here or subpath
-      } else if (profile?.role === 'admin_master') {
-        console.log("REDIRECT_TO_ADMIN");
-        navigate({ to: "/admin" });
-      } else {
-        console.log("REDIRECT_TO_DASHBOARD");
-        navigate({ to: "/dashboard" });
-      }
+      console.log("REDIRECT_TO_DASHBOARD");
+      navigate({ to: "/dashboard" });
     } catch (error: any) {
       toast.error(error.message || "Erro ao realizar login");
     } finally {

@@ -15,6 +15,7 @@ import { PlanLimitProvider } from "@/hooks/usePlanLimits";
 import { FeedbackButton } from "@/components/FeedbackButton";
 import { IntelligentAssistant } from "@/components/IntelligentAssistant";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 function NotFoundComponent() {
   return (
@@ -130,14 +131,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <ErrorBoundary>
-            <PlanLimitProvider>
-              <NewProcessProvider>
-                {children}
-                <SafeFloatingWidgets />
-              </NewProcessProvider>
-            </PlanLimitProvider>
-          </ErrorBoundary>
+          <AuthProvider>
+            <ErrorBoundary>
+              <PlanLimitProvider>
+                <NewProcessProvider>
+                  {children}
+                  <SafeFloatingWidgets />
+                </NewProcessProvider>
+              </PlanLimitProvider>
+            </ErrorBoundary>
+          </AuthProvider>
         </QueryClientProvider>
         <Scripts />
         <Toaster />
@@ -146,22 +149,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Separate component to safely handle floating widgets without crashing the root
+// Separate component to safely handle floating widgets
 function SafeFloatingWidgets() {
-  const isAuthPage = typeof window !== 'undefined' && (
-    window.location.pathname.startsWith('/auth') || 
-    window.location.pathname === '/' ||
-    window.location.pathname === '/home'
-  );
-
-  if (isAuthPage) return null;
-
-  return (
-    <>
-      <FeedbackButton />
-      <IntelligentAssistant />
-    </>
-  );
+  // Desativado temporariamente para estabilidade máxima
+  return null;
 }
 
 function RootComponent() {
