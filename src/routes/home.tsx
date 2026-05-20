@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Anchor, Ship, FileText, CheckCircle, Shield, ArrowRight, Menu, X, Users, Settings, LogIn, Mail, Zap, Cpu, Activity } from "lucide-react";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/home")({
   component: Index,
@@ -10,18 +10,14 @@ export const Route = createFileRoute("/home")({
 function Index() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { session, loading } = useAuth();
 
   useEffect(() => {
-    const checkSession = async () => {
-      console.log("HOME_AUTH_CHECK");
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        console.log("HOME_REDIRECT_DASHBOARD");
-        navigate({ to: "/dashboard" });
-      }
-    };
-    checkSession();
-  }, [navigate]);
+    if (!loading && session) {
+      console.log("HOME_REDIRECT_DASHBOARD");
+      navigate({ to: "/dashboard" });
+    }
+  }, [session, loading, navigate]);
 
   return (
     <div className="flex flex-col min-h-screen">
