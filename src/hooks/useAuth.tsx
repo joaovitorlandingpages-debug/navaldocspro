@@ -33,7 +33,7 @@ export const useAuth = () => {
     };
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
       if (!mounted) return;
       console.log("AUTH_STATE_CHANGE:", event);
       
