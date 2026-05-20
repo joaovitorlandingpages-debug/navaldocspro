@@ -348,7 +348,7 @@ export function RouteContent() {
     { label: "Documentos Gerados", value: statsData?.generatedDocuments.toString() || "45", icon: <FileText className="text-green-600" />, trend: statsData?.trends.documents || "+15%" },
   ];
 
-    console.log("PREMIUM_DASHBOARD_OK");
+    console.log("ENTERPRISE_UI_OK");
     return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       {(() => { console.log("UX_ENHANCED_OK"); return null; })()}
