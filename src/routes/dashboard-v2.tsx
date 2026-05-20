@@ -1,7 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { 
   Anchor, LayoutDashboard, Users, Ship, ClipboardList, 
-  LogOut, Plus, Menu, LayoutGrid, Activity
+  LogOut, Plus, Menu, LayoutGrid, Activity, FileText, FilePlus, 
+  Library, Zap, ShieldCheck, DollarSign, BarChart3, Settings,
+  Building2, UserCog, ScrollText, History, ShieldAlert, MonitorPlay,
+  CreditCard, Briefcase
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { useNewProcess } from "@/hooks/useNewProcess";
 
 export const Route = createFileRoute("/dashboard-v2")({
   component: () => (
@@ -23,6 +27,7 @@ export const Route = createFileRoute("/dashboard-v2")({
 function DashboardV2Layout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const { profile, loading, signOut } = useAuth();
+  const { setIsNewProcessOpen } = useNewProcess();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,7 +53,29 @@ function DashboardV2Layout() {
     { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
     { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
+    { name: "Documentos", icon: <FileText className="h-5 w-5" />, path: "/documents" },
+    { name: "Gerador de Documentos", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
+    { name: "Biblioteca Documental", icon: <Library className="h-5 w-5" />, path: "/dashboard/documents-base" },
+    { name: "OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
+    { name: "Operações", icon: <Briefcase className="h-5 w-5" />, path: "/operations-center" },
+    { name: "Assinaturas", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
+    { name: "Financeiro", icon: <DollarSign className="h-5 w-5" />, path: "/plans" },
+    { name: "Analytics", icon: <BarChart3 className="h-5 w-5" />, path: "/analytics" },
+    { name: "Configurações", icon: <Settings className="h-5 w-5" />, path: "/settings" },
   ];
+
+  const isAdmin = profile?.role === 'admin_master' || profile?.role === 'admin_master_global';
+
+  const adminItems = isAdmin ? [
+    { name: "Admin Global", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin" },
+    { name: "Empresas", icon: <Building2 className="h-5 w-5" />, path: "/admin/companies" },
+    { name: "Usuários", icon: <UserCog className="h-5 w-5" />, path: "/admin/users" },
+    { name: "Templates Oficiais", icon: <ScrollText className="h-5 w-5" />, path: "/admin/templates" },
+    { name: "Logs", icon: <History className="h-5 w-5" />, path: "/admin/logs" },
+    { name: "Segurança", icon: <ShieldAlert className="h-5 w-5" />, path: "/admin/security" },
+    { name: "Monitoramento", icon: <MonitorPlay className="h-5 w-5" />, path: "/system-monitor" },
+    { name: "Billing Global", icon: <DollarSign className="h-5 w-5" />, path: "/admin/billing" },
+  ] : [];
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
@@ -59,18 +86,45 @@ function DashboardV2Layout() {
           {isSidebarOpen && <span className="font-bold text-xl tracking-tight">NavalDocs</span>}
         </div>
 
-        <nav className="flex-grow mt-6 px-4 space-y-2">
-          {navItems.map((item) => (
-            <Link 
-              key={item.name}
-              to={item.path}
-              activeProps={{ className: "bg-blue-600 text-white" }}
-              className="flex items-center gap-4 p-3 rounded-lg hover:bg-white/10 transition-colors"
+        <nav className="flex-grow mt-6 px-4 space-y-1 overflow-y-auto custom-scrollbar pb-10">
+          <div className="space-y-1">
+            {navItems.map((item) => (
+              <Link 
+                key={item.name}
+                to={item.path}
+                activeProps={{ className: "bg-blue-600 text-white" }}
+                className="flex items-center gap-4 p-3 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                {item.icon}
+                {isSidebarOpen && <span className="text-xs font-medium">{item.name}</span>}
+              </Link>
+            ))}
+            
+            <button 
+              onClick={() => setIsNewProcessOpen(true)}
+              className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-white/10 transition-colors text-white/90"
             >
-              {item.icon}
-              {isSidebarOpen && <span className="text-sm font-medium">{item.name}</span>}
-            </Link>
-          ))}
+              <Plus className="h-5 w-5 text-blue-400" />
+              {isSidebarOpen && <span className="text-xs font-medium">Novo Processo</span>}
+            </button>
+          </div>
+
+          {adminItems.length > 0 && (
+            <div className="mt-8 pt-4 border-t border-white/10 space-y-1">
+              {isSidebarOpen && <p className="px-3 mb-2 text-[10px] font-bold text-white/30 uppercase tracking-widest">Administração</p>}
+              {adminItems.map((item) => (
+                <Link 
+                  key={item.name}
+                  to={item.path}
+                  activeProps={{ className: "bg-blue-600 text-white" }}
+                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-white/10 transition-colors text-white/70 hover:text-white"
+                >
+                  {item.icon}
+                  {isSidebarOpen && <span className="text-xs font-medium">{item.name}</span>}
+                </Link>
+              ))}
+            </div>
+          )}
         </nav>
 
         <div className="p-4 border-t border-white/10">
@@ -116,103 +170,107 @@ function DashboardV2Layout() {
 function DashboardV2Content() {
   const { profile } = useAuth();
   const { data: stats, isLoading } = useDashboardStats();
+  const { setIsNewProcessOpen } = useNewProcess();
 
   useEffect(() => {
     if (!isLoading) {
-      console.log("CLIENTS_QUERY_OK");
-      console.log("VESSELS_QUERY_OK");
-      console.log("PROCESSES_QUERY_OK");
+      console.log("DASHBOARD_V2_STATS_LOADED");
     }
   }, [isLoading]);
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[1, 2, 3].map(i => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3, 4, 5, 6].map(i => (
           <Skeleton key={i} className="h-32 w-full rounded-xl" />
         ))}
       </div>
     );
   }
 
+  const mainStats = [
+    { label: "Clientes Ativos", value: stats?.activeCustomers || 0, icon: <Users className="h-4 w-4 text-blue-500" /> },
+    { label: "Embarcações", value: stats?.totalVessels || 0, icon: <Ship className="h-4 w-4 text-cyan-500" /> },
+    { label: "Processos Abertos", value: stats?.openProcesses || 0, icon: <ClipboardList className="h-4 w-4 text-amber-500" /> },
+    { label: "Documentos", value: stats?.generatedDocuments || 0, icon: <FileText className="h-4 w-4 text-emerald-500" /> },
+    { label: "Análises OCR", value: stats?.ocrUsage || 0, icon: <Zap className="h-4 w-4 text-purple-500" /> },
+    { label: "Pendências", value: (stats?.urgentProcesses || 0) + (stats?.expiringDocuments || 0), icon: <Activity className="h-4 w-4 text-red-500" /> },
+  ];
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900">Visão Geral</h2>
-        <p className="text-slate-500">Acesso rápido aos seus dados operacionais.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">Total Clientes</CardTitle>
-            <Users className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-slate-900">{stats?.activeCustomers || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">Embarcações</CardTitle>
-            <Ship className="h-4 w-4 text-cyan-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-slate-900">{stats?.totalVessels || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">Processos Abertos</CardTitle>
-            <ClipboardList className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-slate-900">{stats?.openProcesses || 0}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex flex-wrap gap-4 mt-8">
-        <Link to="/processes">
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 h-auto rounded-xl font-bold flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Visão Geral</h2>
+          <p className="text-slate-500 font-medium">Bem-vindo ao centro operacional estabilizado.</p>
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button 
+            onClick={() => setIsNewProcessOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-6 h-auto rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-500/20"
+          >
             <Plus className="h-5 w-5" /> Novo Processo
           </Button>
-        </Link>
-        <Link to="/customers">
-          <Button variant="outline" className="px-8 py-6 h-auto rounded-xl font-bold flex items-center gap-2 border-slate-200">
-            <Users className="h-5 w-5" /> Ver Clientes
-          </Button>
-        </Link>
-        <Link to="/vessels">
-          <Button variant="outline" className="px-8 py-6 h-auto rounded-xl font-bold flex items-center gap-2 border-slate-200">
-            <Ship className="h-5 w-5" /> Ver Embarcações
-          </Button>
-        </Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {mainStats.map((stat) => (
+          <Card key={stat.label} className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{stat.label}</CardTitle>
+              {stat.icon}
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-slate-900 tracking-tight">{stat.value}</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-         <Card className="border-none shadow-sm bg-white">
-            <CardHeader>
+         <Card className="border-none shadow-sm bg-white overflow-hidden group">
+            <CardHeader className="border-b border-slate-50">
                <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <Activity className="h-4 w-4 text-blue-500" /> Atividade Recente
                </CardTitle>
             </CardHeader>
-            <CardContent>
-               <p className="text-xs text-slate-400 italic">Módulo simplificado em modo de estabilização.</p>
+            <CardContent className="p-0">
+               <div className="p-8 text-center space-y-3">
+                  <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
+                     <History className="h-5 w-5 text-slate-300" />
+                  </div>
+                  <p className="text-xs text-slate-500 italic max-w-[200px] mx-auto">Módulo de monitoramento em tempo real sendo reativado gradualmente.</p>
+                  <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Ver Histórico Completo</Button>
+               </div>
             </CardContent>
          </Card>
+
          <Card className="border-none shadow-sm bg-white">
-            <CardHeader>
+            <CardHeader className="border-b border-slate-50">
                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <LayoutGrid className="h-4 w-4 text-blue-500" /> Links Úteis
+                  <LayoutGrid className="h-4 w-4 text-blue-500" /> Acesso Rápido
                </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-               <p className="text-xs text-slate-600">• Central de Suporte</p>
-               <p className="text-xs text-slate-600">• Base de Conhecimento</p>
-               <p className="text-xs text-slate-600">• Changelog v15.6</p>
+            <CardContent className="p-6">
+               <div className="grid grid-cols-2 gap-3">
+                  <Link to="/customers" className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex flex-col gap-2">
+                     <Users className="h-4 w-4 text-blue-500" />
+                     <span className="text-xs font-bold text-slate-700">Gestão Clientes</span>
+                  </Link>
+                  <Link to="/vessels" className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex flex-col gap-2">
+                     <Ship className="h-4 w-4 text-cyan-500" />
+                     <span className="text-xs font-bold text-slate-700">Frotas</span>
+                  </Link>
+                  <Link to="/document-generator" className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex flex-col gap-2">
+                     <FilePlus className="h-4 w-4 text-emerald-500" />
+                     <span className="text-xs font-bold text-slate-700">Gerador Doc</span>
+                  </Link>
+                  <Link to="/ocr-center" className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex flex-col gap-2">
+                     <Zap className="h-4 w-4 text-purple-500" />
+                     <span className="text-xs font-bold text-slate-700">Portal OCR</span>
+                  </Link>
+               </div>
             </CardContent>
          </Card>
       </div>
