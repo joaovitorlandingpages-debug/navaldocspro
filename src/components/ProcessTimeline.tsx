@@ -14,6 +14,27 @@ interface TimelineEvent {
 export function ProcessTimeline({ events }: { events: TimelineEvent[] }) {
   return (
     <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+      {events.length === 0 && (
+        <div className="space-y-8 opacity-20 grayscale pointer-events-none">
+          {[
+            { id: 'm1', type: 'ocr_processed', user: 'Sistema IA', description: 'Leitura de documento finalizada com sucesso.', date: new Date().toISOString() },
+            { id: 'm2', type: 'creation', user: 'Ricardo Almeida', description: 'Abertura de processo no sistema.', date: new Date().toISOString() },
+          ].map((mock, i) => (
+            <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-slate-50 text-slate-400 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                {mock.type === 'creation' ? <Anchor className="w-5 h-5" /> : <Cpu className="w-5 h-5" />}
+              </div>
+              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                   <span className="font-black text-[10px] text-navy uppercase">{mock.user} • EXEMPLO</span>
+                   <span className="text-[10px] text-slate-400 font-bold uppercase">Hoje</span>
+                </div>
+                <div className="text-slate-600 font-medium text-sm">{mock.description}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       {events.map((event, index) => (
         <div key={event.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
           {/* Icon */}
