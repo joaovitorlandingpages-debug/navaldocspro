@@ -5,7 +5,7 @@ import {
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
-  Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge
+  Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft
 } from "lucide-react";
 import { useState, useEffect, Suspense, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -25,6 +25,8 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExpirationMonitor } from "@/components/ExpirationMonitor";
 import { EnterpriseAuditFeed } from "@/components/dashboard/EnterpriseAuditFeed";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { BackButton } from "@/components/BackButton";
 
 
 
