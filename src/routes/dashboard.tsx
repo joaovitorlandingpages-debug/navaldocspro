@@ -154,17 +154,22 @@ function DashboardLayout() {
           )}
         </div>
 
-        <nav className="flex-grow mt-6 px-4 space-y-1 overflow-y-auto custom-scrollbar">
-          {navItems.map((item) => (
-            <Link 
-              key={item.name}
-              to={item.path}
-              activeProps={{ className: "bg-primary text-white shadow-lg shadow-primary/20 border-primary" }}
-              className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 border border-transparent transition-all group"
-            >
-              <div className="group-hover:scale-110 transition-transform">{item.icon}</div>
-              {isSidebarOpen && <span className="text-sm font-bold uppercase tracking-wider">{item.name}</span>}
-            </Link>
+        <nav className="flex-grow mt-6 px-4 space-y-6 overflow-y-auto custom-scrollbar">
+          {navItems.map((group) => (
+            <div key={group.group} className="space-y-1">
+              {isSidebarOpen && <p className="px-3 mb-2 text-[10px] font-black text-primary/40 uppercase tracking-widest">{group.group}</p>}
+              {group.items.map((item) => (
+                <Link 
+                  key={item.name}
+                  to={item.path}
+                  activeProps={{ className: "bg-primary text-white shadow-lg shadow-primary/20 border-primary" }}
+                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 border border-transparent transition-all group/item"
+                >
+                  <div className="group-hover/item:scale-110 transition-transform">{item.icon}</div>
+                  {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-wider">{item.name}</span>}
+                </Link>
+              ))}
+            </div>
           ))}
         </nav>
 
