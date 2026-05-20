@@ -82,6 +82,7 @@ function Customers() {
     };
 
     console.log("CUSTOMERS_PAGE_OK");
+    console.log("CUSTOMERS_STABLE");
     fetchData();
   }, []);
 
