@@ -673,6 +673,8 @@ export function RouteContent() {
 
           {/* Sidebar Widgets */}
           <div className="space-y-8">
+            <DashboardQuickWidgets recentDocs={recentDocs} />
+
             {/* Team Productivity Widget */}
             <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
                <div className="flex justify-between items-center mb-6">
