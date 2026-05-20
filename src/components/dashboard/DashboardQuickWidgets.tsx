@@ -6,8 +6,9 @@ import { Link } from "@tanstack/react-router";
 export function DashboardQuickWidgets({ recentDocs }: { recentDocs?: any[] }) {
   const displayDocs = recentDocs && recentDocs.length > 0 ? recentDocs : [
     { id: '1', file_name: 'BCE_REBOQUE_PHOENIX.pdf', status: 'validado', compliance_status: 'conforme', created_at: new Date().toISOString() },
-    { id: '2', file_name: 'CNH_PROPRIETARIO_MARIO.jpg', status: 'pendente', compliance_status: 'pendente', created_at: new Date().toISOString() },
-    { id: '3', file_name: 'PROCURACAO_V1.pdf', status: 'validado', compliance_status: 'conforme', created_at: new Date().toISOString() },
+    { id: '2', file_name: 'CNH_ENG_DOUGLAS.jpg', status: 'pendente', compliance_status: 'pendente', created_at: new Date().toISOString() },
+    { id: '3', file_name: 'MEMORIAL_TECNICO_OPS_01.pdf', status: 'validado', compliance_status: 'conforme', created_at: new Date().toISOString() },
+    { id: '4', file_name: 'DPC_2211_SOLICITACAO.pdf', status: 'validado', compliance_status: 'conforme', created_at: new Date().toISOString() },
   ];
 
   const isMock = !recentDocs || recentDocs.length === 0;
