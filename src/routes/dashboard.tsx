@@ -400,36 +400,70 @@ export function RouteContent() {
 
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <div className="bg-navy text-white p-6 rounded-[2rem] border border-white/5 shadow-xl relative overflow-hidden group">
-                <div className="absolute -right-10 -bottom-10 opacity-5 group-hover:scale-110 transition-transform duration-700">
-                   <Target className="h-40 w-40" />
-                </div>
-                <div className="relative z-10">
-                   <Badge className="bg-primary/20 text-primary border-none mb-4 uppercase text-[9px]">Pronto para Geração</Badge>
-                   <h3 className="text-lg font-bold mb-2">Processo PR-2024-08</h3>
-                   <p className="text-xs text-slate-400 mb-6">Todos os dados e documentos foram validados pelo OCR.</p>
-                   <button 
-                     onClick={() => navigate({ to: '/document-generator' })}
-                     className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
-                   >
-                      <FilePlus className="h-4 w-4" /> Gerar Documentos
-                   </button>
-                </div>
-             </div>
+             {(!recentProcesses || recentProcesses.length === 0) ? (
+               <>
+                 <div className="bg-navy text-white p-6 rounded-[2rem] border border-white/5 shadow-xl relative overflow-hidden group opacity-40 grayscale pointer-events-none">
+                    <div className="absolute -right-10 -bottom-10 opacity-5">
+                       <Target className="h-40 w-40" />
+                    </div>
+                    <div className="relative z-10">
+                       <Badge className="bg-primary/20 text-primary border-none mb-4 uppercase text-[9px]">Exemplo: Pronto</Badge>
+                       <h3 className="text-lg font-bold mb-2">Processo PR-2024-EX</h3>
+                       <p className="text-xs text-slate-400 mb-6">Este é um exemplo de processo com OCR 100% validado.</p>
+                       <button className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2">
+                          <FilePlus className="h-4 w-4" /> Gerar Documentos
+                       </button>
+                    </div>
+                 </div>
 
-             <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-                <div className="absolute -right-10 -bottom-10 opacity-5 group-hover:scale-110 transition-transform duration-700 text-amber-500">
-                   <AlertTriangle className="h-40 w-40" />
-                </div>
-                <div className="relative z-10">
-                   <Badge className="bg-amber-100 text-amber-600 border-none mb-4 uppercase text-[9px]">Assinatura Pendente</Badge>
-                   <h3 className="text-lg font-bold text-navy mb-2">Protocolo Anatel</h3>
-                   <p className="text-xs text-slate-400 mb-6">Aguardando assinatura digital do Engenheiro Responsável.</p>
-                   <button className="w-full bg-slate-100 text-navy py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
-                      <Bell className="h-4 w-4" /> Notificar Responsável
-                   </button>
-                </div>
-             </div>
+                 <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group opacity-40 grayscale pointer-events-none">
+                    <div className="absolute -right-10 -bottom-10 opacity-5 text-amber-500">
+                       <AlertTriangle className="h-40 w-40" />
+                    </div>
+                    <div className="relative z-10">
+                       <Badge className="bg-amber-100 text-amber-600 border-none mb-4 uppercase text-[9px]">Exemplo: Pendente</Badge>
+                       <h3 className="text-lg font-bold text-navy mb-2">Renovação CSN</h3>
+                       <p className="text-xs text-slate-400 mb-6">Exemplo de alerta para assinatura técnica pendente.</p>
+                       <button className="w-full bg-slate-100 text-navy py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2">
+                          <Bell className="h-4 w-4" /> Notificar Responsável
+                       </button>
+                    </div>
+                 </div>
+               </>
+             ) : (
+                <>
+                  <div className="bg-navy text-white p-6 rounded-[2rem] border border-white/5 shadow-xl relative overflow-hidden group">
+                     <div className="absolute -right-10 -bottom-10 opacity-5 group-hover:scale-110 transition-transform duration-700">
+                        <Target className="h-40 w-40" />
+                     </div>
+                     <div className="relative z-10">
+                        <Badge className="bg-primary/20 text-primary border-none mb-4 uppercase text-[9px]">Pronto para Geração</Badge>
+                        <h3 className="text-lg font-bold mb-2">Processo {recentProcesses[0]?.id?.split('-')[0]}</h3>
+                        <p className="text-xs text-slate-400 mb-6">Todos os dados e documentos foram validados pelo OCR.</p>
+                        <button 
+                          onClick={() => navigate({ to: '/document-generator' })}
+                          className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                        >
+                           <FilePlus className="h-4 w-4" /> Gerar Documentos
+                        </button>
+                     </div>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                     <div className="absolute -right-10 -bottom-10 opacity-5 group-hover:scale-110 transition-transform duration-700 text-amber-500">
+                        <AlertTriangle className="h-40 w-40" />
+                     </div>
+                     <div className="relative z-10">
+                        <Badge className="bg-amber-100 text-amber-600 border-none mb-4 uppercase text-[9px]">Status Operacional</Badge>
+                        <h3 className="text-lg font-bold text-navy mb-2">Conformidade Ativa</h3>
+                        <p className="text-xs text-slate-400 mb-6">Monitoramento automático de regras marítimas em tempo real.</p>
+                        <button className="w-full bg-slate-100 text-navy py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
+                           <ShieldCheck className="h-4 w-4 text-primary" /> Ver Relatório
+                        </button>
+                     </div>
+                  </div>
+                </>
+             )}
           </div>
         </div>
 
