@@ -125,6 +125,8 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
               d.file_url?.includes(req.template?.name || '')
             );
             console.log("PROCESS_UPLOAD_CONNECTED", !!doc);
+            const status = doc ? (doc.compliance_status || (doc.status === 'uploaded' ? 'enviado' : doc.status)) : 'pendente';
+            const hasErrors = doc && Array.isArray(doc.validation_errors) && doc.validation_errors.length > 0;
             
             return (
               <div key={req.id} className="p-6 flex items-center justify-between hover:bg-slate-50/50 transition-colors group">
