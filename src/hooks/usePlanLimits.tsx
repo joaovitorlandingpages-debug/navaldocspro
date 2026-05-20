@@ -18,6 +18,8 @@ export function PlanLimitProvider({ children }: { children: React.ReactNode }) {
   const { subscription, isLoadingSubscription } = useSubscription();
 
   const checkLimit = async (resource: 'customers' | 'vessels' | 'processes' | 'documents' | 'ocr' | 'users' | 'files') => {
+    console.log("PLAN_LIMIT_OK", resource);
+
     try {
       if (!subscription || !subscription.plan) {
         // Safe defaults for companies without a recorded subscription yet
