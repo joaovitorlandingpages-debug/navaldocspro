@@ -51,6 +51,7 @@ function Processes() {
     };
 
     console.log("PROCESSES_PAGE_OK");
+    console.log("PROCESSES_STABLE");
     fetchProcesses();
   }, []);
 

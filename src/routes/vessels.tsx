@@ -94,6 +94,7 @@ function Vessels() {
     };
 
     console.log("VESSELS_PAGE_OK");
+    console.log("VESSELS_STABLE");
     fetchData();
   }, []);
 

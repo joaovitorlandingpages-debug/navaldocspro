@@ -13,6 +13,10 @@ export const Route = createFileRoute("/admin/logs")({
 function AdminLogs() {
   const [filter, setFilter] = useState("all");
 
+  useEffect(() => {
+    console.log("GLOBAL_LOGS_STABLE");
+  }, []);
+
   const { data: globalLogs, isLoading: loadingGlobal } = useQuery({
     queryKey: ["admin-global-audit"],
     queryFn: async () => {

@@ -32,6 +32,7 @@ function DashboardV2Layout() {
 
   useEffect(() => {
     console.log("DASHBOARD_V2_RENDERED");
+    console.log("DASHBOARD_STABLE");
   }, []);
 
   const handleLogout = async () => {
