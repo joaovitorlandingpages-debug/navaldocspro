@@ -115,9 +115,9 @@ function Processes() {
             <div key={col.id} className="flex-shrink-0 w-80 flex flex-col gap-6">
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-3">
-                  <div className={`h-2.5 w-2.5 rounded-full ${col.color} shadow-[0_0_10px_rgba(0,0,0,0.1)]`} />
-                  <h3 className="font-black text-navy text-[10px] uppercase tracking-[0.2em]">{col.title}</h3>
-                  <span className="bg-white border border-slate-100 text-slate-400 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-sm">
+                  <div className={`h-3 w-3 rounded-full ${col.color} shadow-[0_0_15px_rgba(0,0,0,0.2)] animate-pulse`} />
+                  <h3 className="font-black text-navy text-[11px] uppercase tracking-[0.2em]">{col.title}</h3>
+                  <span className="bg-navy text-primary text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-lg">
                     {processes.filter(p => p.status === col.id).length}
                   </span>
                 </div>
