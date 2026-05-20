@@ -122,6 +122,8 @@ function DashboardLayout() {
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
   ];
 
+  console.log("NAVIGATION_OK");
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Sidebar */}
@@ -148,8 +150,8 @@ function DashboardLayout() {
             <Link 
               key={item.name}
               to={item.path}
-              activeProps={{ className: "bg-primary text-white shadow-lg shadow-primary/20" }}
-              className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all group"
+              activeProps={{ className: "bg-primary text-white shadow-lg shadow-primary/20 border-primary" }}
+              className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 border border-transparent transition-all group"
             >
               <div className="group-hover:scale-110 transition-transform">{item.icon}</div>
               {isSidebarOpen && <span className="text-sm font-bold uppercase tracking-wider">{item.name}</span>}
@@ -205,11 +207,19 @@ function DashboardLayout() {
                 </Link>
              </div>
            )}
-           <div className="h-16 flex items-center justify-between px-8">
-             <div className="flex items-center gap-4 flex-grow">
+           <div className="h-auto py-4 flex items-center justify-between px-8 border-b border-slate-50">
+             <div className="flex items-center gap-6 flex-grow">
                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-100 rounded-lg lg:block hidden">
                   <Menu className="h-5 w-5" />
                 </button>
+                <div className="flex flex-col gap-1">
+                   <div className="flex items-center gap-2">
+                      <BackButton />
+                      <div className="h-4 w-px bg-slate-200 mx-1" />
+                      <Breadcrumbs />
+                   </div>
+                </div>
+             </div>
                 <div className="relative max-w-md w-full hidden sm:block">
                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                    <input 
