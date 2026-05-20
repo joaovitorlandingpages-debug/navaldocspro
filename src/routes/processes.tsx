@@ -51,8 +51,8 @@ function Processes() {
       setIsLoading(false);
     };
 
-    console.log("ENTERPRISE_UI_OK");
-    console.log("PROCESS_EXPERIENCE_OK");
+    console.log("DEMO_ENV_READY");
+    console.log("DEMO_PROCESSES_READY");
     fetchProcesses();
   }, []);
 
