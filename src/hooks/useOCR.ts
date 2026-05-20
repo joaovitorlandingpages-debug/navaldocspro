@@ -113,11 +113,31 @@ export function useOCR() {
     },
   });
 
+  // Alias for backward compatibility
+  const updateJobStatus = useMutation({
+    mutationFn: async ({ jobId, status, extractedData }: { jobId: string; status: string; extractedData?: any }) => {
+      const updateData: any = { status };
+      if (extractedData) updateData.extracted_data = extractedData;
+      
+      const { error } = await supabase
+        .from("ocr_jobs")
+        .update(updateData)
+        .eq("id", jobId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ocr-jobs"] });
+    },
+  });
+
   return {
     jobs,
     isLoading,
     createBatchJobs,
     applyOCRData,
+    updateJobStatus,
   };
 }
+
 
