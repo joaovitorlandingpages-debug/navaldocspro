@@ -31,12 +31,11 @@ function LoginComponent() {
 
       if (error) throw error;
 
-      toast.success("Login realizado com sucesso!");
-      console.log("LOGIN_SUCCESS_REDIRECTING");
+      toast.success("LOGIN_SUCCESS");
+      console.log("REDIRECT_DASHBOARD_SAFE");
       
-      // Use window.location for a hard redirect if tanstack-router is stuck
       setTimeout(() => {
-        window.location.href = "/dashboard";
+        window.location.href = "/dashboard-safe";
       }, 500);
     } catch (error: any) {
       toast.error(error.message || "Erro ao realizar login");
