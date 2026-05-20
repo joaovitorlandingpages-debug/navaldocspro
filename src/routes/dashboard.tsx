@@ -110,6 +110,7 @@ function DashboardLayout() {
   const navItems = [
     { group: "Visão Geral", items: [
       { name: "Painel de Controle", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
+      { name: "Primeiros Passos", icon: <Rocket className="h-5 w-5" />, path: "/getting-started" },
       { name: "Centro de Ops", icon: <Briefcase className="h-5 w-5" />, path: "/operations-center" },
       { name: "Inteligência IA", icon: <Cpu className="h-5 w-5" />, path: "/ai-center" },
     ]},
@@ -363,9 +364,28 @@ export function RouteContent() {
     { label: "Documentos Gerados", value: statsData?.generatedDocuments.toString() || (demoConfig?.is_demo_mode ? "142" : "0"), icon: <FileText className="text-green-600" />, trend: statsData?.trends.documents || "+15%" },
   ];
 
-    console.log("DEMO_DASHBOARD_READY");
+    console.log("ONBOARDING_READY");
+    console.log("PREMIUM_ONBOARDING_OK");
     return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+      {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (
+        <Card className="p-8 bg-gradient-to-r from-primary/10 to-transparent border-primary/20 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+           <div className="flex items-center gap-6">
+              <div className="h-16 w-16 bg-primary rounded-3xl flex items-center justify-center shadow-xl shadow-primary/20">
+                 <Rocket className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                 <h3 className="text-xl font-black text-navy uppercase tracking-tight">Olá, {profile?.name}! Vamos começar?</h3>
+                 <p className="text-slate-500 font-medium">Sua conta está pronta. Siga os primeiros passos para automatizar sua operação.</p>
+              </div>
+           </div>
+           <Link to="/getting-started">
+              <Button className="bg-navy hover:bg-slate-800 text-[10px] font-black uppercase tracking-widest px-8 py-6 rounded-2xl shadow-xl">
+                 Guia de Implantação <ChevronRight className="ml-2 h-4 w-4 text-primary" />
+              </Button>
+           </Link>
+        </Card>
+      )}
       {demoConfig?.is_demo_mode && (
         <div className="bg-primary/10 border border-primary/20 p-4 rounded-2xl flex items-center justify-between">
            <div className="flex items-center gap-3">
