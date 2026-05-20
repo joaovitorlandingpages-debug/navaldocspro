@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Terminal, Search, Trash2, ShieldAlert, Activity, Filter, Download, Database, ShieldCheck, Cpu, Zap, Globe, Lock } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -12,6 +12,10 @@ export const Route = createFileRoute("/admin/logs")({
 
 function AdminLogs() {
   const [filter, setFilter] = useState("all");
+
+  useEffect(() => {
+    console.log("GLOBAL_LOGS_STABLE");
+  }, []);
 
   const { data: globalLogs, isLoading: loadingGlobal } = useQuery({
     queryKey: ["admin-global-audit"],

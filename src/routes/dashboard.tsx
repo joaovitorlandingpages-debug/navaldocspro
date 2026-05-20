@@ -308,7 +308,8 @@ export function RouteContent() {
     { label: "Documentos Gerados", value: statsData?.generatedDocuments.toString() || "0", icon: <FileText className="text-green-600" />, trend: statsData?.trends.documents || "+0%" },
   ];
 
-  return (
+    console.log("DASHBOARD_STABLE");
+    return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>

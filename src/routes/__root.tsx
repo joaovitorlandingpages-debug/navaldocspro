@@ -122,7 +122,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
-  const queryClient = React.useMemo(() => new QueryClient(), []);
+  const queryClient = React.useMemo(() => {
+    console.log("SYSTEM_STABLE");
+    return new QueryClient();
+  }, []);
 
   return (
     <html lang="en">

@@ -21,6 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     console.log("AUTH_INIT");
+    console.log("AUTH_STABLE");
     
     const initAuth = async () => {
       console.log("GET_SESSION_START");
