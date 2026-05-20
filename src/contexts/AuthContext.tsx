@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .select('*, companies(*)')
             .eq('id', initialSession.user.id)
             .maybeSingle()
-            .then(({ data }) => {
+            .then(({ data }: { data: any }) => {
               if (data) setProfile(data);
             });
         } else {
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .select('*, companies(*)')
           .eq('id', currentSession.user.id)
           .maybeSingle()
-          .then(({ data }) => {
+          .then(({ data }: { data: any }) => {
             if (data) setProfile(data);
           });
       } else {
