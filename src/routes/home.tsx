@@ -14,8 +14,8 @@ function Index() {
 
   useEffect(() => {
     if (!loading && session) {
-      console.log("HOME_REDIRECT_DASHBOARD_SAFE");
-      navigate({ to: "/dashboard-safe" });
+      console.log("HOME_REDIRECT_DASHBOARD_V2");
+      navigate({ to: "/dashboard-v2" });
     }
   }, [session, loading, navigate]);
 
