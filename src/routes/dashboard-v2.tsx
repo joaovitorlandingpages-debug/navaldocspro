@@ -1,7 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { 
   Anchor, LayoutDashboard, Users, Ship, ClipboardList, 
-  LogOut, Plus, Menu, LayoutGrid, Activity
+  LogOut, Plus, Menu, LayoutGrid, Activity, FileText, FilePlus, 
+  Library, Zap, ShieldCheck, DollarSign, BarChart3, Settings,
+  Building2, UserCog, ScrollText, History, ShieldAlert, MonitorPlay,
+  CreditCard, Briefcase
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { useNewProcess } from "@/hooks/useNewProcess";
 
 export const Route = createFileRoute("/dashboard-v2")({
   component: () => (
@@ -23,6 +27,7 @@ export const Route = createFileRoute("/dashboard-v2")({
 function DashboardV2Layout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const { profile, loading, signOut } = useAuth();
+  const { setIsNewProcessOpen } = useNewProcess();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,7 +53,27 @@ function DashboardV2Layout() {
     { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
     { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
+    { name: "Documentos", icon: <FileText className="h-5 w-5" />, path: "/documents" },
+    { name: "Gerador de Documentos", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
+    { name: "Biblioteca Documental", icon: <Library className="h-5 w-5" />, path: "/dashboard/documents-base" },
+    { name: "OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
+    { name: "Operações", icon: <Briefcase className="h-5 w-5" />, path: "/operations-center" },
+    { name: "Assinaturas", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
+    { name: "Financeiro", icon: <DollarSign className="h-5 w-5" />, path: "/plans" },
+    { name: "Analytics", icon: <BarChart3 className="h-5 w-5" />, path: "/analytics" },
+    { name: "Configurações", icon: <Settings className="h-5 w-5" />, path: "/settings" },
   ];
+
+  const adminItems = profile?.role === 'admin_master' ? [
+    { name: "Admin Global", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin" },
+    { name: "Empresas", icon: <Building2 className="h-5 w-5" />, path: "/admin/companies" },
+    { name: "Usuários", icon: <UserCog className="h-5 w-5" />, path: "/admin/users" },
+    { name: "Templates Oficiais", icon: <ScrollText className="h-5 w-5" />, path: "/admin/templates" },
+    { name: "Logs", icon: <History className="h-5 w-5" />, path: "/admin/logs" },
+    { name: "Segurança", icon: <ShieldAlert className="h-5 w-5" />, path: "/admin/security" },
+    { name: "Monitoramento", icon: <MonitorPlay className="h-5 w-5" />, path: "/system-monitor" },
+    { name: "Billing Global", icon: <DollarSign className="h-5 w-5" />, path: "/admin/billing" },
+  ] : [];
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
@@ -59,18 +84,45 @@ function DashboardV2Layout() {
           {isSidebarOpen && <span className="font-bold text-xl tracking-tight">NavalDocs</span>}
         </div>
 
-        <nav className="flex-grow mt-6 px-4 space-y-2">
-          {navItems.map((item) => (
-            <Link 
-              key={item.name}
-              to={item.path}
-              activeProps={{ className: "bg-blue-600 text-white" }}
-              className="flex items-center gap-4 p-3 rounded-lg hover:bg-white/10 transition-colors"
+        <nav className="flex-grow mt-6 px-4 space-y-1 overflow-y-auto custom-scrollbar pb-10">
+          <div className="space-y-1">
+            {navItems.map((item) => (
+              <Link 
+                key={item.name}
+                to={item.path}
+                activeProps={{ className: "bg-blue-600 text-white" }}
+                className="flex items-center gap-4 p-3 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                {item.icon}
+                {isSidebarOpen && <span className="text-xs font-medium">{item.name}</span>}
+              </Link>
+            ))}
+            
+            <button 
+              onClick={() => setIsNewProcessOpen(true)}
+              className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-white/10 transition-colors text-white/90"
             >
-              {item.icon}
-              {isSidebarOpen && <span className="text-sm font-medium">{item.name}</span>}
-            </Link>
-          ))}
+              <Plus className="h-5 w-5 text-blue-400" />
+              {isSidebarOpen && <span className="text-xs font-medium">Novo Processo</span>}
+            </button>
+          </div>
+
+          {adminItems.length > 0 && (
+            <div className="mt-8 pt-4 border-t border-white/10 space-y-1">
+              {isSidebarOpen && <p className="px-3 mb-2 text-[10px] font-bold text-white/30 uppercase tracking-widest">Administração</p>}
+              {adminItems.map((item) => (
+                <Link 
+                  key={item.name}
+                  to={item.path}
+                  activeProps={{ className: "bg-blue-600 text-white" }}
+                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-white/10 transition-colors text-white/70 hover:text-white"
+                >
+                  {item.icon}
+                  {isSidebarOpen && <span className="text-xs font-medium">{item.name}</span>}
+                </Link>
+              ))}
+            </div>
+          )}
         </nav>
 
         <div className="p-4 border-t border-white/10">
