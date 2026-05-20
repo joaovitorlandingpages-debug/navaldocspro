@@ -239,16 +239,16 @@ function DashboardLayout() {
                  <div className="relative max-w-xs w-full hidden lg:block">
                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                     <input 
-                      placeholder="Buscar..." 
-                      className="w-full pl-10 pr-4 py-2 bg-slate-100 rounded-full text-sm border-transparent focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all"
+                      placeholder="Busca Inteligente..." 
+                      className="w-full pl-10 pr-4 py-2 bg-slate-100 rounded-full text-sm border-transparent focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all font-medium"
                     />
                  </div>
 
                  <button 
                    onClick={() => setIsNewProcessOpen(true)}
-                   className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 whitespace-nowrap"
+                   className="flex items-center gap-2 bg-navy text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-navy/90 transition-all shadow-lg shadow-navy/10 whitespace-nowrap"
                  >
-                   <Plus className="h-4 w-4" /> Novo
+                   <Plus className="h-4 w-4 text-primary" /> Novo Processo
                  </button>
    
                  <div className="flex items-center gap-4">
