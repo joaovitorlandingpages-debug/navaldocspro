@@ -108,25 +108,31 @@ function DashboardLayout() {
   };
 
   const navItems = [
-    { name: "Painel Ops", icon: <Cpu className="h-5 w-5 text-primary" />, path: "/operations-center" },
-    { name: "Operacional", icon: <LayoutDashboard className="h-5 w-5 text-slate-400" />, path: "/dashboard" },
-    { name: "Centro Automação", icon: <Zap className="h-5 w-5 text-amber-500" />, path: "/automation-center" },
-    { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
-    { name: "Compliance", icon: <ShieldCheck className="h-5 w-5 text-emerald-500" />, path: "/dashboard/compliance-center" },
-    { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
-    { name: "Performance", icon: <Gauge className="h-5 w-5 text-indigo-500" />, path: "/performance-center" },
-    { name: "Logs", icon: <History className="h-5 w-5 text-slate-500" />, path: "/logs" },
-    { name: "Central IA", icon: <Zap className="h-5 w-5" />, path: "/ai-center" },
-    { name: "Central OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
-    { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
-    { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
-    { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
-    { name: "Base Documental", icon: <Database className="h-5 w-5" />, path: "/dashboard/documents-base" },
-    { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
-    { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
+  const navItems = [
+    { group: "Visão Geral", items: [
+      { name: "Painel de Controle", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
+      { name: "Centro de Ops", icon: <Briefcase className="h-5 w-5" />, path: "/operations-center" },
+      { name: "Inteligência IA", icon: <Cpu className="h-5 w-5" />, path: "/ai-center" },
+    ]},
+    { group: "Core Naval", items: [
+      { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
+      { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
+      { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
+    ]},
+    { group: "Documentação", items: [
+      { name: "Central OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
+      { name: "Base Técnica", icon: <Database className="h-5 w-5" />, path: "/dashboard/documents-base" },
+      { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
+    ]},
+    { group: "Gestão & Admin", items: [
+      { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
+      { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
+      { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
+      { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
+    ]}
   ];
 
-  console.log("NAVIGATION_OK");
+  console.log("ENTERPRISE_UI_OK");
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
