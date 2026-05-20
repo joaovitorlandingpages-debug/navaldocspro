@@ -27,6 +27,7 @@ import { ExpirationMonitor } from "@/components/ExpirationMonitor";
 import { EnterpriseAuditFeed } from "@/components/dashboard/EnterpriseAuditFeed";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { BackButton } from "@/components/BackButton";
+import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidgets";
 
 
 
