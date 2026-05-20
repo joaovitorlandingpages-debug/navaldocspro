@@ -149,22 +149,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Separate component to safely handle floating widgets without crashing the root
+// Separate component to safely handle floating widgets
 function SafeFloatingWidgets() {
-  const isAuthPage = typeof window !== 'undefined' && (
-    window.location.pathname.startsWith('/auth') || 
-    window.location.pathname === '/' ||
-    window.location.pathname === '/home'
-  );
-
-  if (isAuthPage) return null;
-
-  return (
-    <>
-      <FeedbackButton />
-      <IntelligentAssistant />
-    </>
-  );
+  // Desativado temporariamente para estabilidade máxima
+  return null;
 }
 
 function RootComponent() {
