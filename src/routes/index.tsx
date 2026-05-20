@@ -14,8 +14,8 @@ function RedirectToIndex() {
       console.log("INDEX_AUTH_CHECK");
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        console.log("INDEX_REDIRECT_DASHBOARD");
-        navigate({ to: "/dashboard" });
+        console.log("INDEX_REDIRECT_DASHBOARD_SAFE");
+        navigate({ to: "/dashboard-safe" });
       } else {
         console.log("INDEX_REDIRECT_HOME");
         navigate({ to: "/home" });

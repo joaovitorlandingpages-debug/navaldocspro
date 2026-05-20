@@ -24,12 +24,14 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
 import { Route as DebugAuthPublicRouteImport } from './routes/debug-auth-public'
+import { Route as DashboardSafeRouteImport } from './routes/dashboard-safe'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AutomationCenterRouteImport } from './routes/automation-center'
 import { Route as AutomationRouteImport } from './routes/automation'
+import { Route as AuthDebugPublicRouteImport } from './routes/auth-debug-public'
 import { Route as AuthDebugRouteImport } from './routes/auth-debug'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AiCenterRouteImport } from './routes/ai-center'
@@ -136,6 +138,11 @@ const DebugAuthPublicRoute = DebugAuthPublicRouteImport.update({
   path: '/debug-auth-public',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardSafeRoute = DashboardSafeRouteImport.update({
+  id: '/dashboard-safe',
+  path: '/dashboard-safe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -164,6 +171,11 @@ const AutomationCenterRoute = AutomationCenterRouteImport.update({
 const AutomationRoute = AutomationRouteImport.update({
   id: '/automation',
   path: '/automation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthDebugPublicRoute = AuthDebugPublicRouteImport.update({
+  id: '/auth-debug-public',
+  path: '/auth-debug-public',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthDebugRoute = AuthDebugRouteImport.update({
@@ -324,12 +336,14 @@ export interface FileRoutesByFullPath {
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
   '/auth-debug': typeof AuthDebugRoute
+  '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/dashboard-safe': typeof DashboardSafeRoute
   '/debug-auth-public': typeof DebugAuthPublicRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
@@ -376,11 +390,13 @@ export interface FileRoutesByTo {
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
   '/auth-debug': typeof AuthDebugRoute
+  '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
+  '/dashboard-safe': typeof DashboardSafeRoute
   '/debug-auth-public': typeof DebugAuthPublicRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
@@ -429,12 +445,14 @@ export interface FileRoutesById {
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
   '/auth-debug': typeof AuthDebugRoute
+  '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/dashboard-safe': typeof DashboardSafeRoute
   '/debug-auth-public': typeof DebugAuthPublicRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
@@ -484,12 +502,14 @@ export interface FileRouteTypes {
     | '/ai-center'
     | '/analytics'
     | '/auth-debug'
+    | '/auth-debug-public'
     | '/automation'
     | '/automation-center'
     | '/calendar'
     | '/changelog'
     | '/customers'
     | '/dashboard'
+    | '/dashboard-safe'
     | '/debug-auth-public'
     | '/document-generator'
     | '/documents'
@@ -536,11 +556,13 @@ export interface FileRouteTypes {
     | '/ai-center'
     | '/analytics'
     | '/auth-debug'
+    | '/auth-debug-public'
     | '/automation'
     | '/automation-center'
     | '/calendar'
     | '/changelog'
     | '/customers'
+    | '/dashboard-safe'
     | '/debug-auth-public'
     | '/document-generator'
     | '/documents'
@@ -588,12 +610,14 @@ export interface FileRouteTypes {
     | '/ai-center'
     | '/analytics'
     | '/auth-debug'
+    | '/auth-debug-public'
     | '/automation'
     | '/automation-center'
     | '/calendar'
     | '/changelog'
     | '/customers'
     | '/dashboard'
+    | '/dashboard-safe'
     | '/debug-auth-public'
     | '/document-generator'
     | '/documents'
@@ -642,12 +666,14 @@ export interface RootRouteChildren {
   AiCenterRoute: typeof AiCenterRoute
   AnalyticsRoute: typeof AnalyticsRouteWithChildren
   AuthDebugRoute: typeof AuthDebugRoute
+  AuthDebugPublicRoute: typeof AuthDebugPublicRoute
   AutomationRoute: typeof AutomationRoute
   AutomationCenterRoute: typeof AutomationCenterRoute
   CalendarRoute: typeof CalendarRoute
   ChangelogRoute: typeof ChangelogRoute
   CustomersRoute: typeof CustomersRoute
   DashboardRoute: typeof DashboardRouteWithChildren
+  DashboardSafeRoute: typeof DashboardSafeRoute
   DebugAuthPublicRoute: typeof DebugAuthPublicRoute
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
@@ -779,6 +805,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DebugAuthPublicRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard-safe': {
+      id: '/dashboard-safe'
+      path: '/dashboard-safe'
+      fullPath: '/dashboard-safe'
+      preLoaderRoute: typeof DashboardSafeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -819,6 +852,13 @@ declare module '@tanstack/react-router' {
       path: '/automation'
       fullPath: '/automation'
       preLoaderRoute: typeof AutomationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth-debug-public': {
+      id: '/auth-debug-public'
+      path: '/auth-debug-public'
+      fullPath: '/auth-debug-public'
+      preLoaderRoute: typeof AuthDebugPublicRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth-debug': {
@@ -1114,12 +1154,14 @@ const rootRouteChildren: RootRouteChildren = {
   AiCenterRoute: AiCenterRoute,
   AnalyticsRoute: AnalyticsRouteWithChildren,
   AuthDebugRoute: AuthDebugRoute,
+  AuthDebugPublicRoute: AuthDebugPublicRoute,
   AutomationRoute: AutomationRoute,
   AutomationCenterRoute: AutomationCenterRoute,
   CalendarRoute: CalendarRoute,
   ChangelogRoute: ChangelogRoute,
   CustomersRoute: CustomersRoute,
   DashboardRoute: DashboardRouteWithChildren,
+  DashboardSafeRoute: DashboardSafeRoute,
   DebugAuthPublicRoute: DebugAuthPublicRoute,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,

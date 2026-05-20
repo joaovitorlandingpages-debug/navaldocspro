@@ -20,49 +20,63 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isTransitioningRef = useRef(false);
 
   useEffect(() => {
-    console.log("AUTH_PROVIDER_INIT");
+    console.log("AUTH_INIT");
     
-    // Initial session check
-    const initSession = async () => {
+    const initAuth = async () => {
+      console.log("GET_SESSION_START");
       try {
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
         if (error) {
-          console.error("AUTH_INIT_ERROR:", error);
+          console.error("GET_SESSION_ERROR:", error);
         }
         
         if (initialSession) {
-          console.log("SESSION_FOUND", initialSession.user.id);
+          console.log("GET_SESSION_SUCCESS", initialSession.user.id);
           setSession(initialSession);
           setUser(initialSession.user);
-          // Fetch profile in background
-          fetchProfile(initialSession.user.id);
+          
+          // Fetch profile in background without blocking the UI
+          supabase
+            .from('profiles')
+            .select('*, companies(*)')
+            .eq('id', initialSession.user.id)
+            .maybeSingle()
+            .then(({ data }: { data: any }) => {
+              if (data) setProfile(data);
+            });
         } else {
-          console.log("SESSION_NOT_FOUND");
+          console.log("GET_SESSION_EMPTY");
+          setSession(null);
+          setUser(null);
+          setProfile(null);
         }
       } catch (err) {
-        console.error("AUTH_CATCH_ERROR:", err);
+        console.error("GET_SESSION_CATCH:", err);
       } finally {
         setLoading(false);
-        console.log("AUTH_LOADING_FINISHED");
       }
     };
 
-    initSession();
+    initAuth();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, currentSession: Session | null) => {
-      console.log("AUTH_STATE_CHANGE:", event);
+      console.log("AUTH_STATE_CHANGED:", event);
       
-      if (isTransitioningRef.current) {
-        console.log("AUTH_STATE_CHANGE_IGNORED_DURING_TRANSITION");
-        return;
-      }
+      if (isTransitioningRef.current) return;
 
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
-        fetchProfile(currentSession.user.id);
+        supabase
+          .from('profiles')
+          .select('*, companies(*)')
+          .eq('id', currentSession.user.id)
+          .maybeSingle()
+          .then(({ data }: { data: any }) => {
+            if (data) setProfile(data);
+          });
       } else {
         setProfile(null);
       }
@@ -75,66 +89,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const fetchProfile = async (userId: string) => {
-    console.log("PROFILE_LOADING", userId);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*, companies(*)')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (error) {
-        console.error("PROFILE_ERROR:", error);
-        return;
-      }
-
-      if (data) {
-        console.log("PROFILE_FOUND", data.role);
-        setProfile(data);
-      } else {
-        console.log("PROFILE_NOT_FOUND - Background creation...");
-        // Handle background creation if needed, but don't block
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData.user) {
-          const { data: newProfile } = await supabase
-            .from('profiles')
-            .insert({
-              id: userData.user.id,
-              email: userData.user.email,
-              name: userData.user.user_metadata?.full_name || userData.user.email?.split('@')[0] || 'Usuário',
-              role: 'user',
-            })
-            .select('*, companies(*)')
-            .single();
-          if (newProfile) setProfile(newProfile);
-        }
-      }
-    } catch (err) {
-      console.error("PROFILE_FETCH_CATCH:", err);
-    }
-  };
-
   const signOut = async () => {
-    console.log("SIGN_OUT_START");
+    console.log("LOGOUT");
     isTransitioningRef.current = true;
     try {
       setSession(null);
       setUser(null);
       setProfile(null);
-      
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("SUPABASE_SIGNOUT_ERROR:", error);
-      }
+      await supabase.auth.signOut();
     } catch (err) {
-      console.error("SIGN_OUT_CATCH:", err);
+      console.error("LOGOUT_ERROR:", err);
     } finally {
-      console.log("SIGN_OUT_COMPLETE");
-      // Keep transitioning true for a bit to allow redirect to complete
       setTimeout(() => {
         isTransitioningRef.current = false;
-      }, 2000);
+        window.location.href = "/auth/login";
+      }, 500);
     }
   };
 
