@@ -305,7 +305,39 @@ export default function DocumentBase() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredTemplates?.map((template: any) => (
+                {filteredTemplates?.length === 0 && !isLoadingTemplates ? (
+                  <div className="col-span-full space-y-8">
+                    <div className="p-20 text-center bg-white border border-dashed border-slate-200 rounded-[3rem] shadow-sm">
+                      <FolderOpen className="h-16 w-16 text-slate-100 mx-auto mb-6" />
+                      <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-2">Nenhum template encontrado</h3>
+                      <p className="text-sm text-slate-400 max-w-sm mx-auto font-medium mb-8">Nossa base nacional de templates marítimos está sempre crescendo. Tente buscar por outros termos.</p>
+                      <Button className="bg-primary text-white rounded-xl gap-2 font-black uppercase text-[10px] tracking-widest px-8">
+                         <Plus className="h-4 w-4" /> Solicitar Template Oficial
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 opacity-30 grayscale pointer-events-none">
+                      {[
+                        { name: "Requerimento DPC-2211", cat: "DPC / MARINHA", desc: "Padrão nacional para solicitações de serviços marítimos." },
+                        { name: "BCE - Boletim de Cadastro", cat: "ESTATUTÁRIO", desc: "Formulário oficial para inscrição de embarcações." },
+                        { name: "Memorial Técnico Descritivo", cat: "ENGENHARIA", desc: "Documento técnico para homologação de casco e motores." }
+                      ].map((mock, i) => (
+                        <Card key={i} className="p-6 rounded-3xl border-slate-100">
+                          <Badge variant="outline" className="text-[8px] font-black uppercase mb-4">{mock.cat} • EXEMPLO</Badge>
+                          <h4 className="text-sm font-black text-navy mb-2">{mock.name}</h4>
+                          <p className="text-xs text-slate-500 line-clamp-2">{mock.desc}</p>
+                          <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
+                             <div className="flex gap-1">
+                                <div className="h-4 w-4 rounded bg-slate-100" />
+                                <div className="h-4 w-4 rounded bg-slate-100" />
+                             </div>
+                             <div className="h-6 w-16 bg-slate-100 rounded-lg" />
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                ) : filteredTemplates?.map((template: any) => (
                   <Card key={template.id} className="group hover:shadow-xl transition-all duration-300 border-slate-100 overflow-hidden relative">
                     <div 
                       className="h-1.5 w-full absolute top-0 left-0" 
