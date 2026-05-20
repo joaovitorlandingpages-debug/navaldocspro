@@ -48,6 +48,7 @@ function AnalyticsPage() {
       }
     };
 
+    console.log("ANALYTICS_OK");
     fetchCounts();
   }, []);
 
