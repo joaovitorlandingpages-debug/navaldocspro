@@ -29,6 +29,8 @@ export interface Subscription {
 }
 
 export const useSubscription = () => {
+  console.log("SUBSCRIPTION_OK");
+
   const { user } = useAuth();
   const queryClient = useQueryClient();
 

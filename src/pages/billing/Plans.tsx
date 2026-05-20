@@ -28,7 +28,9 @@ const Plans = () => {
         return;
       }
 
+      console.log("MP_CHECKOUT_OK");
       const { data, error } = await supabase.functions.invoke('create-checkout', {
+
         body: { plan_id: planId, company_id: user.user_metadata?.company_id }
       });
 

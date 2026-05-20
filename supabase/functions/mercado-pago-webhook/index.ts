@@ -12,7 +12,9 @@ serve(async (req) => {
   }
 
   try {
+    console.log("MP_WEBHOOK_OK");
     const body = await req.json();
+
     console.log("Webhook received:", body);
 
     const supabase = createClient(

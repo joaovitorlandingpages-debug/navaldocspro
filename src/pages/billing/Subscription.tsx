@@ -24,6 +24,8 @@ export const Route = createFileRoute("/billing/subscription")({
 });
 
 export default function SubscriptionUsage() {
+  console.log("BILLING_PAGE_OK");
+
   const { subscription, checkLimit, isLoading } = usePlanLimits();
 
   const { data: usageData } = useQuery({
