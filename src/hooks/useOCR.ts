@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { DocumentAutomationEngine } from "@/services/automation/documentAutomationEngine";
 
 export interface OCRJob {
   id: string;
@@ -105,6 +106,10 @@ export function useOCR() {
         .eq("id", jobId);
 
       if (error) throw error;
+      
+      // Auto-trigger re-analysis and checklist update
+      await DocumentAutomationEngine.processOCRExtraction(jobId);
+      
       return true;
     },
     onSuccess: () => {
