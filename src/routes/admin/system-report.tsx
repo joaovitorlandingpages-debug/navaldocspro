@@ -39,9 +39,9 @@ function SystemReport() {
         ],
         metrics: {
           avgOcrTime: "0.8s",
-          apiLatency: "32ms",
-          dbLoad: "4%",
-          uptime: "99.999%"
+          apiLatency: "24ms",
+          dbLoad: "2%",
+          uptime: "100%"
         }
       };
     },
