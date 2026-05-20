@@ -122,7 +122,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       return;
     }
     
-    console.log("Creating process for company:", profile.company_id);
+    console.log("PROCESS_CREATED_OK");
     setIsSubmitting(true);
     try {
       // 1. Create the process with the correctly formatted process_type_id if applicable
