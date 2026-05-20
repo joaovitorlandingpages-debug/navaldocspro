@@ -79,7 +79,7 @@ function ProcessPackagesGrid() {
 }
 
 export default function DocumentBase() {
-  console.log("DOCUMENT_LIBRARY_VISUAL_OK");
+  console.log("DOCUMENT_LIBRARY_PREMIUM_OK");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 

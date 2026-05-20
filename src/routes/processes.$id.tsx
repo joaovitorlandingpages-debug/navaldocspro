@@ -57,7 +57,7 @@ function ProcessDetail() {
   const { jobs: ocrJobs } = useOCR(id);
 
   useEffect(() => {
-    console.log("PROCESS_VISUAL_OK");
+    console.log("PROCESS_EXPERIENCE_OK");
   }, []);
 
   const { data: complianceHistory } = useQuery({

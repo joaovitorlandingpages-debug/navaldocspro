@@ -51,8 +51,8 @@ function Processes() {
       setIsLoading(false);
     };
 
-    console.log("PROCESSES_PAGE_OK");
-    console.log("PROCESSES_STABLE");
+    console.log("ENTERPRISE_UI_OK");
+    console.log("PROCESS_EXPERIENCE_OK");
     fetchProcesses();
   }, []);
 
@@ -115,9 +115,9 @@ function Processes() {
             <div key={col.id} className="flex-shrink-0 w-80 flex flex-col gap-6">
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-3">
-                  <div className={`h-2.5 w-2.5 rounded-full ${col.color} shadow-[0_0_10px_rgba(0,0,0,0.1)]`} />
-                  <h3 className="font-black text-navy text-[10px] uppercase tracking-[0.2em]">{col.title}</h3>
-                  <span className="bg-white border border-slate-100 text-slate-400 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-sm">
+                  <div className={`h-3 w-3 rounded-full ${col.color} shadow-[0_0_15px_rgba(0,0,0,0.2)] animate-pulse`} />
+                  <h3 className="font-black text-navy text-[11px] uppercase tracking-[0.2em]">{col.title}</h3>
+                  <span className="bg-navy text-primary text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-lg">
                     {processes.filter(p => p.status === col.id).length}
                   </span>
                 </div>
@@ -133,7 +133,7 @@ function Processes() {
                   <Link 
                     key={p.id} 
                     to={`/processes/${p.id}`}
-                    className="block bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-primary/30 transition-all cursor-pointer group relative overflow-hidden"
+                    className="block bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-primary/40 hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 p-4">
                        <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-50 rounded-lg text-slate-300 transition-all">

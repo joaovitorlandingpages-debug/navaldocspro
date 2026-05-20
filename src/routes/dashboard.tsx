@@ -5,7 +5,8 @@ import {
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
-  Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft
+  Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft,
+  Briefcase, Boxes, LayoutGrid, FileSearch
 } from "lucide-react";
 import { useState, useEffect, Suspense, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -107,25 +108,30 @@ function DashboardLayout() {
   };
 
   const navItems = [
-    { name: "Painel Ops", icon: <Cpu className="h-5 w-5 text-primary" />, path: "/operations-center" },
-    { name: "Operacional", icon: <LayoutDashboard className="h-5 w-5 text-slate-400" />, path: "/dashboard" },
-    { name: "Centro Automação", icon: <Zap className="h-5 w-5 text-amber-500" />, path: "/automation-center" },
-    { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
-    { name: "Compliance", icon: <ShieldCheck className="h-5 w-5 text-emerald-500" />, path: "/dashboard/compliance-center" },
-    { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
-    { name: "Performance", icon: <Gauge className="h-5 w-5 text-indigo-500" />, path: "/performance-center" },
-    { name: "Logs", icon: <History className="h-5 w-5 text-slate-500" />, path: "/logs" },
-    { name: "Central IA", icon: <Zap className="h-5 w-5" />, path: "/ai-center" },
-    { name: "Central OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
-    { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
-    { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
-    { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
-    { name: "Base Documental", icon: <Database className="h-5 w-5" />, path: "/dashboard/documents-base" },
-    { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
-    { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
+    { group: "Visão Geral", items: [
+      { name: "Painel de Controle", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
+      { name: "Centro de Ops", icon: <Briefcase className="h-5 w-5" />, path: "/operations-center" },
+      { name: "Inteligência IA", icon: <Cpu className="h-5 w-5" />, path: "/ai-center" },
+    ]},
+    { group: "Core Naval", items: [
+      { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
+      { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
+      { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
+    ]},
+    { group: "Documentação", items: [
+      { name: "Central OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
+      { name: "Base Técnica", icon: <Database className="h-5 w-5" />, path: "/dashboard/documents-base" },
+      { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
+    ]},
+    { group: "Gestão & Admin", items: [
+      { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
+      { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
+      { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
+      { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
+    ]}
   ];
 
-  console.log("NAVIGATION_OK");
+  console.log("ENTERPRISE_UI_OK");
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
@@ -148,17 +154,22 @@ function DashboardLayout() {
           )}
         </div>
 
-        <nav className="flex-grow mt-6 px-4 space-y-1 overflow-y-auto custom-scrollbar">
-          {navItems.map((item) => (
-            <Link 
-              key={item.name}
-              to={item.path}
-              activeProps={{ className: "bg-primary text-white shadow-lg shadow-primary/20 border-primary" }}
-              className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 border border-transparent transition-all group"
-            >
-              <div className="group-hover:scale-110 transition-transform">{item.icon}</div>
-              {isSidebarOpen && <span className="text-sm font-bold uppercase tracking-wider">{item.name}</span>}
-            </Link>
+        <nav className="flex-grow mt-6 px-4 space-y-6 overflow-y-auto custom-scrollbar">
+          {navItems.map((group) => (
+            <div key={group.group} className="space-y-1">
+              {isSidebarOpen && <p className="px-3 mb-2 text-[10px] font-black text-primary/40 uppercase tracking-widest">{group.group}</p>}
+              {group.items.map((item) => (
+                <Link 
+                  key={item.name}
+                  to={item.path}
+                  activeProps={{ className: "bg-primary text-white shadow-lg shadow-primary/20 border-primary" }}
+                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 border border-transparent transition-all group/item"
+                >
+                  <div className="group-hover/item:scale-110 transition-transform">{item.icon}</div>
+                  {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-wider">{item.name}</span>}
+                </Link>
+              ))}
+            </div>
           ))}
         </nav>
 
@@ -228,16 +239,16 @@ function DashboardLayout() {
                  <div className="relative max-w-xs w-full hidden lg:block">
                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                     <input 
-                      placeholder="Buscar..." 
-                      className="w-full pl-10 pr-4 py-2 bg-slate-100 rounded-full text-sm border-transparent focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all"
+                      placeholder="Busca Inteligente..." 
+                      className="w-full pl-10 pr-4 py-2 bg-slate-100 rounded-full text-sm border-transparent focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all font-medium"
                     />
                  </div>
 
                  <button 
                    onClick={() => setIsNewProcessOpen(true)}
-                   className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 whitespace-nowrap"
+                   className="flex items-center gap-2 bg-navy text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-navy/90 transition-all shadow-lg shadow-navy/10 whitespace-nowrap"
                  >
-                   <Plus className="h-4 w-4" /> Novo
+                   <Plus className="h-4 w-4 text-primary" /> Novo Processo
                  </button>
    
                  <div className="flex items-center gap-4">
@@ -246,8 +257,8 @@ function DashboardLayout() {
                       className="relative p-2 hover:bg-slate-100 rounded-full transition-all active:scale-95"
                     >
                         <Bell className="h-5 w-5 text-slate-600" />
-                        <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full animate-ping" />
-                        <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
+                        <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full animate-ping" />
+                        <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full" />
                     </button>
                    <div className="h-8 w-px bg-slate-200" />
                    <div className="flex items-center gap-3">
@@ -337,7 +348,7 @@ export function RouteContent() {
     { label: "Documentos Gerados", value: statsData?.generatedDocuments.toString() || "45", icon: <FileText className="text-green-600" />, trend: statsData?.trends.documents || "+15%" },
   ];
 
-    console.log("UX_ENHANCED_OK");
+    console.log("ENTERPRISE_UI_OK");
     return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       {(() => { console.log("UX_ENHANCED_OK"); return null; })()}
