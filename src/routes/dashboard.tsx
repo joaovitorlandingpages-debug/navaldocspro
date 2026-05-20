@@ -7,29 +7,28 @@ import {
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
   Database, FolderOpen, Library, CheckCircle2, History, ChevronRight
 } from "lucide-react";
-import { useState, useEffect, Suspense, lazy, useMemo } from "react";
+import { useState, useEffect, Suspense, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { NotificationCenter } from "@/components/NotificationCenter";
-import { ActivityFeed } from "@/components/ActivityFeed";
-import { WelcomeTour } from "@/components/WelcomeTour";
-import { ExpirationMonitor } from "@/components/ExpirationMonitor";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useQuery } from "@tanstack/react-query";
 import { ReadinessBanner } from "@/components/dashboard/ReadinessBanner";
-import { EnterpriseAuditFeed } from "@/components/dashboard/EnterpriseAuditFeed";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { WelcomeTour } from "@/components/WelcomeTour";
 
 
 
 export const Route = createFileRoute("/dashboard")({
-  component: DashboardLayout,
+  component: () => (
+    <ProtectedRoute>
+      <DashboardLayout />
+    </ProtectedRoute>
+  ),
 });
 
 function DashboardLayout() {
@@ -43,11 +42,8 @@ function DashboardLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading) {
-      if (!profile) {
-        console.log("REDIRECT_TO_LOGIN");
-        navigate({ to: "/auth/login" });
-      } else if (profile.companies?.onboarding_status === 'pending' && window.location.pathname !== '/onboarding') {
+    if (!loading && profile) {
+      if (profile.companies?.onboarding_status === 'pending' && window.location.pathname !== '/onboarding') {
         console.log("REDIRECT_TO_ONBOARDING");
         navigate({ to: "/onboarding" });
       } else if (profile.companies?.onboarding_status === 'completed') {
@@ -59,18 +55,8 @@ function DashboardLayout() {
     }
   }, [profile, loading, navigate]);
 
-  if (loading) {
-    return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-navy">
-        <div className="flex flex-col items-center gap-4">
-          <Anchor className="h-12 w-12 text-primary animate-spin" />
-          <p className="text-white/60 text-xs font-black uppercase tracking-widest">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
+  // No direct loading/profile return here anymore, ProtectedRoute handles it
 
-  if (!profile) return null; // Prevent flash of content before redirect
 
   useEffect(() => {
     const checkAllLimits = async () => {
