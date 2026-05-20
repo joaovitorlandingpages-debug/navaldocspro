@@ -84,9 +84,28 @@ export function ActivityFeed() {
             </div>
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center p-20 text-center">
-            <Clock className="h-8 w-8 text-slate-100 mb-2" />
-            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhuma atividade recente</p>
+          <div className="space-y-0">
+            {[
+              { user: "Sistema IA", action: "identificou novos campos", target: "RG Ricardo Almeida", type: "ocr_processed", time: "2 min atrás" },
+              { user: "Ricardo Almeida", action: "gerou o documento", target: "BCE - Estrela do Mar", type: "document_generated", time: "15 min atrás" },
+              { user: "Sistema IA", action: "validou conformidade", target: "Inscrição #2024", type: "validation_passed", time: "1h atrás" },
+            ].map((mock, i) => (
+              <div key={i} className="p-6 opacity-40 grayscale hover:opacity-100 hover:grayscale-0 transition-all cursor-not-allowed">
+                <div className="flex gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400">
+                    <Zap className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-600 leading-snug">
+                      <span className="font-bold text-navy">{mock.user}</span> {mock.action} <span className="font-bold text-primary">{mock.target}</span>
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 flex items-center gap-1">
+                      <Clock className="h-3 w-3" /> {mock.time} • <span className="text-primary/60">EXEMPLO</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

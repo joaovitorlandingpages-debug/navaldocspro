@@ -143,20 +143,37 @@ function OCRCenterPage() {
         {/* Right Column: Processing & Results */}
         <div className="lg:col-span-2">
           {!selectedJob ? (
-            <Card className="h-full border-dashed border-2 flex flex-col items-center justify-center p-20 text-center bg-slate-50/50 rounded-[2.5rem] group hover:border-primary/30 transition-all">
-               <div className="h-24 w-24 bg-white rounded-3xl shadow-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                  <MousePointer2 className="h-10 w-10 text-primary animate-bounce" />
-               </div>
-               <h4 className="text-xl font-black text-navy uppercase tracking-tight mb-2">Aguardando Seleção</h4>
-               <p className="text-sm text-slate-400 font-medium max-w-sm">
-                 Selecione um documento no histórico ao lado ou faça um novo upload para visualizar os dados extraídos pela nossa IA.
-               </p>
-               <div className="mt-8 flex gap-2">
-                  <Badge variant="outline" className="text-[9px] font-black uppercase border-slate-200">PDF</Badge>
-                  <Badge variant="outline" className="text-[9px] font-black uppercase border-slate-200">JPG</Badge>
-                  <Badge variant="outline" className="text-[9px] font-black uppercase border-slate-200">PNG</Badge>
-               </div>
-            </Card>
+            <div className="space-y-6 h-full flex flex-col">
+              <Card className="flex-grow border-dashed border-2 flex flex-col items-center justify-center p-20 text-center bg-slate-50/50 rounded-[2.5rem] group hover:border-primary/30 transition-all">
+                <div className="h-24 w-24 bg-white rounded-3xl shadow-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                    <MousePointer2 className="h-10 w-10 text-primary animate-bounce" />
+                </div>
+                <h4 className="text-xl font-black text-navy uppercase tracking-tight mb-2">Aguardando Seleção</h4>
+                <p className="text-sm text-slate-400 font-medium max-w-sm">
+                  Selecione um documento no histórico ao lado ou faça um novo upload para visualizar os dados extraídos pela nossa IA.
+                </p>
+                <div className="mt-8 flex gap-2">
+                    <Badge variant="outline" className="text-[9px] font-black uppercase border-slate-200">PDF</Badge>
+                    <Badge variant="outline" className="text-[9px] font-black uppercase border-slate-200">JPG</Badge>
+                    <Badge variant="outline" className="text-[9px] font-black uppercase border-slate-200">PNG</Badge>
+                </div>
+              </Card>
+
+              {/* Exemplo de Preview */}
+              <div className="p-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm opacity-40 grayscale pointer-events-none hidden md:block">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary"><FileText className="h-5 w-5" /></div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-primary tracking-widest">Exemplo de Extração</p>
+                    <h4 className="font-bold text-navy">CNH_EXEMPLO.PDF</h4>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100"><p className="text-[8px] uppercase font-black text-slate-400 mb-1">Nome Completo</p><p className="text-xs font-bold">RICARDO OLIVEIRA MENEZES</p></div>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100"><p className="text-[8px] uppercase font-black text-slate-400 mb-1">CPF Detectado</p><p className="text-xs font-bold">123.456.789-00</p></div>
+                </div>
+              </div>
+            </div>
           ) : (
             <div className="animate-in slide-in-from-right-8 duration-500">
               {selectedJob.status === 'processing' ? (
