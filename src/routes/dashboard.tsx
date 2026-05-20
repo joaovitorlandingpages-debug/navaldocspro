@@ -108,7 +108,6 @@ function DashboardLayout() {
   };
 
   const navItems = [
-  const navItems = [
     { group: "Visão Geral", items: [
       { name: "Painel de Controle", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
       { name: "Centro de Ops", icon: <Briefcase className="h-5 w-5" />, path: "/operations-center" },
