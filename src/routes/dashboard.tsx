@@ -86,9 +86,11 @@ function DashboardLayout() {
   }, [subscription]);
 
 
+  const { signOut, profile, loading } = useAuth();
+  
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      await signOut();
       toast.success("Sessão encerrada");
       navigate({ to: "/auth/login" });
     } catch (error) {
