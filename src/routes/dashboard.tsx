@@ -5,7 +5,7 @@ import {
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
-  Database, FolderOpen, Library, CheckCircle2, History, ChevronRight
+  Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge
 } from "lucide-react";
 import { useState, useEffect, Suspense, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -110,6 +110,8 @@ function DashboardLayout() {
     { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
     { name: "Compliance", icon: <ShieldCheck className="h-5 w-5 text-emerald-500" />, path: "/dashboard/compliance-center" },
     { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
+    { name: "Performance", icon: <Gauge className="h-5 w-5 text-indigo-500" />, path: "/performance-center" },
+    { name: "Logs", icon: <History className="h-5 w-5 text-slate-500" />, path: "/logs" },
     { name: "Central IA", icon: <Zap className="h-5 w-5" />, path: "/ai-center" },
     { name: "Central OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
     { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },

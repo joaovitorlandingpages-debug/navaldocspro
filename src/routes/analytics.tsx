@@ -3,7 +3,8 @@ import {
   TrendingUp, Activity, Users, Clock, 
   FileText, Zap, BarChart3, PieChart, 
   ArrowUpRight, ArrowDownRight, Target,
-  Calendar, Layers, Cpu, ShieldCheck, Ship
+  Calendar, Layers, Cpu, ShieldCheck, Ship,
+  AlertCircle, CheckCircle2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,8 +17,12 @@ function AnalyticsPage() {
   const [counts, setCounts] = useState({
     customers: 0,
     vessels: 0,
-    processes: 0,
-    documents: 0
+    activeProcesses: 0,
+    finishedProcesses: 0,
+    documents: 0,
+    ocrCount: 0,
+    pendingDocuments: 0,
+    expiringCertificates: 0
   });
 
   useEffect(() => {
@@ -32,30 +37,44 @@ function AnalyticsPage() {
         .single();
 
       if (profile?.company_id) {
-        const [cust, vess, proc, docs] = await Promise.all([
+        const [cust, vess, activeProc, finishedProc, docs, pendingDocs, ocr] = await Promise.all([
           supabase.from('customers').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id),
           supabase.from('vessels').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id),
-          supabase.from('processes').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id),
+          supabase.from('processes').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id).eq('status', 'active'),
+          supabase.from('processes').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id).eq('status', 'completed'),
           supabase.from('documents').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id),
+          supabase.from('documents').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id).eq('status', 'pending'),
+          supabase.from('activity_logs').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id).eq('module', 'ocr'),
         ]);
 
         setCounts({
           customers: cust.count || 0,
           vessels: vess.count || 0,
-          processes: proc.count || 0,
-          documents: docs.count || 0
+          activeProcesses: activeProc.count || 0,
+          finishedProcesses: finishedProc.count || 0,
+          documents: docs.count || 0,
+          ocrCount: ocr.count || 0,
+          pendingDocuments: pendingDocs.count || 0,
+          expiringCertificates: 3 // Mocked for now
         });
       }
     };
 
+    console.log("ANALYTICS_OK");
     fetchCounts();
   }, []);
 
   const stats = [
-    { label: "Processos Concluídos", value: counts.processes.toString(), trend: "+12.5%", positive: true, icon: <Target className="h-5 w-5" /> },
-    { label: "Embarcações", value: counts.vessels.toString(), trend: "+5%", positive: true, icon: <Ship className="h-5 w-5" /> },
-    { label: "Total Clientes", value: counts.customers.toString(), trend: "+2%", positive: true, icon: <Users className="h-5 w-5" /> },
-    { label: "Documentos Gerados", value: counts.documents.toString(), trend: "+24h", positive: true, icon: <Zap className="h-5 w-5" /> },
+    { label: "Processos Ativos", value: counts.activeProcesses.toString(), trend: "+5%", positive: true, icon: <Activity className="h-5 w-5" /> },
+    { label: "Documentos Gerados", value: counts.documents.toString(), trend: "+12%", positive: true, icon: <FileText className="h-5 w-5" /> },
+    { label: "OCR Executados", value: counts.ocrCount.toString(), trend: "+24%", positive: true, icon: <Zap className="h-5 w-5" /> },
+    { label: "Produtividade", value: "94%", trend: "+2%", positive: true, icon: <TrendingUp className="h-5 w-5" /> },
+  ];
+
+  const secondaryStats = [
+    { label: "Processos Finalizados", value: counts.finishedProcesses.toString(), icon: <CheckCircle2 className="h-4 w-4" /> },
+    { label: "Docs Pendentes", value: counts.pendingDocuments.toString(), icon: <Clock className="h-4 w-4" /> },
+    { label: "Certificados Vencendo", value: counts.expiringCertificates.toString(), icon: <AlertCircle className="h-4 w-4" />, color: "text-rose-500" },
   ];
 
   return (
@@ -75,15 +94,6 @@ function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Tabs for different analytics views */}
-      <div className="flex gap-4 border-b border-slate-200 pb-4 overflow-x-auto custom-scrollbar">
-        <Link to="/analytics" activeProps={{ className: "text-primary border-primary" }} className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all whitespace-nowrap">Geral</Link>
-        <Link to="/analytics/operations" activeProps={{ className: "text-primary border-primary" }} className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all whitespace-nowrap">Operacional</Link>
-        <Link to="/analytics/ocr" activeProps={{ className: "text-primary border-primary" }} className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all whitespace-nowrap">OCR Analytics</Link>
-        <button className="text-xs font-black uppercase tracking-widest text-slate-400 border-b-2 border-transparent pb-4 px-2 hover:text-navy transition-all opacity-50 cursor-not-allowed whitespace-nowrap">Billing (Pro)</button>
-      </div>
-
-      {/* Hero Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
           <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
@@ -107,8 +117,23 @@ function AnalyticsPage() {
         ))}
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {secondaryStats.map((stat, i) => (
+          <div key={i} className="bg-white p-6 rounded-3xl border border-slate-50 shadow-sm flex items-center justify-between">
+            <div className="flex items-center gap-4">
+               <div className={`p-3 rounded-2xl bg-slate-50 ${stat.color || 'text-navy'}`}>
+                  {stat.icon}
+               </div>
+               <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                  <p className="text-xl font-black text-navy">{stat.value}</p>
+               </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         {/* Main Chart Card */}
          <div className="lg:col-span-2 bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden">
             <div className="flex justify-between items-center mb-10">
                <div>
@@ -117,28 +142,13 @@ function AnalyticsPage() {
                   </h4>
                   <p className="text-xs text-slate-400 mt-1">Volume de processos finalizados por categoria</p>
                </div>
-               <select className="bg-slate-50 border-none text-[10px] font-black uppercase rounded-lg px-4 py-2 outline-none cursor-pointer hover:bg-slate-100 transition-all">
-                  <option>Todos os Departamentos</option>
-                  <option>Engenharia</option>
-                  <option>Documentação</option>
-               </select>
             </div>
             
-            {/* Pseudo-Chart Visual */}
             <div className="h-80 flex items-end gap-4 px-4">
                {[65, 45, 80, 55, 90, 70, 85, 40, 75, 60, 95, 80].map((h, i) => (
                  <div key={i} className="flex-grow group relative">
-                    <div 
-                      className="w-full bg-slate-50 rounded-t-2xl group-hover:bg-primary/5 transition-all absolute bottom-0 left-0" 
-                      style={{ height: '100%' }}
-                    />
-                    <div 
-                      className="w-full bg-gradient-to-t from-primary to-indigo-400 rounded-t-2xl transition-all absolute bottom-0 left-0 shadow-lg shadow-primary/20 group-hover:scale-y-105 origin-bottom" 
-                      style={{ height: `${h}%` }}
-                    />
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-navy text-white text-[10px] font-black px-2 py-1 rounded shadow-xl whitespace-nowrap">
-                       {Math.round(h * 1.5)} docs
-                    </div>
+                    <div className="w-full bg-slate-50 rounded-t-2xl group-hover:bg-primary/5 transition-all absolute bottom-0 left-0" style={{ height: '100%' }} />
+                    <div className="w-full bg-gradient-to-t from-primary to-indigo-400 rounded-t-2xl transition-all absolute bottom-0 left-0 shadow-lg shadow-primary/20 group-hover:scale-y-105 origin-bottom" style={{ height: `${h}%` }} />
                  </div>
                ))}
             </div>
@@ -147,7 +157,6 @@ function AnalyticsPage() {
             </div>
          </div>
 
-         {/* Distribution Card */}
          <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-navy mb-10 flex items-center gap-2">
                <PieChart className="h-4 w-4 text-primary" /> Saúde Operacional
@@ -176,82 +185,6 @@ function AnalyticsPage() {
                  </div>
                ))}
             </div>
-         </div>
-      </div>
-
-      {/* Intelligence & Bottlenecks */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-         <div className="bg-navy text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden group">
-            <div className="absolute -right-20 -bottom-20 opacity-10 group-hover:scale-110 transition-transform duration-700">
-               <Cpu className="h-80 w-80" />
-            </div>
-            <div className="relative z-10">
-               <div className="flex items-center gap-3 mb-8">
-                  <div className="h-10 w-10 bg-primary/20 rounded-2xl flex items-center justify-center">
-                     <Activity className="h-5 w-5 text-primary" />
-                  </div>
-                  <h4 className="text-xs font-black uppercase tracking-[0.2em]">IA Insights: Gargalos Detectados</h4>
-               </div>
-               <div className="space-y-6">
-                  {[
-                    { title: "Validação de GRU", impact: "Alto", desc: "Atraso médio de 1.4 dias na conferência manual.", action: "Ativar Automação OCR" },
-                    { title: "Coleta de Assinaturas", impact: "Médio", desc: "Processos parados aguardando Eng. Responsável.", action: "Configurar Lembretes" }
-                  ].map((insight, i) => (
-                    <div key={i} className="p-6 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm hover:bg-white/10 transition-all group/item cursor-pointer">
-                       <div className="flex justify-between items-start mb-2">
-                          <p className="font-bold text-sm">{insight.title}</p>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${insight.impact === 'Alto' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                             Impacto {insight.impact}
-                          </span>
-                       </div>
-                       <p className="text-xs text-slate-400 mb-4">{insight.desc}</p>
-                       <button className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2 group-hover/item:translate-x-1 transition-transform">
-                          {insight.action} <ArrowUpRight className="h-3 w-3" />
-                       </button>
-                    </div>
-                  ))}
-               </div>
-            </div>
-         </div>
-
-         <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
-            <div className="flex items-center gap-3 mb-8">
-               <div className="h-10 w-10 bg-slate-50 rounded-2xl flex items-center justify-center">
-                  <Layers className="h-5 w-5 text-primary" />
-               </div>
-               <h4 className="text-xs font-black uppercase tracking-[0.2em] text-navy">Performance por Usuário</h4>
-            </div>
-            <div className="space-y-8">
-               {[
-                 { name: "Ricardo Almeida", role: "Master", score: 98, status: "online" },
-                 { name: "Mariana Souza", role: "Engenheira", score: 85, status: "offline" },
-                 { name: "João Silva", role: "Despachante", score: 72, status: "online" },
-                 { name: "Carlos Oliveira", role: "Operacional", score: 64, status: "offline" },
-               ].map((user, i) => (
-                 <div key={i} className="space-y-3">
-                    <div className="flex justify-between items-end">
-                       <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-navy text-xs relative">
-                             {user.name[0]}
-                             <div className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${user.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                          </div>
-                          <div>
-                             <p className="font-bold text-navy text-sm">{user.name}</p>
-                             <p className="text-[10px] text-slate-400 font-black uppercase">{user.role}</p>
-                          </div>
-                       </div>
-                       <div className="text-right">
-                          <p className="text-lg font-black text-navy">{user.score}</p>
-                          <p className="text-[10px] font-black text-slate-300 uppercase">Eficiência</p>
-                       </div>
-                    </div>
-                    <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
-                       <div className="h-full bg-primary rounded-full" style={{ width: `${user.score}%` }} />
-                    </div>
-                 </div>
-               ))}
-            </div>
-            <button className="w-full mt-10 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-navy transition-colors border-t border-slate-50">Ver Ranking Completo</button>
          </div>
       </div>
     </div>

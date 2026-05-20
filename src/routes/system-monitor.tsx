@@ -17,7 +17,7 @@ function SystemMonitor() {
   const { profile, loading } = useAuth();
 
   useEffect(() => {
-    console.log("GLOBAL_MONITOR_OK");
+    console.log("SYSTEM_MONITOR_OK");
   }, []);
 
   if (loading) return null;
