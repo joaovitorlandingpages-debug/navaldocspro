@@ -81,6 +81,7 @@ function Customers() {
       setIsLoading(false);
     };
 
+    console.log("CUSTOMERS_PAGE_OK");
     fetchData();
   }, []);
 
