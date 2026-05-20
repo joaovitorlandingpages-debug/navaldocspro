@@ -27,6 +27,10 @@ import { ProcessChecklist } from "@/components/ProcessChecklist";
 import { SmartAutomationDashboard } from "@/components/automation/SmartAutomationDashboard";
 import { ProcessTimeline } from "@/components/ProcessTimeline";
 import { DocumentPreviewEditor } from "@/components/documents/DocumentPreviewEditor";
+import { useProcessAutomation } from "@/hooks/useProcessAutomation";
+import { IntelligencePanel } from "@/components/IntelligencePanel";
+import { useOCR } from "@/hooks/useOCR";
+import { OCRUpload } from "@/components/ocr/OCRUpload";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
@@ -47,6 +51,9 @@ function ProcessDetail() {
   const [selectedTemplateForGen, setSelectedTemplateForGen] = useState<any | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
+  
+  const { automationState } = useProcessAutomation(id);
+  const { jobs: ocrJobs } = useOCR(id);
 
   useEffect(() => {
     console.log("PROCESS_PAGE_OK");
@@ -251,8 +258,8 @@ function ProcessDetail() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-         <div className="lg:col-span-2 space-y-8">
+      <div className="grid lg:grid-cols-4 gap-8">
+         <div className="lg:col-span-3 space-y-8">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex-wrap h-auto">
                    <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geral</TabsTrigger>
@@ -332,11 +339,35 @@ function ProcessDetail() {
                     <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
                       <Zap className="h-5 w-5 text-primary" /> Central de Extração OCR
                     </h3>
-                    <p className="text-sm text-slate-500 mb-8">Nossa IA analisa os documentos enviados para este processo e sugere o autopreenchimento.</p>
-                    <div className="p-12 border-2 border-dashed border-slate-100 rounded-[2rem] text-center">
-                       <Bot className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-                       <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Módulo OCR Ativo para este Processo</p>
-                       <Button variant="outline" className="mt-6 rounded-xl font-bold border-primary/20 text-primary">Iniciar Scanner Vision v4.2</Button>
+                    <div className="grid md:grid-cols-2 gap-8">
+                      <div className="space-y-6">
+                        <p className="text-sm text-slate-500">Suba documentos para extração automática de dados neste processo.</p>
+                        <OCRUpload companyId={profile?.company_id || ""} />
+                      </div>
+                      <div className="space-y-4">
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Jobs de OCR neste Processo</p>
+                        {ocrJobs?.length === 0 ? (
+                          <div className="p-12 border-2 border-dashed border-slate-100 rounded-[2rem] text-center">
+                            <Bot className="h-10 w-10 text-slate-200 mx-auto mb-4" />
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nenhum job processado ainda.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {ocrJobs?.map((job) => (
+                              <div key={job.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <FileText className="h-4 w-4 text-slate-400" />
+                                  <div>
+                                    <p className="text-xs font-bold text-navy truncate max-w-[150px]">{job.uploaded_files?.file_name}</p>
+                                    <p className="text-[9px] text-slate-400 font-bold uppercase">{job.identified_document_type || 'Pendente'}</p>
+                                  </div>
+                                </div>
+                                <Badge className="text-[8px] uppercase font-black">{job.status}</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                </TabsContent>
