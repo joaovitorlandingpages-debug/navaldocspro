@@ -191,8 +191,8 @@ function DashboardV2Content() {
     { label: "Embarcações", value: stats?.totalVessels || 0, icon: <Ship className="h-4 w-4 text-cyan-500" /> },
     { label: "Processos Abertos", value: stats?.openProcesses || 0, icon: <ClipboardList className="h-4 w-4 text-amber-500" /> },
     { label: "Documentos", value: stats?.generatedDocuments || 0, icon: <FileText className="h-4 w-4 text-emerald-500" /> },
-    { label: "Análises OCR", value: stats?.ocrCount || 0, icon: <Zap className="h-4 w-4 text-purple-500" /> },
-    { label: "Pendências", value: stats?.pendingTasks || 0, icon: <Activity className="h-4 w-4 text-red-500" /> },
+    { label: "Análises OCR", value: stats?.ocrUsage || 0, icon: <Zap className="h-4 w-4 text-purple-500" /> },
+    { label: "Pendências", value: (stats?.urgentProcesses || 0) + (stats?.expiringDocuments || 0), icon: <Activity className="h-4 w-4 text-red-500" /> },
   ];
 
   return (
