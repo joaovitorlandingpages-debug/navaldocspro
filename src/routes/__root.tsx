@@ -15,6 +15,7 @@ import { PlanLimitProvider } from "@/hooks/usePlanLimits";
 import { FeedbackButton } from "@/components/FeedbackButton";
 import { IntelligentAssistant } from "@/components/IntelligentAssistant";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 function NotFoundComponent() {
   return (
@@ -130,14 +131,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <ErrorBoundary>
-            <PlanLimitProvider>
-              <NewProcessProvider>
-                {children}
-                <SafeFloatingWidgets />
-              </NewProcessProvider>
-            </PlanLimitProvider>
-          </ErrorBoundary>
+          <AuthProvider>
+            <ErrorBoundary>
+              <PlanLimitProvider>
+                <NewProcessProvider>
+                  {children}
+                  <SafeFloatingWidgets />
+                </NewProcessProvider>
+              </PlanLimitProvider>
+            </ErrorBoundary>
+          </AuthProvider>
         </QueryClientProvider>
         <Scripts />
         <Toaster />
