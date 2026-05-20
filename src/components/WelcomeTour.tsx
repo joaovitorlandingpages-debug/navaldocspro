@@ -25,13 +25,13 @@ export function WelcomeTour({
   if (!isOpen) return null;
 
   const steps: Step[] = [
-    { id: '1', title: 'Empresa Demo Ativa', description: 'NavalDocs Demo Operations carregada.', completed: true },
-    { id: '2', title: 'Perfil Douglas Engenharia', description: 'Engenheiro Naval cadastrado.', completed: true },
-    { id: '3', title: 'Embarcação PHOENIX OPS-01', description: 'Reboque portuário configurado.', completed: true },
-    { id: '4', title: 'Fluxo OCR Ativo', description: 'Documentos extraídos com 98% de confiança.', completed: true },
-    { id: '5', title: 'Biblioteca de Templates', description: 'BCE, DPC e Memorial prontos.', completed: true },
-    { id: '6', title: 'Geração de PDF', description: 'Experimente gerar o protocolo agora.', completed: false },
-    { id: '7', title: 'Gestão de Pendências', description: 'Dashboard operacional vivo.', completed: false },
+    { id: '1', title: 'Perfil da Empresa', description: 'Configure seus dados básicos.', completed: onboardingStep >= 1 },
+    { id: '2', title: 'Primeiro Cliente', description: 'Cadastre quem você atende.', completed: onboardingStep >= 4 },
+    { id: '3', title: 'Primeira Embarcação', description: 'Vincule uma embarcação.', completed: onboardingStep >= 5 },
+    { id: '4', title: 'Criar Processo', description: 'Inicie uma automação.', completed: onboardingStep >= 6 },
+    { id: '5', title: 'Enviar Documento', description: 'Upload para análise.', completed: onboardingStep >= 7 },
+    { id: '6', title: 'Executar OCR', description: 'Extração automática de dados.', completed: false },
+    { id: '7', title: 'Gerar Documento', description: 'Finalize sua primeira entrega.', completed: false },
   ];
 
   const completedCount = steps.filter(s => s.completed).length;
