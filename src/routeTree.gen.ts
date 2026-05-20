@@ -24,6 +24,7 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
 import { Route as DebugAuthPublicRouteImport } from './routes/debug-auth-public'
+import { Route as DashboardV2RouteImport } from './routes/dashboard-v2'
 import { Route as DashboardSafeRouteImport } from './routes/dashboard-safe'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
@@ -136,6 +137,11 @@ const DocumentGeneratorRoute = DocumentGeneratorRouteImport.update({
 const DebugAuthPublicRoute = DebugAuthPublicRouteImport.update({
   id: '/debug-auth-public',
   path: '/debug-auth-public',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardV2Route = DashboardV2RouteImport.update({
+  id: '/dashboard-v2',
+  path: '/dashboard-v2',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardSafeRoute = DashboardSafeRouteImport.update({
@@ -344,6 +350,7 @@ export interface FileRoutesByFullPath {
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard-safe': typeof DashboardSafeRoute
+  '/dashboard-v2': typeof DashboardV2Route
   '/debug-auth-public': typeof DebugAuthPublicRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
@@ -397,6 +404,7 @@ export interface FileRoutesByTo {
   '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
   '/dashboard-safe': typeof DashboardSafeRoute
+  '/dashboard-v2': typeof DashboardV2Route
   '/debug-auth-public': typeof DebugAuthPublicRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
@@ -453,6 +461,7 @@ export interface FileRoutesById {
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard-safe': typeof DashboardSafeRoute
+  '/dashboard-v2': typeof DashboardV2Route
   '/debug-auth-public': typeof DebugAuthPublicRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
@@ -510,6 +519,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/dashboard'
     | '/dashboard-safe'
+    | '/dashboard-v2'
     | '/debug-auth-public'
     | '/document-generator'
     | '/documents'
@@ -563,6 +573,7 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/customers'
     | '/dashboard-safe'
+    | '/dashboard-v2'
     | '/debug-auth-public'
     | '/document-generator'
     | '/documents'
@@ -618,6 +629,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/dashboard'
     | '/dashboard-safe'
+    | '/dashboard-v2'
     | '/debug-auth-public'
     | '/document-generator'
     | '/documents'
@@ -674,6 +686,7 @@ export interface RootRouteChildren {
   CustomersRoute: typeof CustomersRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   DashboardSafeRoute: typeof DashboardSafeRoute
+  DashboardV2Route: typeof DashboardV2Route
   DebugAuthPublicRoute: typeof DebugAuthPublicRoute
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
@@ -803,6 +816,13 @@ declare module '@tanstack/react-router' {
       path: '/debug-auth-public'
       fullPath: '/debug-auth-public'
       preLoaderRoute: typeof DebugAuthPublicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard-v2': {
+      id: '/dashboard-v2'
+      path: '/dashboard-v2'
+      fullPath: '/dashboard-v2'
+      preLoaderRoute: typeof DashboardV2RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard-safe': {
@@ -1162,6 +1182,7 @@ const rootRouteChildren: RootRouteChildren = {
   CustomersRoute: CustomersRoute,
   DashboardRoute: DashboardRouteWithChildren,
   DashboardSafeRoute: DashboardSafeRoute,
+  DashboardV2Route: DashboardV2Route,
   DebugAuthPublicRoute: DebugAuthPublicRoute,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
