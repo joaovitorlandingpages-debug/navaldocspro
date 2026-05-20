@@ -10,13 +10,18 @@ function RedirectToIndex() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }: any) => {
+    const checkSession = async () => {
+      console.log("INDEX_AUTH_CHECK");
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        console.log("INDEX_REDIRECT_DASHBOARD");
         navigate({ to: "/dashboard" });
       } else {
+        console.log("INDEX_REDIRECT_HOME");
         navigate({ to: "/home" });
       }
-    });
+    };
+    checkSession();
   }, [navigate]);
 
   return null;

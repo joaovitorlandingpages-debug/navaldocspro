@@ -41,10 +41,13 @@ function LoginComponent() {
       toast.success("Login realizado com sucesso!");
 
       if (profile?.role === 'admin_master_global') {
-        navigate({ to: "/admin/global" });
+        console.log("REDIRECT_TO_ADMIN_GLOBAL");
+        navigate({ to: "/admin" }); // Assuming global is here or subpath
       } else if (profile?.role === 'admin_master') {
+        console.log("REDIRECT_TO_ADMIN");
         navigate({ to: "/admin" });
       } else {
+        console.log("REDIRECT_TO_DASHBOARD");
         navigate({ to: "/dashboard" });
       }
     } catch (error: any) {

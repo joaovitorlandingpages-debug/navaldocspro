@@ -11,24 +11,31 @@ export const useAuth = () => {
   useEffect(() => {
     let mounted = true;
 
-    // Get initial session
     const initAuth = async () => {
+      console.log("AUTH_START");
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (mounted) {
-          setUser(session?.user ?? null);
+          if (session?.user) {
+            console.log("SESSION_FOUND", session.user.id);
+            setUser(session.user);
+          } else {
+            console.log("SESSION_NOT_FOUND");
+            setUser(null);
+            setLoading(false);
+            console.log("AUTH_LOADING_FINISHED - No Session");
+          }
         }
       } catch (err) {
-        console.error("Initial auth session error:", err);
-      } finally {
+        console.error("AUTH_ERROR_INIT:", err);
         if (mounted) setLoading(false);
       }
     };
     initAuth();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
       if (!mounted) return;
+      console.log("AUTH_STATE_CHANGE:", event);
       
       const newUser = session?.user ?? null;
       setUser(newUser);
@@ -36,6 +43,7 @@ export const useAuth = () => {
       if (!newUser) {
         setLoading(false);
         queryClient.setQueryData(['profile', null], null);
+        console.log("AUTH_LOADING_FINISHED - State Change Logged Out");
       }
     });
 
@@ -45,58 +53,68 @@ export const useAuth = () => {
     };
   }, [queryClient]);
 
-  const { data: profile, isLoading: isLoadingProfile } = useQuery({
+  const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user) return null;
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*, companies(*)')
-        .eq('id', user.id)
-        .maybeSingle(); // Use maybeSingle to handle missing profiles
-      
-      if (error) {
-        console.error("Error fetching profile:", error);
-        throw error;
-      }
-
-      // If profile doesn't exist, create one
-      if (!data) {
-        console.log("Profile not found, creating for user:", user.email);
-        const { data: newProfile, error: createError } = await supabase
+      console.log("PROFILE_LOADING", user.id);
+      try {
+        const { data, error } = await supabase
           .from('profiles')
-          .insert({
-            id: user.id,
-            email: user.email,
-            name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
-            role: 'user', // Default role
-          })
           .select('*, companies(*)')
-          .single();
-
-        if (createError) {
-          console.error("Error creating profile:", createError);
-          return null;
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (error) {
+          console.error("PROFILE_ERROR:", error);
+          throw error;
         }
-        return newProfile;
-      }
 
-      return data;
+        if (!data) {
+          console.log("PROFILE_NOT_FOUND - Creating profile...");
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              email: user.email,
+              name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
+              role: 'user',
+            })
+            .select('*, companies(*)')
+            .single();
+
+          if (createError) {
+            console.error("PROFILE_CREATED_ERROR:", createError);
+            return null;
+          }
+          console.log("PROFILE_CREATED_SUCCESS");
+          return newProfile;
+        }
+
+        console.log("PROFILE_FOUND", data.role);
+        return data;
+      } catch (err) {
+        console.error("PROFILE_FETCH_CATCH:", err);
+        return null;
+      }
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
+    retry: 1
   });
 
-  // Calculate final loading state
-  // It's loading if the session is still being initialized
-  // OR if we have a user but the profile is still being fetched
-  const finalLoading = loading || (!!user && isLoadingProfile);
+  useEffect(() => {
+    if (user && !isLoadingProfile) {
+      setLoading(false);
+      console.log("AUTH_LOADING_FINISHED - Profile Loaded");
+    }
+  }, [user, isLoadingProfile]);
 
   return { 
     user, 
     profile, 
-    loading: finalLoading,
+    loading,
     isAdmin: profile?.role === 'admin_master' || profile?.role === 'admin_master_global',
     isGlobalAdmin: profile?.role === 'admin_master_global'
   };

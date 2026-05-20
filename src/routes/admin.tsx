@@ -32,10 +32,15 @@ function AdminLayout() {
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-slate-900">
-        <ShieldCheck className="h-12 w-12 text-primary animate-pulse" />
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-navy gap-4">
+        <ShieldCheck className="h-12 w-12 text-primary animate-spin" />
+        <p className="text-white/60 text-xs font-black uppercase tracking-widest animate-pulse">Sincronizando Operações Master...</p>
       </div>
     );
+  }
+
+  if (!profile) {
+    return <Navigate to="/auth/login" />;
   }
 
   // Permissão estrita para Admin Master Global ou Admin Master

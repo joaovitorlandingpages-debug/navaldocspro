@@ -12,11 +12,15 @@ function Index() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }: any) => {
+    const checkSession = async () => {
+      console.log("HOME_AUTH_CHECK");
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        console.log("HOME_REDIRECT_DASHBOARD");
         navigate({ to: "/dashboard" });
       }
-    });
+    };
+    checkSession();
   }, [navigate]);
 
   return (
