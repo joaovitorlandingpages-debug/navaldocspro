@@ -441,6 +441,38 @@ export type Database = {
           },
         ]
       }
+      demo_configurations: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          id: string
+          is_demo_mode: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_demo_mode?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_demo_mode?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_configurations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       digital_signatures: {
         Row: {
           company_id: string
@@ -3246,6 +3278,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      seed_demo_data: { Args: { p_company_id: string }; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       track_usage: {

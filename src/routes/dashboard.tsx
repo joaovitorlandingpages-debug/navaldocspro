@@ -341,17 +341,45 @@ export function RouteContent() {
     enabled: !!profile?.company_id
   });
 
+  const { data: demoConfig } = useQuery({
+    queryKey: ["demo-config", profile?.company_id],
+    queryFn: async () => {
+      if (!profile?.company_id) return null;
+      const { data, error } = await supabase
+        .from("demo_configurations")
+        .select("*")
+        .eq("company_id", profile.company_id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.company_id
+  });
+
   const stats = [
-    { label: "Clientes Ativos", value: statsData?.activeCustomers.toString() || "0", icon: <Users className="text-blue-600" />, trend: statsData?.trends.customers || "+0%" },
-    { label: "Embarcações", value: statsData?.totalVessels.toString() || "0", icon: <Ship className="text-cyan-600" />, trend: statsData?.trends.vessels || "+0%" },
-    { label: "Processos em Aberto", value: statsData?.openProcesses.toString() || "12", icon: <ClipboardList className="text-amber-600" />, trend: statsData?.trends.processes || "Estável" },
-    { label: "Documentos Gerados", value: statsData?.generatedDocuments.toString() || "45", icon: <FileText className="text-green-600" />, trend: statsData?.trends.documents || "+15%" },
+    { label: "Clientes Ativos", value: statsData?.activeCustomers.toString() || (demoConfig?.is_demo_mode ? "12" : "0"), icon: <Users className="text-blue-600" />, trend: statsData?.trends.customers || "+5%" },
+    { label: "Embarcações", value: statsData?.totalVessels.toString() || (demoConfig?.is_demo_mode ? "24" : "0"), icon: <Ship className="text-cyan-600" />, trend: statsData?.trends.vessels || "+3%" },
+    { label: "Processos em Aberto", value: statsData?.openProcesses.toString() || (demoConfig?.is_demo_mode ? "18" : "0"), icon: <ClipboardList className="text-amber-600" />, trend: statsData?.trends.processes || "Estável" },
+    { label: "Documentos Gerados", value: statsData?.generatedDocuments.toString() || (demoConfig?.is_demo_mode ? "142" : "0"), icon: <FileText className="text-green-600" />, trend: statsData?.trends.documents || "+15%" },
   ];
 
-    console.log("ENTERPRISE_UI_OK");
+    console.log("DEMO_DASHBOARD_READY");
     return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-      {(() => { console.log("UX_ENHANCED_OK"); return null; })()}
+      {demoConfig?.is_demo_mode && (
+        <div className="bg-primary/10 border border-primary/20 p-4 rounded-2xl flex items-center justify-between">
+           <div className="flex items-center gap-3">
+              <Zap className="h-5 w-5 text-primary" />
+              <div>
+                 <p className="text-xs font-black uppercase text-primary tracking-widest">Modo Demonstração Ativo</p>
+                 <p className="text-[10px] font-bold text-navy/60">Você está visualizando dados simulados para Douglas & Engenheiros Piloto.</p>
+              </div>
+           </div>
+           <Button variant="outline" size="sm" className="text-[9px] font-black uppercase tracking-widest border-primary/20 hover:bg-primary/10 text-primary">
+              Mudar para Dados Reais
+           </Button>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Centro de Operações</h1>

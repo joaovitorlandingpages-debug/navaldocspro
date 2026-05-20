@@ -19,8 +19,9 @@ export function SmartOCR() {
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   
   const displayJobs = jobs && jobs.length > 0 ? jobs : [
-    { id: 'm1', status: 'completed', confidence_score: 0.98, identified_document_type: 'PERSONAL_IDENTITY', document_type: 'RG', uploaded_files: { file_name: 'RG_RICARDO_ALMEIDA.JPG' }, extracted_data: { name: 'RICARDO ALMEIDA', doc_number: '123.456.789-00' } },
-    { id: 'm2', status: 'processing', confidence_score: 0.85, identified_document_type: 'VESSEL_TIE', document_type: 'TIE', uploaded_files: { file_name: 'TIE_ESTRELA_DO_MAR.PDF' }, extracted_data: { vessel_name: 'ESTRELA DO MAR' } },
+    { id: 'm1', status: 'completed', confidence_score: 0.98, identified_document_type: 'PERSONAL_IDENTITY', document_type: 'RG', uploaded_files: { file_name: 'RG_ENG_DOUGLAS.JPG' }, extracted_data: { name: 'DOUGLAS ENGENHARIA', doc_number: '123.456.789-00' } },
+    { id: 'm2', status: 'processing', confidence_score: 0.85, identified_document_type: 'VESSEL_TIE', document_type: 'TIE', uploaded_files: { file_name: 'TIE_PHOENIX_OPS_01.PDF' }, extracted_data: { vessel_name: 'PHOENIX OPS-01' } },
+    { id: 'm3', status: 'completed', confidence_score: 0.95, identified_document_type: 'CNH', document_type: 'CNH', uploaded_files: { file_name: 'CNH_DESPACHANTE.JPG' }, extracted_data: { name: 'MARCUS DESPACHANTE', doc_number: '445.667.889-11' } },
   ] as any[];
 
   const isMock = !jobs || jobs.length === 0;
