@@ -195,7 +195,8 @@ export const useFiles = (filters?: { customerId?: string; vesselId?: string; pro
 
       // Trigger automation engine if processId is present
       if (data.process_id) {
-        DocumentAutomationEngine.processOCRExtraction(data.id, mockData);
+        // We trigger re-analysis here, the actual OCR extraction logic is handled via ocr_jobs
+        DocumentAutomationEngine.analyzeProcess(data.process_id);
       }
 
       return data;
