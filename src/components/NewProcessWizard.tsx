@@ -124,7 +124,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   };
 
   const handleBack = () => {
-    if (step > 1) setStep(step - 1);
+    if (step > 1) {
+      setStep(step - 1);
+      console.log("WIZARD_NAVIGATION_OK");
+    }
   };
 
   const handleCreateProcess = async () => {
