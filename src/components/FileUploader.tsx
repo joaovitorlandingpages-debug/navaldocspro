@@ -4,6 +4,8 @@ import { Upload, X, FileText, CheckCircle2, Loader2, AlertCircle, Zap, ShieldChe
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useFiles, FileBucket } from "@/hooks/useFiles";
+import { useOCR } from "@/hooks/useOCR";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 interface FileUploaderProps {
@@ -29,6 +31,8 @@ export function FileUploader({
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const { uploadFile } = useFiles();
+  const { createBatchJobs } = useOCR();
+  const { profile } = useAuth();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -54,6 +58,19 @@ export function FileUploader({
       clearInterval(interval);
       setProgress(100);
       
+      console.log("SMART_UPLOAD_OK", result.id);
+      
+      // Auto-trigger OCR if it's a candidate category
+      const ocrCategories = ['RG', 'CNH', 'CPF', 'TIE', 'TIEM', 'Documentos Pessoais', 'Documentos da Embarcação'];
+      if (ocrCategories.some(cat => category?.includes(cat) || result.file_name.toUpperCase().includes(cat))) {
+        console.log("OCR_AUTOSTART_OK", result.id);
+        createBatchJobs.mutate({
+          files: [{ file, id: result.id }],
+          companyId: profile?.company_id || "",
+          docType: category || "Identidade"
+        });
+      }
+
       if (onSuccess) onSuccess(result);
       
       setTimeout(() => {
