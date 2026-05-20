@@ -147,7 +147,9 @@ function DocumentGenerator() {
         fieldValues: formValues
       });
       
+      console.log("PDF_GENERATION_OK");
       toast.success("Documento oficial gerado e salvo com sucesso!");
+
     } catch (error) {
       console.error("Erro ao gerar documento real:", error);
       toast.error("Erro ao processar documento oficial.");
