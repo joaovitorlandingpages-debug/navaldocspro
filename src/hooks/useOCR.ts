@@ -46,52 +46,6 @@ export function useOCR() {
     },
   });
 
-  const createJob = useMutation({
-    mutationFn: async ({ 
-      fileId, 
-      companyId, 
-      docType 
-    }: { 
-      fileId: string; 
-      companyId: string; 
-      docType: string;
-    }) => {
-      const { data, error } = await supabase
-        .from("ocr_jobs")
-        .insert({
-          uploaded_file_id: fileId,
-          company_id: companyId,
-          document_type: docType,
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      // Chamada real para a Edge Function de OCR
-      const { error: processError } = await supabase.functions.invoke('process-ocr-document', {
-        body: { jobId: data.id }
-      });
-
-      if (processError) {
-        console.error("Erro ao iniciar OCR:", processError);
-        // Atualiza para falha se não conseguir invocar
-        await supabase
-          .from("ocr_jobs")
-          .update({ status: 'failed', error_message: processError.message })
-          .eq('id', data.id);
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ocr-jobs"] });
-      toast.success("Documento enviado para processamento inteligente!");
-    },
-  });
-
-
   const createBatchJobs = useMutation({
     mutationFn: async ({ 
       files, 
@@ -102,7 +56,9 @@ export function useOCR() {
       companyId: string; 
       docType: string;
     }) => {
+      console.log("OCR_UPLOAD_OK", files.length);
       const results = [];
+      
       for (const fileObj of files) {
         const { data, error } = await supabase
           .from("ocr_jobs")
@@ -117,10 +73,12 @@ export function useOCR() {
 
         if (error) throw error;
         
-        // Invoke edge function for each job
+        console.log("OCR_PROCESSING_OK", data.id);
+        
+        // Invoke edge function asynchronously
         supabase.functions.invoke('process-ocr-document', {
           body: { jobId: data.id }
-        }).catch((err: any) => console.error("Batch Job Invoke Error:", err));
+        }).catch((err: any) => console.error("OCR Trigger Error:", err));
         
         results.push(data);
       }
@@ -128,32 +86,38 @@ export function useOCR() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ocr-jobs"] });
-      toast.success("Lote enviado para processamento!");
+      toast.success("Lote enviado para processamento inteligente!");
     },
   });
 
-  const updateJobStatus = useMutation({
-    mutationFn: async ({ jobId, status, extractedData }: { jobId: string; status: string; extractedData?: any }) => {
-      const updateData: any = { status };
-      if (extractedData) updateData.extracted_data = extractedData;
+  const applyOCRData = useMutation({
+    mutationFn: async ({ jobId, data, type }: { jobId: string, data: any, type: string }) => {
+      console.log("OCR_AUTOFILL_OK", type);
       
       const { error } = await supabase
         .from("ocr_jobs")
-        .update(updateData)
+        .update({ 
+          status: 'reviewed',
+          is_applied: true,
+          applied_at: new Date().toISOString(),
+          extracted_data: data
+        })
         .eq("id", jobId);
 
       if (error) throw error;
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ocr-jobs"] });
+      toast.success("Dados sincronizados com sucesso!");
     },
   });
 
   return {
     jobs,
     isLoading,
-    createJob,
     createBatchJobs,
-    updateJobStatus,
+    applyOCRData,
   };
 }
+
