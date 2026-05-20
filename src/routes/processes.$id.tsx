@@ -27,6 +27,10 @@ import { ProcessChecklist } from "@/components/ProcessChecklist";
 import { SmartAutomationDashboard } from "@/components/automation/SmartAutomationDashboard";
 import { ProcessTimeline } from "@/components/ProcessTimeline";
 import { DocumentPreviewEditor } from "@/components/documents/DocumentPreviewEditor";
+import { useProcessAutomation } from "@/hooks/useProcessAutomation";
+import { IntelligencePanel } from "@/components/IntelligencePanel";
+import { useOCR } from "@/hooks/useOCR";
+import { OCRUpload } from "@/components/ocr/OCRUpload";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
@@ -47,6 +51,9 @@ function ProcessDetail() {
   const [selectedTemplateForGen, setSelectedTemplateForGen] = useState<any | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
+  
+  const { automationState } = useProcessAutomation(id);
+  const { jobs: ocrJobs } = useOCR(id);
 
   useEffect(() => {
     console.log("PROCESS_PAGE_OK");
@@ -71,8 +78,8 @@ function ProcessDetail() {
       .from('processes')
       .select(`
         *,
-        customer:customers(id, name, cpf_cnpj),
-        vessel:vessels(id, name, activity, has_radio, gross_tonnage)
+        customer:customers(id, name, cpf_cnpj, email),
+        vessel:vessels(id, name, activity, has_radio, gross_tonnage, registration_number, vessel_type)
       `)
       .eq('id', id)
       .single();
@@ -96,13 +103,17 @@ function ProcessDetail() {
     fetchProcess();
     fetchComments();
 
-    
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel(`process-detail-${id}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'process_comments', filter: `process_id=eq.${id}` },
+        { event: '*', schema: 'public', table: 'process_comments', filter: `process_id=eq.${id}` },
         () => fetchComments()
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'processes', filter: `id=eq.${id}` },
+        () => fetchProcess()
       )
       .subscribe();
 
@@ -120,7 +131,6 @@ function ProcessDetail() {
   useEffect(() => {
     console.log("PROCESS_TIMELINE_OK");
     if (scrollRef.current) {
-
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [comments]);
@@ -149,16 +159,32 @@ function ProcessDetail() {
     }
   };
 
-  const timelineEvents: any[] = complianceHistory?.map((event: any) => ({
-    id: event.id,
-    type: event.event_type as any,
-    user: "Sistema IA",
-    description: event.description,
-    date: event.created_at
-  })) || [
-    { id: "1", type: "creation", user: "Ricardo Almeida", description: "Processo aberto no sistema.", date: process?.created_at || "2026-05-10T09:45:00Z" },
-    { id: "2", type: "update", user: "Ricardo Almeida", description: "Cliente vinculado e embarcação selecionada.", date: process?.created_at || "2026-05-10T10:15:00Z" },
-  ];
+  const automationEvents = automationState?.checklist_status?.filter(i => i.status !== 'missing').map((item: any) => ({
+    id: `auto-${item.template_id}`,
+    type: 'validation_passed' as const,
+    user: "Motor IA",
+    description: `Documento identificado e validado: ${item.name}`,
+    date: new Date().toISOString()
+  })) || [];
+
+  const timelineEvents: any[] = [
+    ...automationEvents,
+    ...(complianceHistory?.map((event: any) => ({
+      id: event.id,
+      type: event.event_type as any,
+      user: "Sistema IA",
+      description: event.description,
+      date: event.created_at
+    })) || [])
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  // Default events if none exist
+  if (timelineEvents.length === 0) {
+    timelineEvents.push(
+      { id: "1", type: "creation", user: "Ricardo Almeida", description: "Processo aberto no sistema.", date: process?.created_at || new Date().toISOString() },
+      { id: "2", type: "update", user: "Ricardo Almeida", description: "Cliente vinculado e embarcação selecionada.", date: process?.created_at || new Date().toISOString() }
+    );
+  }
 
   if (selectedTemplateForGen) {
     return (
@@ -169,8 +195,6 @@ function ProcessDetail() {
           onSave={(finalContent) => {
             setSelectedTemplateForGen(null);
             console.log("PROCESS_GENERATION_OK");
-            // Simular salvamento
-
             toast.success("Documento finalizado e anexado.");
             fetchProcess();
           }}
@@ -235,24 +259,24 @@ function ProcessDetail() {
               </Button>
               <Button 
                 className="flex-1 md:flex-none bg-primary text-white h-11 rounded-xl gap-2 font-bold hover:opacity-90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={process?.compliance_status !== 'conforme' || process?.is_blocked}
+                disabled={automationState?.is_ready_for_generation === false}
                 onClick={() => {
-                  if (process?.compliance_status === 'conforme') {
+                  if (automationState?.is_ready_for_generation) {
                     toast.success("Processo finalizado com sucesso!");
                   } else {
                     toast.error("O processo não pode ser finalizado. Verifique as inconformidades.");
                   }
                 }}
               >
-                 {process?.compliance_status === 'conforme' ? <CheckCircle2 className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
+                 {automationState?.is_ready_for_generation ? <CheckCircle2 className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
                  Finalizar Processo
               </Button>
            </div>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-         <div className="lg:col-span-2 space-y-8">
+      <div className="grid lg:grid-cols-4 gap-8">
+         <div className="lg:col-span-3 space-y-8">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex-wrap h-auto">
                    <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geral</TabsTrigger>
@@ -285,9 +309,9 @@ function ProcessDetail() {
                            <div className="flex justify-between py-3 border-b border-slate-50">
                               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Conformidade</span>
                               <Badge variant="outline" className={`text-[10px] font-black uppercase tracking-widest border-none ${
-                                process?.compliance_status === 'conforme' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                                automationState?.is_ready_for_generation ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
                               }`}>
-                                {process?.compliance_status || 'Pendente'}
+                                {automationState?.is_ready_for_generation ? 'Conforme' : 'Pendente'}
                               </Badge>
                            </div>
                            <div className="flex justify-between py-3 border-b border-slate-50">
@@ -332,11 +356,35 @@ function ProcessDetail() {
                     <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
                       <Zap className="h-5 w-5 text-primary" /> Central de Extração OCR
                     </h3>
-                    <p className="text-sm text-slate-500 mb-8">Nossa IA analisa os documentos enviados para este processo e sugere o autopreenchimento.</p>
-                    <div className="p-12 border-2 border-dashed border-slate-100 rounded-[2rem] text-center">
-                       <Bot className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-                       <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Módulo OCR Ativo para este Processo</p>
-                       <Button variant="outline" className="mt-6 rounded-xl font-bold border-primary/20 text-primary">Iniciar Scanner Vision v4.2</Button>
+                    <div className="grid md:grid-cols-2 gap-8">
+                      <div className="space-y-6">
+                        <p className="text-sm text-slate-500">Suba documentos para extração automática de dados neste processo.</p>
+                        <OCRUpload companyId={profile?.company_id || ""} processId={id} />
+                      </div>
+                      <div className="space-y-4">
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Jobs de OCR neste Processo</p>
+                        {ocrJobs?.length === 0 ? (
+                          <div className="p-12 border-2 border-dashed border-slate-100 rounded-[2rem] text-center">
+                            <Bot className="h-10 w-10 text-slate-200 mx-auto mb-4" />
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nenhum job processado ainda.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {ocrJobs?.map((job) => (
+                              <div key={job.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <FileText className="h-4 w-4 text-slate-400" />
+                                  <div>
+                                    <p className="text-xs font-bold text-navy truncate max-w-[150px]">{job.uploaded_files?.file_name}</p>
+                                    <p className="text-[9px] text-slate-400 font-bold uppercase">{job.identified_document_type || 'Pendente'}</p>
+                                  </div>
+                                </div>
+                                <Badge className="text-[8px] uppercase font-black">{job.status}</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                </TabsContent>
@@ -346,23 +394,28 @@ function ProcessDetail() {
                     <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
                       <FilePlus className="h-5 w-5 text-primary" /> Geração de Documentos Reais
                     </h3>
-                    <div className="grid md:grid-cols-2 gap-4">
-                       <Button variant="outline" className="h-20 rounded-2xl border-slate-100 flex flex-col items-center justify-center gap-1 group hover:border-primary/40">
-                          <FileText className="h-5 w-5 text-slate-400 group-hover:text-primary" />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Gerar BCE</span>
-                       </Button>
-                       <Button variant="outline" className="h-20 rounded-2xl border-slate-100 flex flex-col items-center justify-center gap-1 group hover:border-primary/40">
-                          <FileText className="h-5 w-5 text-slate-400 group-hover:text-primary" />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Gerar DPC-2211</span>
-                       </Button>
-                       <Button variant="outline" className="h-20 rounded-2xl border-slate-100 flex flex-col items-center justify-center gap-1 group hover:border-primary/40">
-                          <FileText className="h-5 w-5 text-slate-400 group-hover:text-primary" />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Gerar Procuração</span>
-                       </Button>
-                       <Button variant="outline" className="h-20 rounded-2xl border-slate-100 flex flex-col items-center justify-center gap-1 group hover:border-primary/40">
-                          <FileText className="h-5 w-5 text-slate-400 group-hover:text-primary" />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Gerar Memorial</span>
-                       </Button>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                       {[
+                         { name: "Requerimento DPC-2211", label: "Gerar DPC-2211" },
+                         { name: "BCE - Boletim de Cadastro", label: "Gerar BCE" },
+                         { name: "Procuração Marítima", label: "Gerar Procuração" },
+                         { name: "Memorial Técnico", label: "Gerar Memorial" },
+                         { name: "Declaração de Propriedade", label: "Gerar Declaração" }
+                       ].map((tpl) => (
+                        <Button 
+                          key={tpl.name}
+                          variant="outline" 
+                          className="h-24 rounded-2xl border-slate-100 flex flex-col items-center justify-center gap-2 group hover:border-primary/40 hover:bg-slate-50"
+                          onClick={async () => {
+                             const { data } = await supabase.from('document_templates').select('*').eq('name', tpl.name).single();
+                             if (data) setSelectedTemplateForGen(data);
+                             else toast.error(`Modelo "${tpl.name}" não encontrado.`);
+                          }}
+                        >
+                           <FileText className="h-6 w-6 text-slate-400 group-hover:text-primary" />
+                           <span className="text-[10px] font-black uppercase tracking-widest">{tpl.label}</span>
+                        </Button>
+                       ))}
                     </div>
                   </div>
                </TabsContent>
@@ -408,7 +461,10 @@ function ProcessDetail() {
                              </div>
                           </div>
                        </div>
-                       <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-12 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-emerald-600/20">
+                       <Button 
+                        disabled={!automationState?.is_ready_for_generation}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-12 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-emerald-600/20"
+                       >
                           <PlayCircle className="h-4 w-4" /> Enviar para Órgão Competente
                        </Button>
                     </div>
@@ -416,12 +472,10 @@ function ProcessDetail() {
                </TabsContent>
 
                 <TabsContent value="requirements" className="space-y-8 animate-in fade-in duration-300">
-                   <ProcessChecklist processId={id} processTypeId={process?.process_type_id} processTypeSlug={process?.process_type?.toLowerCase().replace(/\s+/g, '_')} />
+                   <ProcessChecklist processId={id} processTypeId={process?.process_type_id} />
                 </TabsContent>
 
                <TabsContent value="documents" className="animate-in fade-in duration-300">
-                  {(() => { console.log("PROCESS_DOCUMENTS_OK"); return null; })()}
-
                   <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
@@ -468,89 +522,6 @@ function ProcessDetail() {
                   </div>
                </TabsContent>
 
-                <TabsContent value="gen_docs" className="animate-in fade-in duration-300">
-                   <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                      <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2 mb-6">
-                        <FilePlus className="h-5 w-5 text-primary" /> Documentos de Saída
-                      </h3>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {process?.compliance_status === 'conforme' ? (
-                          <p className="col-span-full text-sm text-slate-500 mb-4 italic">Todos os requisitos foram validados. Você pode gerar o pacote completo.</p>
-                        ) : (
-                          <div className="col-span-full p-4 bg-amber-50 rounded-xl border border-amber-100 mb-4 flex items-center gap-3">
-                             <AlertTriangle className="h-4 w-4 text-amber-600" />
-                             <p className="text-[11px] text-amber-700 font-bold uppercase">Conformidade pendente: Geração limitada a rascunhos.</p>
-                          </div>
-                        )}
-                        
-                        <Card className="p-4 border-slate-100 hover:border-primary/20 transition-all cursor-pointer group" onClick={async () => {
-                           const { data } = await supabase.from('document_templates').select('*').eq('name', 'Requerimento DPC-2211').single();
-                           setSelectedTemplateForGen(data);
-                        }}>
-                           <div className="flex justify-between items-start mb-2">
-                              <Badge className="bg-slate-100 text-slate-500 border-none uppercase text-[8px]">Rascunho</Badge>
-                              <FileText className="h-4 w-4 text-primary opacity-40 group-hover:opacity-100" />
-                           </div>
-                           <h4 className="text-sm font-bold text-navy uppercase tracking-tight">Requerimento Geral</h4>
-                           <p className="text-[10px] text-slate-400 mt-1">DPC-2211 (Padrão Marinha)</p>
-                        </Card>
-                      </div>
-                   </div>
-                </TabsContent>
-                <TabsContent value="comments" className="animate-in fade-in duration-300">
-                  <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col h-[600px] overflow-hidden">
-                    <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
-                      <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4 text-primary" /> Comunicação Interna
-                      </h3>
-                      <Badge variant="outline" className="text-[10px] text-slate-400 border-slate-200">Visível apenas para equipe</Badge>
-                    </div>
-                    
-                    <div ref={scrollRef} className="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50/30">
-                      {comments.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
-                          <MessageSquare className="h-12 w-12 mb-4" />
-                          <p className="text-sm font-bold uppercase tracking-widest">Nenhum comentário ainda</p>
-                          <p className="text-xs">Inicie a conversa sobre este processo.</p>
-                        </div>
-                      ) : (
-                        comments.map((comment) => (
-                          <div key={comment.id} className={`flex flex-col ${comment.user_id === profile?.id ? "items-end" : "items-start"}`}>
-                            <div className={`max-w-[80%] p-4 rounded-2xl ${
-                              comment.user_id === profile?.id 
-                                ? "bg-navy text-white rounded-tr-none" 
-                                : "bg-white text-navy rounded-tl-none border border-slate-100 shadow-sm"
-                            }`}>
-                              <p className="text-sm leading-relaxed">{comment.content}</p>
-                            </div>
-                            <div className="flex items-center gap-2 mt-2 px-1">
-                               <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
-                                 {comment.profiles?.name} • {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}
-                               </p>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-
-                    <form onSubmit={handleSendComment} className="p-6 border-t bg-white flex gap-3">
-                      <Input 
-                        placeholder="Digite sua nota interna..." 
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        className="h-12 rounded-xl bg-slate-50 border-slate-100 focus:bg-white"
-                      />
-                      <Button 
-                        type="submit" 
-                        disabled={!newComment.trim() || isSubmittingComment}
-                        className="h-12 w-12 rounded-xl p-0 bg-primary hover:opacity-90 shadow-lg shadow-primary/20"
-                      >
-                        {isSubmittingComment ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-                      </Button>
-                    </form>
-                  </div>
-               </TabsContent>
-
                <TabsContent value="history" className="animate-in fade-in duration-300">
                   <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
                     <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-10 flex items-center gap-2">
@@ -563,7 +534,9 @@ function ProcessDetail() {
          </div>
 
          {/* Sidebar */}
-         <div className="space-y-8">
+         <aside className="space-y-8">
+            <IntelligencePanel />
+            
             <div className="bg-navy p-8 rounded-[2.5rem] text-white shadow-xl shadow-navy/20">
                <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6">Ações Rápidas</h3>
                <div className="space-y-3">
@@ -572,7 +545,7 @@ function ProcessDetail() {
                     onClick={async () => {
                       setIsGenerating(true);
                       const { data } = await supabase.from('document_templates').select('*').eq('name', 'Requerimento DPC-2211').single();
-                      setSelectedTemplateForGen(data);
+                      if (data) setSelectedTemplateForGen(data);
                       setIsGenerating(false);
                     }}
                   >
@@ -588,27 +561,45 @@ function ProcessDetail() {
                </div>
             </div>
 
-            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-               <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6">Equipe Vinculada</h3>
-               <div className="space-y-4">
-                  {[
-                    { name: "Ricardo Almeida", role: "Engenheiro Responsável", avatar: "RA" },
-                    { name: "Ana Paula", role: "Assistente Documental", avatar: "AP" }
-                  ].map((user) => (
-                    <div key={user.name} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
-                       <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">{user.avatar}</div>
-                       <div>
-                          <p className="text-xs font-bold text-navy">{user.name}</p>
-                          <p className="text-[10px] font-medium text-slate-500">{user.role}</p>
-                       </div>
-                    </div>
-                  ))}
-                  <Button variant="ghost" className="w-full mt-4 text-[10px] font-black uppercase tracking-widest text-primary gap-2">
-                     <Plus className="h-3 w-3" /> Gerenciar Equipe
-                  </Button>
+            <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col h-[500px] overflow-hidden">
+               <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
+                  <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
+                     <MessageSquare className="h-4 w-4 text-primary" /> Chat Interno
+                  </h3>
                </div>
+               
+               <ScrollArea className="flex-1 p-6" ref={scrollRef}>
+                  <div className="space-y-4">
+                     {comments.map((comment) => (
+                        <div key={comment.id} className={`flex flex-col ${comment.user_id === profile?.id ? "items-end" : "items-start"}`}>
+                           <div className={`max-w-[90%] p-3 rounded-2xl text-xs ${
+                              comment.user_id === profile?.id 
+                                 ? "bg-navy text-white rounded-tr-none" 
+                                 : "bg-slate-100 text-navy rounded-tl-none"
+                           }`}>
+                              {comment.content}
+                           </div>
+                           <span className="text-[8px] font-black text-slate-400 uppercase mt-1">
+                              {comment.profiles?.name} • {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}
+                           </span>
+                        </div>
+                     ))}
+                  </div>
+               </ScrollArea>
+
+               <form onSubmit={handleSendComment} className="p-4 border-t bg-white flex gap-2">
+                  <Input 
+                     placeholder="Nota interna..." 
+                     value={newComment}
+                     onChange={(e) => setNewComment(e.target.value)}
+                     className="h-10 rounded-xl bg-slate-50 text-xs"
+                  />
+                  <Button size="icon" type="submit" className="h-10 w-10 shrink-0 rounded-xl bg-primary">
+                     <Send className="h-4 w-4" />
+                  </Button>
+               </form>
             </div>
-         </div>
+         </aside>
       </div>
     </div>
   );
