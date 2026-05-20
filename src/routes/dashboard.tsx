@@ -40,7 +40,7 @@ function DashboardLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isNotificationsOpen, setNotificationsOpen] = useState(false);
   const [showTour, setShowTour] = useState(false);
-  const { profile, loading } = useAuth();
+  const { profile, loading, signOut } = useAuth();
   const { setIsNewProcessOpen } = useNewProcess();
   const { checkLimit, subscription } = usePlanLimits();
   const [quotaWarnings, setQuotaWarnings] = useState<string[]>([]);
@@ -86,7 +86,6 @@ function DashboardLayout() {
   }, [subscription]);
 
 
-  const { signOut, profile, loading } = useAuth();
   
   const handleLogout = async () => {
     try {
