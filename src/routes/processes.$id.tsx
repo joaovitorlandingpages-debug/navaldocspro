@@ -162,7 +162,9 @@ function ProcessDetail() {
           processData={process}
           onSave={(finalContent) => {
             setSelectedTemplateForGen(null);
+            console.log("PROCESS_GENERATION_OK");
             // Simular salvamento
+
             toast.success("Documento finalizado e anexado.");
             fetchProcess();
           }}
