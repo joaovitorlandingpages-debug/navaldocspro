@@ -12,6 +12,10 @@ function AdminGlobalLayout() {
 
   if (loading) return null;
 
+  if (!profile) {
+    return <Navigate to="/auth/login" />;
+  }
+
   if (profile?.role !== 'admin_master_global') {
     return <Navigate to="/admin" />;
   }
