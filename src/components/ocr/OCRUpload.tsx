@@ -11,9 +11,10 @@ import { Progress } from "@/components/ui/progress";
 
 interface OCRUploadProps {
   companyId: string;
+  processId?: string;
 }
 
-export function OCRUpload({ companyId }: OCRUploadProps) {
+export function OCRUpload({ companyId, processId }: OCRUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [docType, setDocType] = useState<string>("AUTO_DETECT");
@@ -70,6 +71,7 @@ export function OCRUpload({ companyId }: OCRUploadProps) {
             company_id: companyId,
             file_name: file.name,
             file_url: filePath,
+            process_id: processId,
             category: 'ocr_analysis',
             file_type: file.type,
             file_size: file.size,
