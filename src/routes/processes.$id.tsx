@@ -359,7 +359,7 @@ function ProcessDetail() {
                     <div className="grid md:grid-cols-2 gap-8">
                       <div className="space-y-6">
                         <p className="text-sm text-slate-500">Suba documentos para extração automática de dados neste processo.</p>
-                        <OCRUpload companyId={profile?.company_id || ""} />
+                        <OCRUpload companyId={profile?.company_id || ""} processId={id} />
                       </div>
                       <div className="space-y-4">
                         <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Jobs de OCR neste Processo</p>
