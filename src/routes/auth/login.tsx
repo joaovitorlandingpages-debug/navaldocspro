@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ShieldCheck, Mail, Lock, Loader2, ArrowRight, Anchor } from "lucide-react";
-import { motion } from "framer-motion";
+// motion removed to prevent removeChild crash
 
 export const Route = createFileRoute("/auth/login")({
   component: LoginComponent,
@@ -65,12 +65,7 @@ function LoginComponent() {
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-[400px] z-10"
-      >
+      <div className="w-full max-w-[400px] z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col items-center mb-8">
           <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/20 mb-4">
             <Anchor className="text-white w-10 h-10" />
@@ -152,7 +147,7 @@ function LoginComponent() {
           <div className="w-1 h-1 bg-white/10 rounded-full" />
           <div className="text-xs uppercase tracking-tighter">AES-256 Encryption</div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

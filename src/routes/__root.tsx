@@ -134,8 +134,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
             <PlanLimitProvider>
               <NewProcessProvider>
                 {children}
-                <FeedbackButton />
-                <IntelligentAssistant />
+                <SafeFloatingWidgets />
               </NewProcessProvider>
             </PlanLimitProvider>
           </ErrorBoundary>
@@ -144,6 +143,24 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <Toaster />
       </body>
     </html>
+  );
+}
+
+// Separate component to safely handle floating widgets without crashing the root
+function SafeFloatingWidgets() {
+  const isAuthPage = typeof window !== 'undefined' && (
+    window.location.pathname.startsWith('/auth') || 
+    window.location.pathname === '/' ||
+    window.location.pathname === '/home'
+  );
+
+  if (isAuthPage) return null;
+
+  return (
+    <>
+      <FeedbackButton />
+      <IntelligentAssistant />
+    </>
   );
 }
 
