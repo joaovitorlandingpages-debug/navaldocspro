@@ -5,7 +5,8 @@ import {
   Download, Share2, PlayCircle, MessageSquare, Plus,
   FileCheck, History, Info, Zap, Bot, Eye, Trash2,
   Image as ImageIcon, Send, Loader2, Target, Ban,
-  FilePlus, RefreshCw, ChevronLeft, AlertTriangle
+  FilePlus, RefreshCw, ChevronLeft, AlertTriangle,
+  Signature
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +46,11 @@ function ProcessDetail() {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedTemplateForGen, setSelectedTemplateForGen] = useState<any | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    console.log("PROCESS_PAGE_OK");
+  }, []);
 
   const { data: complianceHistory } = useQuery({
     queryKey: ["compliance-history", id],
@@ -250,18 +256,19 @@ function ProcessDetail() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex-wrap h-auto">
                    <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geral</TabsTrigger>
-                   <TabsTrigger value="automation" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                     <Zap className="h-3 w-3" /> Automação IA
+                   <TabsTrigger value="requirements" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                     Checklist
                    </TabsTrigger>
-                   <TabsTrigger value="requirements" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Checklist</TabsTrigger>
-                   <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Arquivos</TabsTrigger>
-                   <TabsTrigger value="gen_docs" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
-                     Gerados {process?.compliance_status === 'conforme' && <span className="h-2 w-2 bg-emerald-500 rounded-full animate-ping" />}
+                   <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Uploads</TabsTrigger>
+                   <TabsTrigger value="ocr" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
+                     <Zap className="h-3 w-3" /> OCR
                    </TabsTrigger>
-                   <TabsTrigger value="comments" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
-                     Notas {comments.length > 0 && <span className="bg-primary text-white text-[10px] px-1.5 rounded-full">{comments.length}</span>}
+                   <TabsTrigger value="generation" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geração</TabsTrigger>
+                   <TabsTrigger value="history" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Timeline</TabsTrigger>
+                   <TabsTrigger value="signatures" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                     <Signature className="h-3 w-3" /> Assinaturas
                    </TabsTrigger>
-                   <TabsTrigger value="history" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Histórico</TabsTrigger>
+                   <TabsTrigger value="protocol" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Protocolo</TabsTrigger>
                 </TabsList>
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
@@ -320,8 +327,92 @@ function ProcessDetail() {
                   </div>
                </TabsContent>
 
-               <TabsContent value="automation" className="space-y-8 animate-in fade-in duration-300">
-                  <SmartAutomationDashboard processId={id} />
+               <TabsContent value="ocr" className="space-y-8 animate-in fade-in duration-300">
+                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                    <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
+                      <Zap className="h-5 w-5 text-primary" /> Central de Extração OCR
+                    </h3>
+                    <p className="text-sm text-slate-500 mb-8">Nossa IA analisa os documentos enviados para este processo e sugere o autopreenchimento.</p>
+                    <div className="p-12 border-2 border-dashed border-slate-100 rounded-[2rem] text-center">
+                       <Bot className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+                       <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Módulo OCR Ativo para este Processo</p>
+                       <Button variant="outline" className="mt-6 rounded-xl font-bold border-primary/20 text-primary">Iniciar Scanner Vision v4.2</Button>
+                    </div>
+                  </div>
+               </TabsContent>
+
+               <TabsContent value="generation" className="space-y-8 animate-in fade-in duration-300">
+                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                    <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
+                      <FilePlus className="h-5 w-5 text-primary" /> Geração de Documentos Reais
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                       <Button variant="outline" className="h-20 rounded-2xl border-slate-100 flex flex-col items-center justify-center gap-1 group hover:border-primary/40">
+                          <FileText className="h-5 w-5 text-slate-400 group-hover:text-primary" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Gerar BCE</span>
+                       </Button>
+                       <Button variant="outline" className="h-20 rounded-2xl border-slate-100 flex flex-col items-center justify-center gap-1 group hover:border-primary/40">
+                          <FileText className="h-5 w-5 text-slate-400 group-hover:text-primary" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Gerar DPC-2211</span>
+                       </Button>
+                       <Button variant="outline" className="h-20 rounded-2xl border-slate-100 flex flex-col items-center justify-center gap-1 group hover:border-primary/40">
+                          <FileText className="h-5 w-5 text-slate-400 group-hover:text-primary" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Gerar Procuração</span>
+                       </Button>
+                       <Button variant="outline" className="h-20 rounded-2xl border-slate-100 flex flex-col items-center justify-center gap-1 group hover:border-primary/40">
+                          <FileText className="h-5 w-5 text-slate-400 group-hover:text-primary" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Gerar Memorial</span>
+                       </Button>
+                    </div>
+                  </div>
+               </TabsContent>
+
+               <TabsContent value="signatures" className="space-y-8 animate-in fade-in duration-300">
+                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                    <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
+                      <Signature className="h-5 w-5 text-primary" /> Coleta de Assinaturas Digitais
+                    </h3>
+                    <div className="p-8 bg-slate-50 rounded-[1.5rem] border border-slate-100">
+                       <div className="flex justify-between items-center mb-6">
+                          <div>
+                             <p className="text-xs font-bold text-navy">Aguardando Assinatura do Proprietário</p>
+                             <p className="text-[10px] text-slate-400 font-medium">Documento: Requerimento DPC-2211</p>
+                          </div>
+                          <Badge className="bg-amber-100 text-amber-600 border-none text-[8px] font-black uppercase tracking-widest">Pendente</Badge>
+                       </div>
+                       <Button className="w-full bg-navy text-white rounded-xl h-11 font-bold text-[10px] uppercase tracking-widest gap-2">
+                          <Signature className="h-4 w-4" /> Enviar Link de Assinatura
+                       </Button>
+                    </div>
+                  </div>
+               </TabsContent>
+
+               <TabsContent value="protocol" className="space-y-8 animate-in fade-in duration-300">
+                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                    <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
+                      <Send className="h-5 w-5 text-primary" /> Protocolo e Envio Final
+                    </h3>
+                    <div className="space-y-6">
+                       <div className="p-6 border border-slate-100 rounded-2xl bg-slate-50">
+                          <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                             <span>Consolidado para Protocolo</span>
+                             <span>Ready</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                             <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-slate-400">
+                                <FileCheck className="h-5 w-5" />
+                             </div>
+                             <div>
+                                <p className="text-sm font-bold text-navy">NavalDocs_Protocolo_Consolidado.pdf</p>
+                                <p className="text-[10px] text-slate-400 font-medium">Gerado em 20/05/2026</p>
+                             </div>
+                          </div>
+                       </div>
+                       <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-12 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-emerald-600/20">
+                          <PlayCircle className="h-4 w-4" /> Enviar para Órgão Competente
+                       </Button>
+                    </div>
+                  </div>
                </TabsContent>
 
                 <TabsContent value="requirements" className="space-y-8 animate-in fade-in duration-300">
