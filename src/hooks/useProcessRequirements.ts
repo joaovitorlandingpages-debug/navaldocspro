@@ -21,7 +21,7 @@ export function useProcessRequirements(processTypeId?: string) {
           .from('process_document_packages')
           .select(`
             *,
-            template:document_templates(name, description, category)
+            template:document_templates(id, name, description, category_id)
           `)
           .eq('process_type_id', processTypeId)
           .order('order_index', { ascending: true });
