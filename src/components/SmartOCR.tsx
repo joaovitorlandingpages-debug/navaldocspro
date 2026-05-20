@@ -18,7 +18,13 @@ export function SmartOCR() {
   const { jobs } = useOCR();
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   
-  const currentJob = jobs?.find(j => j.id === activeJobId);
+  const displayJobs = jobs && jobs.length > 0 ? jobs : [
+    { id: 'm1', status: 'completed', confidence_score: 0.98, identified_document_type: 'PERSONAL_IDENTITY', uploaded_files: { file_name: 'RG_RICARDO_ALMEIDA.JPG' }, extracted_data: { name: 'RICARDO ALMEIDA', doc_number: '123.456.789-00' } },
+    { id: 'm2', status: 'processing', confidence_score: 0.85, identified_document_type: 'VESSEL_TIE', uploaded_files: { file_name: 'TIE_ESTRELA_DO_MAR.PDF' }, extracted_data: { vessel_name: 'ESTRELA DO MAR' } },
+  ];
+
+  const isMock = !jobs || jobs.length === 0;
+  const currentJob = displayJobs.find(j => j.id === activeJobId) || (activeJobId === null && displayJobs.length > 0 ? displayJobs[0] : undefined);
 
   return (
     <div className="space-y-6">
@@ -44,12 +50,12 @@ export function SmartOCR() {
            <div className="space-y-3">
               <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Jobs Recentes</p>
               <div className="grid gap-2">
-                 {jobs?.slice(0, 3).map((job) => (
+                  {displayJobs?.slice(0, 3).map((job) => (
                    <div 
                     key={job.id} 
                     onClick={() => setActiveJobId(job.id)}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                      activeJobId === job.id ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
+                    className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${isMock ? 'opacity-50 grayscale' : ''} ${
+                      activeJobId === job.id || (activeJobId === null && job.id === displayJobs[0].id) ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
                     }`}
                    >
                       <div className="flex items-center gap-3">
