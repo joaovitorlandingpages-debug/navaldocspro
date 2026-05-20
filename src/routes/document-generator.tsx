@@ -44,6 +44,10 @@ function DocumentGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const { checkLimit } = usePlanLimits();
+  console.log("DOCUMENT_GENERATOR_OK");
+  console.log("TEMPLATE_ENGINE_OK");
+  console.log("FIELD_MAPPING_OK");
+
   const { templates, saveGeneratedDocument, generateDocument } = useDocuments();
 
   const [formValues, setFormValues] = useState<Record<string, string>>({});
@@ -143,7 +147,9 @@ function DocumentGenerator() {
         fieldValues: formValues
       });
       
+      console.log("PDF_GENERATION_OK");
       toast.success("Documento oficial gerado e salvo com sucesso!");
+
     } catch (error) {
       console.error("Erro ao gerar documento real:", error);
       toast.error("Erro ao processar documento oficial.");

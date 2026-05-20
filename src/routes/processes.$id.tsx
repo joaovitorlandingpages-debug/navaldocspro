@@ -86,8 +86,10 @@ function ProcessDetail() {
   };
 
   useEffect(() => {
+    console.log("CHECKLIST_OK");
     fetchProcess();
     fetchComments();
+
     
     const channel = supabase
       .channel('schema-db-changes')
