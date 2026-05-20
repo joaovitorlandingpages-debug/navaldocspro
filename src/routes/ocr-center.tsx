@@ -30,8 +30,7 @@ export const Route = createFileRoute("/ocr-center")({
 });
 
 function OCRCenterPage() {
-  console.log("OCR_PAGE_OK");
-  console.log("OCR_STABLE");
+  console.log("OCR_VISUAL_OK");
   const { profile } = useAuth();
   const { jobs, isLoading } = useOCR();
   const [selectedJob, setSelectedJob] = useState<OCRJob | null>(null);
