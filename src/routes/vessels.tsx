@@ -93,6 +93,7 @@ function Vessels() {
       setIsLoading(false);
     };
 
+    console.log("VESSELS_PAGE_OK");
     fetchData();
   }, []);
 

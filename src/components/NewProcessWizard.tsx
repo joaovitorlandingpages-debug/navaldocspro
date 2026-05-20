@@ -62,6 +62,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         }
       }
     }
+    console.log("NEW_PROCESS_WIZARD_OK");
   }, [isOpen]);
 
   useEffect(() => {

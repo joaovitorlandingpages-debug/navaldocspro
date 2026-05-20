@@ -50,6 +50,7 @@ function Processes() {
       setIsLoading(false);
     };
 
+    console.log("PROCESSES_PAGE_OK");
     fetchProcesses();
   }, []);
 
