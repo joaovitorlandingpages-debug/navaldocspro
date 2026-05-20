@@ -89,9 +89,14 @@ function DashboardLayout() {
   
   const handleLogout = async () => {
     try {
+      console.log("LOGOUT_CLICKED");
       await signOut();
       toast.success("Sessão encerrada");
-      navigate({ to: "/auth/login" });
+      
+      // Use hard redirect to clear memory state
+      setTimeout(() => {
+        window.location.href = "/auth/login";
+      }, 300);
     } catch (error) {
       console.error("Logout error:", error);
       window.location.href = "/auth/login";
