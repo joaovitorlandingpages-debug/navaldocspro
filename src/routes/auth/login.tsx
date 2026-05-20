@@ -35,7 +35,7 @@ function LoginComponent() {
       console.log("REDIRECT_DASHBOARD_SAFE");
       
       setTimeout(() => {
-        window.location.href = "/dashboard-safe";
+        window.location.href = "/dashboard-v2";
       }, 500);
     } catch (error: any) {
       toast.error(error.message || "Erro ao realizar login");
