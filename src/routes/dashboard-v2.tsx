@@ -168,103 +168,107 @@ function DashboardV2Layout() {
 function DashboardV2Content() {
   const { profile } = useAuth();
   const { data: stats, isLoading } = useDashboardStats();
+  const { setIsNewProcessOpen } = useNewProcess();
 
   useEffect(() => {
     if (!isLoading) {
-      console.log("CLIENTS_QUERY_OK");
-      console.log("VESSELS_QUERY_OK");
-      console.log("PROCESSES_QUERY_OK");
+      console.log("DASHBOARD_V2_STATS_LOADED");
     }
   }, [isLoading]);
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[1, 2, 3].map(i => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3, 4, 5, 6].map(i => (
           <Skeleton key={i} className="h-32 w-full rounded-xl" />
         ))}
       </div>
     );
   }
 
+  const mainStats = [
+    { label: "Clientes Ativos", value: stats?.activeCustomers || 0, icon: <Users className="h-4 w-4 text-blue-500" /> },
+    { label: "Embarcações", value: stats?.totalVessels || 0, icon: <Ship className="h-4 w-4 text-cyan-500" /> },
+    { label: "Processos Abertos", value: stats?.openProcesses || 0, icon: <ClipboardList className="h-4 w-4 text-amber-500" /> },
+    { label: "Documentos", value: stats?.generatedDocuments || 0, icon: <FileText className="h-4 w-4 text-emerald-500" /> },
+    { label: "Análises OCR", value: stats?.ocrCount || 0, icon: <Zap className="h-4 w-4 text-purple-500" /> },
+    { label: "Pendências", value: stats?.pendingTasks || 0, icon: <Activity className="h-4 w-4 text-red-500" /> },
+  ];
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900">Visão Geral</h2>
-        <p className="text-slate-500">Acesso rápido aos seus dados operacionais.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">Total Clientes</CardTitle>
-            <Users className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-slate-900">{stats?.activeCustomers || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">Embarcações</CardTitle>
-            <Ship className="h-4 w-4 text-cyan-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-slate-900">{stats?.totalVessels || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">Processos Abertos</CardTitle>
-            <ClipboardList className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-slate-900">{stats?.openProcesses || 0}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex flex-wrap gap-4 mt-8">
-        <Link to="/processes">
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 h-auto rounded-xl font-bold flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Visão Geral</h2>
+          <p className="text-slate-500 font-medium">Bem-vindo ao centro operacional estabilizado.</p>
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button 
+            onClick={() => setIsNewProcessOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-6 h-auto rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-500/20"
+          >
             <Plus className="h-5 w-5" /> Novo Processo
           </Button>
-        </Link>
-        <Link to="/customers">
-          <Button variant="outline" className="px-8 py-6 h-auto rounded-xl font-bold flex items-center gap-2 border-slate-200">
-            <Users className="h-5 w-5" /> Ver Clientes
-          </Button>
-        </Link>
-        <Link to="/vessels">
-          <Button variant="outline" className="px-8 py-6 h-auto rounded-xl font-bold flex items-center gap-2 border-slate-200">
-            <Ship className="h-5 w-5" /> Ver Embarcações
-          </Button>
-        </Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {mainStats.map((stat) => (
+          <Card key={stat.label} className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{stat.label}</CardTitle>
+              {stat.icon}
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-slate-900 tracking-tight">{stat.value}</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-         <Card className="border-none shadow-sm bg-white">
-            <CardHeader>
+         <Card className="border-none shadow-sm bg-white overflow-hidden group">
+            <CardHeader className="border-b border-slate-50">
                <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <Activity className="h-4 w-4 text-blue-500" /> Atividade Recente
                </CardTitle>
             </CardHeader>
-            <CardContent>
-               <p className="text-xs text-slate-400 italic">Módulo simplificado em modo de estabilização.</p>
+            <CardContent className="p-0">
+               <div className="p-8 text-center space-y-3">
+                  <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
+                     <History className="h-5 w-5 text-slate-300" />
+                  </div>
+                  <p className="text-xs text-slate-500 italic max-w-[200px] mx-auto">Módulo de monitoramento em tempo real sendo reativado gradualmente.</p>
+                  <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Ver Histórico Completo</Button>
+               </div>
             </CardContent>
          </Card>
+
          <Card className="border-none shadow-sm bg-white">
-            <CardHeader>
+            <CardHeader className="border-b border-slate-50">
                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <LayoutGrid className="h-4 w-4 text-blue-500" /> Links Úteis
+                  <LayoutGrid className="h-4 w-4 text-blue-500" /> Acesso Rápido
                </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-               <p className="text-xs text-slate-600">• Central de Suporte</p>
-               <p className="text-xs text-slate-600">• Base de Conhecimento</p>
-               <p className="text-xs text-slate-600">• Changelog v15.6</p>
+            <CardContent className="p-6">
+               <div className="grid grid-cols-2 gap-3">
+                  <Link to="/customers" className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex flex-col gap-2">
+                     <Users className="h-4 w-4 text-blue-500" />
+                     <span className="text-xs font-bold text-slate-700">Gestão Clientes</span>
+                  </Link>
+                  <Link to="/vessels" className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex flex-col gap-2">
+                     <Ship className="h-4 w-4 text-cyan-500" />
+                     <span className="text-xs font-bold text-slate-700">Frotas</span>
+                  </Link>
+                  <Link to="/document-generator" className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex flex-col gap-2">
+                     <FilePlus className="h-4 w-4 text-emerald-500" />
+                     <span className="text-xs font-bold text-slate-700">Gerador Doc</span>
+                  </Link>
+                  <Link to="/ocr-center" className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex flex-col gap-2">
+                     <Zap className="h-4 w-4 text-purple-500" />
+                     <span className="text-xs font-bold text-slate-700">Portal OCR</span>
+                  </Link>
+               </div>
             </CardContent>
          </Card>
       </div>
