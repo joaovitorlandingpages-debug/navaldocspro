@@ -3,7 +3,8 @@ import {
   FileText, Check, Clock, AlertCircle, 
   Plus, Download, Eye, FileCheck, 
   Loader2, AlertTriangle, ShieldCheck, Signature,
-  Zap, Info, Ban, FolderArchive, Package, RefreshCw
+  Zap, Info, Ban, FolderArchive, Package, RefreshCw,
+  History
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -119,7 +120,11 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
 
         <div className="divide-y divide-slate-50">
           {requirements.map((req) => {
-            const doc = documents.find((d: any) => d.document_type === req.template?.name || d.file_name?.includes(req.template?.name || ''));
+            const doc = documents.find((d: any) => 
+              d.document_type === req.template?.name || 
+              d.file_url?.includes(req.template?.name || '')
+            );
+            console.log("PROCESS_UPLOAD_CONNECTED", !!doc);
             const status = doc ? (doc.compliance_status || (doc.status === 'uploaded' ? 'enviado' : doc.status)) : 'pendente';
             const hasErrors = doc && Array.isArray(doc.validation_errors) && doc.validation_errors.length > 0;
             
@@ -209,6 +214,23 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
               <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Nenhum requisito configurado para este tipo de processo.</p>
             </div>
           )}
+        </div>
+        
+        <div className="p-6 bg-slate-50 border-t border-slate-100">
+           <div className="flex items-center gap-3 text-navy/40 mb-4">
+              <History className="h-4 w-4" />
+              <p className="text-[10px] font-black uppercase tracking-widest">Timeline do Checklist</p>
+           </div>
+           <div className="space-y-4">
+              <div className="flex gap-4 relative">
+                 <div className="absolute left-[7px] top-4 bottom-0 w-px bg-slate-200" />
+                 <div className="h-4 w-4 rounded-full bg-emerald-500 border-4 border-white shadow-sm z-10" />
+                 <div>
+                    <p className="text-xs font-bold text-navy">Checklist Automático Gerado</p>
+                    <p className="text-[9px] text-slate-400 font-medium">{requirements.length} itens aguardando ação.</p>
+                 </div>
+              </div>
+           </div>
         </div>
       </div>
     </div>
