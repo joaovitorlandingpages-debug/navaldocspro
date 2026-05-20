@@ -43,6 +43,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const totalSteps = 6;
+  const progressPercent = (step / totalSteps) * 100;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
