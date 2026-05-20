@@ -124,7 +124,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   };
 
   const handleBack = () => {
-    if (step > 1) setStep(step - 1);
+    if (step > 1) {
+      setStep(step - 1);
+      console.log("WIZARD_NAVIGATION_OK");
+    }
   };
 
   const handleCreateProcess = async () => {
@@ -525,9 +528,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               variant="ghost"
               onClick={() => {
                 clearDraft();
-                toast.success("Formulário limpo");
+                toast.success("Rascunho descartado.");
+                onClose();
               }}
-              className="rounded-2xl h-14 px-4 text-slate-400 hover:text-red-500"
+              className="rounded-2xl h-14 px-4 text-slate-400 hover:text-red-500 hover:bg-red-50"
+              title="Descartar Rascunho e Fechar"
             >
               <X className="h-4 w-4" />
             </Button>

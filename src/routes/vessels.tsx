@@ -17,6 +17,7 @@ import { useFiles } from "@/hooks/useFiles";
 import { Badge } from "@/components/ui/badge";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
+import { BackButton } from "@/components/BackButton";
 
 
 export const Route = createFileRoute("/vessels")({
@@ -146,9 +147,12 @@ function Vessels() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Embarcações</h1>
-          <p className="text-muted-foreground font-medium">Frota cadastrada e monitoramento de status.</p>
+        <div className="flex flex-col gap-2">
+          <BackButton className="w-fit lg:hidden" />
+          <div>
+            <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Embarcações</h1>
+            <p className="text-muted-foreground font-medium">Frota cadastrada e monitoramento de status.</p>
+          </div>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <button 

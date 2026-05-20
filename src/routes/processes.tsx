@@ -8,6 +8,7 @@ import { useNewProcess } from "@/hooks/useNewProcess";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { supabase } from "@/integrations/supabase/client";
+import { BackButton } from "@/components/BackButton";
 
 
 export const Route = createFileRoute("/processes")({
@@ -69,9 +70,12 @@ function Processes() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Fluxo de Processos</h1>
-          <p className="text-muted-foreground font-medium">Acompanhamento visual de cada etapa técnica e burocrática.</p>
+        <div className="flex flex-col gap-2">
+          <BackButton className="w-fit lg:hidden" />
+          <div>
+            <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Fluxo de Processos</h1>
+            <p className="text-muted-foreground font-medium">Acompanhamento visual de cada etapa técnica e burocrática.</p>
+          </div>
         </div>
         <div className="flex gap-3 w-full sm:w-auto">
           <div className="bg-slate-100 p-1 rounded-2xl flex border border-slate-200">

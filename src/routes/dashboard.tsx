@@ -5,7 +5,7 @@ import {
   Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
-  Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge
+  Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft
 } from "lucide-react";
 import { useState, useEffect, Suspense, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -25,6 +25,8 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExpirationMonitor } from "@/components/ExpirationMonitor";
 import { EnterpriseAuditFeed } from "@/components/dashboard/EnterpriseAuditFeed";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { BackButton } from "@/components/BackButton";
 
 
 
@@ -122,6 +124,8 @@ function DashboardLayout() {
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
   ];
 
+  console.log("NAVIGATION_OK");
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Sidebar */}
@@ -148,8 +152,8 @@ function DashboardLayout() {
             <Link 
               key={item.name}
               to={item.path}
-              activeProps={{ className: "bg-primary text-white shadow-lg shadow-primary/20" }}
-              className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all group"
+              activeProps={{ className: "bg-primary text-white shadow-lg shadow-primary/20 border-primary" }}
+              className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 border border-transparent transition-all group"
             >
               <div className="group-hover:scale-110 transition-transform">{item.icon}</div>
               {isSidebarOpen && <span className="text-sm font-bold uppercase tracking-wider">{item.name}</span>}
@@ -205,51 +209,59 @@ function DashboardLayout() {
                 </Link>
              </div>
            )}
-           <div className="h-16 flex items-center justify-between px-8">
-             <div className="flex items-center gap-4 flex-grow">
-                <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-100 rounded-lg lg:block hidden">
-                  <Menu className="h-5 w-5" />
-                </button>
-                <div className="relative max-w-md w-full hidden sm:block">
-                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                   <input 
-                     placeholder="Buscar processos, barcos ou clientes..." 
-                     className="w-full pl-10 pr-4 py-2 bg-slate-100 rounded-full text-sm border-transparent focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all"
-                   />
-                </div>
-             </div>
-             
-             <div className="flex items-center gap-6">
-                <button 
-                  onClick={() => setIsNewProcessOpen(true)}
-                  className="hidden md:flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20"
-                >
-                  <Plus className="h-4 w-4" /> Novo Processo
-                </button>
-  
-                <div className="flex items-center gap-4">
-                   <button 
-                     onClick={() => setNotificationsOpen(true)}
-                     className="relative p-2 hover:bg-slate-100 rounded-full transition-all active:scale-95"
-                   >
-                       <Bell className="h-5 w-5 text-slate-600" />
-                       <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full animate-ping" />
-                       <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
-                   </button>
-                  <div className="h-8 w-px bg-slate-200" />
-                  <div className="flex items-center gap-3">
-                      <div className="text-right hidden sm:block">
-                          <p className="text-sm font-bold text-navy">{profile?.name || "Usuário"}</p>
-                          <p className="text-xs text-muted-foreground uppercase tracking-tighter">{subscription?.plan?.name || "Free Tier"}</p>
-                      </div>
-                      <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-                          {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
-                      </div>
-                  </div>
-                </div>
-             </div>
-           </div>
-        </header>
+            <div className="h-auto py-4 flex flex-col sm:flex-row items-center justify-between px-8 border-b border-slate-50 gap-4">
+              <div className="flex items-center gap-6 flex-grow w-full sm:w-auto">
+                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-100 rounded-lg lg:block hidden">
+                   <Menu className="h-5 w-5" />
+                 </button>
+                 <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                       <BackButton />
+                       <div className="h-4 w-px bg-slate-200 mx-1" />
+                       <Breadcrumbs />
+                    </div>
+                 </div>
+              </div>
+              
+              <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
+                 <div className="relative max-w-xs w-full hidden lg:block">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <input 
+                      placeholder="Buscar..." 
+                      className="w-full pl-10 pr-4 py-2 bg-slate-100 rounded-full text-sm border-transparent focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all"
+                    />
+                 </div>
+
+                 <button 
+                   onClick={() => setIsNewProcessOpen(true)}
+                   className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 whitespace-nowrap"
+                 >
+                   <Plus className="h-4 w-4" /> Novo
+                 </button>
+   
+                 <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => setNotificationsOpen(true)}
+                      className="relative p-2 hover:bg-slate-100 rounded-full transition-all active:scale-95"
+                    >
+                        <Bell className="h-5 w-5 text-slate-600" />
+                        <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full animate-ping" />
+                        <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
+                    </button>
+                   <div className="h-8 w-px bg-slate-200" />
+                   <div className="flex items-center gap-3">
+                       <div className="text-right hidden sm:block">
+                           <p className="text-xs font-bold text-navy leading-none">{profile?.name || "Usuário"}</p>
+                           <p className="text-[10px] text-muted-foreground uppercase tracking-tighter mt-1">{subscription?.plan?.name || "Free Tier"}</p>
+                       </div>
+                       <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
+                           {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
+                       </div>
+                   </div>
+                 </div>
+              </div>
+            </div>
+         </header>
 
 
         <NotificationCenter 

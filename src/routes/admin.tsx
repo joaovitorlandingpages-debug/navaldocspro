@@ -14,13 +14,16 @@ import {
   Zap,
   Globe,
   CheckCircle2,
-  TrendingUp
+  TrendingUp,
+  Menu
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
+import { BackButton } from "@/components/BackButton";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -103,13 +106,26 @@ function AdminLayout() {
 
       {/* Main Content */}
       <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 bg-white border-b flex items-center justify-between px-8 z-40">
-           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Plataforma Global NavalDocs</h2>
-           <div className="flex items-center gap-4">
-              <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
-                 <ShieldCheck className="h-4 w-4 text-slate-400" />
+        <header className="h-auto min-h-16 bg-white border-b flex flex-col z-40">
+           <div className="h-auto py-4 flex items-center justify-between px-8 border-b border-slate-50 gap-4">
+              <div className="flex items-center gap-6 flex-grow">
+                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-100 rounded-lg lg:block hidden">
+                   <Menu className="h-5 w-5 text-slate-400" />
+                 </button>
+                 <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                       <BackButton />
+                       <div className="h-4 w-px bg-slate-200 mx-1" />
+                       <Breadcrumbs />
+                    </div>
+                 </div>
               </div>
-              <span className="text-xs font-bold text-navy">ROOT ADMIN</span>
+              <div className="flex items-center gap-4">
+                 <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
+                    <ShieldCheck className="h-4 w-4 text-slate-400" />
+                 </div>
+                 <span className="text-xs font-bold text-navy">ROOT ADMIN</span>
+              </div>
            </div>
         </header>
 
