@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 
@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any | null>(null);
+  const isTransitioningRef = useRef(false);
 
   useEffect(() => {
     console.log("AUTH_PROVIDER_INIT");
@@ -51,6 +52,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, currentSession: Session | null) => {
       console.log("AUTH_STATE_CHANGE:", event);
+      
+      if (isTransitioningRef.current) {
+        console.log("AUTH_STATE_CHANGE_IGNORED_DURING_TRANSITION");
+        return;
+      }
+
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
@@ -110,8 +117,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     console.log("SIGN_OUT_START");
+    isTransitioningRef.current = true;
     try {
-      // Clear state first to avoid session mismatch
       setSession(null);
       setUser(null);
       setProfile(null);
@@ -124,6 +131,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error("SIGN_OUT_CATCH:", err);
     } finally {
       console.log("SIGN_OUT_COMPLETE");
+      // Keep transitioning true for a bit to allow redirect to complete
+      setTimeout(() => {
+        isTransitioningRef.current = false;
+      }, 2000);
     }
   };
 
