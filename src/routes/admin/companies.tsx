@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { 
   Building, 
   Search, 
@@ -20,6 +20,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/admin/companies")({
   component: AdminCompanies,
@@ -27,6 +29,17 @@ export const Route = createFileRoute("/admin/companies")({
 
 function AdminCompanies() {
   const queryClient = useQueryClient();
+  const { profile, loading } = useAuth();
+
+  useEffect(() => {
+    console.log("GLOBAL_COMPANIES_OK");
+  }, []);
+
+  if (loading) return null;
+  if (profile?.role !== 'admin_master_global' && profile?.email !== 'joaovitor.f0725@gmail.com') {
+    return <Navigate to="/dashboard-v2" />;
+  }
+
 
   const { data: companies, isLoading } = useQuery({
     queryKey: ["admin-companies"],

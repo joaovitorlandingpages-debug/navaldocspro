@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Navigate } from '@tanstack/react-router';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { 
   DollarSign, Users, CreditCard, Activity, TrendingUp, 
@@ -9,12 +9,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/hooks/useAuth';
+import { useEffect } from 'react';
 
 export const Route = createFileRoute('/admin/billing')({
   component: AdminBilling,
 });
 
 function AdminBilling() {
+  const { profile, loading } = useAuth();
+
+  useEffect(() => {
+    console.log("GLOBAL_BILLING_OK");
+  }, []);
+
+  if (loading) return null;
+  if (profile?.role !== 'admin_master_global' && profile?.email !== 'joaovitor.f0725@gmail.com') {
+    return <Navigate to="/dashboard-v2" />;
+  }
+
   const { data: payments, isLoading } = useQuery({
     queryKey: ['admin-global-billing'],
     queryFn: async () => {
