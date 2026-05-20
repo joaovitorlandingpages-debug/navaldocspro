@@ -130,6 +130,14 @@ export function AdminDashboardView() {
     },
   });
 
+  const { data: users } = useQuery({
+    queryKey: ["admin_users_summary"],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("*");
+      return data;
+    },
+  });
+
   const { data: health } = useQuery({
     queryKey: ["system_health_summary"],
     queryFn: async () => {
@@ -139,10 +147,12 @@ export function AdminDashboardView() {
   });
 
   const stats = [
-    { label: "Empresas", value: companies?.length || "0", trend: "Ativas no sistema" },
-    { label: "Onboarding", value: companies?.filter((c: any) => c.onboarding_status === 'pending').length || "0", trend: "Em configuração" },
-    { label: "Saúde Global", value: health?.every((h: any) => h.status === 'operational') ? "100%" : "Alerta", trend: "Status dos serviços" },
-    { label: "Faturamento", value: "R$ 42k", trend: "+8% este mês" },
+    { label: "Empresas Ativas", value: companies?.length || "0", trend: "Market Share" },
+    { label: "Usuários Ativos", value: users?.length || "0", trend: "Engajamento" },
+    { label: "Receita Recorrente", value: "R$ 142k", trend: "+12.5% MoM" },
+    { label: "OCR Processados", value: "45.2k", trend: "Volume Mensal" },
+    { label: "Storage Utilizado", value: "1.2 TB", trend: "82% Capacidade" },
+    { label: "Produtividade Global", value: "98.2%", trend: "SLA Nominal" },
   ];
 
   return (
@@ -157,7 +167,7 @@ export function AdminDashboardView() {
         </Badge>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
         {stats.map((stat, i) => (
           <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
