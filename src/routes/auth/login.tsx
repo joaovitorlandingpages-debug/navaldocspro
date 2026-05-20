@@ -32,7 +32,7 @@ function LoginComponent() {
       if (error) throw error;
 
       toast.success("LOGIN_SUCCESS");
-      console.log("REDIRECT_DASHBOARD_SAFE");
+      console.log("REDIRECT_DASHBOARD_V2");
       
       setTimeout(() => {
         window.location.href = "/dashboard-v2";
