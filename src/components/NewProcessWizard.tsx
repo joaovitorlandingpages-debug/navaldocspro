@@ -6,7 +6,10 @@ import {
   Save, Copy, Zap,
   Loader2,
   AlertTriangle,
-  Settings
+  Settings,
+  Target,
+  FileSearch,
+  CheckCircle2
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -14,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { useProcessRequirements, useProcessTypes } from "@/hooks/useProcessRequirements";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +41,7 @@ const INITIAL_FORM_DATA = {
 export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const { profile } = useAuth();
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
   const totalSteps = 6;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -75,12 +80,14 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   useEffect(() => {
     async function fetchCustomers() {
       if (step === 2) {
+        setLoading(true);
         const { data } = await supabase
           .from('customers')
           .select('id, name')
           .ilike('name', `%${searchTerm}%`)
           .limit(10);
         setCustomers(data || []);
+        setLoading(false);
       }
     }
     fetchCustomers();
@@ -89,11 +96,13 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   useEffect(() => {
     async function fetchVessels() {
       if (step === 3 && formData.clientId) {
+        setLoading(true);
         const { data } = await supabase
           .from('vessels')
           .select('id, name')
           .eq('customer_id', formData.clientId);
         setVessels(data || []);
+        setLoading(false);
       }
     }
     fetchVessels();
