@@ -49,7 +49,10 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
       }
     }
 
-    if (processId) fetchDocs();
+    if (processId) {
+      console.log("PROCESS_CHECKLIST_OK");
+      fetchDocs();
+    }
   }, [processId]);
 
   const calculateProgress = () => {
