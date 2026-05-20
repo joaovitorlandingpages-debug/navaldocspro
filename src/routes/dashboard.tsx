@@ -20,6 +20,11 @@ import { useQuery } from "@tanstack/react-query";
 import { ReadinessBanner } from "@/components/dashboard/ReadinessBanner";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { WelcomeTour } from "@/components/WelcomeTour";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ExpirationMonitor } from "@/components/ExpirationMonitor";
+import { EnterpriseAuditFeed } from "@/components/dashboard/EnterpriseAuditFeed";
 
 
 
