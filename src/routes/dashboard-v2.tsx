@@ -64,7 +64,9 @@ function DashboardV2Layout() {
     { name: "Configurações", icon: <Settings className="h-5 w-5" />, path: "/settings" },
   ];
 
-  const adminItems = profile?.role === 'admin_master' ? [
+  const isAdmin = profile?.role === 'admin_master' || profile?.role === 'admin_master_global';
+
+  const adminItems = isAdmin ? [
     { name: "Admin Global", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin" },
     { name: "Empresas", icon: <Building2 className="h-5 w-5" />, path: "/admin/companies" },
     { name: "Usuários", icon: <UserCog className="h-5 w-5" />, path: "/admin/users" },
