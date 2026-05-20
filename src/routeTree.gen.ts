@@ -23,6 +23,7 @@ import { Route as OcrCenterRouteImport } from './routes/ocr-center'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
+import { Route as DebugAuthPublicRouteImport } from './routes/debug-auth-public'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as ChangelogRouteImport } from './routes/changelog'
@@ -127,6 +128,11 @@ const DocumentsRoute = DocumentsRouteImport.update({
 const DocumentGeneratorRoute = DocumentGeneratorRouteImport.update({
   id: '/document-generator',
   path: '/document-generator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DebugAuthPublicRoute = DebugAuthPublicRouteImport.update({
+  id: '/debug-auth-public',
+  path: '/debug-auth-public',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -317,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/debug-auth-public': typeof DebugAuthPublicRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
@@ -366,6 +373,7 @@ export interface FileRoutesByTo {
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
+  '/debug-auth-public': typeof DebugAuthPublicRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
@@ -418,6 +426,7 @@ export interface FileRoutesById {
   '/changelog': typeof ChangelogRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/debug-auth-public': typeof DebugAuthPublicRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/home': typeof HomeRoute
@@ -471,6 +480,7 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/customers'
     | '/dashboard'
+    | '/debug-auth-public'
     | '/document-generator'
     | '/documents'
     | '/home'
@@ -520,6 +530,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/changelog'
     | '/customers'
+    | '/debug-auth-public'
     | '/document-generator'
     | '/documents'
     | '/home'
@@ -571,6 +582,7 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/customers'
     | '/dashboard'
+    | '/debug-auth-public'
     | '/document-generator'
     | '/documents'
     | '/home'
@@ -623,6 +635,7 @@ export interface RootRouteChildren {
   ChangelogRoute: typeof ChangelogRoute
   CustomersRoute: typeof CustomersRoute
   DashboardRoute: typeof DashboardRouteWithChildren
+  DebugAuthPublicRoute: typeof DebugAuthPublicRoute
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
   HomeRoute: typeof HomeRoute
@@ -744,6 +757,13 @@ declare module '@tanstack/react-router' {
       path: '/document-generator'
       fullPath: '/document-generator'
       preLoaderRoute: typeof DocumentGeneratorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/debug-auth-public': {
+      id: '/debug-auth-public'
+      path: '/debug-auth-public'
+      fullPath: '/debug-auth-public'
+      preLoaderRoute: typeof DebugAuthPublicRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -1079,6 +1099,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChangelogRoute: ChangelogRoute,
   CustomersRoute: CustomersRoute,
   DashboardRoute: DashboardRouteWithChildren,
+  DebugAuthPublicRoute: DebugAuthPublicRoute,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
   HomeRoute: HomeRoute,
@@ -1104,13 +1125,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
