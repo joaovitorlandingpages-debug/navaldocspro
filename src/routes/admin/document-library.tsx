@@ -188,7 +188,7 @@ function DocumentLibraryPage() {
                <div>
                   <h4 className="text-xl font-black uppercase tracking-tight">Dúvidas sobre o Field Mapping?</h4>
                   <p className="text-sm text-white/60 font-medium max-w-lg mt-1 italic">
-                    Nossos templates utilizam sintaxe `{{campo}}` para preenchimento automático. 
+                    Nossos templates utilizam sintaxe {"{{campo}}"} para preenchimento automático. 
                     Consulte a documentação técnica para mapear variáveis do cliente, barco ou processo.
                   </p>
                </div>
