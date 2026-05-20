@@ -18,7 +18,13 @@ export function SmartOCR() {
   const { jobs } = useOCR();
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   
-  const currentJob = jobs?.find(j => j.id === activeJobId);
+  const displayJobs = jobs && jobs.length > 0 ? jobs : [
+    { id: 'm1', status: 'completed', confidence_score: 0.98, identified_document_type: 'PERSONAL_IDENTITY', document_type: 'RG', uploaded_files: { file_name: 'RG_RICARDO_ALMEIDA.JPG' }, extracted_data: { name: 'RICARDO ALMEIDA', doc_number: '123.456.789-00' } },
+    { id: 'm2', status: 'processing', confidence_score: 0.85, identified_document_type: 'VESSEL_TIE', document_type: 'TIE', uploaded_files: { file_name: 'TIE_ESTRELA_DO_MAR.PDF' }, extracted_data: { vessel_name: 'ESTRELA DO MAR' } },
+  ] as any[];
+
+  const isMock = !jobs || jobs.length === 0;
+  const currentJob = displayJobs.find(j => j.id === activeJobId) || (activeJobId === null && displayJobs.length > 0 ? displayJobs[0] : undefined);
 
   return (
     <div className="space-y-6">
@@ -44,12 +50,12 @@ export function SmartOCR() {
            <div className="space-y-3">
               <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Jobs Recentes</p>
               <div className="grid gap-2">
-                 {jobs?.slice(0, 3).map((job) => (
+                  {displayJobs?.slice(0, 3).map((job) => (
                    <div 
                     key={job.id} 
                     onClick={() => setActiveJobId(job.id)}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                      activeJobId === job.id ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
+                    className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${isMock ? 'opacity-50 grayscale' : ''} ${
+                      activeJobId === job.id || (activeJobId === null && job.id === displayJobs[0].id) ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
                     }`}
                    >
                       <div className="flex items-center gap-3">
@@ -72,7 +78,7 @@ export function SmartOCR() {
 
         {/* Coluna de Resultado Rápido */}
         <div className="relative">
-           {!activeJobId ? (
+           {!currentJob ? (
              <Card className="h-full border-dashed border-2 flex flex-col items-center justify-center p-12 text-center bg-slate-50/50 rounded-3xl group">
                 <div className="h-16 w-16 bg-white rounded-2xl shadow-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                    <Zap className="h-8 w-8 text-slate-200" />
@@ -80,7 +86,7 @@ export function SmartOCR() {
                 <p className="text-sm font-bold text-slate-400 max-w-xs">Selecione um job ao lado ou envie um novo arquivo para ver a prévia da extração.</p>
              </Card>
            ) : (
-             <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-xl space-y-8 animate-in fade-in zoom-in-95 duration-300 relative overflow-hidden">
+             <Card className={`p-8 rounded-[2.5rem] border-slate-100 shadow-xl space-y-8 animate-in fade-in zoom-in-95 duration-300 relative overflow-hidden ${isMock ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
                 <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-[80px] -mr-6 -mt-6"></div>
                 
                 <div className="flex justify-between items-start relative z-10">
@@ -89,7 +95,7 @@ export function SmartOCR() {
                          <Zap className="h-6 w-6 text-primary" />
                       </div>
                       <div>
-                         <p className="text-[10px] font-black uppercase text-primary tracking-widest">Preview IA</p>
+                         <p className="text-[10px] font-black uppercase text-primary tracking-widest">{isMock ? 'Exemplo IA' : 'Preview IA'}</p>
                          <h4 className="font-bold text-navy truncate max-w-[150px]">{currentJob?.uploaded_files?.file_name}</h4>
                       </div>
                    </div>

@@ -4,17 +4,22 @@ import {
   LogOut, Plus, Menu, LayoutGrid, Activity, FileText, FilePlus, 
   Library, Zap, ShieldCheck, DollarSign, BarChart3, Settings,
   Building2, UserCog, ScrollText, History, ShieldAlert, MonitorPlay,
-  CreditCard, Briefcase
+  CreditCard, Briefcase, TrendingUp
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useNewProcess } from "@/hooks/useNewProcess";
+import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidgets";
+import { ActivityFeed } from "@/components/ActivityFeed";
+import { OperationalCharts } from "@/components/OperationalCharts";
 
 export const Route = createFileRoute("/dashboard-v2")({
   component: () => (
@@ -172,6 +177,22 @@ function DashboardV2Content() {
   const { profile } = useAuth();
   const { data: stats, isLoading } = useDashboardStats();
   const { setIsNewProcessOpen } = useNewProcess();
+  
+  const { data: recentDocs } = useQuery({
+    queryKey: ["recent-documents-dashboard-v2", profile?.company_id],
+    queryFn: async () => {
+      if (!profile?.company_id) return [];
+      const { data, error } = await supabase
+        .from("documents")
+        .select("*, processes(id, process_type)")
+        .eq("company_id", profile.company_id)
+        .order("created_at", { ascending: false })
+        .limit(4);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.company_id
+  });
 
   useEffect(() => {
     if (!isLoading) {
@@ -229,51 +250,57 @@ function DashboardV2Content() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-         <Card className="border-none shadow-sm bg-white overflow-hidden group">
-            <CardHeader className="border-b border-slate-50">
-               <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-blue-500" /> Atividade Recente
-               </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-               <div className="p-8 text-center space-y-3">
-                  <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
-                     <History className="h-5 w-5 text-slate-300" />
-                  </div>
-                  <p className="text-xs text-slate-500 italic max-w-[200px] mx-auto">Módulo de monitoramento em tempo real sendo reativado gradualmente.</p>
-                  <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Ver Histórico Completo</Button>
-               </div>
-            </CardContent>
-         </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+         <div className="lg:col-span-2 space-y-8">
+            <OperationalCharts />
+            <ActivityFeed />
+         </div>
 
-         <Card className="border-none shadow-sm bg-white">
-            <CardHeader className="border-b border-slate-50">
-               <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <LayoutGrid className="h-4 w-4 text-blue-500" /> Acesso Rápido
-               </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-               <div className="grid grid-cols-2 gap-3">
-                  <Link to="/customers" className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex flex-col gap-2">
-                     <Users className="h-4 w-4 text-blue-500" />
-                     <span className="text-xs font-bold text-slate-700">Gestão Clientes</span>
-                  </Link>
-                  <Link to="/vessels" className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex flex-col gap-2">
-                     <Ship className="h-4 w-4 text-cyan-500" />
-                     <span className="text-xs font-bold text-slate-700">Frotas</span>
-                  </Link>
-                  <Link to="/document-generator" className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex flex-col gap-2">
-                     <FilePlus className="h-4 w-4 text-emerald-500" />
-                     <span className="text-xs font-bold text-slate-700">Gerador Doc</span>
-                  </Link>
-                  <Link to="/ocr-center" className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex flex-col gap-2">
-                     <Zap className="h-4 w-4 text-purple-500" />
-                     <span className="text-xs font-bold text-slate-700">Portal OCR</span>
-                  </Link>
+         <div className="space-y-8">
+            <DashboardQuickWidgets recentDocs={recentDocs} />
+            
+            <Card className="border-none shadow-sm bg-white overflow-hidden group">
+               <CardHeader className="border-b border-slate-50 flex flex-row items-center justify-between py-4">
+                  <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                     <LayoutGrid className="h-4 w-4 text-primary" /> Acesso Rápido
+                  </CardTitle>
+               </CardHeader>
+               <CardContent className="p-6">
+                  <div className="grid grid-cols-2 gap-3">
+                     <Link to="/customers" className="p-4 rounded-2xl border border-slate-100 hover:bg-slate-50 hover:border-primary/20 transition-all flex flex-col gap-2 group/nav">
+                        <Users className="h-4 w-4 text-blue-500 group-hover/nav:scale-110 transition-transform" />
+                        <span className="text-[10px] font-black uppercase text-slate-700 tracking-tight">Clientes</span>
+                     </Link>
+                     <Link to="/vessels" className="p-4 rounded-2xl border border-slate-100 hover:bg-slate-50 hover:border-primary/20 transition-all flex flex-col gap-2 group/nav">
+                        <Ship className="h-4 w-4 text-cyan-500 group-hover/nav:scale-110 transition-transform" />
+                        <span className="text-[10px] font-black uppercase text-slate-700 tracking-tight">Frotas</span>
+                     </Link>
+                     <Link to="/document-generator" className="p-4 rounded-2xl border border-slate-100 hover:bg-slate-50 hover:border-primary/20 transition-all flex flex-col gap-2 group/nav">
+                        <FilePlus className="h-4 w-4 text-emerald-500 group-hover/nav:scale-110 transition-transform" />
+                        <span className="text-[10px] font-black uppercase text-slate-700 tracking-tight">Gerador</span>
+                     </Link>
+                     <Link to="/ocr-center" className="p-4 rounded-2xl border border-slate-100 hover:bg-slate-50 hover:border-primary/20 transition-all flex flex-col gap-2 group/nav">
+                        <Zap className="h-4 w-4 text-purple-500 group-hover/nav:scale-110 transition-transform" />
+                        <span className="text-[10px] font-black uppercase text-slate-700 tracking-tight">OCR Center</span>
+                     </Link>
+                  </div>
+               </CardContent>
+            </Card>
+
+            <div className="p-8 rounded-[2.5rem] bg-navy text-white relative overflow-hidden shadow-2xl group">
+               <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                  <ShieldCheck className="h-40 w-40" />
                </div>
-            </CardContent>
-         </Card>
+               <div className="relative z-10">
+                  <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-4">Enterprise Status</p>
+                  <h4 className="text-lg font-bold mb-4 leading-snug">Sua infraestrutura de automação está 100% operacional.</h4>
+                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
+                     <div className="h-2 rounded-full bg-emerald-500 animate-ping" />
+                     Sistemas Ativos
+                  </div>
+               </div>
+            </div>
+         </div>
       </div>
     </div>
   );

@@ -209,9 +209,33 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
           })}
           
           {requirements.length === 0 && (
-            <div className="p-20 text-center">
-              <AlertTriangle className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Nenhum requisito configurado para este tipo de processo.</p>
+            <div className="p-10 space-y-6">
+              <div className="p-8 border-2 border-dashed border-slate-100 rounded-[2rem] text-center bg-slate-50/50">
+                <AlertTriangle className="h-10 w-10 text-slate-200 mx-auto mb-4" />
+                <h4 className="text-sm font-bold text-navy uppercase mb-2">Nenhum requisito configurado</h4>
+                <p className="text-xs text-slate-400 max-w-xs mx-auto font-medium">Este tipo de processo ainda não possui um pacote documental padrão. Adicione documentos manualmente na aba "Uploads".</p>
+              </div>
+              
+              <div className="space-y-3 opacity-30 grayscale">
+                {[
+                  { name: "RG / CNH do Proprietário", role: "Identidade", mandatory: true },
+                  { name: "TIE / TIEM Original", role: "Inscrição", mandatory: true },
+                  { name: "Comprovante de Endereço", role: "Residência", mandatory: false }
+                ].map((mock, i) => (
+                  <div key={i} className="p-4 bg-white rounded-2xl border border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400">
+                        <FileText className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-navy">{mock.name}</p>
+                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">{mock.role} • EXEMPLO</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-[8px] uppercase font-black">Aguardando</Badge>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
