@@ -460,12 +460,18 @@ function ProcessDetail() {
                              </div>
                           </div>
                        </div>
-                       <Button 
-                        disabled={!automationState?.is_ready_for_generation}
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-12 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-emerald-600/20"
-                       >
-                          <PlayCircle className="h-4 w-4" /> Enviar para Órgão Competente
-                       </Button>
+                       <div className="flex flex-col gap-3">
+                         <Button 
+                          disabled={!automationState?.is_ready_for_generation}
+                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-12 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-emerald-600/20"
+                         >
+                            <PlayCircle className="h-4 w-4" /> Enviar para Órgão Competente
+                         </Button>
+                         <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-center gap-3">
+                            <Zap className="h-4 w-4 text-primary animate-pulse" />
+                            <p className="text-[10px] text-navy font-bold uppercase tracking-tight">O motor de IA sugere que o Memorial Técnico seja revisado antes do envio.</p>
+                         </div>
+                       </div>
                     </div>
                   </div>
                </TabsContent>
