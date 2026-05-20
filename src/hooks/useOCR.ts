@@ -22,25 +22,32 @@ export interface OCRJob {
   uploaded_files?: {
     file_name: string;
     file_path: string;
+    process_id?: string;
   };
 }
 
-export function useOCR() {
+export function useOCR(processId?: string) {
   const queryClient = useQueryClient();
 
   const { data: jobs, isLoading } = useQuery({
-    queryKey: ["ocr-jobs"],
+    queryKey: ["ocr-jobs", processId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("ocr_jobs")
         .select(`
           *,
-          uploaded_files (
+          uploaded_files!inner (
             file_name,
-            file_path
+            file_path,
+            process_id
           )
-        `)
-        .order("created_at", { ascending: false });
+        `);
+      
+      if (processId) {
+        query = query.eq('uploaded_files.process_id', processId);
+      }
+      
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
       return data as OCRJob[];
@@ -106,7 +113,7 @@ export function useOCR() {
         .eq("id", jobId);
 
       if (error) throw error;
-      
+
       // Auto-trigger re-analysis and checklist update
       await DocumentAutomationEngine.processOCRExtraction(jobId);
       
@@ -144,5 +151,3 @@ export function useOCR() {
     updateJobStatus,
   };
 }
-
-
