@@ -61,9 +61,11 @@ function DashboardLayout() {
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-navy gap-4">
-        <Anchor className="h-12 w-12 text-primary animate-spin" />
-        <p className="text-white/60 text-xs font-black uppercase tracking-widest animate-pulse">Sincronizando Operações...</p>
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-navy">
+        <div className="flex flex-col items-center gap-4">
+          <Anchor className="h-12 w-12 text-primary animate-spin" />
+          <p className="text-white/60 text-xs font-black uppercase tracking-widest">Carregando...</p>
+        </div>
       </div>
     );
   }
