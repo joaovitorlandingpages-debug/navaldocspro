@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
   Tablet, ArrowRight, Activity, Search,
   Lock, LayoutDashboard, FileCheck, ClipboardList,
   PenTool, FolderKanban, Star, AlertTriangle,
-  History, Settings, BarChart3, Cloud, Globe, CreditCard, Sparkles, MonitorPlay
+  History, Settings, BarChart3, Cloud, Globe, CreditCard, Sparkles, MonitorPlay, Rocket
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
