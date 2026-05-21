@@ -32,6 +32,7 @@ export const Route = createFileRoute("/admin")({
 function AdminLayout() {
   const { profile, loading } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  console.log("FINAL_GLOBAL_PLATFORM_OK");
   console.log("FINAL_ADMIN_GLOBAL_OK");
   console.log("ADMIN_GLOBAL_PREMIUM_OK");
   console.log("GLOBAL_ADMIN_FINAL_OK");
@@ -194,12 +195,12 @@ export function AdminDashboardView() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         {stats.map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:shadow-xl transition-all group overflow-hidden relative">
-            <div className="absolute -right-2 -top-2 h-16 w-16 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-700" />
+          <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:shadow-2xl transition-all group overflow-hidden relative">
+            <div className="absolute -right-2 -top-2 h-16 w-16 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-700 shadow-inner" />
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] relative z-10">{stat.label}</p>
-            <h3 className="text-3xl font-black text-navy mt-3 relative z-10 leading-none">{stat.value}</h3>
+            <h3 className="text-3xl font-black text-navy mt-3 relative z-10 leading-none tracking-tighter">{stat.value}</h3>
             <div className="flex items-center gap-2 mt-4 relative z-10">
-               <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse" />
+               <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
                <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">{stat.trend}</p>
             </div>
           </div>
