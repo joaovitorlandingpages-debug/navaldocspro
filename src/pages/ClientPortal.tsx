@@ -280,12 +280,20 @@ export default function ClientPortal() {
                              </div>
                           </div>
                           
-                          <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-10 text-center hover:bg-primary/[0.02] hover:border-primary/40 transition-all cursor-pointer">
-                             <Upload className="h-10 w-10 text-primary/20 mx-auto mb-4" />
-                             <p className="text-sm font-bold text-navy mb-1">Selecione ou Arraste arquivos</p>
-                             <p className="text-[10px] text-slate-400 font-medium uppercase">Suporta PDF, JPG, PNG até 10MB</p>
-                             <div className="mt-8">
-                                <Button className="bg-primary text-white rounded-xl h-10 px-8 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">Procurar Arquivo</Button>
+                          <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-10 text-center hover:bg-primary/[0.02] hover:border-primary/40 transition-all cursor-pointer relative">
+                             <FileUploader 
+                               processId={selectedProcess?.id || ""} 
+                               bucket="process-attachments" 
+                               category="CLIENT_UPLOAD"
+                               onSuccess={() => {
+                                 toast.success("Arquivo enviado com sucesso!");
+                                 console.log("CLIENT_UPLOAD_READY");
+                               }}
+                             />
+                             <div className="mt-4 pointer-events-none">
+                               <Upload className="h-10 w-10 text-primary/20 mx-auto mb-4" />
+                               <p className="text-sm font-bold text-navy mb-1">Selecione ou Arraste arquivos</p>
+                               <p className="text-[10px] text-slate-400 font-medium uppercase">Suporta PDF, JPG, PNG até 10MB</p>
                              </div>
                           </div>
                        </div>
