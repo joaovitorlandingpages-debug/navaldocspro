@@ -132,24 +132,55 @@ function Index() {
               <p className="text-slate-500 text-lg max-w-2xl mx-auto">Sua operação em uma linha contínua de produtividade, do cliente ao protocolo final.</p>
             </div>
 
-            <div className="relative">
-              <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 hidden lg:block" />
-              <div className="grid lg:grid-cols-4 gap-12">
+            <div className="relative mt-20">
+              <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-100 -translate-y-1/2 hidden lg:block" />
+              <div className="grid lg:grid-cols-9 gap-4">
                 {[
-                  { icon: Users, title: "Cliente & Embarcação", desc: "Cadastro centralizado com histórico completo e metadados técnicos." },
-                  { icon: Layers, title: "Processo & Checklist", desc: "Abertura automática de tarefas conforme o tipo de serviço naval." },
-                  { icon: Zap, title: "Upload & OCR", desc: "Extração instantânea de dados de documentos via inteligência artificial." },
-                  { icon: FileText, title: "Geração & Protocolo", desc: "Emissão de memoriais e requerimentos prontos para assinatura digital." }
+                  { icon: Users, title: "Cliente" },
+                  { icon: Ship, title: "Embarcação" },
+                  { icon: Layers, title: "Processo" },
+                  { icon: Zap, title: "Upload" },
+                  { icon: Cpu, title: "OCR" },
+                  { icon: CheckSquare, title: "Checklist" },
+                  { icon: FileText, title: "Geração" },
+                  { icon: Shield, title: "Assinatura" },
+                  { icon: Globe, title: "Protocolo" }
                 ].map((step, i) => (
                   <div key={i} className="relative z-10 flex flex-col items-center text-center group">
-                    <div className="h-20 w-20 bg-white border-4 border-slate-50 rounded-full flex items-center justify-center text-primary shadow-xl group-hover:scale-110 group-hover:border-primary/20 transition-all mb-8">
-                      <step.icon className="h-10 w-10" />
+                    <div className="h-12 w-12 bg-white border-2 border-slate-50 rounded-xl flex items-center justify-center text-primary shadow-lg group-hover:scale-110 group-hover:border-primary/20 transition-all mb-4">
+                      <step.icon className="h-6 w-6" />
                     </div>
-                    <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-4">{step.title}</h3>
-                    <p className="text-slate-500 text-sm leading-relaxed">{step.desc}</p>
+                    <h3 className="text-[10px] font-black text-navy uppercase tracking-widest">{step.title}</h3>
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Interface Real / Screenshots */}
+        <section className="py-32 bg-navy text-white overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-24">
+               <h2 className="text-4xl font-black tracking-tighter uppercase mb-4">Interface de Alta Performance</h2>
+               <p className="text-slate-400">Desenvolvido por engenheiros, para engenheiros.</p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+               {[
+                 { title: "Dashboard Operacional", img: "https://images.unsplash.com/photo-1551288049-bbbda536339a?w=800&auto=format&fit=crop" },
+                 { title: "Central de Processos", img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop" },
+                 { title: "Inteligência OCR", img: "https://images.unsplash.com/photo-1518186239717-2e9b1bd67a9a?w=800&auto=format&fit=crop" },
+                 { title: "Biblioteca de Templates", img: "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800&auto=format&fit=crop" },
+                 { title: "Analytics Avançado", img: "https://images.unsplash.com/photo-1543286386-713bdd54867e?w=800&auto=format&fit=crop" },
+                 { title: "Controle de Prazos", img: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&auto=format&fit=crop" }
+               ].map((item, i) => (
+                 <div key={i} className="group cursor-pointer">
+                    <div className="aspect-video bg-white/5 rounded-2xl overflow-hidden border border-white/10 mb-4 group-hover:border-primary/50 transition-all">
+                       <img src={item.img} alt={item.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all scale-105 group-hover:scale-100" />
+                    </div>
+                    <h4 className="text-sm font-black uppercase tracking-widest text-white/80 group-hover:text-primary transition-all">{item.title}</h4>
+                 </div>
+               ))}
             </div>
           </div>
         </section>
