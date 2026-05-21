@@ -11,7 +11,9 @@ import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { supabase } from "@/integrations/supabase/client";
 import { BackButton } from "@/components/BackButton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
+
 
 
 export const Route = createFileRoute("/processes")({
