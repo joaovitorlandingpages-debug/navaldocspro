@@ -73,17 +73,18 @@ export default function SystemReport() {
 
 
   const criticalChecklist = [
-    { label: "Política Evolução Controlada", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
-    { label: "Sistema Feature Flags", status: "OK", icon: Settings, color: "text-emerald-500" },
-    { label: "Pipeline QA Contínuo", status: "OK", icon: Terminal, color: "text-emerald-500" },
-    { label: "Health Monitoring Ativo", status: "OK", icon: Activity, color: "text-emerald-500" },
-    { label: "Métricas de Qualidade SaaS", status: "OK", icon: BarChart3, color: "text-emerald-500" },
-    { label: "Sistema Rollback Seguro", status: "OK", icon: History, color: "text-emerald-500" },
-    { label: "Gestão de Versões & Patches", status: "OK", icon: Box, color: "text-emerald-500" },
-    { label: "Central de Manutenção", status: "OK", icon: Hammer, color: "text-emerald-500" },
-    { label: "Readiness Contínuo", status: "OK", icon: Rocket, color: "text-emerald-500" },
-    { label: "Robustez Enterprise Final", status: "OK", icon: Award, color: "text-emerald-500" },
+    { label: "Governança Contínua Enterprise", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
+    { label: "Auditoria Automática Ativa", status: "OK", icon: ClipboardCheck, color: "text-emerald-500" },
+    { label: "Observabilidade Enterprise", status: "OK", icon: ActivitySquare, color: "text-emerald-500" },
+    { label: "Gestão Inteligente Incidentes", status: "OK", icon: AlertCircle, color: "text-emerald-500" },
+    { label: "Ciclo de Melhorias Contínuas", status: "OK", icon: LayoutList, color: "text-emerald-500" },
+    { label: "Gestão de Deploys & Rollback", status: "OK", icon: Rocket, color: "text-emerald-500" },
+    { label: "Monitoramento SaaS Master", status: "OK", icon: BarChart3, color: "text-emerald-500" },
+    { label: "Readiness Longo Prazo", status: "OK", icon: Target, color: "text-emerald-500" },
+    { label: "Excelência Operacional Seal", status: "OK", icon: Sparkles, color: "text-emerald-500" },
+    { label: "Sustentabilidade Enterprise", status: "OK", icon: LifeBuoy, color: "text-emerald-500" },
   ];
+
 
 
   return (
