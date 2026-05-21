@@ -740,6 +740,107 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           </div>
         </div>
       </DialogContent>
+      </DialogContent>
+
+      {/* Modal de Criação Rápida de Cliente */}
+      <Dialog open={isQuickClientOpen} onOpenChange={setIsQuickClientOpen}>
+        <DialogContent className="max-w-md p-8 bg-white border-none rounded-[2rem] shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-navy uppercase tracking-tight">Novo Cliente Rápido</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleQuickClientSubmit} className="space-y-4 pt-4">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Nome Completo</Label>
+              <Input 
+                required
+                value={newClient.name}
+                onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                placeholder="Ex: João da Silva"
+                className="rounded-xl border-slate-200" 
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">CPF/CNPJ</Label>
+                <Input 
+                  value={newClient.document}
+                  onChange={(e) => setNewClient({...newClient, document: e.target.value})}
+                  placeholder="000.000.000-00"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">RG</Label>
+                <Input 
+                  value={newClient.rg}
+                  onChange={(e) => setNewClient({...newClient, rg: e.target.value})}
+                  placeholder="00.000.000-0"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Telefone</Label>
+                <Input 
+                  value={newClient.phone}
+                  onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
+                  placeholder="(00) 00000-0000"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">E-mail</Label>
+                <Input 
+                  type="email"
+                  value={newClient.email}
+                  onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                  placeholder="email@exemplo.com"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Cidade/UF</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Input 
+                  value={newClient.city}
+                  onChange={(e) => setNewClient({...newClient, city: e.target.value})}
+                  placeholder="Cidade"
+                  className="rounded-xl border-slate-200" 
+                />
+                <Input 
+                  value={newClient.state}
+                  onChange={(e) => setNewClient({...newClient, state: e.target.value})}
+                  placeholder="UF"
+                  maxLength={2}
+                  className="rounded-xl border-slate-200 uppercase" 
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 flex gap-3">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setIsQuickClientOpen(false)}
+                className="flex-1 rounded-xl h-12"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isCreatingClient}
+                className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
+              >
+                {isCreatingClient ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Cliente"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
+
