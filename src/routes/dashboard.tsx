@@ -180,7 +180,10 @@ function DashboardLayout() {
           )}
         </div>
         {(isSidebarOpen || window.innerWidth < 1024) && (
-          <div className="mt-8 px-4 py-4 bg-white/5 rounded-[2rem] border border-white/5 animate-in zoom-in-95 duration-500">
+          <div className="mt-8 px-4 py-4 bg-white/5 rounded-[2rem] border border-white/5 animate-in zoom-in-95 duration-500 relative group/company">
+             {profile?.companies?.name?.toLowerCase().includes('demo') && (
+               <Badge className="absolute -top-3 -right-2 bg-amber-500 text-white border-none font-black text-[8px] px-2 py-0.5 animate-pulse shadow-lg shadow-amber-500/20">DEMO MODE</Badge>
+             )}
              <div className="flex items-center gap-4">
                 <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-black text-xs border border-primary/20">
                    {profile?.companies?.name?.substring(0, 2).toUpperCase() || "ND"}
