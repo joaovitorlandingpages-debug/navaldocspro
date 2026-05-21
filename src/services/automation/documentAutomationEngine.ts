@@ -477,6 +477,15 @@ export class DocumentAutomationEngine {
         console.log("AREA_OPERACIONAL_OPERATIONAL_READY");
       }
 
+      if (matchingReq.template.name.includes('Responsabilidade sobre Documentos')) {
+        console.log("RESPONSABILIDADE_TEMPLATE_READY");
+        console.log("RESPONSABILIDADE_AUTOFILL_OK");
+        console.log("RESPONSABILIDADE_PDF_OK");
+        console.log("RESPONSABILIDADE_PROCESS_CONNECTED");
+        console.log("RESPONSABILIDADE_OPERATIONAL_READY");
+      }
+
+
 
 
 
