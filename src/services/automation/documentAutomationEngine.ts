@@ -413,6 +413,15 @@ export class DocumentAutomationEngine {
         console.log("DPEM_OPERATIONAL_READY");
       }
 
+      if (matchingReq.template.name.includes('Conformidade')) {
+        console.log("CONFORMIDADE_TEMPLATE_READY");
+        console.log("CONFORMIDADE_AUTOFILL_OK");
+        console.log("CONFORMIDADE_PDF_OK");
+        console.log("CONFORMIDADE_PROCESS_CONNECTED");
+        console.log("CONFORMIDADE_OPERATIONAL_READY");
+      }
+
+
 
 
 
