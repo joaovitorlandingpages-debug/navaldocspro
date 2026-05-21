@@ -11,6 +11,7 @@ export const useAuth = () => {
   return {
     ...context,
     isAdmin: context.profile?.role === 'admin_master' || context.profile?.role === 'admin_master_global',
-    isGlobalAdmin: context.profile?.role === 'admin_master_global'
+    isGlobalAdmin: context.profile?.role === 'admin_master_global',
+    isClient: context.profile?.role === 'customer' || context.profile?.role === 'client'
   };
 };

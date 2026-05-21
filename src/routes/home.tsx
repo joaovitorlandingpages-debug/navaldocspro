@@ -10,14 +10,19 @@ export const Route = createFileRoute("/home")({
 function Index() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { session, loading } = useAuth();
+  const { session, profile, loading } = useAuth();
 
   useEffect(() => {
     console.log("LANDING_PREMIUM_OK");
     console.log("COMMERCIAL_FLOW_READY");
     if (!loading && session) {
-      console.log("HOME_REDIRECT_DASHBOARD_V2");
-      navigate({ to: "/dashboard-v2" });
+      if (profile?.role === 'customer' || profile?.role === 'client') {
+        console.log("HOME_REDIRECT_CLIENT_PORTAL");
+        navigate({ to: "/client-portal" });
+      } else {
+        console.log("HOME_REDIRECT_DASHBOARD_V2");
+        navigate({ to: "/dashboard-v2" });
+      }
     }
   }, [session, loading, navigate]);
 

@@ -61,7 +61,10 @@ function DashboardLayout() {
 
   useEffect(() => {
     if (!loading && profile) {
-      if (profile.companies?.onboarding_status === 'pending' && window.location.pathname !== '/onboarding') {
+      if (profile.role === 'customer' || profile.role === 'client') {
+        console.log("DASHBOARD_REDIRECT_CLIENT");
+        navigate({ to: "/client-portal" });
+      } else if (profile.companies?.onboarding_status === 'pending' && window.location.pathname !== '/onboarding') {
         console.log("REDIRECT_TO_ONBOARDING");
         navigate({ to: "/onboarding" });
       } else if (profile.companies?.onboarding_status === 'completed') {

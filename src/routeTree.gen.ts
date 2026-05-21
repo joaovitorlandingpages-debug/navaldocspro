@@ -33,6 +33,7 @@ import { Route as DashboardV2RouteImport } from './routes/dashboard-v2'
 import { Route as DashboardSafeRouteImport } from './routes/dashboard-safe'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as ClientPortalRouteImport } from './routes/client-portal'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AutomationCenterRouteImport } from './routes/automation-center'
@@ -189,6 +190,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const CustomersRoute = CustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientPortalRoute = ClientPortalRouteImport.update({
+  id: '/client-portal',
+  path: '/client-portal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChangelogRoute = ChangelogRouteImport.update({
@@ -389,6 +395,7 @@ export interface FileRoutesByFullPath {
   '/automation-center': typeof AutomationCenterRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
+  '/client-portal': typeof ClientPortalRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard-safe': typeof DashboardSafeRoute
@@ -451,6 +458,7 @@ export interface FileRoutesByTo {
   '/automation-center': typeof AutomationCenterRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
+  '/client-portal': typeof ClientPortalRoute
   '/customers': typeof CustomersRoute
   '/dashboard-safe': typeof DashboardSafeRoute
   '/dashboard-v2': typeof DashboardV2Route
@@ -514,6 +522,7 @@ export interface FileRoutesById {
   '/automation-center': typeof AutomationCenterRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
+  '/client-portal': typeof ClientPortalRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard-safe': typeof DashboardSafeRoute
@@ -579,6 +588,7 @@ export interface FileRouteTypes {
     | '/automation-center'
     | '/calendar'
     | '/changelog'
+    | '/client-portal'
     | '/customers'
     | '/dashboard'
     | '/dashboard-safe'
@@ -641,6 +651,7 @@ export interface FileRouteTypes {
     | '/automation-center'
     | '/calendar'
     | '/changelog'
+    | '/client-portal'
     | '/customers'
     | '/dashboard-safe'
     | '/dashboard-v2'
@@ -703,6 +714,7 @@ export interface FileRouteTypes {
     | '/automation-center'
     | '/calendar'
     | '/changelog'
+    | '/client-portal'
     | '/customers'
     | '/dashboard'
     | '/dashboard-safe'
@@ -767,6 +779,7 @@ export interface RootRouteChildren {
   AutomationCenterRoute: typeof AutomationCenterRoute
   CalendarRoute: typeof CalendarRoute
   ChangelogRoute: typeof ChangelogRoute
+  ClientPortalRoute: typeof ClientPortalRoute
   CustomersRoute: typeof CustomersRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   DashboardSafeRoute: typeof DashboardSafeRoute
@@ -968,6 +981,13 @@ declare module '@tanstack/react-router' {
       path: '/customers'
       fullPath: '/customers'
       preLoaderRoute: typeof CustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/client-portal': {
+      id: '/client-portal'
+      path: '/client-portal'
+      fullPath: '/client-portal'
+      preLoaderRoute: typeof ClientPortalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/changelog': {
@@ -1321,6 +1341,7 @@ const rootRouteChildren: RootRouteChildren = {
   AutomationCenterRoute: AutomationCenterRoute,
   CalendarRoute: CalendarRoute,
   ChangelogRoute: ChangelogRoute,
+  ClientPortalRoute: ClientPortalRoute,
   CustomersRoute: CustomersRoute,
   DashboardRoute: DashboardRouteWithChildren,
   DashboardSafeRoute: DashboardSafeRoute,
