@@ -64,8 +64,8 @@ function DemoPage() {
 
         <div className="max-w-5xl w-full text-center space-y-12 relative z-10">
           <div className="space-y-6">
-            <Badge className="bg-primary/20 text-primary border-none font-black text-[11px] uppercase tracking-[0.3em] px-6 py-2 rounded-full animate-in fade-in slide-in-from-bottom duration-700">
-               Market Ready • Enterprise SaaS
+            <Badge className="bg-emerald-500 text-white border-none font-black text-[11px] uppercase tracking-[0.3em] px-6 py-2 rounded-full animate-in fade-in slide-in-from-bottom duration-700 shadow-lg shadow-emerald-500/20">
+               Consolidado Enterprise • Market Ready
             </Badge>
             <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase italic leading-[0.9] animate-in fade-in slide-in-from-bottom duration-1000">
               Transforme sua <span className="text-primary">Engenharia</span> <br /> em Inteligência
