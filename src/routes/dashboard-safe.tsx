@@ -14,7 +14,7 @@ function DashboardSafe() {
   const { user, signOut } = useAuth();
 
   return (
-    <div className="min-h-screen bg-slate-100 p-8">
+    <div className="h-screen bg-slate-100 p-8 overflow-y-auto">
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 space-y-4">
         <h1 className="text-2xl font-bold text-slate-900">Dashboard Seguro Carregado</h1>
         
