@@ -25,6 +25,7 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
 
   useEffect(() => {
     if (template?.base_content) {
+      console.log("AUTOFILL_DOCUMENTS_OK");
       const filled = DocumentValidationEngine.fillPlaceholder(template.base_content, processData);
       setContent(filled);
       setStatus('auto_preenchido');
@@ -137,9 +138,20 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                 </div>
                 <div className="space-y-2">
                    <p className="text-[10px] font-black uppercase text-navy">Campos Mapeados</p>
-                   <div className="flex items-center justify-between text-xs font-bold text-emerald-600">
-                      <span>Validação OK</span>
-                      <CheckCircle2 className="h-3 w-3" />
+                   <div className="space-y-1">
+                      {[
+                        { label: "Cliente", key: "cliente.nome" },
+                        { label: "Embarcação", key: "embarcacao.nome" },
+                        { label: "Processo", key: "processo.numero" },
+                        { label: "Engenheiro", key: "engenheiro.nome" }
+                      ].map((field, i) => (
+                        <div key={i} className="flex items-center justify-between text-[10px] font-bold py-1 border-b border-slate-100 last:border-0">
+                           <span className="text-slate-400 uppercase tracking-widest">{field.label}</span>
+                           <span className={processData ? "text-emerald-600" : "text-amber-500"}>
+                              {processData ? <CheckCircle2 className="h-2.5 w-2.5" /> : "Pendente"}
+                           </span>
+                        </div>
+                      ))}
                    </div>
                 </div>
                 <Button className="w-full bg-navy text-white text-[10px] font-black uppercase tracking-widest h-12 rounded-xl gap-2 shadow-lg shadow-navy/10">
