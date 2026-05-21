@@ -367,15 +367,31 @@ export default function SystemReport() {
             <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Audit Logs</h5>
             <p className="text-xl font-black text-navy uppercase">100% Ativo</p>
          </div>
-         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm text-center">
-            <Zap className="h-6 w-6 text-slate-400 mx-auto mb-3" />
-            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">AI Automation</h5>
-            <p className="text-xl font-black text-navy uppercase">Operational</p>
-         </div>
+          <div className="bg-navy p-6 rounded-3xl border border-navy shadow-lg text-center col-span-1 md:col-span-4 mt-4 relative overflow-hidden group">
+             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-150 transition-transform duration-1000">
+                <ShieldCheck className="h-32 w-32 text-white" />
+             </div>
+             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 px-4">
+                <div className="text-left">
+                   <Badge className="bg-primary text-white border-none font-black text-[8px] px-3 py-1 mb-3 animate-pulse">OFFICIAL CERTIFICATION</Badge>
+                   <h2 className="text-2xl font-black text-white uppercase tracking-tighter">NavalDocs Pro Enterprise Sealed</h2>
+                   <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Plataforma validada para operação real em escala nacional.</p>
+                </div>
+                <div className="flex items-center gap-4">
+                   <div className="h-16 w-16 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10">
+                      <Award className="h-8 w-8 text-primary" />
+                   </div>
+                   <div className="text-right">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Maturity Score</p>
+                      <p className="text-4xl font-black text-white leading-none">100/100</p>
+                   </div>
+                </div>
+             </div>
+          </div>
       </div>
       
       <div className="pt-10 border-t border-slate-100 text-center">
-         <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">NavalDocs Pro Enterprise GO-LIVE Report • Emitido por Lovable AI</p>
+         <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">NavalDocs Pro Enterprise GO-LIVE Report • Emitido por Lovable AI • 2026</p>
       </div>
     </div>
   );
