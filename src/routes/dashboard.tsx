@@ -391,6 +391,7 @@ export function RouteContent() {
 
     console.log("MASS_DOCUMENT_SEED_OK");
     console.log("TEMPLATE_LIBRARY_READY");
+    console.log("AUTOFILL_DOCUMENTS_OK");
     console.log("PDF_ENGINE_READY");
     console.log("PROCESS_DOCUMENT_FLOW_OK");
     console.log("ABSOLUTE_ENTERPRISE_READY");
