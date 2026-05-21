@@ -129,6 +129,10 @@ function DashboardLayout() {
       { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
       { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
       { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
+    ]},
+    { group: "Comercial", items: [
+      { name: "Centro Comercial", icon: <TrendingUp className="h-5 w-5" />, path: "/sales-center" },
+      { name: "Ambiente Demo", icon: <Zap className="h-5 w-5" />, path: "/demo" },
     ]}
   ];
 
