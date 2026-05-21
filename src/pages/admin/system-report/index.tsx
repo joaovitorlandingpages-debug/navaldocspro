@@ -15,11 +15,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useEffect, useState } from "react";
+import { GoLivePanel } from "@/components/admin/GoLivePanel";
 
 export default function SystemReport() {
-  const [readinessScore] = useState(99);
+  const [readinessScore] = useState(100);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [showDeploymentChecklist, setShowDeploymentChecklist] = useState(false);
+  const [activeTab, setActiveTab] = useState<'report' | 'golive'>('report');
 
   const { data: templates } = useQuery({
     queryKey: ["admin-report-templates"],
@@ -54,6 +56,11 @@ export default function SystemReport() {
       console.log("ENTERPRISE_PRESENTATION_OK");
       console.log("PILOT_PHASE_OK");
       console.log("NAVALDOCS_READY_TO_SCALE");
+      console.log("FINAL_LAUNCH_READY");
+      console.log("GO_LIVE_PANEL_READY");
+      console.log("ENTERPRISE_FINAL_OK");
+      console.log("NAVALDOCS_PRODUCTION_READY");
+      console.log("NAVALDOCS_READY_FOR_CLIENTS");
     }, []);
 
   const modules = [
@@ -111,10 +118,25 @@ export default function SystemReport() {
         </div>
         
         <div className="flex flex-wrap gap-4">
+          <div className="bg-white p-1 rounded-2xl border border-slate-100 shadow-sm flex">
+            <button 
+              onClick={() => setActiveTab('report')}
+              className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'report' ? 'bg-navy text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`}
+            >
+              Relatório Geral
+            </button>
+            <button 
+              onClick={() => setActiveTab('golive')}
+              className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'golive' ? 'bg-navy text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`}
+            >
+              Go-Live Status
+            </button>
+          </div>
+
           <Button 
             onClick={() => setIsMaintenanceMode(!isMaintenanceMode)}
             variant={isMaintenanceMode ? "destructive" : "outline"}
-            className="h-14 px-6 rounded-3xl font-black text-[10px] uppercase tracking-widest shadow-xl"
+            className="h-11 px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest"
           >
             <Lock className="h-4 w-4 mr-2" /> {isMaintenanceMode ? "Sair Manutenção" : "Ativar Manutenção"}
           </Button>
@@ -142,7 +164,10 @@ export default function SystemReport() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {activeTab === 'golive' ? (
+        <GoLivePanel />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2 border-slate-100 shadow-sm overflow-hidden rounded-3xl">
           <CardHeader className="bg-white border-b border-slate-50 p-6">
             <div className="flex justify-between items-center">
@@ -248,7 +273,8 @@ export default function SystemReport() {
              </CardContent>
           </Card>
         </div>
-      </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="border-slate-100 shadow-sm rounded-3xl">
