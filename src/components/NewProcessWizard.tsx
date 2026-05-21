@@ -50,11 +50,14 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuickClientOpen, setIsQuickClientOpen] = useState(false);
   const [isCreatingClient, setIsCreatingClient] = useState(false);
+  const [isQuickVesselOpen, setIsQuickVesselOpen] = useState(false);
+  const [isCreatingVessel, setIsCreatingVessel] = useState(false);
 
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [customers, setCustomers] = useState<any[]>([]);
   const [vessels, setVessels] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [vesselSearchTerm, setVesselSearchTerm] = useState("");
   const [newClient, setNewClient] = useState({
     name: "",
     document: "",
@@ -66,6 +69,16 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     state: "",
     notes: ""
   });
+
+  const [newVessel, setNewVessel] = useState({
+    name: "",
+    registration_number: "",
+    vessel_type: "",
+    engine: "",
+    category: "",
+    notes: ""
+  });
+
 
 
   const { requirements, isLoading: loadingReqs } = useProcessRequirements(formData.typeId);
