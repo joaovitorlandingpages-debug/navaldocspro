@@ -101,10 +101,10 @@ export default function SystemReport() {
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-700 bg-slate-50/30 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div>
-          <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/10 border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">Auditoria Final Premium v3.0</Badge>
-          <h1 className="text-4xl font-black text-navy uppercase tracking-tighter leading-none">System Report</h1>
-          <p className="text-slate-500 font-medium mt-2">Relatório de prontidão real do NavalDocs Pro para operação nacional.</p>
+        <div className="relative group">
+          <Badge className="mb-2 bg-emerald-500 text-white hover:bg-emerald-600 border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-lg shadow-emerald-500/20 animate-bounce">CONSOLIDADO ENTERPRISE v1.0</Badge>
+          <h1 className="text-5xl font-black text-navy uppercase tracking-tighter leading-none">System Report</h1>
+          <p className="text-slate-500 font-bold text-lg mt-2 uppercase tracking-widest opacity-50">Auditoria Final de Prontidão Operacional</p>
         </div>
         
         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 flex items-center gap-6 min-w-[280px]">
