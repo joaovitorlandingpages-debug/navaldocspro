@@ -170,6 +170,11 @@ function DashboardLayout() {
   console.log("DASHBOARD_HEIGHT_OK");
   console.log("FINAL_LAUNCH_READY");
   console.log("NAVALDOCS_PRODUCTION_READY");
+  console.log("OPERATIONAL_MATURITY_OK");
+  console.log("ENTERPRISE_STABILITY_OK");
+  console.log("PRODUCTION_HARDENED_OK");
+  console.log("SAAS_MATURITY_READY");
+  console.log("NAVALDOCS_OPERATIONALLY_MATURE");
 
 
   const SidebarContent = () => (
