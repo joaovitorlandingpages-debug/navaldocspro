@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
- import { 
+import { 
   CheckCircle2, AlertCircle, Clock, 
   FileText, Users, Ship, ShieldCheck, 
   Zap, Database, Smartphone, Laptop, 
@@ -52,19 +52,19 @@ export default function SystemReport() {
     }
   });
 
-     useEffect(() => {
-      // Fase Final Absoluta: Consolidação Enterprise
-      console.log("FINAL_POLISH_OK");
-      console.log("COMMERCIAL_READY_OK");
-      console.log("GO_LIVE_READY");
-      console.log("PRODUCTION_READY");
-      console.log("NAVALDOCS_ENTERPRISE_READY");
-      console.log("FINAL_ENTERPRISE_AUDIT_OK");
-      console.log("FINAL_SECURITY_OK");
-      console.log("FINAL_OCR_OK");
-      console.log("FINAL_DOCUMENT_FLOW_OK");
-      console.log("FINAL_COMMERCIAL_READY");
-    }, []);
+   useEffect(() => {
+     // Fase Final Absoluta: Consolidação Enterprise
+     console.log("FINAL_POLISH_OK");
+     console.log("COMMERCIAL_READY_OK");
+     console.log("GO_LIVE_READY");
+     console.log("PRODUCTION_READY");
+     console.log("NAVALDOCS_ENTERPRISE_READY");
+     console.log("FINAL_ENTERPRISE_AUDIT_OK");
+     console.log("FINAL_SECURITY_OK");
+     console.log("FINAL_OCR_OK");
+     console.log("FINAL_DOCUMENT_FLOW_OK");
+     console.log("FINAL_COMMERCIAL_READY");
+   }, []);
 
   const modules = [
     { name: "Autenticação", status: "Operacional", icon: Lock, score: 100, color: "text-emerald-500" },
@@ -244,13 +244,6 @@ export default function SystemReport() {
                            </td>
                         </tr>
                       ))}
-                      {templates && templates.length > 15 && (
-                        <tr>
-                           <td colSpan={3} className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest italic bg-slate-50/30">
-                              + {templates.length - 15} documentos adicionais mapeados
-                           </td>
-                        </tr>
-                      )}
                    </tbody>
                 </table>
              </div>
