@@ -13,8 +13,12 @@ interface TimelineEvent {
 }
 
 export function ProcessTimeline({ events }: { events: TimelineEvent[] }) {
+  // Group events by category
+  const categories = Array.from(new Set(events.filter(e => e.category).map(e => e.category)));
+  
   return (
-    <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+    <div className="space-y-12 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-px before:bg-slate-200">
+
       {events.length === 0 && (
         <div className="space-y-8 opacity-20 grayscale pointer-events-none">
           {[
@@ -53,7 +57,12 @@ export function ProcessTimeline({ events }: { events: TimelineEvent[] }) {
             {event.type === 'auto_fill' && <Sparkles className="w-5 h-5 text-purple-500" />}
           </div>
           {/* Content */}
-          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm transition-all group-hover:shadow-lg group-hover:border-primary/20">
+          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm transition-all group-hover:shadow-xl group-hover:border-primary/20 relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-3 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
+                {event.type === 'auto_fill' && <Sparkles className="w-12 h-12" />}
+                {event.type === 'ocr_processed' && <Cpu className="w-12 h-12" />}
+                {event.type === 'signature' && <FileText className="w-12 h-12" />}
+             </div>
             <div className="flex items-center justify-between space-x-2 mb-2">
               <div className="flex items-center gap-2">
                  {event.category && (

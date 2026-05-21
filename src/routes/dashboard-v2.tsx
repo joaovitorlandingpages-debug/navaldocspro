@@ -4,7 +4,7 @@ import {
   LogOut, Plus, Menu, LayoutGrid, Activity, FileText, FilePlus, 
   Library, Zap, ShieldCheck, DollarSign, BarChart3, Settings,
   Building2, UserCog, ScrollText, History, ShieldAlert, MonitorPlay,
-  CreditCard, Briefcase, TrendingUp
+  CreditCard, Briefcase, TrendingUp, Sparkles, Clock
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -288,17 +288,38 @@ function DashboardV2Content() {
                </CardContent>
             </Card>
 
-            <div className="p-8 rounded-[2.5rem] bg-navy text-white relative overflow-hidden shadow-2xl group">
-               <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                  <ShieldCheck className="h-40 w-40" />
+            <div className="p-8 rounded-[2.5rem] bg-navy text-white relative overflow-hidden shadow-2xl group border border-white/5">
+               <div className="absolute -right-6 -bottom-6 opacity-5 group-hover:scale-110 transition-transform duration-1000">
+                  <Anchor className="h-48 w-48" />
+               </div>
+               <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                  <Sparkles className="h-32 w-32" />
                </div>
                <div className="relative z-10">
-                  <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-4">Enterprise Status</p>
-                  <h4 className="text-lg font-bold mb-4 leading-snug">Sua infraestrutura de automação está 100% operacional.</h4>
-                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
-                     <div className="h-2 rounded-full bg-emerald-500 animate-ping" />
-                     Sistemas Ativos
+                  <div className="flex items-center gap-2 mb-6">
+                     <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse" />
+                     <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">Sistemas Operacionais</p>
                   </div>
+                  <h4 className="text-xl font-bold mb-6 leading-snug">Infraestrutura Enterprise em conformidade.</h4>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-8">
+                     <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
+                        <p className="text-[8px] font-black uppercase text-white/40 mb-1">OCR Status</p>
+                        <p className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                           <Zap className="h-3 w-3" /> 98%
+                        </p>
+                     </div>
+                     <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
+                        <p className="text-[8px] font-black uppercase text-white/40 mb-1">SLA Ativo</p>
+                        <p className="text-xs font-bold text-blue-400 flex items-center gap-1.5">
+                           <Clock className="h-3 w-3" /> 100%
+                        </p>
+                     </div>
+                  </div>
+
+                  <p className="text-[10px] font-medium text-white/40 italic leading-relaxed">
+                     NavalDocs Pro: Tecnologia de ponta para engenharia naval de alta performance.
+                  </p>
                </div>
             </div>
          </div>
