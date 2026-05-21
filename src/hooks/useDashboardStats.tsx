@@ -41,8 +41,7 @@ export const useDashboardStats = () => {
         { count: documentsCount },
         { data: ocrData },
         { count: urgentCount },
-        { count: expiringCount },
-        supabase.from("process_automation_state").select("estimated_time_saved_minutes").eq("process_id.company_id", profile.company_id)
+        { count: expiringCount }
       ] = await Promise.all([
         supabase.from("customers").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id),
         supabase.from("vessels").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id),
