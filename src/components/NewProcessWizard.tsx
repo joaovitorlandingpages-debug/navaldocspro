@@ -552,7 +552,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               <Input 
                 placeholder="Buscar embarcação..." 
                 className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl"
+                value={vesselSearchTerm}
+                onChange={(e) => setVesselSearchTerm(e.target.value)}
               />
+
             </div>
             
             <div className="space-y-2">
