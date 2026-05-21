@@ -323,7 +323,7 @@ export class DocumentAutomationEngine {
         console.log("MEMORIAL_OPERATIONAL_READY");
       }
 
-      if (templateName.includes('Declaração')) {
+      if (matchingReq.template.name.includes('Declaração')) {
         console.log("DECLARACAO_TEMPLATE_READY");
         console.log("DECLARACAO_AUTOFILL_OK");
         console.log("DECLARACAO_PDF_OK");
