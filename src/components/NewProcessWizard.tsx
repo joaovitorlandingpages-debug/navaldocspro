@@ -422,9 +422,17 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             </div>
 
             <div className="pt-4 border-t border-slate-100">
-               <Button variant="outline" className="w-full h-12 rounded-xl border-dashed gap-2">
+               <Button 
+                 variant="outline" 
+                 className="w-full h-12 rounded-xl border-dashed gap-2"
+                 onClick={() => {
+                   setIsQuickClientOpen(true);
+                   console.log("CLIENT_MODAL_OPEN_OK");
+                 }}
+               >
                   <Plus className="h-4 w-4" /> Criar novo cliente rapidamente
                </Button>
+
             </div>
           </div>
         );
