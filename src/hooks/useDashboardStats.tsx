@@ -45,13 +45,13 @@ export const useDashboardStats = () => {
         urgentCount,
         expiringCount
       ] = await Promise.all([
-        supabase.from("customers").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).then(r => r.count),
-        supabase.from("vessels").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).then(r => r.count),
-        supabase.from("processes").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).neq("status", "completed").then(r => r.count),
-        supabase.from("generated_documents").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).then(r => r.count),
-        supabase.from("ocr_usage").select("total_jobs").eq("company_id", profile.company_id).eq("month", new Date().getMonth() + 1).maybeSingle().then(r => r.data),
-        supabase.from("processes").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).in("priority", ["urgent", "critical"]).neq("status", "completed").then(r => r.count),
-        supabase.from("generated_documents").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).lte("expiry_date", nextMonth.toISOString()).gte("expiry_date", today.toISOString()).then(r => r.count)
+        supabase.from("customers").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).then((r: any) => r.count),
+        supabase.from("vessels").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).then((r: any) => r.count),
+        supabase.from("processes").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).neq("status", "completed").then((r: any) => r.count),
+        supabase.from("generated_documents").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).then((r: any) => r.count),
+        supabase.from("ocr_usage").select("total_jobs").eq("company_id", profile.company_id).eq("month", new Date().getMonth() + 1).maybeSingle().then((r: any) => r.data),
+        supabase.from("processes").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).in("priority", ["urgent", "critical"]).neq("status", "completed").then((r: any) => r.count),
+        supabase.from("generated_documents").select("*", { count: "exact", head: true }).eq("company_id", profile.company_id).lte("expiry_date", nextMonth.toISOString()).gte("expiry_date", today.toISOString()).then((r: any) => r.count)
       ]);
 
       return {
