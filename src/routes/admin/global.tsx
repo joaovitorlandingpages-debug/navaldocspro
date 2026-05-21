@@ -46,8 +46,8 @@ function AdminGlobalAICenter() {
       const { count: pendingJobs } = await supabase.from("ai_jobs_queue").select("*", { count: 'exact', head: true }).eq('status', 'pending');
       const { count: activeConfigs } = await supabase.from("ai_model_configs").select("*", { count: 'exact', head: true }).eq('is_active', true);
       
-      const totalTokens = usage?.reduce((acc, curr) => acc + (curr.tokens_input || 0) + (curr.tokens_output || 0), 0) || 0;
-      const totalCost = usage?.reduce((acc, curr) => acc + Number(curr.estimated_cost || 0), 0) || 0;
+      const totalTokens = usage?.reduce((acc: number, curr: any) => acc + (curr.tokens_input || 0) + (curr.tokens_output || 0), 0) || 0;
+      const totalCost = usage?.reduce((acc: number, curr: any) => acc + Number(curr.estimated_cost || 0), 0) || 0;
 
       return {
         totalTokens,

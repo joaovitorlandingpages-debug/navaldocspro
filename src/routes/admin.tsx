@@ -8,6 +8,7 @@ import {
   Activity, 
   ArrowLeft,
   LayoutDashboard,
+  Bot,
   LogOut,
   CreditCard,
   History,
