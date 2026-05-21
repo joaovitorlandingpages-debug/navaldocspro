@@ -3539,6 +3539,42 @@ export type Database = {
           },
         ]
       }
+      system_backlog: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          priority: string
+          source: string | null
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          priority: string
+          source?: string | null
+          status: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          priority?: string
+          source?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       system_changelog: {
         Row: {
           changes: Json
@@ -3565,6 +3601,42 @@ export type Database = {
           id?: string
           is_published?: boolean | null
           title?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      system_deploys: {
+        Row: {
+          created_at: string | null
+          deployed_at: string | null
+          deployed_by: string | null
+          environment: string
+          id: string
+          is_hotfix: boolean | null
+          release_notes: string | null
+          status: string
+          version: string
+        }
+        Insert: {
+          created_at?: string | null
+          deployed_at?: string | null
+          deployed_by?: string | null
+          environment: string
+          id?: string
+          is_hotfix?: boolean | null
+          release_notes?: string | null
+          status: string
+          version: string
+        }
+        Update: {
+          created_at?: string | null
+          deployed_at?: string | null
+          deployed_by?: string | null
+          environment?: string
+          id?: string
+          is_hotfix?: boolean | null
+          release_notes?: string | null
+          status?: string
           version?: string
         }
         Relationships: []
@@ -3659,7 +3731,10 @@ export type Database = {
           description: string | null
           ends_at: string | null
           id: string
+          impact_score: number | null
           is_maintenance: boolean | null
+          recovery_steps: string | null
+          root_cause: string | null
           severity: string | null
           starts_at: string | null
           status: string | null
@@ -3670,7 +3745,10 @@ export type Database = {
           description?: string | null
           ends_at?: string | null
           id?: string
+          impact_score?: number | null
           is_maintenance?: boolean | null
+          recovery_steps?: string | null
+          root_cause?: string | null
           severity?: string | null
           starts_at?: string | null
           status?: string | null
@@ -3681,7 +3759,10 @@ export type Database = {
           description?: string | null
           ends_at?: string | null
           id?: string
+          impact_score?: number | null
           is_maintenance?: boolean | null
+          recovery_steps?: string | null
+          root_cause?: string | null
           severity?: string | null
           starts_at?: string | null
           status?: string | null
