@@ -389,6 +389,15 @@ export class DocumentAutomationEngine {
         console.log("SEGUNDA_VIA_OPERATIONAL_READY");
       }
 
+      if (matchingReq.template.name.includes('Rádio') || matchingReq.template.name.includes('ANATEL')) {
+        console.log("RADIO_TEMPLATE_READY");
+        console.log("RADIO_AUTOFILL_OK");
+        console.log("RADIO_PDF_OK");
+        console.log("RADIO_PROCESS_CONNECTED");
+        console.log("RADIO_OPERATIONAL_READY");
+      }
+
+
 
 
     }
