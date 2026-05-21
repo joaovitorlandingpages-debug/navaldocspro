@@ -312,12 +312,32 @@ function Customers() {
         </div>
 
         
-        <div className="p-6 border-t flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
-          <span>Mostrando {customers.length} clientes</span>
+        <div className="p-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+          <span>Mostrando {customers.length} de {totalCount} clientes</span>
           <div className="flex gap-2">
-            <button className="px-3 py-1.5 border rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-all" disabled>Anterior</button>
-            <button className="px-4 py-1.5 border rounded-lg bg-primary text-white shadow-sm transition-all">1</button>
-            <button className="px-3 py-1.5 border rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-all" disabled>Próximo</button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200 bg-white"
+              onClick={() => setPage(prev => Math.max(1, prev - 1))}
+              disabled={page === 1}
+            >
+              Anterior
+            </Button>
+            <div className="flex items-center gap-1">
+              <span className="px-3 h-8 flex items-center bg-primary text-white rounded-lg shadow-sm">{page}</span>
+              <span className="text-slate-300">/</span>
+              <span className="px-3 h-8 flex items-center text-navy font-bold">{Math.ceil(totalCount / pageSize) || 1}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200 bg-white"
+              onClick={() => setPage(prev => prev + 1)}
+              disabled={page >= Math.ceil(totalCount / pageSize)}
+            >
+              Próximo
+            </Button>
           </div>
         </div>
       </div>
