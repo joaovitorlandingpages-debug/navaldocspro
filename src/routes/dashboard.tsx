@@ -162,11 +162,11 @@ function DashboardLayout() {
 
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="p-8 flex flex-col gap-1">
+    <div className="flex flex-col h-full bg-[#000B18]">
+      <div className="p-8 pb-4 flex flex-col gap-1">
         <div className="flex items-center gap-4">
-          <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)]">
-             <Anchor className="h-6 w-6 text-white" />
+          <div className="h-12 w-12 bg-primary rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.4)] group-hover:scale-110 transition-transform duration-500">
+             <Anchor className="h-7 w-7 text-white" />
           </div>
           {(isSidebarOpen || window.innerWidth < 1024) && (
             <div className="animate-in fade-in slide-in-from-left-2 duration-500">
@@ -175,65 +175,59 @@ function DashboardLayout() {
           )}
         </div>
         {(isSidebarOpen || window.innerWidth < 1024) && (
-          <div className="mt-6 px-1 py-3 bg-white/5 rounded-2xl border border-white/5 animate-in zoom-in-95 duration-500">
-             <div className="flex items-center gap-3 px-3">
-                <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-black text-[10px]">
+          <div className="mt-8 px-4 py-4 bg-white/5 rounded-[2rem] border border-white/5 animate-in zoom-in-95 duration-500">
+             <div className="flex items-center gap-4">
+                <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-black text-xs border border-primary/20">
                    {profile?.companies?.name?.substring(0, 2).toUpperCase() || "ND"}
                 </div>
                 <div className="overflow-hidden">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Licença Enterprise</p>
-                  <p className="text-[10px] font-bold text-white/60 truncate">{profile?.companies?.name || "Empresa..."}</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary mb-0.5">Licença Enterprise</p>
+                  <p className="text-[11px] font-bold text-white/70 truncate">{profile?.companies?.name || "Empresa..."}</p>
                 </div>
              </div>
           </div>
         )}
       </div>
 
-      <nav className="flex-grow mt-6 px-4 space-y-6 overflow-y-auto custom-scrollbar">
+      <nav className="flex-grow mt-6 px-4 space-y-8 overflow-y-auto custom-scrollbar pb-10">
         {navItems.map((group) => (
           <div key={group.group} className="space-y-1">
-            {(isSidebarOpen || window.innerWidth < 1024) && <p className="px-4 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">{group.group}</p>}
+            {(isSidebarOpen || window.innerWidth < 1024) && <p className="px-5 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.35em]">{group.group}</p>}
             {group.items.map((item) => (
               <Link 
                 key={item.name}
                 to={item.path}
                 onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)}
-                activeProps={{ className: "bg-primary text-white shadow-[0_10px_20px_rgba(37,99,235,0.3)] border-white/10" }}
-                className="flex items-center gap-4 p-4 rounded-[1.25rem] hover:bg-white/5 border border-transparent transition-all group/item"
+                activeProps={{ className: "bg-primary/10 text-primary border-primary/20 shadow-[0_0_20px_rgba(37,99,235,0.1)]" }}
+                className="flex items-center gap-4 px-5 py-4 rounded-[1.5rem] hover:bg-white/5 border border-transparent transition-all group/item text-white/60 hover:text-white"
               >
-                <div className="group-hover/item:scale-110 group-hover/item:text-primary transition-all duration-300">{item.icon}</div>
-                {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[11px] font-black uppercase tracking-widest leading-none">{item.name}</span>}
+                <div className="group-hover/item:scale-110 group-active/item:scale-95 transition-all duration-300">{item.icon}</div>
+                {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[11px] font-bold uppercase tracking-widest leading-none">{item.name}</span>}
               </Link>
             ))}
           </div>
         ))}
       </nav>
 
-      <div className="p-4 border-t border-white/5 space-y-2">
+      <div className="p-6 border-t border-white/5 space-y-2 bg-white/[0.02]">
          {profile?.role === 'admin_master' && (
-           <Link to="/admin" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+           <Link to="/admin" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
               <ShieldCheck className="h-5 w-5" />
-              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-xs font-bold uppercase tracking-widest">Painel Master</span>}
+              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Painel Master</span>}
            </Link>
          )}
          {profile?.role === 'admin_master' && (
-           <Link to="/admin/document-library" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+           <Link to="/admin/document-library" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
               <Library className="h-5 w-5" />
-              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-xs font-bold uppercase tracking-widest">Biblioteca Master</span>}
-           </Link>
-         )}
-         {profile?.role === 'admin_master' && (
-           <Link to="/admin/billing" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
-              <DollarSign className="h-5 w-5" />
-              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-xs font-bold uppercase tracking-widest">Financeiro</span>}
+              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Biblioteca Master</span>}
            </Link>
          )}
          <button 
            onClick={handleLogout}
-           className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all"
+           className="w-full flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-red-500/10 text-red-400 transition-all border border-transparent hover:border-red-500/20"
          >
             <LogOut className="h-5 w-5" />
-            {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-xs font-bold uppercase tracking-widest">Sair</span>}
+            {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Sair do Sistema</span>}
          </button>
       </div>
     </div>
