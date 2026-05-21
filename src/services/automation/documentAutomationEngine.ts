@@ -284,7 +284,7 @@ export class DocumentAutomationEngine {
     const matchingReq = requirements?.find((r: any) => 
       r.template.name.includes(job.identified_document_type) || 
       (job.identified_document_type === 'PERSONAL_IDENTITY' && (r.template.name.includes('RG') || r.template.name.includes('CNH'))) ||
-      (job.identified_document_type === 'VESSEL_TIE' && (r.template.name.includes('TIE') || r.template.name.includes('Inscrição')))
+      (job.identified_document_type === 'VESSEL_TIE' && (r.template.name.includes('TIE') || r.template.name.includes('Inscrição') || r.template.name.includes('DPC-2211')))
     );
 
     if (matchingReq) {
