@@ -3423,6 +3423,10 @@ export type Database = {
     Functions: {
       duplicate_document: { Args: { doc_id: string }; Returns: string }
       get_system_readiness: { Args: never; Returns: Json }
+      increment_ocr_usage: {
+        Args: { amount: number; company_id_param: string }
+        Returns: undefined
+      }
       is_admin_master: { Args: never; Returns: boolean }
       log_security_event: {
         Args: {
