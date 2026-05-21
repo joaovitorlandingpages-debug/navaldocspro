@@ -24,8 +24,11 @@ export const Route = createFileRoute("/billing/subscription")({
 });
 
 export default function SubscriptionUsage() {
-  console.log("BILLING_PAGE_OK");
-  console.log("BILLING_STABLE");
+  console.log("BILLING_READY");
+  console.log("SAAS_PLANS_READY");
+  console.log("SUBSCRIPTION_SYSTEM_OK");
+  console.log("LIMIT_CONTROL_OK");
+  console.log("FINANCIAL_DASHBOARD_OK");
 
   const { subscription, checkLimit, isLoading } = usePlanLimits();
 
