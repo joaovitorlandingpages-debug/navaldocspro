@@ -156,11 +156,12 @@ function Processes() {
                        </button>
                     </div>
                     
-                    <div className="mb-4">
-                      <span className="text-[10px] font-mono font-black text-primary bg-primary/5 px-2 py-0.5 rounded uppercase tracking-tighter">{p.id.substring(0, 8)}</span>
+                    <div className="mb-4 flex items-center justify-between">
+                      <span className="text-[10px] font-mono font-black text-primary bg-primary/5 px-2 py-0.5 rounded uppercase tracking-tighter shadow-sm border border-primary/10">PROC-{p.id.substring(0, 6)}</span>
+                      <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest bg-slate-50 border-slate-100">{p.status === 'pending' ? 'Novo Lead' : 'Ativo'}</Badge>
                     </div>
 
-                    <h4 className="font-black text-navy text-sm mb-4 leading-tight group-hover:text-primary transition-colors">{p.process_type}</h4>
+                    <h4 className="font-black text-navy text-sm mb-4 leading-tight group-hover:text-primary transition-colors min-h-[40px]">{p.process_type}</h4>
                     
                     <div className="space-y-3 pb-5 mb-5 border-b border-slate-50">
                       <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
