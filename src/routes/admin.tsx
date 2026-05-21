@@ -185,7 +185,8 @@ export function AdminDashboardView() {
         totalProcesses: totalProcesses || 0,
         totalDocuments: totalDocuments || 0,
         totalStorageMB,
-        mrr: (totalCompanies || 0) * 497 // Base calculation for MRR estimation
+        mrr: (totalCompanies || 0) * 497, // Base calculation for MRR estimation
+        arr: (totalCompanies || 0) * 497 * 12
       };
     }
   });
@@ -194,9 +195,10 @@ export function AdminDashboardView() {
     { label: "Empresas Ativas", value: globalStats?.totalCompanies || "0", icon: Building, color: "text-primary" },
     { label: "Usuários Totais", value: globalStats?.totalUsers || "0", icon: Users, color: "text-blue-500" },
     { label: "Processos Master", value: globalStats?.totalProcesses || "0", icon: Activity, color: "text-amber-500" },
-    { label: "Receita (Est.)", value: `R$ ${globalStats?.mrr.toLocaleString()}`, icon: CreditCard, color: "text-emerald-500" },
+    { label: "Receita Mensal (MRR)", value: `R$ ${globalStats?.mrr.toLocaleString()}`, icon: CreditCard, color: "text-emerald-500" },
+    { label: "Receita Anual (ARR)", value: `R$ ${globalStats?.arr.toLocaleString()}`, icon: TrendingUp, color: "text-indigo-500" },
     { label: "Storage SaaS", value: `${globalStats?.totalStorageMB} MB`, icon: Globe, color: "text-cyan-500" },
-    { label: "Uso OCR", value: globalStats?.totalDocuments || "0", icon: Zap, color: "text-purple-500" },
+    { label: "Uso OCR Global", value: globalStats?.totalDocuments || "0", icon: Zap, color: "text-purple-500" },
   ];
 
   return (
