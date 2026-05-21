@@ -1028,3 +1028,5 @@ function DashboardSkeleton() {
     </div>
   );
 }
+
+export const RouteComponent = RouteContent;
