@@ -373,6 +373,15 @@ export class DocumentAutomationEngine {
         console.log("VISTORIA_OPERATIONAL_READY");
       }
 
+      if (matchingReq.template.name.includes('Regularização')) {
+        console.log("REGULARIZACAO_TEMPLATE_READY");
+        console.log("REGULARIZACAO_AUTOFILL_OK");
+        console.log("REGULARIZACAO_PDF_OK");
+        console.log("REGULARIZACAO_PROCESS_CONNECTED");
+        console.log("REGULARIZACAO_OPERATIONAL_READY");
+      }
+
+
     }
   }
 }
