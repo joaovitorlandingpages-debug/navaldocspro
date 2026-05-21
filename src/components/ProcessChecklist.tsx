@@ -4,7 +4,7 @@ import {
   Plus, Download, Eye, FileCheck, 
   Loader2, AlertTriangle, ShieldCheck, Signature,
   Zap, Info, Ban, FolderArchive, Package, RefreshCw,
-  History
+  History, Bot, FileSearch
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
