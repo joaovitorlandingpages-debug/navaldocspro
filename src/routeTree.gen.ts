@@ -72,6 +72,7 @@ import { Route as AdminRoadmapRouteImport } from './routes/admin/roadmap'
 import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminGlobalRouteImport } from './routes/admin/global'
+import { Route as AdminExecutiveOverviewRouteImport } from './routes/admin/executive-overview'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
 import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
@@ -395,6 +396,11 @@ const AdminGlobalRoute = AdminGlobalRouteImport.update({
   path: '/global',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminExecutiveOverviewRoute = AdminExecutiveOverviewRouteImport.update({
+  id: '/executive-overview',
+  path: '/executive-overview',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDocumentsRoute = AdminDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
@@ -468,6 +474,7 @@ export interface FileRoutesByFullPath {
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
+  '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
@@ -537,6 +544,7 @@ export interface FileRoutesByTo {
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
+  '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
@@ -609,6 +617,7 @@ export interface FileRoutesById {
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
+  '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
@@ -682,6 +691,7 @@ export interface FileRouteTypes {
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
+    | '/admin/executive-overview'
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
@@ -751,6 +761,7 @@ export interface FileRouteTypes {
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
+    | '/admin/executive-overview'
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
@@ -822,6 +833,7 @@ export interface FileRouteTypes {
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
+    | '/admin/executive-overview'
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
@@ -1340,6 +1352,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGlobalRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/executive-overview': {
+      id: '/admin/executive-overview'
+      path: '/executive-overview'
+      fullPath: '/admin/executive-overview'
+      preLoaderRoute: typeof AdminExecutiveOverviewRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/documents': {
       id: '/admin/documents'
       path: '/documents'
@@ -1392,6 +1411,7 @@ interface AdminRouteChildren {
   AdminCompaniesRoute: typeof AdminCompaniesRoute
   AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
+  AdminExecutiveOverviewRoute: typeof AdminExecutiveOverviewRoute
   AdminGlobalRoute: typeof AdminGlobalRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminOcrRoute: typeof AdminOcrRoute
@@ -1412,6 +1432,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCompaniesRoute: AdminCompaniesRoute,
   AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
+  AdminExecutiveOverviewRoute: AdminExecutiveOverviewRoute,
   AdminGlobalRoute: AdminGlobalRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminOcrRoute: AdminOcrRoute,
