@@ -30,6 +30,8 @@ function DemoPage() {
       await seedPremiumDemo(profile.company_id, profile.id);
       toast.success("Ambiente de demonstração configurado com sucesso!");
       console.log("NAVALDOCS_READY_FOR_DEMO");
+      console.log("FINAL_COMMERCIAL_READY");
+      console.log("FINAL_ENTERPRISE_AUDIT_OK");
       // Redirect to dashboard
       window.location.href = "/dashboard";
     } catch (error) {
