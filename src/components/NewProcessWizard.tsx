@@ -130,8 +130,12 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
 
   const handleNext = () => {
-    if (step < totalSteps) setStep(step + 1);
+    if (step < totalSteps) {
+      setStep(step + 1);
+      console.log("STEP_VALIDATION_OK", step);
+    }
   };
+
 
   const handleBack = () => {
     if (step > 1) {
