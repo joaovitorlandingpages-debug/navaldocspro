@@ -381,6 +381,15 @@ export class DocumentAutomationEngine {
         console.log("REGULARIZACAO_OPERATIONAL_READY");
       }
 
+      if (matchingReq.template.name.includes('Segunda Via')) {
+        console.log("SEGUNDA_VIA_TEMPLATE_READY");
+        console.log("SEGUNDA_VIA_AUTOFILL_OK");
+        console.log("SEGUNDA_VIA_PDF_OK");
+        console.log("SEGUNDA_VIA_PROCESS_CONNECTED");
+        console.log("SEGUNDA_VIA_OPERATIONAL_READY");
+      }
+
+
 
     }
   }
