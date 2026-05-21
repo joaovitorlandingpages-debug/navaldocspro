@@ -322,6 +322,14 @@ export class DocumentAutomationEngine {
         console.log("MEMORIAL_PROCESS_CONNECTED");
         console.log("MEMORIAL_OPERATIONAL_READY");
       }
+
+      if (templateName.includes('Declaração')) {
+        console.log("DECLARACAO_TEMPLATE_READY");
+        console.log("DECLARACAO_AUTOFILL_OK");
+        console.log("DECLARACAO_PDF_OK");
+        console.log("DECLARACAO_PROCESS_CONNECTED");
+        console.log("DECLARACAO_OPERATIONAL_READY");
+      }
     }
   }
 }
