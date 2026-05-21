@@ -982,7 +982,7 @@ export function RouteContent() {
                     <div className="flex justify-center p-4"><Loader2 className="h-4 w-4 animate-spin text-slate-300" /></div>
                   ) : (
                     <>
-                      {statsData?.expiringDocuments > 0 ? (
+                      {statsData && statsData.expiringDocuments > 0 ? (
                         <div className="p-4 rounded-2xl border-l-4 border-l-amber-500 bg-amber-50/50 transition-all hover:bg-slate-50 cursor-pointer" onClick={() => navigate({ to: '/dashboard/deadlines' })}>
                            <div className="flex justify-between items-start mb-1">
                               <p className="text-sm font-black text-navy uppercase tracking-tight">Vencimentos Próximos</p>
@@ -992,7 +992,7 @@ export function RouteContent() {
                         </div>
                       ) : null}
                       
-                      {statsData?.urgentProcesses > 0 ? (
+                      {statsData && statsData.urgentProcesses > 0 ? (
                         <div className="p-4 rounded-2xl border-l-4 border-l-red-500 bg-red-50/50 transition-all hover:bg-slate-50 cursor-pointer" onClick={() => navigate({ to: '/dashboard/deadlines' })}>
                            <div className="flex justify-between items-start mb-1">
                               <p className="text-sm font-black text-navy uppercase tracking-tight">Processos Retidos</p>
@@ -1002,7 +1002,7 @@ export function RouteContent() {
                         </div>
                       ) : null}
 
-                      {statsData?.expiringDocuments === 0 && statsData?.urgentProcesses === 0 && (
+                      {(!statsData || (statsData.expiringDocuments === 0 && statsData.urgentProcesses === 0)) && (
                         <div className="py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                           <CheckCircle2 className="h-8 w-8 text-emerald-100 mx-auto mb-2" />
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nenhum alerta crítico</p>
