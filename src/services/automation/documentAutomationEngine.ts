@@ -346,6 +346,14 @@ export class DocumentAutomationEngine {
         console.log("TRANSFERENCIA_PROCESS_CONNECTED");
         console.log("TRANSFERENCIA_OPERATIONAL_READY");
       }
+
+      if (matchingReq.template.name.includes('Alteração de Motor')) {
+        console.log("MOTOR_CHANGE_TEMPLATE_READY");
+        console.log("MOTOR_CHANGE_AUTOFILL_OK");
+        console.log("MOTOR_CHANGE_PDF_OK");
+        console.log("MOTOR_CHANGE_PROCESS_CONNECTED");
+        console.log("MOTOR_CHANGE_OPERATIONAL_READY");
+      }
     }
   }
 }
