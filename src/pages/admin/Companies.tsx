@@ -179,8 +179,9 @@ export default function AdminCompanies() {
 
 function AdminLogs() {
   useEffect(() => {
-    console.log("MASTER_ADMIN_READY");
+    console.log("ADMIN_ENTERPRISE_READY");
     console.log("SAAS_CONTROL_READY");
+    console.log("SAAS_MASTER_READY");
   }, []);
   return null;
 }

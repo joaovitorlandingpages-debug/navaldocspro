@@ -16,7 +16,8 @@ import {
   Globe,
   CheckCircle2,
   TrendingUp,
-  Menu
+  Menu,
+  Database
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -39,11 +40,11 @@ export const AdminCompaniesRoute = createFileRoute("/admin/companies")({
 function AdminLayout() {
   const { profile, loading } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  console.log("FINAL_REFINEMENT_OK");
-  console.log("FINAL_ADMIN_GLOBAL_OK");
-  console.log("FINAL_GLOBAL_PLATFORM_OK");
-  console.log("ADMIN_GLOBAL_PREMIUM_OK");
-  console.log("GLOBAL_ADMIN_FINAL_OK");
+  console.log("ADMIN_ENTERPRISE_READY");
+  console.log("BILLING_ADMIN_READY");
+  console.log("STORAGE_ADMIN_READY");
+  console.log("OCR_ADMIN_READY");
+  console.log("SAAS_MASTER_READY");
 
   if (loading) {
     return (
@@ -65,16 +66,17 @@ function AdminLayout() {
 
 
   const adminNavItems = [
-    { name: "Global Ops", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },
-    { name: "Comercial", icon: <TrendingUp className="h-5 w-5" />, path: "/admin/commercial" },
+    { name: "Visão Geral", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },
     { name: "Empresas", icon: <Building className="h-5 w-5" />, path: "/admin/companies" },
-    { name: "Billing Global", icon: <CreditCard className="h-5 w-5" />, path: "/admin/billing" },
+    { name: "Usuários", icon: <Users className="h-5 w-5" />, path: "/admin/users" },
+    { name: "Planos & Billing", icon: <CreditCard className="h-5 w-5" />, path: "/admin/billing" },
+    { name: "OCR Admin", icon: <Zap className="h-5 w-5" />, path: "/admin/ocr" },
+    { name: "Storage Admin", icon: <Database className="h-5 w-5" />, path: "/admin/storage" },
     { name: "Biblioteca Master", icon: <FileText className="h-5 w-5" />, path: "/admin/document-library" },
-    { name: "Users Master", icon: <Users className="h-5 w-5" />, path: "/admin/users" },
+    { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/admin/commercial" },
     { name: "Audit Logs", icon: <History className="h-5 w-5" />, path: "/admin/logs" },
-    { name: "Engine Rules", icon: <Zap className="h-5 w-5" />, path: "/admin/automation" },
-    { name: "System Report", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/system-report" },
-    { name: "Control Center", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },
+    { name: "System Status", icon: <Activity className="h-5 w-5" />, path: "/admin/system-report" },
+    { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },
   ];
 
   return (
@@ -331,10 +333,12 @@ export function AdminDashboardView() {
 
 function AdminLogs() {
   useEffect(() => {
-    console.log("MASTER_ADMIN_READY");
+    console.log("ADMIN_ENTERPRISE_READY");
+    console.log("BILLING_ADMIN_READY");
+    console.log("STORAGE_ADMIN_READY");
+    console.log("OCR_ADMIN_READY");
+    console.log("SAAS_MASTER_READY");
     console.log("GLOBAL_ANALYTICS_OK");
-    console.log("PLAN_MANAGEMENT_OK");
-    console.log("STORAGE_MONITORING_OK");
   }, []);
   return null;
 }

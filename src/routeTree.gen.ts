@@ -63,7 +63,9 @@ import { Route as AnalyticsOperationsRouteImport } from './routes/analytics.oper
 import { Route as AnalyticsOcrRouteImport } from './routes/analytics.ocr'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
+import { Route as AdminStorageRouteImport } from './routes/admin/storage'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminGlobalRouteImport } from './routes/admin/global'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
@@ -344,9 +346,19 @@ const AdminSystemReportRoute = AdminSystemReportRouteImport.update({
   path: '/system-report',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminStorageRoute = AdminStorageRouteImport.update({
+  id: '/storage',
+  path: '/storage',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOcrRoute = AdminOcrRouteImport.update({
+  id: '/ocr',
+  path: '/ocr',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminLogsRoute = AdminLogsRouteImport.update({
@@ -434,7 +446,9 @@ export interface FileRoutesByFullPath {
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/ocr': typeof AdminOcrRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/storage': typeof AdminStorageRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
@@ -497,7 +511,9 @@ export interface FileRoutesByTo {
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/ocr': typeof AdminOcrRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/storage': typeof AdminStorageRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
@@ -563,7 +579,9 @@ export interface FileRoutesById {
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/ocr': typeof AdminOcrRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/storage': typeof AdminStorageRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
@@ -630,7 +648,9 @@ export interface FileRouteTypes {
     | '/admin/documents'
     | '/admin/global'
     | '/admin/logs'
+    | '/admin/ocr'
     | '/admin/settings'
+    | '/admin/storage'
     | '/admin/system-report'
     | '/admin/users'
     | '/analytics/ocr'
@@ -693,7 +713,9 @@ export interface FileRouteTypes {
     | '/admin/documents'
     | '/admin/global'
     | '/admin/logs'
+    | '/admin/ocr'
     | '/admin/settings'
+    | '/admin/storage'
     | '/admin/system-report'
     | '/admin/users'
     | '/analytics/ocr'
@@ -758,7 +780,9 @@ export interface FileRouteTypes {
     | '/admin/documents'
     | '/admin/global'
     | '/admin/logs'
+    | '/admin/ocr'
     | '/admin/settings'
+    | '/admin/storage'
     | '/admin/system-report'
     | '/admin/users'
     | '/analytics/ocr'
@@ -1205,11 +1229,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSystemReportRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/storage': {
+      id: '/admin/storage'
+      path: '/storage'
+      fullPath: '/admin/storage'
+      preLoaderRoute: typeof AdminStorageRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ocr': {
+      id: '/admin/ocr'
+      path: '/ocr'
+      fullPath: '/admin/ocr'
+      preLoaderRoute: typeof AdminOcrRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/logs': {
@@ -1280,7 +1318,9 @@ interface AdminRouteChildren {
   AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminGlobalRoute: typeof AdminGlobalRoute
   AdminLogsRoute: typeof AdminLogsRoute
+  AdminOcrRoute: typeof AdminOcrRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminStorageRoute: typeof AdminStorageRoute
   AdminSystemReportRoute: typeof AdminSystemReportRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -1295,7 +1335,9 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDocumentsRoute: AdminDocumentsRoute,
   AdminGlobalRoute: AdminGlobalRoute,
   AdminLogsRoute: AdminLogsRoute,
+  AdminOcrRoute: AdminOcrRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminStorageRoute: AdminStorageRoute,
   AdminSystemReportRoute: AdminSystemReportRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
