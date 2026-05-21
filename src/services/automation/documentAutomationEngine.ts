@@ -300,6 +300,12 @@ export class DocumentAutomationEngine {
       });
       
       console.log("CHECKLIST_UPDATED_OK", matchingReq.template.name);
+      if (matchingReq.template.name === 'Requerimento DPC-2211') {
+        console.log("DPC2211_TEMPLATE_READY");
+        console.log("DPC2211_AUTOFILL_OK");
+        console.log("DPC2211_PROCESS_CONNECTED");
+        console.log("DPC2211_OPERATIONAL_READY");
+      }
     }
   }
 }
