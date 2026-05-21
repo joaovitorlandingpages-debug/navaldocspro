@@ -28,6 +28,7 @@ function AdminUsers() {
 
   useEffect(() => {
     console.log("GLOBAL_USERS_OK");
+    console.log("MASTER_ADMIN_READY");
   }, []);
 
   if (loading) return null;
