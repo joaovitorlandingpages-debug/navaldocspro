@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, Link, Navigate } from "@tanstack/react-router";
+import AdminCompanies from "@/pages/admin/Companies";
 import { 
   ShieldCheck, 
   Users, 
@@ -27,6 +28,10 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
+});
+
+export const AdminCompaniesRoute = createFileRoute("/admin/companies")({
+  component: AdminCompanies,
 });
 
 function AdminLayout() {
