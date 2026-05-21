@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export const Route = createFileRoute("/admin/automation")({
-  component: AdminAutomationPage,
+  component: () => <Navigate to="/admin/ocr" />,
 });
 
 function AdminAutomationPage() {
