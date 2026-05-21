@@ -17,7 +17,10 @@ import {
   CheckCircle2,
   TrendingUp,
   Menu,
-  Database
+  Database,
+  Rocket,
+  MessageSquare,
+  BarChart3
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -28,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { BackButton } from "@/components/BackButton";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { useTelemetry } from "@/hooks/useTelemetry";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -40,6 +44,7 @@ export const AdminCompaniesRoute = createFileRoute("/admin/companies")({
 function AdminLayout() {
   const { profile, loading } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  useTelemetry("Admin Portal");
   console.log("ADMIN_ENTERPRISE_READY");
   console.log("BILLING_ADMIN_READY");
   console.log("STORAGE_ADMIN_READY");
@@ -68,12 +73,13 @@ function AdminLayout() {
   const adminNavItems = [
     { name: "Visão Geral", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },
     { name: "Empresas", icon: <Building className="h-5 w-5" />, path: "/admin/companies" },
-    { name: "Usuários", icon: <Users className="h-5 w-5" />, path: "/admin/users" },
+    { name: "Métricas SaaS", icon: <TrendingUp className="h-5 w-5" />, path: "/admin/saas-metrics" },
+    { name: "Roadmap", icon: <Rocket className="h-5 w-5" />, path: "/admin/roadmap" },
+    { name: "Suporte", icon: <MessageSquare className="h-5 w-5" />, path: "/admin/support" },
     { name: "Planos & Billing", icon: <CreditCard className="h-5 w-5" />, path: "/admin/billing" },
     { name: "OCR Admin", icon: <Zap className="h-5 w-5" />, path: "/admin/ocr" },
     { name: "Storage Admin", icon: <Database className="h-5 w-5" />, path: "/admin/storage" },
     { name: "Biblioteca Master", icon: <FileText className="h-5 w-5" />, path: "/admin/document-library" },
-    { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/admin/commercial" },
     { name: "Audit Logs", icon: <History className="h-5 w-5" />, path: "/admin/logs" },
     { name: "System Status", icon: <Activity className="h-5 w-5" />, path: "/admin/system-report" },
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },

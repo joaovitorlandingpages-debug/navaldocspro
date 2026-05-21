@@ -1588,6 +1588,50 @@ export type Database = {
           },
         ]
       }
+      ocr_evolution_logs: {
+        Row: {
+          company_id: string | null
+          confidence_score: number | null
+          correction_details: Json | null
+          created_at: string | null
+          document_type: string | null
+          error_message: string | null
+          id: string
+          job_id: string | null
+          was_manually_corrected: boolean | null
+        }
+        Insert: {
+          company_id?: string | null
+          confidence_score?: number | null
+          correction_details?: Json | null
+          created_at?: string | null
+          document_type?: string | null
+          error_message?: string | null
+          id?: string
+          job_id?: string | null
+          was_manually_corrected?: boolean | null
+        }
+        Update: {
+          company_id?: string | null
+          confidence_score?: number | null
+          correction_details?: Json | null
+          created_at?: string | null
+          document_type?: string | null
+          error_message?: string | null
+          id?: string
+          job_id?: string | null
+          was_manually_corrected?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ocr_evolution_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ocr_jobs: {
         Row: {
           applied_at: string | null
@@ -2742,6 +2786,45 @@ export type Database = {
           },
         ]
       }
+      saas_global_metrics: {
+        Row: {
+          active_users_daily: number | null
+          active_users_monthly: number | null
+          churn_rate: number | null
+          created_at: string | null
+          id: string
+          metric_date: string
+          ocr_total_usage: number | null
+          storage_total_bytes: number | null
+          total_companies: number | null
+          total_mrr: number | null
+        }
+        Insert: {
+          active_users_daily?: number | null
+          active_users_monthly?: number | null
+          churn_rate?: number | null
+          created_at?: string | null
+          id?: string
+          metric_date?: string
+          ocr_total_usage?: number | null
+          storage_total_bytes?: number | null
+          total_companies?: number | null
+          total_mrr?: number | null
+        }
+        Update: {
+          active_users_daily?: number | null
+          active_users_monthly?: number | null
+          churn_rate?: number | null
+          created_at?: string | null
+          id?: string
+          metric_date?: string
+          ocr_total_usage?: number | null
+          storage_total_bytes?: number | null
+          total_companies?: number | null
+          total_mrr?: number | null
+        }
+        Relationships: []
+      }
       security_alerts: {
         Row: {
           company_id: string
@@ -3098,6 +3181,92 @@ export type Database = {
           status?: string
         }
         Relationships: []
+      }
+      system_roadmap: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          estimated_completion: string | null
+          id: string
+          priority: string
+          status: string
+          target_version: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          estimated_completion?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          target_version?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          estimated_completion?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          target_version?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      telemetry_logs: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          duration_ms: number | null
+          event_type: string
+          flow_name: string | null
+          id: string
+          metadata: Json | null
+          module_name: string | null
+          step_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          event_type: string
+          flow_name?: string | null
+          id?: string
+          metadata?: Json | null
+          module_name?: string | null
+          step_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          event_type?: string
+          flow_name?: string | null
+          id?: string
+          metadata?: Json | null
+          module_name?: string | null
+          step_name?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telemetry_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tickets: {
         Row: {

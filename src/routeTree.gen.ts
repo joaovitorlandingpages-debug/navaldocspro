@@ -63,8 +63,11 @@ import { Route as AnalyticsOperationsRouteImport } from './routes/analytics.oper
 import { Route as AnalyticsOcrRouteImport } from './routes/analytics.ocr'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
+import { Route as AdminSupportRouteImport } from './routes/admin/support'
 import { Route as AdminStorageRouteImport } from './routes/admin/storage'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminSaasMetricsRouteImport } from './routes/admin/saas-metrics'
+import { Route as AdminRoadmapRouteImport } from './routes/admin/roadmap'
 import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminGlobalRouteImport } from './routes/admin/global'
@@ -346,6 +349,11 @@ const AdminSystemReportRoute = AdminSystemReportRouteImport.update({
   path: '/system-report',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminStorageRoute = AdminStorageRouteImport.update({
   id: '/storage',
   path: '/storage',
@@ -354,6 +362,16 @@ const AdminStorageRoute = AdminStorageRouteImport.update({
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSaasMetricsRoute = AdminSaasMetricsRouteImport.update({
+  id: '/saas-metrics',
+  path: '/saas-metrics',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRoadmapRoute = AdminRoadmapRouteImport.update({
+  id: '/roadmap',
+  path: '/roadmap',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminOcrRoute = AdminOcrRouteImport.update({
@@ -447,8 +465,11 @@ export interface FileRoutesByFullPath {
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
+  '/admin/roadmap': typeof AdminRoadmapRoute
+  '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/storage': typeof AdminStorageRoute
+  '/admin/support': typeof AdminSupportRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
@@ -512,8 +533,11 @@ export interface FileRoutesByTo {
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
+  '/admin/roadmap': typeof AdminRoadmapRoute
+  '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/storage': typeof AdminStorageRoute
+  '/admin/support': typeof AdminSupportRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
@@ -580,8 +604,11 @@ export interface FileRoutesById {
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
+  '/admin/roadmap': typeof AdminRoadmapRoute
+  '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/storage': typeof AdminStorageRoute
+  '/admin/support': typeof AdminSupportRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
@@ -649,8 +676,11 @@ export interface FileRouteTypes {
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
+    | '/admin/roadmap'
+    | '/admin/saas-metrics'
     | '/admin/settings'
     | '/admin/storage'
+    | '/admin/support'
     | '/admin/system-report'
     | '/admin/users'
     | '/analytics/ocr'
@@ -714,8 +744,11 @@ export interface FileRouteTypes {
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
+    | '/admin/roadmap'
+    | '/admin/saas-metrics'
     | '/admin/settings'
     | '/admin/storage'
+    | '/admin/support'
     | '/admin/system-report'
     | '/admin/users'
     | '/analytics/ocr'
@@ -781,8 +814,11 @@ export interface FileRouteTypes {
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
+    | '/admin/roadmap'
+    | '/admin/saas-metrics'
     | '/admin/settings'
     | '/admin/storage'
+    | '/admin/support'
     | '/admin/system-report'
     | '/admin/users'
     | '/analytics/ocr'
@@ -1229,6 +1265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSystemReportRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/storage': {
       id: '/admin/storage'
       path: '/storage'
@@ -1241,6 +1284,20 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/saas-metrics': {
+      id: '/admin/saas-metrics'
+      path: '/saas-metrics'
+      fullPath: '/admin/saas-metrics'
+      preLoaderRoute: typeof AdminSaasMetricsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/roadmap': {
+      id: '/admin/roadmap'
+      path: '/roadmap'
+      fullPath: '/admin/roadmap'
+      preLoaderRoute: typeof AdminRoadmapRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/ocr': {
@@ -1319,8 +1376,11 @@ interface AdminRouteChildren {
   AdminGlobalRoute: typeof AdminGlobalRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminOcrRoute: typeof AdminOcrRoute
+  AdminRoadmapRoute: typeof AdminRoadmapRoute
+  AdminSaasMetricsRoute: typeof AdminSaasMetricsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStorageRoute: typeof AdminStorageRoute
+  AdminSupportRoute: typeof AdminSupportRoute
   AdminSystemReportRoute: typeof AdminSystemReportRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -1336,8 +1396,11 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminGlobalRoute: AdminGlobalRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminOcrRoute: AdminOcrRoute,
+  AdminRoadmapRoute: AdminRoadmapRoute,
+  AdminSaasMetricsRoute: AdminSaasMetricsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminStorageRoute: AdminStorageRoute,
+  AdminSupportRoute: AdminSupportRoute,
   AdminSystemReportRoute: AdminSystemReportRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
