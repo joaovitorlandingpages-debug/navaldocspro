@@ -168,7 +168,8 @@ function Customers() {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
@@ -235,6 +236,51 @@ function Customers() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {isLoading ? (
+            <div className="px-6 py-20 text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Carregando clientes...</p>
+            </div>
+          ) : customers.length === 0 ? (
+            <div className="px-6 py-20 text-center">
+              <Users className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Nenhum cliente encontrado</p>
+            </div>
+          ) : (
+            customers.map((c, i) => {
+              console.log("TABLES_MOBILE_OK");
+              return (
+                <div 
+                  key={i} 
+                  onClick={() => handleOpenDetails(c)}
+                  className="p-4 active:bg-slate-50 transition-colors space-y-3 cursor-pointer"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-bold text-navy">{c.name}</div>
+                      <div className="text-[10px] text-slate-400 font-mono tracking-tighter">{c.cpf_cnpj}</div>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest ${c.cpf_cnpj?.length > 14 ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-600'}`}>
+                      {c.cpf_cnpj?.length > 14 ? 'Empresa' : 'Individual'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
+                    <div className="flex items-center gap-1.5 text-slate-500 truncate">
+                      <Mail className="h-3 w-3" /> {c.email || "Sem e-mail"}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-slate-500 justify-end">
+                      <Ship className="h-3 w-3" /> {c.vessels?.[0]?.count || 0} Embarcações
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
         
         <div className="p-6 border-t flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
           <span>Mostrando {customers.length} clientes</span>
