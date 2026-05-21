@@ -179,6 +179,9 @@ function DashboardV2Layout() {
 
         <main className="flex-grow overflow-y-auto p-8">
            <DashboardV2Content />
+           <div className="p-8 pt-0">
+             <PerformanceMonitor />
+           </div>
         </main>
       </div>
     </div>
