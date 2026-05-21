@@ -48,11 +48,25 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const totalSteps = 6;
   const progressPercent = (step / totalSteps) * 100;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isQuickClientOpen, setIsQuickClientOpen] = useState(false);
+  const [isCreatingClient, setIsCreatingClient] = useState(false);
 
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [customers, setCustomers] = useState<any[]>([]);
   const [vessels, setVessels] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [newClient, setNewClient] = useState({
+    name: "",
+    document: "",
+    rg: "",
+    phone: "",
+    email: "",
+    address: "",
+    city: "",
+    state: "",
+    notes: ""
+  });
+
 
   const { requirements, isLoading: loadingReqs } = useProcessRequirements(formData.typeId);
   const { processTypes, isLoading: loadingTypes } = useProcessTypes();
