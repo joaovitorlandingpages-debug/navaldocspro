@@ -7,7 +7,8 @@ import {
   Tablet, ArrowRight, Activity, Search,
   Lock, LayoutDashboard, FileCheck, ClipboardList,
   PenTool, FolderKanban, Star, AlertTriangle,
-  History, Settings, BarChart3, Cloud, Globe, CreditCard, Sparkles, MonitorPlay, Rocket
+  History, Settings, BarChart3, Cloud, Globe, CreditCard, Sparkles, MonitorPlay, Rocket,
+  Download
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,16 +73,16 @@ export default function SystemReport() {
   ];
 
     const criticalChecklist = [
-     { label: "Isolamento por company_id (RLS)", status: "OK", icon: ShieldCheck },
-     { label: "Performance (Queries & Render)", status: "OK", icon: Zap },
-     { label: "Responsividade Desktop/Mobile", status: "OK", icon: Smartphone },
-     { label: "Fluxo Completo Step 1 ao 6", status: "OK", icon: ArrowRight },
-     { label: "Geração de PDFs Reais", status: "OK", icon: FileText },
-     { label: "Audit Trail & Segurança", status: "OK", icon: Lock },
-     { label: "Prontidão para Demonstração", status: "OK", icon: MonitorPlay },
-     { label: "Ambiente de Produção Estável", status: "OK", icon: ShieldCheck },
-     { label: "Políticas de Storage OK", status: "OK", icon: Database },
-     { label: "Consolidação Enterprise Final", status: "OK", icon: Sparkles },
+     { label: "Isolamento por company_id (RLS)", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
+     { label: "Performance (Queries & Render)", status: "OK", icon: Zap, color: "text-emerald-500" },
+     { label: "Responsividade Desktop/Mobile", status: "OK", icon: Smartphone, color: "text-emerald-500" },
+     { label: "Fluxo Completo Step 1 ao 6", status: "OK", icon: ArrowRight, color: "text-emerald-500" },
+     { label: "Geração de PDFs Reais", status: "OK", icon: FileText, color: "text-emerald-500" },
+     { label: "Audit Trail & Segurança", status: "OK", icon: Lock, color: "text-emerald-500" },
+     { label: "Prontidão para Demonstração", status: "OK", icon: MonitorPlay, color: "text-emerald-500" },
+     { label: "Ambiente de Produção Estável", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
+     { label: "Políticas de Storage OK", status: "OK", icon: Database, color: "text-emerald-500" },
+     { label: "Consolidação Enterprise Final", status: "OK", icon: Sparkles, color: "text-emerald-500" },
    ];
 
   return (
