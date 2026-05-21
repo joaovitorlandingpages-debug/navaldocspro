@@ -26,11 +26,20 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
   useEffect(() => {
     if (template?.base_content) {
       console.log("AUTOFILL_DOCUMENTS_OK");
+      console.log("DOCUMENT_AUTOFILL_READY");
       const filled = DocumentValidationEngine.fillPlaceholder(template.base_content, processData);
       setContent(filled);
       setStatus('auto_preenchido');
     }
   }, [template, processData]);
+
+  const handleRegenerate = () => {
+    if (template?.base_content) {
+      const filled = DocumentValidationEngine.fillPlaceholder(template.base_content, processData);
+      setContent(filled);
+      toast.info("Campos regenerados com dados do processo.");
+    }
+  };
 
   const handleApprove = () => {
     setStatus('aprovado');
