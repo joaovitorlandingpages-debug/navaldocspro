@@ -6,7 +6,7 @@ import {
   FileCheck, History, Info, Zap, Bot, Eye, Trash2,
   Image as ImageIcon, Send, Loader2, Target, Ban,
   FilePlus, RefreshCw, ChevronLeft, AlertTriangle,
-  Signature
+  Signature, FileSearch, Bot
 } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 import { Card } from "@/components/ui/card";
