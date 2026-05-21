@@ -38,7 +38,7 @@ export function WelcomeTour({
   const progress = (completedCount / steps.length) * 100;
 
   return (
-    <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] border border-slate-100 shadow-[0_50px_100px_rgba(0,0,0,0.15)] overflow-hidden animate-in fade-in slide-in-from-right-12 duration-1000 max-w-[calc(100vw-2rem)] md:max-w-md w-full fixed bottom-4 right-4 md:bottom-12 md:right-12 z-[90] ring-1 ring-navy/5">
+    <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] border border-slate-100 shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden animate-in fade-in zoom-in duration-700 max-w-[calc(100vw-2rem)] md:max-w-md w-full relative z-[110] ring-1 ring-navy/5">
       <div className="bg-[#000B18] p-10 text-white relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-full h-full bg-primary/10 blur-[60px] -mr-40 group-hover:bg-primary/20 transition-all duration-1000" />
         <button 
