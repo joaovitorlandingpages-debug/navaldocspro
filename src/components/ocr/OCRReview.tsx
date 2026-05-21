@@ -406,40 +406,78 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nome da Embarcação</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nome da Embarcação / Descrição Bem</Label>
                     <Input 
-                      value={editedData?.vessel_name || editedData?.vessel?.nome || ''} 
+                      value={editedData?.vessel_name || editedData?.description || editedData?.vessel?.nome || ''} 
                       onChange={(e) => setEditedData({...editedData, vessel_name: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nº Inscrição / TIE</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nº Inscrição / TIE / Chassis</Label>
                     <Input 
-                      value={editedData?.inscription || editedData?.vessel?.inscricao || ''} 
+                      value={editedData?.inscription || editedData?.serial_numbers?.hull || editedData?.vessel?.inscricao || ''} 
                       onChange={(e) => setEditedData({...editedData, inscription: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Proprietário (Extraído)</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipo / Categoria</Label>
                     <Input 
-                      value={editedData?.owner_name || editedData?.vessel?.proprietario || ''} 
-                      onChange={(e) => setEditedData({...editedData, owner_name: e.target.value})}
+                      value={editedData?.vessel_type || editedData?.navigation_category || editedData?.vessel?.tipo || ''} 
+                      onChange={(e) => setEditedData({...editedData, vessel_type: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
                   </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Motorização (Extraído)</Label>
+                    <Input 
+                      value={editedData?.engine || editedData?.serial_numbers?.engine || editedData?.vessel?.engine || ''} 
+                      onChange={(e) => setEditedData({...editedData, engine: e.target.value})}
+                      className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
+                    />
+                  </div>
+                  
+                  {editedData?.measurements && (
+                    <div className="grid grid-cols-3 gap-4 md:col-span-2">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Comprimento</Label>
+                        <Input 
+                          value={editedData.measurements.length || ''} 
+                          onChange={(e) => setEditedData({...editedData, measurements: {...editedData.measurements, length: e.target.value}})}
+                          className="rounded-2xl border-slate-100 bg-slate-50 h-10 font-bold" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Boca</Label>
+                        <Input 
+                          value={editedData.measurements.beam || ''} 
+                          onChange={(e) => setEditedData({...editedData, measurements: {...editedData.measurements, beam: e.target.value}})}
+                          className="rounded-2xl border-slate-100 bg-slate-50 h-10 font-bold" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Arqueação</Label>
+                        <Input 
+                          value={editedData.measurements.tonnage || ''} 
+                          onChange={(e) => setEditedData({...editedData, measurements: {...editedData.measurements, tonnage: e.target.value}})}
+                          className="rounded-2xl border-slate-100 bg-slate-50 h-10 font-bold" 
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {editedData?.engines && (
+                {(editedData?.engines || editedData?.serial_numbers) && (
                   <div className="mt-10 space-y-4">
                     <p className="text-[11px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-primary" /> Motores Detectados
+                      <Zap className="h-4 w-4 text-primary" /> Identificadores Técnicos
                     </p>
                     <div className="grid gap-3">
-                      {editedData.engines.map((eng: any, i: number) => (
+                      {editedData?.engines?.map((eng: any, i: number) => (
                         <div key={i} className="p-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="h-10 w-10 bg-white rounded-xl shadow-sm flex items-center justify-center">
@@ -453,6 +491,19 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
                           <Badge className="bg-green-500 text-white border-none text-[9px] font-black uppercase tracking-widest">OK</Badge>
                         </div>
                       ))}
+                      {editedData?.serial_numbers && (
+                         <div className="p-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] space-y-2">
+                            <p className="text-[10px] font-black text-navy uppercase tracking-widest">Números de Série NF</p>
+                            <div className="flex justify-between items-center">
+                               <span className="text-[10px] font-bold text-slate-500">CASCO:</span>
+                               <span className="text-[10px] font-black text-navy">{editedData.serial_numbers.hull}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                               <span className="text-[10px] font-bold text-slate-500">MOTOR:</span>
+                               <span className="text-[10px] font-black text-navy">{editedData.serial_numbers.engine}</span>
+                            </div>
+                         </div>
+                      )}
                     </div>
                   </div>
                 )}
