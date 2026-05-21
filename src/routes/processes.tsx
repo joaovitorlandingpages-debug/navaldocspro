@@ -14,8 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
 
-
-
 export const Route = createFileRoute("/processes")({
   component: Processes,
 });
@@ -75,7 +73,7 @@ function Processes() {
     }, 300);
 
     return () => clearTimeout(debounceTimer);
-  }, [page, searchTerm]);
+  }, [page, searchTerm, profile?.company_id]);
 
   useEffect(() => {
     console.log("PERFORMANCE_AUDIT_OK");
@@ -145,7 +143,6 @@ function Processes() {
             }}
             className="flex-grow sm:flex-initial bg-primary text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/20"
           >
-
             <Plus className="h-4 w-4 inline mr-2" /> Novo Processo
           </button>
         </div>
@@ -229,35 +226,8 @@ function Processes() {
                       title="Nenhum processo"
                       description="Esta etapa está livre. Nenhuma ação pendente aqui."
                     />
-        <div className="p-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-          <span>Mostrando {processes.length} de {totalCount} processos</span>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200"
-              onClick={() => setPage(prev => Math.max(1, prev - 1))}
-              disabled={page === 1}
-            >
-              Anterior
-            </Button>
-            <div className="flex items-center gap-1">
-              <span className="px-3 h-8 flex items-center bg-primary text-white rounded-lg shadow-sm">{page}</span>
-              <span className="text-slate-300">/</span>
-              <span className="px-3 h-8 flex items-center text-navy font-bold">{Math.ceil(totalCount / pageSize) || 1}</span>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200"
-              onClick={() => setPage(prev => prev + 1)}
-              disabled={page >= Math.ceil(totalCount / pageSize)}
-            >
-              Próximo
-            </Button>
-          </div>
-        </div>
-      )}
+                  </div>
+                )}
 
                 <button 
                   onClick={() => setIsNewProcessOpen(true)}
@@ -271,7 +241,6 @@ function Processes() {
         </div>
       ) : (
         <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-          {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left">
               <thead>
@@ -328,7 +297,6 @@ function Processes() {
             </table>
           </div>
 
-          {/* Mobile Card View */}
           <div className="md:hidden divide-y divide-slate-100">
             {isLoading ? (
               <div className="p-10 text-center">
@@ -367,7 +335,37 @@ function Processes() {
             ))}
           </div>
         </div>
+      )}
 
+      {!isLoading && totalCount > 0 && (
+        <div className="p-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white rounded-b-[2rem]">
+          <span>Mostrando {processes.length} de {totalCount} processos</span>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200 bg-white"
+              onClick={() => setPage(prev => Math.max(1, prev - 1))}
+              disabled={page === 1}
+            >
+              Anterior
+            </Button>
+            <div className="flex items-center gap-1">
+              <span className="px-3 h-8 flex items-center bg-primary text-white rounded-lg shadow-sm">{page}</span>
+              <span className="text-slate-300">/</span>
+              <span className="px-3 h-8 flex items-center text-navy font-bold">{Math.ceil(totalCount / pageSize) || 1}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200 bg-white"
+              onClick={() => setPage(prev => prev + 1)}
+              disabled={page >= Math.ceil(totalCount / pageSize)}
+            >
+              Próximo
+            </Button>
+          </div>
+        </div>
       )}
 
       <UpgradeModal 
@@ -378,6 +376,5 @@ function Processes() {
         current={upgradeModal.current}
       />
     </div>
-
   );
 }
