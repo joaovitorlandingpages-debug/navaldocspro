@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
+
 import { 
   X, Check, ChevronRight, ChevronLeft, 
   Ship, User, FileText, ClipboardCheck, 
@@ -23,6 +25,7 @@ import { useProcessRequirements, useProcessTypes } from "@/hooks/useProcessRequi
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
+
 interface NewProcessWizardProps {
   isOpen: boolean;
   onClose: () => void;
@@ -44,17 +47,22 @@ const INITIAL_FORM_DATA = {
 export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const { profile } = useAuth();
   const [step, setStep] = useState(1);
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const totalSteps = 6;
   const progressPercent = (step / totalSteps) * 100;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuickClientOpen, setIsQuickClientOpen] = useState(false);
   const [isCreatingClient, setIsCreatingClient] = useState(false);
+  const [isQuickVesselOpen, setIsQuickVesselOpen] = useState(false);
+  const [isCreatingVessel, setIsCreatingVessel] = useState(false);
 
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [customers, setCustomers] = useState<any[]>([]);
   const [vessels, setVessels] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [vesselSearchTerm, setVesselSearchTerm] = useState("");
   const [newClient, setNewClient] = useState({
     name: "",
     document: "",
@@ -66,6 +74,20 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     state: "",
     notes: ""
   });
+
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [ocrStatus, setOcrStatus] = useState<Record<string, string>>({});
+
+
+  const [newVessel, setNewVessel] = useState({
+    name: "",
+    registration_number: "",
+    vessel_type: "",
+    engine: "",
+    category: "",
+    notes: ""
+  });
+
 
 
   const { requirements, isLoading: loadingReqs } = useProcessRequirements(formData.typeId);
@@ -121,20 +143,101 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   }, [step, searchTerm]);
 
 
-  useEffect(() => {
-    async function fetchVessels() {
-      if (step === 3 && formData.clientId) {
-        setLoading(true);
-        const { data } = await supabase
-          .from('vessels')
-          .select('id, name')
-          .eq('customer_id', formData.clientId);
-        setVessels(data || []);
-        setLoading(false);
-      }
+  const fetchVesselsList = async (forceSearchTerm?: string) => {
+    if (!formData.clientId) return;
+    
+    setLoading(true);
+    console.log("PROCESS_TYPES_LOADING", "vessels");
+    
+    const query = supabase
+      .from('vessels')
+      .select('id, name, registration_number, vessel_type')
+      .eq('customer_id', formData.clientId);
+    
+    const finalSearch = forceSearchTerm !== undefined ? forceSearchTerm : vesselSearchTerm;
+    if (finalSearch) {
+      query.ilike('name', `%${finalSearch}%`);
     }
-    fetchVessels();
-  }, [step, formData.clientId]);
+
+    const { data, error } = await query.limit(10);
+    
+    if (error) {
+      console.error("Error fetching vessels", error);
+      setVessels([]);
+    } else {
+      setVessels(data || []);
+      console.log("STEP_3_VESSEL_OK", data?.length);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (step === 3 && formData.clientId) {
+      fetchVesselsList();
+    }
+  }, [step, formData.clientId, vesselSearchTerm]);
+
+  const handleQuickVesselSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile?.company_id) {
+      toast.error("Empresa não identificada.");
+      return;
+    }
+
+    if (!formData.clientId) {
+      toast.error("Selecione um cliente primeiro.");
+      return;
+    }
+
+    if (!newVessel.name) {
+      toast.error("O nome da embarcação é obrigatório.");
+      return;
+    }
+
+    setIsCreatingVessel(true);
+    console.log("VESSEL_CREATE_SUBMIT_OK");
+    
+    try {
+      const { data, error } = await supabase
+        .from('vessels')
+        .insert({
+          company_id: profile.company_id,
+          customer_id: formData.clientId,
+          name: newVessel.name,
+          registration_number: newVessel.registration_number,
+          vessel_type: newVessel.vessel_type,
+          engine: newVessel.engine,
+          category: newVessel.category,
+          notes: newVessel.notes
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log("VESSEL_INSERT_OK", data.id);
+      toast.success("Embarcação criada e vinculada com sucesso!");
+      
+      setFormData({ ...formData, vessel: data.name, vesselId: data.id });
+      setIsQuickVesselOpen(false);
+      setNewVessel({
+        name: "",
+        registration_number: "",
+        vessel_type: "",
+        engine: "",
+        category: "",
+        notes: ""
+      });
+
+      await fetchVesselsList("");
+    } catch (error: any) {
+      console.error("Error creating vessel", error);
+      toast.error("Erro ao criar embarcação: " + error.message);
+    } finally {
+      setIsCreatingVessel(false);
+    }
+  };
+
 
   const handleQuickClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -227,11 +330,26 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
 
   const handleNext = () => {
+    if (step === 1 && !formData.typeId) {
+      toast.error("Selecione o tipo de processo.");
+      return;
+    }
+    if (step === 2 && !formData.clientId) {
+      toast.error("Selecione um cliente.");
+      return;
+    }
+    if (step === 3 && !formData.vesselId) {
+      toast.error("Selecione uma embarcação.");
+      return;
+    }
+
     if (step < totalSteps) {
       setStep(step + 1);
-      console.log("STEP_VALIDATION_OK", step);
+      const logTags = ["STEP_1_OK", "STEP_2_CLIENT_OK", "STEP_3_VESSEL_OK", "STEP_4_CHECKLIST_OK", "STEP_5_UPLOAD_OCR_OK", "STEP_6_REVIEW_OK"];
+      console.log(logTags[step - 1]);
     }
   };
+
 
 
   const handleBack = () => {
@@ -248,6 +366,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     }
     
     setIsSubmitting(true);
+    console.log("PROCESS_CREATE_SUBMIT_OK");
+    
     try {
       // 1. Create the process
       const { data: processData, error: processError } = await supabase
@@ -263,7 +383,6 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           compliance_status: 'incompleto',
           notes: formData.notes
         })
-
         .select()
         .single();
 
@@ -278,14 +397,12 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             process_id: processData.id,
             item_name: req.template?.name || "Documento sem nome",
             is_mandatory: req.is_mandatory,
-            status: 'pendente',
-            document_role: req.document_role
+            status: 'pendente'
           });
         });
       }
 
       if (checklistItems.length > 0) {
-        // First verify if column exists, then insert
         const { error: checklistError } = await supabase
           .from('document_checklists')
           .insert(checklistItems);
@@ -294,7 +411,36 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         console.log("PROCESS_CHECKLIST_CREATED", checklistItems.length);
       }
 
-      // 3. Register creation in compliance history
+      // 3. Handle File Uploads
+      if (selectedFiles.length > 0) {
+        console.log("UPLOADING_FILES", selectedFiles.length);
+        for (const file of selectedFiles) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${processData.id}/${crypto.randomUUID()}.${fileExt}`;
+          const filePath = fileName;
+
+          const { error: uploadError } = await supabase.storage
+            .from('process-attachments')
+            .upload(filePath, file);
+
+          if (uploadError) {
+            console.error("Error uploading file:", uploadError);
+          } else {
+            // Create document record
+            await supabase.from('documents').insert({
+              company_id: profile.company_id,
+              process_id: processData.id,
+              customer_id: formData.clientId,
+              vessel_id: formData.vesselId,
+              document_type: 'attachment',
+              status: 'uploaded',
+              file_url: filePath
+            });
+          }
+        }
+      }
+
+      // 4. Register creation in compliance history
       await supabase.from('compliance_history').insert({
         process_id: processData.id,
         event_type: 'creation',
@@ -303,17 +449,22 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         module: 'process_wizard'
       });
 
-
-      console.log("PROCESS_CREATED_OK");
-      toast.success("Processo e pacote documental configurados!");
+      console.log("PROCESS_CREATED_OK", processData.id);
+      toast.success("Processo criado com sucesso!");
+      
       clearDraft();
       onClose();
+      
+      // Redirect to the new process page
+      navigate({ to: `/processes/${processData.id}` });
     } catch (err: any) {
+      console.error("Error creating process:", err);
       toast.error("Erro ao criar processo: " + err.message);
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   const renderStep = () => {
     console.log("FORM_STATE_OK", formData);
@@ -458,7 +609,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               <Input 
                 placeholder="Buscar embarcação..." 
                 className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl"
+                value={vesselSearchTerm}
+                onChange={(e) => setVesselSearchTerm(e.target.value)}
               />
+
             </div>
             
             <div className="space-y-2">
@@ -492,10 +646,15 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             </div>
 
             <div className="pt-4 border-t border-slate-100">
-               <Button variant="outline" className="w-full h-12 rounded-xl border-dashed gap-2">
-                  <Plus className="h-4 w-4" /> Vincular nova embarcação
+               <Button 
+                 variant="outline" 
+                 className="w-full h-12 rounded-xl border-dashed gap-2"
+                 onClick={() => setIsQuickVesselOpen(true)}
+               >
+                  <Plus className="h-4 w-4" /> Criar nova embarcação rapidamente
                </Button>
             </div>
+
           </div>
         );
       case 4:
@@ -543,49 +702,117 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                            </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full opacity-0 group-hover:opacity-100">
-                         <Plus className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 rounded-full text-slate-400 hover:text-primary"
+                          onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.onchange = (e: any) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                setSelectedFiles(prev => [...prev, file]);
+                                toast.success(`Arquivo ${file.name} anexado ao rascunho.`);
+                              }
+                            };
+                            input.click();
+                          }}
+                        >
+                           <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
               </ScrollArea>
+            )}
+            {requirements.length > 0 && (
+              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
+                <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
+                <p className="text-[10px] text-amber-700 leading-tight">Você pode avançar com pendências. O sistema marcará os itens não enviados como "Pendente" automaticamente.</p>
+              </div>
             )}
           </div>
         );
       case 5:
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-             <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-amber-500" />
-                <p className="text-xs text-amber-700 font-medium">Os campos abaixo foram preenchidos automaticamente com base nos dados do cliente e da embarcação.</p>
-             </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                   <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Upload & OCR</Label>
+                   <div 
+                     className="border-2 border-dashed border-slate-200 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 hover:border-primary/50 transition-all cursor-pointer bg-slate-50/50 group"
+                     onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.multiple = true;
+                        input.onchange = (e: any) => {
+                           const files = Array.from(e.target.files) as File[];
+                           setSelectedFiles(prev => [...prev, ...files]);
+                        };
+                        input.click();
+                     }}
+                   >
+                      <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform">
+                         <Plus className="h-6 w-6" />
+                      </div>
+                      <div className="text-center">
+                         <p className="text-sm font-bold text-navy">Clique para selecionar arquivos</p>
+                         <p className="text-[10px] text-slate-400 font-medium">PDF, JPG, PNG (Max 10MB)</p>
+                      </div>
+                   </div>
 
-             <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                   <Label className="text-[10px] uppercase font-black text-slate-400">Nome do Requerente</Label>
-                   <Input defaultValue={formData.client} className="bg-slate-50 border-slate-200" readOnly />
+                   <div className="space-y-2">
+                      {selectedFiles.map((file, i) => (
+                         <div key={i} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                               <FileCheck className="h-4 w-4 text-green-500 flex-shrink-0" />
+                               <span className="text-xs font-bold text-navy truncate">{file.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                               <Badge className="bg-slate-100 text-slate-500 border-none text-[8px] uppercase">Aguardando</Badge>
+                               <button 
+                                 onClick={() => setSelectedFiles(prev => prev.filter((_, idx) => idx !== i))}
+                                 className="p-1 hover:text-red-500"
+                               >
+                                  <X className="h-3 w-3" />
+                               </button>
+                            </div>
+                         </div>
+                      ))}
+                   </div>
                 </div>
-                <div className="space-y-1.5">
-                   <Label className="text-[10px] uppercase font-black text-slate-400">Embarcação</Label>
-                   <Input defaultValue={formData.vessel} className="bg-slate-50 border-slate-200" readOnly />
-                </div>
-                <div className="space-y-1.5">
-                   <Label className="text-[10px] uppercase font-black text-slate-400">Data de Solicitação</Label>
-                   <Input defaultValue={new Date().toLocaleDateString('pt-BR')} className="bg-slate-50 border-slate-200" readOnly />
-                </div>
-                <div className="space-y-1.5">
-                   <Label className="text-[10px] uppercase font-black text-slate-400">Responsável Técnico</Label>
-                   <Input placeholder="Selecione..." className="bg-white border-primary/20 shadow-sm" />
-                   <p className="text-[9px] text-red-500 font-bold">* Campo obrigatório</p>
-                </div>
-                <div className="col-span-2 space-y-1.5">
-                   <Label className="text-[10px] uppercase font-black text-slate-400">Objeto da Solicitação</Label>
-                   <textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm min-h-[80px]" defaultValue={`Solicitação de ${formData.type} para a embarcação ${formData.vessel}.`} />
+
+                <div className="space-y-4">
+                   <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Documentos Geráveis</Label>
+                   <div className="space-y-2">
+                      {[
+                        { name: "BCE - Boletim de Cadastro", status: "ready" },
+                        { name: "DPC-2211 - Inscrição", status: "ready" },
+                        { name: "Procuração Naval", status: "ready" },
+                        { name: "Declaração de Responsabilidade", status: "ready" },
+                        { name: "Memorial Descritivo", status: "ready" }
+                      ].map((doc, i) => (
+                         <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl group hover:border-primary/20 transition-all">
+                            <div className="flex items-center gap-3">
+                               <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
+                                  <Zap className="h-4 w-4" />
+                               </div>
+                               <span className="text-xs font-bold text-navy">{doc.name}</span>
+                            </div>
+                            <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full text-[10px] font-black uppercase text-primary hover:bg-primary/5">
+                               Gerar
+                            </Button>
+                         </div>
+                      ))}
+                   </div>
                 </div>
              </div>
           </div>
         );
+
       case 6:
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -621,10 +848,15 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                    <span className="text-slate-500 font-medium">Documentos vinculados</span>
                    <span className="text-navy font-bold">{requirements.length} itens</span>
                 </div>
-                <div className="flex justify-between items-center text-xs px-2">
-                   <span className="text-slate-500 font-medium">Prazo estimado</span>
-                   <span className="text-navy font-bold">15 dias úteis</span>
-                </div>
+                 <div className="flex justify-between items-center text-xs px-2">
+                    <span className="text-slate-500 font-medium">Arquivos para upload</span>
+                    <span className="text-navy font-bold">{selectedFiles.length} arquivos</span>
+                 </div>
+                 <div className="flex justify-between items-center text-xs px-2">
+                    <span className="text-slate-500 font-medium">Prazo estimado</span>
+                    <span className="text-navy font-bold">15 dias úteis</span>
+                 </div>
+
              </div>
 
              <div className="p-4 bg-green-50 border border-green-100 rounded-2xl flex items-center gap-3">
@@ -843,8 +1075,99 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Criação Rápida de Embarcação */}
+      <Dialog open={isQuickVesselOpen} onOpenChange={setIsQuickVesselOpen}>
+        <DialogContent className="max-w-md p-8 bg-white border-none rounded-[2rem] shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-navy uppercase tracking-tight">Nova Embarcação Rápida</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleQuickVesselSubmit} className="space-y-4 pt-4">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Nome da Embarcação</Label>
+              <Input 
+                required
+                value={newVessel.name}
+                onChange={(e) => setNewVessel({...newVessel, name: e.target.value})}
+                placeholder="Ex: My Boat"
+                className="rounded-xl border-slate-200" 
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Inscrição / TIE</Label>
+                <Input 
+                  value={newVessel.registration_number}
+                  onChange={(e) => setNewVessel({...newVessel, registration_number: e.target.value})}
+                  placeholder="000.000000-0"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Tipo (Lancha, Veleiro...)</Label>
+                <Input 
+                  value={newVessel.vessel_type}
+                  onChange={(e) => setNewVessel({...newVessel, vessel_type: e.target.value})}
+                  placeholder="Ex: Lancha"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Motorização</Label>
+                <Input 
+                  value={newVessel.engine}
+                  onChange={(e) => setNewVessel({...newVessel, engine: e.target.value})}
+                  placeholder="Ex: Volvo 200HP"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Categoria (Esporte/Recreio...)</Label>
+                <Input 
+                  value={newVessel.category}
+                  onChange={(e) => setNewVessel({...newVessel, category: e.target.value})}
+                  placeholder="Ex: Esporte"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Observações Técnicas</Label>
+              <textarea 
+                className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm min-h-[80px]"
+                value={newVessel.notes}
+                onChange={(e) => setNewVessel({...newVessel, notes: e.target.value})}
+                placeholder="Detalhes adicionais..."
+              />
+            </div>
+
+            <div className="pt-4 flex gap-3">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setIsQuickVesselOpen(false)}
+                className="flex-1 rounded-xl h-12"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isCreatingVessel}
+                className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
+              >
+                {isCreatingVessel ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Embarcação"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
+
+
 
 
