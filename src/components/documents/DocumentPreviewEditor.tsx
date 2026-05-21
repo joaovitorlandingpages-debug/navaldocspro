@@ -33,10 +33,13 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
   const [procuracaoType, setProcuracaoType] = useState("Procuração Geral para Processo Naval");
   const [memorialType, setMemorialType] = useState("Memorial Técnico de Embarcação");
   const [declaracaoType, setDeclaracaoType] = useState("Declaração Geral");
+  const [termoType, setTermoType] = useState("Responsabilidade Técnica Geral");
 
   const isProcuracao = template?.name?.includes("Procuração");
   const isMemorial = template?.name?.includes("Memorial");
   const isDeclaracao = template?.name?.includes("Declaração");
+  const isTermo = template?.name?.includes("Termo de Responsabilidade");
+
 
 
 
@@ -74,6 +77,15 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
       setContent(filled);
     }
   }, [declaracaoType, isDeclaracao, template, processData]);
+
+  useEffect(() => {
+    if (isTermo && template?.base_content) {
+      const updatedProcessData = { ...processData, process_type: termoType };
+      const filled = DocumentValidationEngine.fillPlaceholder(template.base_content, updatedProcessData);
+      setContent(filled);
+    }
+  }, [termoType, isTermo, template, processData]);
+
 
 
 
@@ -263,7 +275,27 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                       </div>
                     )}
 
+                    {isTermo && (
+                      <div className="space-y-2 p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                        <p className="text-[10px] font-black uppercase text-navy">Tipo de Termo</p>
+                        <Select value={termoType} onValueChange={setTermoType}>
+                          <SelectTrigger className="w-full text-xs font-bold h-9 rounded-lg border-slate-200">
+                            <SelectValue placeholder="Selecione o tipo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Responsabilidade Técnica Geral">Responsabilidade Técnica Geral</SelectItem>
+                            <SelectItem value="Alteração de Motor">Alteração de Motor</SelectItem>
+                            <SelectItem value="Regularização">Regularização</SelectItem>
+                            <SelectItem value="Registro Inicial">Registro Inicial</SelectItem>
+                            <SelectItem value="Vistoria Técnica">Vistoria Técnica</SelectItem>
+                            <SelectItem value="Memorial Técnico">Memorial Técnico</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
                     <p className="text-[10px] font-black uppercase text-navy">Mapeamento Inteligente (OCR/BD)</p>
+
 
 
 
@@ -326,7 +358,11 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                        if (template.name.includes("Declaração")) {
                          console.log("DECLARACAO_PDF_OK");
                        }
+                       if (template.name.includes("Termo de Responsabilidade")) {
+                         console.log("TERMO_TECNICO_PDF_OK");
+                       }
                        handleApprove();
+
 
 
 
