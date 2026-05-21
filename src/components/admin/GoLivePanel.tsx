@@ -1,13 +1,84 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   CheckCircle2, Activity, Database, Cloud, 
   FileText, CreditCard, Globe, Zap, 
-  ShieldCheck, RefreshCw, Server
+  ShieldCheck, RefreshCw, Server, History, AlertTriangle, Settings, ArrowUpCircle, Info, Filter, Plus, Hammer, Trash2, Power
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 export function GoLivePanel() {
+  const queryClient = useQueryClient();
+  const [activeSubTab, setActiveSubTab] = useState<'monitoring' | 'flags' | 'versioning' | 'incidents'>('monitoring');
+  const [newFlagName, setNewFlagName] = useState("");
+
+  const { data: flags } = useQuery({
+    queryKey: ["admin-feature-flags"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("feature_flags").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: version } = useQuery({
+    queryKey: ["admin-system-version"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("system_settings").select("*").eq("key", "system_version").single();
+      if (error) throw error;
+      return data?.value;
+    }
+  });
+
+  const { data: incidents } = useQuery({
+    queryKey: ["admin-system-incidents"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("system_incidents").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const updateFlagMutation = useMutation({
+    mutationFn: async ({ id, is_enabled }: { id: string, is_enabled: boolean }) => {
+      const { error } = await supabase.from("feature_flags").update({ is_enabled }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-feature-flags"] });
+      toast.success("Feature flag atualizada com sucesso");
+    }
+  });
+
+  const addFlagMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const { error } = await supabase.from("feature_flags").insert([{ name, is_enabled: false }]);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-feature-flags"] });
+      setNewFlagName("");
+      toast.success("Feature flag criada");
+    }
+  });
+
+  const deleteFlagMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("feature_flags").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-feature-flags"] });
+      toast.success("Feature flag removida");
+    }
+  });
   const statusItems = [
     { name: "OCR Processing", status: "Online", icon: Zap, latency: "240ms", color: "text-emerald-500" },
     { name: "PDF Generation", status: "Online", icon: FileText, latency: "450ms", color: "text-emerald-500" },
