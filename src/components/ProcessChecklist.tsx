@@ -78,6 +78,7 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
     );
   }
 
+  console.log("DOCUMENT_FLOW_READY");
   return (
     <div className="space-y-6">
       <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between">
