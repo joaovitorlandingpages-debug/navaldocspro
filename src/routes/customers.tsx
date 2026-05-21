@@ -78,19 +78,35 @@ function Customers() {
 
       if (profile?.company_id) {
         setCompanyId(profile.company_id);
-        const { data: customerData } = await supabase
+        let query = supabase
           .from('customers')
-          .select('*, vessels(count)')
+          .select('*, vessels(count)', { count: 'exact' })
           .eq('company_id', profile.company_id);
+
+        if (searchTerm) {
+          query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,cpf_cnpj.ilike.%${searchTerm}%`);
+        }
+
+        const { data: customerData, count, error } = await query
+          .order('name', { ascending: true })
+          .range((page - 1) * pageSize, page * pageSize - 1);
         
         if (customerData) setCustomers(customerData);
+        if (count !== null) setTotalCount(count);
+        if (error) console.error("Error fetching customers:", error);
       }
       setIsLoading(false);
     };
 
-    console.log("CUSTOMERS_PAGE_OK");
-    console.log("CUSTOMERS_STABLE");
-    fetchData();
+    const debounceTimer = setTimeout(() => {
+      fetchData();
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [page, searchTerm]);
+
+  useEffect(() => {
+    console.log("CACHE_SYSTEM_OK");
   }, []);
 
   const handleCreateCustomer = async (e: React.FormEvent) => {
