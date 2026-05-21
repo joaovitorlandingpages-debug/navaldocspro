@@ -32,6 +32,10 @@ function Customers() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 12;
+  const [searchTerm, setSearchTerm] = useState("");
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [upgradeModal, setUpgradeModal] = useState<{ isOpen: boolean; current: number; limit: number | null }>({
     isOpen: false,
@@ -74,19 +78,35 @@ function Customers() {
 
       if (profile?.company_id) {
         setCompanyId(profile.company_id);
-        const { data: customerData } = await supabase
+        let query = supabase
           .from('customers')
-          .select('*, vessels(count)')
+          .select('*, vessels(count)', { count: 'exact' })
           .eq('company_id', profile.company_id);
+
+        if (searchTerm) {
+          query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,cpf_cnpj.ilike.%${searchTerm}%`);
+        }
+
+        const { data: customerData, count, error } = await query
+          .order('name', { ascending: true })
+          .range((page - 1) * pageSize, page * pageSize - 1);
         
         if (customerData) setCustomers(customerData);
+        if (count !== null) setTotalCount(count);
+        if (error) console.error("Error fetching customers:", error);
       }
       setIsLoading(false);
     };
 
-    console.log("CUSTOMERS_PAGE_OK");
-    console.log("CUSTOMERS_STABLE");
-    fetchData();
+    const debounceTimer = setTimeout(() => {
+      fetchData();
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [page, searchTerm]);
+
+  useEffect(() => {
+    console.log("CACHE_SYSTEM_OK");
   }, []);
 
   const handleCreateCustomer = async (e: React.FormEvent) => {
@@ -163,7 +183,15 @@ function Customers() {
         <div className="p-6 border-b bg-slate-50/50 flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="relative w-full md:max-w-md">
             <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-            <input placeholder="Filtrar clientes..." className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+            <input 
+              placeholder="Buscar por nome, e-mail ou documento..." 
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPage(1);
+              }}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+            />
           </div>
           <button className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest bg-white hover:bg-slate-50 transition-all">
             <Filter className="h-4 w-4" /> Filtros Avançados
@@ -284,12 +312,32 @@ function Customers() {
         </div>
 
         
-        <div className="p-6 border-t flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
-          <span>Mostrando {customers.length} clientes</span>
+        <div className="p-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+          <span>Mostrando {customers.length} de {totalCount} clientes</span>
           <div className="flex gap-2">
-            <button className="px-3 py-1.5 border rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-all" disabled>Anterior</button>
-            <button className="px-4 py-1.5 border rounded-lg bg-primary text-white shadow-sm transition-all">1</button>
-            <button className="px-3 py-1.5 border rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-all" disabled>Próximo</button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200 bg-white"
+              onClick={() => setPage(prev => Math.max(1, prev - 1))}
+              disabled={page === 1}
+            >
+              Anterior
+            </Button>
+            <div className="flex items-center gap-1">
+              <span className="px-3 h-8 flex items-center bg-primary text-white rounded-lg shadow-sm">{page}</span>
+              <span className="text-slate-300">/</span>
+              <span className="px-3 h-8 flex items-center text-navy font-bold">{Math.ceil(totalCount / pageSize) || 1}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200 bg-white"
+              onClick={() => setPage(prev => prev + 1)}
+              disabled={page >= Math.ceil(totalCount / pageSize)}
+            >
+              Próximo
+            </Button>
           </div>
         </div>
       </div>

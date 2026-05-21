@@ -20,6 +20,7 @@ import { useNewProcess } from "@/hooks/useNewProcess";
 import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidgets";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { OperationalCharts } from "@/components/OperationalCharts";
+import { PerformanceMonitor } from "@/components/performance/PerformanceMonitor";
 
 export const Route = createFileRoute("/dashboard-v2")({
   component: () => (
@@ -38,18 +39,13 @@ function DashboardV2Layout() {
   useEffect(() => {
     if (!loading && profile) {
       if (profile.role === 'customer' || profile.role === 'client') {
-        console.log("DASHBOARD_V2_REDIRECT_CLIENT");
         navigate({ to: "/client-portal" });
       }
     }
   }, [profile, loading, navigate]);
 
   useEffect(() => {
-    console.log("DASHBOARD_V2_RENDERED");
-    console.log("DASHBOARD_STABLE");
-    console.log("LAYOUT_OVERFLOW_FIXED");
-    console.log("SINGLE_SCROLL_OK");
-    console.log("DASHBOARD_HEIGHT_OK");
+    import("@/utils/enterpriseScale").then(m => m.EnterpriseScale.audit());
   }, []);
 
   const handleLogout = async () => {
@@ -179,6 +175,9 @@ function DashboardV2Layout() {
 
         <main className="flex-grow overflow-y-auto p-8">
            <DashboardV2Content />
+           <div className="p-8 pt-0">
+             <PerformanceMonitor />
+           </div>
         </main>
       </div>
     </div>

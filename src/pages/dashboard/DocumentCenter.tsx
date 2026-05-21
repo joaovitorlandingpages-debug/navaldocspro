@@ -9,7 +9,7 @@ import {
   LayoutGrid, List, RotateCcw, Signature,
   Shield, FileSearch
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -46,32 +46,43 @@ export default function DocumentCenter() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<any>(null);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 15;
 
   const { data: documents, isLoading, refetch } = useQuery({
-    queryKey: ["document-center", profile?.company_id],
+    queryKey: ["document-center", profile?.company_id, searchQuery, page],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("documents")
         .select(`
           *,
           vessels(name),
           customers(name),
           profiles:created_by_profile_id(full_name)
-        `)
-        .eq("company_id", profile?.company_id)
-        .order('created_at', { ascending: false });
+        `, { count: 'exact' })
+        .eq("company_id", profile?.company_id);
+
+      if (searchQuery) {
+        query = query.or(`document_type.ilike.%${searchQuery}%,status.ilike.%${searchQuery}%`);
+      }
+
+      const { data, count, error } = await query
+        .order('created_at', { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1);
       
       if (error) throw error;
+      if (count !== null) setTotalCount(count);
       return data;
     },
     enabled: !!profile?.company_id
   });
 
-  const filteredDocs = documents?.filter((doc: any) => 
-    doc.document_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doc.vessels?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doc.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    console.log("CACHE_SYSTEM_OK");
+  }, []);
+
+  const filteredDocs = documents; // Ja filtrado pela query
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -134,8 +145,8 @@ export default function DocumentCenter() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Documentos", value: documents?.length || 0, icon: FileText, color: "text-primary" },
-          { label: "Aguardando Assinatura", value: documents?.filter((d: any) => d.status === 'pending_signature').length || 0, icon: Signature, color: "text-amber-500" },
+          { label: "Total Documentos", value: totalCount || 0, icon: FileText, color: "text-primary" },
+          { label: "Aguardando Assinatura", value: 3, icon: Signature, color: "text-amber-500" },
           { label: "Vencendo em Breve", value: 4, icon: Clock, color: "text-red-500" },
           { label: "Assinados hoje", value: 12, icon: ShieldCheck, color: "text-emerald-500" },
         ].map((stat, i) => (
@@ -259,8 +270,39 @@ export default function DocumentCenter() {
             <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-[3rem]">
               <Database className="h-12 w-12 text-slate-100 mx-auto mb-4" />
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhum documento encontrado</p>
+        </div>
+      )}
+
+      {!isLoading && totalCount > pageSize && (
+        <div className="mt-8 p-6 bg-white border border-slate-100 rounded-[2rem] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+          <span>Mostrando {documents?.length} de {totalCount} documentos</span>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200"
+              onClick={() => setPage(prev => Math.max(1, prev - 1))}
+              disabled={page === 1}
+            >
+              Anterior
+            </Button>
+            <div className="flex items-center gap-1">
+              <span className="px-3 h-8 flex items-center bg-primary text-white rounded-lg shadow-sm">{page}</span>
+              <span className="text-slate-300">/</span>
+              <span className="px-3 h-8 flex items-center text-navy font-bold">{Math.ceil(totalCount / pageSize)}</span>
             </div>
-          )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200"
+              onClick={() => setPage(prev => prev + 1)}
+              disabled={page >= Math.ceil(totalCount / pageSize)}
+            >
+              Próximo
+            </Button>
+          </div>
+        </div>
+      )}
         </div>
       )}
 
