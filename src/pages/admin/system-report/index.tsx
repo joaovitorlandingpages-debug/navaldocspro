@@ -321,21 +321,12 @@ export default function SystemReport() {
              </CardHeader>
              <CardContent className="p-6 pt-0 space-y-3">
                 {[
-                  { label: "Operational Excellence Framework", icon: ShieldCheck },
-                  { label: "Infinite Enterprise Stability", icon: Sparkles },
+                  { label: "Enterprise Permanence Framework", icon: ShieldCheck },
+                  { label: "Infinite Operational Continuity", icon: Sparkles },
                   { label: "Sustainable SaaS Governance", icon: LifeBuoy },
-                  { label: "Long-Term Operational Resilience", icon: ActivitySquare },
-                  { label: "NavalDocs Enterprise Excellence Platform", icon: Award },
+                  { label: "Long-Term Enterprise Stability", icon: ActivitySquare },
+                  { label: "NavalDocs Enterprise Permanence Platform", icon: Award },
                   { label: "Absolute Quality Seal", icon: Verified },
-
-
-
-
-
-
-
-
-
                 ].map((status, i) => (
                   <div key={i} className="flex items-center justify-between">
                      <div className="flex items-center gap-2">
