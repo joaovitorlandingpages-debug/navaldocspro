@@ -221,7 +221,7 @@ export function GoLivePanel() {
              </CardHeader>
              <CardContent className="p-0">
                <div className="divide-y divide-slate-50">
-                 {flags?.map((flag) => (
+                 {flags?.map((flag: any) => (
                    <div key={flag.id} className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors">
                      <div className="flex items-center gap-4">
                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${flag.is_enabled ? 'bg-emerald-50 text-emerald-500' : 'bg-slate-50 text-slate-400'}`}>
