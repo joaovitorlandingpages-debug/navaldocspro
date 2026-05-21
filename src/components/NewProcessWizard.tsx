@@ -325,11 +325,26 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
 
   const handleNext = () => {
+    if (step === 1 && !formData.typeId) {
+      toast.error("Selecione o tipo de processo.");
+      return;
+    }
+    if (step === 2 && !formData.clientId) {
+      toast.error("Selecione um cliente.");
+      return;
+    }
+    if (step === 3 && !formData.vesselId) {
+      toast.error("Selecione uma embarcação.");
+      return;
+    }
+
     if (step < totalSteps) {
       setStep(step + 1);
-      console.log("STEP_VALIDATION_OK", step);
+      const logTags = ["STEP_1_OK", "STEP_2_CLIENT_OK", "STEP_3_VESSEL_OK", "STEP_4_CHECKLIST_OK", "STEP_5_UPLOAD_OCR_OK", "STEP_6_REVIEW_OK"];
+      console.log(logTags[step - 1]);
     }
   };
+
 
 
   const handleBack = () => {
