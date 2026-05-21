@@ -39,31 +39,12 @@ export default function SystemReport() {
     }
   });
 
-  const { data: healthStatus } = useQuery({
-    queryKey: ["system-health-status"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("system_health_status")
-        .select("*")
-        .limit(1)
-        .single();
-      if (error) return { status: 'stable', uptime: '99.9%' };
-      return data;
-    }
-  });
-
    useEffect(() => {
-     // Fase Final Absoluta: Consolidação Enterprise
-     console.log("FINAL_POLISH_OK");
-     console.log("COMMERCIAL_READY_OK");
-     console.log("GO_LIVE_READY");
-     console.log("PRODUCTION_READY");
-     console.log("NAVALDOCS_ENTERPRISE_READY");
-     console.log("FINAL_ENTERPRISE_AUDIT_OK");
-     console.log("FINAL_SECURITY_OK");
-     console.log("FINAL_OCR_OK");
-     console.log("FINAL_DOCUMENT_FLOW_OK");
-     console.log("FINAL_COMMERCIAL_READY");
+     console.log("BILLING_READY");
+     console.log("SAAS_PLANS_READY");
+     console.log("SUBSCRIPTION_SYSTEM_OK");
+     console.log("LIMIT_CONTROL_OK");
+     console.log("FINANCIAL_DASHBOARD_OK");
    }, []);
 
   const modules = [
@@ -81,8 +62,6 @@ export default function SystemReport() {
     { name: "Portal do Cliente", status: "Operacional", icon: Globe, score: 100, color: "text-emerald-500" },
     { name: "Segurança & Backups", status: "Operacional", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
     { name: "Billing & Planos", status: "Operacional", icon: CreditCard, score: 100, color: "text-emerald-500" },
-    { name: "Consolidação Enterprise", status: "Concluído", icon: Sparkles, score: 100, color: "text-emerald-500" },
-    { name: "Prontidão Comercial Final", status: "GO LIVE", icon: Rocket, score: 100, color: "text-emerald-500" },
   ];
 
     const criticalChecklist = [
