@@ -158,12 +158,18 @@ export class DocumentValidationEngine {
       "current_date": new Date().toLocaleDateString('pt-BR')
     };
 
+    // LOG: Registrando conexão de dados real
+    console.log("OCR_TEMPLATE_CONNECTION_OK", { 
+      fields_count: Object.keys(mappings).length,
+      vessel: data.vessel?.name 
+    });
+
     // Substituir placeholders {{chave}}
     Object.keys(mappings).forEach(key => {
       const value = mappings[key];
       const placeholder = new RegExp(`{{${key}}}`, 'g');
       
-      if (value !== undefined && value !== null) {
+      if (value !== undefined && value !== null && value !== "") {
         filled = filled.replace(placeholder, value);
       } else {
         // Se não houver dado, marcar como pendente para destaque visual
