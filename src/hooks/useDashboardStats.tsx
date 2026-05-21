@@ -27,6 +27,8 @@ export const useDashboardStats = () => {
 
   return useQuery({
     queryKey: ["dashboard-stats", profile?.company_id],
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
     queryFn: async (): Promise<DashboardStats> => {
       if (!profile?.company_id) throw new Error("No company ID");
 
