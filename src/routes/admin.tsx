@@ -16,7 +16,8 @@ import {
   Globe,
   CheckCircle2,
   TrendingUp,
-  Menu
+  Menu,
+  Database
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";

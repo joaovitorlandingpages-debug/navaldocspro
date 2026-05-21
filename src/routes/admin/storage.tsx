@@ -38,13 +38,13 @@ function AdminStorage() {
     queryFn: async () => {
       const { data: files } = await supabase.from("uploaded_files").select("file_size, bucket_name");
       
-      const totalSize = files?.reduce((acc, f) => acc + (f.file_size || 0), 0) || 0;
+      const totalSize = files?.reduce((acc: number, f: any) => acc + (f.file_size || 0), 0) || 0;
       const totalMB = (totalSize / (1024 * 1024)).toFixed(2);
       
       return {
         totalSize: totalMB,
         count: files?.length || 0,
-        buckets: [...new Set(files?.map(f => f.bucket_name))]
+        buckets: [...new Set(files?.map((f: any) => f.bucket_name))]
       };
     }
   });
