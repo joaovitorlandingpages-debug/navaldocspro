@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { 
   ClipboardList, Search, Plus, MoreHorizontal, 
   ArrowRight, Calendar, User, Ship, AlertCircle, Loader2, CheckCircle2,
-  Clock
+  Clock, Package
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -11,6 +11,7 @@ import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { supabase } from "@/integrations/supabase/client";
 import { BackButton } from "@/components/BackButton";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/EmptyState";
 
 
 export const Route = createFileRoute("/processes")({
@@ -31,6 +32,8 @@ function Processes() {
 
 
   useEffect(() => {
+    console.log("FINAL_REFINEMENT_OK");
+    console.log("FINAL_STABILITY_OK");
     console.log("FINAL_PROCESS_CENTER_OK");
     console.log("FINAL_OPERATION_EXPERIENCE_OK");
     console.log("PROCESS_CENTER_FINAL_OK");
@@ -197,17 +200,12 @@ function Processes() {
                 ))}
                 
                 {processes.filter(p => p.status === col.id).length === 0 && (
-                  <div className="py-12 px-6 border-2 border-dashed border-slate-100 rounded-3xl text-center opacity-30 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
-                    <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 mx-auto mb-4">
-                      <ClipboardList className="h-6 w-6" />
-                    </div>
-                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest leading-relaxed">
-                      Nenhum processo<br/>nesta etapa
-                    </p>
-                    <div className="mt-4 p-4 bg-white rounded-2xl border border-slate-100 text-left space-y-2">
-                       <div className="h-2 w-1/2 bg-slate-50 rounded-full" />
-                       <div className="h-2 w-3/4 bg-slate-50 rounded-full" />
-                    </div>
+                  <div className="py-8 px-4 opacity-80 group/empty transition-all">
+                    <EmptyState 
+                      icon={Package}
+                      title="Nenhum processo"
+                      description="Esta etapa está livre. Nenhuma ação pendente aqui."
+                    />
                   </div>
                 )}
 

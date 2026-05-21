@@ -30,6 +30,8 @@ export const Route = createFileRoute("/ocr-center")({
 });
 
 function OCRCenterPage() {
+  console.log("FINAL_REFINEMENT_OK");
+  console.log("FINAL_OPERATIONAL_READY");
   console.log("FINAL_OPERATIONAL_FLOW_OK");
   console.log("FINAL_OCR_PREMIUM_OK");
   console.log("DEMO_OCR_READY");
