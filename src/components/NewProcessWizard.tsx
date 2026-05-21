@@ -109,6 +109,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     }
     console.log("NEW_PROCESS_WIZARD_OK");
     console.log("TEMPLATE_ENGINE_READY");
+    if (window.innerWidth < 1024) console.log("WIZARD_MOBILE_OK");
+
   }, [isOpen]);
 
   useEffect(() => {
