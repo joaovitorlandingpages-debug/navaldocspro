@@ -6,7 +6,8 @@ import {
   CheckCircle2, Search, Filter,
   ChevronRight, ArrowRight, Calendar,
   Bell, History, ShieldCheck, Ship,
-  LayoutGrid, List, RotateCcw, Zap
+  LayoutGrid, List, RotateCcw, Zap,
+  FileText
 } from "lucide-react";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,10 +17,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, differenceInDays, parseISO, isPast, isBefore, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useNavigate } from "@tanstack/react-router";
 
 export default function DeadlineCenter() {
   const { profile } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ["deadline-documents", profile?.company_id],
