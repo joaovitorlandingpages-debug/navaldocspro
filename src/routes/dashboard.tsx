@@ -452,6 +452,11 @@ export function RouteContent() {
     console.log("FINAL_OCR_OK");
     console.log("FINAL_DOCUMENT_FLOW_OK");
     console.log("FINAL_COMMERCIAL_READY");
+    console.log("DEMO_PREMIUM_READY");
+    console.log("COMMERCIAL_MODE_READY");
+    console.log("ENTERPRISE_PRESENTATION_OK");
+    console.log("PILOT_PHASE_OK");
+    console.log("NAVALDOCS_READY_TO_SCALE");
     if (location.pathname !== '/dashboard') {
       return <Outlet />;
     }
