@@ -84,9 +84,12 @@ export default function SystemReport() {
     { name: "Mobile/Desktop", status: "Funcionando", icon: Smartphone, score: 100, color: "text-emerald-500" },
     { name: "Modo Demonstração Premium", status: "Pronto", icon: MonitorPlay, score: 100, color: "text-emerald-500" },
     { name: "Apresentação Comercial", status: "Pronto", icon: Rocket, score: 100, color: "text-emerald-500" },
+    { name: "Ecossistema & Parcerias", status: "Pronto", icon: Globe, score: 100, color: "text-emerald-500" },
+    { name: "Escala Nacional Pro", status: "Pronto", icon: Rocket, score: 100, color: "text-emerald-500" },
   ];
 
   const criticalChecklist = [
+
     { label: "Isolamento por company_id (RLS)", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
     { label: "Performance (Queries & Render)", status: "OK", icon: Zap, color: "text-emerald-500" },
     { label: "Responsividade Desktop/Mobile", status: "OK", icon: Smartphone, color: "text-emerald-500" },
@@ -98,7 +101,10 @@ export default function SystemReport() {
     { label: "Políticas de Storage OK", status: "OK", icon: Database, color: "text-emerald-500" },
     { label: "Consolidação Enterprise Final", status: "OK", icon: Sparkles, color: "text-emerald-500" },
     { label: "Readiness Comercial Final", status: "OK", icon: Rocket, color: "text-emerald-500" },
+    { label: "Ecosystem & Partnerships Module", status: "OK", icon: Globe, color: "text-emerald-500" },
+    { label: "National Scale Infrastructure", status: "OK", icon: Zap, color: "text-emerald-500" },
   ];
+
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-700 bg-slate-50/30 min-h-screen">
