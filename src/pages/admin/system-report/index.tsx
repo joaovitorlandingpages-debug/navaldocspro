@@ -290,12 +290,13 @@ export default function SystemReport() {
              </CardHeader>
              <CardContent className="p-6 pt-0 space-y-3">
                 {[
-                  { label: "Enterprise Certified", icon: Award },
-                  { label: "Production Certified", icon: Verified },
-                  { label: "Operational Excellence", icon: Sparkles },
-                  { label: "SaaS Certified", icon: Cloud },
-                  { label: "Long-Term Ready", icon: LifeBuoy },
-                  { label: "NavalDocs Enterprise Edition", icon: ShieldCheck },
+                  { label: "Enterprise Governance Ready", icon: ShieldCheck },
+                  { label: "Continuous Quality Certified", icon: ClipboardCheck },
+                  { label: "Operational Excellence Active", icon: Sparkles },
+                  { label: "SaaS Health Verified", icon: ActivitySquare },
+                  { label: "Long-Term Enterprise Stability", icon: Award },
+                  { label: "NavalDocs Continuous Evolution Ready", icon: Rocket },
+
                 ].map((status, i) => (
                   <div key={i} className="flex items-center justify-between">
                      <div className="flex items-center gap-2">
