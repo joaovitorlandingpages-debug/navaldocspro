@@ -4,7 +4,7 @@ import {
   Plus, Download, Eye, FileCheck, 
   Loader2, AlertTriangle, ShieldCheck, Signature,
   Zap, Info, Ban, FolderArchive, Package, RefreshCw,
-  History, Bot, FileSearch
+  History, Bot, FileSearch, CheckCircle2, TrendingUp
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,19 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
   const { pkg, isLoading: loadingPkg } = useProcessPackage(processTypeSlug);
   const [documents, setDocuments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [automationState, setAutomationState] = useState<any>(null);
+
+  useEffect(() => {
+    async function fetchAutomation() {
+      const { data } = await supabase
+        .from('process_automation_state')
+        .select('*')
+        .eq('process_id', processId)
+        .maybeSingle();
+      if (data) setAutomationState(data);
+    }
+    fetchAutomation();
+  }, [processId]);
 
   useEffect(() => {
     async function fetchDocs() {
@@ -84,32 +97,72 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
   console.log("PROCESS_CENTER_REFINED");
   return (
     <div className="space-y-6">
-       {/* Automation Suggestions */}
-       {calculateProgress() < 100 && (
-         <div className="p-6 bg-primary/5 border border-primary/10 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4 group animate-in slide-in-from-right-4 duration-500 shadow-sm">
-            <div className="flex items-center gap-6">
-               <div className="h-14 w-14 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border border-primary/5">
-                  <Zap className="h-7 w-7 text-primary animate-pulse" />
-               </div>
-               <div>
-                  <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-1 flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 bg-primary rounded-full animate-ping" /> Próximo Passo Sugerido
-                  </p>
-                  <h4 className="text-sm font-bold text-navy">
-                    {calculateProgress() > 50 ? "Finalizar Geração Documental" : "Completar Requisitos de OCR"}
-                  </h4>
-                  <p className="text-[11px] text-slate-500 font-medium">
-                    {calculateProgress() > 50 
-                      ? "Os principais dados foram identificados via OCR. Pronto para gerar o Memorial Técnico."
-                      : "Aguardando upload de TIE/CNH para extração automática de dados do casco e motor."}
-                  </p>
-               </div>
-            </div>
-            <Button size="sm" className="bg-primary text-white font-black text-[9px] uppercase tracking-widest h-11 px-8 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all">
-               {calculateProgress() > 50 ? "Iniciar Geração" : "Upload Rápido"}
-            </Button>
-         </div>
-       )}
+       {/* Automation Suggestions & Productivity Banner */}
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-[2rem] flex flex-col gap-4 shadow-sm relative overflow-hidden group">
+             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform">
+                <Zap className="h-16 w-16 text-primary" />
+             </div>
+             <div className="flex items-center gap-4">
+                <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center shadow-md">
+                   <Bot className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                   <p className="text-[10px] font-black uppercase text-primary tracking-widest">IA Naval Docs</p>
+                   <h4 className="text-sm font-bold text-navy">Próximo Passo Recomendado</h4>
+                </div>
+             </div>
+             <div className="bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-white">
+                <p className="text-xs font-bold text-navy mb-1">
+                   {automationState?.next_suggested_steps?.[0] || (calculateProgress() > 50 ? "Finalizar Geração Documental" : "Aguardando OCR")}
+                </p>
+                <p className="text-[10px] text-slate-500">
+                   A IA identificou que este processo pode avançar para a próxima fase.
+                </p>
+             </div>
+             <Button size="sm" className="bg-primary text-white font-black text-[9px] uppercase tracking-widest h-10 w-full rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all">
+                Executar Agora
+             </Button>
+          </div>
+
+          <div className="p-6 bg-navy text-white rounded-[2rem] flex flex-col justify-between shadow-xl relative overflow-hidden group">
+             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform">
+                <TrendingUp className="h-16 w-16 text-primary" />
+             </div>
+             <div>
+                <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-1 flex items-center gap-2">
+                   <Clock className="h-3 w-3" /> Produtividade Operacional
+                </p>
+                <h4 className="text-sm font-bold">Economia Estimada</h4>
+             </div>
+             <div className="flex items-end gap-2 mt-4">
+                <span className="text-4xl font-black text-primary">{automationState?.estimated_time_saved_minutes || Math.round(calculateProgress() * 0.45)}</span>
+                <span className="text-xs font-bold text-white/60 mb-1.5 uppercase tracking-widest">Minutos Salvos</span>
+             </div>
+             <p className="text-[10px] text-white/40 mt-4 italic">
+                Cálculo baseado em OCR automático e geração de templates.
+             </p>
+          </div>
+       </div>
+
+       {/* Intelligent Indicators */}
+       <div className="flex flex-wrap gap-2 mb-4">
+          {automationState?.is_ready_for_generation && (
+             <Badge className="bg-emerald-500 text-white border-none gap-2 px-3 py-1.5 rounded-full font-black text-[9px] uppercase tracking-widest">
+                <CheckCircle2 className="h-3 w-3" /> Pronto para Geração
+             </Badge>
+          )}
+          {calculateProgress() > 70 && (
+             <Badge className="bg-blue-600 text-white border-none gap-2 px-3 py-1.5 rounded-full font-black text-[9px] uppercase tracking-widest">
+                <Zap className="h-3 w-3" /> Alta Probabilidade de Sucesso
+             </Badge>
+          )}
+          {automationState?.checklist_status?.some((i:any) => i.status === 'validated') && (
+             <Badge variant="outline" className="border-primary/20 text-primary bg-primary/5 gap-2 px-3 py-1.5 rounded-full font-black text-[9px] uppercase tracking-widest">
+                <FileCheck className="h-3 w-3" /> Dados Confirmados via OCR
+             </Badge>
+          )}
+       </div>
       <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">

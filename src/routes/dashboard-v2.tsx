@@ -217,6 +217,7 @@ function DashboardV2Content() {
     { label: "Documentos", value: stats?.generatedDocuments || 0, icon: <FileText className="h-4 w-4 text-emerald-500" /> },
     { label: "Análises OCR", value: stats?.ocrUsage || 0, icon: <Zap className="h-4 w-4 text-purple-500" /> },
     { label: "Pendências", value: (stats?.urgentProcesses || 0) + (stats?.expiringDocuments || 0), icon: <Activity className="h-4 w-4 text-red-500" /> },
+    { label: "Tempo Economizado (IA)", value: `${stats?.timeSavedHours || 0}h`, icon: <TrendingUp className="h-4 w-4 text-blue-600" /> },
   ];
 
   return (

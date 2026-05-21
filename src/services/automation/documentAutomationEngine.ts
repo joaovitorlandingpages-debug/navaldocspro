@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Process, ProcessAutomationState } from "@/types/process";
+import { toast } from "sonner";
 
 export class DocumentAutomationEngine {
   /**
@@ -121,17 +122,37 @@ export class DocumentAutomationEngine {
 
       // 8. Próximos Passos Sugeridos
       const next_suggested_steps: string[] = [];
+      let estimated_time_saved = 0;
+
+      // Cálculo de economia de tempo estimada (minutos)
+      // OCR Completo: 15min por documento
+      // Geração: 20min por processo
+      // Preenchimento: 5min por campo
+      
+      const validatedDocsCount = checklist_status.filter(i => i.status === 'validated' || i.status === 'uploaded').length;
+      estimated_time_saved += validatedDocsCount * 15;
+
       if (pending_items.length > 0) {
         if (checklist_status.some(i => i.is_mandatory && i.status === 'missing')) {
-          next_suggested_steps.push('Fazer upload dos documentos obrigatórios');
+          const firstMissing = checklist_status.find(i => i.is_mandatory && i.status === 'missing');
+          next_suggested_steps.push(`Fazer upload do documento: ${firstMissing?.name}`);
         }
         if (data_completeness.some(i => i.is_missing)) {
-          next_suggested_steps.push('Completar o cadastro do cliente/embarcação');
+          const firstMissingField = data_completeness.find(i => i.is_missing);
+          next_suggested_steps.push(`Completar dado: ${firstMissingField?.field} do ${firstMissingField?.entity === 'customer' ? 'Cliente' : 'Vaso'}`);
         }
       } else {
-        next_suggested_steps.push('Gerar pacote documental completo');
-        next_suggested_steps.push('Enviar para conferência final');
+        next_suggested_steps.push('Gerar pacote documental inteligente');
+        next_suggested_steps.push('Enviar para assinatura digital');
+        estimated_time_saved += 20; // Economia por geração automática
       }
+
+      // Adicionar progresso e economia ao estado
+      const completion_percentage = Math.round(
+        ((checklist_status.filter(i => i.status !== 'missing').length + 
+          data_completeness.filter(i => !i.is_missing).length) / 
+         (checklist_status.length + data_completeness.length)) * 100
+      );
 
       // 9. Salvar Estado de Automação no Banco
       const automationStateData = {
@@ -141,6 +162,8 @@ export class DocumentAutomationEngine {
         pending_items,
         is_ready_for_generation,
         next_suggested_steps,
+        completion_percentage,
+        estimated_time_saved_minutes: estimated_time_saved,
         last_analyzed_at: new Date().toISOString()
       };
 

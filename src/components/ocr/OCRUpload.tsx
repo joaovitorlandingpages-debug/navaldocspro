@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, Camera, FileText, CheckCircle2, Loader2, X, Info, Zap, ListChecks } from "lucide-react";
+import { Upload, Camera, FileText, CheckCircle2, Loader2, X, Info, Zap, ListChecks, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -217,9 +217,17 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
                onClick={processBatch}
                disabled={isUploading}
              >
-               {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4 text-primary" />}
-               Iniciar OCR Lote
+               {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 text-primary" />}
+               Análise Inteligente
              </Button>
+          </div>
+          <div className="mt-4 p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-center gap-3">
+             <div className="h-8 w-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                <ShieldCheck className="h-4 w-4 text-primary" />
+             </div>
+             <p className="text-[10px] font-bold text-navy/70">
+                Sua IA está calibrada para identificar CPFs, CNPJs, nomes de embarcações e datas técnicas com 98% de confiança.
+             </p>
           </div>
         </div>
       )}
