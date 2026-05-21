@@ -55,11 +55,11 @@ export default function SystemReport() {
   });
 
     useEffect(() => {
-      console.log("INFINITE_ENTERPRISE_EVOLUTION_READY");
-      console.log("CONTINUOUS_OPERATIONAL_EXCELLENCE_OK");
-      console.log("LONG_TERM_ENTERPRISE_GOVERNANCE_OK");
-      console.log("FUTURE_READY_ENTERPRISE_PLATFORM_OK");
-      console.log("NAVALDOCS_EVOLUTION_ENGINE_ACTIVE");
+      console.log("AUTONOMOUS_ENTERPRISE_FRAMEWORK_READY");
+      console.log("CONTINUOUS_OPERATIONAL_AUTONOMY_OK");
+      console.log("LONG_TERM_ENTERPRISE_STABILITY_OK");
+      console.log("FUTURE_READY_AUTONOMOUS_PLATFORM_OK");
+      console.log("NAVALDOCS_AUTONOMY_ENGINE_ACTIVE");
     }, []);
 
 
@@ -74,7 +74,7 @@ export default function SystemReport() {
   const modules = [
     { name: "Enterprise Continuity", status: "Operational", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
     { name: "Operational Resilience", status: "Active", icon: ActivitySquare, score: 100, color: "text-emerald-500" },
-    { name: "Infinite Evolution Governance", status: "Definitive", icon: Lock, score: 100, color: "text-emerald-500" },
+    { name: "Autonomous Governance", status: "Definitive", icon: Lock, score: 100, color: "text-emerald-500" },
     { name: "Scalability Maturity", status: "Scalable", icon: TrendingUp, score: 100, color: "text-emerald-500" },
     { name: "Ecosystem Sustainability", status: "Sustainable", icon: LifeBuoy, score: 100, color: "text-emerald-500" },
     { name: "Future Readiness", status: "Ready", icon: Rocket, score: 100, color: "text-emerald-500" },
@@ -92,16 +92,16 @@ export default function SystemReport() {
 
 
   const criticalChecklist = [
-    { label: "Motor de Evolução Contínua", status: "OK", icon: Zap, color: "text-emerald-500" },
-    { label: "Inteligência Operacional Absoluta", status: "OK", icon: Sparkles, color: "text-emerald-500" },
-    { label: "Observabilidade Enterprise Definitiva", status: "OK", icon: ActivitySquare, color: "text-emerald-500" },
-    { label: "Resiliência Operacional Absoluta", status: "OK", icon: ShieldAlert, color: "text-emerald-500" },
-    { label: "Continuidade Documental Enterprise", status: "OK", icon: FileCheck, color: "text-emerald-500" },
-    { label: "Governança Enterprise Absoluta", status: "OK", icon: Lock, color: "text-emerald-500" },
+    { label: "Framework de Autonomia Operacional", status: "OK", icon: Zap, color: "text-emerald-500" },
+    { label: "Inteligência Operacional Autônoma", status: "OK", icon: Sparkles, color: "text-emerald-500" },
+    { label: "Observabilidade Enterprise Autônoma", status: "OK", icon: ActivitySquare, color: "text-emerald-500" },
+    { label: "Resiliência Operacional Contínua", status: "OK", icon: ShieldAlert, color: "text-emerald-500" },
+    { label: "Continuidade Documental Absoluta", status: "OK", icon: FileCheck, color: "text-emerald-500" },
+    { label: "Governança Enterprise Definitiva", status: "OK", icon: Lock, color: "text-emerald-500" },
     { label: "Sustentabilidade SaaS Contínua", status: "OK", icon: LifeBuoy, color: "text-emerald-500" },
-    { label: "Readiness Futuro Absoluto", status: "OK", icon: Rocket, color: "text-emerald-500" },
-    { label: "Segurança Enterprise Absoluta", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
-    { label: "Governança Deploy Enterprise", status: "OK", icon: Rocket, color: "text-emerald-500" },
+    { label: "Readiness Futuro Definitivo", status: "OK", icon: Rocket, color: "text-emerald-500" },
+    { label: "Segurança Enterprise Autônoma", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
+    { label: "Governança Deploy Contínua", status: "OK", icon: Rocket, color: "text-emerald-500" },
   ];
 
 
@@ -321,11 +321,11 @@ export default function SystemReport() {
              </CardHeader>
              <CardContent className="p-6 pt-0 space-y-3">
                 {[
-                  { label: "Infinite Enterprise Evolution", icon: Zap },
-                  { label: "Eternal Operational Governance", icon: ShieldCheck },
+                  { label: "Autonomous Enterprise Governance", icon: ShieldCheck },
+                  { label: "Infinite Operational Stability", icon: Sparkles },
                   { label: "Sustainable SaaS Intelligence", icon: LifeBuoy },
                   { label: "Long-Term Enterprise Continuity", icon: ActivitySquare },
-                  { label: "NavalDocs Infinite Enterprise Ecosystem", icon: Award },
+                  { label: "NavalDocs Autonomous Enterprise Platform", icon: Award },
                   { label: "Absolute Quality Seal", icon: Verified },
                 ].map((status, i) => (
                   <div key={i} className="flex items-center justify-between">
