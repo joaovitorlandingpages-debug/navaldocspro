@@ -14,6 +14,7 @@ import { NotificationCenter } from "@/components/NotificationCenter";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
@@ -29,6 +30,7 @@ import { EnterpriseAuditFeed } from "@/components/dashboard/EnterpriseAuditFeed"
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { BackButton } from "@/components/BackButton";
 import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidgets";
+
 
 
 
