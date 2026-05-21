@@ -14,6 +14,7 @@ import { Route as SystemMonitorRouteImport } from './routes/system-monitor'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SalesCenterRouteImport } from './routes/sales-center'
 import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PerformanceCenterRouteImport } from './routes/performance-center'
@@ -26,6 +27,7 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as GettingStartedRouteImport } from './routes/getting-started'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DebugAuthPublicRouteImport } from './routes/debug-auth-public'
 import { Route as DashboardV2RouteImport } from './routes/dashboard-v2'
 import { Route as DashboardSafeRouteImport } from './routes/dashboard-safe'
@@ -92,6 +94,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SalesCenterRoute = SalesCenterRouteImport.update({
+  id: '/sales-center',
+  path: '/sales-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProcessesRoute = ProcessesRouteImport.update({
   id: '/processes',
   path: '/processes',
@@ -150,6 +157,11 @@ const DocumentsRoute = DocumentsRouteImport.update({
 const DocumentGeneratorRoute = DocumentGeneratorRouteImport.update({
   id: '/document-generator',
   path: '/document-generator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DebugAuthPublicRoute = DebugAuthPublicRouteImport.update({
@@ -370,6 +382,7 @@ export interface FileRoutesByFullPath {
   '/dashboard-safe': typeof DashboardSafeRoute
   '/dashboard-v2': typeof DashboardV2Route
   '/debug-auth-public': typeof DebugAuthPublicRoute
+  '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/getting-started': typeof GettingStartedRoute
@@ -382,6 +395,7 @@ export interface FileRoutesByFullPath {
   '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
+  '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
@@ -427,6 +441,7 @@ export interface FileRoutesByTo {
   '/dashboard-safe': typeof DashboardSafeRoute
   '/dashboard-v2': typeof DashboardV2Route
   '/debug-auth-public': typeof DebugAuthPublicRoute
+  '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/getting-started': typeof GettingStartedRoute
@@ -439,6 +454,7 @@ export interface FileRoutesByTo {
   '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
+  '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
@@ -487,6 +503,7 @@ export interface FileRoutesById {
   '/dashboard-safe': typeof DashboardSafeRoute
   '/dashboard-v2': typeof DashboardV2Route
   '/debug-auth-public': typeof DebugAuthPublicRoute
+  '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/getting-started': typeof GettingStartedRoute
@@ -499,6 +516,7 @@ export interface FileRoutesById {
   '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
   '/processes': typeof ProcessesRouteWithChildren
+  '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
@@ -548,6 +566,7 @@ export interface FileRouteTypes {
     | '/dashboard-safe'
     | '/dashboard-v2'
     | '/debug-auth-public'
+    | '/demo'
     | '/document-generator'
     | '/documents'
     | '/getting-started'
@@ -560,6 +579,7 @@ export interface FileRouteTypes {
     | '/performance-center'
     | '/plans'
     | '/processes'
+    | '/sales-center'
     | '/settings'
     | '/status'
     | '/support'
@@ -605,6 +625,7 @@ export interface FileRouteTypes {
     | '/dashboard-safe'
     | '/dashboard-v2'
     | '/debug-auth-public'
+    | '/demo'
     | '/document-generator'
     | '/documents'
     | '/getting-started'
@@ -617,6 +638,7 @@ export interface FileRouteTypes {
     | '/performance-center'
     | '/plans'
     | '/processes'
+    | '/sales-center'
     | '/settings'
     | '/status'
     | '/support'
@@ -664,6 +686,7 @@ export interface FileRouteTypes {
     | '/dashboard-safe'
     | '/dashboard-v2'
     | '/debug-auth-public'
+    | '/demo'
     | '/document-generator'
     | '/documents'
     | '/getting-started'
@@ -676,6 +699,7 @@ export interface FileRouteTypes {
     | '/performance-center'
     | '/plans'
     | '/processes'
+    | '/sales-center'
     | '/settings'
     | '/status'
     | '/support'
@@ -724,6 +748,7 @@ export interface RootRouteChildren {
   DashboardSafeRoute: typeof DashboardSafeRoute
   DashboardV2Route: typeof DashboardV2Route
   DebugAuthPublicRoute: typeof DebugAuthPublicRoute
+  DemoRoute: typeof DemoRoute
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
   GettingStartedRoute: typeof GettingStartedRoute
@@ -736,6 +761,7 @@ export interface RootRouteChildren {
   PerformanceCenterRoute: typeof PerformanceCenterRoute
   PlansRoute: typeof PlansRoute
   ProcessesRoute: typeof ProcessesRouteWithChildren
+  SalesCenterRoute: typeof SalesCenterRoute
   SettingsRoute: typeof SettingsRoute
   StatusRoute: typeof StatusRoute
   SupportRoute: typeof SupportRoute
@@ -785,6 +811,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sales-center': {
+      id: '/sales-center'
+      path: '/sales-center'
+      fullPath: '/sales-center'
+      preLoaderRoute: typeof SalesCenterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/processes': {
@@ -869,6 +902,13 @@ declare module '@tanstack/react-router' {
       path: '/document-generator'
       fullPath: '/document-generator'
       preLoaderRoute: typeof DocumentGeneratorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/debug-auth-public': {
@@ -1244,6 +1284,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardSafeRoute: DashboardSafeRoute,
   DashboardV2Route: DashboardV2Route,
   DebugAuthPublicRoute: DebugAuthPublicRoute,
+  DemoRoute: DemoRoute,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
   GettingStartedRoute: GettingStartedRoute,
@@ -1256,6 +1297,7 @@ const rootRouteChildren: RootRouteChildren = {
   PerformanceCenterRoute: PerformanceCenterRoute,
   PlansRoute: PlansRoute,
   ProcessesRoute: ProcessesRouteWithChildren,
+  SalesCenterRoute: SalesCenterRoute,
   SettingsRoute: SettingsRoute,
   StatusRoute: StatusRoute,
   SupportRoute: SupportRoute,
@@ -1272,13 +1314,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
