@@ -50,13 +50,13 @@ export default function SystemReport() {
   });
 
     useEffect(() => {
-      console.log("CONTROLLED_EVOLUTION_READY");
-      console.log("FEATURE_FLAGS_READY");
-      console.log("QA_PIPELINE_READY");
-      console.log("SYSTEM_HEALTH_MONITORING_OK");
-      console.log("CONTINUOUS_ENTERPRISE_QUALITY_OK");
-      console.log("NAVALDOCS_EVOLUTION_CERTIFIED");
+      console.log("ENTERPRISE_GOVERNANCE_READY");
+      console.log("CONTINUOUS_AUDIT_OK");
+      console.log("OPERATIONAL_EXCELLENCE_ACTIVE");
+      console.log("SAAS_HEALTH_MONITORING_OK");
+      console.log("NAVALDOCS_CONTINUOUS_EVOLUTION_READY");
     }, []);
+
 
   const modules = [
     { name: "Evolução Controlada", status: "Active", icon: Rocket, score: 100, color: "text-emerald-500" },
