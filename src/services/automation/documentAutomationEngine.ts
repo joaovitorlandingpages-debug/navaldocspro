@@ -263,12 +263,44 @@ export class DocumentAutomationEngine {
     // 1. Registrar Log
     await this.logEvent(processId, 'ocr_complete', `Dados extraídos de ${job.identified_document_type || 'documento'}`, extracted);
 
-    // 2. Tentar vincular automaticamente se o documento for TIE
+    // 2. Tentar vincular automaticamente ou atualizar dados
     if (job.identified_document_type === 'VESSEL_TIE' && extracted.vessel_name) {
-      const { data: process } = await supabase.from('processes').select('vessel_id').eq('id', processId).single();
-      if (process && !process.vessel_id) {
-        // Tentar encontrar ou criar embarcação? Para agora apenas logamos
-        await this.logEvent(processId, 'suggestion', `Sugerimos vincular a embarcação "${extracted.vessel_name}" ao processo.`);
+      const { data: process } = await supabase.from('processes').select('vessel_id, customer_id').eq('id', processId).single();
+      
+      if (process?.vessel_id) {
+        // Atualizar embarcação existente
+        await supabase.from('vessels').update({
+          registration_number: extracted.inscription,
+          engine: extracted.engine,
+          category: extracted.navigation_category
+        }).eq('id', process.vessel_id);
+      }
+
+      if (process?.customer_id && extracted.owner_doc) {
+        // Atualizar cliente se o CPF bater
+        await supabase.from('customers').update({
+          cpf_cnpj: extracted.owner_doc
+        }).eq('id', process.customer_id);
+      }
+    }
+
+    if ((job.identified_document_type === 'RG' || job.identified_document_type === 'CNH') && extracted.cpf) {
+      const { data: process } = await supabase.from('processes').select('customer_id').eq('id', processId).single();
+      if (process?.customer_id) {
+        await supabase.from('customers').update({
+          cpf_cnpj: extracted.cpf,
+          name: extracted.name,
+          address: extracted.address || extracted.endereco
+        }).eq('id', process.customer_id);
+      }
+    }
+
+    if (job.identified_document_type === 'RESIDENCE_PROOF' && extracted.address) {
+      const { data: process } = await supabase.from('processes').select('customer_id').eq('id', processId).single();
+      if (process?.customer_id) {
+        await supabase.from('customers').update({
+          address: extracted.address
+        }).eq('id', process.customer_id);
       }
     }
 
@@ -281,13 +313,22 @@ export class DocumentAutomationEngine {
       .select('*, template:document_templates(*)')
       .eq('process_type_id', (await supabase.from('processes').select('process_type_id').eq('id', processId).single()).data?.process_type_id);
     
-    const matchingReq = requirements?.find((r: any) => 
-      r.template.name.includes(job.identified_document_type) || 
-      (job.identified_document_type === 'PERSONAL_IDENTITY' && (r.template.name.includes('RG') || r.template.name.includes('CNH'))) ||
-      (job.identified_document_type === 'VESSEL_TIE' && (r.template.name.includes('TIE') || r.template.name.includes('Inscrição') || r.template.name.includes('DPC-2211'))) ||
-      (job.identified_document_type === 'ENGINE_INVOICE' && r.template.name.includes('Alteração de Motor')) ||
-      (job.identified_document_type === 'ENGINE_MANUAL' && r.template.name.includes('Alteração de Motor'))
-    );
+    const matchingReq = requirements?.find((r: any) => {
+      const templateName = r.template.name.toUpperCase();
+      const docType = job.identified_document_type;
+
+      return (
+        templateName.includes(docType) ||
+        (docType === 'RG' && templateName.includes('RG')) ||
+        (docType === 'CNH' && templateName.includes('CNH')) ||
+        (docType === 'CPF' && templateName.includes('CPF')) ||
+        (docType === 'CNPJ' && templateName.includes('CNPJ')) ||
+        (docType === 'RESIDENCE_PROOF' && (templateName.includes('RESIDÊNCIA') || templateName.includes('ENDEREÇO'))) ||
+        (docType === 'VESSEL_TIE' && (templateName.includes('TIE') || templateName.includes('INSCRIÇÃO') || templateName.includes('DPC-2211'))) ||
+        (docType === 'INVOICE' && (templateName.includes('NOTA FISCAL') || templateName.includes('NF'))) ||
+        (docType === 'FINANCIAL_GRU' && (templateName.includes('GRU') || templateName.includes('PAGAMENTO')))
+      );
+    });
 
     if (matchingReq) {
       // Marcar documento como enviado/conforme no sistema

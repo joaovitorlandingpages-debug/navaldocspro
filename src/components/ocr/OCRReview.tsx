@@ -261,13 +261,19 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
              </Card>
           )}
 
-          <Tabs defaultValue={job?.identified_document_type === 'VESSEL_TIE' ? 'vessel' : 'person'} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 rounded-2xl h-14 p-1.5 bg-slate-100 border border-slate-200">
+          <Tabs defaultValue={
+            job?.identified_document_type === 'VESSEL_TIE' || job?.identified_document_type === 'INVOICE' ? 'vessel' : 
+            job?.identified_document_type === 'FINANCIAL_GRU' ? 'financial' : 'person'
+          } className="w-full">
+            <TabsList className="grid w-full grid-cols-3 rounded-2xl h-14 p-1.5 bg-slate-100 border border-slate-200">
               <TabsTrigger value="person" className="rounded-xl font-black uppercase text-[10px] tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md">
                 <User className="h-4 w-4" /> Dados Pessoais
               </TabsTrigger>
               <TabsTrigger value="vessel" className="rounded-xl font-black uppercase text-[10px] tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md">
                 <Ship className="h-4 w-4" /> Dados Técnicos
+              </TabsTrigger>
+              <TabsTrigger value="financial" className="rounded-xl font-black uppercase text-[10px] tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md">
+                <FileText className="h-4 w-4" /> Financeiro
               </TabsTrigger>
             </TabsList>
 
@@ -288,22 +294,53 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div className="space-y-2 md:col-span-2 group">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nome Completo</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nome / Razão Social</Label>
                     <Input 
-                      value={editedData?.name || editedData?.person?.nome || ''} 
+                      value={editedData?.name || editedData?.company_name || editedData?.person?.nome || ''} 
                       onChange={(e) => setEditedData({...editedData, name: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy px-4" 
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">CPF / Tax ID</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">CPF / CNPJ</Label>
                     <Input 
-                      value={editedData?.doc_number || editedData?.person?.cpf || ''} 
-                      onChange={(e) => setEditedData({...editedData, doc_number: e.target.value})}
+                      value={editedData?.cpf || editedData?.cnpj || editedData?.doc_number || ''} 
+                      onChange={(e) => setEditedData({...editedData, cpf: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
                   </div>
+
+                  {job?.identified_document_type === 'RG' && (
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Número do RG</Label>
+                      <Input 
+                        value={editedData?.rg_number || ''} 
+                        onChange={(e) => setEditedData({...editedData, rg_number: e.target.value})}
+                        className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
+                      />
+                    </div>
+                  )}
+
+                  {job?.identified_document_type === 'CNH' && (
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Número CNH / Validade</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          value={editedData?.cnh_number || ''} 
+                          placeholder="Número"
+                          onChange={(e) => setEditedData({...editedData, cnh_number: e.target.value})}
+                          className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy flex-1" 
+                        />
+                        <Input 
+                          value={editedData?.expiry_date || ''} 
+                          placeholder="Validade"
+                          onChange={(e) => setEditedData({...editedData, expiry_date: e.target.value})}
+                          className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy w-32" 
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Data de Nascimento</Label>
@@ -316,13 +353,42 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Endereço Residencial</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Endereço Residencial Completo</Label>
                     <Input 
                       value={editedData?.address || editedData?.person?.endereco || ''} 
                       onChange={(e) => setEditedData({...editedData, address: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
                   </div>
+                  
+                  {(editedData?.city || editedData?.state || editedData?.zip) && (
+                    <div className="grid grid-cols-3 gap-4 md:col-span-2">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Cidade</Label>
+                        <Input 
+                          value={editedData?.city || ''} 
+                          onChange={(e) => setEditedData({...editedData, city: e.target.value})}
+                          className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white h-12 font-bold text-navy" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">UF</Label>
+                        <Input 
+                          value={editedData?.state || ''} 
+                          onChange={(e) => setEditedData({...editedData, state: e.target.value})}
+                          className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white h-12 font-bold text-navy" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">CEP</Label>
+                        <Input 
+                          value={editedData?.zip || ''} 
+                          onChange={(e) => setEditedData({...editedData, zip: e.target.value})}
+                          className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white h-12 font-bold text-navy" 
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
             </TabsContent>
@@ -340,40 +406,78 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nome da Embarcação</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nome da Embarcação / Descrição Bem</Label>
                     <Input 
-                      value={editedData?.vessel_name || editedData?.vessel?.nome || ''} 
+                      value={editedData?.vessel_name || editedData?.description || editedData?.vessel?.nome || ''} 
                       onChange={(e) => setEditedData({...editedData, vessel_name: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nº Inscrição / TIE</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nº Inscrição / TIE / Chassis</Label>
                     <Input 
-                      value={editedData?.inscription || editedData?.vessel?.inscricao || ''} 
+                      value={editedData?.inscription || editedData?.serial_numbers?.hull || editedData?.vessel?.inscricao || ''} 
                       onChange={(e) => setEditedData({...editedData, inscription: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Proprietário (Extraído)</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipo / Categoria</Label>
                     <Input 
-                      value={editedData?.owner_name || editedData?.vessel?.proprietario || ''} 
-                      onChange={(e) => setEditedData({...editedData, owner_name: e.target.value})}
+                      value={editedData?.vessel_type || editedData?.navigation_category || editedData?.vessel?.tipo || ''} 
+                      onChange={(e) => setEditedData({...editedData, vessel_type: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
                   </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Motorização (Extraído)</Label>
+                    <Input 
+                      value={editedData?.engine || editedData?.serial_numbers?.engine || editedData?.vessel?.engine || ''} 
+                      onChange={(e) => setEditedData({...editedData, engine: e.target.value})}
+                      className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
+                    />
+                  </div>
+                  
+                  {editedData?.measurements && (
+                    <div className="grid grid-cols-3 gap-4 md:col-span-2">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Comprimento</Label>
+                        <Input 
+                          value={editedData.measurements.length || ''} 
+                          onChange={(e) => setEditedData({...editedData, measurements: {...editedData.measurements, length: e.target.value}})}
+                          className="rounded-2xl border-slate-100 bg-slate-50 h-10 font-bold" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Boca</Label>
+                        <Input 
+                          value={editedData.measurements.beam || ''} 
+                          onChange={(e) => setEditedData({...editedData, measurements: {...editedData.measurements, beam: e.target.value}})}
+                          className="rounded-2xl border-slate-100 bg-slate-50 h-10 font-bold" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Arqueação</Label>
+                        <Input 
+                          value={editedData.measurements.tonnage || ''} 
+                          onChange={(e) => setEditedData({...editedData, measurements: {...editedData.measurements, tonnage: e.target.value}})}
+                          className="rounded-2xl border-slate-100 bg-slate-50 h-10 font-bold" 
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {editedData?.engines && (
+                {(editedData?.engines || editedData?.serial_numbers) && (
                   <div className="mt-10 space-y-4">
                     <p className="text-[11px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-primary" /> Motores Detectados
+                      <Zap className="h-4 w-4 text-primary" /> Identificadores Técnicos
                     </p>
                     <div className="grid gap-3">
-                      {editedData.engines.map((eng: any, i: number) => (
+                      {editedData?.engines?.map((eng: any, i: number) => (
                         <div key={i} className="p-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="h-10 w-10 bg-white rounded-xl shadow-sm flex items-center justify-center">
@@ -387,9 +491,84 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
                           <Badge className="bg-green-500 text-white border-none text-[9px] font-black uppercase tracking-widest">OK</Badge>
                         </div>
                       ))}
+                      {editedData?.serial_numbers && (
+                         <div className="p-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] space-y-2">
+                            <p className="text-[10px] font-black text-navy uppercase tracking-widest">Números de Série NF</p>
+                            <div className="flex justify-between items-center">
+                               <span className="text-[10px] font-bold text-slate-500">CASCO:</span>
+                               <span className="text-[10px] font-black text-navy">{editedData.serial_numbers.hull}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                               <span className="text-[10px] font-bold text-slate-500">MOTOR:</span>
+                               <span className="text-[10px] font-black text-navy">{editedData.serial_numbers.engine}</span>
+                            </div>
+                         </div>
+                      )}
                     </div>
                   </div>
                 )}
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="financial" className="mt-6">
+               <Card className="p-8 border-slate-100 shadow-xl rounded-[2.5rem] bg-white">
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="font-black text-navy uppercase tracking-tight text-base flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-primary" /> Dados Financeiros
+                  </h3>
+                  <Badge variant="outline" className="border-blue-100 text-blue-600 bg-blue-50 uppercase text-[10px] font-black px-3 py-1">
+                    {job?.identified_document_type || 'Documento'}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Valor do Documento</Label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy font-black text-sm">R$</span>
+                      <Input 
+                        value={editedData?.amount || ''} 
+                        onChange={(e) => setEditedData({...editedData, amount: e.target.value})}
+                        className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy pl-10" 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Data de Vencimento</Label>
+                    <Input 
+                      type="date"
+                      value={editedData?.due_date || ''} 
+                      onChange={(e) => setEditedData({...editedData, due_date: e.target.value})}
+                      className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Código de Barras / Chave de Acesso</Label>
+                    <Input 
+                      value={editedData?.barcode || editedData?.access_key || ''} 
+                      onChange={(e) => setEditedData({...editedData, barcode: e.target.value})}
+                      className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy text-[11px]" 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipo de Pagamento / Emissor</Label>
+                    <Input 
+                      value={editedData?.type || editedData?.payment_code || editedData?.issuer || ''} 
+                      onChange={(e) => setEditedData({...editedData, type: e.target.value})}
+                      className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Status do Pagamento</Label>
+                    <Badge className={`${editedData?.status === 'PAID' ? 'bg-green-500' : 'bg-amber-500'} text-white border-none h-12 w-full rounded-2xl flex items-center justify-center font-black uppercase tracking-widest text-[10px]`}>
+                      {editedData?.status === 'PAID' ? 'Pago / Comprovado' : 'Aguardando Pagamento'}
+                    </Badge>
+                  </div>
+                </div>
               </Card>
             </TabsContent>
           </Tabs>

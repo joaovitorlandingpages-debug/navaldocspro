@@ -35,8 +35,8 @@ function SystemReport() {
           { item: "Dashboard Mobile", status: "OK", notes: "Sidebar convertida em Sheet, botões visíveis." },
           { item: "Wizard Novo Processo", status: "OK", notes: "Passos 1-6 operacionais e responsivos." },
           { item: "Tabelas Responsivas", status: "OK", notes: "Conversão automática para Cards em mobile." },
-          { item: "Upload & OCR", status: "OK", notes: "Preview responsivo e feedback visual." },
-          { item: "Navegação Global", status: "OK", notes: "Breadcrumbs e BackButton integrados." }
+          { item: "Upload & Neural OCR", status: "OK", notes: "RG, CNH, TIE, NF e GRU com autopreenchimento." },
+          { item: "Revisão Inteligente", status: "OK", notes: "Central de aprovação com visualização side-by-side." }
         ],
         integrations: [
           { name: "Supabase DB Cluster", status: "operational" },

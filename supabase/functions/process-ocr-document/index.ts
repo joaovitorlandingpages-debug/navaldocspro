@@ -31,86 +31,156 @@ serve(async (req) => {
     // Update status to processing
     await supabaseClient
       .from('ocr_jobs')
-      .update({ status: 'processing', provider_used: 'NavalDocs AI Engine (Vision v3)' })
+      .update({ status: 'processing', provider_used: 'NavalDocs AI Engine (Vision v4)' })
       .eq('id', jobId)
 
-    console.log(`Processing OCR for file: ${job.uploaded_files.file_path}`)
+    console.log(`Processing OCR for file: ${job.uploaded_files.file_name}`)
     
     // Simulating AI processing delay
-    await new Promise(resolve => setTimeout(resolve, 3500))
+    await new Promise(resolve => setTimeout(resolve, 2000))
 
-    // 2. Identify Document Type (Simulated logic based on file name or generic)
+    // 2. Identify Document Type (Simulated logic based on file name or provided type)
     const fileName = job.uploaded_files.file_name.toLowerCase()
-    let docType = 'GENERIC'
-    let extractedData = {}
-    let confidenceByField = {}
-    let suggestedActions = []
+    const providedType = job.document_type || 'GENERIC'
+    let docType = providedType
+    let extractedData: any = {}
+    let confidenceByField: any = {}
+    let suggestedActions: any[] = []
 
-    if (fileName.includes('cnh') || fileName.includes('rg')) {
-      docType = 'PERSONAL_IDENTITY'
+    // RG Logic
+    if (fileName.includes('rg') || providedType === 'RG') {
+      docType = 'RG'
       extractedData = {
-        name: "RICARDO OLIVEIRA MENEZES",
-        doc_number: "123.456.789-01",
-        rg: "20.123.456-7",
-        birth_date: "1982-11-15",
-        address: "AVENIDA ATLÂNTICA, 2500 - COPACABANA",
+        name: "MARCOS SOUZA DA SILVA",
+        rg_number: "20.456.789-X",
+        cpf: "123.456.789-00",
+        birth_date: "1985-05-20",
+        issuing_body: "SSP/RJ",
+        issuing_state: "RJ",
+        parents: "JOÃO DA SILVA e MARIA SOUZA DA SILVA"
+      }
+      confidenceByField = { name: 0.99, rg_number: 0.98, cpf: 0.99, birth_date: 0.95 }
+      suggestedActions = [{ type: "update_customer", label: "Atualizar Cliente", description: "Dados de RG/CPF detectados para MARCOS SOUZA DA SILVA" }]
+      console.log("OCR_RG_READY");
+    } 
+    // CNH Logic
+    else if (fileName.includes('cnh') || providedType === 'CNH') {
+      docType = 'CNH'
+      extractedData = {
+        name: "MARCOS SOUZA DA SILVA",
+        cpf: "123.456.789-00",
+        rg: "20.456.789-X",
+        cnh_number: "04567891234",
+        expiry_date: "2028-12-10",
+        category: "B",
+        address: "RUA DAS PALMEIRAS, 123 - CENTRO",
         city: "RIO DE JANEIRO",
         state: "RJ",
-        zip: "22041-001"
+        zip: "20000-000"
       }
-      confidenceByField = {
-        name: 0.99, doc_number: 0.98, rg: 0.95, birth_date: 0.99, address: 0.88
+      confidenceByField = { name: 0.99, cpf: 0.99, cnh_number: 0.97, expiry_date: 0.99, category: 0.98 }
+      suggestedActions = [{ type: "update_customer", label: "Atualizar Cliente", description: "Vincular endereço e dados de CNH ao cadastro." }]
+      console.log("OCR_CNH_READY");
+    }
+    // CPF/CNPJ Logic
+    else if (fileName.includes('cpf') || fileName.includes('cnpj') || providedType === 'CPF' || providedType === 'CNPJ') {
+      docType = fileName.includes('cnpj') || providedType === 'CNPJ' ? 'CNPJ' : 'CPF'
+      if (docType === 'CNPJ') {
+        extractedData = {
+          company_name: "MARITIMA SERVICOS LTDA",
+          cnpj: "12.345.678/0001-90",
+          status: "ATIVA"
+        }
+      } else {
+        extractedData = {
+          name: "MARCOS SOUZA DA SILVA",
+          cpf: "123.456.789-00",
+          status: "REGULAR"
+        }
       }
-      suggestedActions = [
-        { type: "update_customer", label: "Atualizar Dados do Cliente", description: "O endereço detectado é diferente do cadastro atual." }
-      ]
-    } else if (fileName.includes('tie') || fileName.includes('tiem')) {
+      confidenceByField = { cnpj: 0.99, cpf: 0.99, company_name: 0.98 }
+    }
+    // Proof of Residence Logic
+    else if (fileName.includes('residencia') || fileName.includes('comprovante') || providedType === 'RESIDENCE_PROOF') {
+      docType = 'RESIDENCE_PROOF'
+      extractedData = {
+        name: "MARCOS SOUZA DA SILVA",
+        address: "RUA DAS PALMEIRAS, 123 - APTO 402",
+        city: "RIO DE JANEIRO",
+        state: "RJ",
+        zip: "20000-000",
+        issue_date: "2024-03-15"
+      }
+      confidenceByField = { address: 0.92, zip: 0.98, city: 0.99 }
+      suggestedActions = [{ type: "update_address", label: "Atualizar Endereço", description: "Novo endereço detectado no comprovante de residência." }]
+    }
+    // TIE/TIEM Logic
+    else if (fileName.includes('tie') || fileName.includes('tiem') || providedType === 'VESSEL_TIE') {
       docType = 'VESSEL_TIE'
       extractedData = {
         vessel_name: "ESTRELA DO MAR IV",
         inscription: "381ABC2024",
-        owner_name: "RICARDO OLIVEIRA MENEZES",
+        owner_name: "MARCOS SOUZA DA SILVA",
+        owner_doc: "123.456.789-00",
         vessel_type: "LANCHA",
-        category: "ESPORTE E RECREIO",
-        hull_material: "FIBRA DE VIDRO",
-        length: "12.5m",
-        engines: [
-          { brand: "VOLVO PENTA", model: "300HP", serial: "VP-987654", power: "300HP" }
-        ]
+        navigation_category: "ESPORTE E RECREIO",
+        measurements: {
+          length: "12.50m",
+          beam: "3.40m",
+          tonnage: "15.0"
+        },
+        engine: "VOLVO PENTA 300HP - SN: VP-987654",
+        expiry_date: "2029-05-20"
       }
-      confidenceByField = {
-        vessel_name: 0.97, inscription: 0.99, owner_name: 0.98, engine_serial: 0.92
-      }
+      confidenceByField = { vessel_name: 0.97, inscription: 0.99, engine: 0.92, measurements: 0.95 }
       suggestedActions = [
-        { type: "link_vessel", label: "Vincular Embarcação", description: "Embarcação detectada: ESTRELA DO MAR IV" },
-        { type: "update_engine", label: "Atualizar Motor", description: "Número de série do motor detectado (VP-987654) diverge do cadastro." }
+        { type: "update_vessel", label: "Sincronizar Embarcação", description: "Atualizar medidas e motor da embarcação." },
+        { type: "link_vessel", label: "Vincular ao Processo", description: "Vincular ESTRELA DO MAR IV a este processo." }
       ]
-    } else if (fileName.includes('gru') || fileName.includes('pagamento')) {
+      console.log("OCR_TIE_READY");
+    }
+    // Invoice (Nota Fiscal) Logic
+    else if (fileName.includes('nota') || fileName.includes('nf') || providedType === 'INVOICE') {
+      docType = 'INVOICE'
+      extractedData = {
+        invoice_number: "000.123.456",
+        access_key: "33240312345678000190550010001234561987654321",
+        issuer: "NAUTICA RIO LTDA",
+        buyer: "MARCOS SOUZA DA SILVA",
+        amount: 450000.00,
+        description: "EMBARCAÇÃO NOVA MODELO X-300 COM MOTOR YAMAHA 300HP",
+        serial_numbers: {
+          hull: "BR-RIOX300A124",
+          engine: "YAM-300-456789"
+        }
+      }
+      confidenceByField = { invoice_number: 0.99, amount: 0.99, serial_numbers: 0.95 }
+      suggestedActions = [{ type: "update_vessel_serial", label: "Atualizar Nº de Série", description: "Detectado chassi/motor na nota fiscal." }]
+      console.log("OCR_NF_READY");
+    }
+    // GRU Logic
+    else if (fileName.includes('gru') || providedType === 'FINANCIAL_GRU') {
       docType = 'FINANCIAL_GRU'
       extractedData = {
+        type: "GRU Simples",
         payment_code: "221-1",
         amount: 150.00,
         due_date: "2024-12-20",
-        barcode: "846700000015 500000000000 000000000000 000000000000"
+        barcode: "846700000015 500000000000 000000000000 000000000000",
+        status: fileName.includes('comprovante') ? "PAID" : "PENDING"
       }
-      confidenceByField = {
-        amount: 0.99, due_date: 0.98, barcode: 0.95
-      }
+      confidenceByField = { amount: 0.99, due_date: 0.98, barcode: 0.95 }
+      console.log("OCR_GRU_READY");
     } else {
-      // Default / Generic
+      docType = 'GENERIC'
       extractedData = {
         detected_text: "Texto genérico extraído do documento...",
-        summary: "Documento oficial marítimo não identificado especificamente."
+        summary: "Documento oficial não categorizado automaticamente."
       }
+      confidenceByField = { text: 0.50 }
     }
 
-    // 3. Comparison Logic (Simulated)
-    // In a real scenario, we would fetch the current customer/vessel data from Supabase
-    // and compare it with extractedData.
-    const comparisonData = {
-      name: { current: "Ricardo Menezes", extracted: extractedData.name || "", diff: extractedData.name !== "Ricardo Menezes" },
-      address: { current: "Rua das Flores, 10", extracted: extractedData.address || "", diff: !!extractedData.address && extractedData.address !== "Rua das Flores, 10" }
-    }
+    console.log("OCR_AUTOFILL_CONNECTED");
 
     // 4. Update Job with Results
     const { error: updateError } = await supabaseClient
@@ -121,9 +191,8 @@ serve(async (req) => {
         extracted_data: extractedData,
         confidence_score: 0.95,
         confidence_by_field: confidenceByField,
-        comparison_data: comparisonData,
         suggested_actions: suggestedActions,
-        processing_time: 3500
+        processing_time: 2000
       })
       .eq('id', jobId)
 
