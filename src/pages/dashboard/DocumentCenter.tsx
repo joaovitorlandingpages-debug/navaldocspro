@@ -270,8 +270,39 @@ export default function DocumentCenter() {
             <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-[3rem]">
               <Database className="h-12 w-12 text-slate-100 mx-auto mb-4" />
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhum documento encontrado</p>
+        </div>
+      )}
+
+      {!isLoading && totalCount > pageSize && (
+        <div className="mt-8 p-6 bg-white border border-slate-100 rounded-[2rem] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+          <span>Mostrando {documents?.length} de {totalCount} documentos</span>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200"
+              onClick={() => setPage(prev => Math.max(1, prev - 1))}
+              disabled={page === 1}
+            >
+              Anterior
+            </Button>
+            <div className="flex items-center gap-1">
+              <span className="px-3 h-8 flex items-center bg-primary text-white rounded-lg shadow-sm">{page}</span>
+              <span className="text-slate-300">/</span>
+              <span className="px-3 h-8 flex items-center text-navy font-bold">{Math.ceil(totalCount / pageSize)}</span>
             </div>
-          )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200"
+              onClick={() => setPage(prev => prev + 1)}
+              disabled={page >= Math.ceil(totalCount / pageSize)}
+            >
+              Próximo
+            </Button>
+          </div>
+        </div>
+      )}
         </div>
       )}
 
