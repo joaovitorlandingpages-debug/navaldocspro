@@ -983,7 +983,7 @@ export function RouteContent() {
                     <div className="flex justify-center p-4"><Loader2 className="h-4 w-4 animate-spin text-slate-300" /></div>
                   ) : (
                     <>
-                      {statsData && statsData.expiringDocuments > 0 ? (
+                      {statsData && statsData.expiringDocuments > 0 && (
                         <div className="p-4 rounded-2xl border-l-4 border-l-amber-500 bg-amber-50/50 transition-all hover:bg-slate-50 cursor-pointer" onClick={() => navigate({ to: '/dashboard/deadlines' })}>
                            <div className="flex justify-between items-start mb-1">
                               <p className="text-sm font-black text-navy uppercase tracking-tight">Vencimentos Próximos</p>
@@ -991,9 +991,9 @@ export function RouteContent() {
                            <p className="text-[11px] text-slate-500 mb-2 font-medium">Existem {statsData.expiringDocuments} documentos que expiram em menos de 30 dias.</p>
                            <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Ação Recomendada</p>
                         </div>
-                      ) : null}
+                      )}
                       
-                      {statsData && statsData.urgentProcesses > 0 ? (
+                      {statsData && statsData.urgentProcesses > 0 && (
                         <div className="p-4 rounded-2xl border-l-4 border-l-red-500 bg-red-50/50 transition-all hover:bg-slate-50 cursor-pointer" onClick={() => navigate({ to: '/dashboard/deadlines' })}>
                            <div className="flex justify-between items-start mb-1">
                               <p className="text-sm font-black text-navy uppercase tracking-tight">Processos Retidos</p>
@@ -1001,7 +1001,7 @@ export function RouteContent() {
                            <p className="text-[11px] text-slate-500 mb-2 font-medium">{statsData.urgentProcesses} processos estão parados há mais de 15 dias.</p>
                            <p className="text-[10px] font-black uppercase tracking-widest text-red-600">Alta Prioridade</p>
                         </div>
-                      ) : null}
+                      )}
 
                       {(!statsData || (statsData.expiringDocuments === 0 && statsData.urgentProcesses === 0)) && (
                         <div className="py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
