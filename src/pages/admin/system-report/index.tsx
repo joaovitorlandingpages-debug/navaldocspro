@@ -9,8 +9,9 @@ import {
   PenTool, FolderKanban, Star, AlertTriangle,
   History, Settings, BarChart3, Cloud, Globe, CreditCard, Sparkles, MonitorPlay, Rocket,
   Download, LifeBuoy, Terminal, Box, ShieldAlert, Award, Verified, CheckCircle, Hammer,
-  ActivitySquare, ClipboardCheck, LayoutList, Target
+  ActivitySquare, ClipboardCheck, LayoutList, Target, TrendingUp
 } from "lucide-react";
+
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,26 +55,28 @@ export default function SystemReport() {
   });
 
     useEffect(() => {
-      console.log("ENTERPRISE_GOVERNANCE_READY");
-      console.log("CONTINUOUS_AUDIT_OK");
-      console.log("OPERATIONAL_EXCELLENCE_ACTIVE");
-      console.log("SAAS_HEALTH_MONITORING_OK");
-      console.log("NAVALDOCS_CONTINUOUS_EVOLUTION_READY");
+      console.log("PERPETUAL_ENTERPRISE_CYCLE_READY");
+      console.log("CONTINUOUS_OPERATIONAL_EXCELLENCE_OK");
+      console.log("SAAS_LONG_TERM_STABILITY_OK");
+      console.log("FUTURE_EVOLUTION_READY");
+      console.log("NAVALDOCS_ENTERPRISE_CONTINUUM_READY");
     }, []);
 
 
+
   const modules = [
-    { name: "Enterprise Governance", status: "Active", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
-    { name: "Continuous Audit", status: "Enabled", icon: ClipboardCheck, score: 100, color: "text-emerald-500" },
-    { name: "Operational Excellence", status: "Nominal", icon: Sparkles, score: 100, color: "text-emerald-500" },
-    { name: "SaaS Health Tracking", status: "Healthy", icon: ActivitySquare, score: 100, color: "text-emerald-500" },
-    { name: "OCR Reliability", status: "99.2%", icon: Zap, score: 99, color: "text-emerald-500" },
-    { name: "PDF Engine Stability", status: "Stable", icon: FileText, score: 100, color: "text-emerald-500" },
-    { name: "Security Governance", status: "Hardened", icon: Lock, score: 100, color: "text-emerald-500" },
-    { name: "Deployment Control", status: "Active", icon: Rocket, score: 100, color: "text-emerald-500" },
-    { name: "Incident Management", status: "Ready", icon: AlertCircle, score: 100, color: "text-emerald-500" },
-    { name: "Long-Term Readiness", status: "High", icon: Award, score: 100, color: "text-emerald-500" },
+    { name: "Maturidade Enterprise", status: "Perpetual", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
+    { name: "Excelência Operacional", status: "Active", icon: Sparkles, score: 100, color: "text-emerald-500" },
+    { name: "Saúde SaaS", status: "Excellent", icon: ActivitySquare, score: 100, color: "text-emerald-500" },
+    { name: "Escalabilidade", status: "Ready", icon: TrendingUp, score: 100, color: "text-emerald-500" },
+    { name: "Confiabilidade OCR", status: "99.5%", icon: Zap, score: 99, color: "text-emerald-500" },
+    { name: "Prontidão Futura", status: "High", icon: Rocket, score: 100, color: "text-emerald-500" },
+    { name: "Sustentabilidade", status: "Verified", icon: LifeBuoy, score: 100, color: "text-emerald-500" },
+    { name: "Observabilidade Total", status: "Enabled", icon: Target, score: 100, color: "text-emerald-500" },
+    { name: "Governança Definitive", status: "Standard", icon: Lock, score: 100, color: "text-emerald-500" },
+    { name: "Inteligência Operacional", status: "Active", icon: Activity, score: 100, color: "text-emerald-500" },
   ];
+
 
 
   const criticalChecklist = [
@@ -306,12 +309,13 @@ export default function SystemReport() {
              </CardHeader>
              <CardContent className="p-6 pt-0 space-y-3">
                 {[
-                  { label: "Enterprise Governance Ready", icon: ShieldCheck },
-                  { label: "Continuous Quality Certified", icon: ClipboardCheck },
-                  { label: "Operational Excellence Active", icon: Sparkles },
-                  { label: "SaaS Health Verified", icon: ActivitySquare },
-                  { label: "Long-Term Enterprise Stability", icon: Award },
-                  { label: "NavalDocs Continuous Evolution Ready", icon: Rocket },
+                  { label: "Enterprise Excellence Active", icon: Sparkles },
+                  { label: "Continuous Evolution Active", icon: Rocket },
+                  { label: "Operational Stability Verified", icon: ShieldCheck },
+                  { label: "SaaS Scalability Ready", icon: TrendingUp },
+                  { label: "Long-Term Enterprise Ecosystem", icon: LifeBuoy },
+                  { label: "Perpetual Quality Shield", icon: Award },
+
 
                 ].map((status, i) => (
                   <div key={i} className="flex items-center justify-between">
