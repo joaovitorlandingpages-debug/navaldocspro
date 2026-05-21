@@ -6,7 +6,7 @@ import {
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
   Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft,
-  Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight
+  Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight, Signature
 } from "lucide-react";
 import { useState, useEffect, Suspense, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
