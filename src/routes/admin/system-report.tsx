@@ -36,7 +36,8 @@ function SystemReport() {
           { item: "Wizard Novo Processo", status: "OK", notes: "Passos 1-6 operacionais e responsivos." },
           { item: "Tabelas Responsivas", status: "OK", notes: "Conversão automática para Cards em mobile." },
           { item: "Upload & Neural OCR", status: "OK", notes: "RG, CNH, TIE, NF e GRU com autopreenchimento." },
-          { item: "Revisão Inteligente", status: "OK", notes: "Central de aprovação com visualização side-by-side." }
+          { item: "Revisão Inteligente", status: "OK", notes: "Central de aprovação com visualização side-by-side." },
+          { item: "SaaS Multi-tenant", status: "OK", notes: "Isolamento de dados e gestão master centralizada." }
         ],
         integrations: [
           { name: "Supabase DB Cluster", status: "operational" },
