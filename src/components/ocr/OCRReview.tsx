@@ -262,8 +262,15 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
           )}
 
           <Tabs defaultValue={
-            job?.identified_document_type === 'VESSEL_TIE' || job?.identified_document_type === 'INVOICE' ? 'vessel' : 
-            job?.identified_document_type === 'FINANCIAL_GRU' ? 'financial' : 'person'
+            job?.identified_document_type === 'VESSEL_TIE' || 
+            job?.identified_document_type === 'INVOICE' ||
+            job?.identified_document_type === 'SAFETY_CERTIFICATE' ||
+            job?.identified_document_type === 'TECHNICAL_REPORT' ||
+            job?.identified_document_type === 'TECHNICAL_MEMORIAL' ? 'vessel' : 
+            job?.identified_document_type === 'FINANCIAL_GRU' ||
+            job?.identified_document_type === 'DPEM_INSURANCE' ||
+            job?.identified_document_type === 'PAYMENT_PROOF' ||
+            job?.identified_document_type === 'PURCHASE_CONTRACT' ? 'financial' : 'person'
           } className="w-full">
             <TabsList className="grid w-full grid-cols-3 rounded-2xl h-14 p-1.5 bg-slate-100 border border-slate-200">
               <TabsTrigger value="person" className="rounded-xl font-black uppercase text-[10px] tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md">
