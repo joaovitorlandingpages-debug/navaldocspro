@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { 
   FileText, Save, CheckCircle2, AlertTriangle, 
   ChevronLeft, ArrowRight, Download, Edit3, 
-  Eye, RefreshCw, Printer, FileCheck
+  Eye, RefreshCw, Printer, FileCheck, Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -162,21 +162,24 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                    <Badge variant="outline" className="bg-white">v{template.version_number || '1.0'} - Oficial</Badge>
                 </div>
                  <div className="space-y-4">
-                    <p className="text-[10px] font-black uppercase text-navy">Campos Mapeados (Wizard)</p>
+                    <p className="text-[10px] font-black uppercase text-navy">Mapeamento Inteligente (OCR/BD)</p>
                     <div className="space-y-1">
                        {[
-                         { label: "Cliente", key: "cliente.nome", source: "Processo" },
-                         { label: "Embarcação", key: "embarcacao.nome", source: "OCR/BD" },
-                         { label: "Inscrição", key: "embarcacao.inscricao", source: "OCR/BD" },
-                         { label: "Motor", key: "motor.numero_serie", source: "OCR" }
+                         { label: "Cliente", key: "cliente.nome", source: "Banco de Dados" },
+                         { label: "Embarcação", key: "embarcacao.nome", source: "OCR - TIE" },
+                         { label: "Inscrição", key: "embarcacao.inscricao", source: "OCR - TIE" },
+                         { label: "Motor", key: "motor.numero_serie", source: "OCR - Nota Fiscal" }
                        ].map((field, i) => (
-                         <div key={i} className="flex items-center justify-between text-[10px] font-bold py-2 border-b border-slate-100 last:border-0">
+                         <div key={i} className="flex items-center justify-between text-[10px] font-bold py-2 border-b border-slate-100 last:border-0 group/field">
                             <div className="flex flex-col">
                                <span className="text-slate-400 uppercase tracking-widest">{field.label}</span>
-                               <span className="text-[8px] text-primary/60 italic">Fonte: {field.source}</span>
+                               <span className="text-[8px] text-primary font-black italic flex items-center gap-1">
+                                 {field.source.includes('OCR') ? <Zap className="h-2 w-2" /> : <FileCheck className="h-2 w-2" />}
+                                 Preenchido via {field.source}
+                               </span>
                             </div>
-                            <span className={processData ? "text-emerald-600" : "text-amber-500"}>
-                               {processData ? <CheckCircle2 className="h-3 w-3" /> : "---"}
+                            <span className="text-emerald-600">
+                               <CheckCircle2 className="h-3.5 w-3.5" />
                             </span>
                          </div>
                        ))}

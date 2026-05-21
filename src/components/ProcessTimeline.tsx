@@ -8,6 +8,7 @@ interface TimelineEvent {
   user: string;
   description: string;
   date: string;
+  category?: string;
   metadata?: any;
 }
 
@@ -55,7 +56,11 @@ export function ProcessTimeline({ events }: { events: TimelineEvent[] }) {
           <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm transition-all group-hover:shadow-lg group-hover:border-primary/20">
             <div className="flex items-center justify-between space-x-2 mb-2">
               <div className="flex items-center gap-2">
-                 <User className="w-4 h-4 text-slate-400" />
+                 {event.category && (
+                   <span className="text-[8px] font-black uppercase text-primary bg-primary/10 px-1.5 py-0.5 rounded tracking-tighter">
+                     {event.category}
+                   </span>
+                 )}
                  <span className="font-black text-[10px] text-navy uppercase tracking-widest">{event.user}</span>
               </div>
               <time className="font-bold text-[10px] text-slate-400 uppercase">

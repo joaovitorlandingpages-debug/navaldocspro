@@ -4,7 +4,7 @@ import {
   Plus, Download, Eye, FileCheck, 
   Loader2, AlertTriangle, ShieldCheck, Signature,
   Zap, Info, Ban, FolderArchive, Package, RefreshCw,
-  History
+  History, Bot, FileSearch
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -85,21 +85,31 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
   return (
     <div className="space-y-6">
        {/* Automation Suggestions */}
-       <div className="p-6 bg-primary/5 border border-primary/10 rounded-[2rem] flex items-center justify-between group animate-in slide-in-from-right-4 duration-500">
-          <div className="flex items-center gap-6">
-             <div className="h-14 w-14 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                <Zap className="h-7 w-7 text-primary animate-pulse" />
-             </div>
-             <div>
-                <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-1">Próximo Passo Inteligente</p>
-                <h4 className="text-sm font-bold text-navy">Gerar Memorial Técnico Descritivo</h4>
-                <p className="text-[11px] text-slate-500 font-medium">Os dados do motor e casco foram identificados via OCR e estão prontos.</p>
-             </div>
-          </div>
-          <Button size="sm" className="bg-primary text-white font-black text-[9px] uppercase tracking-widest h-10 px-6 rounded-xl shadow-lg shadow-primary/20">
-             Iniciar Geração
-          </Button>
-       </div>
+       {calculateProgress() < 100 && (
+         <div className="p-6 bg-primary/5 border border-primary/10 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4 group animate-in slide-in-from-right-4 duration-500 shadow-sm">
+            <div className="flex items-center gap-6">
+               <div className="h-14 w-14 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border border-primary/5">
+                  <Zap className="h-7 w-7 text-primary animate-pulse" />
+               </div>
+               <div>
+                  <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-1 flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 bg-primary rounded-full animate-ping" /> Próximo Passo Sugerido
+                  </p>
+                  <h4 className="text-sm font-bold text-navy">
+                    {calculateProgress() > 50 ? "Finalizar Geração Documental" : "Completar Requisitos de OCR"}
+                  </h4>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    {calculateProgress() > 50 
+                      ? "Os principais dados foram identificados via OCR. Pronto para gerar o Memorial Técnico."
+                      : "Aguardando upload de TIE/CNH para extração automática de dados do casco e motor."}
+                  </p>
+               </div>
+            </div>
+            <Button size="sm" className="bg-primary text-white font-black text-[9px] uppercase tracking-widest h-11 px-8 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all">
+               {calculateProgress() > 50 ? "Iniciar Geração" : "Upload Rápido"}
+            </Button>
+         </div>
+       )}
       <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
@@ -175,10 +185,18 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
                         </TooltipProvider>
                       )}
                     </h4>
-                    <div className="flex items-center gap-3 mt-1">
+                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
                       <p className="text-[10px] font-medium text-slate-400">{req.template?.description || 'Documento operacional'}</p>
-                      <span className="h-1 w-1 bg-slate-200 rounded-full" />
+                      <span className="h-0.5 w-0.5 bg-slate-200 rounded-full" />
                       <p className="text-[10px] font-black uppercase text-primary tracking-widest">{req.document_role}</p>
+                      {status === 'conforme' && (
+                        <>
+                          <span className="h-0.5 w-0.5 bg-slate-200 rounded-full" />
+                          <Badge variant="outline" className="text-[8px] h-4 font-black uppercase tracking-tighter text-emerald-600 border-emerald-100 bg-emerald-50/50 flex gap-1">
+                            <Bot className="h-2.5 w-2.5" /> Identificado automaticamente
+                          </Badge>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

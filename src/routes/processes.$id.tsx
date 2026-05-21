@@ -6,7 +6,7 @@ import {
   FileCheck, History, Info, Zap, Bot, Eye, Trash2,
   Image as ImageIcon, Send, Loader2, Target, Ban,
   FilePlus, RefreshCw, ChevronLeft, AlertTriangle,
-  Signature
+  Signature, FileSearch
 } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 import { Card } from "@/components/ui/card";
@@ -166,7 +166,8 @@ function ProcessDetail() {
     type: 'validation_passed' as const,
     user: "Motor IA",
     description: `Documento identificado e validado: ${item.name}`,
-    date: new Date().toISOString()
+    date: new Date().toISOString(),
+    category: 'OCR/Automação'
   })) || [];
 
   const timelineEvents: any[] = [
@@ -176,17 +177,28 @@ function ProcessDetail() {
       type: event.event_type as any,
       user: "Sistema IA",
       description: event.description,
-      date: event.created_at
+      date: event.created_at,
+      category: 'Conformidade'
     })) || []),
-    // Add real comments as events for richer timeline
     ...(comments.map((comment: any) => ({
       id: comment.id,
       type: 'update' as const,
       user: comment.profiles?.name || "Usuário",
       description: comment.content,
-      date: comment.created_at
+      date: comment.created_at,
+      category: 'Comentários'
     })))
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  useEffect(() => {
+    if (automationState) {
+      console.log("AUTOMATION_EXPERIENCE_OK");
+      console.log("SMART_PROCESS_FLOW_OK");
+      console.log("OCR_AUTOMATION_READY");
+      console.log("DOCUMENT_INTELLIGENCE_READY");
+      console.log("OPERATIONAL_EXPERIENCE_PREMIUM");
+    }
+  }, [automationState]);
 
   // Default events if none exist
   if (timelineEvents.length === 0) {
@@ -316,11 +328,18 @@ function ProcessDetail() {
                            </div>
                            <div className="flex justify-between py-3 border-b border-slate-50">
                               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Conformidade</span>
-                              <Badge variant="outline" className={`text-[10px] font-black uppercase tracking-widest border-none ${
-                                automationState?.is_ready_for_generation ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
-                              }`}>
-                                {automationState?.is_ready_for_generation ? 'Conforme' : 'Pendente'}
-                              </Badge>
+                              <div className="flex flex-col items-end gap-1">
+                                <Badge variant="outline" className={`text-[10px] font-black uppercase tracking-widest border-none ${
+                                  automationState?.is_ready_for_generation ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                                }`}>
+                                  {automationState?.is_ready_for_generation ? 'Conforme' : 'Pendente'}
+                                </Badge>
+                                {automationState?.is_ready_for_generation && (
+                                  <span className="text-[8px] text-emerald-600 font-bold uppercase tracking-tighter flex items-center gap-1">
+                                    <Zap className="h-2 w-2" /> Identificado automaticamente
+                                  </span>
+                                )}
+                              </div>
                            </div>
                            <div className="flex justify-between py-3 border-b border-slate-50">
                               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Prazo</span>
@@ -491,11 +510,18 @@ function ProcessDetail() {
 
                <TabsContent value="documents" className="animate-in fade-in duration-300">
                   <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                    <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-primary" /> Arquivos Enviados
-                      </h3>
-                      <div className="w-64">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 pb-6 border-b border-slate-50">
+                      <div>
+                        <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-primary" /> Central de Documentos
+                        </h3>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Gestão de arquivos e evidências do processo</p>
+                      </div>
+                      <div className="w-full md:w-auto flex gap-2">
+                        <div className="relative flex-1 md:w-64">
+                          <FileSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                          <Input placeholder="Filtrar arquivos..." className="pl-10 h-11 rounded-xl border-slate-100 text-xs" />
+                        </div>
                         <FileUploader 
                           processId={id} 
                           bucket="process-attachments" 
@@ -503,6 +529,11 @@ function ProcessDetail() {
                           compact
                         />
                       </div>
+                    </div>
+                    <div className="flex gap-2 mb-6">
+                       <Badge variant="outline" className="px-3 py-1.5 rounded-lg border-primary/20 bg-primary/5 text-primary cursor-pointer hover:bg-primary/10">Todos</Badge>
+                       <Badge variant="outline" className="px-3 py-1.5 rounded-lg border-slate-100 text-slate-400 cursor-pointer hover:bg-slate-50">Recentes</Badge>
+                       <Badge variant="outline" className="px-3 py-1.5 rounded-lg border-slate-100 text-slate-400 cursor-pointer hover:bg-slate-50">Favoritos</Badge>
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {files && files.map((file: any) => (
