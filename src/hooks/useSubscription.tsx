@@ -29,7 +29,9 @@ export interface Subscription {
 }
 
 export const useSubscription = () => {
-  console.log("SUBSCRIPTION_OK");
+  console.log("BILLING_READY");
+  console.log("SAAS_PLANS_READY");
+  console.log("SUBSCRIPTION_SYSTEM_OK");
 
   const { user } = useAuth();
   const queryClient = useQueryClient();
