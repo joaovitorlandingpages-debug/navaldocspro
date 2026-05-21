@@ -474,10 +474,10 @@ export function RouteContent() {
 
       {/* Critical Operational Center */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-         <div className="lg:col-span-3 space-y-10">
-           <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-[0_30px_60px_rgba(0,0,0,0.02)] relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-10 opacity-5">
-                 <AlertCircle className="h-40 w-40 text-red-500" />
+         <div className="lg:col-span-3 space-y-12">
+           <div className="bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-[0_40px_80px_rgba(0,0,0,0.03)] relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:scale-110 transition-transform duration-1000">
+                 <AlertCircle className="h-48 w-48 text-red-500" />
               </div>
               <div className="relative z-10 space-y-8">
                  <div className="flex justify-between items-center">
