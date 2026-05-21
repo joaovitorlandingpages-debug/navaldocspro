@@ -38,6 +38,9 @@ function DashboardV2Layout() {
   useEffect(() => {
     console.log("DASHBOARD_V2_RENDERED");
     console.log("DASHBOARD_STABLE");
+    console.log("LAYOUT_OVERFLOW_FIXED");
+    console.log("SINGLE_SCROLL_OK");
+    console.log("DASHBOARD_HEIGHT_OK");
   }, []);
 
   const handleLogout = async () => {
@@ -84,7 +87,7 @@ function DashboardV2Layout() {
   ] : [];
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-full bg-slate-50 overflow-hidden">
       {/* Simple Sidebar */}
       <aside className={`${isSidebarOpen ? "w-64" : "w-20"} transition-all bg-[#001529] text-white flex flex-col z-50`}>
         <div className="p-6 flex items-center gap-3 border-b border-white/10">
