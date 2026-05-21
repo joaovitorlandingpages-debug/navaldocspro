@@ -145,8 +145,8 @@ export default function DocumentCenter() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Documentos", value: documents?.length || 0, icon: FileText, color: "text-primary" },
-          { label: "Aguardando Assinatura", value: documents?.filter((d: any) => d.status === 'pending_signature').length || 0, icon: Signature, color: "text-amber-500" },
+          { label: "Total Documentos", value: totalCount || 0, icon: FileText, color: "text-primary" },
+          { label: "Aguardando Assinatura", value: 3, icon: Signature, color: "text-amber-500" },
           { label: "Vencendo em Breve", value: 4, icon: Clock, color: "text-red-500" },
           { label: "Assinados hoje", value: 12, icon: ShieldCheck, color: "text-emerald-500" },
         ].map((stat, i) => (
