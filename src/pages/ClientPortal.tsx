@@ -46,7 +46,7 @@ export default function ClientPortal() {
 
       const { data, error } = await supabase
         .from("processes")
-        .select("*, vessels(name)")
+        .select("*, vessels(name), companies(name, email, phone)")
         .eq("customer_id", customer.id)
         .order('created_at', { ascending: false });
       
