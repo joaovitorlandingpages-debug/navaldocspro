@@ -510,11 +510,18 @@ function ProcessDetail() {
 
                <TabsContent value="documents" className="animate-in fade-in duration-300">
                   <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                    <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-primary" /> Arquivos Enviados
-                      </h3>
-                      <div className="w-64">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 pb-6 border-b border-slate-50">
+                      <div>
+                        <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-primary" /> Central de Documentos
+                        </h3>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Gestão de arquivos e evidências do processo</p>
+                      </div>
+                      <div className="w-full md:w-auto flex gap-2">
+                        <div className="relative flex-1 md:w-64">
+                          <FileSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                          <Input placeholder="Filtrar arquivos..." className="pl-10 h-11 rounded-xl border-slate-100 text-xs" />
+                        </div>
                         <FileUploader 
                           processId={id} 
                           bucket="process-attachments" 
@@ -522,6 +529,11 @@ function ProcessDetail() {
                           compact
                         />
                       </div>
+                    </div>
+                    <div className="flex gap-2 mb-6">
+                       <Badge variant="outline" className="px-3 py-1.5 rounded-lg border-primary/20 bg-primary/5 text-primary cursor-pointer hover:bg-primary/10">Todos</Badge>
+                       <Badge variant="outline" className="px-3 py-1.5 rounded-lg border-slate-100 text-slate-400 cursor-pointer hover:bg-slate-50">Recentes</Badge>
+                       <Badge variant="outline" className="px-3 py-1.5 rounded-lg border-slate-100 text-slate-400 cursor-pointer hover:bg-slate-50">Favoritos</Badge>
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {files && files.map((file: any) => (
