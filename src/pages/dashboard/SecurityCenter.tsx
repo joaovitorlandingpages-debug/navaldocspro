@@ -81,6 +81,38 @@ export default function SecurityCenter() {
     enabled: !!profile?.company_id
   });
 
+  const { data: deletedDocs, isLoading: deletedLoading } = useQuery({
+    queryKey: ["deleted-documents", profile?.company_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("documents")
+        .select("*")
+        .eq("company_id", profile?.company_id)
+        .not("deleted_at", "is", null)
+        .order("deleted_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.company_id
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from("documents")
+        .update({ deleted_at: null })
+        .eq("id", id)
+        .select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Documento restaurado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["deleted-documents"] });
+    }
+  });
+
+
   const createBackupMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase
@@ -407,15 +439,60 @@ export default function SecurityCenter() {
                 <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none text-[9px] font-black uppercase">Auto-Cleanup: 30 Dias</Badge>
               </div>
             </CardHeader>
-            <CardContent className="p-12 text-center">
-               <div className="max-w-md mx-auto">
-                 <div className="h-20 w-20 rounded-[2.5rem] bg-slate-50 flex items-center justify-center mx-auto mb-6 border-2 border-dashed border-slate-200">
-                    <Trash2 className="h-10 w-10 text-slate-200" />
+            <CardContent className="p-0">
+               {deletedLoading ? (
+                 <div className="py-20 text-center text-xs font-black text-slate-400 animate-pulse uppercase tracking-widest">Escaneando base de dados...</div>
+               ) : deletedDocs && deletedDocs.length > 0 ? (
+                 <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead className="bg-slate-50 border-b border-slate-100">
+                        <tr>
+                          <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Documento</th>
+                          <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Removido Em</th>
+                          <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Ação</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {deletedDocs.map((doc: any) => (
+                          <tr key={doc.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-navy text-xs">{doc.document_type || "Documento s/ nome"}</span>
+                                <span className="text-[9px] text-slate-400 font-mono uppercase">{doc.id.substring(0, 8)}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">
+                              {format(new Date(doc.deleted_at), "dd/MM/yyyy HH:mm")}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 border-primary/20 text-primary hover:bg-primary/5 text-[9px] font-black uppercase tracking-widest"
+                                onClick={() => restoreMutation.mutate(doc.id)}
+                                disabled={restoreMutation.isPending}
+                              >
+                                <RefreshCw className="h-3 w-3 mr-1" /> Restaurar
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                  </div>
-                 <h4 className="font-black text-navy uppercase text-sm tracking-widest mb-2">Lixeira Vazia</h4>
-                 <p className="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">Não há itens excluídos no momento. Todos os seus dados operacionais estão ativos e protegidos.</p>
-               </div>
+               ) : (
+                 <div className="p-12 text-center">
+                   <div className="max-w-md mx-auto">
+                     <div className="h-20 w-20 rounded-[2.5rem] bg-slate-50 flex items-center justify-center mx-auto mb-6 border-2 border-dashed border-slate-200">
+                        <Trash2 className="h-10 w-10 text-slate-200" />
+                     </div>
+                     <h4 className="font-black text-navy uppercase text-sm tracking-widest mb-2">Lixeira Vazia</h4>
+                     <p className="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">Não há itens excluídos no momento. Todos os seus dados operacionais estão ativos e protegidos.</p>
+                   </div>
+                 </div>
+               )}
             </CardContent>
+
           </Card>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
