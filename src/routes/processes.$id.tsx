@@ -357,12 +357,35 @@ function ProcessDetail() {
                            <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
                               <Target className="h-5 w-5 text-primary" /> Progresso do SLA
                            </h3>
-                           <div className="space-y-4">
+                           <div className="space-y-6">
                               <div className="flex justify-between items-end">
                                  <div>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status do Prazo</p>
-                                    <p className="text-sm font-bold text-navy">No prazo operacional</p>
+                                    <p className={`text-sm font-bold ${process?.due_date && isPast(parseISO(process.due_date)) ? 'text-red-500' : 'text-emerald-500'}`}>
+                                      {process?.due_date && isPast(parseISO(process.due_date)) ? 'Processo Atrasado' : 'No prazo operacional'}
+                                    </p>
                                  </div>
+                                 <span className="text-xl font-black text-navy">{automationState?.completion_percentage || 0}%</span>
+                              </div>
+                              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                 <div className="h-full bg-primary transition-all duration-1000" style={{ width: `${automationState?.completion_percentage || 0}%` }}></div>
+                              </div>
+                              
+                              {process?.due_date && (
+                                <div className={`p-4 rounded-xl border flex items-center gap-3 ${isPast(parseISO(process.due_date)) ? 'bg-red-50 border-red-100 text-red-600' : 'bg-amber-50 border-amber-100 text-amber-600'}`}>
+                                  <AlertCircle className="h-5 w-5" />
+                                  <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Alerta de Prazo</p>
+                                    <p className="text-xs font-bold leading-none">
+                                      {isPast(parseISO(process.due_date)) 
+                                        ? `Atrasado há ${differenceInDays(new Date(), parseISO(process.due_date))} dias`
+                                        : `Expira em ${differenceInDays(parseISO(process.due_date), new Date())} dias`
+                                      }
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                           </div>
                                  <p className="text-xs font-black text-primary uppercase">80%</p>
                               </div>
                               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
