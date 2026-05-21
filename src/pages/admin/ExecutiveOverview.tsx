@@ -34,9 +34,15 @@ export default function ExecutiveOverview() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-3xl font-black text-navy uppercase tracking-tight italic">Executive <span className="text-primary">Overview</span></h1>
-          <p className="text-slate-500 font-medium">Visão estratégica nacional e ecossistema NavalDocs Pro.</p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 w-full">
+          <div>
+            <h1 className="text-3xl font-black text-navy uppercase tracking-tight italic">Executive <span className="text-primary">Ecosystem</span> Overview</h1>
+            <p className="text-slate-500 font-medium">Visão estratégica nacional e ecossistema NavalDocs Pro consolidado.</p>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-navy text-white rounded-xl shadow-lg animate-in slide-in-from-right duration-500">
+             <Globe className="h-4 w-4 text-primary animate-spin-slow" />
+             <span className="text-[10px] font-black uppercase tracking-[0.2em]">National Scale Consolidated</span>
+          </div>
         </div>
         <Badge className="bg-navy text-white border-none font-black uppercase text-[10px] tracking-widest py-2 px-4 italic">
           High Level Access

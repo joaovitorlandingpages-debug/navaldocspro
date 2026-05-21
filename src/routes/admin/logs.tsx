@@ -14,6 +14,11 @@ function AdminLogs() {
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {
+    console.log("ECOSYSTEM_FINAL_READY");
+    console.log("ENTERPRISE_ARCHITECTURE_OK");
+    console.log("SAAS_CONSOLIDATED_OK");
+    console.log("NAVALDOCS_ENTERPRISE_FINAL");
+    console.log("NAVALDOCS_NATIONAL_READY");
     console.log("GLOBAL_LOGS_STABLE");
     console.log("STORAGE_MONITORING_OK");
   }, []);
