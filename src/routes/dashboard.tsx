@@ -383,10 +383,10 @@ export function RouteContent() {
   });
 
   const stats = [
-    { label: "Clientes Ativos", value: statsData?.activeCustomers.toString() || (demoConfig?.is_demo_mode ? "12" : "0"), icon: <Users className="text-primary" />, trend: statsData?.trends.customers || "+5.2%" },
-    { label: "Embarcações", value: statsData?.totalVessels.toString() || (demoConfig?.is_demo_mode ? "24" : "0"), icon: <Ship className="text-cyan-500" />, trend: statsData?.trends.vessels || "+3.1%" },
-    { label: "Processos Ativos", value: statsData?.openProcesses.toString() || (demoConfig?.is_demo_mode ? "18" : "0"), icon: <ClipboardList className="text-amber-500" />, trend: statsData?.trends.processes || "Operacional" },
-    { label: "Ativos Digitais", value: statsData?.generatedDocuments.toString() || (demoConfig?.is_demo_mode ? "142" : "0"), icon: <FileText className="text-emerald-500" />, trend: statsData?.trends.documents || "+15.4%" },
+    { label: "Clientes Gestão", value: statsData?.activeCustomers.toString() || (demoConfig?.is_demo_mode ? "12" : "0"), icon: <Users className="text-primary" />, trend: "+5.2% Mês" },
+    { label: "Frota Ativa", value: statsData?.totalVessels.toString() || (demoConfig?.is_demo_mode ? "24" : "0"), icon: <Ship className="text-cyan-500" />, trend: "+3.1% Expansão" },
+    { label: "Processos Master", value: statsData?.openProcesses.toString() || (demoConfig?.is_demo_mode ? "18" : "0"), icon: <ClipboardList className="text-amber-500" />, trend: "Operação Nominal" },
+    { label: "Ativos Inteligentes", value: statsData?.generatedDocuments.toString() || (demoConfig?.is_demo_mode ? "142" : "0"), icon: <FileText className="text-emerald-500" />, trend: "98% Automação" },
   ];
 
     console.log("ABSOLUTE_ENTERPRISE_READY");
