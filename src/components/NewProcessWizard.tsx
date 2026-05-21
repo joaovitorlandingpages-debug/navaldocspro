@@ -296,7 +296,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                 {customers.map((c) => (
                   <button
                     key={c.id}
-                    onClick={() => setFormData({ ...formData, client: c.name, clientId: c.id })}
+                    onClick={() => {
+                      setFormData({ ...formData, client: c.name, clientId: c.id });
+                      console.log("FORM_STATE_OK", { client: c.name, clientId: c.id });
+                    }}
+
                     className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${
                       formData.clientId === c.id ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
                     }`}
