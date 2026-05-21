@@ -202,8 +202,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         process_id: processData.id,
         event_type: 'creation',
         description: `Processo de ${formData.type} iniciado. Checklist automático gerado com ${checklistItems.length} itens.`,
-        severity: 'info'
+        severity: 'info',
+        module: 'process_wizard'
       });
+
 
       console.log("PROCESS_CREATED_OK");
       toast.success("Processo e pacote documental configurados!");
