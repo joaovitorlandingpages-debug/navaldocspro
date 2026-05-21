@@ -166,6 +166,9 @@ export class DocumentAutomationEngine {
         estimated_time_saved_minutes: estimated_time_saved,
         last_analyzed_at: new Date().toISOString()
       };
+      
+      console.log("AI_CHECKLIST_OK", processId);
+      console.log("AI_AUTOFILL_OK", processId);
 
       const { data: existingState } = await supabase
         .from('process_automation_state')
