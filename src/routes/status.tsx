@@ -17,7 +17,7 @@ function StatusPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="h-screen bg-slate-50 p-8 overflow-y-auto">
       <div className="max-w-4xl mx-auto space-y-8">
         <header>
           <h1 className="text-4xl font-black text-navy uppercase tracking-tight">Status do Sistema</h1>
