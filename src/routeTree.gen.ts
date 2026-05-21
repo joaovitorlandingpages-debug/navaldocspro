@@ -50,6 +50,7 @@ import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as DebugSystemRouteImport } from './routes/debug.system'
 import { Route as DebugAuthRouteImport } from './routes/debug.auth'
 import { Route as DashboardSecurityRouteImport } from './routes/dashboard.security'
+import { Route as DashboardEcosystemRouteImport } from './routes/dashboard.ecosystem'
 import { Route as DashboardDocumentsBaseRouteImport } from './routes/dashboard/documents-base'
 import { Route as DashboardDocumentCenterRouteImport } from './routes/dashboard.document-center'
 import { Route as DashboardDeadlinesRouteImport } from './routes/dashboard.deadlines'
@@ -71,6 +72,7 @@ import { Route as AdminRoadmapRouteImport } from './routes/admin/roadmap'
 import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminGlobalRouteImport } from './routes/admin/global'
+import { Route as AdminExecutiveOverviewRouteImport } from './routes/admin/executive-overview'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
 import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
@@ -283,6 +285,11 @@ const DashboardSecurityRoute = DashboardSecurityRouteImport.update({
   path: '/security',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardEcosystemRoute = DashboardEcosystemRouteImport.update({
+  id: '/ecosystem',
+  path: '/ecosystem',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardDocumentsBaseRoute = DashboardDocumentsBaseRouteImport.update({
   id: '/documents-base',
   path: '/documents-base',
@@ -389,6 +396,11 @@ const AdminGlobalRoute = AdminGlobalRouteImport.update({
   path: '/global',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminExecutiveOverviewRoute = AdminExecutiveOverviewRouteImport.update({
+  id: '/executive-overview',
+  path: '/executive-overview',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDocumentsRoute = AdminDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
@@ -462,6 +474,7 @@ export interface FileRoutesByFullPath {
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
+  '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
@@ -483,6 +496,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/dashboard/ecosystem': typeof DashboardEcosystemRoute
   '/dashboard/security': typeof DashboardSecurityRoute
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
@@ -530,6 +544,7 @@ export interface FileRoutesByTo {
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
+  '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
@@ -551,6 +566,7 @@ export interface FileRoutesByTo {
   '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/dashboard/ecosystem': typeof DashboardEcosystemRoute
   '/dashboard/security': typeof DashboardSecurityRoute
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
@@ -601,6 +617,7 @@ export interface FileRoutesById {
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
+  '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
@@ -622,6 +639,7 @@ export interface FileRoutesById {
   '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/dashboard/ecosystem': typeof DashboardEcosystemRoute
   '/dashboard/security': typeof DashboardSecurityRoute
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
@@ -673,6 +691,7 @@ export interface FileRouteTypes {
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
+    | '/admin/executive-overview'
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
@@ -694,6 +713,7 @@ export interface FileRouteTypes {
     | '/dashboard/deadlines'
     | '/dashboard/document-center'
     | '/dashboard/documents-base'
+    | '/dashboard/ecosystem'
     | '/dashboard/security'
     | '/debug/auth'
     | '/debug/system'
@@ -741,6 +761,7 @@ export interface FileRouteTypes {
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
+    | '/admin/executive-overview'
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
@@ -762,6 +783,7 @@ export interface FileRouteTypes {
     | '/dashboard/deadlines'
     | '/dashboard/document-center'
     | '/dashboard/documents-base'
+    | '/dashboard/ecosystem'
     | '/dashboard/security'
     | '/debug/auth'
     | '/debug/system'
@@ -811,6 +833,7 @@ export interface FileRouteTypes {
     | '/admin/companies'
     | '/admin/document-library'
     | '/admin/documents'
+    | '/admin/executive-overview'
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
@@ -832,6 +855,7 @@ export interface FileRouteTypes {
     | '/dashboard/deadlines'
     | '/dashboard/document-center'
     | '/dashboard/documents-base'
+    | '/dashboard/ecosystem'
     | '/dashboard/security'
     | '/debug/auth'
     | '/debug/system'
@@ -1174,6 +1198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSecurityRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/ecosystem': {
+      id: '/dashboard/ecosystem'
+      path: '/ecosystem'
+      fullPath: '/dashboard/ecosystem'
+      preLoaderRoute: typeof DashboardEcosystemRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/documents-base': {
       id: '/dashboard/documents-base'
       path: '/documents-base'
@@ -1321,6 +1352,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGlobalRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/executive-overview': {
+      id: '/admin/executive-overview'
+      path: '/executive-overview'
+      fullPath: '/admin/executive-overview'
+      preLoaderRoute: typeof AdminExecutiveOverviewRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/documents': {
       id: '/admin/documents'
       path: '/documents'
@@ -1373,6 +1411,7 @@ interface AdminRouteChildren {
   AdminCompaniesRoute: typeof AdminCompaniesRoute
   AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
+  AdminExecutiveOverviewRoute: typeof AdminExecutiveOverviewRoute
   AdminGlobalRoute: typeof AdminGlobalRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminOcrRoute: typeof AdminOcrRoute
@@ -1393,6 +1432,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCompaniesRoute: AdminCompaniesRoute,
   AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
+  AdminExecutiveOverviewRoute: AdminExecutiveOverviewRoute,
   AdminGlobalRoute: AdminGlobalRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminOcrRoute: AdminOcrRoute,
@@ -1427,6 +1467,7 @@ interface DashboardRouteChildren {
   DashboardDeadlinesRoute: typeof DashboardDeadlinesRoute
   DashboardDocumentCenterRoute: typeof DashboardDocumentCenterRoute
   DashboardDocumentsBaseRoute: typeof DashboardDocumentsBaseRoute
+  DashboardEcosystemRoute: typeof DashboardEcosystemRoute
   DashboardSecurityRoute: typeof DashboardSecurityRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
@@ -1436,6 +1477,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardDeadlinesRoute: DashboardDeadlinesRoute,
   DashboardDocumentCenterRoute: DashboardDocumentCenterRoute,
   DashboardDocumentsBaseRoute: DashboardDocumentsBaseRoute,
+  DashboardEcosystemRoute: DashboardEcosystemRoute,
   DashboardSecurityRoute: DashboardSecurityRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }

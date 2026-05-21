@@ -6,8 +6,10 @@ import {
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
   Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft,
-  Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight, Signature, Lock
+  Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight, Signature, Lock,
+  Globe
 } from "lucide-react";
+
 import { useState, useEffect, Suspense, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { NotificationCenter } from "@/components/NotificationCenter";
@@ -128,9 +130,11 @@ function DashboardLayout() {
     { group: "Visão Geral", items: [
       { name: "Painel de Controle", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
       { name: "Primeiros Passos", icon: <Rocket className="h-5 w-5" />, path: "/getting-started" },
+      { name: "Ecossistema & Parceiros", icon: <Globe className="h-5 w-5" />, path: "/dashboard/ecosystem" },
       { name: "Centro de Ops", icon: <Briefcase className="h-5 w-5" />, path: "/operations-center" },
       { name: "Inteligência IA", icon: <Cpu className="h-5 w-5" />, path: "/ai-center" },
     ]},
+
     { group: "Core Naval", items: [
       { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
       { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
