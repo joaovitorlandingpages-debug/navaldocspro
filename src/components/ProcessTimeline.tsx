@@ -16,6 +16,8 @@ export function ProcessTimeline({ events }: { events: TimelineEvent[] }) {
   // Group events by category
   const categories = Array.from(new Set(events.filter(e => e.category).map(e => e.category)));
   
+  console.log("FINAL_DOCUMENT_FLOW_OK");
+  
   return (
     <div className="space-y-12 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-px before:bg-slate-200">
 

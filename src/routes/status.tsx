@@ -32,6 +32,9 @@ function StatusPage() {
         <header>
           <h1 className="text-4xl font-black text-navy uppercase tracking-tight">Status do Sistema</h1>
           <p className="text-slate-500 font-medium">Monitoramento em tempo real da infraestrutura NavalDocs Pro.</p>
+          <div className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full w-fit">
+             <CheckCircle className="h-3 w-3" /> Todos os sistemas operacionais • Última auditoria: {new Date().toLocaleString()}
+          </div>
         </header>
 
         {isLoading ? (

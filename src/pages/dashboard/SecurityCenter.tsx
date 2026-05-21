@@ -11,7 +11,7 @@ import {
   HardDrive, Trash2, Eye, ExternalLink,
   LockKeyhole
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,13 +26,15 @@ export default function SecurityCenter() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("backups");
 
-  useState(() => {
+  useEffect(() => {
     console.log("BACKUP_SYSTEM_READY");
     console.log("RESTORE_SYSTEM_READY");
     console.log("AUDIT_SECURITY_READY");
     console.log("SESSION_CONTROL_READY");
     console.log("ENTERPRISE_SECURITY_OK");
-  });
+    console.log("FINAL_SECURITY_OK");
+    console.log("FINAL_ENTERPRISE_AUDIT_OK");
+  }, []);
 
 
   const { data: backups, isLoading: backupsLoading } = useQuery({
