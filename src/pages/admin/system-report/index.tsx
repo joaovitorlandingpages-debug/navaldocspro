@@ -8,7 +8,8 @@ import {
   Lock, LayoutDashboard, FileCheck, ClipboardList,
   PenTool, FolderKanban, Star, AlertTriangle,
   History, Settings, BarChart3, Cloud, Globe, CreditCard, Sparkles, MonitorPlay, Rocket,
-  Download, LifeBuoy, Terminal, Box, ShieldAlert, Award, Verified, CheckCircle, Hammer
+  Download, LifeBuoy, Terminal, Box, ShieldAlert, Award, Verified, CheckCircle, Hammer,
+  ActivitySquare, ClipboardCheck, LayoutList
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,12 +17,15 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useEffect, useState } from "react";
 import { GoLivePanel } from "@/components/admin/GoLivePanel";
+import { GovernancePanel } from "@/components/admin/GovernancePanel";
+import { IncidentManager } from "@/components/admin/IncidentManager";
+import { DeploymentManager } from "@/components/admin/DeploymentManager";
 
 export default function SystemReport() {
   const [readinessScore] = useState(100);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
-  const [showDeploymentChecklist, setShowDeploymentChecklist] = useState(false);
-  const [activeTab, setActiveTab] = useState<'report' | 'golive'>('report');
+  const [activeTab, setActiveTab] = useState<'report' | 'golive' | 'governance' | 'incidents' | 'deploys'>('report');
+
 
   const { data: templates } = useQuery({
     queryKey: ["admin-report-templates"],
