@@ -49,13 +49,13 @@ const Plans = () => {
   };
 
   const getIcon = (slug: string) => {
-    if (slug === 'start') return Zap;
+    if (slug === 'starter' || slug === 'start') return Zap;
     if (slug === 'professional') return Shield;
     return Crown;
   };
 
   const getColor = (slug: string) => {
-    if (slug === 'start') return 'blue';
+    if (slug === 'starter' || slug === 'start') return 'blue';
     if (slug === 'professional') return 'indigo';
     return 'purple';
   };
