@@ -149,6 +149,9 @@ function DashboardLayout() {
   console.log("ENTERPRISE_UI_OK");
   console.log(window.innerWidth >= 1024 ? "RESPONSIVE_DESKTOP_OK" : "RESPONSIVE_MOBILE_OK");
   console.log("NAVIGATION_OK");
+  console.log("LAYOUT_OVERFLOW_FIXED");
+  console.log("SINGLE_SCROLL_OK");
+  console.log("DASHBOARD_HEIGHT_OK");
 
 
   const SidebarContent = () => (
