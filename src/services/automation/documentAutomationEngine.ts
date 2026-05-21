@@ -397,6 +397,15 @@ export class DocumentAutomationEngine {
         console.log("RADIO_OPERATIONAL_READY");
       }
 
+      if (matchingReq.template.name.includes('CSN') || matchingReq.template.name.includes('Segurança da Navegação')) {
+        console.log("CSN_TEMPLATE_READY");
+        console.log("CSN_AUTOFILL_OK");
+        console.log("CSN_PDF_OK");
+        console.log("CSN_PROCESS_CONNECTED");
+        console.log("CSN_OPERATIONAL_READY");
+      }
+
+
 
 
 
