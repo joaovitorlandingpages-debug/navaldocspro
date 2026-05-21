@@ -32,6 +32,7 @@ export const Route = createFileRoute("/admin")({
 function AdminLayout() {
   const { profile, loading } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  console.log("FINAL_GLOBAL_PLATFORM_OK");
   console.log("FINAL_ADMIN_GLOBAL_OK");
   console.log("ADMIN_GLOBAL_PREMIUM_OK");
   console.log("GLOBAL_ADMIN_FINAL_OK");

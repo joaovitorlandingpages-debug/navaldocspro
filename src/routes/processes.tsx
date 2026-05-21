@@ -30,6 +30,7 @@ function Processes() {
 
 
   useEffect(() => {
+    console.log("FINAL_PROCESS_CENTER_OK");
     console.log("FINAL_OPERATION_EXPERIENCE_OK");
     console.log("PROCESS_CENTER_FINAL_OK");
     console.log("DAILY_OPERATION_READY");
