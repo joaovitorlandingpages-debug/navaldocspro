@@ -76,3 +76,30 @@ export interface DocumentVersion {
   change_summary?: string;
   created_at: string;
 }
+
+export interface DigitalSignature {
+  id: string;
+  document_id: string;
+  user_id: string;
+  company_id: string;
+  signer_name: string;
+  signer_role: string;
+  signature_type: 'simple' | 'drawn' | 'typed' | 'upload';
+  signature_data: string;
+  ip_address?: string;
+  user_agent?: string;
+  signed_at: string;
+  verification_hash: string;
+  is_valid: boolean;
+}
+
+export interface DocumentAuditLog {
+  id: string;
+  document_id: string;
+  user_id: string;
+  company_id: string;
+  action: 'created' | 'viewed' | 'downloaded' | 'signed' | 'regenerated' | 'edited' | 'deleted';
+  details?: any;
+  ip_address?: string;
+  created_at: string;
+}
