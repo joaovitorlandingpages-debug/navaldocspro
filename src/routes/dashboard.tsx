@@ -233,7 +233,7 @@ function DashboardLayout() {
   );
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-full bg-slate-50 overflow-hidden">
       {/* Mobile Sidebar */}
       <div className="lg:hidden">
         <Sheet open={isSidebarOpen && window.innerWidth < 1024} onOpenChange={setSidebarOpen}>
