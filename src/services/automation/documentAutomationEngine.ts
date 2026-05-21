@@ -217,7 +217,7 @@ export class DocumentAutomationEngine {
       return null;
     }
   }
-...
+
   /**
    * IA Operacional: Gera insights inteligentes baseados no estado do processo.
    */
