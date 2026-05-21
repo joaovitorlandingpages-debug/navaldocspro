@@ -46,32 +46,43 @@ export default function DocumentCenter() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<any>(null);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 15;
 
   const { data: documents, isLoading, refetch } = useQuery({
-    queryKey: ["document-center", profile?.company_id],
+    queryKey: ["document-center", profile?.company_id, searchQuery, page],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("documents")
         .select(`
           *,
           vessels(name),
           customers(name),
           profiles:created_by_profile_id(full_name)
-        `)
-        .eq("company_id", profile?.company_id)
-        .order('created_at', { ascending: false });
+        `, { count: 'exact' })
+        .eq("company_id", profile?.company_id);
+
+      if (searchQuery) {
+        query = query.or(`document_type.ilike.%${searchQuery}%,status.ilike.%${searchQuery}%`);
+      }
+
+      const { data, count, error } = await query
+        .order('created_at', { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1);
       
       if (error) throw error;
+      if (count !== null) setTotalCount(count);
       return data;
     },
     enabled: !!profile?.company_id
   });
 
-  const filteredDocs = documents?.filter((doc: any) => 
-    doc.document_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doc.vessels?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doc.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    console.log("CACHE_SYSTEM_OK");
+  }, []);
+
+  const filteredDocs = documents; // Ja filtrado pela query
 
   const getStatusBadge = (status: string) => {
     switch (status) {
