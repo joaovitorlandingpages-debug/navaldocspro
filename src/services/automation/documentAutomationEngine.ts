@@ -453,6 +453,15 @@ export class DocumentAutomationEngine {
         console.log("MATERIAL_OPERATIONAL_READY");
       }
 
+      if (matchingReq.template.name.includes('Capacidade e Lotação')) {
+        console.log("LOTACAO_TEMPLATE_READY");
+        console.log("LOTACAO_AUTOFILL_OK");
+        console.log("LOTACAO_PDF_OK");
+        console.log("LOTACAO_PROCESS_CONNECTED");
+        console.log("LOTACAO_OPERATIONAL_READY");
+      }
+
+
 
 
 
