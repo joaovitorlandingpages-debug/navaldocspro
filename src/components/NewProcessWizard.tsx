@@ -47,6 +47,8 @@ const INITIAL_FORM_DATA = {
 export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const { profile } = useAuth();
   const [step, setStep] = useState(1);
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const totalSteps = 6;
   const progressPercent = (step / totalSteps) * 100;
