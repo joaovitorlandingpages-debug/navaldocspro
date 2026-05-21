@@ -8,6 +8,7 @@ import {
   Activity, 
   ArrowLeft,
   LayoutDashboard,
+  Bot,
   LogOut,
   CreditCard,
   History,
@@ -73,6 +74,7 @@ function AdminLayout() {
   const adminNavItems = [
     { name: "Visão Geral", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },
     { name: "Executive Overview", icon: <Globe className="h-5 w-5" />, path: "/admin/executive-overview" },
+    { name: "AI Global Console", icon: <Bot className="h-5 w-5" />, path: "/admin/global" },
     { name: "Empresas", icon: <Building className="h-5 w-5" />, path: "/admin/companies" },
     { name: "Métricas SaaS", icon: <TrendingUp className="h-5 w-5" />, path: "/admin/saas-metrics" },
     { name: "Roadmap", icon: <Rocket className="h-5 w-5" />, path: "/admin/roadmap" },
