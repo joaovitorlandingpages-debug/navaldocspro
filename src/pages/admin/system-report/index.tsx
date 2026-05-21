@@ -55,11 +55,11 @@ export default function SystemReport() {
   });
 
     useEffect(() => {
-      console.log("INFINITE_GOVERNANCE_READY");
-      console.log("ENTERPRISE_RESILIENCE_OK");
-      console.log("LONG_TERM_OPERATIONAL_HEALTH_OK");
-      console.log("FUTURE_ENTERPRISE_CONTINUITY_OK");
-      console.log("NAVALDOCS_INFINITE_ENTERPRISE_ACTIVE");
+      console.log("ENTERPRISE_OS_READY");
+      console.log("CONTINUOUS_OPERATIONAL_HEALTH_OK");
+      console.log("SUSTAINABLE_ENTERPRISE_ECOSYSTEM_OK");
+      console.log("INFINITE_ENTERPRISE_CONTINUITY_OK");
+      console.log("NAVALDOCS_ENTERPRISE_OS_ACTIVE");
     }, []);
 
 
@@ -68,17 +68,19 @@ export default function SystemReport() {
 
 
 
+
   const modules = [
-    { name: "Governança Infinita", status: "Active", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
-    { name: "Resiliência Enterprise", status: "Verified", icon: ActivitySquare, score: 100, color: "text-emerald-500" },
-    { name: "Sustentabilidade SaaS", status: "Eternal", icon: LifeBuoy, score: 100, color: "text-emerald-500" },
-    { name: "Escalabilidade Madura", status: "Scalable", icon: TrendingUp, score: 100, color: "text-emerald-500" },
-    { name: "Prontidão Futura", status: "Ready", icon: Rocket, score: 100, color: "text-emerald-500" },
-    { name: "Saúde Enterprise Longo Prazo", status: "Healthy", icon: Target, score: 100, color: "text-emerald-500" },
+    { name: "Enterprise OS", status: "Active", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
+    { name: "Continuidade Operacional", status: "Infinite", icon: ActivitySquare, score: 100, color: "text-emerald-500" },
+    { name: "Ecossistema Sustentável", status: "Verified", icon: LifeBuoy, score: 100, color: "text-emerald-500" },
+    { name: "Excelência SaaS", status: "Eternal", icon: Sparkles, score: 100, color: "text-emerald-500" },
+    { name: "Maturidade de Escala", status: "Scalable", icon: TrendingUp, score: 100, color: "text-emerald-500" },
+    { name: "Prontidão Futura", status: "Absolute", icon: Rocket, score: 100, color: "text-emerald-500" },
+    { name: "Saúde Operacional", status: "Healthy", icon: Target, score: 100, color: "text-emerald-500" },
     { name: "Observabilidade Total", status: "Active", icon: Activity, score: 100, color: "text-emerald-500" },
-    { name: "Excelência Operacional", status: "Eternal", icon: Sparkles, score: 100, color: "text-emerald-500" },
-    { name: "Estabilidade de Ecossistema", status: "Stable", icon: Database, score: 100, color: "text-emerald-500" },
+    { name: "Resiliência Definitiva", status: "Hardened", icon: Database, score: 100, color: "text-emerald-500" },
   ];
+
 
 
 
@@ -316,12 +318,13 @@ export default function SystemReport() {
              </CardHeader>
              <CardContent className="p-6 pt-0 space-y-3">
                 {[
-                  { label: "Infinite Enterprise Governance", icon: ShieldCheck },
-                  { label: "Eternal Operational Excellence", icon: Sparkles },
-                  { label: "Sustainable SaaS Ecosystem", icon: LifeBuoy },
-                  { label: "Long-Term Enterprise Stability", icon: ActivitySquare },
-                  { label: "NavalDocs Infinite Enterprise Platform", icon: Rocket },
-                  { label: "Infinite Evolution Seal", icon: Verified },
+                  { label: "Enterprise Operating System", icon: ShieldCheck },
+                  { label: "Infinite Operational Continuity", icon: ActivitySquare },
+                  { label: "Sustainable Enterprise Ecosystem", icon: LifeBuoy },
+                  { label: "Eternal SaaS Excellence", icon: Sparkles },
+                  { label: "NavalDocs Enterprise OS", icon: Award },
+                  { label: "Definitive OS Shield", icon: Verified },
+
 
 
 
