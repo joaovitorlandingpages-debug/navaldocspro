@@ -203,9 +203,14 @@ export function AdminDashboardView() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-            <h4 className="font-black text-navy uppercase tracking-widest text-xs mb-6">Empresas em Onboarding</h4>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+         <div className="lg:col-span-2 bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.02)]">
+            <div className="flex justify-between items-center mb-8">
+               <h4 className="font-black text-navy uppercase tracking-[0.2em] text-[10px] flex items-center gap-3">
+                  <Building className="h-5 w-5 text-primary" /> Ativações Pendentes
+               </h4>
+               <Badge variant="secondary" className="bg-slate-50 text-slate-400 border-none font-black text-[9px] uppercase tracking-widest px-3 py-1.5">Aguardando Triagem</Badge>
+            </div>
             <div className="space-y-4">
                {companies?.filter((c: any) => c.onboarding_status === 'pending').slice(0, 3).map((company: any) => (
                  <div key={company.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
