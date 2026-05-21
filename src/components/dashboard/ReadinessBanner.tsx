@@ -22,7 +22,7 @@ export function ReadinessBanner() {
   if (isLoading) return <Skeleton className="h-40 w-full rounded-[2.5rem]" />;
 
   return (
-    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-8 animate-in fade-in duration-700">
+    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col md:flex-row items-center gap-8 animate-in fade-in duration-700 hover:shadow-2xl hover:shadow-primary/5 transition-all group">
        <div className="relative h-32 w-32 flex-shrink-0">
           <svg className="h-full w-full" viewBox="0 0 100 100">
              <circle className="text-slate-100" strokeWidth="8" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" />
@@ -40,7 +40,7 @@ export function ReadinessBanner() {
              />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-             <span className="text-3xl font-black text-navy">{averageScore}</span>
+             <span className="text-3xl font-black text-navy group-hover:scale-110 transition-transform">{averageScore}</span>
              <span className="text-[8px] font-black uppercase text-slate-400">Readiness</span>
           </div>
        </div>
