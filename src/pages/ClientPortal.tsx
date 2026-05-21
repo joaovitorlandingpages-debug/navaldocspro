@@ -56,7 +56,7 @@ export default function ClientPortal() {
     enabled: !!profile?.email
   });
 
-  const selectedProcess = processes?.find(p => p.id === selectedProcessId) || processes?.[0];
+  const selectedProcess = processes?.find((p: any) => p.id === selectedProcessId) || processes?.[0];
 
   const { data: documents } = useQuery({
     queryKey: ["client-process-docs", selectedProcess?.id],
@@ -153,7 +153,7 @@ export default function ClientPortal() {
                  <Signature className="h-16 w-16 text-primary" />
               </div>
               <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Assinaturas</p>
-              <h3 className="text-3xl font-black text-primary">{documents?.filter(d => d.status === 'pending_signature').length || 0}</h3>
+              <h3 className="text-3xl font-black text-primary">{documents?.filter((d: any) => d.status === 'pending_signature').length || 0}</h3>
            </Card>
         </div>
 
@@ -165,7 +165,7 @@ export default function ClientPortal() {
               </h3>
               {processes && processes.length > 1 && (
                 <div className="flex gap-2">
-                   {processes.map(p => (
+                   {processes.map((p: any) => (
                      <button 
                        key={p.id}
                        onClick={() => setSelectedProcessId(p.id)}
@@ -274,7 +274,7 @@ export default function ClientPortal() {
                        <div className="space-y-6">
                           <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Status Documental</h5>
                           <div className="space-y-3">
-                             {documents?.map((doc) => (
+                             {documents?.map((doc: any) => (
                                <div key={doc.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-4 group">
                                   <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
                                      <FileText className="h-5 w-5" />
@@ -368,10 +368,15 @@ export default function ClientPortal() {
          <Upload className="h-6 w-6" />
       </Button>
 
-      <span className="hidden">
-        {console.log("CLIENT_UPLOAD_READY")}
-        {console.log("CLIENT_TIMELINE_OK")}
-      </span>
+      <PortalLogs />
     </div>
   );
+}
+
+function PortalLogs() {
+  useEffect(() => {
+    console.log("CLIENT_UPLOAD_READY");
+    console.log("CLIENT_TIMELINE_OK");
+  }, []);
+  return null;
 }
