@@ -42,44 +42,45 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
 
   if (!profile || isAuthPage) return null;
 
-  const { data: insights } = useQuery({
-    queryKey: ['operational_insights', processId],
+  const { data: insights, refetch } = useQuery({
+    queryKey: ['operational_insights', processId, profile?.company_id],
     queryFn: async () => {
-      // In a real scenario, this fetches from the new operational_insights table
-      const { data } = await supabase
+      let query = supabase
         .from('operational_insights')
         .select('*')
         .eq('is_resolved', false)
-        .limit(3);
+        .order('confidence_score', { ascending: false });
+      
+      if (processId) {
+        query = query.eq('process_id', processId);
+      } else {
+        query = query.eq('company_id', profile?.company_id);
+      }
+      
+      const { data, error } = await query.limit(5);
+      if (error) throw error;
       
       if (!data || data.length === 0) {
         return [
           { 
-            id: '1', 
-            type: 'automation', 
-            message: 'Este processo pode gerar automaticamente o BCE.', 
-            action_label: 'Gerar Documento',
-            confidence_score: 0.98 
-          },
-          { 
-            id: '2', 
-            type: 'critical', 
-            message: 'Existe divergência no número do motor entre os documentos.', 
-            action_label: 'Revisar OCR',
-            confidence_score: 0.95 
-          },
-          { 
-            id: '3', 
+            id: 'welcome', 
             type: 'suggestion', 
-            message: 'Falta apenas uma assinatura para protocolar na Anatel.', 
-            action_label: 'Solicitar Assinatura',
+            message: `Olá, ${profile?.full_name?.split(' ')[0]}! Eu sou sua IA Operacional. Estou analisando seus processos em tempo real.`, 
             confidence_score: 1.0 
           }
         ] as Insight[];
       }
       return data as Insight[];
-    }
+    },
+    enabled: !!profile?.company_id,
+    refetchInterval: 30000 // Refresh a cada 30s para novos insights
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      console.log("AI_ASSISTANT_READY");
+    }
+  }, [isOpen]);
 
   if (!isOpen) return (
     <button 

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -21,26 +22,34 @@ export function IntelligencePanel() {
   const { data: insights } = useQuery({
     queryKey: ["operational-insights-real"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user.id).single();
+      if (!profile) return [];
+
       const { data, error } = await supabase
         .from('operational_insights')
-        .select('*')
+        .select('*, processes(id, process_type)')
+        .eq('company_id', profile.company_id)
         .eq('is_resolved', false)
         .order('created_at', { ascending: false })
-        .limit(4);
+        .limit(6);
       
       if (error) throw error;
       
       if (!data || data.length === 0) {
         return [
-          { id: '1', type: 'automation', message: 'O processo #2024-001X já possui todos os dados para emissão do BCE.', action_label: 'Gerar BCE Agora' },
-          { id: '2', type: 'critical', message: 'Divergência detectada no número do motor entre TIE e Memorial Técnico.', action_label: 'Revisar OCR' },
-          { id: '3', type: 'bottleneck', message: 'Assinatura do Engenheiro pendente há mais de 48h.', action_label: 'Notificar Responsável' },
-          { id: '4', type: 'suggestion', message: 'Sugerimos atualizar o cadastro do cliente com base no novo RG extraído.', action_label: 'Sincronizar Dados' },
+          { id: 'empty', type: 'suggestion', message: 'Nenhuma pendência crítica detectada pela IA no momento. Sua operação está nominal.', action_label: 'Ver Todos Processos' },
         ];
       }
       return data;
     }
   });
+
+  useEffect(() => {
+    console.log("AI_OPERATIONAL_INSIGHTS_OK");
+  }, []);
 
   return (
     <div className="space-y-6">

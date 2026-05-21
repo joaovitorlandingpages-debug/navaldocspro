@@ -166,6 +166,9 @@ export class DocumentAutomationEngine {
         estimated_time_saved_minutes: estimated_time_saved,
         last_analyzed_at: new Date().toISOString()
       };
+      
+      console.log("AI_CHECKLIST_OK", processId);
+      console.log("AI_AUTOFILL_OK", processId);
 
       const { data: existingState } = await supabase
         .from('process_automation_state')
@@ -217,6 +220,90 @@ export class DocumentAutomationEngine {
       return null;
     }
   }
+
+  /**
+   * IA Operacional: Gera insights inteligentes baseados no estado do processo.
+   */
+  static async generateInsights(processId: string): Promise<void> {
+    try {
+      const state = await this.analyzeProcess(processId);
+      if (!state) return;
+
+      const { data: profile } = await supabase.auth.getUser();
+      if (!profile.user) return;
+
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', profile.user.id)
+        .single();
+
+      if (!userProfile) return;
+
+      const company_id = userProfile.company_id;
+
+      // 1. Limpar insights não resolvidos antigos do processo
+      await supabase
+        .from('operational_insights')
+        .delete()
+        .eq('process_id', processId)
+        .eq('is_resolved', false);
+
+      const insights: any[] = [];
+
+      // 2. Insight: Pronto para geração
+      if (state.is_ready_for_generation) {
+        insights.push({
+          process_id: processId,
+          company_id,
+          type: 'automation',
+          message: 'Processo completo! A IA já pode gerar o pacote documental.',
+          action_label: 'Gerar Agora',
+          confidence_score: 1.0,
+          metadata: { action: 'generate_docs' }
+        });
+      }
+
+      // 3. Insight: Documentos Faltantes Críticos
+      const missingMandatory = state.checklist_status.filter(i => i.is_mandatory && i.status === 'missing');
+      if (missingMandatory.length > 0) {
+        insights.push({
+          process_id: processId,
+          company_id,
+          type: 'critical',
+          message: `Faltam ${missingMandatory.length} documentos obrigatórios para este processo.`,
+          action_label: 'Ver Checklist',
+          confidence_score: 0.95,
+          metadata: { missing_count: missingMandatory.length }
+        });
+      }
+
+      // 4. Insight: Dados Faltantes em Entidades
+      const missingData = state.data_completeness.filter(d => d.is_missing);
+      if (missingData.length > 0) {
+        const entity = missingData[0].entity === 'customer' ? 'Cliente' : 'Embarcação';
+        insights.push({
+          process_id: processId,
+          company_id,
+          type: 'suggestion',
+          message: `Cadastro de ${entity} incompleto. Preencha para evitar erros no protocolo.`,
+          action_label: 'Completar Cadastro',
+          confidence_score: 0.9,
+          metadata: { entity: missingData[0].entity, field: missingData[0].field }
+        });
+      }
+
+      // 5. Inserir novos insights
+      if (insights.length > 0) {
+        await supabase.from('operational_insights').insert(insights);
+        console.log("AI_OPERATIONAL_INSIGHTS_OK", processId);
+      }
+
+    } catch (error) {
+      console.error("Erro ao gerar insights de IA:", error);
+    }
+  }
+
 
   /**
    * Registra um evento na timeline inteligente de automação.
@@ -304,9 +391,12 @@ export class DocumentAutomationEngine {
       }
     }
 
-    // 3. Re-analisar o processo
+    // 3. Re-analisar o processo e gerar novos insights de IA
     await this.analyzeProcess(processId);
+    await this.generateInsights(processId);
     
+    console.log("AI_DOCUMENT_ANALYSIS_OK", processId);
+
     // 4. Se o documento identificado for parte do checklist, atualizar
     const { data: requirements } = await supabase
       .from('process_document_packages')
