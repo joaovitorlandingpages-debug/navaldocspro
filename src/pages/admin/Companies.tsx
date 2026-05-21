@@ -48,7 +48,7 @@ export default function AdminCompanies() {
     }
   });
 
-  const filteredCompanies = companies?.filter(c => 
+  const filteredCompanies = companies?.filter((c: any) => 
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.plan_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -94,7 +94,7 @@ export default function AdminCompanies() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {filteredCompanies?.map((company) => (
+          {filteredCompanies?.map((company: any) => (
             <Card key={company.id} className="border-slate-100 hover:shadow-md transition-all group overflow-hidden">
               <CardContent className="p-0">
                 <div className="flex flex-col lg:flex-row items-center p-6 gap-8">
@@ -172,8 +172,10 @@ export default function AdminCompanies() {
         </div>
       )}
       
-      {console.log("MASTER_ADMIN_READY")}
-      {console.log("SAAS_CONTROL_READY")}
+      <span className="hidden">
+        {console.log("MASTER_ADMIN_READY")}
+        {console.log("SAAS_CONTROL_READY")}
+      </span>
     </div>
   );
 }
