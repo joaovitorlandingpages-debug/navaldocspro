@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Rocket, CheckCircle2, Circle, 
-  ChevronRight, X, PlayCircle 
+  ChevronRight, X, PlayCircle, ArrowRight 
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
@@ -38,71 +38,75 @@ export function WelcomeTour({
   const progress = (completedCount / steps.length) * 100;
 
   return (
-    <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-[calc(100vw-2rem)] md:max-w-md w-full fixed bottom-4 right-4 md:bottom-8 md:right-8 z-[90] ring-1 ring-navy/5">
-      <div className="bg-navy p-8 text-white relative overflow-hidden group">
-        <Rocket className="absolute -right-8 -top-8 h-32 w-32 text-white/5 group-hover:scale-110 transition-transform duration-700" />
+    <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] border border-slate-100 shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden animate-in fade-in zoom-in duration-700 max-w-[calc(100vw-2rem)] md:max-w-md w-full relative z-[110] ring-1 ring-navy/5">
+      <div className="bg-[#000B18] p-10 text-white relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-full h-full bg-primary/10 blur-[60px] -mr-40 group-hover:bg-primary/20 transition-all duration-1000" />
         <button 
           onClick={() => { setIsOpen(false); onClose(); }}
-          className="absolute top-6 right-6 text-white/40 hover:text-white transition-all z-10"
+          className="absolute top-8 right-8 text-white/40 hover:text-white transition-all z-20 h-10 w-10 flex items-center justify-center rounded-full hover:bg-white/5"
         >
           <X className="h-6 w-6" />
         </button>
-        <div className="flex items-center gap-4 mb-6 relative z-10">
-          <div className="p-3 bg-primary/20 rounded-2xl">
-            <Rocket className="h-6 w-6 text-primary" />
+        
+        <div className="flex items-center gap-6 mb-8 relative z-10">
+          <div className="p-4 bg-primary rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.4)] group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+            <Rocket className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h3 className="font-black uppercase tracking-widest text-xs text-primary">Onboarding Premium</h3>
-            <h2 className="text-xl font-bold leading-tight">Configuração Inicial</h2>
+            <h3 className="font-black uppercase tracking-[0.25em] text-[10px] text-primary mb-1">Onboarding Premium</h3>
+            <h2 className="text-2xl font-black italic tracking-tighter leading-none uppercase">Setup Inicial</h2>
           </div>
         </div>
-        <div className="space-y-3 relative z-10">
-           <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
-              <span>Status de Implantação</span>
+        
+        <div className="space-y-4 relative z-10">
+           <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
+              <span className="text-white/40">Status de Implantação</span>
               <span className="text-primary">{Math.round(progress)}%</span>
            </div>
-           <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+           <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-primary transition-all duration-1000" 
+                className="h-full bg-primary transition-all duration-1000 relative" 
                 style={{ width: `${progress}%` }}
-              />
+              >
+                <div className="absolute top-0 right-0 h-full w-8 bg-white/20 blur-sm animate-pulse" />
+              </div>
            </div>
         </div>
       </div>
 
-      <div className="p-8 space-y-5 max-h-[400px] overflow-y-auto custom-scrollbar bg-white">
+      <div className="p-10 space-y-6 max-h-[450px] overflow-y-auto custom-scrollbar bg-white">
         {steps.map((step) => (
-          <div key={step.id} className="flex gap-5 items-start group">
+          <div key={step.id} className="flex gap-6 items-start group">
             <div className="mt-1">
               {step.completed ? (
-                <div className="h-6 w-6 bg-emerald-50 rounded-lg flex items-center justify-center">
+                <div className="h-7 w-7 bg-emerald-50 rounded-xl flex items-center justify-center shadow-sm">
                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                 </div>
               ) : (
-                <div className="h-6 w-6 border-2 border-slate-100 rounded-lg flex items-center justify-center group-hover:border-primary/40 transition-all">
+                <div className="h-7 w-7 border-2 border-slate-100 rounded-xl flex items-center justify-center group-hover:border-primary/40 group-hover:bg-primary/5 transition-all">
                    <Circle className="h-3 w-3 text-slate-200 group-hover:text-primary transition-all" />
                 </div>
               )}
             </div>
             <div className="flex-grow">
-              <h4 className={`text-sm font-bold tracking-tight ${step.completed ? 'text-slate-300' : 'text-navy'}`}>
+              <h4 className={`text-[13px] font-black uppercase tracking-tight ${step.completed ? 'text-slate-300' : 'text-navy'}`}>
                 {step.title}
               </h4>
-              <p className="text-[10px] text-slate-400 font-medium leading-relaxed">{step.description}</p>
+              <p className="text-[11px] text-slate-400 font-bold mt-1 leading-relaxed">{step.description}</p>
             </div>
             {!step.completed && (
-              <ChevronRight className="h-4 w-4 text-slate-200 opacity-0 group-hover:opacity-100 transition-all" />
+              <ChevronRight className="h-5 w-5 text-slate-200 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1" />
             )}
           </div>
         ))}
       </div>
 
-      <div className="p-8 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-         <button className="flex items-center gap-2 text-[10px] font-black uppercase text-navy hover:text-primary transition-all">
-            <PlayCircle className="h-5 w-5" /> Ver Vídeo Tutorial
+      <div className="p-10 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-4 justify-between">
+         <button className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-navy/40 hover:text-primary transition-all">
+            <PlayCircle className="h-5 w-5" /> Assistir Tutorial
          </button>
-         <Button className="bg-navy text-[10px] font-black uppercase tracking-widest px-6 py-5 rounded-2xl shadow-xl hover:opacity-90 transition-all">
-            Próximo Passo
+         <Button className="w-full sm:w-auto bg-navy text-[11px] font-black uppercase tracking-[0.2em] px-10 py-7 rounded-2xl shadow-xl hover:bg-slate-900 transition-all border border-navy/10 active:scale-95">
+            Configurar Agora <ArrowRight className="ml-3 h-4 w-4" />
          </Button>
       </div>
     </div>
