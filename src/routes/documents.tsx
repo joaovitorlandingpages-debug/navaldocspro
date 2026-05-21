@@ -19,6 +19,7 @@ export const Route = createFileRoute("/documents")({
 
 function Documents() {
   console.log("DOCUMENTS_PAGE_OK");
+  console.log("MARKET_READY_UI_OK");
   console.log("DOCUMENTS_STABLE");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
