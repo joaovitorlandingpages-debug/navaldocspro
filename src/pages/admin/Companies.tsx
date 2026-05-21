@@ -37,7 +37,7 @@ export default function AdminCompanies() {
       
       if (error) throw error;
       
-      return data.map(c => ({
+      return (data || []).map((c: any) => ({
         ...c,
         user_count: c.profiles?.length || 0,
         plan_name: c.subscriptions?.[0]?.plans?.name || "Free",
@@ -172,10 +172,10 @@ export default function AdminCompanies() {
         </div>
       )}
       
-      <span className="hidden">
+      <div className="hidden">
         {console.log("MASTER_ADMIN_READY")}
         {console.log("SAAS_CONTROL_READY")}
-      </span>
+      </div>
     </div>
   );
 }
