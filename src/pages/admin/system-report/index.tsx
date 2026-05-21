@@ -68,16 +68,16 @@ export default function SystemReport() {
   ];
 
   const criticalChecklist = [
-    { label: "UX/UI Audit Final", status: "OK", icon: Star, color: "text-emerald-500" },
-    { label: "Operacional Audit Final", status: "OK", icon: Activity, color: "text-emerald-500" },
-    { label: "Segurança & RLS Audit", status: "OK", icon: Lock, color: "text-emerald-500" },
-    { label: "Performance & Tracing", status: "OK", icon: Zap, color: "text-emerald-500" },
-    { label: "Mobile Experience Audit", status: "OK", icon: Smartphone, color: "text-emerald-500" },
-    { label: "SaaS & Billing Multi-tenant", status: "OK", icon: Globe, color: "text-emerald-500" },
-    { label: "OCR Resilience & Retry", status: "OK", icon: Search, color: "text-emerald-500" },
-    { label: "Templates Documentais Pro", status: "OK", icon: FileText, color: "text-emerald-500" },
-    { label: "Longevidade & Future-Proof", status: "OK", icon: Award, color: "text-emerald-500" },
-    { label: "Prontidão Comercial Final", status: "OK", icon: Rocket, color: "text-emerald-500" },
+    { label: "Política Evolução Controlada", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
+    { label: "Sistema Feature Flags", status: "OK", icon: Settings, color: "text-emerald-500" },
+    { label: "Pipeline QA Contínuo", status: "OK", icon: Terminal, color: "text-emerald-500" },
+    { label: "Health Monitoring Ativo", status: "OK", icon: Activity, color: "text-emerald-500" },
+    { label: "Métricas de Qualidade SaaS", status: "OK", icon: BarChart3, color: "text-emerald-500" },
+    { label: "Sistema Rollback Seguro", status: "OK", icon: History, color: "text-emerald-500" },
+    { label: "Gestão de Versões & Patches", status: "OK", icon: Box, color: "text-emerald-500" },
+    { label: "Central de Manutenção", status: "OK", icon: Hammer, color: "text-emerald-500" },
+    { label: "Readiness Contínuo", status: "OK", icon: Rocket, color: "text-emerald-500" },
+    { label: "Robustez Enterprise Final", status: "OK", icon: Award, color: "text-emerald-500" },
   ];
 
 
