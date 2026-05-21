@@ -20,6 +20,7 @@ import { useNewProcess } from "@/hooks/useNewProcess";
 import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidgets";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { OperationalCharts } from "@/components/OperationalCharts";
+import { PerformanceMonitor } from "@/components/performance/PerformanceMonitor";
 
 export const Route = createFileRoute("/dashboard-v2")({
   component: () => (
