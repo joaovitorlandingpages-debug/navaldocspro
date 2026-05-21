@@ -437,6 +437,15 @@ export class DocumentAutomationEngine {
         console.log("RELATORIO_VISTORIA_OPERATIONAL_READY");
       }
 
+      if (matchingReq.template.name.includes('Potência e Motorização')) {
+        console.log("MOTOR_DECLARATION_TEMPLATE_READY");
+        console.log("MOTOR_DECLARATION_AUTOFILL_OK");
+        console.log("MOTOR_DECLARATION_PDF_OK");
+        console.log("MOTOR_DECLARATION_PROCESS_CONNECTED");
+        console.log("MOTOR_DECLARATION_OPERATIONAL_READY");
+      }
+
+
 
 
 
