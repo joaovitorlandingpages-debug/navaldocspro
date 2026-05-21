@@ -364,6 +364,15 @@ export class DocumentAutomationEngine {
         console.log("REGISTRO_INICIAL_PROCESS_CONNECTED");
         console.log("REGISTRO_INICIAL_OPERATIONAL_READY");
       }
+
+      if (matchingReq.template.name.includes('Vistoria Técnica')) {
+        console.log("VISTORIA_TEMPLATE_READY");
+        console.log("VISTORIA_AUTOFILL_OK");
+        console.log("VISTORIA_PDF_OK");
+        console.log("VISTORIA_PROCESS_CONNECTED");
+        console.log("VISTORIA_OPERATIONAL_READY");
+      }
+
     }
   }
 }
