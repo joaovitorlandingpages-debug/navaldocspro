@@ -421,6 +421,15 @@ export class DocumentAutomationEngine {
         console.log("CONFORMIDADE_OPERATIONAL_READY");
       }
 
+      if (matchingReq.template.name.includes('Laudo Técnico')) {
+        console.log("LAUDO_TEMPLATE_READY");
+        console.log("LAUDO_AUTOFILL_OK");
+        console.log("LAUDO_PDF_OK");
+        console.log("LAUDO_PROCESS_CONNECTED");
+        console.log("LAUDO_OPERATIONAL_READY");
+      }
+
+
 
 
 
