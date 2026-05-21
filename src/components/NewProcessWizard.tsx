@@ -119,8 +119,15 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   };
 
   const handleTypeSelect = (type: any) => {
-    setFormData({ ...formData, typeId: type.id, type: type.name });
+    setFormData({ 
+      ...formData, 
+      typeId: type.id, 
+      type: type.name,
+      category: type.category || "" 
+    });
+    console.log("STEP_RENDER_OK", 1);
   };
+
 
   const handleNext = () => {
     if (step < totalSteps) setStep(step + 1);
