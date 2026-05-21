@@ -129,8 +129,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       type: type.name,
       category: type.category || "" 
     });
+    console.log("PROCESS_TYPE_SELECTED", type.name);
     console.log("STEP_RENDER_OK", 1);
   };
+
 
 
   const handleNext = () => {
