@@ -418,9 +418,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                     {formData.clientId === c.id && <Check className="h-4 w-4 text-primary" />}
                   </button>
                 ))}
-                {customers.length === 0 && !searchTerm && (
-                   <p className="text-xs text-slate-400 text-center py-4">Nenhum cliente sugerido. Use a busca.</p>
+                {customers.length === 0 && (
+                   <p className="text-xs text-slate-400 text-center py-4">Nenhum cliente encontrado. {searchTerm ? "Tente outro termo ou crie um novo." : "Use a busca ou crie um novo."}</p>
                 )}
+
               </div>
             </div>
 
