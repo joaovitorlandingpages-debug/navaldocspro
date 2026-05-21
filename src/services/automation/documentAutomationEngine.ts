@@ -358,13 +358,14 @@ export class DocumentAutomationEngine {
       }
 
       if (matchingReq.template.name.includes('Registro Inicial')) {
-        console.log(\"REGISTRO_INICIAL_TEMPLATE_READY\");
-        console.log(\"REGISTRO_INICIAL_AUTOFILL_OK\");
-        console.log(\"REGISTRO_INICIAL_PDF_OK\");
-        console.log(\"REGISTRO_INICIAL_PROCESS_CONNECTED\");
-        console.log(\"REGISTRO_INICIAL_OPERATIONAL_READY\");
+        console.log("REGISTRO_INICIAL_TEMPLATE_READY");
+        console.log("REGISTRO_INICIAL_AUTOFILL_OK");
+        console.log("REGISTRO_INICIAL_PDF_OK");
+        console.log("REGISTRO_INICIAL_PROCESS_CONNECTED");
+        console.log("REGISTRO_INICIAL_OPERATIONAL_READY");
       }
-
+    }
   }
 }
+
 
