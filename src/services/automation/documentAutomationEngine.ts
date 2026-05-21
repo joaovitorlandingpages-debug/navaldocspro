@@ -326,7 +326,14 @@ export class DocumentAutomationEngine {
         (docType === 'RESIDENCE_PROOF' && (templateName.includes('RESIDÊNCIA') || templateName.includes('ENDEREÇO'))) ||
         (docType === 'VESSEL_TIE' && (templateName.includes('TIE') || templateName.includes('INSCRIÇÃO') || templateName.includes('DPC-2211'))) ||
         (docType === 'INVOICE' && (templateName.includes('NOTA FISCAL') || templateName.includes('NF'))) ||
-        (docType === 'FINANCIAL_GRU' && (templateName.includes('GRU') || templateName.includes('PAGAMENTO')))
+        (docType === 'FINANCIAL_GRU' && (templateName.includes('GRU') || templateName.includes('PAGAMENTO'))) ||
+        (docType === 'SAFETY_CERTIFICATE' && (templateName.includes('CSN') || templateName.includes('SEGURANÇA'))) ||
+        (docType === 'DPEM_INSURANCE' && (templateName.includes('DPEM') || templateName.includes('SEGURO'))) ||
+        (docType === 'TECHNICAL_REPORT' && (templateName.includes('LAUDO') || templateName.includes('ART'))) ||
+        (docType === 'TECHNICAL_MEMORIAL' && templateName.includes('MEMORIAL')) ||
+        (docType === 'PURCHASE_CONTRACT' && (templateName.includes('CONTRATO') || templateName.includes('COMPRA') || templateName.includes('RECIBO'))) ||
+        (docType === 'POLICE_REPORT' && (templateName.includes('BO') || templateName.includes('BOLETIM') || templateName.includes('OCORRÊNCIA'))) ||
+        (docType === 'PAYMENT_PROOF' && (templateName.includes('PAGAMENTO') || templateName.includes('COMPROVANTE')))
       );
     });
 
