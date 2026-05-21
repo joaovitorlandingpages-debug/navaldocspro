@@ -36,6 +36,15 @@ function DashboardV2Layout() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!loading && profile) {
+      if (profile.role === 'customer' || profile.role === 'client') {
+        console.log("DASHBOARD_V2_REDIRECT_CLIENT");
+        navigate({ to: "/client-portal" });
+      }
+    }
+  }, [profile, loading, navigate]);
+
+  useEffect(() => {
     console.log("DASHBOARD_V2_RENDERED");
     console.log("DASHBOARD_STABLE");
     console.log("LAYOUT_OVERFLOW_FIXED");
