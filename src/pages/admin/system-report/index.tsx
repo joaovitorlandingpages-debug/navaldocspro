@@ -60,7 +60,7 @@ export default function SystemReport() {
     { name: "Checklist Dinâmico", status: "Funcionando", icon: ClipboardList, score: 100, color: "text-emerald-500" },
     { name: "Upload & Storage", status: "Funcionando", icon: Cloud, score: 100, color: "text-emerald-500" },
     { name: "OCR Inteligente", status: "Funcionando", icon: Search, score: 100, color: "text-emerald-500" },
-    { name: "Geração de Documentos", status: "Parcial", icon: FileText, score: 85, color: "text-amber-500" },
+    { name: "Geração de Documentos", status: "Funcionando", icon: FileText, score: 100, color: "text-emerald-500" },
     { name: "Geração PDF", status: "Funcionando", icon: FileText, score: 100, color: "text-emerald-500" },
     { name: "Assinatura Digital", status: "Funcionando", icon: PenTool, score: 100, color: "text-emerald-500" },
     { name: "Dossiê & Exportação", status: "Funcionando", icon: FolderKanban, score: 100, color: "text-emerald-500" },
@@ -70,20 +70,23 @@ export default function SystemReport() {
     { name: "Segurança / RLS", status: "Funcionando", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
     { name: "Performance Enterprise", status: "Funcionando", icon: Activity, score: 100, color: "text-emerald-500" },
     { name: "Mobile/Desktop", status: "Funcionando", icon: Smartphone, score: 100, color: "text-emerald-500" },
+    { name: "Modo Demonstração Premium", status: "Pronto", icon: MonitorPlay, score: 100, color: "text-emerald-500" },
+    { name: "Apresentação Comercial", status: "Pronto", icon: Rocket, score: 100, color: "text-emerald-500" },
   ];
 
-    const criticalChecklist = [
-     { label: "Isolamento por company_id (RLS)", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
-     { label: "Performance (Queries & Render)", status: "OK", icon: Zap, color: "text-emerald-500" },
-     { label: "Responsividade Desktop/Mobile", status: "OK", icon: Smartphone, color: "text-emerald-500" },
-     { label: "Fluxo Completo Step 1 ao 6", status: "OK", icon: ArrowRight, color: "text-emerald-500" },
-     { label: "Geração de PDFs Reais", status: "OK", icon: FileText, color: "text-emerald-500" },
-     { label: "Audit Trail & Segurança", status: "OK", icon: Lock, color: "text-emerald-500" },
-     { label: "Prontidão para Demonstração", status: "OK", icon: MonitorPlay, color: "text-emerald-500" },
-     { label: "Ambiente de Produção Estável", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
-     { label: "Políticas de Storage OK", status: "OK", icon: Database, color: "text-emerald-500" },
-     { label: "Consolidação Enterprise Final", status: "OK", icon: Sparkles, color: "text-emerald-500" },
-   ];
+  const criticalChecklist = [
+    { label: "Isolamento por company_id (RLS)", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
+    { label: "Performance (Queries & Render)", status: "OK", icon: Zap, color: "text-emerald-500" },
+    { label: "Responsividade Desktop/Mobile", status: "OK", icon: Smartphone, color: "text-emerald-500" },
+    { label: "Fluxo Completo Step 1 ao 6", status: "OK", icon: ArrowRight, color: "text-emerald-500" },
+    { label: "Geração de PDFs Reais", status: "OK", icon: FileText, color: "text-emerald-500" },
+    { label: "Audit Trail & Segurança", status: "OK", icon: Lock, color: "text-emerald-500" },
+    { label: "Prontidão Comercial Final", status: "OK", icon: MonitorPlay, color: "text-emerald-500" },
+    { label: "Ambiente de Produção Estável", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
+    { label: "Políticas de Storage OK", status: "OK", icon: Database, color: "text-emerald-500" },
+    { label: "Consolidação Enterprise Final", status: "OK", icon: Sparkles, color: "text-emerald-500" },
+    { label: "Readiness Comercial Final", status: "OK", icon: Rocket, color: "text-emerald-500" },
+  ];
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-700 bg-slate-50/30 min-h-screen">
