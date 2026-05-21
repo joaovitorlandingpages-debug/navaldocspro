@@ -15,6 +15,7 @@ function AdminLogs() {
 
   useEffect(() => {
     console.log("GLOBAL_LOGS_STABLE");
+    console.log("STORAGE_MONITORING_OK");
   }, []);
 
   const { data: globalLogs, isLoading: loadingGlobal } = useQuery({

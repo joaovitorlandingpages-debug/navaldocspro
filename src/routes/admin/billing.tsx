@@ -21,6 +21,7 @@ function AdminBilling() {
 
   useEffect(() => {
     console.log("GLOBAL_BILLING_OK");
+    console.log("PLAN_MANAGEMENT_OK");
   }, []);
 
   if (loading) return null;
