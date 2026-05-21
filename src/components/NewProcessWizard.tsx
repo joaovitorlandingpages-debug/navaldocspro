@@ -163,8 +163,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           process_type_id: formData.typeId,
           status: 'pending',
           priority: 'medium',
-          compliance_status: 'incompleto'
+          compliance_status: 'incompleto',
+          notes: formData.notes
         })
+
         .select()
         .single();
 
