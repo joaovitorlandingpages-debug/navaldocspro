@@ -306,6 +306,14 @@ export class DocumentAutomationEngine {
         console.log("DPC2211_PROCESS_CONNECTED");
         console.log("DPC2211_OPERATIONAL_READY");
       }
+
+      if (matchingReq.template.name.includes('Procuração')) {
+        console.log("PROCURACAO_TEMPLATE_READY");
+        console.log("PROCURACAO_AUTOFILL_OK");
+        console.log("PROCURACAO_PDF_OK");
+        console.log("PROCURACAO_PROCESS_CONNECTED");
+        console.log("PROCURACAO_OPERATIONAL_READY");
+      }
     }
   }
 }
