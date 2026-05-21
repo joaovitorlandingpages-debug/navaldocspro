@@ -924,13 +924,13 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
 
 
-        <div className="p-8 pt-4 bg-slate-50/50 flex justify-between items-center">
-          <div className="flex gap-2">
+        <div className="p-4 md:p-8 pt-2 md:pt-4 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex gap-2 w-full sm:w-auto">
             <Button
               variant="ghost"
               onClick={handleBack}
               disabled={step === 1}
-              className="rounded-2xl h-14 px-6 font-black uppercase text-xs tracking-widest gap-2"
+              className="flex-1 sm:flex-none rounded-xl md:rounded-2xl h-12 md:h-14 px-4 md:px-6 font-black uppercase text-[10px] md:text-xs tracking-widest gap-2"
             >
               <ChevronLeft className="h-4 w-4" /> Voltar
             </Button>
@@ -941,14 +941,14 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                 toast.success("Rascunho descartado.");
                 onClose();
               }}
-              className="rounded-2xl h-14 px-4 text-slate-400 hover:text-red-500 hover:bg-red-50"
+              className="rounded-xl md:rounded-2xl h-12 md:h-14 px-3 md:px-4 text-slate-400 hover:text-red-500 hover:bg-red-50"
               title="Descartar Rascunho e Fechar"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
             <Button
               variant="outline"
               className="hidden md:flex rounded-2xl h-14 px-6 font-black uppercase text-xs tracking-widest gap-2 border-slate-200"
@@ -961,7 +961,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               <Button
                 onClick={handleCreateProcess}
                 disabled={isSubmitting}
-                className="bg-primary hover:opacity-90 rounded-2xl h-14 px-10 font-black uppercase text-xs tracking-widest shadow-xl shadow-primary/20 gap-2"
+                className="flex-1 sm:flex-none bg-primary hover:opacity-90 rounded-xl md:rounded-2xl h-12 md:h-14 px-6 md:px-10 font-black uppercase text-[10px] md:text-xs tracking-widest shadow-lg shadow-primary/20 gap-2"
               >
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Processo"} <Check className="h-4 w-4" />
               </Button>
@@ -969,13 +969,14 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               <Button
                 onClick={handleNext}
                 disabled={(!formData.typeId && step === 1) || (!formData.clientId && step === 2)}
-                className="bg-navy hover:opacity-90 rounded-2xl h-14 px-10 font-black uppercase text-xs tracking-widest text-white shadow-xl shadow-navy/20 gap-2"
+                className="flex-1 sm:flex-none bg-navy hover:opacity-90 rounded-xl md:rounded-2xl h-12 md:h-14 px-6 md:px-10 font-black uppercase text-[10px] md:text-xs tracking-widest text-white shadow-lg shadow-navy/20 gap-2"
               >
                 Próximo <ChevronRight className="h-4 w-4" />
               </Button>
             )}
           </div>
         </div>
+
       </DialogContent>
 
       {/* Modal de Criação Rápida de Cliente */}
