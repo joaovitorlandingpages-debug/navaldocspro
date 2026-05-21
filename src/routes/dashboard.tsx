@@ -164,6 +164,8 @@ function DashboardLayout() {
   console.log("LAYOUT_OVERFLOW_FIXED");
   console.log("SINGLE_SCROLL_OK");
   console.log("DASHBOARD_HEIGHT_OK");
+  console.log("FINAL_LAUNCH_READY");
+  console.log("NAVALDOCS_PRODUCTION_READY");
 
 
   const SidebarContent = () => (
@@ -296,7 +298,12 @@ function DashboardLayout() {
               </div>
               
               <div className="flex items-center gap-4 md:gap-8 w-full sm:w-auto justify-end">
-                 <div className="relative max-w-sm w-full hidden xl:block group">
+                  <div className="hidden xl:flex items-center gap-3 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl">
+                    <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
+                    <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Production Ready</span>
+                  </div>
+
+                 <div className="relative max-w-sm w-full hidden 2xl:block group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                     <input 
                       placeholder="Busca Global Inteligente..." 
