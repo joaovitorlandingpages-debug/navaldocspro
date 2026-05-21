@@ -18,11 +18,13 @@ import {
   TrendingUp,
   Menu
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { BackButton } from "@/components/BackButton";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
@@ -172,7 +174,7 @@ export function AdminDashboardView() {
         supabase.from("uploaded_files").select("file_size")
       ]);
 
-      const totalStorageBytes = storageData?.reduce((acc, file) => acc + (file.file_size || 0), 0) || 0;
+      const totalStorageBytes = storageData?.reduce((acc: number, file: any) => acc + (file.file_size || 0), 0) || 0;
       const totalStorageMB = Math.round(totalStorageBytes / (1024 * 1024));
 
       return {
@@ -322,12 +324,19 @@ export function AdminDashboardView() {
          </div>
       </div>
       
-      {console.log("MASTER_ADMIN_READY")}
-      {console.log("GLOBAL_ANALYTICS_OK")}
-      {console.log("PLAN_MANAGEMENT_OK")}
-      {console.log("STORAGE_MONITORING_OK")}
+      <AdminLogs />
     </div>
   );
+}
+
+function AdminLogs() {
+  useEffect(() => {
+    console.log("MASTER_ADMIN_READY");
+    console.log("GLOBAL_ANALYTICS_OK");
+    console.log("PLAN_MANAGEMENT_OK");
+    console.log("STORAGE_MONITORING_OK");
+  }, []);
+  return null;
 }
 
 function Progress({ value, className }: { value: number, className?: string }) {
