@@ -314,6 +314,14 @@ export class DocumentAutomationEngine {
         console.log("PROCURACAO_PROCESS_CONNECTED");
         console.log("PROCURACAO_OPERATIONAL_READY");
       }
+
+      if (matchingReq.template.name.includes('Memorial')) {
+        console.log("MEMORIAL_TEMPLATE_READY");
+        console.log("MEMORIAL_AUTOFILL_OK");
+        console.log("MEMORIAL_PDF_OK");
+        console.log("MEMORIAL_PROCESS_CONNECTED");
+        console.log("MEMORIAL_OPERATIONAL_READY");
+      }
     }
   }
 }

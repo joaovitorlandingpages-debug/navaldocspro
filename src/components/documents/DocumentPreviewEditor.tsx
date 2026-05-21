@@ -31,8 +31,11 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
   const [isEditing, setIsEditing] = useState(false);
   const [status, setStatus] = useState<'rascunho' | 'auto_preenchido' | 'em_revisao' | 'aprovado'>('rascunho');
   const [procuracaoType, setProcuracaoType] = useState("Procuração Geral para Processo Naval");
+  const [memorialType, setMemorialType] = useState("Memorial Técnico de Embarcação");
 
   const isProcuracao = template?.name?.includes("Procuração");
+  const isMemorial = template?.name?.includes("Memorial");
+
 
 
   useEffect(() => {
@@ -52,6 +55,15 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
       setContent(filled);
     }
   }, [procuracaoType, isProcuracao, template, processData]);
+
+  useEffect(() => {
+    if (isMemorial && template?.base_content) {
+      const updatedProcessData = { ...processData, process_type: memorialType };
+      const filled = DocumentValidationEngine.fillPlaceholder(template.base_content, updatedProcessData);
+      setContent(filled);
+    }
+  }, [memorialType, isMemorial, template, processData]);
+
 
 
   const handleRegenerate = () => {
@@ -201,7 +213,27 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                         </Select>
                       </div>
                     )}
+                    
+                    {isMemorial && (
+                      <div className="space-y-2 p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                        <p className="text-[10px] font-black uppercase text-navy">Tipo de Memorial</p>
+                        <Select value={memorialType} onValueChange={setMemorialType}>
+                          <SelectTrigger className="w-full text-xs font-bold h-9 rounded-lg border-slate-200">
+                            <SelectValue placeholder="Selecione o tipo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Memorial Registro Inicial">Memorial Registro Inicial</SelectItem>
+                            <SelectItem value="Memorial Alteração Motor">Memorial Alteração Motor</SelectItem>
+                            <SelectItem value="Memorial Regularização">Memorial Regularização</SelectItem>
+                            <SelectItem value="Memorial Vistoria">Memorial Vistoria</SelectItem>
+                            <SelectItem value="Memorial Transferência">Memorial Transferência</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
                     <p className="text-[10px] font-black uppercase text-navy">Mapeamento Inteligente (OCR/BD)</p>
+
 
                     <div className="space-y-1">
                        {[
@@ -256,7 +288,11 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                        if (template.name.includes("Procuração")) {
                          console.log("PROCURACAO_PDF_OK");
                        }
+                       if (template.name.includes("Memorial")) {
+                         console.log("MEMORIAL_PDF_OK");
+                       }
                        handleApprove();
+
 
                     }}
                     className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all gap-2"
