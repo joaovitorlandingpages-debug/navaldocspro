@@ -196,15 +196,20 @@ export default function ClientPortal() {
                     <div className="h-14 w-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-primary">
                        <ClipboardList className="h-8 w-8" />
                     </div>
-                    <div>
-                       <div className="flex items-center gap-3 mb-1">
-                          <h4 className="text-xl font-black text-navy uppercase tracking-tight">{selectedProcess?.process_type || "Nenhum processo selecionado"}</h4>
-                          <Badge className="bg-primary text-white border-none text-[8px] font-black uppercase px-2 py-0.5 rounded-md">Ativo</Badge>
+                       <div>
+                          <div className="flex items-center gap-3 mb-1">
+                             <h4 className="text-xl font-black text-navy uppercase tracking-tight">{selectedProcess?.process_type || "Nenhum processo selecionado"}</h4>
+                             <Badge className="bg-primary text-white border-none text-[8px] font-black uppercase px-2 py-0.5 rounded-md">Ativo</Badge>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-4">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                               Embarcação: <span className="text-navy">{selectedProcess?.vessels?.name || "N/D"}</span>
+                            </p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                               Empresa: <span className="text-navy">{selectedProcess?.companies?.name || "N/D"}</span>
+                            </p>
+                          </div>
                        </div>
-                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                          Embarcação: <span className="text-navy">{selectedProcess?.vessels?.name || "N/D"}</span>
-                       </p>
-                    </div>
                  </div>
                  <div className="w-full md:w-48 space-y-2">
                     <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400 tracking-widest">
