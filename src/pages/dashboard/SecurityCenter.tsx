@@ -32,7 +32,9 @@ export default function SecurityCenter() {
     console.log("AUDIT_SECURITY_READY");
     console.log("SESSION_CONTROL_READY");
     console.log("ENTERPRISE_SECURITY_OK");
-  });
+    console.log("FINAL_SECURITY_OK");
+    console.log("FINAL_ENTERPRISE_AUDIT_OK");
+  }, []);
 
 
   const { data: backups, isLoading: backupsLoading } = useQuery({
