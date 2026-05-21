@@ -17,7 +17,7 @@ import { Progress } from "@/components/ui/progress";
 import { useEffect, useState } from "react";
 
 export default function SystemReport() {
-  const [readinessScore] = useState(96);
+  const [readinessScore] = useState(99);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [showDeploymentChecklist, setShowDeploymentChecklist] = useState(false);
 
