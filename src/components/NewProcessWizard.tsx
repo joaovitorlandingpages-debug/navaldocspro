@@ -649,49 +649,117 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                            </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full opacity-0 group-hover:opacity-100">
-                         <Plus className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 rounded-full text-slate-400 hover:text-primary"
+                          onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.onchange = (e: any) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                setSelectedFiles(prev => [...prev, file]);
+                                toast.success(`Arquivo ${file.name} anexado ao rascunho.`);
+                              }
+                            };
+                            input.click();
+                          }}
+                        >
+                           <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
               </ScrollArea>
+            )}
+            {requirements.length > 0 && (
+              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
+                <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
+                <p className="text-[10px] text-amber-700 leading-tight">Você pode avançar com pendências. O sistema marcará os itens não enviados como "Pendente" automaticamente.</p>
+              </div>
             )}
           </div>
         );
       case 5:
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-             <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-amber-500" />
-                <p className="text-xs text-amber-700 font-medium">Os campos abaixo foram preenchidos automaticamente com base nos dados do cliente e da embarcação.</p>
-             </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                   <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Upload & OCR</Label>
+                   <div 
+                     className="border-2 border-dashed border-slate-200 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 hover:border-primary/50 transition-all cursor-pointer bg-slate-50/50 group"
+                     onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.multiple = true;
+                        input.onchange = (e: any) => {
+                           const files = Array.from(e.target.files) as File[];
+                           setSelectedFiles(prev => [...prev, ...files]);
+                        };
+                        input.click();
+                     }}
+                   >
+                      <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform">
+                         <Plus className="h-6 w-6" />
+                      </div>
+                      <div className="text-center">
+                         <p className="text-sm font-bold text-navy">Clique para selecionar arquivos</p>
+                         <p className="text-[10px] text-slate-400 font-medium">PDF, JPG, PNG (Max 10MB)</p>
+                      </div>
+                   </div>
 
-             <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                   <Label className="text-[10px] uppercase font-black text-slate-400">Nome do Requerente</Label>
-                   <Input defaultValue={formData.client} className="bg-slate-50 border-slate-200" readOnly />
+                   <div className="space-y-2">
+                      {selectedFiles.map((file, i) => (
+                         <div key={i} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                               <FileCheck className="h-4 w-4 text-green-500 flex-shrink-0" />
+                               <span className="text-xs font-bold text-navy truncate">{file.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                               <Badge className="bg-slate-100 text-slate-500 border-none text-[8px] uppercase">Aguardando</Badge>
+                               <button 
+                                 onClick={() => setSelectedFiles(prev => prev.filter((_, idx) => idx !== i))}
+                                 className="p-1 hover:text-red-500"
+                               >
+                                  <X className="h-3 w-3" />
+                               </button>
+                            </div>
+                         </div>
+                      ))}
+                   </div>
                 </div>
-                <div className="space-y-1.5">
-                   <Label className="text-[10px] uppercase font-black text-slate-400">Embarcação</Label>
-                   <Input defaultValue={formData.vessel} className="bg-slate-50 border-slate-200" readOnly />
-                </div>
-                <div className="space-y-1.5">
-                   <Label className="text-[10px] uppercase font-black text-slate-400">Data de Solicitação</Label>
-                   <Input defaultValue={new Date().toLocaleDateString('pt-BR')} className="bg-slate-50 border-slate-200" readOnly />
-                </div>
-                <div className="space-y-1.5">
-                   <Label className="text-[10px] uppercase font-black text-slate-400">Responsável Técnico</Label>
-                   <Input placeholder="Selecione..." className="bg-white border-primary/20 shadow-sm" />
-                   <p className="text-[9px] text-red-500 font-bold">* Campo obrigatório</p>
-                </div>
-                <div className="col-span-2 space-y-1.5">
-                   <Label className="text-[10px] uppercase font-black text-slate-400">Objeto da Solicitação</Label>
-                   <textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm min-h-[80px]" defaultValue={`Solicitação de ${formData.type} para a embarcação ${formData.vessel}.`} />
+
+                <div className="space-y-4">
+                   <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Documentos Geráveis</Label>
+                   <div className="space-y-2">
+                      {[
+                        { name: "BCE - Boletim de Cadastro", status: "ready" },
+                        { name: "DPC-2211 - Inscrição", status: "ready" },
+                        { name: "Procuração Naval", status: "ready" },
+                        { name: "Declaração de Responsabilidade", status: "ready" },
+                        { name: "Memorial Descritivo", status: "ready" }
+                      ].map((doc, i) => (
+                         <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl group hover:border-primary/20 transition-all">
+                            <div className="flex items-center gap-3">
+                               <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
+                                  <Zap className="h-4 w-4" />
+                               </div>
+                               <span className="text-xs font-bold text-navy">{doc.name}</span>
+                            </div>
+                            <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full text-[10px] font-black uppercase text-primary hover:bg-primary/5">
+                               Gerar
+                            </Button>
+                         </div>
+                      ))}
+                   </div>
                 </div>
              </div>
           </div>
         );
+
       case 6:
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
