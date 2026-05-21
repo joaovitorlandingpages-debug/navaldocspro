@@ -552,18 +552,18 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Código de Barras / Chave de Acesso</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Identificadores (BO / Apólice / Barcode / Chave)</Label>
                     <Input 
-                      value={editedData?.barcode || editedData?.access_key || ''} 
+                      value={editedData?.barcode || editedData?.access_key || editedData?.policy_number || editedData?.report_number || editedData?.reference_code || ''} 
                       onChange={(e) => setEditedData({...editedData, barcode: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy text-[11px]" 
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipo de Pagamento / Emissor</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipo / Emissor / Seguradora / Comprador</Label>
                     <Input 
-                      value={editedData?.type || editedData?.payment_code || editedData?.issuer || ''} 
+                      value={editedData?.type || editedData?.payment_code || editedData?.issuer || editedData?.insurance_company || editedData?.buyer || ''} 
                       onChange={(e) => setEditedData({...editedData, type: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
