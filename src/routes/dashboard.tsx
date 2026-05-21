@@ -888,7 +888,7 @@ export function RouteContent() {
 
           {/* Sidebar Widgets */}
           <div className="space-y-8">
-            <DashboardQuickWidgets recentDocs={recentDocs} />
+            <DashboardQuickWidgets recentDocs={recentDocs} loading={!recentDocs} />
 
             {/* Team Productivity Widget */}
             <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
