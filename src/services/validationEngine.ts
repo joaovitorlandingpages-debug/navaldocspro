@@ -172,8 +172,17 @@ export class DocumentValidationEngine {
       "motor.numero_serie": data.vessel?.engine_serial || "[NÚMERO SÉRIE MOTOR PENDENTE]",
 
       "motor.combustivel": data.vessel?.fuel_type || "Diesel",
+      "motor_antigo.fabricante": data.metadata?.motor_antigo_fabricante || "[FABRICANTE ANTIGO PENDENTE]",
+      "motor_antigo.modelo": data.metadata?.motor_antigo_modelo || "[MODELO ANTIGO PENDENTE]",
+      "motor_antigo.numero_serie": data.metadata?.motor_antigo_serial || "[SÉRIE ANTIGO PENDENTE]",
+      "motor_antigo.potencia": data.metadata?.motor_antigo_potencia || "0",
+      "motor_novo.fabricante": data.metadata?.motor_novo_fabricante || "[FABRICANTE NOVO PENDENTE]",
+      "motor_novo.modelo": data.metadata?.motor_novo_modelo || "[MODELO NOVO PENDENTE]",
+      "motor_novo.numero_serie": data.metadata?.motor_novo_serial || "[SÉRIE NOVO PENDENTE]",
+      "motor_novo.potencia": data.metadata?.motor_novo_potencia || "0",
       "processo.numero": data.id?.substring(0, 8).toUpperCase(),
       "processo.tipo": data.process_type || "Processo Naval Geral",
+
       "empresa.nome": data.company?.name || "NavalDocs Pro",
       "empresa.cnpj": data.company?.cnpj || "00.000.000/0001-00",
       "empresa.responsavel": data.company?.manager_name || "Ricardo Almeida",
