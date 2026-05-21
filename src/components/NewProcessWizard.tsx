@@ -215,7 +215,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   };
 
   const renderStep = () => {
+    console.log("FORM_STATE_OK", formData);
     switch (step) {
+
       case 1:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
