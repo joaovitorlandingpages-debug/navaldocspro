@@ -21,7 +21,7 @@ import { useFiles } from "@/hooks/useFiles";
 import { FileUploader } from "@/components/FileUploader";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, isPast, parseISO, differenceInDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
 import { ProcessChecklist } from "@/components/ProcessChecklist";
