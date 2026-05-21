@@ -11,7 +11,9 @@ import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { supabase } from "@/integrations/supabase/client";
 import { BackButton } from "@/components/BackButton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
+
 
 
 export const Route = createFileRoute("/processes")({
@@ -129,7 +131,7 @@ function Processes() {
       </div>
 
       {view === "kanban" ? (
-        <div className="flex gap-8 overflow-x-auto pb-8 h-[calc(100vh-280px)] min-h-[650px] custom-scrollbar px-2">
+        <div className="flex gap-4 md:gap-8 overflow-x-auto pb-8 h-[calc(100vh-280px)] min-h-[650px] md:min-h-[700px] custom-scrollbar px-2">
           {columns.map((col) => (
             <div key={col.id} className="flex-shrink-0 w-80 flex flex-col gap-6">
               <div className="flex items-center justify-between px-2">
@@ -220,14 +222,104 @@ function Processes() {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-20 flex flex-col items-center justify-center text-center">
-           <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6">
-              <ClipboardList className="h-10 w-10" />
-           </div>
-           <h3 className="text-xl font-black text-navy mb-2 uppercase tracking-tight">Visualização em Lista</h3>
-           <p className="text-sm text-slate-400 max-w-xs mx-auto mb-8 font-medium">Prefere o modo clássico? Esta visualização está sendo otimizada para tabelas de alta densidade.</p>
-           <button onClick={() => setView("kanban")} className="text-xs font-black uppercase tracking-widest text-primary hover:underline">Voltar para Kanban</button>
+        <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                  <th className="px-6 py-4">PROCESSO / TIPO</th>
+                  <th className="px-6 py-4">CLIENTE</th>
+                  <th className="px-6 py-4">EMBARCAÇÃO</th>
+                  <th className="px-6 py-4">STATUS</th>
+                  <th className="px-6 py-4"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-10 text-center">
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                    </td>
+                  </tr>
+                ) : processes.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-10 text-center">
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhum processo encontrado</p>
+                    </td>
+                  </tr>
+                ) : processes.map((p) => (
+                  <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <Link to={`/processes/${p.id}`} className="block">
+                        <div className="font-bold text-navy text-sm">{p.process_type}</div>
+                        <div className="text-[10px] text-primary font-mono font-black uppercase tracking-tighter">PROC-{p.id.substring(0, 6)}</div>
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 text-xs font-bold text-slate-600">
+                      {p.customers?.name || "---"}
+                    </td>
+                    <td className="px-6 py-4 text-xs font-bold text-slate-600">
+                      {p.vessels?.name || "---"}
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge className="text-[8px] font-black uppercase tracking-widest bg-slate-100 text-slate-600 border-none">
+                        {columns.find(c => c.id === p.status)?.title || p.status}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                       <Link to={`/processes/${p.id}`}>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                             <ArrowRight className="h-4 w-4" />
+                          </Button>
+                       </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {isLoading ? (
+              <div className="p-10 text-center">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+              </div>
+            ) : processes.length === 0 ? (
+              <div className="p-10 text-center">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Nenhum processo</p>
+              </div>
+            ) : processes.map((p) => (
+              <Link 
+                key={p.id} 
+                to={`/processes/${p.id}`}
+                className="block p-4 active:bg-slate-50 transition-colors"
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <div className="font-bold text-navy text-sm">{p.process_type}</div>
+                    <div className="text-[9px] text-primary font-mono font-black uppercase">PROC-{p.id.substring(0, 6)}</div>
+                  </div>
+                  <Badge className="text-[7px] font-black uppercase tracking-widest bg-primary/10 text-primary border-none">
+                    {columns.find(c => c.id === p.status)?.title || p.status}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500">
+                  <div className="flex items-center gap-1.5 overflow-hidden">
+                    <User className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{p.customers?.name || "---"}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 overflow-hidden justify-end">
+                    <Ship className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{p.vessels?.name || "---"}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
+
       )}
 
       <UpgradeModal 
