@@ -59,13 +59,93 @@ export default function DocumentCenter() {
     doc.vessels?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     doc.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
-...
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'signed':
+        return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 uppercase text-[9px] font-black tracking-widest gap-1"><CheckCircle2 className="h-3 w-3" /> Assinado</Badge>;
+      case 'pending_signature':
+        return <Badge className="bg-amber-50 text-amber-700 border-amber-100 uppercase text-[9px] font-black tracking-widest gap-1"><Clock className="h-3 w-3" /> Pendente Assinatura</Badge>;
+      case 'expired':
+        return <Badge className="bg-red-50 text-red-700 border-red-100 uppercase text-[9px] font-black tracking-widest gap-1"><AlertCircle className="h-3 w-3" /> Vencido</Badge>;
+      default:
+        return <Badge variant="outline" className="uppercase text-[9px] font-black tracking-widest">{status}</Badge>;
+    }
+  };
+
+  const handleDownload = async (doc: any) => {
+    if (doc.file_url) {
+      window.open(doc.file_url, '_blank');
+      await documentService.logAction(doc.id, 'downloaded');
+    } else {
+      toast.error("URL do arquivo não encontrada.");
+    }
+  };
+
+  const handleSignRequest = (id: string) => {
+    setSelectedDocId(id);
+    setIsSignModalOpen(true);
+  };
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase flex items-center gap-3">
+            <Database className="h-8 w-8 text-primary" /> Central Documental
+          </h1>
+          <p className="text-muted-foreground font-medium">Gestão profissional de documentos, assinaturas e versões.</p>
+        </div>
+        
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" className="flex-grow sm:flex-initial gap-2 border-slate-200 font-black text-[10px] uppercase tracking-widest">
+            <Filter className="h-4 w-4" /> Filtros
+          </Button>
+          <Button className="flex-grow sm:flex-initial bg-primary text-white gap-2 shadow-lg shadow-primary/20 font-black text-[10px] uppercase tracking-widest">
+            <RotateCcw className="h-4 w-4" /> Sincronizar
+          </Button>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { label: "Total Documentos", value: documents?.length || 0, icon: FileText, color: "text-primary" },
           { label: "Aguardando Assinatura", value: documents?.filter((d: any) => d.status === 'pending_signature').length || 0, icon: Signature, color: "text-amber-500" },
           { label: "Vencendo em Breve", value: 4, icon: Clock, color: "text-red-500" },
-...
+          { label: "Assinados hoje", value: 12, icon: ShieldCheck, color: "text-emerald-500" },
+        ].map((stat, i) => (
+          <Card key={i} className="bg-white border-slate-100 shadow-sm">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{stat.label}</p>
+                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              </div>
+              <h3 className="text-2xl font-bold text-navy">{stat.value}</h3>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="relative w-full md:max-w-md">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+          <Input 
+            placeholder="Buscar por nome, cliente ou embarcação..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 h-10 bg-slate-50 border-transparent focus:bg-white"
+          />
+        </div>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)} className="w-full">
+            <TabsList className="grid grid-cols-2 w-full sm:w-[120px]">
+              <TabsTrigger value="list"><List className="h-4 w-4" /></TabsTrigger>
+              <TabsTrigger value="grid"><LayoutGrid className="h-4 w-4" /></TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      </div>
+
       {isLoading ? (
         <div className="py-20 text-center animate-pulse text-slate-400 uppercase font-black text-xs tracking-widest">
           Carregando Central Documental...
