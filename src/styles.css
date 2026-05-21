@@ -112,8 +112,11 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
   }
 }
+
 
 @keyframes scan {
   0% { top: 0; }
