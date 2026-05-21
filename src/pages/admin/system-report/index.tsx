@@ -9,8 +9,9 @@ import {
   PenTool, FolderKanban, Star, AlertTriangle,
   History, Settings, BarChart3, Cloud, Globe, CreditCard, Sparkles, MonitorPlay, Rocket,
   Download, LifeBuoy, Terminal, Box, ShieldAlert, Award, Verified, CheckCircle, Hammer,
-  ActivitySquare, ClipboardCheck, LayoutList, Target
+  ActivitySquare, ClipboardCheck, LayoutList, Target, TrendingUp
 } from "lucide-react";
+
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
