@@ -14,7 +14,7 @@ export function FeedbackButton() {
   const { profile } = useAuth();
   
   const [feedback, setFeedback] = useState({
-    type: 'bug' as 'bug' | 'suggestion' | 'ux',
+    type: 'bug' as 'bug' | 'suggestion' | 'ux' | 'ocr_poor',
     description: '',
   });
 
@@ -114,6 +114,14 @@ export function FeedbackButton() {
                     >
                       <Activity className="h-5 w-5" />
                       <span className="text-[10px] font-black uppercase">UX/UI</span>
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setFeedback({ ...feedback, type: 'ocr_poor' })}
+                      className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${feedback.type === 'ocr_poor' ? 'bg-purple-50 border-purple-200 text-purple-600' : 'bg-slate-50 border-transparent text-slate-400'}`}
+                    >
+                      <Activity className="h-5 w-5" />
+                      <span className="text-[10px] font-black uppercase">OCR Ruim</span>
                     </button>
                   </div>
 
