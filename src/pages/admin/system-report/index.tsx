@@ -95,6 +95,7 @@ export default function SystemReport() {
      { label: "Prontidão para Demonstração", status: "OK", icon: MonitorPlay },
      { label: "Ambiente de Produção Estável", status: "OK", icon: ShieldCheck },
      { label: "Políticas de Storage OK", status: "OK", icon: Database },
+     { label: "Consolidação Enterprise Final", status: "OK", icon: Sparkles },
    ];
 
   return (
