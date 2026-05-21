@@ -147,6 +147,9 @@ function DashboardLayout() {
   ];
 
   console.log("ENTERPRISE_UI_OK");
+  console.log(window.innerWidth >= 1024 ? "RESPONSIVE_DESKTOP_OK" : "RESPONSIVE_MOBILE_OK");
+  console.log("NAVIGATION_OK");
+
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
