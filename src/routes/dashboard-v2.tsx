@@ -4,7 +4,7 @@ import {
   LogOut, Plus, Menu, LayoutGrid, Activity, FileText, FilePlus, 
   Library, Zap, ShieldCheck, DollarSign, BarChart3, Settings,
   Building2, UserCog, ScrollText, History, ShieldAlert, MonitorPlay,
-  CreditCard, Briefcase, TrendingUp
+  CreditCard, Briefcase, TrendingUp, Sparkles, Clock
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
