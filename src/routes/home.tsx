@@ -10,7 +10,7 @@ export const Route = createFileRoute("/home")({
 function Index() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { session, loading } = useAuth();
+  const { session, profile, loading } = useAuth();
 
   useEffect(() => {
     console.log("LANDING_PREMIUM_OK");
