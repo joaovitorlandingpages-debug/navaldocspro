@@ -6,7 +6,7 @@ import {
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
   Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft,
-  Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight
+  Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight, Signature
 } from "lucide-react";
 import { useState, useEffect, Suspense, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -242,7 +242,7 @@ function DashboardLayout() {
            )}
             <div className="h-auto py-5 flex flex-col sm:flex-row items-center justify-between px-10 border-b border-slate-100 gap-6">
               <div className="flex items-center gap-8 flex-grow w-full sm:w-auto">
-                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl lg:block hidden transition-all shadow-sm">
+                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all shadow-sm">
                    <Menu className="h-5 w-5 text-navy" />
                  </button>
                  <div className="flex flex-col gap-1">
@@ -389,8 +389,8 @@ export function RouteContent() {
     { label: "Ativos Digitais", value: statsData?.generatedDocuments.toString() || (demoConfig?.is_demo_mode ? "142" : "0"), icon: <FileText className="text-emerald-500" />, trend: statsData?.trends.documents || "+15.4%" },
   ];
 
-    console.log("ONBOARDING_READY");
-    console.log("PREMIUM_ONBOARDING_OK");
+    console.log("MARKET_READY_UI_OK");
+    console.log("ENTERPRISE_OPERATION_READY");
     console.log("PREMIUM_EXPERIENCE_READY");
     console.log("DAILY_OPERATION_READY");
     console.log("ENTERPRISE_FEEL_READY");
@@ -469,9 +469,43 @@ export function RouteContent() {
       </div>
 
 
-      {/* Intelligence & Recommendations */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
+      {/* Critical Operational Center */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+         <div className="lg:col-span-3 space-y-10">
+           <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-[0_30px_60px_rgba(0,0,0,0.02)] relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-10 opacity-5">
+                 <AlertCircle className="h-40 w-40 text-red-500" />
+              </div>
+              <div className="relative z-10 space-y-8">
+                 <div className="flex justify-between items-center">
+                    <div>
+                       <h2 className="text-2xl font-black text-navy uppercase tracking-tighter italic">Ações Críticas <span className="text-primary">Master</span></h2>
+                       <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Intervenções manuais e validações urgentes</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center animate-pulse">
+                       <AlertCircle className="h-6 w-6" />
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[
+                      { title: "Validação OCR", desc: "3 documentos aguardam revisão manual de confiança.", color: "primary", icon: Zap },
+                      { title: "Assinaturas", desc: "2 memoriais prontos para assinatura do engenheiro.", color: "blue-600", icon: Signature },
+                      { title: "Protocolo", desc: "1 processo aguarda envio final para a Marinha.", color: "emerald-500", icon: CheckCircle2 }
+                    ].map((item, i) => (
+                      <div key={i} className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:bg-white hover:shadow-xl transition-all cursor-pointer">
+                         <div className={`h-10 w-10 rounded-xl bg-${item.color}/10 text-${item.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                            <item.icon className="h-5 w-5" />
+                         </div>
+                         <h4 className="font-black text-navy text-[11px] uppercase tracking-widest mb-1">{item.title}</h4>
+                         <p className="text-xs text-slate-500 font-medium leading-relaxed">{item.desc}</p>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+           </div>
+
+           <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
               <Zap className="h-4 w-4 text-primary" /> Inteligência Operacional
@@ -555,8 +589,9 @@ export function RouteContent() {
              )}
           </div>
         </div>
+      </div>
 
-        <div className="space-y-6">
+      <div className="lg:col-span-1 space-y-6">
           <div className="bg-navy p-6 rounded-[2rem] text-white shadow-xl relative overflow-hidden group">
              <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
                 <Database className="h-40 w-40" />

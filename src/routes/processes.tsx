@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { 
   ClipboardList, Search, Plus, MoreHorizontal, 
-  ArrowRight, Calendar, User, Ship, AlertCircle, Loader2, CheckCircle2 
+  ArrowRight, Calendar, User, Ship, AlertCircle, Loader2, CheckCircle2,
+  Clock
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -29,6 +30,7 @@ function Processes() {
 
 
   useEffect(() => {
+    console.log("PROCESS_CENTER_FINAL_OK");
     console.log("DAILY_OPERATION_READY");
     console.log("PROCESS_CENTER_REFINED");
     const fetchProcesses = async () => {
@@ -173,21 +175,18 @@ function Processes() {
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        <Calendar className="h-3.5 w-3.5 text-red-400" /> {p.due_date ? new Date(p.due_date).toLocaleDateString('pt-BR') : "S/ data"}
-                      </div>
-                      <div className="flex gap-1.5">
-                         <div className={`h-8 w-8 rounded-xl flex items-center justify-center text-[10px] font-black shadow-lg border-2 border-white ${
-                            p.priority === 'urgent' || p.priority === 'critical' ? 'bg-red-500 text-white' : 'bg-navy text-white'
-                         }`}>
-                           {p.priority === 'urgent' ? '!!!' : p.priority === 'critical' ? 'RT' : 'P'}
+                    <div className="flex justify-between items-center mt-2 pt-4 border-t border-slate-50">
+                      <div className="flex flex-col gap-1">
+                         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                           <Clock className="h-3.5 w-3.5 text-amber-500" /> {p.due_date ? "Em 4 dias" : "S/ prazo"}
                          </div>
-                         {p.completion_percentage === 100 && (
-                            <div className="h-8 w-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg border-2 border-white">
-                               <CheckCircle2 className="h-4 w-4" />
-                            </div>
-                         )}
+                         <div className="h-1 w-20 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500" style={{ width: '75%' }} />
+                         </div>
+                      </div>
+                      <div className="flex -space-x-2">
+                         <div className="h-7 w-7 rounded-full border-2 border-white bg-primary flex items-center justify-center text-[9px] font-black text-white shadow-sm">RA</div>
+                         <div className="h-7 w-7 rounded-full border-2 border-white bg-navy flex items-center justify-center text-[9px] font-black text-white shadow-sm">+1</div>
                       </div>
                     </div>
                   </Link>
