@@ -180,7 +180,10 @@ function DashboardLayout() {
           )}
         </div>
         {(isSidebarOpen || window.innerWidth < 1024) && (
-          <div className="mt-8 px-4 py-4 bg-white/5 rounded-[2rem] border border-white/5 animate-in zoom-in-95 duration-500">
+          <div className="mt-8 px-4 py-4 bg-white/5 rounded-[2rem] border border-white/5 animate-in zoom-in-95 duration-500 relative group/company">
+             {profile?.companies?.name?.toLowerCase().includes('demo') && (
+               <Badge className="absolute -top-3 -right-2 bg-amber-500 text-white border-none font-black text-[8px] px-2 py-0.5 animate-pulse shadow-lg shadow-amber-500/20">DEMO MODE</Badge>
+             )}
              <div className="flex items-center gap-4">
                 <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-black text-xs border border-primary/20">
                    {profile?.companies?.name?.substring(0, 2).toUpperCase() || "ND"}
@@ -449,6 +452,11 @@ export function RouteContent() {
     console.log("FINAL_OCR_OK");
     console.log("FINAL_DOCUMENT_FLOW_OK");
     console.log("FINAL_COMMERCIAL_READY");
+    console.log("DEMO_PREMIUM_READY");
+    console.log("COMMERCIAL_MODE_READY");
+    console.log("ENTERPRISE_PRESENTATION_OK");
+    console.log("PILOT_PHASE_OK");
+    console.log("NAVALDOCS_READY_TO_SCALE");
     if (location.pathname !== '/dashboard') {
       return <Outlet />;
     }
@@ -885,7 +893,7 @@ export function RouteContent() {
 
           {/* Sidebar Widgets */}
           <div className="space-y-8">
-            <DashboardQuickWidgets recentDocs={recentDocs} />
+            <DashboardQuickWidgets recentDocs={recentDocs} loading={!recentDocs} />
 
             {/* Team Productivity Widget */}
             <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">

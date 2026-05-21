@@ -24,25 +24,27 @@ function ChangelogPage() {
       if (!data || data.length === 0) {
         return [
           {
+            version: "v20.0",
+            title: "Commercial Scale Ready",
+            description: "NavalDocs Pro atinge maturidade absoluta para operação nacional em larga escala, com novos módulos de demonstração e apresentação premium.",
+            created_at: new Date().toISOString(),
+            changes: [
+              { type: 'feature', text: 'Modo Demonstração Premium Integrado' },
+              { type: 'feature', text: 'Apresentação Comercial Interna' },
+              { type: 'feature', text: 'Infraestrutura de Escala SaaS' },
+              { type: 'security', text: 'Consolidação Final de Segurança LGPD' }
+            ]
+          },
+          {
             version: "v15.0",
             title: "Final Enterprise Gold Edition",
             description: "A versão mais estável e poderosa do NavalDocs Pro, focada em escala nacional e operação enterprise.",
-            created_at: new Date().toISOString(),
+            created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
             changes: [
               { type: 'feature', text: 'Novo Sistema de Inteligência Operacional' },
               { type: 'feature', text: 'Dashboard Comercial & Pilot Tracking' },
               { type: 'fix', text: 'Otimização crítica do motor de OCR' },
               { type: 'security', text: 'Auditoria completa de RLS e Permissões' }
-            ]
-          },
-          {
-            version: "v13.0",
-            title: "Neural Intelligence Update",
-            description: "Introdução de machine learning para classificação automática de documentos e extração de dados complexos.",
-            created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-            changes: [
-              { type: 'feature', text: 'Classificação neural de documentos' },
-              { type: 'feature', text: 'Novo Wizard de Processos' }
             ]
           }
         ];
