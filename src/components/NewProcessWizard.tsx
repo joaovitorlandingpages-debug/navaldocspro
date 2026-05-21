@@ -95,21 +95,31 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     }
   }, [formData, step, isOpen]);
 
-  useEffect(() => {
-    async function fetchCustomers() {
-      if (step === 2) {
-        setLoading(true);
-        const { data } = await supabase
-          .from('customers')
-          .select('id, name')
-          .ilike('name', `%${searchTerm}%`)
-          .limit(10);
-        setCustomers(data || []);
-        setLoading(false);
-      }
+  const fetchCustomersList = async (forceSearchTerm?: string) => {
+    setLoading(true);
+    console.log("PROCESS_TYPES_LOADING", "customers");
+    const { data, error } = await supabase
+      .from('customers')
+      .select('id, name')
+      .ilike('name', `%${forceSearchTerm !== undefined ? forceSearchTerm : searchTerm}%`)
+      .limit(10);
+    
+    if (error) {
+      console.error("Error fetching customers", error);
+      setCustomers([]);
+    } else {
+      setCustomers(data || []);
+      console.log("CLIENT_REFRESH_OK", data?.length);
     }
-    fetchCustomers();
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (step === 2) {
+      fetchCustomersList();
+    }
   }, [step, searchTerm]);
+
 
   useEffect(() => {
     async function fetchVessels() {
