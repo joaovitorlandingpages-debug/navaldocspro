@@ -348,13 +348,15 @@ function DashboardLayout() {
 
 
         {showTour && profile?.companies && (
-          <WelcomeTour 
-            onboardingStep={profile.companies.onboarding_step || 1} 
-            onClose={() => {
-              setShowTour(false);
-              localStorage.setItem(`tour_seen_${profile.company_id}`, 'true');
-            }}
-          />
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-500">
+            <WelcomeTour 
+              onboardingStep={profile.companies.onboarding_step || 1} 
+              onClose={() => {
+                setShowTour(false);
+                localStorage.setItem(`tour_seen_${profile.company_id}`, 'true');
+              }}
+            />
+          </div>
         )}
       </div>
     </div>
