@@ -105,8 +105,11 @@ export function WelcomeTour({
          <button className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-navy/40 hover:text-primary transition-all">
             <PlayCircle className="h-5 w-5" /> Assistir Tutorial
          </button>
-         <Button className="w-full sm:w-auto bg-navy text-[11px] font-black uppercase tracking-[0.2em] px-10 py-7 rounded-2xl shadow-xl hover:bg-slate-900 transition-all border border-navy/10 active:scale-95">
-            Configurar Agora <ArrowRight className="ml-3 h-4 w-4" />
+         <Button 
+           onClick={() => { setIsOpen(false); onClose(); }}
+           className="w-full sm:w-auto bg-navy text-[11px] font-black uppercase tracking-[0.2em] px-10 py-7 rounded-2xl shadow-xl hover:bg-slate-900 transition-all border border-navy/10 active:scale-95"
+         >
+            Finalizar Tour <ArrowRight className="ml-3 h-4 w-4" />
          </Button>
       </div>
     </div>
