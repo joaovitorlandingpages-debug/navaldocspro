@@ -48,11 +48,25 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const totalSteps = 6;
   const progressPercent = (step / totalSteps) * 100;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isQuickClientOpen, setIsQuickClientOpen] = useState(false);
+  const [isCreatingClient, setIsCreatingClient] = useState(false);
 
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [customers, setCustomers] = useState<any[]>([]);
   const [vessels, setVessels] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [newClient, setNewClient] = useState({
+    name: "",
+    document: "",
+    rg: "",
+    phone: "",
+    email: "",
+    address: "",
+    city: "",
+    state: "",
+    notes: ""
+  });
+
 
   const { requirements, isLoading: loadingReqs } = useProcessRequirements(formData.typeId);
   const { processTypes, isLoading: loadingTypes } = useProcessTypes();
@@ -81,21 +95,31 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     }
   }, [formData, step, isOpen]);
 
-  useEffect(() => {
-    async function fetchCustomers() {
-      if (step === 2) {
-        setLoading(true);
-        const { data } = await supabase
-          .from('customers')
-          .select('id, name')
-          .ilike('name', `%${searchTerm}%`)
-          .limit(10);
-        setCustomers(data || []);
-        setLoading(false);
-      }
+  const fetchCustomersList = async (forceSearchTerm?: string) => {
+    setLoading(true);
+    console.log("PROCESS_TYPES_LOADING", "customers");
+    const { data, error } = await supabase
+      .from('customers')
+      .select('id, name')
+      .ilike('name', `%${forceSearchTerm !== undefined ? forceSearchTerm : searchTerm}%`)
+      .limit(10);
+    
+    if (error) {
+      console.error("Error fetching customers", error);
+      setCustomers([]);
+    } else {
+      setCustomers(data || []);
+      console.log("CLIENT_REFRESH_OK", data?.length);
     }
-    fetchCustomers();
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (step === 2) {
+      fetchCustomersList();
+    }
   }, [step, searchTerm]);
+
 
   useEffect(() => {
     async function fetchVessels() {
@@ -111,6 +135,73 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     }
     fetchVessels();
   }, [step, formData.clientId]);
+
+  const handleQuickClientSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile?.company_id) {
+      toast.error("Empresa não identificada.");
+      return;
+    }
+
+    if (!newClient.name) {
+      toast.error("O nome é obrigatório.");
+      return;
+    }
+
+    setIsCreatingClient(true);
+    console.log("CLIENT_CREATE_SUBMIT_OK");
+    
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .insert({
+          company_id: profile.company_id,
+          name: newClient.name,
+          document_number: newClient.document,
+          rg: newClient.rg,
+          phone: newClient.phone,
+          email: newClient.email,
+          address: newClient.address,
+          city: newClient.city,
+          state: newClient.state,
+          notes: newClient.notes,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log("CLIENT_INSERT_OK", data.id);
+      toast.success("Cliente criado com sucesso!");
+      
+      // Update form data and close quick modal
+      setFormData({ ...formData, client: data.name, clientId: data.id });
+      console.log("CLIENT_SELECTED_OK", data.name);
+      
+      setIsQuickClientOpen(false);
+      setNewClient({
+        name: "",
+        document: "",
+        rg: "",
+        phone: "",
+        email: "",
+        address: "",
+        city: "",
+        state: "",
+        notes: ""
+      });
+
+      // Refresh list
+      await fetchCustomersList("");
+    } catch (error: any) {
+      console.error("Error creating client", error);
+      toast.error("Erro ao criar cliente: " + error.message);
+    } finally {
+      setIsCreatingClient(false);
+    }
+  };
+
 
   const clearDraft = () => {
     localStorage.removeItem("process_wizard_draft");
@@ -250,9 +341,12 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                     >
                       <option value="">Selecione o tipo...</option>
                       {processTypes.map((type) => (
-                        <option key={type.id} value={type.id}>{type.name}</option>
+                        <option key={type.id} value={type.id}>
+                          {type.name} {type.description ? `(${type.description})` : ""}
+                        </option>
                       ))}
                     </select>
+
                   </div>
 
                   <div className="space-y-2">
@@ -324,16 +418,25 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                     {formData.clientId === c.id && <Check className="h-4 w-4 text-primary" />}
                   </button>
                 ))}
-                {customers.length === 0 && !searchTerm && (
-                   <p className="text-xs text-slate-400 text-center py-4">Nenhum cliente sugerido. Use a busca.</p>
+                {customers.length === 0 && (
+                   <p className="text-xs text-slate-400 text-center py-4">Nenhum cliente encontrado. {searchTerm ? "Tente outro termo ou crie um novo." : "Use a busca ou crie um novo."}</p>
                 )}
+
               </div>
             </div>
 
             <div className="pt-4 border-t border-slate-100">
-               <Button variant="outline" className="w-full h-12 rounded-xl border-dashed gap-2">
+               <Button 
+                 variant="outline" 
+                 className="w-full h-12 rounded-xl border-dashed gap-2"
+                 onClick={() => {
+                   setIsQuickClientOpen(true);
+                   console.log("CLIENT_MODAL_OPEN_OK");
+                 }}
+               >
                   <Plus className="h-4 w-4" /> Criar novo cliente rapidamente
                </Button>
+
             </div>
           </div>
         );
@@ -641,6 +744,107 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           </div>
         </div>
       </DialogContent>
+
+      {/* Modal de Criação Rápida de Cliente */}
+      <Dialog open={isQuickClientOpen} onOpenChange={setIsQuickClientOpen}>
+        <DialogContent className="max-w-md p-8 bg-white border-none rounded-[2rem] shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-navy uppercase tracking-tight">Novo Cliente Rápido</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleQuickClientSubmit} className="space-y-4 pt-4">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Nome Completo</Label>
+              <Input 
+                required
+                value={newClient.name}
+                onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                placeholder="Ex: João da Silva"
+                className="rounded-xl border-slate-200" 
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">CPF/CNPJ</Label>
+                <Input 
+                  value={newClient.document}
+                  onChange={(e) => setNewClient({...newClient, document: e.target.value})}
+                  placeholder="000.000.000-00"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">RG</Label>
+                <Input 
+                  value={newClient.rg}
+                  onChange={(e) => setNewClient({...newClient, rg: e.target.value})}
+                  placeholder="00.000.000-0"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Telefone</Label>
+                <Input 
+                  value={newClient.phone}
+                  onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
+                  placeholder="(00) 00000-0000"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">E-mail</Label>
+                <Input 
+                  type="email"
+                  value={newClient.email}
+                  onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                  placeholder="email@exemplo.com"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Cidade/UF</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Input 
+                  value={newClient.city}
+                  onChange={(e) => setNewClient({...newClient, city: e.target.value})}
+                  placeholder="Cidade"
+                  className="rounded-xl border-slate-200" 
+                />
+                <Input 
+                  value={newClient.state}
+                  onChange={(e) => setNewClient({...newClient, state: e.target.value})}
+                  placeholder="UF"
+                  maxLength={2}
+                  className="rounded-xl border-slate-200 uppercase" 
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 flex gap-3">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setIsQuickClientOpen(false)}
+                className="flex-1 rounded-xl h-12"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isCreatingClient}
+                className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
+              >
+                {isCreatingClient ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Cliente"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
+
+
