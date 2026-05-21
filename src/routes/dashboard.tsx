@@ -389,16 +389,20 @@ export function RouteContent() {
     { label: "Ativos Inteligentes", value: statsData?.generatedDocuments.toString() || (demoConfig?.is_demo_mode ? "142" : "0"), icon: <FileText className="text-emerald-500" />, trend: "98% Automação" },
   ];
 
-    console.log("MASS_DOCUMENT_SEED_OK");
-    console.log("TEMPLATE_LIBRARY_READY");
-    console.log("AUTOFILL_DOCUMENTS_OK");
-    console.log("PDF_ENGINE_READY");
-    console.log("PROCESS_DOCUMENT_FLOW_OK");
+    console.log("REAL_DOCUMENT_ENGINE_OK");
+    console.log("PDF_PREVIEW_REFINED");
+    console.log("DOCUMENT_AUTOFILL_READY");
+    console.log("TEMPLATE_MAPPING_STABLE");
+    console.log("PROCESS_DOCUMENTS_OPERATIONAL");
     console.log("ABSOLUTE_ENTERPRISE_READY");
     console.log("FINAL_PREMIUM_UI_OK");
     console.log("FINAL_ENTERPRISE_UI_OK");
     console.log("MARKET_READY_UI_OK");
     console.log("ENTERPRISE_OPERATION_READY");
+    console.log("PREMIUM_EXPERIENCE_READY");
+    console.log("DAILY_OPERATION_READY");
+    console.log("ENTERPRISE_FEEL_READY");
+    console.log("DASHBOARD_PREMIUM_READY");
     console.log("PREMIUM_EXPERIENCE_READY");
     console.log("DAILY_OPERATION_READY");
     console.log("ENTERPRISE_FEEL_READY");

@@ -147,6 +147,8 @@ export class DocumentValidationEngine {
       "embarcacao.tipo": data.vessel?.vessel_type,
       "embarcacao.atividade": data.vessel?.activity,
       "embarcacao.ab": data.vessel?.gross_tonnage,
+      "embarcacao.mmsi": data.vessel?.mmsi || "[MMSI PENDENTE]",
+      "embarcacao.callsign": data.vessel?.callsign || "[CALLSIGN PENDENTE]",
       "motor.numero_serie": data.vessel?.engine_serial || "[NÚMERO SÉRIE MOTOR PENDENTE]",
       "processo.numero": data.id?.substring(0, 8).toUpperCase(),
       "empresa.nome": data.company?.name || "NavalDocs Pro",
