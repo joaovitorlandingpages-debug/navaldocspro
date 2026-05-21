@@ -148,8 +148,8 @@ function DashboardLayout() {
       { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
     ]},
     { group: "Comercial", items: [
-      { name: "Centro Comercial", icon: <TrendingUp className="h-5 w-5" />, path: "/sales-center" },
-      { name: "Ambiente Demo", icon: <Zap className="h-5 w-5" />, path: "/demo" },
+      { name: "Ambiente Demo", icon: <Rocket className="h-5 w-5" />, path: "/demo" },
+      { name: "Relatório de Prontidão", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/system-report" },
     ]}
   ];
 
