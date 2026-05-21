@@ -553,7 +553,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       console.log("PROCESS_MODAL_OK", open);
     }}>
 
-      <DialogContent className="max-w-xl p-0 overflow-hidden bg-white border-none rounded-[2.5rem] shadow-2xl">
+      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-white border-none rounded-[2.5rem] shadow-2xl">
         <DialogHeader className="p-8 pb-0 border-b-0">
           <div className="flex flex-col gap-4 w-full">
             <div className="flex items-center justify-between">
