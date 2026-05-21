@@ -137,6 +137,7 @@ function DashboardLayout() {
       { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
     ]},
     { group: "Gestão & Admin", items: [
+      { name: "Compliance Center", icon: <ShieldCheck className="h-5 w-5" />, path: "/dashboard/compliance-center" },
       { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
       { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
       { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
