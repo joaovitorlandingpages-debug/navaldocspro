@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   X, Check, ChevronRight, ChevronLeft, 
   Ship, User, FileText, ClipboardCheck, 
@@ -22,6 +23,7 @@ import { toast } from "sonner";
 import { useProcessRequirements, useProcessTypes } from "@/hooks/useProcessRequirements";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+
 
 interface NewProcessWizardProps {
   isOpen: boolean;
