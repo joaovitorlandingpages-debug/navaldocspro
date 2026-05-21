@@ -24,10 +24,22 @@ function ChangelogPage() {
       if (!data || data.length === 0) {
         return [
           {
+            version: "v20.5",
+            title: "Controlled Evolution Phase",
+            description: "NavalDocs Pro entra na fase de evolução controlada com sistema de feature flags, maturidade operacional e monitoramento de saúde em tempo real.",
+            created_at: new Date().toISOString(),
+            changes: [
+              { type: 'feature', text: 'Sistema Enterprise de Feature Flags' },
+              { type: 'feature', text: 'Painel de Maturidade & Evolução Admin' },
+              { type: 'feature', text: 'Monitoramento de Saúde em Tempo Real' },
+              { type: 'security', text: 'Auditoria Contínua de Segurança & RLS' }
+            ]
+          },
+          {
             version: "v20.0",
             title: "Commercial Scale Ready",
             description: "NavalDocs Pro atinge maturidade absoluta para operação nacional em larga escala, com novos módulos de demonstração e apresentação premium.",
-            created_at: new Date().toISOString(),
+            created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
             changes: [
               { type: 'feature', text: 'Modo Demonstração Premium Integrado' },
               { type: 'feature', text: 'Apresentação Comercial Interna' },

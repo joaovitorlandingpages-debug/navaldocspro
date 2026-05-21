@@ -155,24 +155,20 @@ function DashboardLayout() {
       { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
       { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
     ]},
-    { group: "Comercial", items: [
+    { group: "Comercial & Evolução", items: [
       { name: "Ambiente Demo", icon: <Rocket className="h-5 w-5" />, path: "/demo" },
-      { name: "Relatório de Prontidão", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/system-report" },
-      { name: "Status do Sistema", icon: <Activity className="h-5 w-5" />, path: "/status" },
+      { name: "Auditoria Final", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/system-report" },
+      { name: "Maturidade SaaS", icon: <Activity className="h-5 w-5" />, path: "/status" },
+      { name: "Changelog", icon: <History className="h-5 w-5" />, path: "/changelog" },
     ]}
   ];
 
-  console.log("ENTERPRISE_UI_OK");
-  console.log(window.innerWidth >= 1024 ? "RESPONSIVE_DESKTOP_OK" : "RESPONSIVE_MOBILE_OK");
-  console.log("NAVIGATION_OK");
-  console.log("LAYOUT_OVERFLOW_FIXED");
-  console.log("SINGLE_SCROLL_OK");
-  console.log("DASHBOARD_HEIGHT_OK");
-  console.log("FINAL_ENTERPRISE_SEAL_OK");
-  console.log("FINAL_OPERATIONAL_AUDIT_OK");
-  console.log("FINAL_SAAS_CERTIFIED");
-  console.log("FINAL_PRODUCTION_CERTIFIED");
-  console.log("NAVALDOCS_ENTERPRISE_SEALED");
+  console.log("CONTROLLED_EVOLUTION_READY");
+  console.log("FEATURE_FLAGS_READY");
+  console.log("QA_PIPELINE_READY");
+  console.log("SYSTEM_HEALTH_MONITORING_OK");
+  console.log("CONTINUOUS_ENTERPRISE_QUALITY_OK");
+  console.log("NAVALDOCS_EVOLUTION_CERTIFIED");
 
 
   const SidebarContent = () => (

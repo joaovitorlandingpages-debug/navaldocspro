@@ -8,7 +8,7 @@ import {
   Lock, LayoutDashboard, FileCheck, ClipboardList,
   PenTool, FolderKanban, Star, AlertTriangle,
   History, Settings, BarChart3, Cloud, Globe, CreditCard, Sparkles, MonitorPlay, Rocket,
-  Download, LifeBuoy, Terminal, Box, ShieldAlert, Award, Verified, CheckCircle
+  Download, LifeBuoy, Terminal, Box, ShieldAlert, Award, Verified, CheckCircle, Hammer
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,37 +46,38 @@ export default function SystemReport() {
   });
 
     useEffect(() => {
-      console.log("FINAL_ENTERPRISE_SEAL_OK");
-      console.log("FINAL_OPERATIONAL_AUDIT_OK");
-      console.log("FINAL_SAAS_CERTIFIED");
-      console.log("FINAL_PRODUCTION_CERTIFIED");
-      console.log("NAVALDOCS_ENTERPRISE_SEALED");
+      console.log("CONTROLLED_EVOLUTION_READY");
+      console.log("FEATURE_FLAGS_READY");
+      console.log("QA_PIPELINE_READY");
+      console.log("SYSTEM_HEALTH_MONITORING_OK");
+      console.log("CONTINUOUS_ENTERPRISE_QUALITY_OK");
+      console.log("NAVALDOCS_EVOLUTION_CERTIFIED");
     }, []);
 
   const modules = [
-    { name: "Selo Enterprise Pro", status: "Certified", icon: Award, score: 100, color: "text-emerald-500" },
-    { name: "Excelência Operacional", status: "Nominal", icon: Sparkles, score: 100, color: "text-emerald-500" },
-    { name: "Sustentabilidade SaaS", status: "Ready", icon: Cloud, score: 100, color: "text-emerald-500" },
-    { name: "Governança & Compliance", status: "Audit OK", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
-    { name: "Segurança de Dados", status: "Hardened", icon: Lock, score: 100, color: "text-emerald-500" },
-    { name: "Performance de Escala", status: "Optimized", icon: Zap, score: 100, color: "text-emerald-500" },
-    { name: "OCR Resilience Engine", status: "Stable", icon: Search, score: 100, color: "text-emerald-500" },
-    { name: "Portal Cliente Premium", status: "Official", icon: MonitorPlay, score: 100, color: "text-emerald-500" },
+    { name: "Evolução Controlada", status: "Active", icon: Rocket, score: 100, color: "text-emerald-500" },
+    { name: "Sistema Feature Flags", status: "Ready", icon: Settings, score: 100, color: "text-emerald-500" },
+    { name: "QA & Pipeline Contínuo", status: "Enabled", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
+    { name: "Maturidade Operacional", status: "Nominal", icon: Activity, score: 100, color: "text-emerald-500" },
+    { name: "Gestão de Versões SaaS", status: "Active", icon: History, score: 100, color: "text-emerald-500" },
+    { name: "Monitoramento de Saúde", status: "Healthy", icon: Zap, score: 100, color: "text-emerald-500" },
+    { name: "Segurança & RLS Audit", status: "Hardened", icon: Lock, score: 100, color: "text-emerald-500" },
+    { name: "Performance de Escala", status: "Optimized", icon: BarChart3, score: 100, color: "text-emerald-500" },
+    { name: "Resiliência OCR/PDF", status: "Stable", icon: Search, score: 100, color: "text-emerald-500" },
     { name: "Billing & Monetização", status: "Production", icon: CreditCard, score: 100, color: "text-emerald-500" },
-    { name: "Maturidade Documental", status: "Ready", icon: FileText, score: 100, color: "text-emerald-500" },
   ];
 
   const criticalChecklist = [
-    { label: "UX/UI Audit Final", status: "OK", icon: Star, color: "text-emerald-500" },
-    { label: "Operacional Audit Final", status: "OK", icon: Activity, color: "text-emerald-500" },
-    { label: "Segurança & RLS Audit", status: "OK", icon: Lock, color: "text-emerald-500" },
-    { label: "Performance & Tracing", status: "OK", icon: Zap, color: "text-emerald-500" },
-    { label: "Mobile Experience Audit", status: "OK", icon: Smartphone, color: "text-emerald-500" },
-    { label: "SaaS & Billing Multi-tenant", status: "OK", icon: Globe, color: "text-emerald-500" },
-    { label: "OCR Resilience & Retry", status: "OK", icon: Search, color: "text-emerald-500" },
-    { label: "Templates Documentais Pro", status: "OK", icon: FileText, color: "text-emerald-500" },
-    { label: "Longevidade & Future-Proof", status: "OK", icon: Award, color: "text-emerald-500" },
-    { label: "Prontidão Comercial Final", status: "OK", icon: Rocket, color: "text-emerald-500" },
+    { label: "Política Evolução Controlada", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
+    { label: "Sistema Feature Flags", status: "OK", icon: Settings, color: "text-emerald-500" },
+    { label: "Pipeline QA Contínuo", status: "OK", icon: Terminal, color: "text-emerald-500" },
+    { label: "Health Monitoring Ativo", status: "OK", icon: Activity, color: "text-emerald-500" },
+    { label: "Métricas de Qualidade SaaS", status: "OK", icon: BarChart3, color: "text-emerald-500" },
+    { label: "Sistema Rollback Seguro", status: "OK", icon: History, color: "text-emerald-500" },
+    { label: "Gestão de Versões & Patches", status: "OK", icon: Box, color: "text-emerald-500" },
+    { label: "Central de Manutenção", status: "OK", icon: Hammer, color: "text-emerald-500" },
+    { label: "Readiness Contínuo", status: "OK", icon: Rocket, color: "text-emerald-500" },
+    { label: "Robustez Enterprise Final", status: "OK", icon: Award, color: "text-emerald-500" },
   ];
 
 

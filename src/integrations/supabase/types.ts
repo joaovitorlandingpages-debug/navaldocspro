@@ -1599,6 +1599,36 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flags: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_enabled: boolean | null
+          name: string
+          rules: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          name: string
+          rules?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          name?: string
+          rules?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       generated_documents: {
         Row: {
           company_id: string | null
@@ -3572,6 +3602,30 @@ export type Database = {
         }
         Relationships: []
       }
+      system_health_metrics: {
+        Row: {
+          id: string
+          metadata: Json | null
+          metric_name: string
+          recorded_at: string | null
+          value: number
+        }
+        Insert: {
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          recorded_at?: string | null
+          value: number
+        }
+        Update: {
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          recorded_at?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
       system_health_status: {
         Row: {
           id: string
@@ -3596,6 +3650,42 @@ export type Database = {
           message?: string | null
           service_name?: string
           status?: string
+        }
+        Relationships: []
+      }
+      system_incidents: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          ends_at: string | null
+          id: string
+          is_maintenance: boolean | null
+          severity: string | null
+          starts_at: string | null
+          status: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          is_maintenance?: boolean | null
+          severity?: string | null
+          starts_at?: string | null
+          status?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          is_maintenance?: boolean | null
+          severity?: string | null
+          starts_at?: string | null
+          status?: string | null
+          title?: string
         }
         Relationships: []
       }
@@ -3703,6 +3793,33 @@ export type Database = {
           target_version?: string | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: Json
         }
         Relationships: []
       }
