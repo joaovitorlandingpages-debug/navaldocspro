@@ -131,6 +131,7 @@ function DashboardLayout() {
     ]},
     { group: "Documentação", items: [
       { name: "Central OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
+      { name: "Central Documental", icon: <Signature className="h-5 w-5" />, path: "/dashboard/document-center" },
       { name: "Base Técnica", icon: <Database className="h-5 w-5" />, path: "/dashboard/documents-base" },
       { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
     ]},
