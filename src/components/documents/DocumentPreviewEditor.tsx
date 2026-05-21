@@ -168,7 +168,8 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                          { label: "Cliente", key: "cliente.nome", source: "Banco de Dados" },
                          { label: "Embarcação", key: "embarcacao.nome", source: "OCR - TIE" },
                          { label: "Inscrição", key: "embarcacao.inscricao", source: "OCR - TIE" },
-                         { label: "Motor", key: "motor.numero_serie", source: "OCR - Nota Fiscal" }
+                         { label: "Motor", key: "motor.numero_serie", source: "OCR - Nota Fiscal" },
+                         { label: "Medidas", key: "embarcacao.comprimento", source: "OCR - Memorial" }
                        ].map((field, i) => (
                          <div key={i} className="flex items-center justify-between text-[10px] font-bold py-2 border-b border-slate-100 last:border-0 group/field">
                             <div className="flex flex-col">
