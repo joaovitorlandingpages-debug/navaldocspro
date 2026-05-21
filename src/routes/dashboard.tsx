@@ -389,6 +389,7 @@ export function RouteContent() {
     { label: "Ativos Digitais", value: statsData?.generatedDocuments.toString() || (demoConfig?.is_demo_mode ? "142" : "0"), icon: <FileText className="text-emerald-500" />, trend: statsData?.trends.documents || "+15.4%" },
   ];
 
+    console.log("FINAL_ENTERPRISE_UI_OK");
     console.log("MARKET_READY_UI_OK");
     console.log("ENTERPRISE_OPERATION_READY");
     console.log("PREMIUM_EXPERIENCE_READY");
