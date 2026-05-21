@@ -30,6 +30,9 @@ export function useProcessAutomation(processId?: string) {
         setAutomationState(newState);
       }
 
+      // 1.5 Gerar insights de IA após carregar/atualizar o estado
+      await DocumentAutomationEngine.generateInsights(processId);
+
       // Fetch logs
       const { data: logsData } = await supabase
         .from('automation_logs')
