@@ -136,6 +136,73 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     fetchVessels();
   }, [step, formData.clientId]);
 
+  const handleQuickClientSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile?.company_id) {
+      toast.error("Empresa não identificada.");
+      return;
+    }
+
+    if (!newClient.name) {
+      toast.error("O nome é obrigatório.");
+      return;
+    }
+
+    setIsCreatingClient(true);
+    console.log("CLIENT_CREATE_SUBMIT_OK");
+    
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .insert({
+          company_id: profile.company_id,
+          name: newClient.name,
+          document_number: newClient.document,
+          rg: newClient.rg,
+          phone: newClient.phone,
+          email: newClient.email,
+          address: newClient.address,
+          city: newClient.city,
+          state: newClient.state,
+          notes: newClient.notes,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log("CLIENT_INSERT_OK", data.id);
+      toast.success("Cliente criado com sucesso!");
+      
+      // Update form data and close quick modal
+      setFormData({ ...formData, client: data.name, clientId: data.id });
+      console.log("CLIENT_SELECTED_OK", data.name);
+      
+      setIsQuickClientOpen(false);
+      setNewClient({
+        name: "",
+        document: "",
+        rg: "",
+        phone: "",
+        email: "",
+        address: "",
+        city: "",
+        state: "",
+        notes: ""
+      });
+
+      // Refresh list
+      await fetchCustomersList("");
+    } catch (error: any) {
+      console.error("Error creating client", error);
+      toast.error("Erro ao criar cliente: " + error.message);
+    } finally {
+      setIsCreatingClient(false);
+    }
+  };
+
+
   const clearDraft = () => {
     localStorage.removeItem("process_wizard_draft");
     setFormData({
