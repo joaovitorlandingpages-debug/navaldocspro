@@ -117,7 +117,7 @@ export default function AdminSaaSMetrics() {
               <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Latência Média</p>
                 <h4 className="text-3xl font-black text-primary tracking-tighter">142ms</h4>
-                <p className="text-[9px] text-slate-400 font-bold uppercase mt-2 italic">Meta: < 200ms</p>
+                <p className="text-[9px] text-slate-400 font-bold uppercase mt-2 italic">Meta: {"< 200ms"}</p>
               </div>
             </div>
             <div className="pt-4">
