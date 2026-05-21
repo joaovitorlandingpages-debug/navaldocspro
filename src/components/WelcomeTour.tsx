@@ -111,5 +111,5 @@ export function WelcomeTour({
       </div>
     </div>
   );
-  );
+}
 }
