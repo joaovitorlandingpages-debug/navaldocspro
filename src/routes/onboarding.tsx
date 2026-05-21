@@ -378,7 +378,7 @@ function OnboardingFlow() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="h-screen bg-slate-50 flex flex-col overflow-y-auto">
       <header className="p-6 flex justify-between items-center border-b bg-white z-10">
         <div className="flex items-center gap-2">
           <Ship className="h-6 w-6 text-primary" />
