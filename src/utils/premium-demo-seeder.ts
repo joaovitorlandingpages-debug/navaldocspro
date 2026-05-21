@@ -37,7 +37,7 @@ export async function seedPremiumDemo(companyId: string, userId: string) {
 
       if (process) {
         // 4. Create Demo Documents with OCR already "processed"
-        await supabase.from('documents').insert([
+        const { data: docs } = await supabase.from('documents').insert([
           {
             company_id: companyId,
             process_id: process.id,
@@ -53,19 +53,49 @@ export async function seedPremiumDemo(companyId: string, userId: string) {
             file_name: 'RG_DOUGLAS.jpg',
             status: 'validado',
             compliance_status: 'conforme'
+          },
+          {
+            company_id: companyId,
+            process_id: process.id,
+            document_type: 'Memorial Descritivo',
+            file_name: 'MEMORIAL_PHOENIX.pdf',
+            status: 'validado',
+            compliance_status: 'conforme'
           }
+        ]).select();
+
+        // 5. Create Signatures
+        if (docs) {
+          await supabase.from('document_signatures').insert(
+            docs.map(doc => ({
+              document_id: doc.id,
+              company_id: companyId,
+              signer_name: 'Comandante Silva',
+              signer_role: 'Comandante',
+              status: 'completed',
+              signed_at: new Date().toISOString()
+            }))
+          );
+        }
+
+        // 6. Create Checklist Items
+        await supabase.from('process_checklist_items').insert([
+          { process_id: process.id, company_id: companyId, title: 'Validar Documentação Técnica', status: 'completed' },
+          { process_id: process.id, company_id: companyId, title: 'Assinatura do Proprietário', status: 'completed' },
+          { process_id: process.id, company_id: companyId, title: 'Protocolo na Capitania', status: 'pending' }
         ]);
 
-        // 5. Create Timeline Events
+        // 7. Create Timeline Events
         await supabase.from('process_timeline').insert([
           { process_id: process.id, company_id: companyId, user_id: userId, type: 'creation', description: 'Processo aberto via Assistente IA' },
-          { process_id: process.id, company_id: companyId, user_id: userId, type: 'ocr_processed', description: 'OCR finalizado: TIE identificado com 99% confiança' }
+          { process_id: process.id, company_id: companyId, user_id: userId, type: 'ocr_processed', description: 'OCR finalizado: TIE identificado com 99% confiança' },
+          { process_id: process.id, company_id: companyId, user_id: userId, type: 'signature_completed', description: 'Documentos assinados digitalmente pelo Comandante' }
         ]);
       }
     }
   }
 
-  // 6. Create Intelligence Insights
+  // 8. Create Intelligence Insights
   const insights = [
     {
       company_id: companyId,
@@ -82,19 +112,31 @@ export async function seedPremiumDemo(companyId: string, userId: string) {
       message: 'Divergência crítica resolvida: O número do motor no TIE coincide agora com o Memorial.',
       action_label: 'Ver Histórico',
       confidence_score: 1.0
+    },
+    {
+      company_id: companyId,
+      user_id: userId,
+      type: 'suggestion',
+      message: 'Sugestão IA: Iniciar processo de renovação de CSN (vence em 30 dias).',
+      action_label: 'Abrir Renovação',
+      confidence_score: 0.95
     }
   ];
 
   await supabase.from('operational_insights').insert(insights);
 
-  // 7. Create Automation Stats
+  // 9. Create Automation Stats
   const stats = [
     { company_id: companyId, module_name: 'OCR Core', total_executions: 1250, successful_executions: 1245, time_saved_seconds: 1250 * 60 },
     { company_id: companyId, module_name: 'Doc Generator', total_executions: 840, successful_executions: 838, time_saved_seconds: 840 * 300 },
-    { company_id: companyId, module_name: 'Auto Filler', total_executions: 2100, successful_executions: 2095, time_saved_seconds: 2100 * 120 }
+    { company_id: companyId, module_name: 'Auto Filler', total_executions: 2100, successful_executions: 2095, time_saved_seconds: 2100 * 120 },
+    { company_id: companyId, module_name: 'Digital Signature', total_executions: 450, successful_executions: 450, time_saved_seconds: 450 * 1800 }
   ];
 
   await supabase.from('automation_statistics').upsert(stats, { onConflict: 'company_id,module_name' });
 
+  console.log("DEMO_PREMIUM_READY");
+  console.log("PILOT_PHASE_OK");
+  
   return { success: true };
 }
