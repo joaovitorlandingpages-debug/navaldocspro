@@ -740,7 +740,6 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           </div>
         </div>
       </DialogContent>
-      </DialogContent>
 
       {/* Modal de Criação Rápida de Cliente */}
       <Dialog open={isQuickClientOpen} onOpenChange={setIsQuickClientOpen}>
@@ -843,4 +842,5 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     </Dialog>
   );
 }
+
 
