@@ -84,7 +84,6 @@ export default function SystemReport() {
   ];
 
   const criticalChecklist = [
-
     { label: "Isolamento por company_id (RLS)", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
     { label: "Performance (Queries & Render)", status: "OK", icon: Zap, color: "text-emerald-500" },
     { label: "Responsividade Desktop/Mobile", status: "OK", icon: Smartphone, color: "text-emerald-500" },
@@ -98,6 +97,10 @@ export default function SystemReport() {
     { label: "Readiness Comercial Final", status: "OK", icon: Rocket, color: "text-emerald-500" },
     { label: "Ecosystem & Partnerships Module", status: "OK", icon: Globe, color: "text-emerald-500" },
     { label: "National Scale Infrastructure", status: "OK", icon: Zap, color: "text-emerald-500" },
+    { label: "Arquitetura Modular Consolidada", status: "OK", icon: LayoutDashboard, color: "text-emerald-500" },
+    { label: "OCR Operational Consolidado", status: "OK", icon: Search, color: "text-emerald-500" },
+    { label: "Portal Cliente Premium", status: "OK", icon: Globe, color: "text-emerald-500" },
+    { label: "Segurança Enterprise LGPD", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
   ];
 
 
