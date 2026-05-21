@@ -1030,5 +1030,3 @@ function DashboardSkeleton() {
 }
 
 export const RouteComponent = RouteContent;
-
-export const RouteComponent = RouteContent;
