@@ -263,33 +263,40 @@ function DashboardLayout() {
                     />
                  </div>
 
-                 <button 
-                   onClick={() => setIsNewProcessOpen(true)}
-                   className="flex items-center gap-2 bg-navy text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-navy/90 transition-all shadow-lg shadow-navy/10 whitespace-nowrap"
-                 >
-                   <Plus className="h-4 w-4 text-primary" /> Novo Processo
-                 </button>
-   
-                 <div className="flex items-center gap-4">
-                    <button 
-                      onClick={() => setNotificationsOpen(true)}
-                      className="relative p-2 hover:bg-slate-100 rounded-full transition-all active:scale-95"
-                    >
-                        <Bell className="h-5 w-5 text-slate-600" />
-                        <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full animate-ping" />
-                        <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full" />
-                    </button>
-                   <div className="h-8 w-px bg-slate-200" />
-                   <div className="flex items-center gap-3">
-                       <div className="text-right hidden sm:block">
-                           <p className="text-xs font-bold text-navy leading-none">{profile?.name || "Usuário"}</p>
-                           <p className="text-[10px] text-muted-foreground uppercase tracking-tighter mt-1">{subscription?.plan?.name || "Free Tier"}</p>
-                       </div>
-                       <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
-                           {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
-                       </div>
-                   </div>
-                 </div>
+                  <button 
+                    onClick={() => setIsNewProcessOpen(true)}
+                    className="flex items-center gap-3 bg-navy text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-[0_10px_25px_rgba(0,11,24,0.15)] whitespace-nowrap group"
+                  >
+                    <div className="h-5 w-5 bg-primary rounded-lg flex items-center justify-center group-hover:rotate-90 transition-transform duration-500">
+                      <Plus className="h-4 w-4 text-white" />
+                    </div>
+                    Novo Processo
+                  </button>
+    
+                  <div className="flex items-center gap-6">
+                     <button 
+                       onClick={() => setNotificationsOpen(true)}
+                       className="relative p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all active:scale-95 border border-transparent hover:border-slate-200"
+                     >
+                         <Bell className="h-5 w-5 text-navy" />
+                         <span className="absolute top-2.5 right-2.5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-white shadow-sm animate-ping" />
+                         <span className="absolute top-2.5 right-2.5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-white" />
+                     </button>
+                    <div className="h-10 w-px bg-slate-100" />
+                    <div className="flex items-center gap-4">
+                        <div className="text-right hidden xl:block">
+                            <p className="text-[11px] font-black text-navy leading-none uppercase tracking-widest">{profile?.name || "Operador Master"}</p>
+                            <div className="flex items-center justify-end gap-1.5 mt-1.5">
+                               <Badge variant="outline" className="text-[8px] font-black border-primary/20 text-primary bg-primary/5 uppercase tracking-widest px-2">{subscription?.plan?.name || "Professional"}</Badge>
+                               <span className="h-1 w-1 bg-slate-300 rounded-full" />
+                               <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Ativo</p>
+                            </div>
+                        </div>
+                        <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-navy to-slate-800 flex items-center justify-center text-white font-black text-xs shadow-lg border-2 border-white">
+                            {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
+                        </div>
+                    </div>
+                  </div>
               </div>
             </div>
          </header>
