@@ -155,10 +155,11 @@ function DashboardLayout() {
       { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
       { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
     ]},
-    { group: "Comercial", items: [
+    { group: "Comercial & Evolução", items: [
       { name: "Ambiente Demo", icon: <Rocket className="h-5 w-5" />, path: "/demo" },
-      { name: "Relatório de Prontidão", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/system-report" },
-      { name: "Status do Sistema", icon: <Activity className="h-5 w-5" />, path: "/status" },
+      { name: "Auditoria Final", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/system-report" },
+      { name: "Maturidade SaaS", icon: <Activity className="h-5 w-5" />, path: "/status" },
+      { name: "Changelog", icon: <History className="h-5 w-5" />, path: "/changelog" },
     ]}
   ];
 
