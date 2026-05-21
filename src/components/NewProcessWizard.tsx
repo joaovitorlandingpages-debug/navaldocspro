@@ -396,6 +396,14 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       case 4:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between mb-4">
+               <div>
+                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Processo</p>
+                  <p className="text-sm font-bold text-navy">{formData.type}</p>
+               </div>
+               <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase">{formData.category}</Badge>
+            </div>
+
             <p className="text-sm text-slate-500 mb-4">Checklist automático baseado no tipo: <span className="font-bold text-navy">{formData.type}</span></p>
             
             {loadingReqs ? (
