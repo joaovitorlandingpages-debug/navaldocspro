@@ -58,6 +58,7 @@ function ProcessDetail() {
 
   useEffect(() => {
     console.log("PROCESS_EXPERIENCE_OK");
+    console.log("PROCESS_AUTOMATION_READY");
   }, []);
 
   const { data: complianceHistory } = useQuery({

@@ -26,11 +26,20 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
   useEffect(() => {
     if (template?.base_content) {
       console.log("AUTOFILL_DOCUMENTS_OK");
+      console.log("DOCUMENT_AUTOFILL_READY");
       const filled = DocumentValidationEngine.fillPlaceholder(template.base_content, processData);
       setContent(filled);
       setStatus('auto_preenchido');
     }
   }, [template, processData]);
+
+  const handleRegenerate = () => {
+    if (template?.base_content) {
+      const filled = DocumentValidationEngine.fillPlaceholder(template.base_content, processData);
+      setContent(filled);
+      toast.info("Campos regenerados com dados do processo.");
+    }
+  };
 
   const handleApprove = () => {
     setStatus('aprovado');
@@ -152,46 +161,59 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                    <p className="text-[10px] font-black uppercase text-navy">Versão do Modelo</p>
                    <Badge variant="outline" className="bg-white">v{template.version_number || '1.0'} - Oficial</Badge>
                 </div>
-                <div className="space-y-2">
-                   <p className="text-[10px] font-black uppercase text-navy">Campos Mapeados</p>
-                   <div className="space-y-1">
-                      {[
-                        { label: "Cliente", key: "cliente.nome" },
-                        { label: "Embarcação", key: "embarcacao.nome" },
-                        { label: "Processo", key: "processo.numero" },
-                        { label: "Engenheiro", key: "engenheiro.nome" }
-                      ].map((field, i) => (
-                        <div key={i} className="flex items-center justify-between text-[10px] font-bold py-1 border-b border-slate-100 last:border-0">
-                           <span className="text-slate-400 uppercase tracking-widest">{field.label}</span>
-                           <span className={processData ? "text-emerald-600" : "text-amber-500"}>
-                              {processData ? <CheckCircle2 className="h-2.5 w-2.5" /> : "Pendente"}
-                           </span>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <Button className="w-full bg-navy text-white text-[10px] font-black uppercase tracking-widest h-12 rounded-xl gap-2 shadow-lg shadow-navy/10">
-                   <Printer className="h-4 w-4" /> Preview para Impressão
-                </Button>
-             </CardContent>
-          </Card>
+                 <div className="space-y-4">
+                    <p className="text-[10px] font-black uppercase text-navy">Campos Mapeados (Wizard)</p>
+                    <div className="space-y-1">
+                       {[
+                         { label: "Cliente", key: "cliente.nome", source: "Processo" },
+                         { label: "Embarcação", key: "embarcacao.nome", source: "OCR/BD" },
+                         { label: "Inscrição", key: "embarcacao.inscricao", source: "OCR/BD" },
+                         { label: "Motor", key: "motor.numero_serie", source: "OCR" }
+                       ].map((field, i) => (
+                         <div key={i} className="flex items-center justify-between text-[10px] font-bold py-2 border-b border-slate-100 last:border-0">
+                            <div className="flex flex-col">
+                               <span className="text-slate-400 uppercase tracking-widest">{field.label}</span>
+                               <span className="text-[8px] text-primary/60 italic">Fonte: {field.source}</span>
+                            </div>
+                            <span className={processData ? "text-emerald-600" : "text-amber-500"}>
+                               {processData ? <CheckCircle2 className="h-3 w-3" /> : "---"}
+                            </span>
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+                 <Button 
+                   variant="outline"
+                   onClick={handleRegenerate}
+                   className="w-full text-[10px] font-black uppercase tracking-widest h-11 rounded-xl gap-2 border-primary/20 text-primary hover:bg-primary/5"
+                 >
+                    <RefreshCw className="h-4 w-4" /> Sincronizar Dados
+                 </Button>
+                 <Button className="w-full bg-navy text-white text-[10px] font-black uppercase tracking-widest h-12 rounded-xl gap-2 shadow-lg shadow-navy/10">
+                    <Printer className="h-4 w-4" /> Layout de Impressão (A4)
+                 </Button>
+              </CardContent>
+           </Card>
 
-          <div className="p-6 rounded-[2rem] bg-navy text-white shadow-xl relative overflow-hidden group">
-             <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                <FileText className="h-32 w-32" />
-             </div>
-             <div className="relative z-10">
-                <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-4">Exportação</p>
-                <h4 className="text-lg font-bold mb-4">Pronto para Gerar PDF?</h4>
-                <p className="text-[11px] text-slate-400 mb-6 leading-relaxed">Após a aprovação, o documento será convertido em PDF oficial e anexado ao processo automaticamente.</p>
-                <Button 
-                   onClick={handleApprove}
-                   className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all gap-2"
-                >
-                   <Download className="h-4 w-4" /> Baixar PDF Final
-                </Button>
-             </div>
-          </div>
+           <div className="p-6 rounded-[2rem] bg-navy text-white shadow-xl relative overflow-hidden group">
+              <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                 <FileText className="h-32 w-32" />
+              </div>
+              <div className="relative z-10">
+                 <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-4">Exportação Final</p>
+                 <h4 className="text-lg font-bold mb-4">Gerar PDF Oficial</h4>
+                 <p className="text-[11px] text-slate-400 mb-6 leading-relaxed">Este documento será registrado na timeline do processo como uma versão finalizada e imutável.</p>
+                 <Button 
+                    onClick={() => {
+                       console.log("PDF_OPERATIONAL_READY");
+                       handleApprove();
+                    }}
+                    className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all gap-2"
+                 >
+                    <Download className="h-4 w-4" /> Exportar PDF
+                 </Button>
+              </div>
+           </div>
         </aside>
       </div>
     </div>

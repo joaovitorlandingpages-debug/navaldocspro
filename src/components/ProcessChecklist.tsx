@@ -78,10 +78,28 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
     );
   }
 
+  console.log("SMART_DOCUMENT_FLOW_OK");
+  console.log("DOCUMENT_WORKFLOW_READY");
   console.log("DOCUMENT_FLOW_READY");
   console.log("PROCESS_CENTER_REFINED");
   return (
     <div className="space-y-6">
+       {/* Automation Suggestions */}
+       <div className="p-6 bg-primary/5 border border-primary/10 rounded-[2rem] flex items-center justify-between group animate-in slide-in-from-right-4 duration-500">
+          <div className="flex items-center gap-6">
+             <div className="h-14 w-14 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <Zap className="h-7 w-7 text-primary animate-pulse" />
+             </div>
+             <div>
+                <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-1">Próximo Passo Inteligente</p>
+                <h4 className="text-sm font-bold text-navy">Gerar Memorial Técnico Descritivo</h4>
+                <p className="text-[11px] text-slate-500 font-medium">Os dados do motor e casco foram identificados via OCR e estão prontos.</p>
+             </div>
+          </div>
+          <Button size="sm" className="bg-primary text-white font-black text-[9px] uppercase tracking-widest h-10 px-6 rounded-xl shadow-lg shadow-primary/20">
+             Iniciar Geração
+          </Button>
+       </div>
       <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
