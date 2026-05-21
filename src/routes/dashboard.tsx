@@ -469,9 +469,43 @@ export function RouteContent() {
       </div>
 
 
-      {/* Intelligence & Recommendations */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
+      {/* Critical Operational Center */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+         <div className="lg:col-span-3 space-y-10">
+           <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-[0_30px_60px_rgba(0,0,0,0.02)] relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-10 opacity-5">
+                 <AlertCircle className="h-40 w-40 text-red-500" />
+              </div>
+              <div className="relative z-10 space-y-8">
+                 <div className="flex justify-between items-center">
+                    <div>
+                       <h2 className="text-2xl font-black text-navy uppercase tracking-tighter italic">Ações Críticas <span className="text-primary">Master</span></h2>
+                       <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Intervenções manuais e validações urgentes</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center animate-pulse">
+                       <AlertCircle className="h-6 w-6" />
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[
+                      { title: "Validação OCR", desc: "3 documentos aguardam revisão manual de confiança.", color: "primary", icon: Zap },
+                      { title: "Assinaturas", desc: "2 memoriais prontos para assinatura do engenheiro.", color: "blue-600", icon: Signature },
+                      { title: "Protocolo", desc: "1 processo aguarda envio final para a Marinha.", color: "emerald-500", icon: CheckCircle2 }
+                    ].map((item, i) => (
+                      <div key={i} className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:bg-white hover:shadow-xl transition-all cursor-pointer">
+                         <div className={`h-10 w-10 rounded-xl bg-${item.color}/10 text-${item.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                            <item.icon className="h-5 w-5" />
+                         </div>
+                         <h4 className="font-black text-navy text-[11px] uppercase tracking-widest mb-1">{item.title}</h4>
+                         <p className="text-xs text-slate-500 font-medium leading-relaxed">{item.desc}</p>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+           </div>
+
+           <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
               <Zap className="h-4 w-4 text-primary" /> Inteligência Operacional
