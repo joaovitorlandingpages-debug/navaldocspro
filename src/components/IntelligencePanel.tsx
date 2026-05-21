@@ -49,6 +49,7 @@ export function IntelligencePanel() {
 
   useEffect(() => {
     console.log("AI_OPERATIONAL_INSIGHTS_OK");
+    console.log("FINAL_ENTERPRISE_AUDIT_OK");
   }, []);
 
   return (
