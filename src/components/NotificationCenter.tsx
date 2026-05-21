@@ -101,12 +101,13 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClo
            )}
         </div>
 
-        <div className="p-8 border-t bg-slate-50">
+        <div className="p-6 md:p-8 border-t bg-slate-50">
            <Button 
              onClick={markAllAsRead}
              disabled={unreadCount === 0}
-             className="w-full bg-navy text-white hover:bg-slate-900 h-14 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl"
+             className="w-full bg-navy text-white hover:bg-slate-900 h-12 md:h-14 rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl"
            >
+
              Limpar Todas as Notificações
            </Button>
         </div>
