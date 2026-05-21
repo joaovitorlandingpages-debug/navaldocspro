@@ -141,6 +141,7 @@ function DashboardLayout() {
     ]},
     { group: "Gestão & Admin", items: [
       { name: "Compliance Center", icon: <ShieldCheck className="h-5 w-5" />, path: "/dashboard/compliance-center" },
+      { name: "Segurança & Backups", icon: <Lock className="h-5 w-5" />, path: "/dashboard/security" },
       { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
       { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
       { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
