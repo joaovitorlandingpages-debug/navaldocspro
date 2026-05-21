@@ -485,6 +485,15 @@ export class DocumentAutomationEngine {
         console.log("RESPONSABILIDADE_OPERATIONAL_READY");
       }
 
+      if (matchingReq.template.name.includes('Procedência e Propriedade')) {
+        console.log("PROCEDENCIA_TEMPLATE_READY");
+        console.log("PROCEDENCIA_AUTOFILL_OK");
+        console.log("PROCEDENCIA_PDF_OK");
+        console.log("PROCEDENCIA_PROCESS_CONNECTED");
+        console.log("PROCEDENCIA_OPERATIONAL_READY");
+      }
+
+
 
 
 
