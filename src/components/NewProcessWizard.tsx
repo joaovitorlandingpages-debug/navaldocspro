@@ -1070,9 +1070,99 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Criação Rápida de Embarcação */}
+      <Dialog open={isQuickVesselOpen} onOpenChange={setIsQuickVesselOpen}>
+        <DialogContent className="max-w-md p-8 bg-white border-none rounded-[2rem] shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-navy uppercase tracking-tight">Nova Embarcação Rápida</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleQuickVesselSubmit} className="space-y-4 pt-4">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Nome da Embarcação</Label>
+              <Input 
+                required
+                value={newVessel.name}
+                onChange={(e) => setNewVessel({...newVessel, name: e.target.value})}
+                placeholder="Ex: My Boat"
+                className="rounded-xl border-slate-200" 
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Inscrição / TIE</Label>
+                <Input 
+                  value={newVessel.registration_number}
+                  onChange={(e) => setNewVessel({...newVessel, registration_number: e.target.value})}
+                  placeholder="000.000000-0"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Tipo (Lancha, Veleiro...)</Label>
+                <Input 
+                  value={newVessel.vessel_type}
+                  onChange={(e) => setNewVessel({...newVessel, vessel_type: e.target.value})}
+                  placeholder="Ex: Lancha"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Motorização</Label>
+                <Input 
+                  value={newVessel.engine}
+                  onChange={(e) => setNewVessel({...newVessel, engine: e.target.value})}
+                  placeholder="Ex: Volvo 200HP"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Categoria (Esporte/Recreio...)</Label>
+                <Input 
+                  value={newVessel.category}
+                  onChange={(e) => setNewVessel({...newVessel, category: e.target.value})}
+                  placeholder="Ex: Esporte"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Observações Técnicas</Label>
+              <textarea 
+                className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm min-h-[80px]"
+                value={newVessel.notes}
+                onChange={(e) => setNewVessel({...newVessel, notes: e.target.value})}
+                placeholder="Detalhes adicionais..."
+              />
+            </div>
+
+            <div className="pt-4 flex gap-3">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setIsQuickVesselOpen(false)}
+                className="flex-1 rounded-xl h-12"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isCreatingVessel}
+                className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
+              >
+                {isCreatingVessel ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Embarcação"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
+
 
 
 
