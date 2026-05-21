@@ -57,12 +57,13 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClo
              </div>
            ) : (
              <div className="divide-y divide-slate-100">
-                {notifications.map((n) => (
-                  <div 
-                    key={n.id} 
-                    onClick={() => markAsRead(n.id)}
-                    className={`p-8 hover:bg-slate-50/80 transition-all cursor-pointer group relative border-l-4 ${!n.is_read ? 'bg-primary/[0.02] border-l-primary' : 'border-l-transparent'}`}
-                  >
+                 {notifications.map((n) => (
+                   <div 
+                     key={n.id} 
+                     onClick={() => markAsRead(n.id)}
+                     className={`p-6 md:p-8 hover:bg-slate-50/80 transition-all cursor-pointer group relative border-l-4 ${!n.is_read ? 'bg-primary/[0.02] border-l-primary' : 'border-l-transparent'}`}
+                   >
+
                      <div className="flex gap-5">
                         <div className={`h-14 w-14 rounded-[1.25rem] flex items-center justify-center flex-shrink-0 transition-all shadow-sm group-hover:scale-110 group-hover:shadow-lg ${
                           n.type === 'success' ? 'bg-green-50 text-green-600' : 
