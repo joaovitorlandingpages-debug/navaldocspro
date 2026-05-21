@@ -70,6 +70,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     notes: ""
   });
 
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [ocrStatus, setOcrStatus] = useState<Record<string, string>>({});
+
+
   const [newVessel, setNewVessel] = useState({
     name: "",
     registration_number: "",
