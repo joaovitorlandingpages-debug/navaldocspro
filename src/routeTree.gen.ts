@@ -50,6 +50,7 @@ import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as DebugSystemRouteImport } from './routes/debug.system'
 import { Route as DebugAuthRouteImport } from './routes/debug.auth'
 import { Route as DashboardSecurityRouteImport } from './routes/dashboard.security'
+import { Route as DashboardEcosystemRouteImport } from './routes/dashboard.ecosystem'
 import { Route as DashboardDocumentsBaseRouteImport } from './routes/dashboard/documents-base'
 import { Route as DashboardDocumentCenterRouteImport } from './routes/dashboard.document-center'
 import { Route as DashboardDeadlinesRouteImport } from './routes/dashboard.deadlines'
@@ -283,6 +284,11 @@ const DashboardSecurityRoute = DashboardSecurityRouteImport.update({
   path: '/security',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardEcosystemRoute = DashboardEcosystemRouteImport.update({
+  id: '/ecosystem',
+  path: '/ecosystem',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardDocumentsBaseRoute = DashboardDocumentsBaseRouteImport.update({
   id: '/documents-base',
   path: '/documents-base',
@@ -483,6 +489,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/dashboard/ecosystem': typeof DashboardEcosystemRoute
   '/dashboard/security': typeof DashboardSecurityRoute
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
@@ -551,6 +558,7 @@ export interface FileRoutesByTo {
   '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/dashboard/ecosystem': typeof DashboardEcosystemRoute
   '/dashboard/security': typeof DashboardSecurityRoute
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
@@ -622,6 +630,7 @@ export interface FileRoutesById {
   '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/dashboard/ecosystem': typeof DashboardEcosystemRoute
   '/dashboard/security': typeof DashboardSecurityRoute
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
@@ -694,6 +703,7 @@ export interface FileRouteTypes {
     | '/dashboard/deadlines'
     | '/dashboard/document-center'
     | '/dashboard/documents-base'
+    | '/dashboard/ecosystem'
     | '/dashboard/security'
     | '/debug/auth'
     | '/debug/system'
@@ -762,6 +772,7 @@ export interface FileRouteTypes {
     | '/dashboard/deadlines'
     | '/dashboard/document-center'
     | '/dashboard/documents-base'
+    | '/dashboard/ecosystem'
     | '/dashboard/security'
     | '/debug/auth'
     | '/debug/system'
@@ -832,6 +843,7 @@ export interface FileRouteTypes {
     | '/dashboard/deadlines'
     | '/dashboard/document-center'
     | '/dashboard/documents-base'
+    | '/dashboard/ecosystem'
     | '/dashboard/security'
     | '/debug/auth'
     | '/debug/system'
@@ -1174,6 +1186,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSecurityRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/ecosystem': {
+      id: '/dashboard/ecosystem'
+      path: '/ecosystem'
+      fullPath: '/dashboard/ecosystem'
+      preLoaderRoute: typeof DashboardEcosystemRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/documents-base': {
       id: '/dashboard/documents-base'
       path: '/documents-base'
@@ -1427,6 +1446,7 @@ interface DashboardRouteChildren {
   DashboardDeadlinesRoute: typeof DashboardDeadlinesRoute
   DashboardDocumentCenterRoute: typeof DashboardDocumentCenterRoute
   DashboardDocumentsBaseRoute: typeof DashboardDocumentsBaseRoute
+  DashboardEcosystemRoute: typeof DashboardEcosystemRoute
   DashboardSecurityRoute: typeof DashboardSecurityRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
@@ -1436,6 +1456,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardDeadlinesRoute: DashboardDeadlinesRoute,
   DashboardDocumentCenterRoute: DashboardDocumentCenterRoute,
   DashboardDocumentsBaseRoute: DashboardDocumentsBaseRoute,
+  DashboardEcosystemRoute: DashboardEcosystemRoute,
   DashboardSecurityRoute: DashboardSecurityRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }

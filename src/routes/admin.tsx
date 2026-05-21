@@ -72,6 +72,7 @@ function AdminLayout() {
 
   const adminNavItems = [
     { name: "Visão Geral", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },
+    { name: "Executive Overview", icon: <Globe className="h-5 w-5" />, path: "/admin/executive-overview" },
     { name: "Empresas", icon: <Building className="h-5 w-5" />, path: "/admin/companies" },
     { name: "Métricas SaaS", icon: <TrendingUp className="h-5 w-5" />, path: "/admin/saas-metrics" },
     { name: "Roadmap", icon: <Rocket className="h-5 w-5" />, path: "/admin/roadmap" },
@@ -83,6 +84,7 @@ function AdminLayout() {
     { name: "Audit Logs", icon: <History className="h-5 w-5" />, path: "/admin/logs" },
     { name: "System Status", icon: <Activity className="h-5 w-5" />, path: "/admin/system-report" },
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },
+
   ];
 
   return (

@@ -6,8 +6,10 @@ import {
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
   Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft,
-  Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight, Signature, Lock
+  Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight, Signature, Lock,
+  Globe
 } from "lucide-react";
+
 import { useState, useEffect, Suspense, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { NotificationCenter } from "@/components/NotificationCenter";
