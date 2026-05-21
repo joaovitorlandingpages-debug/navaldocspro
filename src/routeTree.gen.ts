@@ -49,6 +49,7 @@ import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as DebugSystemRouteImport } from './routes/debug.system'
 import { Route as DebugAuthRouteImport } from './routes/debug.auth'
 import { Route as DashboardDocumentsBaseRouteImport } from './routes/dashboard/documents-base'
+import { Route as DashboardDocumentCenterRouteImport } from './routes/dashboard.document-center'
 import { Route as DashboardComplianceCenterRouteImport } from './routes/dashboard/compliance-center'
 import { Route as BillingSuccessRouteImport } from './routes/billing.success'
 import { Route as BillingSubscriptionRouteImport } from './routes/billing.subscription'
@@ -269,6 +270,11 @@ const DashboardDocumentsBaseRoute = DashboardDocumentsBaseRouteImport.update({
   path: '/documents-base',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardDocumentCenterRoute = DashboardDocumentCenterRouteImport.update({
+  id: '/document-center',
+  path: '/document-center',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardComplianceCenterRoute =
   DashboardComplianceCenterRouteImport.update({
     id: '/compliance-center',
@@ -420,6 +426,7 @@ export interface FileRoutesByFullPath {
   '/billing/subscription': typeof BillingSubscriptionRoute
   '/billing/success': typeof BillingSuccessRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
+  '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
@@ -479,6 +486,7 @@ export interface FileRoutesByTo {
   '/billing/subscription': typeof BillingSubscriptionRoute
   '/billing/success': typeof BillingSuccessRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
+  '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
@@ -541,6 +549,7 @@ export interface FileRoutesById {
   '/billing/subscription': typeof BillingSubscriptionRoute
   '/billing/success': typeof BillingSuccessRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
+  '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
@@ -604,6 +613,7 @@ export interface FileRouteTypes {
     | '/billing/subscription'
     | '/billing/success'
     | '/dashboard/compliance-center'
+    | '/dashboard/document-center'
     | '/dashboard/documents-base'
     | '/debug/auth'
     | '/debug/system'
@@ -663,6 +673,7 @@ export interface FileRouteTypes {
     | '/billing/subscription'
     | '/billing/success'
     | '/dashboard/compliance-center'
+    | '/dashboard/document-center'
     | '/dashboard/documents-base'
     | '/debug/auth'
     | '/debug/system'
@@ -724,6 +735,7 @@ export interface FileRouteTypes {
     | '/billing/subscription'
     | '/billing/success'
     | '/dashboard/compliance-center'
+    | '/dashboard/document-center'
     | '/dashboard/documents-base'
     | '/debug/auth'
     | '/debug/system'
@@ -1058,6 +1070,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardDocumentsBaseRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/document-center': {
+      id: '/dashboard/document-center'
+      path: '/document-center'
+      fullPath: '/dashboard/document-center'
+      preLoaderRoute: typeof DashboardDocumentCenterRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/compliance-center': {
       id: '/dashboard/compliance-center'
       path: '/compliance-center'
@@ -1242,12 +1261,14 @@ const AnalyticsRouteWithChildren = AnalyticsRoute._addFileChildren(
 
 interface DashboardRouteChildren {
   DashboardComplianceCenterRoute: typeof DashboardComplianceCenterRoute
+  DashboardDocumentCenterRoute: typeof DashboardDocumentCenterRoute
   DashboardDocumentsBaseRoute: typeof DashboardDocumentsBaseRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardComplianceCenterRoute: DashboardComplianceCenterRoute,
+  DashboardDocumentCenterRoute: DashboardDocumentCenterRoute,
   DashboardDocumentsBaseRoute: DashboardDocumentsBaseRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
