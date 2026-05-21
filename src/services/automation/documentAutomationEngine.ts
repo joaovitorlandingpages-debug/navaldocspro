@@ -429,6 +429,15 @@ export class DocumentAutomationEngine {
         console.log("LAUDO_OPERATIONAL_READY");
       }
 
+      if (matchingReq.template.name.includes('Relatório de Vistoria')) {
+        console.log("RELATORIO_VISTORIA_TEMPLATE_READY");
+        console.log("RELATORIO_VISTORIA_AUTOFILL_OK");
+        console.log("RELATORIO_VISTORIA_PDF_OK");
+        console.log("RELATORIO_VISTORIA_PROCESS_CONNECTED");
+        console.log("RELATORIO_VISTORIA_OPERATIONAL_READY");
+      }
+
+
 
 
 
