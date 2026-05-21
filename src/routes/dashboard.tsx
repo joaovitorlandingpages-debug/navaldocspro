@@ -544,10 +544,10 @@ export function RouteContent() {
             <div className="flex items-center gap-3">
                <div className="flex flex-col items-end">
                   <p className="text-[10px] font-black uppercase text-slate-400">Readiness Score</p>
-                  <p className="text-xs font-bold text-navy">94.2%</p>
+                   <p className="text-xs font-bold text-navy">100%</p>
                </div>
                <div className="h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary w-[94.2%]"></div>
+                  <div className="h-full bg-primary w-[100%]"></div>
                </div>
             </div>
           </div>
