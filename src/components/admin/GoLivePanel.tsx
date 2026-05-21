@@ -303,7 +303,7 @@ export function GoLivePanel() {
              </CardHeader>
              <CardContent className="p-0">
                <div className="divide-y divide-slate-50">
-                 {incidents?.map((incident) => (
+                 {incidents?.map((incident: any) => (
                    <div key={incident.id} className="p-6 hover:bg-slate-50 transition-colors">
                      <div className="flex items-start justify-between">
                        <div className="flex items-start gap-4">
