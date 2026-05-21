@@ -7,7 +7,7 @@ import {
   ArrowUpRight, AlertCircle, CheckCircle2,
   Trash2, ShieldAlert
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -172,10 +172,15 @@ export default function AdminCompanies() {
         </div>
       )}
       
-      <div className="hidden">
-        {console.log("MASTER_ADMIN_READY")}
-        {console.log("SAAS_CONTROL_READY")}
-      </div>
+      <AdminLogs />
     </div>
   );
+}
+
+function AdminLogs() {
+  useEffect(() => {
+    console.log("MASTER_ADMIN_READY");
+    console.log("SAAS_CONTROL_READY");
+  }, []);
+  return null;
 }
