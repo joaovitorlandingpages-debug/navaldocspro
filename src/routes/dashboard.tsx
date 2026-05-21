@@ -242,7 +242,7 @@ function DashboardLayout() {
            )}
             <div className="h-auto py-5 flex flex-col sm:flex-row items-center justify-between px-10 border-b border-slate-100 gap-6">
               <div className="flex items-center gap-8 flex-grow w-full sm:w-auto">
-                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl lg:block hidden transition-all shadow-sm">
+                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all shadow-sm">
                    <Menu className="h-5 w-5 text-navy" />
                  </button>
                  <div className="flex flex-col gap-1">
