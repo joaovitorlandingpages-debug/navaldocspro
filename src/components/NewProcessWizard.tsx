@@ -134,20 +134,101 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   }, [step, searchTerm]);
 
 
-  useEffect(() => {
-    async function fetchVessels() {
-      if (step === 3 && formData.clientId) {
-        setLoading(true);
-        const { data } = await supabase
-          .from('vessels')
-          .select('id, name')
-          .eq('customer_id', formData.clientId);
-        setVessels(data || []);
-        setLoading(false);
-      }
+  const fetchVesselsList = async (forceSearchTerm?: string) => {
+    if (!formData.clientId) return;
+    
+    setLoading(true);
+    console.log("PROCESS_TYPES_LOADING", "vessels");
+    
+    const query = supabase
+      .from('vessels')
+      .select('id, name, registration_number, vessel_type')
+      .eq('customer_id', formData.clientId);
+    
+    const finalSearch = forceSearchTerm !== undefined ? forceSearchTerm : vesselSearchTerm;
+    if (finalSearch) {
+      query.ilike('name', `%${finalSearch}%`);
     }
-    fetchVessels();
-  }, [step, formData.clientId]);
+
+    const { data, error } = await query.limit(10);
+    
+    if (error) {
+      console.error("Error fetching vessels", error);
+      setVessels([]);
+    } else {
+      setVessels(data || []);
+      console.log("STEP_3_VESSEL_OK", data?.length);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (step === 3 && formData.clientId) {
+      fetchVesselsList();
+    }
+  }, [step, formData.clientId, vesselSearchTerm]);
+
+  const handleQuickVesselSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile?.company_id) {
+      toast.error("Empresa não identificada.");
+      return;
+    }
+
+    if (!formData.clientId) {
+      toast.error("Selecione um cliente primeiro.");
+      return;
+    }
+
+    if (!newVessel.name) {
+      toast.error("O nome da embarcação é obrigatório.");
+      return;
+    }
+
+    setIsCreatingVessel(true);
+    console.log("VESSEL_CREATE_SUBMIT_OK");
+    
+    try {
+      const { data, error } = await supabase
+        .from('vessels')
+        .insert({
+          company_id: profile.company_id,
+          customer_id: formData.clientId,
+          name: newVessel.name,
+          registration_number: newVessel.registration_number,
+          vessel_type: newVessel.vessel_type,
+          engine: newVessel.engine,
+          category: newVessel.category,
+          notes: newVessel.notes
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log("VESSEL_INSERT_OK", data.id);
+      toast.success("Embarcação criada e vinculada com sucesso!");
+      
+      setFormData({ ...formData, vessel: data.name, vesselId: data.id });
+      setIsQuickVesselOpen(false);
+      setNewVessel({
+        name: "",
+        registration_number: "",
+        vessel_type: "",
+        engine: "",
+        category: "",
+        notes: ""
+      });
+
+      await fetchVesselsList("");
+    } catch (error: any) {
+      console.error("Error creating vessel", error);
+      toast.error("Erro ao criar embarcação: " + error.message);
+    } finally {
+      setIsCreatingVessel(false);
+    }
+  };
+
 
   const handleQuickClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
