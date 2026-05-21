@@ -126,6 +126,20 @@ export default function ClientPortal() {
               <p className="text-slate-500 font-medium">Acompanhe seus processos e envie pendências aqui.</p>
            </div>
            <div className="flex gap-2 w-full md:w-auto">
+              <Button 
+                variant="outline"
+                className="flex-1 md:flex-none border-slate-200 h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest gap-2"
+                onClick={() => {
+                  const company = selectedProcess?.companies;
+                  if (company?.phone) {
+                    window.open(`https://wa.me/${company.phone.replace(/\D/g, '')}`, '_blank');
+                  } else {
+                    toast.info("Contato não disponível para esta empresa.");
+                  }
+                }}
+              >
+                Falar com Engenheiro
+              </Button>
               <Button className="flex-1 md:flex-none bg-primary text-white h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-primary/20">
                  <Send className="h-4 w-4" /> Suporte VIP
               </Button>
