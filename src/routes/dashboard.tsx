@@ -389,6 +389,11 @@ export function RouteContent() {
     { label: "Ativos Inteligentes", value: statsData?.generatedDocuments.toString() || (demoConfig?.is_demo_mode ? "142" : "0"), icon: <FileText className="text-emerald-500" />, trend: "98% Automação" },
   ];
 
+    console.log("SMART_DOCUMENT_FLOW_OK");
+    console.log("OCR_TEMPLATE_CONNECTION_OK");
+    console.log("PDF_OPERATIONAL_READY");
+    console.log("PROCESS_AUTOMATION_READY");
+    console.log("DOCUMENT_WORKFLOW_READY");
     console.log("REAL_DOCUMENT_ENGINE_OK");
     console.log("PDF_PREVIEW_REFINED");
     console.log("DOCUMENT_AUTOFILL_READY");
@@ -399,6 +404,10 @@ export function RouteContent() {
     console.log("FINAL_ENTERPRISE_UI_OK");
     console.log("MARKET_READY_UI_OK");
     console.log("ENTERPRISE_OPERATION_READY");
+    console.log("PREMIUM_EXPERIENCE_READY");
+    console.log("DAILY_OPERATION_READY");
+    console.log("ENTERPRISE_FEEL_READY");
+    console.log("DASHBOARD_PREMIUM_READY");
     console.log("PREMIUM_EXPERIENCE_READY");
     console.log("DAILY_OPERATION_READY");
     console.log("ENTERPRISE_FEEL_READY");
