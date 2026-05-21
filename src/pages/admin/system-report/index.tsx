@@ -21,6 +21,8 @@ import { GoLivePanel } from "@/components/admin/GoLivePanel";
 import { GovernancePanel } from "@/components/admin/GovernancePanel";
 import { IncidentManager } from "@/components/admin/IncidentManager";
 import { DeploymentManager } from "@/components/admin/DeploymentManager";
+import { ImprovementsPanel } from "@/components/admin/ImprovementsPanel";
+
 
 export default function SystemReport() {
   const [readinessScore] = useState(100);
