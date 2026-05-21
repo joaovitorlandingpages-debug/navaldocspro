@@ -40,6 +40,8 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
   const isDeclaracao = template?.name?.includes("Declaração");
   const isTermo = template?.name?.includes("Termo de Responsabilidade");
   const isTransferencia = template?.name?.includes("Transferência");
+  const isAlteracaoMotor = template?.name?.includes("Alteração de Motor");
+
 
 
 
@@ -366,7 +368,11 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                        if (template.name.includes("Transferência")) {
                          console.log("TRANSFERENCIA_PDF_OK");
                        }
+                       if (template.name.includes("Alteração de Motor")) {
+                         console.log("MOTOR_CHANGE_PDF_OK");
+                       }
                        handleApprove();
+
 
 
 
