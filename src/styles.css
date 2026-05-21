@@ -113,6 +113,8 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
+    position: fixed;
+    width: 100%;
   }
   body {
     background-color: var(--color-background);
@@ -120,7 +122,17 @@
     font-feature-settings: "rlig" 1, "calt" 1;
     overflow: hidden;
     -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
   }
+}
+
+.premium-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+  overscroll-behavior-y: contain;
 }
 
 

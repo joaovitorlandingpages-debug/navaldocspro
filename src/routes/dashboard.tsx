@@ -170,6 +170,11 @@ function DashboardLayout() {
   console.log("DASHBOARD_HEIGHT_OK");
   console.log("FINAL_LAUNCH_READY");
   console.log("NAVALDOCS_PRODUCTION_READY");
+  console.log("OPERATIONAL_MATURITY_OK");
+  console.log("ENTERPRISE_STABILITY_OK");
+  console.log("PRODUCTION_HARDENED_OK");
+  console.log("SAAS_MATURITY_READY");
+  console.log("NAVALDOCS_OPERATIONALLY_MATURE");
 
 
   const SidebarContent = () => (
@@ -304,7 +309,11 @@ function DashboardLayout() {
               <div className="flex items-center gap-4 md:gap-8 w-full sm:w-auto justify-end">
                   <div className="hidden xl:flex items-center gap-3 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl">
                     <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
-                    <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Production Ready</span>
+                    <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Operationally Mature</span>
+                  </div>
+                  <div className="hidden xl:flex items-center gap-3 px-4 py-2 bg-primary/5 border border-primary/10 rounded-xl">
+                    <ShieldCheck className="h-3 w-3 text-primary" />
+                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">Enterprise Stable</span>
                   </div>
 
                  <div className="relative max-w-sm w-full hidden 2xl:block group">

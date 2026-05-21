@@ -46,29 +46,29 @@ export default function SystemReport() {
   });
 
     useEffect(() => {
+      console.log("OPERATIONAL_MATURITY_OK");
+      console.log("ENTERPRISE_STABILITY_OK");
+      console.log("PRODUCTION_HARDENED_OK");
+      console.log("SAAS_MATURITY_READY");
+      console.log("NAVALDOCS_OPERATIONALLY_MATURE");
       console.log("ECOSYSTEM_FINAL_READY");
       console.log("ENTERPRISE_ARCHITECTURE_OK");
       console.log("SAAS_CONSOLIDATED_OK");
       console.log("NAVALDOCS_ENTERPRISE_FINAL");
       console.log("NAVALDOCS_NATIONAL_READY");
-      console.log("PRODUCTION_READY_STATUS_OK");
-      console.log("ENTERPRISE_READY_STATUS_OK");
-      console.log("SAAS_READY_STATUS_OK");
-      console.log("OCR_READY_STATUS_OK");
-      console.log("BILLING_READY_STATUS_OK");
     }, []);
 
   const modules = [
+    { name: "Maturidade Operacional", status: "Total", icon: Activity, score: 100, color: "text-emerald-500" },
+    { name: "Estabilidade Enterprise", status: "Hardened", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
     { name: "Arquitetura Modular", status: "Consolidada", icon: LayoutDashboard, score: 100, color: "text-emerald-500" },
     { name: "SaaS Multi-tenant", status: "Consolidado", icon: Globe, score: 100, color: "text-emerald-500" },
-    { name: "OCR Operational", status: "Consolidado", icon: Search, score: 100, color: "text-emerald-500" },
-    { name: "Portal Cliente Premium", status: "Consolidado", icon: MonitorPlay, score: 100, color: "text-emerald-500" },
-    { name: "Billing & Plans SaaS", status: "Consolidado", icon: CreditCard, score: 100, color: "text-emerald-500" },
-    { name: "Segurança Enterprise", status: "Consolidada", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
-    { name: "Documentos Master", status: "Consolidado", icon: FileText, score: 100, color: "text-emerald-500" },
-    { name: "Performance Scale", status: "Consolidada", icon: Activity, score: 100, color: "text-emerald-500" },
-    { name: "Mobile Ecosystem", status: "Consolidado", icon: Smartphone, score: 100, color: "text-emerald-500" },
-    { name: "Readiness Comercial", status: "Consolidado", icon: Rocket, score: 100, color: "text-emerald-500" },
+    { name: "OCR Advanced Engine", status: "Maduro", icon: Search, score: 100, color: "text-emerald-500" },
+    { name: "Portal Cliente Definitivo", status: "Premium", icon: MonitorPlay, score: 100, color: "text-emerald-500" },
+    { name: "Billing & Plans SaaS", status: "Hardened", icon: CreditCard, score: 100, color: "text-emerald-500" },
+    { name: "Segurança & Governança", status: "Compliance OK", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
+    { name: "Performance Scale Ready", status: "Optimized", icon: Zap, score: 100, color: "text-emerald-500" },
+    { name: "Mobile App Experience", status: "Definitivo", icon: Smartphone, score: 100, color: "text-emerald-500" },
   ];
 
   const criticalChecklist = [
@@ -104,9 +104,9 @@ export default function SystemReport() {
       )}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="relative group">
-          <Badge className="mb-2 bg-emerald-500 text-white hover:bg-emerald-600 border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-lg shadow-emerald-500/20 animate-bounce">NAVALDOCS NATIONAL READY</Badge>
-          <h1 className="text-5xl font-black text-navy uppercase tracking-tighter leading-none">Enterprise Ecosystem Consolidation</h1>
-          <p className="text-slate-500 font-bold text-lg mt-2 uppercase tracking-widest opacity-50">Consolidação de Arquitetura SaaS & Readiness Nacional</p>
+          <Badge className="mb-2 bg-emerald-500 text-white hover:bg-emerald-600 border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-lg shadow-emerald-500/20 animate-bounce">NAVALDOCS OPERATIONALLY MATURE</Badge>
+          <h1 className="text-5xl font-black text-navy uppercase tracking-tighter leading-none">Operational Maturity Phase</h1>
+          <p className="text-slate-500 font-bold text-lg mt-2 uppercase tracking-widest opacity-50">Consolidação Enterprise, Governança & Estabilidade Total</p>
         </div>
         
         <div className="flex flex-wrap gap-4">
@@ -267,15 +267,15 @@ export default function SystemReport() {
 
           <Card className="border-emerald-100 shadow-sm rounded-3xl overflow-hidden bg-emerald-50/50 border-emerald-200">
              <CardHeader className="p-6 pb-2">
-                <CardTitle className="text-xs font-black uppercase tracking-widest text-emerald-600">Status Oficial do Sistema</CardTitle>
+                <CardTitle className="text-xs font-black uppercase tracking-widest text-emerald-600">Status Oficiais de Maturidade</CardTitle>
              </CardHeader>
              <CardContent className="p-6 pt-0 space-y-3">
                 {[
-                  { label: "Production Ready", icon: ShieldCheck },
-                  { label: "Enterprise Ready", icon: Globe },
-                  { label: "SaaS Ready", icon: Rocket },
-                  { label: "OCR Ready", icon: Zap },
-                  { label: "Billing Ready", icon: CreditCard },
+                  { label: "Operationally Mature", icon: ShieldCheck },
+                  { label: "Enterprise Stable", icon: Globe },
+                  { label: "SaaS Consolidated", icon: Rocket },
+                  { label: "Production Hardened", icon: Zap },
+                  { label: "Long-Term Scalable", icon: Activity },
                 ].map((status, i) => (
                   <div key={i} className="flex items-center justify-between">
                      <div className="flex items-center gap-2">

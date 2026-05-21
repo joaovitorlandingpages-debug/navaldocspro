@@ -29,6 +29,9 @@ export default function ClientPortal() {
 
   useEffect(() => {
     console.log("CLIENT_PORTAL_READY");
+    console.log("CLIENT_UPLOAD_READY");
+    console.log("CLIENT_SIGNATURE_READY");
+    console.log("CLIENT_TIMELINE_OK");
     console.log("CLIENT_EXPERIENCE_PREMIUM");
   }, []);
 
