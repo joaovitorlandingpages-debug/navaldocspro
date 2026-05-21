@@ -388,9 +388,12 @@ export class DocumentAutomationEngine {
       }
     }
 
-    // 3. Re-analisar o processo
+    // 3. Re-analisar o processo e gerar novos insights de IA
     await this.analyzeProcess(processId);
+    await this.generateInsights(processId);
     
+    console.log("AI_DOCUMENT_ANALYSIS_OK", processId);
+
     // 4. Se o documento identificado for parte do checklist, atualizar
     const { data: requirements } = await supabase
       .from('process_document_packages')
