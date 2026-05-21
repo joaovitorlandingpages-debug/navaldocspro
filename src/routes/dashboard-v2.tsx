@@ -39,18 +39,13 @@ function DashboardV2Layout() {
   useEffect(() => {
     if (!loading && profile) {
       if (profile.role === 'customer' || profile.role === 'client') {
-        console.log("DASHBOARD_V2_REDIRECT_CLIENT");
         navigate({ to: "/client-portal" });
       }
     }
   }, [profile, loading, navigate]);
 
   useEffect(() => {
-    console.log("DASHBOARD_V2_RENDERED");
-    console.log("DASHBOARD_STABLE");
-    console.log("LAYOUT_OVERFLOW_FIXED");
-    console.log("SINGLE_SCROLL_OK");
-    console.log("DASHBOARD_HEIGHT_OK");
+    import("@/utils/enterpriseScale").then(m => m.EnterpriseScale.audit());
   }, []);
 
   const handleLogout = async () => {
