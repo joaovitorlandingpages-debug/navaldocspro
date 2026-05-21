@@ -35,12 +35,16 @@ import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidg
 
 
 export const Route = createFileRoute("/dashboard")({
-  component: () => (
+  component: DashboardLayoutWrapper,
+});
+
+function DashboardLayoutWrapper() {
+  return (
     <ProtectedRoute>
       <DashboardLayout />
     </ProtectedRoute>
-  ),
-});
+  );
+}
 
 function DashboardLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
