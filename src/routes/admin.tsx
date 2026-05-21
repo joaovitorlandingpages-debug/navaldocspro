@@ -33,6 +33,7 @@ function AdminLayout() {
   const { profile, loading } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   console.log("ADMIN_GLOBAL_PREMIUM_OK");
+  console.log("GLOBAL_ADMIN_FINAL_OK");
 
   if (loading) {
     return (
