@@ -140,11 +140,89 @@ function DashboardLayout() {
 
   console.log("ENTERPRISE_UI_OK");
 
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full">
+      <div className="p-8 flex flex-col gap-1">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)]">
+             <Anchor className="h-6 w-6 text-white" />
+          </div>
+          {(isSidebarOpen || window.innerWidth < 1024) && (
+            <div className="animate-in fade-in slide-in-from-left-2 duration-500">
+              <span className="font-black text-2xl tracking-tighter text-white uppercase italic">NavalDocs <span className="text-primary">Pro</span></span>
+            </div>
+          )}
+        </div>
+        {(isSidebarOpen || window.innerWidth < 1024) && (
+          <div className="mt-6 px-1 py-3 bg-white/5 rounded-2xl border border-white/5 animate-in zoom-in-95 duration-500">
+             <div className="flex items-center gap-3 px-3">
+                <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-black text-[10px]">
+                   {profile?.companies?.name?.substring(0, 2).toUpperCase() || "ND"}
+                </div>
+                <div className="overflow-hidden">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Licença Enterprise</p>
+                  <p className="text-[10px] font-bold text-white/60 truncate">{profile?.companies?.name || "Empresa..."}</p>
+                </div>
+             </div>
+          </div>
+        )}
+      </div>
+
+      <nav className="flex-grow mt-6 px-4 space-y-6 overflow-y-auto custom-scrollbar">
+        {navItems.map((group) => (
+          <div key={group.group} className="space-y-1">
+            {(isSidebarOpen || window.innerWidth < 1024) && <p className="px-4 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">{group.group}</p>}
+            {group.items.map((item) => (
+              <Link 
+                key={item.name}
+                to={item.path}
+                onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)}
+                activeProps={{ className: "bg-primary text-white shadow-[0_10px_20px_rgba(37,99,235,0.3)] border-white/10" }}
+                className="flex items-center gap-4 p-4 rounded-[1.25rem] hover:bg-white/5 border border-transparent transition-all group/item"
+              >
+                <div className="group-hover/item:scale-110 group-hover/item:text-primary transition-all duration-300">{item.icon}</div>
+                {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[11px] font-black uppercase tracking-widest leading-none">{item.name}</span>}
+              </Link>
+            ))}
+          </div>
+        ))}
+      </nav>
+
+      <div className="p-4 border-t border-white/5 space-y-2">
+         {profile?.role === 'admin_master' && (
+           <Link to="/admin" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+              <ShieldCheck className="h-5 w-5" />
+              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-xs font-bold uppercase tracking-widest">Painel Master</span>}
+           </Link>
+         )}
+         {profile?.role === 'admin_master' && (
+           <Link to="/admin/document-library" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+              <Library className="h-5 w-5" />
+              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-xs font-bold uppercase tracking-widest">Biblioteca Master</span>}
+           </Link>
+         )}
+         {profile?.role === 'admin_master' && (
+           <Link to="/admin/billing" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+              <DollarSign className="h-5 w-5" />
+              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-xs font-bold uppercase tracking-widest">Financeiro</span>}
+           </Link>
+         )}
+         <button 
+           onClick={handleLogout}
+           className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all"
+         >
+            <LogOut className="h-5 w-5" />
+            {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-xs font-bold uppercase tracking-widest">Sair</span>}
+         </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Mobile Sidebar */}
-      <div className="lg:hidden z-[60]">
-        <Sheet open={isSidebarOpen} onOpenChange={setSidebarOpen}>
+      <div className="lg:hidden">
+        <Sheet open={isSidebarOpen && window.innerWidth < 1024} onOpenChange={setSidebarOpen}>
           <SheetContent side="left" className="p-0 border-none w-72 bg-[#000B18]">
             <SidebarContent />
           </SheetContent>
@@ -160,57 +238,6 @@ function DashboardLayout() {
         <SidebarContent />
       </aside>
 
-      {/* Sidebar Content Extracted */}
-      {/* (I'll implement the SidebarContent as a separate internal component or just include it here if simple) */}
-
-
-        <nav className="flex-grow mt-6 px-4 space-y-6 overflow-y-auto custom-scrollbar">
-          {navItems.map((group) => (
-            <div key={group.group} className="space-y-1">
-              {isSidebarOpen && <p className="px-4 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">{group.group}</p>}
-              {group.items.map((item) => (
-                <Link 
-                  key={item.name}
-                  to={item.path}
-                  activeProps={{ className: "bg-primary text-white shadow-[0_10px_20px_rgba(37,99,235,0.3)] border-white/10" }}
-                  className="flex items-center gap-4 p-4 rounded-[1.25rem] hover:bg-white/5 border border-transparent transition-all group/item"
-                >
-                  <div className="group-hover/item:scale-110 group-hover/item:text-primary transition-all duration-300">{item.icon}</div>
-                  {isSidebarOpen && <span className="text-[11px] font-black uppercase tracking-widest leading-none">{item.name}</span>}
-                </Link>
-              ))}
-            </div>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-white/5 space-y-2">
-           {profile?.role === 'admin_master' && (
-             <Link to="/admin" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
-                <ShieldCheck className="h-5 w-5" />
-                {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Painel Master</span>}
-             </Link>
-           )}
-           {profile?.role === 'admin_master' && (
-             <Link to="/admin/document-library" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
-                <Library className="h-5 w-5" />
-                {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Biblioteca Master</span>}
-             </Link>
-           )}
-           {profile?.role === 'admin_master' && (
-             <Link to="/admin/billing" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
-                <DollarSign className="h-5 w-5" />
-                {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Financeiro</span>}
-             </Link>
-           )}
-           <button 
-             onClick={handleLogout}
-             className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all"
-           >
-              <LogOut className="h-5 w-5" />
-              {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Sair</span>}
-           </button>
-        </div>
-      </aside>
 
       {/* Main Content */}
       <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
