@@ -16,6 +16,14 @@ export async function seedPremiumDemo(companyId: string, userId: string) {
     {
       company_id: companyId,
       user_id: userId,
+      type: 'automation',
+      message: 'O processo #2026-NAV-02 possui documentos validados. Recomendamos gerar o Requerimento DPC-2211.',
+      action_label: 'Gerar DPC-2211',
+      confidence_score: 0.98
+    },
+    {
+      company_id: companyId,
+      user_id: userId,
       type: 'critical',
       message: 'Divergência crítica: O número do motor no TIE não coincide com o Memorial Descritivo.',
       action_label: 'Corrigir Dados',

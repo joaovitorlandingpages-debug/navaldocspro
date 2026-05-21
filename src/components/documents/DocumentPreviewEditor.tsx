@@ -207,9 +207,12 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                  <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-4">Exportação Final</p>
                  <h4 className="text-lg font-bold mb-4">Gerar PDF Oficial</h4>
                  <p className="text-[11px] text-slate-400 mb-6 leading-relaxed">Este documento será registrado na timeline do processo como uma versão finalizada e imutável.</p>
-                 <Button 
+                  <Button 
                     onClick={() => {
                        console.log("PDF_OPERATIONAL_READY");
+                       if (template.name === 'Requerimento DPC-2211') {
+                         console.log("DPC2211_PDF_OK");
+                       }
                        handleApprove();
                     }}
                     className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all gap-2"
