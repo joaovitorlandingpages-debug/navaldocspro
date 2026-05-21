@@ -79,7 +79,7 @@ function Processes() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
         <div className="flex flex-col gap-4 w-full sm:w-auto">
           <div className="flex items-center gap-3">
