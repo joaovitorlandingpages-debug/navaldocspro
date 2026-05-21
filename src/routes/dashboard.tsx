@@ -383,10 +383,10 @@ export function RouteContent() {
   });
 
   const stats = [
-    { label: "Clientes Ativos", value: statsData?.activeCustomers.toString() || (demoConfig?.is_demo_mode ? "12" : "0"), icon: <Users className="text-blue-600" />, trend: statsData?.trends.customers || "+5%" },
-    { label: "Embarcações", value: statsData?.totalVessels.toString() || (demoConfig?.is_demo_mode ? "24" : "0"), icon: <Ship className="text-cyan-600" />, trend: statsData?.trends.vessels || "+3%" },
-    { label: "Processos em Aberto", value: statsData?.openProcesses.toString() || (demoConfig?.is_demo_mode ? "18" : "0"), icon: <ClipboardList className="text-amber-600" />, trend: statsData?.trends.processes || "Estável" },
-    { label: "Documentos Gerados", value: statsData?.generatedDocuments.toString() || (demoConfig?.is_demo_mode ? "142" : "0"), icon: <FileText className="text-green-600" />, trend: statsData?.trends.documents || "+15%" },
+    { label: "Clientes Ativos", value: statsData?.activeCustomers.toString() || (demoConfig?.is_demo_mode ? "12" : "0"), icon: <Users className="text-primary" />, trend: statsData?.trends.customers || "+5.2%" },
+    { label: "Embarcações", value: statsData?.totalVessels.toString() || (demoConfig?.is_demo_mode ? "24" : "0"), icon: <Ship className="text-cyan-500" />, trend: statsData?.trends.vessels || "+3.1%" },
+    { label: "Processos Ativos", value: statsData?.openProcesses.toString() || (demoConfig?.is_demo_mode ? "18" : "0"), icon: <ClipboardList className="text-amber-500" />, trend: statsData?.trends.processes || "Operacional" },
+    { label: "Ativos Digitais", value: statsData?.generatedDocuments.toString() || (demoConfig?.is_demo_mode ? "142" : "0"), icon: <FileText className="text-emerald-500" />, trend: statsData?.trends.documents || "+15.4%" },
   ];
 
     console.log("ONBOARDING_READY");
