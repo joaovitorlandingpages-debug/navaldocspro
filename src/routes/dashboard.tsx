@@ -53,6 +53,13 @@ function DashboardLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Mobile-first: start with sidebar closed on mobile
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  }, []);
+
+  useEffect(() => {
     if (!loading && profile) {
       if (profile.companies?.onboarding_status === 'pending' && window.location.pathname !== '/onboarding') {
         console.log("REDIRECT_TO_ONBOARDING");
@@ -65,6 +72,7 @@ function DashboardLayout() {
       }
     }
   }, [profile, loading, navigate]);
+
 
   // No direct loading/profile return here anymore, ProtectedRoute handles it
 
