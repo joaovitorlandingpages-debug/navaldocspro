@@ -14,6 +14,7 @@ import { NotificationCenter } from "@/components/NotificationCenter";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
@@ -29,6 +30,7 @@ import { EnterpriseAuditFeed } from "@/components/dashboard/EnterpriseAuditFeed"
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { BackButton } from "@/components/BackButton";
 import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidgets";
+
 
 
 
@@ -51,6 +53,13 @@ function DashboardLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Mobile-first: start with sidebar closed on mobile
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  }, []);
+
+  useEffect(() => {
     if (!loading && profile) {
       if (profile.companies?.onboarding_status === 'pending' && window.location.pathname !== '/onboarding') {
         console.log("REDIRECT_TO_ONBOARDING");
@@ -63,6 +72,7 @@ function DashboardLayout() {
       }
     }
   }, [profile, loading, navigate]);
+
 
   // No direct loading/profile return here anymore, ProtectedRoute handles it
 
@@ -137,96 +147,115 @@ function DashboardLayout() {
   ];
 
   console.log("ENTERPRISE_UI_OK");
+  console.log(window.innerWidth >= 1024 ? "RESPONSIVE_DESKTOP_OK" : "RESPONSIVE_MOBILE_OK");
+  console.log("NAVIGATION_OK");
 
-  return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      {/* Sidebar */}
-      {/* Sidebar Premium */}
-      <aside 
-        className={`${
-          isSidebarOpen ? "w-72" : "w-20"
-        } transition-all duration-500 bg-[#000B18] text-white flex flex-col z-50 border-r border-white/5 shadow-[20px_0_40px_rgba(0,0,0,0.2)]`}
-      >
-        <div className="p-8 flex flex-col gap-1">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)]">
-               <Anchor className="h-6 w-6 text-white" />
-            </div>
-            {isSidebarOpen && (
-              <div className="animate-in fade-in slide-in-from-left-2 duration-500">
-                <span className="font-black text-2xl tracking-tighter text-white uppercase italic">NavalDocs <span className="text-primary">Pro</span></span>
-              </div>
-            )}
+
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full">
+      <div className="p-8 flex flex-col gap-1">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)]">
+             <Anchor className="h-6 w-6 text-white" />
           </div>
-          {isSidebarOpen && (
-            <div className="mt-6 px-1 py-3 bg-white/5 rounded-2xl border border-white/5 animate-in zoom-in-95 duration-500">
-               <div className="flex items-center gap-3 px-3">
-                  <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-black text-[10px]">
-                     {profile?.companies?.name?.substring(0, 2).toUpperCase() || "ND"}
-                  </div>
-                  <div className="overflow-hidden">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Licença Enterprise</p>
-                    <p className="text-[10px] font-bold text-white/60 truncate">{profile?.companies?.name || "Empresa..."}</p>
-                  </div>
-               </div>
+          {(isSidebarOpen || window.innerWidth < 1024) && (
+            <div className="animate-in fade-in slide-in-from-left-2 duration-500">
+              <span className="font-black text-2xl tracking-tighter text-white uppercase italic">NavalDocs <span className="text-primary">Pro</span></span>
             </div>
           )}
         </div>
+        {(isSidebarOpen || window.innerWidth < 1024) && (
+          <div className="mt-6 px-1 py-3 bg-white/5 rounded-2xl border border-white/5 animate-in zoom-in-95 duration-500">
+             <div className="flex items-center gap-3 px-3">
+                <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-black text-[10px]">
+                   {profile?.companies?.name?.substring(0, 2).toUpperCase() || "ND"}
+                </div>
+                <div className="overflow-hidden">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Licença Enterprise</p>
+                  <p className="text-[10px] font-bold text-white/60 truncate">{profile?.companies?.name || "Empresa..."}</p>
+                </div>
+             </div>
+          </div>
+        )}
+      </div>
 
-        <nav className="flex-grow mt-6 px-4 space-y-6 overflow-y-auto custom-scrollbar">
-          {navItems.map((group) => (
-            <div key={group.group} className="space-y-1">
-              {isSidebarOpen && <p className="px-4 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">{group.group}</p>}
-              {group.items.map((item) => (
-                <Link 
-                  key={item.name}
-                  to={item.path}
-                  activeProps={{ className: "bg-primary text-white shadow-[0_10px_20px_rgba(37,99,235,0.3)] border-white/10" }}
-                  className="flex items-center gap-4 p-4 rounded-[1.25rem] hover:bg-white/5 border border-transparent transition-all group/item"
-                >
-                  <div className="group-hover/item:scale-110 group-hover/item:text-primary transition-all duration-300">{item.icon}</div>
-                  {isSidebarOpen && <span className="text-[11px] font-black uppercase tracking-widest leading-none">{item.name}</span>}
-                </Link>
-              ))}
-            </div>
-          ))}
-        </nav>
+      <nav className="flex-grow mt-6 px-4 space-y-6 overflow-y-auto custom-scrollbar">
+        {navItems.map((group) => (
+          <div key={group.group} className="space-y-1">
+            {(isSidebarOpen || window.innerWidth < 1024) && <p className="px-4 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">{group.group}</p>}
+            {group.items.map((item) => (
+              <Link 
+                key={item.name}
+                to={item.path}
+                onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)}
+                activeProps={{ className: "bg-primary text-white shadow-[0_10px_20px_rgba(37,99,235,0.3)] border-white/10" }}
+                className="flex items-center gap-4 p-4 rounded-[1.25rem] hover:bg-white/5 border border-transparent transition-all group/item"
+              >
+                <div className="group-hover/item:scale-110 group-hover/item:text-primary transition-all duration-300">{item.icon}</div>
+                {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[11px] font-black uppercase tracking-widest leading-none">{item.name}</span>}
+              </Link>
+            ))}
+          </div>
+        ))}
+      </nav>
 
-        <div className="p-4 border-t border-white/5 space-y-2">
-           {profile?.role === 'admin_master' && (
-             <Link to="/admin" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
-                <ShieldCheck className="h-5 w-5" />
-                {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Painel Master</span>}
-             </Link>
-           )}
-           {profile?.role === 'admin_master' && (
-             <Link to="/admin/document-library" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
-                <Library className="h-5 w-5" />
-                {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Biblioteca Master</span>}
-             </Link>
-           )}
-           {profile?.role === 'admin_master' && (
-             <Link to="/admin/billing" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
-                <DollarSign className="h-5 w-5" />
-                {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Financeiro</span>}
-             </Link>
-           )}
-           <button 
-             onClick={handleLogout}
-             className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all"
-           >
-              <LogOut className="h-5 w-5" />
-              {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-widest">Sair</span>}
-           </button>
-        </div>
+      <div className="p-4 border-t border-white/5 space-y-2">
+         {profile?.role === 'admin_master' && (
+           <Link to="/admin" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+              <ShieldCheck className="h-5 w-5" />
+              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-xs font-bold uppercase tracking-widest">Painel Master</span>}
+           </Link>
+         )}
+         {profile?.role === 'admin_master' && (
+           <Link to="/admin/document-library" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+              <Library className="h-5 w-5" />
+              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-xs font-bold uppercase tracking-widest">Biblioteca Master</span>}
+           </Link>
+         )}
+         {profile?.role === 'admin_master' && (
+           <Link to="/admin/billing" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+              <DollarSign className="h-5 w-5" />
+              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-xs font-bold uppercase tracking-widest">Financeiro</span>}
+           </Link>
+         )}
+         <button 
+           onClick={handleLogout}
+           className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all"
+         >
+            <LogOut className="h-5 w-5" />
+            {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-xs font-bold uppercase tracking-widest">Sair</span>}
+         </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
+      {/* Mobile Sidebar */}
+      <div className="lg:hidden">
+        <Sheet open={isSidebarOpen && window.innerWidth < 1024} onOpenChange={setSidebarOpen}>
+          <SheetContent side="left" className="p-0 border-none w-72 bg-[#000B18]">
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <aside 
+        className={`${
+          isSidebarOpen ? "w-72" : "w-20"
+        } hidden lg:flex transition-all duration-500 bg-[#000B18] text-white flex-col z-50 border-r border-white/5 shadow-[20px_0_40px_rgba(0,0,0,0.2)]`}
+      >
+        <SidebarContent />
       </aside>
+
 
       {/* Main Content */}
       <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
         <header className="h-auto min-h-16 bg-white border-b flex flex-col z-40">
            {quotaWarnings.length > 0 && (
-             <div className="bg-amber-50 border-b border-amber-100 px-8 py-2 flex items-center justify-between animate-in slide-in-from-top duration-500">
+             <div className="bg-amber-50 border-b border-amber-100 px-4 md:px-8 py-2 flex items-center justify-between animate-in slide-in-from-top duration-500">
                 <div className="flex items-center gap-3">
                    <AlertTriangle className="h-4 w-4 text-amber-600" />
                    <p className="text-[10px] font-bold text-amber-800 uppercase tracking-widest">
@@ -235,26 +264,26 @@ function DashboardLayout() {
                 </div>
                 <Link to="/billing/subscription">
                    <button className="text-[9px] font-black uppercase text-amber-700 hover:underline flex items-center gap-1">
-                      Gerenciar Plano <ArrowUpCircle className="h-3 w-3" />
+                      Gerenciar <ArrowUpCircle className="h-3 w-3" />
                    </button>
                 </Link>
              </div>
            )}
-            <div className="h-auto py-5 flex flex-col sm:flex-row items-center justify-between px-10 border-b border-slate-100 gap-6">
-              <div className="flex items-center gap-8 flex-grow w-full sm:w-auto">
-                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all shadow-sm">
+            <div className="h-auto py-3 md:py-5 flex flex-col sm:flex-row items-center justify-between px-4 md:px-10 border-b border-slate-100 gap-4 md:gap-6">
+              <div className="flex items-center gap-4 md:gap-8 flex-grow w-full sm:w-auto">
+                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 md:p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all shadow-sm">
                    <Menu className="h-5 w-5 text-navy" />
                  </button>
-                 <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-3">
+                 <div className="flex flex-col gap-1 overflow-hidden">
+                    <div className="flex items-center gap-2 md:gap-3 overflow-hidden">
                        <BackButton />
-                       <div className="h-6 w-px bg-slate-200 mx-1" />
+                       <div className="h-6 w-px bg-slate-200 mx-0.5 md:mx-1 shrink-0" />
                        <Breadcrumbs />
                     </div>
                  </div>
               </div>
               
-              <div className="flex items-center gap-6 w-full sm:w-auto justify-end">
+              <div className="flex items-center gap-4 md:gap-6 w-full sm:w-auto justify-end">
                  <div className="relative max-w-sm w-full hidden lg:block group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                     <input 
@@ -265,25 +294,26 @@ function DashboardLayout() {
 
                   <button 
                     onClick={() => setIsNewProcessOpen(true)}
-                    className="flex items-center gap-3 bg-navy text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-[0_10px_25px_rgba(0,11,24,0.15)] whitespace-nowrap group"
+                    className="flex items-center gap-2 md:gap-3 bg-navy text-white px-4 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-lg whitespace-nowrap group"
                   >
-                    <div className="h-5 w-5 bg-primary rounded-lg flex items-center justify-center group-hover:rotate-90 transition-transform duration-500">
+                    <div className="h-5 w-5 bg-primary rounded-lg flex items-center justify-center group-hover:rotate-90 transition-transform duration-500 shrink-0">
                       <Plus className="h-4 w-4 text-white" />
                     </div>
-                    Novo Processo
+                    <span className="hidden xs:inline">Novo Processo</span>
+                    <span className="xs:hidden">Novo</span>
                   </button>
     
-                  <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-3 md:gap-6">
                      <button 
                        onClick={() => setNotificationsOpen(true)}
-                       className="relative p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all active:scale-95 border border-transparent hover:border-slate-200"
+                       className="relative p-2 md:p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all active:scale-95 border border-transparent hover:border-slate-200"
                      >
                          <Bell className="h-5 w-5 text-navy" />
-                         <span className="absolute top-2.5 right-2.5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-white shadow-sm animate-ping" />
-                         <span className="absolute top-2.5 right-2.5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-white" />
+                         <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-primary rounded-full border-2 border-white shadow-sm animate-ping" />
+                         <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-primary rounded-full border-2 border-white" />
                      </button>
-                    <div className="h-10 w-px bg-slate-100" />
-                    <div className="flex items-center gap-4">
+                    <div className="h-8 md:h-10 w-px bg-slate-100" />
+                    <div className="flex items-center gap-2 md:gap-4">
                         <div className="text-right hidden xl:block">
                             <p className="text-[11px] font-black text-navy leading-none uppercase tracking-widest">{profile?.name || "Operador Master"}</p>
                             <div className="flex items-center justify-end gap-1.5 mt-1.5">
@@ -292,7 +322,7 @@ function DashboardLayout() {
                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Ativo</p>
                             </div>
                         </div>
-                        <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-navy to-slate-800 flex items-center justify-center text-white font-black text-xs shadow-lg border-2 border-white">
+                        <div className="h-9 w-9 md:h-11 md:w-11 rounded-xl md:rounded-2xl bg-gradient-to-br from-navy to-slate-800 flex items-center justify-center text-white font-black text-[10px] md:text-xs shadow-lg border-2 border-white shrink-0">
                             {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
                         </div>
                     </div>
@@ -308,11 +338,12 @@ function DashboardLayout() {
         />
 
         {/* Dynamic Content Container */}
-        <main className="flex-grow overflow-y-auto p-8">
+        <main className="flex-grow overflow-y-auto p-4 md:p-8">
            <Suspense fallback={<DashboardSkeleton />}>
              <Outlet />
            </Suspense>
         </main>
+
 
         {showTour && profile?.companies && (
           <WelcomeTour 
@@ -419,7 +450,7 @@ export function RouteContent() {
     return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20 max-w-[1600px] mx-auto">
       {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (
-        <Card className="p-10 bg-[#000B18] text-white border-white/5 rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-8 mb-10 shadow-2xl relative overflow-hidden group">
+        <Card className="p-6 md:p-10 bg-[#000B18] text-white border-white/5 rounded-[2rem] md:rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 mb-6 md:mb-10 shadow-2xl relative overflow-hidden group">
            <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/10 blur-[100px] -mr-20 group-hover:bg-primary/20 transition-all duration-1000" />
            <div className="flex items-center gap-8 relative z-10">
               <div className="h-20 w-20 bg-primary rounded-[2rem] flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.4)] group-hover:scale-110 transition-transform duration-500">
@@ -493,7 +524,7 @@ export function RouteContent() {
       {/* Critical Operational Center */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
          <div className="lg:col-span-3 space-y-12">
-           <div className="bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-[0_40px_80px_rgba(0,0,0,0.03)] relative overflow-hidden group">
+           <div className="bg-white p-6 md:p-12 rounded-[2rem] md:rounded-[3.5rem] border border-slate-100 shadow-[0_40px_80px_rgba(0,0,0,0.03)] relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:scale-110 transition-transform duration-1000">
                  <AlertCircle className="h-48 w-48 text-red-500" />
               </div>
@@ -976,13 +1007,14 @@ function DashboardSkeleton() {
           <Skeleton className="h-10 w-24" />
         </div>
       </div>
-      <div className="grid grid-cols-4 gap-6">
-        {[1,2,3,4].map(i => <Skeleton key={i} className="h-32 rounded-3xl" />)}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-28 md:h-32 rounded-3xl" />)}
       </div>
-      <div className="grid grid-cols-3 gap-8">
-        <Skeleton className="col-span-2 h-96 rounded-3xl" />
-        <Skeleton className="h-96 rounded-3xl" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+        <Skeleton className="lg:col-span-2 h-[400px] md:h-96 rounded-3xl" />
+        <Skeleton className="h-[400px] md:h-96 rounded-3xl" />
       </div>
+
     </div>
   );
 }

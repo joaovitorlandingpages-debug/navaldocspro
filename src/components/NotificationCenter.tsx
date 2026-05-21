@@ -15,8 +15,9 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClo
     <div className="fixed inset-0 z-[100] flex justify-end">
       <div className="absolute inset-0 bg-navy/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
       
-      <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 rounded-l-[3rem] overflow-hidden">
-        <div className="p-8 border-b flex justify-between items-center bg-slate-50 relative overflow-hidden">
+      <div className="relative w-full md:max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 md:rounded-l-[3rem] overflow-hidden">
+        <div className="p-6 md:p-8 border-b flex justify-between items-center bg-slate-50 relative overflow-hidden">
+
            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -mr-10 -mt-10"></div>
            
            <div className="flex items-center gap-4 relative z-10">
@@ -56,12 +57,13 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClo
              </div>
            ) : (
              <div className="divide-y divide-slate-100">
-                {notifications.map((n) => (
-                  <div 
-                    key={n.id} 
-                    onClick={() => markAsRead(n.id)}
-                    className={`p-8 hover:bg-slate-50/80 transition-all cursor-pointer group relative border-l-4 ${!n.is_read ? 'bg-primary/[0.02] border-l-primary' : 'border-l-transparent'}`}
-                  >
+                 {notifications.map((n) => (
+                   <div 
+                     key={n.id} 
+                     onClick={() => markAsRead(n.id)}
+                     className={`p-6 md:p-8 hover:bg-slate-50/80 transition-all cursor-pointer group relative border-l-4 ${!n.is_read ? 'bg-primary/[0.02] border-l-primary' : 'border-l-transparent'}`}
+                   >
+
                      <div className="flex gap-5">
                         <div className={`h-14 w-14 rounded-[1.25rem] flex items-center justify-center flex-shrink-0 transition-all shadow-sm group-hover:scale-110 group-hover:shadow-lg ${
                           n.type === 'success' ? 'bg-green-50 text-green-600' : 
@@ -99,12 +101,13 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClo
            )}
         </div>
 
-        <div className="p-8 border-t bg-slate-50">
+        <div className="p-6 md:p-8 border-t bg-slate-50">
            <Button 
              onClick={markAllAsRead}
              disabled={unreadCount === 0}
-             className="w-full bg-navy text-white hover:bg-slate-900 h-14 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl"
+             className="w-full bg-navy text-white hover:bg-slate-900 h-12 md:h-14 rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl"
            >
+
              Limpar Todas as Notificações
            </Button>
         </div>
