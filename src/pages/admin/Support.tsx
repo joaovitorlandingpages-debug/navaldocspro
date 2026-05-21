@@ -30,7 +30,7 @@ export default function AdminSupport() {
     }
   });
 
-  const filteredTickets = tickets?.filter(t => 
+  const filteredTickets = tickets?.filter((t: any) => 
     t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.companies?.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -62,7 +62,7 @@ export default function AdminSupport() {
         {isLoading ? (
           [1, 2, 3].map(i => <div key={i} className="h-24 bg-slate-100 rounded-2xl animate-pulse" />)
         ) : (
-          filteredTickets?.map((ticket) => (
+          filteredTickets?.map((ticket: any) => (
             <Card key={ticket.id} className="border-slate-100 shadow-sm hover:shadow-md transition-all rounded-3xl overflow-hidden group">
               <CardContent className="p-0">
                 <div className="flex flex-col lg:flex-row items-center p-6 gap-6">

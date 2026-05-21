@@ -25,7 +25,7 @@ export default function AdminRoadmap() {
     }
   });
 
-  const filteredRoadmap = roadmap?.filter(item => 
+  const filteredRoadmap = roadmap?.filter((item: any) => 
     filter === "all" || item.status === filter
   );
 
@@ -58,7 +58,7 @@ export default function AdminRoadmap() {
         {isLoading ? (
           [1, 2, 3].map(i => <div key={i} className="h-48 bg-slate-100 rounded-3xl animate-pulse" />)
         ) : (
-          filteredRoadmap?.map((item) => (
+          filteredRoadmap?.map((item: any) => (
             <Card key={item.id} className="border-slate-100 shadow-sm hover:shadow-xl transition-all rounded-3xl overflow-hidden group">
               <CardHeader className="p-6 pb-2">
                 <div className="flex justify-between items-start mb-4">
