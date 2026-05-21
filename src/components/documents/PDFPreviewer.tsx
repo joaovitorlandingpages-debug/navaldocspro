@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { 
   Eye, Download, Maximize2, 
   Minimize2, ZoomIn, ZoomOut,
-  Share2, FileText, X
+  Share2, FileText, X, Loader2
 } from "lucide-react";
 
 interface PDFPreviewerProps {
