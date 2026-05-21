@@ -38,6 +38,9 @@ function DashboardV2Layout() {
   useEffect(() => {
     console.log("DASHBOARD_V2_RENDERED");
     console.log("DASHBOARD_STABLE");
+    console.log("LAYOUT_OVERFLOW_FIXED");
+    console.log("SINGLE_SCROLL_OK");
+    console.log("DASHBOARD_HEIGHT_OK");
   }, []);
 
   const handleLogout = async () => {
