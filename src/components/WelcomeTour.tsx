@@ -54,7 +54,7 @@ export function WelcomeTour({
           </div>
           <div>
             <h3 className="font-black uppercase tracking-[0.25em] text-[10px] text-primary mb-1">Onboarding Premium</h3>
-            <h2 className="text-2xl font-black italic tracking-tighter leading-none uppercase">Setup Inicial</h2>
+            <h2 className="text-2xl font-black italic tracking-tighter leading-none uppercase">Tour NavalDocs Pro</h2>
           </div>
         </div>
         
