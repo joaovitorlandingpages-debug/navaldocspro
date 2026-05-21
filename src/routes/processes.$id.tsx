@@ -386,13 +386,6 @@ function ProcessDetail() {
                                 </div>
                               )}
                            </div>
-                                 <p className="text-xs font-black text-primary uppercase">80%</p>
-                              </div>
-                              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                 <div className="h-full bg-primary rounded-full" style={{ width: '80%' }} />
-                              </div>
-                              <p className="text-[10px] text-slate-400 italic">Previsão de conclusão em 2 dias úteis.</p>
-                           </div>
                         </div>
                         <div className="bg-slate-50 p-4 rounded-2xl mt-6">
                            <p className="text-xs text-slate-500 leading-relaxed font-medium">{process?.notes || "Nenhuma observação interna registrada."}</p>
