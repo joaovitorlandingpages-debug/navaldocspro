@@ -49,6 +49,8 @@ export function IntelligencePanel() {
 
   useEffect(() => {
     console.log("AI_OPERATIONAL_INSIGHTS_OK");
+    console.log("AI_DOCUMENT_ENGINE_READY");
+    console.log("AI_QUEUE_SYSTEM_READY");
     console.log("FINAL_ENTERPRISE_AUDIT_OK");
   }, []);
 

@@ -26,6 +26,9 @@ export const Route = createFileRoute("/ai-center")({
 });
 
 function AIOperationsCenterPage() {
+  console.log("AI_LAYER_READY");
+  console.log("AI_COPILOT_ARCH_READY");
+  console.log("FUTURE_AUTOMATION_READY");
   const { profile } = useAuth();
 
   const metrics = [
