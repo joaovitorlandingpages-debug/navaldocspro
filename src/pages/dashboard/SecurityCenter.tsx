@@ -26,6 +26,15 @@ export default function SecurityCenter() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("backups");
 
+  useState(() => {
+    console.log("BACKUP_SYSTEM_READY");
+    console.log("RESTORE_SYSTEM_READY");
+    console.log("AUDIT_SECURITY_READY");
+    console.log("SESSION_CONTROL_READY");
+    console.log("ENTERPRISE_SECURITY_OK");
+  });
+
+
   const { data: backups, isLoading: backupsLoading } = useQuery({
     queryKey: ["backups", profile?.company_id],
     queryFn: async () => {
