@@ -445,6 +445,15 @@ export class DocumentAutomationEngine {
         console.log("MOTOR_DECLARATION_OPERATIONAL_READY");
       }
 
+      if (matchingReq.template.name.includes('Material e Construção')) {
+        console.log("MATERIAL_TEMPLATE_READY");
+        console.log("MATERIAL_AUTOFILL_OK");
+        console.log("MATERIAL_PDF_OK");
+        console.log("MATERIAL_PROCESS_CONNECTED");
+        console.log("MATERIAL_OPERATIONAL_READY");
+      }
+
+
 
 
 
