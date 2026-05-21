@@ -39,6 +39,18 @@ export const useOCR = () => {
   const createBatchJobs = useMutation({
     mutationFn: async ({ files, companyId, docType }: { files: any[], companyId: string, docType: string }) => {
       console.log("OCR_UPLOAD_OK", files.length);
+
+      // Check Plan Limits before processing
+      const { data: usage } = await supabase.from('usage_metrics').select('ocr_usage').eq('company_id', companyId).maybeSingle();
+      const { data: sub } = await supabase.from('subscriptions').select('*, plan:plans(*)').eq('company_id', companyId).maybeSingle();
+      
+      const limit = sub?.plan?.ocr_limit || 10;
+      const current = usage?.ocr_usage || 0;
+      
+      if (current + files.length > limit) {
+          toast.error(`Limite de OCR atingido (${current}/${limit}). Faça upgrade do seu plano.`);
+          throw new Error("PLAN_LIMIT_REACHED");
+      }
       
       const jobsToCreate = files.map(f => ({
         company_id: companyId,
@@ -54,6 +66,9 @@ export const useOCR = () => {
         .select();
 
       if (error) throw error;
+
+      // Log usage increment (Ideally this happens via DB trigger on OCR job creation)
+      await supabase.rpc('increment_ocr_usage', { company_id_param: companyId, amount: files.length });
 
       // Trigger asynchronous processing
       console.log("OCR_PROCESSING_OK", data.length);
