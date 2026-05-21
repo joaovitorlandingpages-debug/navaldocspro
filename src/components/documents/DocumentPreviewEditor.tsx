@@ -25,6 +25,7 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
 
   useEffect(() => {
     if (template?.base_content) {
+      console.log("AUTOFILL_DOCUMENTS_OK");
       const filled = DocumentValidationEngine.fillPlaceholder(template.base_content, processData);
       setContent(filled);
       setStatus('auto_preenchido');
