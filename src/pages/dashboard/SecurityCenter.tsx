@@ -225,7 +225,8 @@ export default function SecurityCenter() {
                   <tbody className="divide-y divide-slate-50">
                     {backupsLoading ? (
                       <tr><td colSpan={6} className="px-6 py-12 text-center text-xs font-black text-slate-400 animate-pulse">CARREGANDO...</td></tr>
-                    ) : backups?.map((backup) => (
+                    ) : backups?.map((backup: any) => (
+
                       <tr key={backup.id} className="hover:bg-slate-50/50 transition-colors">
                         <td className="px-6 py-4 font-bold text-navy text-xs">{backup.name}</td>
                         <td className="px-6 py-4">
@@ -290,7 +291,8 @@ export default function SecurityCenter() {
                   <tbody className="divide-y divide-slate-50">
                     {logsLoading ? (
                       <tr><td colSpan={6} className="px-6 py-12 text-center text-xs font-black text-slate-400 animate-pulse">CARREGANDO...</td></tr>
-                    ) : auditLogs?.map((log) => (
+                    ) : auditLogs?.map((log: any) => (
+
                       <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
@@ -491,10 +493,7 @@ export default function SecurityCenter() {
             </div>
          </div>
       </div>
-      {console.log("RESTORE_SYSTEM_READY")}
-      {console.log("AUDIT_SECURITY_READY")}
-      {console.log("SESSION_CONTROL_READY")}
-      {console.log("ENTERPRISE_SECURITY_OK")}
     </div>
   );
 }
+
