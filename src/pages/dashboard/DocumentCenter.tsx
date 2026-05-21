@@ -6,7 +6,8 @@ import {
   Download, Eye, Clock, History,
   ShieldCheck, ArrowUpRight, CheckCircle2,
   AlertCircle, MoreVertical, Database,
-  LayoutGrid, List, RotateCcw, Signature
+  LayoutGrid, List, RotateCcw, Signature,
+  Shield, FileSearch
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -21,9 +22,18 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle,
+  SheetDescription
+} from "@/components/ui/sheet";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { SignatureModal } from "@/components/documents/SignatureModal";
+import { DocumentAuditTimeline } from "@/components/documents/DocumentAuditTimeline";
+import { PDFPreviewer } from "@/components/documents/PDFPreviewer";
 import { documentService } from "@/services/documentService";
 import { toast } from "sonner";
 
@@ -32,7 +42,10 @@ export default function DocumentCenter() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [isSignModalOpen, setIsSignModalOpen] = useState(false);
+  const [isAuditOpen, setIsAuditOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<any>(null);
 
   const { data: documents, isLoading, refetch } = useQuery({
     queryKey: ["document-center", profile?.company_id],
@@ -85,6 +98,18 @@ export default function DocumentCenter() {
   const handleSignRequest = (id: string) => {
     setSelectedDocId(id);
     setIsSignModalOpen(true);
+  };
+
+  const handleAuditRequest = (doc: any) => {
+    setSelectedDoc(doc);
+    setSelectedDocId(doc.id);
+    setIsAuditOpen(true);
+  };
+
+  const handlePreviewRequest = (doc: any) => {
+    setSelectedDoc(doc);
+    setIsPreviewOpen(true);
+    documentService.logAction(doc.id, 'viewed');
   };
 
   return (
@@ -181,6 +206,7 @@ export default function DocumentCenter() {
                     size="sm" 
                     className="h-10 w-10 p-0 text-slate-400 hover:text-primary hover:bg-primary/5"
                     title="Visualizar"
+                    onClick={() => handlePreviewRequest(doc)}
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -212,7 +238,10 @@ export default function DocumentCenter() {
                       <DropdownMenuItem className="text-[10px] font-bold uppercase tracking-widest gap-2">
                         <History className="h-3.5 w-3.5" /> Ver Versões
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-[10px] font-bold uppercase tracking-widest gap-2">
+                      <DropdownMenuItem 
+                        className="text-[10px] font-bold uppercase tracking-widest gap-2"
+                        onClick={() => handleAuditRequest(doc)}
+                      >
                         <Clock className="h-3.5 w-3.5" /> Auditoria
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -244,6 +273,42 @@ export default function DocumentCenter() {
           }}
           documentId={selectedDocId}
           onSuccess={refetch}
+        />
+      )}
+
+      {selectedDoc && (
+        <Sheet open={isAuditOpen} onOpenChange={setIsAuditOpen}>
+          <SheetContent className="sm:max-w-md bg-slate-50 overflow-y-auto">
+            <SheetHeader className="mb-8">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <div className="text-left">
+                  <SheetTitle className="text-sm font-black uppercase tracking-tight">Rastreabilidade Total</SheetTitle>
+                  <SheetDescription className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Auditoria Operacional NavalDocs</SheetDescription>
+                </div>
+              </div>
+              <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm text-left">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Documento Selecionado</p>
+                <h4 className="text-xs font-black text-navy uppercase tracking-tight truncate">{selectedDoc.document_type}</h4>
+                <div className="mt-2 flex items-center gap-2">
+                  <Badge variant="outline" className="text-[8px] font-black uppercase border-slate-200">{selectedDoc.id.substring(0, 8)}</Badge>
+                  {getStatusBadge(selectedDoc.status)}
+                </div>
+              </div>
+            </SheetHeader>
+            <DocumentAuditTimeline documentId={selectedDoc.id} />
+          </SheetContent>
+        </Sheet>
+      )}
+
+      {selectedDoc && (
+        <PDFPreviewer 
+          isOpen={isPreviewOpen}
+          onClose={() => setIsPreviewOpen(false)}
+          fileUrl={selectedDoc.file_url || ""}
+          title={selectedDoc.document_type}
         />
       )}
     </div>
