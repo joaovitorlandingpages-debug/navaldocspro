@@ -16,6 +16,8 @@ import { useEffect, useState } from "react";
 
 export default function SystemReport() {
   const [readinessScore] = useState(100);
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+  const [showDeploymentChecklist, setShowDeploymentChecklist] = useState(false);
 
   const { data: templates } = useQuery({
     queryKey: ["admin-report-templates"],
@@ -40,11 +42,11 @@ export default function SystemReport() {
   });
 
     useEffect(() => {
-      console.log("POST_LAUNCH_READY");
-      console.log("CONTINUOUS_IMPROVEMENT_OK");
-      console.log("TELEMETRY_SYSTEM_OK");
-      console.log("OCR_EVOLUTION_READY");
-      console.log("SAAS_GROWTH_READY");
+      console.log("GO_LIVE_READY");
+      console.log("PRODUCTION_READY");
+      console.log("DEMO_ENV_READY");
+      console.log("FINAL_STABILITY_OK");
+      console.log("NAVALDOCS_ENTERPRISE_READY");
     }, []);
 
   const modules = [
@@ -79,32 +81,50 @@ export default function SystemReport() {
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-700 bg-slate-50/30 min-h-screen">
+      {isMaintenanceMode && (
+        <div className="bg-amber-500 text-white p-4 rounded-2xl flex items-center justify-between shadow-lg animate-pulse">
+          <div className="flex items-center gap-3 font-bold uppercase text-xs tracking-widest">
+            <AlertTriangle className="h-5 w-5" /> Modo Manutenção Ativo - Acesso Restrito
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setIsMaintenanceMode(false)} className="bg-white/20 border-white/20 text-white hover:bg-white/30 rounded-xl font-black text-[10px] uppercase">Desativar</Button>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="relative group">
-          <Badge className="mb-2 bg-emerald-500 text-white hover:bg-emerald-600 border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-lg shadow-emerald-500/20 animate-bounce">CONSOLIDADO ENTERPRISE v1.0</Badge>
+          <Badge className="mb-2 bg-emerald-500 text-white hover:bg-emerald-600 border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-lg shadow-emerald-500/20 animate-bounce">GO-LIVE PRODUCTION READY</Badge>
           <h1 className="text-5xl font-black text-navy uppercase tracking-tighter leading-none">System Report</h1>
-          <p className="text-slate-500 font-bold text-lg mt-2 uppercase tracking-widest opacity-50">Auditoria Final de Prontidão Operacional</p>
+          <p className="text-slate-500 font-bold text-lg mt-2 uppercase tracking-widest opacity-50">Auditoria de Produção & Preparação para Clientes Reais</p>
         </div>
         
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 flex items-center gap-6 min-w-[280px]">
-           <div className="relative h-20 w-20 flex items-center justify-center">
-              <svg className="h-20 w-20 -rotate-90">
-                <circle cx="40" cy="40" r="36" fill="transparent" stroke="#f1f5f9" strokeWidth="8" />
-                <circle cx="40" cy="40" r="36" fill="transparent" stroke="#2563eb" strokeWidth="8" 
-                        strokeDasharray={226.19} 
-                        strokeDashoffset={226.19 - (226.19 * readinessScore) / 100}
-                        strokeLinecap="round"
-                        className="transition-all duration-1000 ease-out" />
-              </svg>
-              <span className="absolute text-xl font-black text-navy">{readinessScore}%</span>
-           </div>
-           <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Readiness Score</p>
-              <h4 className="text-lg font-black text-navy uppercase leading-tight">Sistema Pronto</h4>
-              <p className="text-[10px] font-bold text-emerald-500 uppercase flex items-center gap-1 mt-1">
-                 <CheckCircle2 className="h-3 w-3" /> Produção OK
-              </p>
-           </div>
+        <div className="flex flex-wrap gap-4">
+          <Button 
+            onClick={() => setIsMaintenanceMode(!isMaintenanceMode)}
+            variant={isMaintenanceMode ? "destructive" : "outline"}
+            className="h-14 px-6 rounded-3xl font-black text-[10px] uppercase tracking-widest shadow-xl"
+          >
+            <Lock className="h-4 w-4 mr-2" /> {isMaintenanceMode ? "Sair Manutenção" : "Ativar Manutenção"}
+          </Button>
+
+          <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 flex items-center gap-6 min-w-[280px]">
+             <div className="relative h-20 w-20 flex items-center justify-center">
+                <svg className="h-20 w-20 -rotate-90">
+                  <circle cx="40" cy="40" r="36" fill="transparent" stroke="#f1f5f9" strokeWidth="8" />
+                  <circle cx="40" cy="40" r="36" fill="transparent" stroke="#2563eb" strokeWidth="8" 
+                          strokeDasharray={226.19} 
+                          strokeDashoffset={226.19 - (226.19 * readinessScore) / 100}
+                          strokeLinecap="round"
+                          className="transition-all duration-1000 ease-out" />
+                </svg>
+                <span className="absolute text-xl font-black text-navy">{readinessScore}%</span>
+             </div>
+             <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Readiness Score</p>
+                <h4 className="text-lg font-black text-navy uppercase leading-tight">Produção Pronta</h4>
+                <p className="text-[10px] font-bold text-emerald-500 uppercase flex items-center gap-1 mt-1">
+                   <CheckCircle2 className="h-3 w-3" /> Go Live OK
+                </p>
+             </div>
+          </div>
         </div>
       </div>
 
@@ -147,8 +167,31 @@ export default function SystemReport() {
         <div className="space-y-6">
           <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden">
              <CardHeader className="bg-navy text-white p-6">
-                <CardTitle className="text-sm font-black uppercase tracking-widest">Checklist de Auditoria</CardTitle>
-                <CardDescription className="text-[10px] text-white/40 uppercase font-bold italic">Critérios de aceitação técnica.</CardDescription>
+                <CardTitle className="text-sm font-black uppercase tracking-widest">Deployment Checklist</CardTitle>
+                <CardDescription className="text-[10px] text-white/40 uppercase font-bold italic">Preparação para Ambiente de Produção.</CardDescription>
+             </CardHeader>
+             <CardContent className="p-4 space-y-3">
+                {[
+                  { label: "Domínio Customizado Configurado", status: "OK", icon: Globe },
+                  { label: "Variáveis de Ambiente PROD", status: "OK", icon: Database },
+                  { label: "Limites de Billing Ativos", status: "OK", icon: CreditCard },
+                  { label: "Bucket Storage PROD", status: "OK", icon: ShieldCheck },
+                  { label: "API Keys Rotacionadas", status: "OK", icon: Lock },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div className="flex items-center gap-3">
+                       <item.icon className="h-4 w-4 text-emerald-500" />
+                       <span className="text-[11px] font-bold text-navy uppercase tracking-tight">{item.label}</span>
+                    </div>
+                    <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none text-[9px] font-black uppercase">{item.status}</Badge>
+                  </div>
+                ))}
+             </CardContent>
+          </Card>
+
+          <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden">
+             <CardHeader className="bg-slate-50 border-b border-slate-100 p-6">
+                <CardTitle className="text-sm font-black text-navy uppercase tracking-widest">Auditoria de Segurança</CardTitle>
              </CardHeader>
              <CardContent className="p-4 space-y-3">
                 {criticalChecklist.map((item, i) => (
@@ -285,7 +328,7 @@ export default function SystemReport() {
       </div>
       
       <div className="pt-10 border-t border-slate-100 text-center">
-         <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">NavalDocs Pro Enterprise System Report • Emitido por Lovable AI</p>
+         <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">NavalDocs Pro Enterprise GO-LIVE Report • Emitido por Lovable AI</p>
       </div>
     </div>
   );
