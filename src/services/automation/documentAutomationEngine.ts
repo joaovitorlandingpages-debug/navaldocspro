@@ -313,13 +313,22 @@ export class DocumentAutomationEngine {
       .select('*, template:document_templates(*)')
       .eq('process_type_id', (await supabase.from('processes').select('process_type_id').eq('id', processId).single()).data?.process_type_id);
     
-    const matchingReq = requirements?.find((r: any) => 
-      r.template.name.includes(job.identified_document_type) || 
-      (job.identified_document_type === 'PERSONAL_IDENTITY' && (r.template.name.includes('RG') || r.template.name.includes('CNH'))) ||
-      (job.identified_document_type === 'VESSEL_TIE' && (r.template.name.includes('TIE') || r.template.name.includes('Inscrição') || r.template.name.includes('DPC-2211'))) ||
-      (job.identified_document_type === 'ENGINE_INVOICE' && r.template.name.includes('Alteração de Motor')) ||
-      (job.identified_document_type === 'ENGINE_MANUAL' && r.template.name.includes('Alteração de Motor'))
-    );
+    const matchingReq = requirements?.find((r: any) => {
+      const templateName = r.template.name.toUpperCase();
+      const docType = job.identified_document_type;
+
+      return (
+        templateName.includes(docType) ||
+        (docType === 'RG' && templateName.includes('RG')) ||
+        (docType === 'CNH' && templateName.includes('CNH')) ||
+        (docType === 'CPF' && templateName.includes('CPF')) ||
+        (docType === 'CNPJ' && templateName.includes('CNPJ')) ||
+        (docType === 'RESIDENCE_PROOF' && (templateName.includes('RESIDÊNCIA') || templateName.includes('ENDEREÇO'))) ||
+        (docType === 'VESSEL_TIE' && (templateName.includes('TIE') || templateName.includes('INSCRIÇÃO') || templateName.includes('DPC-2211'))) ||
+        (docType === 'INVOICE' && (templateName.includes('NOTA FISCAL') || templateName.includes('NF'))) ||
+        (docType === 'FINANCIAL_GRU' && (templateName.includes('GRU') || templateName.includes('PAGAMENTO')))
+      );
+    });
 
     if (matchingReq) {
       // Marcar documento como enviado/conforme no sistema
