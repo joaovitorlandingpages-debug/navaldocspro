@@ -346,7 +346,7 @@ function DashboardLayout() {
         {/* Dynamic Content Container */}
         <main className="flex-grow overflow-y-auto p-4 md:p-8">
            <Suspense fallback={<DashboardSkeleton />}>
-             <Outlet />
+              <RouteContent />
            </Suspense>
         </main>
 
