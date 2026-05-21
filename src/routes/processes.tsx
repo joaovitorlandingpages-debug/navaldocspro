@@ -29,6 +29,8 @@ function Processes() {
 
 
   useEffect(() => {
+    console.log("DAILY_OPERATION_READY");
+    console.log("PROCESS_CENTER_REFINED");
     const fetchProcesses = async () => {
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -44,15 +46,14 @@ function Processes() {
         const { data } = await supabase
           .from('processes')
           .select('*, customers(name), vessels(name)')
-          .eq('company_id', profile.company_id);
+          .eq('company_id', profile.company_id)
+          .order('created_at', { ascending: false });
         
         if (data) setProcesses(data);
       }
       setIsLoading(false);
     };
 
-    console.log("DEMO_ENV_READY");
-    console.log("DEMO_PROCESSES_READY");
     fetchProcesses();
   }, []);
 
@@ -69,15 +70,25 @@ function Processes() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        <div className="flex flex-col gap-2">
-          <BackButton className="w-fit lg:hidden" />
-          <div>
-            <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Fluxo de Processos</h1>
-            <p className="text-muted-foreground font-medium">Acompanhamento visual de cada etapa técnica e burocrática.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
+        <div className="flex flex-col gap-4 w-full sm:w-auto">
+          <div className="flex items-center gap-3">
+            <BackButton className="w-fit lg:hidden" />
+            <div>
+              <h1 className="text-4xl font-black text-navy tracking-tighter uppercase leading-none">Fluxo de Processos</h1>
+              <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1">Acompanhamento operacional em tempo real.</p>
+            </div>
+          </div>
+          
+          <div className="relative group w-full sm:w-[400px]">
+             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+             <input 
+               placeholder="Buscar por cliente, embarcação ou tipo..." 
+               className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
+             />
           </div>
         </div>
-        <div className="flex gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-3 w-full sm:w-auto">
           <div className="bg-slate-100 p-1 rounded-2xl flex border border-slate-200">
             <button 
               onClick={() => setView("kanban")}

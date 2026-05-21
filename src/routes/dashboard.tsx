@@ -370,6 +370,8 @@ export function RouteContent() {
 
     console.log("ONBOARDING_READY");
     console.log("PREMIUM_ONBOARDING_OK");
+    console.log("PREMIUM_EXPERIENCE_READY");
+    console.log("DAILY_OPERATION_READY");
     return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (

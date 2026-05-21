@@ -27,6 +27,7 @@ export function SmartOCR() {
   const isMock = !jobs || jobs.length === 0;
   const currentJob = displayJobs.find(j => j.id === activeJobId) || (activeJobId === null && displayJobs.length > 0 ? displayJobs[0] : undefined);
 
+  console.log("OCR_OPERATIONAL_READY");
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
