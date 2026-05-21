@@ -7,7 +7,7 @@ import {
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
   Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft,
   Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight, Signature, Lock,
-  Globe
+  Globe, Award, Verified
 } from "lucide-react";
 
 import { useState, useEffect, Suspense, useMemo } from "react";
