@@ -114,7 +114,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
   const clearDraft = () => {
     localStorage.removeItem("process_wizard_draft");
-    setFormData(INITIAL_FORM_DATA);
+    setFormData({
+      ...INITIAL_FORM_DATA,
+      notes: ""
+    });
+
     setStep(1);
   };
 
