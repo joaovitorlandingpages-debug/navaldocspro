@@ -10,6 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { toast } from "sonner";
 import { DocumentValidationEngine } from "@/services/validationEngine"; 
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 
 interface DocumentPreviewEditorProps {
   template: any;
@@ -22,6 +30,10 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
   const [content, setContent] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [status, setStatus] = useState<'rascunho' | 'auto_preenchido' | 'em_revisao' | 'aprovado'>('rascunho');
+  const [procuracaoType, setProcuracaoType] = useState("Procuração Geral para Processo Naval");
+
+  const isProcuracao = template?.name?.includes("Procuração");
+
 
   useEffect(() => {
     if (template?.base_content) {
@@ -32,6 +44,15 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
       setStatus('auto_preenchido');
     }
   }, [template, processData]);
+
+  useEffect(() => {
+    if (isProcuracao && template?.base_content) {
+      const updatedProcessData = { ...processData, process_type: procuracaoType };
+      const filled = DocumentValidationEngine.fillPlaceholder(template.base_content, updatedProcessData);
+      setContent(filled);
+    }
+  }, [procuracaoType, isProcuracao, template, processData]);
+
 
   const handleRegenerate = () => {
     if (template?.base_content) {
@@ -162,7 +183,26 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                    <Badge variant="outline" className="bg-white">v{template.version_number || '1.0'} - Oficial</Badge>
                 </div>
                  <div className="space-y-4">
+                    {isProcuracao && (
+                      <div className="space-y-2 p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                        <p className="text-[10px] font-black uppercase text-navy">Tipo de Procuração</p>
+                        <Select value={procuracaoType} onValueChange={setProcuracaoType}>
+                          <SelectTrigger className="w-full text-xs font-bold h-9 rounded-lg border-slate-200">
+                            <SelectValue placeholder="Selecione o tipo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Procuração Simples">Procuração Simples</SelectItem>
+                            <SelectItem value="Procuração para Transferência">Procuração para Transferência</SelectItem>
+                            <SelectItem value="Procuração para Registro">Procuração para Registro</SelectItem>
+                            <SelectItem value="Procuração para Renovação">Procuração para Renovação</SelectItem>
+                            <SelectItem value="Procuração para Vistoria">Procuração para Vistoria</SelectItem>
+                            <SelectItem value="Procuração Geral para Processo Naval">Procuração Geral para Processo Naval</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     <p className="text-[10px] font-black uppercase text-navy">Mapeamento Inteligente (OCR/BD)</p>
+
                     <div className="space-y-1">
                        {[
                          { label: "Cliente", key: "cliente.nome", source: "Banco de Dados" },
@@ -213,7 +253,11 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                        if (template.name === 'Requerimento DPC-2211') {
                          console.log("DPC2211_PDF_OK");
                        }
+                       if (template.name.includes("Procuração")) {
+                         console.log("PROCURACAO_PDF_OK");
+                       }
                        handleApprove();
+
                     }}
                     className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all gap-2"
                  >
