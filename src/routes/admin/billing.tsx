@@ -59,7 +59,7 @@ function AdminBilling() {
          .select('*, plan:plans(price)')
          .eq('status', 'active');
        
-       return data?.reduce((acc, s) => acc + (Number(s.plan?.price) || 0), 0) || 0;
+       return data?.reduce((acc: number, s: any) => acc + (Number(s.plan?.price) || 0), 0) || 0;
     }
   });
 
