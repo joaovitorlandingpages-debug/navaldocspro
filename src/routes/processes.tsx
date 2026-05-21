@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { 
   ClipboardList, Search, Plus, MoreHorizontal, 
-  ArrowRight, Calendar, User, Ship, AlertCircle, Loader2, CheckCircle2 
+  ArrowRight, Calendar, User, Ship, AlertCircle, Loader2, CheckCircle2,
+  Clock
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
