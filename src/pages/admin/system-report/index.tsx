@@ -189,7 +189,10 @@ export default function SystemReport() {
         <IncidentManager />
       ) : activeTab === 'deploys' ? (
         <DeploymentManager />
+      ) : activeTab === 'improvements' ? (
+        <ImprovementsPanel />
       ) : (
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
         <Card className="md:col-span-2 border-slate-100 shadow-sm overflow-hidden rounded-3xl">
