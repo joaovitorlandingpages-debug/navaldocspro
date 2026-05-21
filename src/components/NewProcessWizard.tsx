@@ -751,6 +751,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                         input.onchange = (e: any) => {
                            const files = Array.from(e.target.files) as File[];
                            setSelectedFiles(prev => [...prev, ...files]);
+                           console.log("UPLOAD_MOBILE_OK", files.length);
+
                         };
                         input.click();
                      }}
