@@ -12,6 +12,7 @@ function RedirectToIndex() {
   useEffect(() => {
     const checkSession = async () => {
       console.log("INDEX_AUTH_CHECK");
+      console.log("COMMERCIAL_FLOW_READY");
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         console.log("INDEX_REDIRECT_DASHBOARD_V2");

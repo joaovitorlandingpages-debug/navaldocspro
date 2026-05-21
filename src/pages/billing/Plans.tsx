@@ -12,6 +12,8 @@ const Plans = () => {
   const [dbPlans, setDbPlans] = React.useState<any[]>([]);
 
   React.useEffect(() => {
+    console.log("ENTERPRISE_UI_OK");
+    console.log("COMMERCIAL_FLOW_READY");
     const fetchPlans = async () => {
       const { data, error } = await supabase.from('plans').select('*').eq('is_active', true).order('price', { ascending: true });
       if (data) setDbPlans(data);
