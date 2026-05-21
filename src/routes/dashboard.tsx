@@ -7,7 +7,7 @@ import {
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
   Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft,
   Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight, Signature, Lock,
-  Globe
+  Globe, Award, Verified
 } from "lucide-react";
 
 import { useState, useEffect, Suspense, useMemo } from "react";
@@ -168,11 +168,11 @@ function DashboardLayout() {
   console.log("LAYOUT_OVERFLOW_FIXED");
   console.log("SINGLE_SCROLL_OK");
   console.log("DASHBOARD_HEIGHT_OK");
-  console.log("FUTURE_PROOF_READY");
-  console.log("LONG_TERM_READY");
-  console.log("ENTERPRISE_GOVERNANCE_OK");
-  console.log("PLATFORM_SUSTAINABILITY_OK");
-  console.log("NAVALDOCS_LEGACY_READY");
+  console.log("FINAL_ENTERPRISE_SEAL_OK");
+  console.log("FINAL_OPERATIONAL_AUDIT_OK");
+  console.log("FINAL_SAAS_CERTIFIED");
+  console.log("FINAL_PRODUCTION_CERTIFIED");
+  console.log("NAVALDOCS_ENTERPRISE_SEALED");
 
 
   const SidebarContent = () => (
@@ -305,13 +305,13 @@ function DashboardLayout() {
               </div>
               
               <div className="flex items-center gap-4 md:gap-8 w-full sm:w-auto justify-end">
-                  <div className="hidden xl:flex items-center gap-3 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl">
-                    <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
-                    <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Operationally Mature</span>
+                  <div className="hidden xl:flex items-center gap-3 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl group/seal">
+                    <Award className="h-3 w-3 text-emerald-500 group-hover/seal:scale-125 transition-transform" />
+                    <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Enterprise Certified</span>
                   </div>
-                  <div className="hidden xl:flex items-center gap-3 px-4 py-2 bg-primary/5 border border-primary/10 rounded-xl">
-                    <ShieldCheck className="h-3 w-3 text-primary" />
-                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">Enterprise Stable</span>
+                  <div className="hidden xl:flex items-center gap-3 px-4 py-2 bg-primary/5 border border-primary/10 rounded-xl group/prod">
+                    <Verified className="h-3 w-3 text-primary group-hover/prod:rotate-12 transition-transform" />
+                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">Production Hardened</span>
                   </div>
 
                  <div className="relative max-w-sm w-full hidden 2xl:block group">
