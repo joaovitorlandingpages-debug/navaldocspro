@@ -84,4 +84,5 @@ export interface ProcessAutomationState {
   is_ready_for_generation: boolean;
   next_suggested_steps: string[];
   last_analyzed_at: string;
+  completion_percentage?: number;
 }
