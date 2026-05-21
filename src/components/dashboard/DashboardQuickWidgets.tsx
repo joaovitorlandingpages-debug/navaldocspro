@@ -4,8 +4,9 @@ import { FileText, Clock, ChevronRight, Zap, CheckCircle2, Search, Star, History
 import { Link } from "@tanstack/react-router";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export function DashboardQuickWidgets({ recentDocs }: { recentDocs?: any[] }) {
+export function DashboardQuickWidgets({ recentDocs, loading }: { recentDocs?: any[], loading?: boolean }) {
   const [search, setSearch] = useState("");
   
   const displayDocs = recentDocs && recentDocs.length > 0 ? recentDocs : [
