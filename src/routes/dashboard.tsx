@@ -252,7 +252,7 @@ function DashboardLayout() {
         {/* Topbar */}
         <header className="h-auto min-h-16 bg-white border-b flex flex-col z-40">
            {quotaWarnings.length > 0 && (
-             <div className="bg-amber-50 border-b border-amber-100 px-8 py-2 flex items-center justify-between animate-in slide-in-from-top duration-500">
+             <div className="bg-amber-50 border-b border-amber-100 px-4 md:px-8 py-2 flex items-center justify-between animate-in slide-in-from-top duration-500">
                 <div className="flex items-center gap-3">
                    <AlertTriangle className="h-4 w-4 text-amber-600" />
                    <p className="text-[10px] font-bold text-amber-800 uppercase tracking-widest">
@@ -261,26 +261,26 @@ function DashboardLayout() {
                 </div>
                 <Link to="/billing/subscription">
                    <button className="text-[9px] font-black uppercase text-amber-700 hover:underline flex items-center gap-1">
-                      Gerenciar Plano <ArrowUpCircle className="h-3 w-3" />
+                      Gerenciar <ArrowUpCircle className="h-3 w-3" />
                    </button>
                 </Link>
              </div>
            )}
-            <div className="h-auto py-5 flex flex-col sm:flex-row items-center justify-between px-10 border-b border-slate-100 gap-6">
-              <div className="flex items-center gap-8 flex-grow w-full sm:w-auto">
-                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all shadow-sm">
+            <div className="h-auto py-3 md:py-5 flex flex-col sm:flex-row items-center justify-between px-4 md:px-10 border-b border-slate-100 gap-4 md:gap-6">
+              <div className="flex items-center gap-4 md:gap-8 flex-grow w-full sm:w-auto">
+                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 md:p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all shadow-sm">
                    <Menu className="h-5 w-5 text-navy" />
                  </button>
-                 <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-3">
+                 <div className="flex flex-col gap-1 overflow-hidden">
+                    <div className="flex items-center gap-2 md:gap-3 overflow-hidden">
                        <BackButton />
-                       <div className="h-6 w-px bg-slate-200 mx-1" />
+                       <div className="h-6 w-px bg-slate-200 mx-0.5 md:mx-1 shrink-0" />
                        <Breadcrumbs />
                     </div>
                  </div>
               </div>
               
-              <div className="flex items-center gap-6 w-full sm:w-auto justify-end">
+              <div className="flex items-center gap-4 md:gap-6 w-full sm:w-auto justify-end">
                  <div className="relative max-w-sm w-full hidden lg:block group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                     <input 
@@ -291,25 +291,26 @@ function DashboardLayout() {
 
                   <button 
                     onClick={() => setIsNewProcessOpen(true)}
-                    className="flex items-center gap-3 bg-navy text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-[0_10px_25px_rgba(0,11,24,0.15)] whitespace-nowrap group"
+                    className="flex items-center gap-2 md:gap-3 bg-navy text-white px-4 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-lg whitespace-nowrap group"
                   >
-                    <div className="h-5 w-5 bg-primary rounded-lg flex items-center justify-center group-hover:rotate-90 transition-transform duration-500">
+                    <div className="h-5 w-5 bg-primary rounded-lg flex items-center justify-center group-hover:rotate-90 transition-transform duration-500 shrink-0">
                       <Plus className="h-4 w-4 text-white" />
                     </div>
-                    Novo Processo
+                    <span className="hidden xs:inline">Novo Processo</span>
+                    <span className="xs:hidden">Novo</span>
                   </button>
     
-                  <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-3 md:gap-6">
                      <button 
                        onClick={() => setNotificationsOpen(true)}
-                       className="relative p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all active:scale-95 border border-transparent hover:border-slate-200"
+                       className="relative p-2 md:p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all active:scale-95 border border-transparent hover:border-slate-200"
                      >
                          <Bell className="h-5 w-5 text-navy" />
-                         <span className="absolute top-2.5 right-2.5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-white shadow-sm animate-ping" />
-                         <span className="absolute top-2.5 right-2.5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-white" />
+                         <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-primary rounded-full border-2 border-white shadow-sm animate-ping" />
+                         <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-primary rounded-full border-2 border-white" />
                      </button>
-                    <div className="h-10 w-px bg-slate-100" />
-                    <div className="flex items-center gap-4">
+                    <div className="h-8 md:h-10 w-px bg-slate-100" />
+                    <div className="flex items-center gap-2 md:gap-4">
                         <div className="text-right hidden xl:block">
                             <p className="text-[11px] font-black text-navy leading-none uppercase tracking-widest">{profile?.name || "Operador Master"}</p>
                             <div className="flex items-center justify-end gap-1.5 mt-1.5">
@@ -318,7 +319,7 @@ function DashboardLayout() {
                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Ativo</p>
                             </div>
                         </div>
-                        <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-navy to-slate-800 flex items-center justify-center text-white font-black text-xs shadow-lg border-2 border-white">
+                        <div className="h-9 w-9 md:h-11 md:w-11 rounded-xl md:rounded-2xl bg-gradient-to-br from-navy to-slate-800 flex items-center justify-center text-white font-black text-[10px] md:text-xs shadow-lg border-2 border-white shrink-0">
                             {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
                         </div>
                     </div>
@@ -334,11 +335,12 @@ function DashboardLayout() {
         />
 
         {/* Dynamic Content Container */}
-        <main className="flex-grow overflow-y-auto p-8">
+        <main className="flex-grow overflow-y-auto p-4 md:p-8">
            <Suspense fallback={<DashboardSkeleton />}>
              <Outlet />
            </Suspense>
         </main>
+
 
         {showTour && profile?.companies && (
           <WelcomeTour 
