@@ -176,7 +176,15 @@ function ProcessDetail() {
       user: "Sistema IA",
       description: event.description,
       date: event.created_at
-    })) || [])
+    })) || []),
+    // Add real comments as events for richer timeline
+    ...(comments.map((comment: any) => ({
+      id: comment.id,
+      type: 'update' as const,
+      user: comment.profiles?.name || "Usuário",
+      description: comment.content,
+      date: comment.created_at
+    })))
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // Default events if none exist

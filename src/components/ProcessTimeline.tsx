@@ -13,7 +13,7 @@ interface TimelineEvent {
 
 export function ProcessTimeline({ events }: { events: TimelineEvent[] }) {
   return (
-    <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+    <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
       {events.length === 0 && (
         <div className="space-y-8 opacity-20 grayscale pointer-events-none">
           {[
@@ -52,7 +52,7 @@ export function ProcessTimeline({ events }: { events: TimelineEvent[] }) {
             {event.type === 'auto_fill' && <Sparkles className="w-5 h-5 text-purple-500" />}
           </div>
           {/* Content */}
-          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm transition-all group-hover:shadow-md group-hover:border-primary/20">
+          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm transition-all group-hover:shadow-lg group-hover:border-primary/20">
             <div className="flex items-center justify-between space-x-2 mb-2">
               <div className="flex items-center gap-2">
                  <User className="w-4 h-4 text-slate-400" />
