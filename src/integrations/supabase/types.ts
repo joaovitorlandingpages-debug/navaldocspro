@@ -235,6 +235,53 @@ export type Database = {
           },
         ]
       }
+      backups: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          file_url: string | null
+          id: string
+          metadata: Json | null
+          name: string
+          size_bytes: number | null
+          status: string
+          type: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          name: string
+          size_bytes?: number | null
+          status?: string
+          type: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          name?: string
+          size_bytes?: number | null
+          status?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backups_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           cnpj: string | null
@@ -1101,6 +1148,7 @@ export type Database = {
           compliance_status: string | null
           created_at: string
           customer_id: string | null
+          deleted_at: string | null
           document_type: string
           expiry_date: string | null
           extracted_data: Json | null
@@ -1125,6 +1173,7 @@ export type Database = {
           compliance_status?: string | null
           created_at?: string
           customer_id?: string | null
+          deleted_at?: string | null
           document_type: string
           expiry_date?: string | null
           extracted_data?: Json | null
@@ -1149,6 +1198,7 @@ export type Database = {
           compliance_status?: string | null
           created_at?: string
           customer_id?: string | null
+          deleted_at?: string | null
           document_type?: string
           expiry_date?: string | null
           extracted_data?: Json | null
@@ -2408,6 +2458,7 @@ export type Database = {
           compliance_status: string | null
           created_at: string
           customer_id: string
+          deleted_at: string | null
           draft_data: Json | null
           due_date: string | null
           efficiency_score: number | null
@@ -2455,6 +2506,7 @@ export type Database = {
           compliance_status?: string | null
           created_at?: string
           customer_id: string
+          deleted_at?: string | null
           draft_data?: Json | null
           due_date?: string | null
           efficiency_score?: number | null
@@ -2502,6 +2554,7 @@ export type Database = {
           compliance_status?: string | null
           created_at?: string
           customer_id?: string
+          deleted_at?: string | null
           draft_data?: Json | null
           due_date?: string | null
           efficiency_score?: number | null
@@ -2673,6 +2726,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "queue_items_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      security_alerts: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          type: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          type: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "security_alerts_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
@@ -3043,6 +3143,7 @@ export type Database = {
           company_id: string | null
           created_at: string
           customer_id: string | null
+          deleted_at: string | null
           expiry_date: string | null
           extracted_data: Json | null
           file_name: string
@@ -3063,6 +3164,7 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           customer_id?: string | null
+          deleted_at?: string | null
           expiry_date?: string | null
           extracted_data?: Json | null
           file_name: string
@@ -3083,6 +3185,7 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           customer_id?: string | null
+          deleted_at?: string | null
           expiry_date?: string | null
           extracted_data?: Json | null
           file_name?: string
@@ -3268,6 +3371,17 @@ export type Database = {
       duplicate_document: { Args: { doc_id: string }; Returns: string }
       get_system_readiness: { Args: never; Returns: Json }
       is_admin_master: { Args: never; Returns: boolean }
+      log_security_event: {
+        Args: {
+          p_action: string
+          p_company_id: string
+          p_entity_id: string
+          p_entity_type: string
+          p_metadata?: Json
+          p_severity?: string
+        }
+        Returns: undefined
+      }
       log_system_event: {
         Args: {
           p_company_id?: string
