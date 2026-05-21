@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Anchor, Ship, FileText, CheckCircle, Shield, ArrowRight, Menu, X, Users, Settings, LogIn, Mail, Zap, Cpu, Activity, BarChart3, Building2, Globe, Layers, CheckSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTelemetry } from "@/hooks/useTelemetry";
 
 export const Route = createFileRoute("/home")({
   component: Index,
@@ -11,6 +12,7 @@ function Index() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { session, profile, loading } = useAuth();
+  useTelemetry("Landing Page");
 
   useEffect(() => {
     console.log("LANDING_PREMIUM_OK");

@@ -21,6 +21,7 @@ import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidg
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { OperationalCharts } from "@/components/OperationalCharts";
 import { PerformanceMonitor } from "@/components/performance/PerformanceMonitor";
+import { useTelemetry } from "@/hooks/useTelemetry";
 
 export const Route = createFileRoute("/dashboard-v2")({
   component: () => (
@@ -35,6 +36,7 @@ function DashboardV2Layout() {
   const { profile, loading, signOut } = useAuth();
   const { setIsNewProcessOpen } = useNewProcess();
   const navigate = useNavigate();
+  useTelemetry("Dashboard V2");
 
   useEffect(() => {
     if (!loading && profile) {
