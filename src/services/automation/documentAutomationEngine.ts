@@ -196,12 +196,21 @@ export class DocumentAutomationEngine {
    */
   static async logEvent(processId: string, eventType: string, description: string, metadata: any = {}) {
     try {
-      await supabase.from('automation_logs').insert({
+      console.log("AUTOMATION_LOG:", eventType, description);
+      
+      const { error } = await supabase.from('automation_logs').insert({
         process_id: processId,
         event_type: eventType,
         description,
         metadata
       });
+
+      if (error) throw error;
+      
+      // Mark for console logs as requested
+      if (eventType === 'ocr_complete') console.log("OCR_AUTOFILL_OK");
+      if (eventType === 'status_changed') console.log("SMART_PROCESS_FLOW_OK");
+      
     } catch (error) {
       console.error("Erro ao registrar log de automação:", error);
     }
