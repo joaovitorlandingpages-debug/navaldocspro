@@ -8,7 +8,10 @@ import {
   CheckCircle2, 
   FileSearch,
   Timer,
-  Bot
+  Bot,
+  TrendingUp,
+  Workflow,
+  Sparkles
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,13 +44,25 @@ export function IntelligencePanel() {
 
   return (
     <div className="space-y-6">
+      <div className="p-6 bg-gradient-to-br from-primary to-blue-700 text-white rounded-[2rem] shadow-xl relative overflow-hidden group mb-4">
+         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform">
+            <Sparkles className="h-16 w-16" />
+         </div>
+         <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-70">Produtividade Estimada</p>
+         <div className="flex items-end gap-2 mb-4">
+            <span className="text-4xl font-black">8.5h</span>
+            <span className="text-[10px] font-bold uppercase opacity-50 mb-1.5">Economizadas/mês</span>
+         </div>
+         <p className="text-[10px] font-medium leading-relaxed opacity-80">
+            A automação reduziu o trabalho manual em 65% na última semana.
+         </p>
+      </div>
+
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
-          <BrainCircuit className="h-5 w-5 text-primary" /> Sugestões da IA Operacional
+        <h3 className="text-xs font-black text-navy uppercase tracking-widest flex items-center gap-2">
+          <Workflow className="h-4 w-4 text-primary" /> Automação Inteligente
         </h3>
-        <span className="text-[9px] font-black uppercase text-primary border border-primary/20 bg-primary/5 px-2 py-1 rounded-md">
-          Processamento Ativo
-        </span>
+        <Badge className="bg-emerald-500 text-white font-black text-[8px] uppercase tracking-tighter border-none animate-pulse">Live</Badge>
       </div>
 
       <div className="grid gap-4">
