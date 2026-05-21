@@ -154,6 +154,7 @@ function DashboardLayout() {
     { group: "Comercial", items: [
       { name: "Ambiente Demo", icon: <Rocket className="h-5 w-5" />, path: "/demo" },
       { name: "Relatório de Prontidão", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/system-report" },
+      { name: "Status do Sistema", icon: <Activity className="h-5 w-5" />, path: "/status" },
     ]}
   ];
 
