@@ -32,6 +32,10 @@ function Customers() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 12;
+  const [searchTerm, setSearchTerm] = useState("");
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [upgradeModal, setUpgradeModal] = useState<{ isOpen: boolean; current: number; limit: number | null }>({
     isOpen: false,
