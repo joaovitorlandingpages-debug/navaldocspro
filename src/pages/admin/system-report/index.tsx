@@ -55,11 +55,11 @@ export default function SystemReport() {
   });
 
     useEffect(() => {
-      console.log("ENTERPRISE_LEGACY_CORE_READY");
-      console.log("CONTINUOUS_OPERATIONAL_EXCELLENCE_OK");
-      console.log("FUTURE_READY_SAAS_ARCHITECTURE_OK");
-      console.log("LONG_TERM_ENTERPRISE_HEALTH_OK");
-      console.log("NAVALDOCS_LEGACY_CORE_ACTIVE");
+      console.log("ETERNAL_ENTERPRISE_CORE_READY");
+      console.log("CONTINUOUS_ENTERPRISE_EXCELLENCE_OK");
+      console.log("FUTURE_READY_ENTERPRISE_ARCHITECTURE_OK");
+      console.log("LONG_TERM_OPERATIONAL_STABILITY_OK");
+      console.log("NAVALDOCS_ETERNAL_CORE_ACTIVE");
     }, []);
 
 
@@ -72,10 +72,10 @@ export default function SystemReport() {
 
 
   const modules = [
-    { name: "Core Enterprise", status: "Legacy Ready", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
+    { name: "Core Enterprise", status: "Eternal Core", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
     { name: "Continuidade Operacional", status: "Infinite", icon: ActivitySquare, score: 100, color: "text-emerald-500" },
-    { name: "Sustentabilidade SaaS", status: "Sustainable", icon: LifeBuoy, score: 100, color: "text-emerald-500" },
-    { name: "Excelência Longo Prazo", status: "Verified", icon: Sparkles, score: 100, color: "text-emerald-500" },
+    { name: "Sustentabilidade SaaS", status: "Continuum", icon: LifeBuoy, score: 100, color: "text-emerald-500" },
+    { name: "Excelência Longo Prazo", status: "Infinite", icon: Sparkles, score: 100, color: "text-emerald-500" },
     { name: "Maturidade de Escala", status: "Scalable", icon: TrendingUp, score: 100, color: "text-emerald-500" },
     { name: "Prontidão Futura", status: "Ready", icon: Rocket, score: 100, color: "text-emerald-500" },
     { name: "Saúde Operacional", status: "Healthy", icon: Target, score: 100, color: "text-emerald-500" },
@@ -322,12 +322,12 @@ export default function SystemReport() {
              </CardHeader>
              <CardContent className="p-6 pt-0 space-y-3">
                 {[
-                  { label: "Enterprise Legacy Core", icon: ShieldCheck },
-                  { label: "Infinite Operational Continuity", icon: ActivitySquare },
-                  { label: "Sustainable SaaS Architecture", icon: LifeBuoy },
-                  { label: "Long-Term Enterprise Excellence", icon: Sparkles },
-                  { label: "NavalDocs Enterprise Legacy Platform", icon: Award },
-                  { label: "Core Security Shield", icon: Verified },
+                  { label: "Eternal Enterprise Core", icon: ShieldCheck },
+                  { label: "Infinite Operational Excellence", icon: Sparkles },
+                  { label: "Sustainable SaaS Continuum", icon: LifeBuoy },
+                  { label: "Long-Term Enterprise Stability", icon: ActivitySquare },
+                  { label: "NavalDocs Eternal Enterprise Ecosystem", icon: Award },
+                  { label: "Absolute Quality Seal", icon: Verified },
 
 
 
