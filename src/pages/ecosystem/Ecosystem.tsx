@@ -1,15 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Building, Users, Briefcase, Plus, Search } from "lucide-react";
+import { Building, Users, Briefcase, Plus, Search, Globe, Shield, Activity, Users2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
-export const Route = createFileRoute("/dashboard/ecosystem")({
-  component: EcosystemPage,
-});
-
-function EcosystemPage() {
+export default function EcosystemPage() {
   const [activeTab, setActiveTab] = useState("partners");
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
