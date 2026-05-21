@@ -890,36 +890,37 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       console.log("PROCESS_MODAL_OK", open);
     }}>
 
-      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-white border-none rounded-[2.5rem] shadow-2xl">
-        <DialogHeader className="p-8 pb-0 border-b-0">
+      <DialogContent className="max-w-2xl w-[95vw] md:w-full p-0 overflow-hidden bg-white border-none rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl max-h-[90vh] md:max-h-none">
+        <DialogHeader className="p-4 md:p-8 pb-0 border-b-0">
           <div className="flex flex-col gap-4 w-full">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 bg-navy text-white rounded-2xl flex items-center justify-center font-black shadow-lg">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="h-10 w-10 md:h-12 md:w-12 bg-navy text-white rounded-xl md:rounded-2xl flex items-center justify-center font-black shadow-lg text-sm md:text-base">
                   {step}
                 </div>
-                <div>
-                  <DialogTitle className="text-2xl font-black text-navy uppercase tracking-tight">Novo Processo Naval</DialogTitle>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{getStepTitle()}</p>
+                <div className="overflow-hidden">
+                  <DialogTitle className="text-lg md:text-2xl font-black text-navy uppercase tracking-tight truncate">Novo Processo Naval</DialogTitle>
+                  <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{getStepTitle()}</p>
                 </div>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                <X className="h-6 w-6 text-slate-300" />
+              <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors shrink-0">
+                <X className="h-5 w-5 md:h-6 md:w-6 text-slate-300" />
               </button>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
               <div className="flex-1">
-                <Progress value={progressPercent} className="h-1.5" />
+                <Progress value={progressPercent} className="h-1.2 md:h-1.5" />
               </div>
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Passo {step} de {totalSteps}</span>
+              <span className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap shrink-0">Passo {step} / {totalSteps}</span>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="px-8 py-6 min-h-[420px] overflow-y-auto max-h-[60vh]">
+        <div className="px-4 md:px-8 py-4 md:py-6 min-h-[300px] md:min-h-[420px] overflow-y-auto max-h-[60vh] md:max-h-[65vh]">
           {renderStep()}
         </div>
+
 
 
 
