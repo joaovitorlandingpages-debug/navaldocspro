@@ -55,11 +55,11 @@ export default function SystemReport() {
   });
 
     useEffect(() => {
-      console.log("ENTERPRISE_PERMANENCE_FRAMEWORK_READY");
-      console.log("CONTINUOUS_OPERATIONAL_RESILIENCE_OK");
-      console.log("FUTURE_READY_ENTERPRISE_ECOSYSTEM_OK");
-      console.log("LONG_TERM_SAAS_CONTINUITY_OK");
-      console.log("NAVALDOCS_PERMANENCE_FRAMEWORK_ACTIVE");
+      console.log("INFINITE_ENTERPRISE_CORE_READY");
+      console.log("CONTINUOUS_OPERATIONAL_EXCELLENCE_OK");
+      console.log("LONG_TERM_ENTERPRISE_HEALTH_OK");
+      console.log("FUTURE_READY_ENTERPRISE_ARCHITECTURE_OK");
+      console.log("NAVALDOCS_INFINITE_CORE_ACTIVE");
     }, []);
 
 
@@ -74,12 +74,12 @@ export default function SystemReport() {
   const modules = [
     { name: "Enterprise Continuity", status: "Operational", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
     { name: "Operational Resilience", status: "Active", icon: ActivitySquare, score: 100, color: "text-emerald-500" },
-    { name: "Ecosystem Sustainability", status: "Sustainable", icon: LifeBuoy, score: 100, color: "text-emerald-500" },
+    { name: "Infinite Governance", status: "Definitive", icon: Lock, score: 100, color: "text-emerald-500" },
     { name: "Scalability Maturity", status: "Scalable", icon: TrendingUp, score: 100, color: "text-emerald-500" },
+    { name: "Ecosystem Sustainability", status: "Sustainable", icon: LifeBuoy, score: 100, color: "text-emerald-500" },
     { name: "Future Readiness", status: "Ready", icon: Rocket, score: 100, color: "text-emerald-500" },
-    { name: "Infinite Operational Excellence", status: "Eternal", icon: HeartPulse, score: 100, color: "text-emerald-500" },
+    { name: "Long-term Operational Excellence", status: "Eternal", icon: HeartPulse, score: 100, color: "text-emerald-500" },
     { name: "Continuous Observability", status: "Active", icon: Activity, score: 100, color: "text-emerald-500" },
-    { name: "Definitive Governance", status: "Definitive", icon: Lock, score: 100, color: "text-emerald-500" },
   ];
 
 
@@ -92,16 +92,16 @@ export default function SystemReport() {
 
 
   const criticalChecklist = [
-    { label: "Ciclo de Permanência Enterprise", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
+    { label: "Core Operacional Enterprise Definitivo", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
     { label: "Observabilidade Contínua Absoluta", status: "OK", icon: ActivitySquare, color: "text-emerald-500" },
-    { label: "Resiliência Enterprise Permanente", status: "OK", icon: ShieldAlert, color: "text-emerald-500" },
+    { label: "Resiliência Operacional Definitiva", status: "OK", icon: ShieldAlert, color: "text-emerald-500" },
+    { label: "Continuidade Documental Definitiva", status: "OK", icon: FileCheck, color: "text-emerald-500" },
     { label: "Inteligência Operacional Contínua", status: "OK", icon: Sparkles, color: "text-emerald-500" },
-    { label: "Sustentabilidade SaaS Permanente", status: "OK", icon: LifeBuoy, color: "text-emerald-500" },
-    { label: "Readiness Futuro Permanente", status: "OK", icon: Rocket, color: "text-emerald-500" },
-    { label: "Governança Contínua Definitiva", status: "OK", icon: Lock, color: "text-emerald-500" },
+    { label: "Sustentabilidade SaaS Absoluta", status: "OK", icon: LifeBuoy, color: "text-emerald-500" },
+    { label: "Governança Deploy Definitiva", status: "OK", icon: Rocket, color: "text-emerald-500" },
     { label: "Cultura Enterprise Contínua", status: "OK", icon: Award, color: "text-emerald-500" },
-    { label: "Excelência Operacional Contínua", status: "OK", icon: CheckCircle, color: "text-emerald-500" },
-    { label: "Auditoria Contínua Permanente", status: "OK", icon: ClipboardCheck, color: "text-emerald-500" },
+    { label: "Readiness Futuro Contínuo", status: "OK", icon: Target, color: "text-emerald-500" },
+    { label: "Segurança Enterprise Absoluta", status: "OK", icon: Lock, color: "text-emerald-500" },
   ];
 
 
@@ -321,11 +321,11 @@ export default function SystemReport() {
              </CardHeader>
              <CardContent className="p-6 pt-0 space-y-3">
                 {[
-                  { label: "Enterprise Permanence Framework", icon: ShieldCheck },
-                  { label: "Infinite Operational Continuity", icon: Sparkles },
+                  { label: "Infinite Enterprise Operational Core", icon: ShieldCheck },
+                  { label: "Eternal Operational Excellence", icon: Sparkles },
                   { label: "Sustainable SaaS Governance", icon: LifeBuoy },
-                  { label: "Long-Term Enterprise Stability", icon: ActivitySquare },
-                  { label: "NavalDocs Enterprise Permanence Platform", icon: Award },
+                  { label: "Long-Term Enterprise Ecosystem", icon: ActivitySquare },
+                  { label: "NavalDocs Infinite Enterprise Platform", icon: Award },
                   { label: "Absolute Quality Seal", icon: Verified },
                 ].map((status, i) => (
                   <div key={i} className="flex items-center justify-between">
