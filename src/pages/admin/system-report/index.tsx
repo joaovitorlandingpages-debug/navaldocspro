@@ -25,7 +25,8 @@ import { DeploymentManager } from "@/components/admin/DeploymentManager";
 export default function SystemReport() {
   const [readinessScore] = useState(100);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
-  const [activeTab, setActiveTab] = useState<'report' | 'golive' | 'governance' | 'incidents' | 'deploys'>('report');
+  const [activeTab, setActiveTab] = useState<'report' | 'golive' | 'governance' | 'incidents' | 'deploys' | 'improvements'>('report');
+
 
 
   const { data: templates } = useQuery({
