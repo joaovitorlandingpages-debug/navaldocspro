@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle2, AlertCircle, Zap, FileText, Clock } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, Zap, FileText, Clock, Activity } from "lucide-react";
 import { OCRJob } from "@/hooks/useOCR";
 
 interface BatchOCRQueueProps {
