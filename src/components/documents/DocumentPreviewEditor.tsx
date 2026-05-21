@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { 
   FileText, Save, CheckCircle2, AlertTriangle, 
   ChevronLeft, ArrowRight, Download, Edit3, 
-  Eye, RefreshCw, Printer, FileCheck
+  Eye, RefreshCw, Printer, FileCheck, Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
