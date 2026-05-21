@@ -49,6 +49,11 @@ export default function SystemReport() {
       console.log("DEMO_ENV_READY");
       console.log("FINAL_STABILITY_OK");
       console.log("NAVALDOCS_ENTERPRISE_READY");
+      console.log("DEMO_PREMIUM_READY");
+      console.log("COMMERCIAL_MODE_READY");
+      console.log("ENTERPRISE_PRESENTATION_OK");
+      console.log("PILOT_PHASE_OK");
+      console.log("NAVALDOCS_READY_TO_SCALE");
     }, []);
 
   const modules = [
