@@ -92,8 +92,12 @@ export function BatchOCRQueue({ jobs, isLoading }: BatchOCRQueueProps) {
       </div>
 
       <div className="pt-2">
-        <div className="p-3 bg-navy rounded-xl text-center">
-          <p className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em]">Enterprise Engine Active</p>
+        <div className="p-3 bg-navy rounded-xl text-center relative overflow-hidden group">
+          <div className="absolute inset-0 bg-primary/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+          <p className="text-[9px] font-black text-white uppercase tracking-[0.2em] relative z-10 flex items-center justify-center gap-2">
+            <Activity className="h-3 w-3 text-primary animate-pulse" />
+            Enterprise Neural Engine Active
+          </p>
         </div>
       </div>
     </Card>
