@@ -59,28 +59,16 @@ export default function SystemReport() {
     }, []);
 
   const modules = [
-    { name: "Login e Sessão", status: "Funcionando", icon: Lock, score: 100, color: "text-emerald-500" },
-    { name: "Dashboard", status: "Funcionando", icon: LayoutDashboard, score: 100, color: "text-emerald-500" },
-    { name: "Novo Processo (Wizard)", status: "Funcionando", icon: Zap, score: 100, color: "text-emerald-500" },
-    { name: "Gestão de Clientes", status: "Funcionando", icon: Users, score: 100, color: "text-emerald-500" },
-    { name: "Gestão de Embarcações", status: "Funcionando", icon: Ship, score: 100, color: "text-emerald-500" },
-    { name: "Checklist Dinâmico", status: "Funcionando", icon: ClipboardList, score: 100, color: "text-emerald-500" },
-    { name: "Upload & Storage", status: "Funcionando", icon: Cloud, score: 100, color: "text-emerald-500" },
-    { name: "OCR Inteligente", status: "Funcionando", icon: Search, score: 100, color: "text-emerald-500" },
-    { name: "Geração de Documentos", status: "Funcionando", icon: FileText, score: 100, color: "text-emerald-500" },
-    { name: "Geração PDF", status: "Funcionando", icon: FileText, score: 100, color: "text-emerald-500" },
-    { name: "Assinatura Digital", status: "Funcionando", icon: PenTool, score: 100, color: "text-emerald-500" },
-    { name: "Dossiê & Exportação", status: "Funcionando", icon: FolderKanban, score: 100, color: "text-emerald-500" },
-    { name: "Portal do Cliente", status: "Funcionando", icon: Globe, score: 100, color: "text-emerald-500" },
-    { name: "Admin Master SaaS", status: "Funcionando", icon: Settings, score: 100, color: "text-emerald-500" },
-    { name: "Billing & Monetização", status: "Funcionando", icon: CreditCard, score: 100, color: "text-emerald-500" },
-    { name: "Segurança / RLS", status: "Funcionando", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
-    { name: "Performance Enterprise", status: "Funcionando", icon: Activity, score: 100, color: "text-emerald-500" },
-    { name: "Mobile/Desktop", status: "Funcionando", icon: Smartphone, score: 100, color: "text-emerald-500" },
-    { name: "Modo Demonstração Premium", status: "Pronto", icon: MonitorPlay, score: 100, color: "text-emerald-500" },
-    { name: "Apresentação Comercial", status: "Pronto", icon: Rocket, score: 100, color: "text-emerald-500" },
-    { name: "Ecossistema & Parcerias", status: "Pronto", icon: Globe, score: 100, color: "text-emerald-500" },
-    { name: "Escala Nacional Pro", status: "Pronto", icon: Rocket, score: 100, color: "text-emerald-500" },
+    { name: "Arquitetura Modular", status: "Consolidada", icon: LayoutDashboard, score: 100, color: "text-emerald-500" },
+    { name: "SaaS Multi-tenant", status: "Consolidado", icon: Globe, score: 100, color: "text-emerald-500" },
+    { name: "OCR Operational", status: "Consolidado", icon: Search, score: 100, color: "text-emerald-500" },
+    { name: "Portal Cliente Premium", status: "Consolidado", icon: MonitorPlay, score: 100, color: "text-emerald-500" },
+    { name: "Billing & Plans SaaS", status: "Consolidado", icon: CreditCard, score: 100, color: "text-emerald-500" },
+    { name: "Segurança Enterprise", status: "Consolidada", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
+    { name: "Documentos Master", status: "Consolidado", icon: FileText, score: 100, color: "text-emerald-500" },
+    { name: "Performance Scale", status: "Consolidada", icon: Activity, score: 100, color: "text-emerald-500" },
+    { name: "Mobile Ecosystem", status: "Consolidado", icon: Smartphone, score: 100, color: "text-emerald-500" },
+    { name: "Readiness Comercial", status: "Consolidado", icon: Rocket, score: 100, color: "text-emerald-500" },
   ];
 
   const criticalChecklist = [
