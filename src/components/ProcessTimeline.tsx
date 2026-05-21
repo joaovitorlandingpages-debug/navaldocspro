@@ -8,6 +8,7 @@ interface TimelineEvent {
   user: string;
   description: string;
   date: string;
+  category?: string;
   metadata?: any;
 }
 
