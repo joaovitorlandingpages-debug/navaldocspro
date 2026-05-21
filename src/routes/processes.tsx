@@ -73,7 +73,7 @@ function Processes() {
     }, 300);
 
     return () => clearTimeout(debounceTimer);
-  }, [page, searchTerm, profile?.company_id]);
+  }, [page, searchTerm]);
 
   useEffect(() => {
     console.log("PERFORMANCE_AUDIT_OK");
