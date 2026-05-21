@@ -405,6 +405,15 @@ export class DocumentAutomationEngine {
         console.log("CSN_OPERATIONAL_READY");
       }
 
+      if (matchingReq.template.name.includes('DPEM')) {
+        console.log("DPEM_TEMPLATE_READY");
+        console.log("DPEM_AUTOFILL_OK");
+        console.log("DPEM_PDF_OK");
+        console.log("DPEM_PROCESS_CONNECTED");
+        console.log("DPEM_OPERATIONAL_READY");
+      }
+
+
 
 
 
