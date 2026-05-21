@@ -109,6 +109,53 @@ export type Database = {
           },
         ]
       }
+      app_notifications: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string
+          metadata: Json | null
+          title: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message: string
+          metadata?: Json | null
+          title: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string
+          metadata?: Json | null
+          title?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_notifications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -515,6 +562,41 @@ export type Database = {
             foreignKeyName: "demo_configurations_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      departments: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
           },
@@ -1289,6 +1371,36 @@ export type Database = {
         }
         Relationships: []
       }
+      executive_metrics: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          metric_date: string | null
+          metric_name: string
+          metric_value: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_date?: string | null
+          metric_name: string
+          metric_value: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_date?: string | null
+          metric_name?: string
+          metric_value?: number
+        }
+        Relationships: []
+      }
       generated_documents: {
         Row: {
           company_id: string | null
@@ -1501,6 +1613,56 @@ export type Database = {
             columns: ["admin_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          last_contact_at: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          source: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_contact_at?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_contact_at?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -2001,6 +2163,111 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "operational_tasks_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partners: {
+        Row: {
+          address: string | null
+          company_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          name: string
+          phone: string | null
+          type: Database["public"]["Enums"]["partner_type"]
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          company_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          name: string
+          phone?: string | null
+          type?: Database["public"]["Enums"]["partner_type"]
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          company_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          name?: string
+          phone?: string | null
+          type?: Database["public"]["Enums"]["partner_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partners_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partnership_shares: {
+        Row: {
+          created_at: string
+          document_id: string | null
+          expires_at: string | null
+          id: string
+          partner_id: string
+          permissions: string[] | null
+          process_id: string | null
+          shared_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_id?: string | null
+          expires_at?: string | null
+          id?: string
+          partner_id: string
+          permissions?: string[] | null
+          process_id?: string | null
+          shared_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_id?: string | null
+          expires_at?: string | null
+          id?: string
+          partner_id?: string
+          permissions?: string[] | null
+          process_id?: string | null
+          shared_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partnership_shares_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partnership_shares_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partnership_shares_process_id_fkey"
             columns: ["process_id"]
             isOneToOne: false
             referencedRelation: "processes"
@@ -2693,12 +2960,14 @@ export type Database = {
         Row: {
           company_id: string | null
           created_at: string
+          department_id: string | null
           email: string | null
           id: string
           is_demo_user: boolean | null
           is_pilot: boolean | null
           name: string | null
           onboarding_checklist: Json | null
+          partner_id: string | null
           phone: string | null
           role: string | null
           updated_at: string
@@ -2706,12 +2975,14 @@ export type Database = {
         Insert: {
           company_id?: string | null
           created_at?: string
+          department_id?: string | null
           email?: string | null
           id: string
           is_demo_user?: boolean | null
           is_pilot?: boolean | null
           name?: string | null
           onboarding_checklist?: Json | null
+          partner_id?: string | null
           phone?: string | null
           role?: string | null
           updated_at?: string
@@ -2719,12 +2990,14 @@ export type Database = {
         Update: {
           company_id?: string | null
           created_at?: string
+          department_id?: string | null
           email?: string | null
           id?: string
           is_demo_user?: boolean | null
           is_pilot?: boolean | null
           name?: string | null
           onboarding_checklist?: Json | null
+          partner_id?: string | null
           phone?: string | null
           role?: string | null
           updated_at?: string
@@ -2735,6 +3008,20 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
             referencedColumns: ["id"]
           },
         ]
@@ -3632,7 +3919,14 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      partner_type:
+        | "despachante"
+        | "engenheiro"
+        | "vistoriador"
+        | "marina"
+        | "estaleiro"
+        | "oficina"
+        | "outro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3759,6 +4053,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      partner_type: [
+        "despachante",
+        "engenheiro",
+        "vistoriador",
+        "marina",
+        "estaleiro",
+        "oficina",
+        "outro",
+      ],
+    },
   },
 } as const
