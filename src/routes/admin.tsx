@@ -67,15 +67,21 @@ function AdminLayout() {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      {/* Admin Sidebar */}
+      {/* Admin Sidebar Premium */}
       <aside 
         className={`${
-          isSidebarOpen ? "w-64" : "w-20"
-        } transition-all duration-300 bg-slate-900 text-white flex flex-col z-50`}
+          isSidebarOpen ? "w-72" : "w-20"
+        } transition-all duration-500 bg-[#020D1D] text-white flex flex-col z-50 border-r border-white/5`}
       >
-        <div className="p-6 flex items-center gap-3 border-b border-white/5">
-          <ShieldCheck className="h-8 w-8 text-primary flex-shrink-0" />
-          {isSidebarOpen && <span className="font-bold text-xl tracking-tight uppercase">Admin Master</span>}
+        <div className="p-8 flex items-center gap-4 border-b border-white/5 bg-navy/20">
+          <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)]">
+             <ShieldCheck className="h-6 w-6 text-white" />
+          </div>
+          {isSidebarOpen && (
+            <div className="animate-in fade-in slide-in-from-left-2 duration-500">
+               <span className="font-black text-xl tracking-tighter uppercase italic">Master <span className="text-primary">Ops</span></span>
+            </div>
+          )}
         </div>
 
         <nav className="flex-grow mt-6 px-4 space-y-2">
