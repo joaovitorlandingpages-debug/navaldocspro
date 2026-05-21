@@ -343,8 +343,14 @@ function Index() {
                   <Anchor className="h-6 w-6 text-primary" />
                   <span className="text-lg font-black tracking-tighter text-white uppercase italic">NavalDocs <span className="text-primary">Pro</span></span>
                </div>
-               <div className="text-slate-500 text-sm font-bold">
-                  © 2026 NavalDocs Pro - Software Enterprise para Engenharia Naval.
+               <div className="flex flex-col items-center md:items-start">
+                  <div className="text-slate-500 text-sm font-bold">
+                    © 2026 NavalDocs Pro - Software Enterprise para Engenharia Naval.
+                  </div>
+                  <div className="flex items-center gap-2 mt-2 px-3 py-1 bg-white/5 border border-white/10 rounded-lg">
+                    <CheckCircle className="h-3 w-3 text-emerald-500" />
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Enterprise Edition Sealed</span>
+                  </div>
                </div>
                <div className="flex gap-6">
                   <Link to="/status" className="text-xs font-black text-slate-500 hover:text-white transition-colors">STATUS</Link>
