@@ -201,6 +201,10 @@ export class DocumentAutomationEngine {
           .eq('id', processId);
         
         await this.logEvent(processId, 'status_changed', `Automação: Status alterado para ${newStatus}`);
+        toast.info(`Processo avançou para: ${newStatus}`, {
+          description: "A IA identificou novos documentos e dados conformes.",
+          icon: "🚀"
+        });
       }
 
       return {
