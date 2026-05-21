@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { BackButton } from "@/components/BackButton";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { useTelemetry } from "@/hooks/useTelemetry";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -43,6 +44,7 @@ export const AdminCompaniesRoute = createFileRoute("/admin/companies")({
 function AdminLayout() {
   const { profile, loading } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  useTelemetry("Admin Portal");
   console.log("ADMIN_ENTERPRISE_READY");
   console.log("BILLING_ADMIN_READY");
   console.log("STORAGE_ADMIN_READY");
