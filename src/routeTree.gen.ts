@@ -49,6 +49,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as DebugSystemRouteImport } from './routes/debug.system'
 import { Route as DebugAuthRouteImport } from './routes/debug.auth'
+import { Route as DashboardSecurityRouteImport } from './routes/dashboard.security'
 import { Route as DashboardDocumentsBaseRouteImport } from './routes/dashboard/documents-base'
 import { Route as DashboardDocumentCenterRouteImport } from './routes/dashboard.document-center'
 import { Route as DashboardDeadlinesRouteImport } from './routes/dashboard.deadlines'
@@ -272,6 +273,11 @@ const DebugAuthRoute = DebugAuthRouteImport.update({
   path: '/debug/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardSecurityRoute = DashboardSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardDocumentsBaseRoute = DashboardDocumentsBaseRouteImport.update({
   id: '/documents-base',
   path: '/documents-base',
@@ -442,6 +448,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/dashboard/security': typeof DashboardSecurityRoute
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
@@ -504,6 +511,7 @@ export interface FileRoutesByTo {
   '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/dashboard/security': typeof DashboardSecurityRoute
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
@@ -569,6 +577,7 @@ export interface FileRoutesById {
   '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
+  '/dashboard/security': typeof DashboardSecurityRoute
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
   '/processes/$id': typeof ProcessesIdRoute
@@ -635,6 +644,7 @@ export interface FileRouteTypes {
     | '/dashboard/deadlines'
     | '/dashboard/document-center'
     | '/dashboard/documents-base'
+    | '/dashboard/security'
     | '/debug/auth'
     | '/debug/system'
     | '/processes/$id'
@@ -697,6 +707,7 @@ export interface FileRouteTypes {
     | '/dashboard/deadlines'
     | '/dashboard/document-center'
     | '/dashboard/documents-base'
+    | '/dashboard/security'
     | '/debug/auth'
     | '/debug/system'
     | '/processes/$id'
@@ -761,6 +772,7 @@ export interface FileRouteTypes {
     | '/dashboard/deadlines'
     | '/dashboard/document-center'
     | '/dashboard/documents-base'
+    | '/dashboard/security'
     | '/debug/auth'
     | '/debug/system'
     | '/processes/$id'
@@ -1095,6 +1107,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DebugAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/security': {
+      id: '/dashboard/security'
+      path: '/security'
+      fullPath: '/dashboard/security'
+      preLoaderRoute: typeof DashboardSecurityRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/documents-base': {
       id: '/dashboard/documents-base'
       path: '/documents-base'
@@ -1303,6 +1322,7 @@ interface DashboardRouteChildren {
   DashboardDeadlinesRoute: typeof DashboardDeadlinesRoute
   DashboardDocumentCenterRoute: typeof DashboardDocumentCenterRoute
   DashboardDocumentsBaseRoute: typeof DashboardDocumentsBaseRoute
+  DashboardSecurityRoute: typeof DashboardSecurityRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
@@ -1311,6 +1331,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardDeadlinesRoute: DashboardDeadlinesRoute,
   DashboardDocumentCenterRoute: DashboardDocumentCenterRoute,
   DashboardDocumentsBaseRoute: DashboardDocumentsBaseRoute,
+  DashboardSecurityRoute: DashboardSecurityRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 
@@ -1377,3 +1398,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
