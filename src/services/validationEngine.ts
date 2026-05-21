@@ -127,18 +127,46 @@ export class DocumentValidationEngine {
 
   static fillPlaceholder(content: string, data: any): string {
     let filled = content;
+    
+    // Mapeamento abrangente conforme solicitação
     const mappings: any = {
+      // Padrão antigo (retrocompatibilidade)
       customer_name: data.customer?.name,
       customer_cpf: data.customer?.cpf_cnpj,
       vessel_name: data.vessel?.name,
       vessel_id: data.vessel?.tie || data.vessel?.registration_number,
       company_name: data.company?.name || "NavalDocs Pro",
-      process_type: data.process_type
+      process_type: data.process_type,
+      
+      // Novo padrão amigável solicitado pelo usuário
+      "cliente.nome": data.customer?.name,
+      "cliente.cpf": data.customer?.cpf_cnpj,
+      "cliente.email": data.customer?.email,
+      "embarcacao.nome": data.vessel?.name,
+      "embarcacao.inscricao": data.vessel?.tie || data.vessel?.registration_number,
+      "embarcacao.tipo": data.vessel?.vessel_type,
+      "embarcacao.atividade": data.vessel?.activity,
+      "embarcacao.ab": data.vessel?.gross_tonnage,
+      "motor.numero_serie": data.vessel?.engine_serial || "[NÚMERO SÉRIE MOTOR PENDENTE]",
+      "processo.numero": data.id?.substring(0, 8).toUpperCase(),
+      "empresa.nome": data.company?.name || "NavalDocs Pro",
+      "engenheiro.nome": data.engineer?.name || "Eng. Ricardo Almeida",
+      "engenheiro.crea": data.engineer?.crea || "CREA/SC 123456-D",
+      "data_atual": new Date().toLocaleDateString('pt-BR'),
+      "current_date": new Date().toLocaleDateString('pt-BR')
     };
 
+    // Substituir placeholders {{chave}}
     Object.keys(mappings).forEach(key => {
-      const value = mappings[key] || `[${key.toUpperCase()} PENDENTE]`;
-      filled = filled.replace(new RegExp(`{{${key}}}`, 'g'), value);
+      const value = mappings[key];
+      const placeholder = new RegExp(`{{${key}}}`, 'g');
+      
+      if (value !== undefined && value !== null) {
+        filled = filled.replace(placeholder, value);
+      } else {
+        // Se não houver dado, marcar como pendente para destaque visual
+        filled = filled.replace(placeholder, `[${key.toUpperCase()} PENDENTE]`);
+      }
     });
 
     return filled;
