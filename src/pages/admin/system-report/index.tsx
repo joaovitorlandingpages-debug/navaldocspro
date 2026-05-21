@@ -7,7 +7,7 @@ import {
   Tablet, ArrowRight, Activity, Search,
   Lock, LayoutDashboard, FileCheck, ClipboardList,
   PenTool, FolderKanban, Star, AlertTriangle,
-  History, Settings, BarChart3, Cloud
+  History, Settings, BarChart3, Cloud, Globe, CreditCard
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -228,8 +228,8 @@ export default function SystemReport() {
                          <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Status</th>
                       </tr>
                    </thead>
-                   <tbody className="divide-y divide-slate-50">
-                      {templates?.slice(0, 15).map((t, i) => (
+                  <tbody className="divide-y divide-slate-50">
+                      {templates?.slice(0, 15).map((t: any, i: number) => (
                         <tr key={i} className="hover:bg-slate-50/50 transition-colors">
                            <td className="px-6 py-4 text-[11px] font-bold text-navy uppercase">{t.name}</td>
                            <td className="px-6 py-4">
@@ -273,7 +273,7 @@ export default function SystemReport() {
                       </tr>
                    </thead>
                    <tbody className="divide-y divide-slate-50">
-                      {processTypes?.map((pt, i) => (
+                      {processTypes?.map((pt: any, i: number) => (
                         <tr key={i} className="hover:bg-slate-50/50 transition-colors">
                            <td className="px-6 py-4 text-[11px] font-bold text-navy uppercase">{pt.name}</td>
                            <td className="px-6 py-4 text-right">
