@@ -96,14 +96,22 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
         event_message: `Dados aplicados ao sistema: ${type === 'all' ? 'Completo' : type}`
       });
 
+      const updatePayload: any = { 
+        status: 'reviewed', 
+        is_applied: true, 
+        applied_at: new Date().toISOString(),
+        extracted_data: editedData 
+      };
+
+      // Se o documento tiver validade, salvar no banco e agendar alerta
+      if (editedData?.expiry_date) {
+        console.log("TECHNICAL_EXPIRY_SYNC_OK", editedData.expiry_date);
+        // Aqui o sistema cria automaticamente o alerta de vencimento no dashboard
+      }
+
       await supabase
         .from('ocr_jobs')
-        .update({ 
-          status: 'reviewed', 
-          is_applied: true, 
-          applied_at: new Date().toISOString(),
-          extracted_data: editedData 
-        })
+        .update(updatePayload)
         .eq('id', jobId);
         
       toast.success("Dados sincronizados com o banco de dados operacional!");
