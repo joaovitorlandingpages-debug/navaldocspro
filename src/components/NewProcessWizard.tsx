@@ -354,7 +354,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                 {vessels.map((v) => (
                   <button
                     key={v.id}
-                    onClick={() => setFormData({ ...formData, vessel: v.name, vesselId: v.id })}
+                    onClick={() => {
+                      setFormData({ ...formData, vessel: v.name, vesselId: v.id });
+                      console.log("FORM_STATE_OK", { vessel: v.name, vesselId: v.id });
+                    }}
+
                     className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${
                       formData.vesselId === v.id ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
                     }`}
