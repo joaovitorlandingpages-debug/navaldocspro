@@ -2,12 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { 
   FileText, Search, Plus, Download, Eye, 
   Filter, Tag, LayoutGrid, List, MoreVertical, X,
-  Zap, Cpu, Loader2, Calendar, User as UserIcon
+  Zap, Cpu, Loader2, Calendar, User as UserIcon,
+  Archive, FolderPlus
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { SmartOCR } from "@/components/SmartOCR";
 import { useDocuments } from "@/hooks/useDocuments";
+import { EmptyState } from "@/components/EmptyState";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
