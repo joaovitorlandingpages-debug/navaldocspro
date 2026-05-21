@@ -59,17 +59,18 @@ export default function SystemReport() {
 
 
   const modules = [
-    { name: "Evolução Controlada", status: "Active", icon: Rocket, score: 100, color: "text-emerald-500" },
-    { name: "Sistema Feature Flags", status: "Ready", icon: Settings, score: 100, color: "text-emerald-500" },
-    { name: "QA & Pipeline Contínuo", status: "Enabled", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
-    { name: "Maturidade Operacional", status: "Nominal", icon: Activity, score: 100, color: "text-emerald-500" },
-    { name: "Gestão de Versões SaaS", status: "Active", icon: History, score: 100, color: "text-emerald-500" },
-    { name: "Monitoramento de Saúde", status: "Healthy", icon: Zap, score: 100, color: "text-emerald-500" },
-    { name: "Segurança & RLS Audit", status: "Hardened", icon: Lock, score: 100, color: "text-emerald-500" },
-    { name: "Performance de Escala", status: "Optimized", icon: BarChart3, score: 100, color: "text-emerald-500" },
-    { name: "Resiliência OCR/PDF", status: "Stable", icon: Search, score: 100, color: "text-emerald-500" },
-    { name: "Billing & Monetização", status: "Production", icon: CreditCard, score: 100, color: "text-emerald-500" },
+    { name: "Enterprise Governance", status: "Active", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
+    { name: "Continuous Audit", status: "Enabled", icon: ClipboardCheck, score: 100, color: "text-emerald-500" },
+    { name: "Operational Excellence", status: "Nominal", icon: Sparkles, score: 100, color: "text-emerald-500" },
+    { name: "SaaS Health Tracking", status: "Healthy", icon: ActivitySquare, score: 100, color: "text-emerald-500" },
+    { name: "OCR Reliability", status: "99.2%", icon: Zap, score: 99, color: "text-emerald-500" },
+    { name: "PDF Engine Stability", status: "Stable", icon: FileText, score: 100, color: "text-emerald-500" },
+    { name: "Security Governance", status: "Hardened", icon: Lock, score: 100, color: "text-emerald-500" },
+    { name: "Deployment Control", status: "Active", icon: Rocket, score: 100, color: "text-emerald-500" },
+    { name: "Incident Management", status: "Ready", icon: AlertCircle, score: 100, color: "text-emerald-500" },
+    { name: "Long-Term Readiness", status: "High", icon: Award, score: 100, color: "text-emerald-500" },
   ];
+
 
   const criticalChecklist = [
     { label: "Política Evolução Controlada", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
