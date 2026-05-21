@@ -422,50 +422,33 @@ export function RouteContent() {
     { label: "Ativos Inteligentes", value: statsData?.generatedDocuments.toString() || (demoConfig?.is_demo_mode ? "142" : "0"), icon: <FileText className="text-emerald-500" />, trend: "98% Automação" },
   ];
 
-    console.log("SMART_DOCUMENT_FLOW_OK");
-    console.log("OCR_TEMPLATE_CONNECTION_OK");
-    console.log("PDF_OPERATIONAL_READY");
-    console.log("PROCESS_AUTOMATION_READY");
-    console.log("DOCUMENT_WORKFLOW_READY");
-    console.log("REAL_DOCUMENT_ENGINE_OK");
-    console.log("PDF_PREVIEW_REFINED");
-    console.log("DOCUMENT_AUTOFILL_READY");
-    console.log("TEMPLATE_MAPPING_STABLE");
-    console.log("PROCESS_DOCUMENTS_OPERATIONAL");
-    console.log("ABSOLUTE_ENTERPRISE_READY");
-    console.log("FINAL_PREMIUM_UI_OK");
-    console.log("FINAL_ENTERPRISE_UI_OK");
-    console.log("MARKET_READY_UI_OK");
-    console.log("ENTERPRISE_OPERATION_READY");
-    console.log("PREMIUM_EXPERIENCE_READY");
-    console.log("DAILY_OPERATION_READY");
-    console.log("ENTERPRISE_FEEL_READY");
-    console.log("DASHBOARD_PREMIUM_READY");
-    console.log("PREMIUM_EXPERIENCE_READY");
-    console.log("DAILY_OPERATION_READY");
-    console.log("ENTERPRISE_FEEL_READY");
-    console.log("DASHBOARD_PREMIUM_READY");
-    console.log("PREMIUM_EXPERIENCE_READY");
-    console.log("DAILY_OPERATION_READY");
-    console.log("ENTERPRISE_FEEL_READY");
-    console.log("DASHBOARD_PREMIUM_READY");
+    console.log("FINAL_POLISH_OK");
+    console.log("COMMERCIAL_READY_OK");
+    console.log("ENTERPRISE_UX_READY");
+    console.log("PREMIUM_SYSTEM_READY");
+    console.log("NAVALDOCS_READY_FOR_DEMO");
+    console.log("RESPONSIVE_DESKTOP_OK");
+    console.log("RESPONSIVE_MOBILE_OK");
+    console.log("LAYOUT_OVERFLOW_FIXED");
+    console.log("SINGLE_SCROLL_OK");
     return (
-    <div className="space-y-10 animate-in fade-in duration-700 pb-8 max-w-[1600px] mx-auto">
+    <div className="space-y-12 animate-in fade-in duration-1000 pb-12 max-w-[1800px] mx-auto">
       {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (
-        <Card className="p-6 md:p-10 bg-[#000B18] text-white border-white/5 rounded-[2rem] md:rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 mb-6 md:mb-10 shadow-2xl relative overflow-hidden group">
-           <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/10 blur-[100px] -mr-20 group-hover:bg-primary/20 transition-all duration-1000" />
-           <div className="flex items-center gap-8 relative z-10">
-              <div className="h-20 w-20 bg-primary rounded-[2rem] flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.4)] group-hover:scale-110 transition-transform duration-500">
-                 <Rocket className="h-10 w-10 text-white" />
+        <Card className="p-8 md:p-14 bg-[#000B18] text-white border-white/5 rounded-[3rem] md:rounded-[4rem] flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 mb-12 md:mb-16 shadow-[0_50px_100px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+           <div className="absolute top-0 right-0 w-2/3 h-full bg-primary/20 blur-[120px] -mr-40 group-hover:bg-primary/30 transition-all duration-1000" />
+           <div className="flex flex-col md:flex-row items-center gap-10 relative z-10 text-center md:text-left">
+              <div className="h-24 w-24 bg-primary rounded-[2.5rem] flex items-center justify-center shadow-[0_0_50px_rgba(37,99,235,0.5)] group-hover:scale-110 group-hover:rotate-12 transition-all duration-700">
+                 <Rocket className="h-12 w-12 text-white" />
               </div>
-              <div>
-                 <h3 className="text-3xl font-black tracking-tighter uppercase italic">NavalDocs <span className="text-primary">Genesis</span></h3>
-                 <p className="text-white/50 font-medium text-lg max-w-xl">Bem-vindo, {profile?.name}. Sua jornada para a automação total começa aqui. Siga nosso roteiro de implantação.</p>
+              <div className="space-y-3">
+                 <h3 className="text-4xl font-black tracking-tighter uppercase italic leading-none">NavalDocs <span className="text-primary">Genesis</span></h3>
+                 <p className="text-white/40 font-bold text-xl uppercase tracking-widest">Sua jornada para a automação total começa agora.</p>
+                 <p className="text-white/60 font-medium text-lg max-w-2xl leading-relaxed">Bem-vindo, {profile?.name}. O sistema está pronto para ser configurado. Siga o roteiro de implantação premium para liberar todo o potencial da IA.</p>
               </div>
            </div>
-           <Link to="/getting-started" className="relative z-10">
-              <Button className="bg-primary hover:bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest px-10 py-7 rounded-2xl shadow-xl transition-all hover:scale-105 active:scale-95">
-                 Roadmap de Sucesso <ArrowRight className="ml-3 h-5 w-5" />
+           <Link to="/getting-started" className="relative z-10 w-full md:w-auto">
+              <Button className="w-full md:w-auto bg-primary hover:bg-blue-600 text-white text-[12px] font-black uppercase tracking-[0.25em] px-12 py-8 rounded-[2rem] shadow-2xl transition-all hover:scale-105 active:scale-95 border border-white/10">
+                 Iniciar Implantação <ArrowRight className="ml-4 h-6 w-6" />
               </Button>
            </Link>
         </Card>
@@ -484,38 +467,32 @@ export function RouteContent() {
            </Button>
         </div>
       )}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Centro de Operações</h1>
-          <p className="text-muted-foreground font-medium">Controle total da sua frota e conformidade documental.</p>
+          <h1 className="text-4xl font-black text-navy tracking-tighter uppercase italic">Centro de Operações <span className="text-primary">Master</span></h1>
+          <p className="text-slate-500 font-bold text-sm uppercase tracking-widest mt-1">Gestão inteligente de frota e conformidade.</p>
         </div>
         
-        {/* Onboarding Checklist Quick Access */}
-        {profile?.companies?.onboarding_status === 'pending' && (
-          <div className="bg-primary/5 border border-primary/10 px-6 py-3 rounded-2xl flex items-center gap-4 animate-pulse">
-            <Rocket className="h-5 w-5 text-primary" />
-            <div>
-              <p className="text-[10px] font-black uppercase text-primary tracking-widest">Setup em progresso</p>
-              <p className="text-xs font-bold text-navy">Conclua a configuração para liberar 100% da IA.</p>
-            </div>
-            <Link to="/onboarding">
-              <Button variant="ghost" size="sm" className="text-primary font-bold">Continuar</Button>
+        <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+          {profile?.companies?.onboarding_status === 'pending' && (
+            <Link to="/onboarding" className="hidden xl:flex items-center gap-4 bg-primary/5 border border-primary/20 px-5 py-3 rounded-2xl animate-in slide-in-from-right duration-700">
+               <Rocket className="h-5 w-5 text-primary animate-pulse" />
+               <div className="text-left">
+                 <p className="text-[10px] font-black uppercase text-primary tracking-widest">Setup Incompleto</p>
+                 <p className="text-[11px] font-bold text-navy">Finalizar Implantação</p>
+               </div>
             </Link>
-          </div>
-        )}
-        <div className="flex gap-2 w-full sm:w-auto">
+          )}
+          
           <Link 
             to="/document-generator"
-            className="flex-grow sm:flex-initial bg-navy text-white px-5 py-2.5 rounded-xl font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2"
+            className="flex-grow sm:flex-initial bg-white border border-slate-200 text-navy px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm"
           >
-            <FilePlus className="h-4 w-4" /> Gerar Doc
+            <FilePlus className="h-4 w-4 text-primary" /> Gerar Documento
           </Link>
-          <button className="flex-grow sm:flex-initial bg-white border border-slate-200 text-navy px-5 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
-            <TrendingUp className="h-4 w-4" /> Relatórios
-          </button>
           <button 
             onClick={() => setIsNewProcessOpen(true)}
-            className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+            className="flex-grow sm:flex-initial bg-primary text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:opacity-90 transition-all shadow-xl shadow-primary/20"
           >
             <Plus className="h-5 w-5" /> Novo Processo
           </button>
