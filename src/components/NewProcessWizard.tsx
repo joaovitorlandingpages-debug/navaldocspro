@@ -589,10 +589,15 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             </div>
 
             <div className="pt-4 border-t border-slate-100">
-               <Button variant="outline" className="w-full h-12 rounded-xl border-dashed gap-2">
-                  <Plus className="h-4 w-4" /> Vincular nova embarcação
+               <Button 
+                 variant="outline" 
+                 className="w-full h-12 rounded-xl border-dashed gap-2"
+                 onClick={() => setIsQuickVesselOpen(true)}
+               >
+                  <Plus className="h-4 w-4" /> Criar nova embarcação rapidamente
                </Button>
             </div>
+
           </div>
         );
       case 4:
