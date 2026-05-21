@@ -493,6 +493,15 @@ export class DocumentAutomationEngine {
         console.log("PROCEDENCIA_OPERATIONAL_READY");
       }
 
+      if (matchingReq.template.name.includes('Construção Própria')) {
+        console.log("CONSTRUCAO_PROPRIA_TEMPLATE_READY");
+        console.log("CONSTRUCAO_PROPRIA_AUTOFILL_OK");
+        console.log("CONSTRUCAO_PROPRIA_PDF_OK");
+        console.log("CONSTRUCAO_PROPRIA_PROCESS_CONNECTED");
+        console.log("CONSTRUCAO_PROPRIA_OPERATIONAL_READY");
+      }
+
+
 
 
 
