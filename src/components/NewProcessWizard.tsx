@@ -981,7 +981,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
       {/* Modal de Criação Rápida de Cliente */}
       <Dialog open={isQuickClientOpen} onOpenChange={setIsQuickClientOpen}>
-        <DialogContent className="max-w-md p-8 bg-white border-none rounded-[2rem] shadow-2xl">
+        <DialogContent className="max-w-md w-[95vw] p-6 md:p-8 bg-white border-none rounded-[1.5rem] md:rounded-[2rem] shadow-2xl">
+
           <DialogHeader>
             <DialogTitle className="text-xl font-black text-navy uppercase tracking-tight">Novo Cliente Rápido</DialogTitle>
           </DialogHeader>
