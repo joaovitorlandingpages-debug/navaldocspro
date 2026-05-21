@@ -32,6 +32,7 @@ export const Route = createFileRoute("/admin")({
 function AdminLayout() {
   const { profile, loading } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  console.log("ADMIN_GLOBAL_PREMIUM_OK");
 
   if (loading) {
     return (
@@ -67,15 +68,21 @@ function AdminLayout() {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      {/* Admin Sidebar */}
+      {/* Admin Sidebar Premium */}
       <aside 
         className={`${
-          isSidebarOpen ? "w-64" : "w-20"
-        } transition-all duration-300 bg-slate-900 text-white flex flex-col z-50`}
+          isSidebarOpen ? "w-72" : "w-20"
+        } transition-all duration-500 bg-[#020D1D] text-white flex flex-col z-50 border-r border-white/5`}
       >
-        <div className="p-6 flex items-center gap-3 border-b border-white/5">
-          <ShieldCheck className="h-8 w-8 text-primary flex-shrink-0" />
-          {isSidebarOpen && <span className="font-bold text-xl tracking-tight uppercase">Admin Master</span>}
+        <div className="p-8 flex items-center gap-4 border-b border-white/5 bg-navy/20">
+          <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)]">
+             <ShieldCheck className="h-6 w-6 text-white" />
+          </div>
+          {isSidebarOpen && (
+            <div className="animate-in fade-in slide-in-from-left-2 duration-500">
+               <span className="font-black text-xl tracking-tighter uppercase italic">Master <span className="text-primary">Ops</span></span>
+            </div>
+          )}
         </div>
 
         <nav className="flex-grow mt-6 px-4 space-y-2">
@@ -183,19 +190,28 @@ export function AdminDashboardView() {
         </Badge>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         {stats.map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-            <h3 className="text-3xl font-black text-navy mt-2">{stat.value}</h3>
-            <p className="text-[10px] font-bold text-emerald-600 mt-2 uppercase">{stat.trend}</p>
+          <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:shadow-xl transition-all group overflow-hidden relative">
+            <div className="absolute -right-2 -top-2 h-16 w-16 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-700" />
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] relative z-10">{stat.label}</p>
+            <h3 className="text-3xl font-black text-navy mt-3 relative z-10 leading-none">{stat.value}</h3>
+            <div className="flex items-center gap-2 mt-4 relative z-10">
+               <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse" />
+               <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">{stat.trend}</p>
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-            <h4 className="font-black text-navy uppercase tracking-widest text-xs mb-6">Empresas em Onboarding</h4>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+         <div className="lg:col-span-2 bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.02)]">
+            <div className="flex justify-between items-center mb-8">
+               <h4 className="font-black text-navy uppercase tracking-[0.2em] text-[10px] flex items-center gap-3">
+                  <Building className="h-5 w-5 text-primary" /> Ativações Pendentes
+               </h4>
+               <Badge variant="secondary" className="bg-slate-50 text-slate-400 border-none font-black text-[9px] uppercase tracking-widest px-3 py-1.5">Aguardando Triagem</Badge>
+            </div>
             <div className="space-y-4">
                {companies?.filter((c: any) => c.onboarding_status === 'pending').slice(0, 3).map((company: any) => (
                  <div key={company.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">

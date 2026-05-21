@@ -6,7 +6,7 @@ import {
   Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
   Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft,
-  Briefcase, Boxes, LayoutGrid, FileSearch
+  Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight
 } from "lucide-react";
 import { useState, useEffect, Suspense, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -141,20 +141,34 @@ function DashboardLayout() {
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Sidebar */}
+      {/* Sidebar Premium */}
       <aside 
         className={`${
-          isSidebarOpen ? "w-64" : "w-20"
-        } transition-all duration-300 bg-navy text-white flex flex-col z-50`}
+          isSidebarOpen ? "w-72" : "w-20"
+        } transition-all duration-500 bg-[#000B18] text-white flex flex-col z-50 border-r border-white/5 shadow-[20px_0_40px_rgba(0,0,0,0.2)]`}
       >
-        <div className="p-6 flex flex-col gap-1 border-b border-white/5">
-          <div className="flex items-center gap-3">
-            <Anchor className="h-8 w-8 text-primary flex-shrink-0" />
-            {isSidebarOpen && <span className="font-bold text-xl tracking-tight text-white">NavalDocs</span>}
+        <div className="p-8 flex flex-col gap-1">
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)]">
+               <Anchor className="h-6 w-6 text-white" />
+            </div>
+            {isSidebarOpen && (
+              <div className="animate-in fade-in slide-in-from-left-2 duration-500">
+                <span className="font-black text-2xl tracking-tighter text-white uppercase italic">NavalDocs <span className="text-primary">Pro</span></span>
+              </div>
+            )}
           </div>
           {isSidebarOpen && (
-            <div className="mt-2 px-1">
-               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Ambiente Enterprise</p>
-               <p className="text-[10px] font-bold text-white/40 truncate">{profile?.companies?.name || "Empresa..."}</p>
+            <div className="mt-6 px-1 py-3 bg-white/5 rounded-2xl border border-white/5 animate-in zoom-in-95 duration-500">
+               <div className="flex items-center gap-3 px-3">
+                  <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-black text-[10px]">
+                     {profile?.companies?.name?.substring(0, 2).toUpperCase() || "ND"}
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Licença Enterprise</p>
+                    <p className="text-[10px] font-bold text-white/60 truncate">{profile?.companies?.name || "Empresa..."}</p>
+                  </div>
+               </div>
             </div>
           )}
         </div>
@@ -162,16 +176,16 @@ function DashboardLayout() {
         <nav className="flex-grow mt-6 px-4 space-y-6 overflow-y-auto custom-scrollbar">
           {navItems.map((group) => (
             <div key={group.group} className="space-y-1">
-              {isSidebarOpen && <p className="px-3 mb-2 text-[10px] font-black text-primary/40 uppercase tracking-widest">{group.group}</p>}
+              {isSidebarOpen && <p className="px-4 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">{group.group}</p>}
               {group.items.map((item) => (
                 <Link 
                   key={item.name}
                   to={item.path}
-                  activeProps={{ className: "bg-primary text-white shadow-lg shadow-primary/20 border-primary" }}
-                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 border border-transparent transition-all group/item"
+                  activeProps={{ className: "bg-primary text-white shadow-[0_10px_20px_rgba(37,99,235,0.3)] border-white/10" }}
+                  className="flex items-center gap-4 p-4 rounded-[1.25rem] hover:bg-white/5 border border-transparent transition-all group/item"
                 >
-                  <div className="group-hover/item:scale-110 transition-transform">{item.icon}</div>
-                  {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-wider">{item.name}</span>}
+                  <div className="group-hover/item:scale-110 group-hover/item:text-primary transition-all duration-300">{item.icon}</div>
+                  {isSidebarOpen && <span className="text-[11px] font-black uppercase tracking-widest leading-none">{item.name}</span>}
                 </Link>
               ))}
             </div>
@@ -226,56 +240,63 @@ function DashboardLayout() {
                 </Link>
              </div>
            )}
-            <div className="h-auto py-4 flex flex-col sm:flex-row items-center justify-between px-8 border-b border-slate-50 gap-4">
-              <div className="flex items-center gap-6 flex-grow w-full sm:w-auto">
-                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-100 rounded-lg lg:block hidden">
-                   <Menu className="h-5 w-5" />
+            <div className="h-auto py-5 flex flex-col sm:flex-row items-center justify-between px-10 border-b border-slate-100 gap-6">
+              <div className="flex items-center gap-8 flex-grow w-full sm:w-auto">
+                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl lg:block hidden transition-all shadow-sm">
+                   <Menu className="h-5 w-5 text-navy" />
                  </button>
                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                        <BackButton />
-                       <div className="h-4 w-px bg-slate-200 mx-1" />
+                       <div className="h-6 w-px bg-slate-200 mx-1" />
                        <Breadcrumbs />
                     </div>
                  </div>
               </div>
               
-              <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
-                 <div className="relative max-w-xs w-full hidden lg:block">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <div className="flex items-center gap-6 w-full sm:w-auto justify-end">
+                 <div className="relative max-w-sm w-full hidden lg:block group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                     <input 
-                      placeholder="Busca Inteligente..." 
-                      className="w-full pl-10 pr-4 py-2 bg-slate-100 rounded-full text-sm border-transparent focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                      placeholder="Busca Global Inteligente..." 
+                      className="w-full pl-12 pr-6 py-3 bg-slate-50 rounded-2xl text-[11px] font-black uppercase tracking-widest border border-transparent focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all"
                     />
                  </div>
 
-                 <button 
-                   onClick={() => setIsNewProcessOpen(true)}
-                   className="flex items-center gap-2 bg-navy text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-navy/90 transition-all shadow-lg shadow-navy/10 whitespace-nowrap"
-                 >
-                   <Plus className="h-4 w-4 text-primary" /> Novo Processo
-                 </button>
-   
-                 <div className="flex items-center gap-4">
-                    <button 
-                      onClick={() => setNotificationsOpen(true)}
-                      className="relative p-2 hover:bg-slate-100 rounded-full transition-all active:scale-95"
-                    >
-                        <Bell className="h-5 w-5 text-slate-600" />
-                        <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full animate-ping" />
-                        <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full" />
-                    </button>
-                   <div className="h-8 w-px bg-slate-200" />
-                   <div className="flex items-center gap-3">
-                       <div className="text-right hidden sm:block">
-                           <p className="text-xs font-bold text-navy leading-none">{profile?.name || "Usuário"}</p>
-                           <p className="text-[10px] text-muted-foreground uppercase tracking-tighter mt-1">{subscription?.plan?.name || "Free Tier"}</p>
-                       </div>
-                       <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
-                           {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
-                       </div>
-                   </div>
-                 </div>
+                  <button 
+                    onClick={() => setIsNewProcessOpen(true)}
+                    className="flex items-center gap-3 bg-navy text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-[0_10px_25px_rgba(0,11,24,0.15)] whitespace-nowrap group"
+                  >
+                    <div className="h-5 w-5 bg-primary rounded-lg flex items-center justify-center group-hover:rotate-90 transition-transform duration-500">
+                      <Plus className="h-4 w-4 text-white" />
+                    </div>
+                    Novo Processo
+                  </button>
+    
+                  <div className="flex items-center gap-6">
+                     <button 
+                       onClick={() => setNotificationsOpen(true)}
+                       className="relative p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all active:scale-95 border border-transparent hover:border-slate-200"
+                     >
+                         <Bell className="h-5 w-5 text-navy" />
+                         <span className="absolute top-2.5 right-2.5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-white shadow-sm animate-ping" />
+                         <span className="absolute top-2.5 right-2.5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-white" />
+                     </button>
+                    <div className="h-10 w-px bg-slate-100" />
+                    <div className="flex items-center gap-4">
+                        <div className="text-right hidden xl:block">
+                            <p className="text-[11px] font-black text-navy leading-none uppercase tracking-widest">{profile?.name || "Operador Master"}</p>
+                            <div className="flex items-center justify-end gap-1.5 mt-1.5">
+                               <Badge variant="outline" className="text-[8px] font-black border-primary/20 text-primary bg-primary/5 uppercase tracking-widest px-2">{subscription?.plan?.name || "Professional"}</Badge>
+                               <span className="h-1 w-1 bg-slate-300 rounded-full" />
+                               <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Ativo</p>
+                            </div>
+                        </div>
+                        <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-navy to-slate-800 flex items-center justify-center text-white font-black text-xs shadow-lg border-2 border-white">
+                            {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
+                        </div>
+                    </div>
+                  </div>
               </div>
             </div>
          </header>
@@ -362,32 +383,35 @@ export function RouteContent() {
   });
 
   const stats = [
-    { label: "Clientes Ativos", value: statsData?.activeCustomers.toString() || (demoConfig?.is_demo_mode ? "12" : "0"), icon: <Users className="text-blue-600" />, trend: statsData?.trends.customers || "+5%" },
-    { label: "Embarcações", value: statsData?.totalVessels.toString() || (demoConfig?.is_demo_mode ? "24" : "0"), icon: <Ship className="text-cyan-600" />, trend: statsData?.trends.vessels || "+3%" },
-    { label: "Processos em Aberto", value: statsData?.openProcesses.toString() || (demoConfig?.is_demo_mode ? "18" : "0"), icon: <ClipboardList className="text-amber-600" />, trend: statsData?.trends.processes || "Estável" },
-    { label: "Documentos Gerados", value: statsData?.generatedDocuments.toString() || (demoConfig?.is_demo_mode ? "142" : "0"), icon: <FileText className="text-green-600" />, trend: statsData?.trends.documents || "+15%" },
+    { label: "Clientes Ativos", value: statsData?.activeCustomers.toString() || (demoConfig?.is_demo_mode ? "12" : "0"), icon: <Users className="text-primary" />, trend: statsData?.trends.customers || "+5.2%" },
+    { label: "Embarcações", value: statsData?.totalVessels.toString() || (demoConfig?.is_demo_mode ? "24" : "0"), icon: <Ship className="text-cyan-500" />, trend: statsData?.trends.vessels || "+3.1%" },
+    { label: "Processos Ativos", value: statsData?.openProcesses.toString() || (demoConfig?.is_demo_mode ? "18" : "0"), icon: <ClipboardList className="text-amber-500" />, trend: statsData?.trends.processes || "Operacional" },
+    { label: "Ativos Digitais", value: statsData?.generatedDocuments.toString() || (demoConfig?.is_demo_mode ? "142" : "0"), icon: <FileText className="text-emerald-500" />, trend: statsData?.trends.documents || "+15.4%" },
   ];
 
     console.log("ONBOARDING_READY");
     console.log("PREMIUM_ONBOARDING_OK");
     console.log("PREMIUM_EXPERIENCE_READY");
     console.log("DAILY_OPERATION_READY");
+    console.log("ENTERPRISE_FEEL_READY");
+    console.log("DASHBOARD_PREMIUM_READY");
     return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="space-y-10 animate-in fade-in duration-700 pb-20 max-w-[1600px] mx-auto">
       {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (
-        <Card className="p-8 bg-gradient-to-r from-primary/10 to-transparent border-primary/20 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
-           <div className="flex items-center gap-6">
-              <div className="h-16 w-16 bg-primary rounded-3xl flex items-center justify-center shadow-xl shadow-primary/20">
-                 <Rocket className="h-8 w-8 text-white" />
+        <Card className="p-10 bg-[#000B18] text-white border-white/5 rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-8 mb-10 shadow-2xl relative overflow-hidden group">
+           <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/10 blur-[100px] -mr-20 group-hover:bg-primary/20 transition-all duration-1000" />
+           <div className="flex items-center gap-8 relative z-10">
+              <div className="h-20 w-20 bg-primary rounded-[2rem] flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.4)] group-hover:scale-110 transition-transform duration-500">
+                 <Rocket className="h-10 w-10 text-white" />
               </div>
               <div>
-                 <h3 className="text-xl font-black text-navy uppercase tracking-tight">Olá, {profile?.name}! Vamos começar?</h3>
-                 <p className="text-slate-500 font-medium">Sua conta está pronta. Siga os primeiros passos para automatizar sua operação.</p>
+                 <h3 className="text-3xl font-black tracking-tighter uppercase italic">NavalDocs <span className="text-primary">Genesis</span></h3>
+                 <p className="text-white/50 font-medium text-lg max-w-xl">Bem-vindo, {profile?.name}. Sua jornada para a automação total começa aqui. Siga nosso roteiro de implantação.</p>
               </div>
            </div>
-           <Link to="/getting-started">
-              <Button className="bg-navy hover:bg-slate-800 text-[10px] font-black uppercase tracking-widest px-8 py-6 rounded-2xl shadow-xl">
-                 Guia de Implantação <ChevronRight className="ml-2 h-4 w-4 text-primary" />
+           <Link to="/getting-started" className="relative z-10">
+              <Button className="bg-primary hover:bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest px-10 py-7 rounded-2xl shadow-xl transition-all hover:scale-105 active:scale-95">
+                 Roadmap de Sucesso <ArrowRight className="ml-3 h-5 w-5" />
               </Button>
            </Link>
         </Card>

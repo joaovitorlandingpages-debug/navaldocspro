@@ -2,12 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { 
   FileText, Search, Plus, Download, Eye, 
   Filter, Tag, LayoutGrid, List, MoreVertical, X,
-  Zap, Cpu, Loader2, Calendar, User as UserIcon
+  Zap, Cpu, Loader2, Calendar, User as UserIcon,
+  Archive, FolderPlus
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { SmartOCR } from "@/components/SmartOCR";
 import { useDocuments } from "@/hooks/useDocuments";
+import { EmptyState } from "@/components/EmptyState";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -108,10 +110,13 @@ function Documents() {
             <p className="text-slate-500 font-medium">Carregando documentos...</p>
           </div>
         ) : docs.length === 0 ? (
-          <div className="text-center py-20 border-2 border-dashed border-slate-100 rounded-3xl">
-             <FileText className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-             <p className="text-slate-400 font-medium">Nenhum documento encontrado.</p>
-          </div>
+          <EmptyState 
+            icon={Archive}
+            title="Biblioteca Vazia"
+            description="Você ainda não possui documentos gerados ou enviados para esta categoria. Comece criando um novo documento ou usando o OCR."
+            actionLabel="Novo Documento"
+            onAction={() => setIsUploadOpen(true)}
+          />
         ) : viewMode === "grid" ? (
           <div className="grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {docs.map((doc: any) => (

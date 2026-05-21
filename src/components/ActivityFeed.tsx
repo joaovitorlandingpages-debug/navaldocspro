@@ -44,15 +44,21 @@ export function ActivityFeed() {
   };
 
   return (
-    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-      <div className="p-6 border-b flex justify-between items-center bg-slate-50/50">
-        <h3 className="font-bold text-navy flex items-center gap-2 uppercase text-xs tracking-widest">
-          <Clock className="h-5 w-5 text-primary" /> Centro de Atividades
-        </h3>
+    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden">
+      <div className="p-8 border-b flex justify-between items-center bg-slate-50/30">
+        <div>
+          <h3 className="font-black text-navy flex items-center gap-3 uppercase text-[10px] tracking-[0.2em]">
+            <Clock className="h-5 w-5 text-primary" /> Torre de Controle Live
+          </h3>
+          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Status operacional em tempo real</p>
+        </div>
         {isLoading ? (
-          <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
+          <Loader2 className="h-4 w-4 animate-spin text-primary/40" />
         ) : (
-          <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full border border-emerald-100">
+            <span className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+            <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Live</span>
+          </div>
         )}
       </div>
       
