@@ -240,26 +240,26 @@ function DashboardLayout() {
                 </Link>
              </div>
            )}
-            <div className="h-auto py-4 flex flex-col sm:flex-row items-center justify-between px-8 border-b border-slate-50 gap-4">
-              <div className="flex items-center gap-6 flex-grow w-full sm:w-auto">
-                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-100 rounded-lg lg:block hidden">
-                   <Menu className="h-5 w-5" />
+            <div className="h-auto py-5 flex flex-col sm:flex-row items-center justify-between px-10 border-b border-slate-100 gap-6">
+              <div className="flex items-center gap-8 flex-grow w-full sm:w-auto">
+                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl lg:block hidden transition-all shadow-sm">
+                   <Menu className="h-5 w-5 text-navy" />
                  </button>
                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                        <BackButton />
-                       <div className="h-4 w-px bg-slate-200 mx-1" />
+                       <div className="h-6 w-px bg-slate-200 mx-1" />
                        <Breadcrumbs />
                     </div>
                  </div>
               </div>
               
-              <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
-                 <div className="relative max-w-xs w-full hidden lg:block">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <div className="flex items-center gap-6 w-full sm:w-auto justify-end">
+                 <div className="relative max-w-sm w-full hidden lg:block group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                     <input 
-                      placeholder="Busca Inteligente..." 
-                      className="w-full pl-10 pr-4 py-2 bg-slate-100 rounded-full text-sm border-transparent focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                      placeholder="Busca Global Inteligente..." 
+                      className="w-full pl-12 pr-6 py-3 bg-slate-50 rounded-2xl text-[11px] font-black uppercase tracking-widest border border-transparent focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all"
                     />
                  </div>
 
