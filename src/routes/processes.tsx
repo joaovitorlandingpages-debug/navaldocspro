@@ -29,6 +29,7 @@ function Processes() {
 
 
   useEffect(() => {
+    console.log("PROCESS_CENTER_FINAL_OK");
     console.log("DAILY_OPERATION_READY");
     console.log("PROCESS_CENTER_REFINED");
     const fetchProcesses = async () => {
