@@ -294,22 +294,53 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div className="space-y-2 md:col-span-2 group">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nome Completo</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nome / Razão Social</Label>
                     <Input 
-                      value={editedData?.name || editedData?.person?.nome || ''} 
+                      value={editedData?.name || editedData?.company_name || editedData?.person?.nome || ''} 
                       onChange={(e) => setEditedData({...editedData, name: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy px-4" 
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">CPF / Tax ID</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">CPF / CNPJ</Label>
                     <Input 
-                      value={editedData?.doc_number || editedData?.person?.cpf || ''} 
-                      onChange={(e) => setEditedData({...editedData, doc_number: e.target.value})}
+                      value={editedData?.cpf || editedData?.cnpj || editedData?.doc_number || ''} 
+                      onChange={(e) => setEditedData({...editedData, cpf: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
                   </div>
+
+                  {job?.identified_document_type === 'RG' && (
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Número do RG</Label>
+                      <Input 
+                        value={editedData?.rg_number || ''} 
+                        onChange={(e) => setEditedData({...editedData, rg_number: e.target.value})}
+                        className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
+                      />
+                    </div>
+                  )}
+
+                  {job?.identified_document_type === 'CNH' && (
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Número CNH / Validade</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          value={editedData?.cnh_number || ''} 
+                          placeholder="Número"
+                          onChange={(e) => setEditedData({...editedData, cnh_number: e.target.value})}
+                          className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy flex-1" 
+                        />
+                        <Input 
+                          value={editedData?.expiry_date || ''} 
+                          placeholder="Validade"
+                          onChange={(e) => setEditedData({...editedData, expiry_date: e.target.value})}
+                          className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy w-32" 
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Data de Nascimento</Label>
@@ -322,13 +353,42 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Endereço Residencial</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Endereço Residencial Completo</Label>
                     <Input 
                       value={editedData?.address || editedData?.person?.endereco || ''} 
                       onChange={(e) => setEditedData({...editedData, address: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
                   </div>
+                  
+                  {(editedData?.city || editedData?.state || editedData?.zip) && (
+                    <div className="grid grid-cols-3 gap-4 md:col-span-2">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Cidade</Label>
+                        <Input 
+                          value={editedData?.city || ''} 
+                          onChange={(e) => setEditedData({...editedData, city: e.target.value})}
+                          className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white h-12 font-bold text-navy" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">UF</Label>
+                        <Input 
+                          value={editedData?.state || ''} 
+                          onChange={(e) => setEditedData({...editedData, state: e.target.value})}
+                          className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white h-12 font-bold text-navy" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">CEP</Label>
+                        <Input 
+                          value={editedData?.zip || ''} 
+                          onChange={(e) => setEditedData({...editedData, zip: e.target.value})}
+                          className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white h-12 font-bold text-navy" 
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
             </TabsContent>
