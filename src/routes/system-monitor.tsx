@@ -27,12 +27,12 @@ function SystemMonitor() {
   }
 
   const services = [
-    { name: "Supabase Database", status: "online", latency: "24ms", icon: <Database /> },
-    { name: "OCR Engine (Google Vision)", status: "online", latency: "145ms", icon: <Zap /> },
-    { name: "Storage Service", status: "online", latency: "18ms", icon: <HardDrive /> },
-    { name: "Mercado Pago Gateway", status: "online", latency: "210ms", icon: <CreditCard /> },
-    { name: "PDF Generator Service", status: "online", latency: "450ms", icon: <Cpu /> },
-    { name: "Edge Functions", status: "online", latency: "56ms", icon: <Globe /> },
+    { name: "Database & Storage", status: "online", latency: "24ms", health: "100%", icon: <Database /> },
+    { name: "OCR Advanced Engine", status: "online", latency: "145ms", health: "100%", icon: <Zap /> },
+    { name: "PDF & Document Logic", status: "online", latency: "410ms", health: "100%", icon: <Cpu /> },
+    { name: "Billing & Subscriptions", status: "online", latency: "112ms", health: "100%", icon: <CreditCard /> },
+    { name: "Webhooks & API Jobs", status: "online", latency: "56ms", health: "100%", icon: <Globe /> },
+    { name: "Recovery System", status: "active", latency: "12ms", health: "100%", icon: <RefreshCw /> },
   ];
 
   return (
@@ -62,8 +62,8 @@ function SystemMonitor() {
              <h3 className="text-lg font-black text-navy uppercase tracking-tight">{service.name}</h3>
              <div className="mt-4 flex justify-between items-end">
                 <div className="space-y-1">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Latência</p>
-                    <p className="text-xl font-mono font-bold text-navy">{service.latency}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Latência / Health</p>
+                    <p className="text-xl font-mono font-bold text-navy">{service.latency} • {service.health}</p>
                 </div>
                 <div className="flex gap-1">
                     {[1,2,3,4,5,6,7,8,9,10].map(v => (
@@ -83,10 +83,12 @@ function SystemMonitor() {
            <div className="relative z-10">
               <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-8 text-primary">Fila de Processamento</h4>
               <div className="space-y-6">
-                 {[
+                  {[
                     { label: "OCR Jobs Pendentes", value: 0 },
-                    { label: "PDFs na Fila", value: 2 },
-                    { label: "Notificações em Envio", value: 45 },
+                    { label: "PDFs na Fila (Retry Auto)", value: 0 },
+                    { label: "Storage Health Check", value: "100%" },
+                    { label: "Webhook Sync status", value: "OK" },
+                    { label: "Auto Recovery Events", value: 142 },
                  ].map((row, i) => (
                     <div key={i} className="flex justify-between items-center border-b border-white/5 pb-4">
                        <span className="text-slate-400 font-bold">{row.label}</span>
