@@ -175,7 +175,9 @@ export class DocumentValidationEngine {
       "empresa.telefone": data.company?.phone || "(47) 99999-0000",
       "engenheiro.nome": data.engineer?.name || "Eng. Ricardo Almeida",
       "engenheiro.crea": data.engineer?.crea || "CREA/SC 123456-D",
+      "engenheiro.cpf": data.engineer?.cpf || "000.000.000-00",
       "data_atual": new Date().toLocaleDateString('pt-BR'),
+
       "current_date": new Date().toLocaleDateString('pt-BR')
     };
 

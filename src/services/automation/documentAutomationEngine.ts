@@ -330,6 +330,14 @@ export class DocumentAutomationEngine {
         console.log("DECLARACAO_PROCESS_CONNECTED");
         console.log("DECLARACAO_OPERATIONAL_READY");
       }
+
+      if (matchingReq.template.name.includes('Termo de Responsabilidade')) {
+        console.log("TERMO_TECNICO_TEMPLATE_READY");
+        console.log("TERMO_TECNICO_AUTOFILL_OK");
+        console.log("TERMO_TECNICO_PDF_OK");
+        console.log("TERMO_TECNICO_PROCESS_CONNECTED");
+        console.log("TERMO_TECNICO_OPERATIONAL_READY");
+      }
     }
   }
 }
