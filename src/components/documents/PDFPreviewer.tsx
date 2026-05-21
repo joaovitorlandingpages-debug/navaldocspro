@@ -72,11 +72,19 @@ export function PDFPreviewer({ isOpen, onClose, fileUrl, title }: PDFPreviewerPr
               aspectRatio: '1/1.414' 
             }}
           >
-            <iframe 
-              src={`${fileUrl}#toolbar=0`} 
-              className="w-full h-full border-none"
-              title="PDF Viewer"
-            />
+            <Suspense fallback={
+              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-800 text-white/40 gap-4">
+                <Loader2 className="h-10 w-10 animate-spin" />
+                <p className="text-[10px] font-black uppercase tracking-widest">Carregando PDF com Performance IA...</p>
+              </div>
+            }>
+              <iframe 
+                src={`${fileUrl}#toolbar=0`} 
+                className="w-full h-full border-none"
+                title="PDF Viewer"
+                loading="lazy"
+              />
+            </Suspense>
           </div>
         </div>
 
