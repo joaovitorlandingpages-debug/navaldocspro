@@ -580,9 +580,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           </div>
         </DialogHeader>
 
-        <div className="px-8 py-6 min-h-[400px]">
+        <div className="px-8 py-6 min-h-[420px] overflow-y-auto max-h-[60vh]">
           {renderStep()}
         </div>
+
 
 
         <div className="p-8 pt-4 bg-slate-50/50 flex justify-between items-center">
