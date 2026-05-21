@@ -25,9 +25,18 @@ function AdminBilling() {
   }, []);
 
   if (loading) return null;
-  if (profile?.role !== 'admin_master_global' && profile?.email !== 'joaovitor.f0725@gmail.com') {
-    return <Navigate to="/dashboard-v2" />;
+  if (!profile?.isAdmin && profile?.email !== 'joaovitor.f0725@gmail.com') {
+    return <Navigate to="/dashboard" />;
   }
+
+  const { data: plans } = useQuery({
+    queryKey: ['admin-global-plans'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('plans').select('*').order('price');
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const { data: payments, isLoading } = useQuery({
     queryKey: ['admin-global-billing'],
@@ -41,13 +50,26 @@ function AdminBilling() {
     }
   });
 
+  const { data: mrrData } = useQuery({
+    queryKey: ['admin-mrr-calc'],
+    queryFn: async () => {
+       // Real MRR calculation from active subscriptions
+       const { data } = await supabase
+         .from('subscriptions')
+         .select('*, plan:plans(price)')
+         .eq('status', 'active');
+       
+       return data?.reduce((acc, s) => acc + (Number(s.plan?.price) || 0), 0) || 0;
+    }
+  });
+
   const totalRevenue = payments?.reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0) || 0;
-  const activeSubs = [...new Set(payments?.map((p: any) => p.company_id))].length;
+  const activeSubsCount = [...new Set(payments?.map((p: any) => p.company_id))].length;
 
   const stats = [
     { label: "Receita Total", value: `R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: <DollarSign className="text-emerald-500" />, trend: "+12.5%", trendUp: true },
-    { label: "MRR Estimado", value: `R$ ${(totalRevenue / 3).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: <TrendingUp className="text-blue-500" />, trend: "+4.2%", trendUp: true },
-    { label: "Clientes Pagantes", value: activeSubs.toString(), icon: <Users className="text-indigo-500" />, trend: "+2", trendUp: true },
+    { label: "MRR Real", value: `R$ ${(mrrData || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: <TrendingUp className="text-blue-500" />, trend: "+4.2%", trendUp: true },
+    { label: "Assinaturas Ativas", value: activeSubsCount.toString(), icon: <Users className="text-indigo-500" />, trend: "+2", trendUp: true },
     { label: "Taxa de Churn", value: "1.2%", icon: <ArrowDownCircle className="text-rose-500" />, trend: "-0.5%", trendUp: false },
   ];
 
@@ -146,7 +168,41 @@ function AdminBilling() {
         </div>
       </Card>
 
-      <div className="bg-navy text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden group">
+      <div className="mt-12 space-y-6">
+         <h3 className="text-xl font-black text-navy uppercase tracking-tight flex items-center gap-3">
+            <CreditCard className="h-6 w-6 text-primary" /> Planos SaaS Ativos
+         </h3>
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {plans?.map((plan: any) => (
+               <Card key={plan.id} className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm hover:shadow-xl transition-all group border-t-8 border-t-primary">
+                  <div className="flex justify-between items-start mb-6">
+                     <div>
+                        <h4 className="text-xl font-black text-navy uppercase tracking-tighter">{plan.name}</h4>
+                        <p className="text-xs text-slate-400 font-bold uppercase mt-1">R$ {Number(plan.price).toLocaleString()}/mês</p>
+                     </div>
+                     <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase">v{plan.version || 1}</Badge>
+                  </div>
+                  <div className="space-y-4">
+                     <div className="flex justify-between text-[10px] font-bold uppercase text-slate-500">
+                        <span>Usuários</span>
+                        <span className="text-navy">{plan.user_limit || 'Ilimitado'}</span>
+                     </div>
+                     <div className="flex justify-between text-[10px] font-bold uppercase text-slate-500">
+                        <span>OCR Jobs</span>
+                        <span className="text-navy">{plan.ocr_limit || '---'}</span>
+                     </div>
+                     <div className="flex justify-between text-[10px] font-bold uppercase text-slate-500">
+                        <span>Storage</span>
+                        <span className="text-navy">{plan.storage_limit_gb ? `${plan.storage_limit_gb}GB` : '---'}</span>
+                     </div>
+                  </div>
+                  <Button variant="ghost" className="w-full mt-8 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary border border-primary/10 hover:bg-primary/5">Editar Definição</Button>
+               </Card>
+            ))}
+         </div>
+      </div>
+
+      <div className="bg-navy text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden group mt-12">
          <div className="absolute top-0 right-0 p-10 opacity-5">
             <TrendingUp className="h-64 w-64" />
          </div>
