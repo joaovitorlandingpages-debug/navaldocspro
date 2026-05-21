@@ -15,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { useEffect, useState } from "react";
 
 export default function SystemReport() {
-  const [readinessScore, setReadinessScore] = useState(100);
+  const [readinessScore] = useState(100);
 
   const { data: templates } = useQuery({
     queryKey: ["admin-report-templates"],
