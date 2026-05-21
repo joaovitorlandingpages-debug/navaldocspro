@@ -132,10 +132,12 @@ function DashboardLayout() {
     { group: "Documentação", items: [
       { name: "Central OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
       { name: "Central Documental", icon: <Signature className="h-5 w-5" />, path: "/dashboard/document-center" },
+      { name: "Prazos e Vencimentos", icon: <Clock className="h-5 w-5" />, path: "/dashboard/deadlines" },
       { name: "Base Técnica", icon: <Database className="h-5 w-5" />, path: "/dashboard/documents-base" },
       { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
     ]},
     { group: "Gestão & Admin", items: [
+      { name: "Compliance Center", icon: <ShieldCheck className="h-5 w-5" />, path: "/dashboard/compliance-center" },
       { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
       { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
       { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
@@ -977,20 +979,40 @@ export function RouteContent() {
                   <Bell className="h-5 w-5 text-amber-500 animate-bounce" /> Alertas Críticos
                </h3>
                <div className="space-y-4">
-                  {[
-                    { title: "Vistoria Anual - Phoenix", days: "Faltam 3 dias", color: "red", desc: "Vencimento de certificação DPC." },
-                    { title: "Certificado de Segurança", days: "Faltam 12 dias", color: "amber", desc: "Titan requer renovação de CSN." }
-                  ].map((alert, i) => (
-                    <div key={i} className={`p-4 rounded-2xl border-l-4 transition-all hover:bg-slate-50 cursor-pointer`} style={{ borderLeftColor: alert.color === 'red' ? '#ef4444' : '#f59e0b', backgroundColor: alert.color === 'red' ? '#fef2f2' : '#fffbeb' }}>
-                       <div className="flex justify-between items-start mb-1">
-                          <p className="text-sm font-black text-navy">{alert.title}</p>
-                       </div>
-                       <p className="text-[11px] text-slate-500 mb-2 font-medium">{alert.desc}</p>
-                       <p className={`text-[10px] font-black uppercase tracking-widest ${alert.color === 'red' ? 'text-red-600' : 'text-amber-600'}`}>{alert.days}</p>
-                    </div>
-                  ))}
+                  {isLoadingStats ? (
+                    <div className="flex justify-center p-4"><Loader2 className="h-4 w-4 animate-spin text-slate-300" /></div>
+                  ) : (
+                    <>
+                      {statsData && statsData.expiringDocuments > 0 && (
+                        <div className="p-4 rounded-2xl border-l-4 border-l-amber-500 bg-amber-50/50 transition-all hover:bg-slate-50 cursor-pointer" onClick={() => navigate({ to: '/dashboard/deadlines' })}>
+                           <div className="flex justify-between items-start mb-1">
+                              <p className="text-sm font-black text-navy uppercase tracking-tight">Vencimentos Próximos</p>
+                           </div>
+                           <p className="text-[11px] text-slate-500 mb-2 font-medium">Existem {statsData.expiringDocuments} documentos que expiram em menos de 30 dias.</p>
+                           <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Ação Recomendada</p>
+                        </div>
+                      )}
+                      
+                      {statsData && statsData.urgentProcesses > 0 && (
+                        <div className="p-4 rounded-2xl border-l-4 border-l-red-500 bg-red-50/50 transition-all hover:bg-slate-50 cursor-pointer" onClick={() => navigate({ to: '/dashboard/deadlines' })}>
+                           <div className="flex justify-between items-start mb-1">
+                              <p className="text-sm font-black text-navy uppercase tracking-tight">Processos Retidos</p>
+                           </div>
+                           <p className="text-[11px] text-slate-500 mb-2 font-medium">{statsData.urgentProcesses} processos estão parados há mais de 15 dias.</p>
+                           <p className="text-[10px] font-black uppercase tracking-widest text-red-600">Alta Prioridade</p>
+                        </div>
+                      )}
+
+                      {(!statsData || (statsData.expiringDocuments === 0 && statsData.urgentProcesses === 0)) && (
+                        <div className="py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                          <CheckCircle2 className="h-8 w-8 text-emerald-100 mx-auto mb-2" />
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nenhum alerta crítico</p>
+                        </div>
+                      )}
+                    </>
+                  )}
                </div>
-               <button className="w-full mt-6 py-3 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-navy transition-colors">Ignorar Todos</button>
+               <button className="w-full mt-6 py-3 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-navy transition-colors" onClick={() => navigate({ to: '/dashboard/deadlines' })}>Ver Todos os Prazos</button>
             </div>
           </div>
        </div>

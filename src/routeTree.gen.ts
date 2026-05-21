@@ -50,6 +50,7 @@ import { Route as DebugSystemRouteImport } from './routes/debug.system'
 import { Route as DebugAuthRouteImport } from './routes/debug.auth'
 import { Route as DashboardDocumentsBaseRouteImport } from './routes/dashboard/documents-base'
 import { Route as DashboardDocumentCenterRouteImport } from './routes/dashboard.document-center'
+import { Route as DashboardDeadlinesRouteImport } from './routes/dashboard.deadlines'
 import { Route as DashboardComplianceCenterRouteImport } from './routes/dashboard/compliance-center'
 import { Route as BillingSuccessRouteImport } from './routes/billing.success'
 import { Route as BillingSubscriptionRouteImport } from './routes/billing.subscription'
@@ -275,6 +276,11 @@ const DashboardDocumentCenterRoute = DashboardDocumentCenterRouteImport.update({
   path: '/document-center',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardDeadlinesRoute = DashboardDeadlinesRouteImport.update({
+  id: '/deadlines',
+  path: '/deadlines',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardComplianceCenterRoute =
   DashboardComplianceCenterRouteImport.update({
     id: '/compliance-center',
@@ -426,6 +432,7 @@ export interface FileRoutesByFullPath {
   '/billing/subscription': typeof BillingSubscriptionRoute
   '/billing/success': typeof BillingSuccessRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
+  '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/debug/auth': typeof DebugAuthRoute
@@ -486,6 +493,7 @@ export interface FileRoutesByTo {
   '/billing/subscription': typeof BillingSubscriptionRoute
   '/billing/success': typeof BillingSuccessRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
+  '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/debug/auth': typeof DebugAuthRoute
@@ -549,6 +557,7 @@ export interface FileRoutesById {
   '/billing/subscription': typeof BillingSubscriptionRoute
   '/billing/success': typeof BillingSuccessRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
+  '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/debug/auth': typeof DebugAuthRoute
@@ -613,6 +622,7 @@ export interface FileRouteTypes {
     | '/billing/subscription'
     | '/billing/success'
     | '/dashboard/compliance-center'
+    | '/dashboard/deadlines'
     | '/dashboard/document-center'
     | '/dashboard/documents-base'
     | '/debug/auth'
@@ -673,6 +683,7 @@ export interface FileRouteTypes {
     | '/billing/subscription'
     | '/billing/success'
     | '/dashboard/compliance-center'
+    | '/dashboard/deadlines'
     | '/dashboard/document-center'
     | '/dashboard/documents-base'
     | '/debug/auth'
@@ -735,6 +746,7 @@ export interface FileRouteTypes {
     | '/billing/subscription'
     | '/billing/success'
     | '/dashboard/compliance-center'
+    | '/dashboard/deadlines'
     | '/dashboard/document-center'
     | '/dashboard/documents-base'
     | '/debug/auth'
@@ -1077,6 +1089,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardDocumentCenterRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/deadlines': {
+      id: '/dashboard/deadlines'
+      path: '/deadlines'
+      fullPath: '/dashboard/deadlines'
+      preLoaderRoute: typeof DashboardDeadlinesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/compliance-center': {
       id: '/dashboard/compliance-center'
       path: '/compliance-center'
@@ -1261,6 +1280,7 @@ const AnalyticsRouteWithChildren = AnalyticsRoute._addFileChildren(
 
 interface DashboardRouteChildren {
   DashboardComplianceCenterRoute: typeof DashboardComplianceCenterRoute
+  DashboardDeadlinesRoute: typeof DashboardDeadlinesRoute
   DashboardDocumentCenterRoute: typeof DashboardDocumentCenterRoute
   DashboardDocumentsBaseRoute: typeof DashboardDocumentsBaseRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
@@ -1268,6 +1288,7 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardComplianceCenterRoute: DashboardComplianceCenterRoute,
+  DashboardDeadlinesRoute: DashboardDeadlinesRoute,
   DashboardDocumentCenterRoute: DashboardDocumentCenterRoute,
   DashboardDocumentsBaseRoute: DashboardDocumentsBaseRoute,
   DashboardIndexRoute: DashboardIndexRoute,
