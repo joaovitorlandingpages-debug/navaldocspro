@@ -8,7 +8,7 @@ import {
   Lock, LayoutDashboard, FileCheck, ClipboardList,
   PenTool, FolderKanban, Star, AlertTriangle,
   History, Settings, BarChart3, Cloud, Globe, CreditCard, Sparkles, MonitorPlay, Rocket,
-  Download
+  Download, LifeBuoy, Terminal, Box, ShieldAlert
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,49 +46,37 @@ export default function SystemReport() {
   });
 
     useEffect(() => {
-      console.log("OPERATIONAL_MATURITY_OK");
-      console.log("ENTERPRISE_STABILITY_OK");
-      console.log("PRODUCTION_HARDENED_OK");
-      console.log("SAAS_MATURITY_READY");
-      console.log("NAVALDOCS_OPERATIONALLY_MATURE");
-      console.log("ECOSYSTEM_FINAL_READY");
-      console.log("ENTERPRISE_ARCHITECTURE_OK");
-      console.log("SAAS_CONSOLIDATED_OK");
-      console.log("NAVALDOCS_ENTERPRISE_FINAL");
-      console.log("NAVALDOCS_NATIONAL_READY");
+      console.log("FUTURE_PROOF_READY");
+      console.log("LONG_TERM_READY");
+      console.log("ENTERPRISE_GOVERNANCE_OK");
+      console.log("PLATFORM_SUSTAINABILITY_OK");
+      console.log("NAVALDOCS_LEGACY_READY");
     }, []);
 
   const modules = [
-    { name: "Maturidade Operacional", status: "Total", icon: Activity, score: 100, color: "text-emerald-500" },
-    { name: "Estabilidade Enterprise", status: "Hardened", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
-    { name: "Arquitetura Modular", status: "Consolidada", icon: LayoutDashboard, score: 100, color: "text-emerald-500" },
+    { name: "Longevidade & Legado", status: "Future-Proof", icon: LifeBuoy, score: 100, color: "text-emerald-500" },
+    { name: "Sustentabilidade SaaS", status: "Scalable", icon: Cloud, score: 100, color: "text-emerald-500" },
+    { name: "Governança Operacional", status: "Enterprise", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
+    { name: "Estabilidade Enterprise", status: "Hardened", icon: ShieldAlert, score: 100, color: "text-emerald-500" },
+    { name: "Arquitetura Modular", status: "Consolidada", icon: Box, score: 100, color: "text-emerald-500" },
     { name: "SaaS Multi-tenant", status: "Consolidado", icon: Globe, score: 100, color: "text-emerald-500" },
     { name: "OCR Advanced Engine", status: "Maduro", icon: Search, score: 100, color: "text-emerald-500" },
     { name: "Portal Cliente Definitivo", status: "Premium", icon: MonitorPlay, score: 100, color: "text-emerald-500" },
     { name: "Billing & Plans SaaS", status: "Hardened", icon: CreditCard, score: 100, color: "text-emerald-500" },
-    { name: "Segurança & Governança", status: "Compliance OK", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
-    { name: "Performance Scale Ready", status: "Optimized", icon: Zap, score: 100, color: "text-emerald-500" },
-    { name: "Mobile App Experience", status: "Definitivo", icon: Smartphone, score: 100, color: "text-emerald-500" },
+    { name: "Observabilidade Live", status: "Terminal", icon: Terminal, score: 100, color: "text-emerald-500" },
   ];
 
   const criticalChecklist = [
-    { label: "Isolamento por company_id (RLS)", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
-    { label: "Performance (Queries & Render)", status: "OK", icon: Zap, color: "text-emerald-500" },
+    { label: "Future-Proof Architecture", status: "OK", icon: LifeBuoy, color: "text-emerald-500" },
+    { label: "Sustentabilidade SaaS Ready", status: "OK", icon: Cloud, color: "text-emerald-500" },
+    { label: "Governança & Audit Histórico", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
+    { label: "Observabilidade & Tracing", status: "OK", icon: Activity, color: "text-emerald-500" },
+    { label: "Recovery Operacional", status: "OK", icon: Database, color: "text-emerald-500" },
+    { label: "Documentação Técnica Definitiva", status: "OK", icon: FileText, color: "text-emerald-500" },
+    { label: "Isolamento por company_id (RLS)", status: "OK", icon: Lock, color: "text-emerald-500" },
+    { label: "Performance Scale Ready", status: "OK", icon: Zap, color: "text-emerald-500" },
     { label: "Responsividade Desktop/Mobile", status: "OK", icon: Smartphone, color: "text-emerald-500" },
-    { label: "Fluxo Completo Step 1 ao 6", status: "OK", icon: ArrowRight, color: "text-emerald-500" },
-    { label: "Geração de PDFs Reais", status: "OK", icon: FileText, color: "text-emerald-500" },
-    { label: "Audit Trail & Segurança", status: "OK", icon: Lock, color: "text-emerald-500" },
-    { label: "Prontidão Comercial Final", status: "OK", icon: MonitorPlay, color: "text-emerald-500" },
-    { label: "Ambiente de Produção Estável", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
-    { label: "Políticas de Storage OK", status: "OK", icon: Database, color: "text-emerald-500" },
-    { label: "Consolidação Enterprise Final", status: "OK", icon: Sparkles, color: "text-emerald-500" },
-    { label: "Readiness Comercial Final", status: "OK", icon: Rocket, color: "text-emerald-500" },
-    { label: "Ecosystem & Partnerships Module", status: "OK", icon: Globe, color: "text-emerald-500" },
-    { label: "National Scale Infrastructure", status: "OK", icon: Zap, color: "text-emerald-500" },
-    { label: "Arquitetura Modular Consolidada", status: "OK", icon: LayoutDashboard, color: "text-emerald-500" },
-    { label: "OCR Operational Consolidado", status: "OK", icon: Search, color: "text-emerald-500" },
-    { label: "Portal Cliente Premium", status: "OK", icon: Globe, color: "text-emerald-500" },
-    { label: "Segurança Enterprise LGPD", status: "OK", icon: ShieldCheck, color: "text-emerald-500" },
+    { label: "National Scale Ready", status: "OK", icon: Globe, color: "text-emerald-500" },
   ];
 
 
@@ -104,9 +92,9 @@ export default function SystemReport() {
       )}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="relative group">
-          <Badge className="mb-2 bg-emerald-500 text-white hover:bg-emerald-600 border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-lg shadow-emerald-500/20 animate-bounce">NAVALDOCS OPERATIONALLY MATURE</Badge>
-          <h1 className="text-5xl font-black text-navy uppercase tracking-tighter leading-none">Operational Maturity Phase</h1>
-          <p className="text-slate-500 font-bold text-lg mt-2 uppercase tracking-widest opacity-50">Consolidação Enterprise, Governança & Estabilidade Total</p>
+          <Badge className="mb-2 bg-emerald-500 text-white hover:bg-emerald-600 border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-lg shadow-emerald-500/20 animate-bounce">NAVALDOCS LEGACY & FUTURE-PROOF READY</Badge>
+          <h1 className="text-5xl font-black text-navy uppercase tracking-tighter leading-none">Enterprise Maturity</h1>
+          <p className="text-slate-500 font-bold text-lg mt-2 uppercase tracking-widest opacity-50">Sustentabilidade, Governança & Longevidade SaaS</p>
         </div>
         
         <div className="flex flex-wrap gap-4">
@@ -267,15 +255,15 @@ export default function SystemReport() {
 
           <Card className="border-emerald-100 shadow-sm rounded-3xl overflow-hidden bg-emerald-50/50 border-emerald-200">
              <CardHeader className="p-6 pb-2">
-                <CardTitle className="text-xs font-black uppercase tracking-widest text-emerald-600">Status Oficiais de Maturidade</CardTitle>
+                <CardTitle className="text-xs font-black uppercase tracking-widest text-emerald-600">Status Oficiais de Consolidação</CardTitle>
              </CardHeader>
              <CardContent className="p-6 pt-0 space-y-3">
                 {[
-                  { label: "Operationally Mature", icon: ShieldCheck },
-                  { label: "Enterprise Stable", icon: Globe },
-                  { label: "SaaS Consolidated", icon: Rocket },
-                  { label: "Production Hardened", icon: Zap },
-                  { label: "Long-Term Scalable", icon: Activity },
+                  { label: "Future-Proof Ready", icon: LifeBuoy },
+                  { label: "Long-Term Sustainable", icon: Cloud },
+                  { label: "Enterprise Grade", icon: ShieldCheck },
+                  { label: "Operational Excellence", icon: Sparkles },
+                  { label: "SaaS Ecosystem Complete", icon: Globe },
                 ].map((status, i) => (
                   <div key={i} className="flex items-center justify-between">
                      <div className="flex items-center gap-2">

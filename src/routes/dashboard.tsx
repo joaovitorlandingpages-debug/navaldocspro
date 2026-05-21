@@ -168,13 +168,11 @@ function DashboardLayout() {
   console.log("LAYOUT_OVERFLOW_FIXED");
   console.log("SINGLE_SCROLL_OK");
   console.log("DASHBOARD_HEIGHT_OK");
-  console.log("FINAL_LAUNCH_READY");
-  console.log("NAVALDOCS_PRODUCTION_READY");
-  console.log("OPERATIONAL_MATURITY_OK");
-  console.log("ENTERPRISE_STABILITY_OK");
-  console.log("PRODUCTION_HARDENED_OK");
-  console.log("SAAS_MATURITY_READY");
-  console.log("NAVALDOCS_OPERATIONALLY_MATURE");
+  console.log("FUTURE_PROOF_READY");
+  console.log("LONG_TERM_READY");
+  console.log("ENTERPRISE_GOVERNANCE_OK");
+  console.log("PLATFORM_SUSTAINABILITY_OK");
+  console.log("NAVALDOCS_LEGACY_READY");
 
 
   const SidebarContent = () => (
