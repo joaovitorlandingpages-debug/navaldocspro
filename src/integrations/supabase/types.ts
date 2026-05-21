@@ -2070,9 +2070,12 @@ export type Database = {
           name: string
           ocr_limit: number | null
           price: number
+          process_limit: number | null
           slug: string | null
+          storage_limit_gb: number | null
           updated_at: string
           user_limit: number | null
+          version: number | null
         }
         Insert: {
           billing_cycle?: string
@@ -2087,9 +2090,12 @@ export type Database = {
           name: string
           ocr_limit?: number | null
           price: number
+          process_limit?: number | null
           slug?: string | null
+          storage_limit_gb?: number | null
           updated_at?: string
           user_limit?: number | null
+          version?: number | null
         }
         Update: {
           billing_cycle?: string
@@ -2104,9 +2110,12 @@ export type Database = {
           name?: string
           ocr_limit?: number | null
           price?: number
+          process_limit?: number | null
           slug?: string | null
+          storage_limit_gb?: number | null
           updated_at?: string
           user_limit?: number | null
+          version?: number | null
         }
         Relationships: []
       }
@@ -3262,6 +3271,50 @@ export type Database = {
         }
         Relationships: []
       }
+      usage_metrics: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          docs_generated: number | null
+          id: string
+          last_reset_at: string | null
+          ocr_usage: number | null
+          processes_created: number | null
+          storage_usage_bytes: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          docs_generated?: number | null
+          id?: string
+          last_reset_at?: string | null
+          ocr_usage?: number | null
+          processes_created?: number | null
+          storage_usage_bytes?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          docs_generated?: number | null
+          id?: string
+          last_reset_at?: string | null
+          ocr_usage?: number | null
+          processes_created?: number | null
+          storage_usage_bytes?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_metrics_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vessel_engines: {
         Row: {
           brand: string | null
@@ -3370,6 +3423,10 @@ export type Database = {
     Functions: {
       duplicate_document: { Args: { doc_id: string }; Returns: string }
       get_system_readiness: { Args: never; Returns: Json }
+      increment_ocr_usage: {
+        Args: { amount: number; company_id_param: string }
+        Returns: undefined
+      }
       is_admin_master: { Args: never; Returns: boolean }
       log_security_event: {
         Args: {

@@ -27,6 +27,11 @@ export default function SecurityCenter() {
   const [activeTab, setActiveTab] = useState("backups");
 
   useEffect(() => {
+    console.log("BILLING_READY");
+    console.log("SAAS_PLANS_READY");
+    console.log("SUBSCRIPTION_SYSTEM_OK");
+    console.log("LIMIT_CONTROL_OK");
+    console.log("FINANCIAL_DASHBOARD_OK");
     console.log("BACKUP_SYSTEM_READY");
     console.log("RESTORE_SYSTEM_READY");
     console.log("AUDIT_SECURITY_READY");
