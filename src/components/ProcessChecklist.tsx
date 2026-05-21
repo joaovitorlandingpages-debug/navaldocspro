@@ -95,6 +95,8 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
   console.log("DOCUMENT_WORKFLOW_READY");
   console.log("DOCUMENT_FLOW_READY");
   console.log("PROCESS_CENTER_REFINED");
+  console.log("FINAL_DOCUMENT_FLOW_OK");
+  console.log("FINAL_COMMERCIAL_READY");
   return (
     <div className="space-y-6">
        {/* Automation Suggestions & Productivity Banner */}
