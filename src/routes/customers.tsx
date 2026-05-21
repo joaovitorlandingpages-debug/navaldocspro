@@ -126,7 +126,7 @@ function Customers() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div className="flex flex-col gap-2">
           <BackButton className="w-fit lg:hidden" />
