@@ -590,7 +590,7 @@ export function RouteContent() {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="lg:col-span-1 space-y-6">
           <div className="bg-navy p-6 rounded-[2rem] text-white shadow-xl relative overflow-hidden group">
              <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
                 <Database className="h-40 w-40" />
