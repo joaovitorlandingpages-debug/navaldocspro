@@ -176,16 +176,16 @@ function DashboardLayout() {
         <nav className="flex-grow mt-6 px-4 space-y-6 overflow-y-auto custom-scrollbar">
           {navItems.map((group) => (
             <div key={group.group} className="space-y-1">
-              {isSidebarOpen && <p className="px-3 mb-2 text-[10px] font-black text-primary/40 uppercase tracking-widest">{group.group}</p>}
+              {isSidebarOpen && <p className="px-4 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">{group.group}</p>}
               {group.items.map((item) => (
                 <Link 
                   key={item.name}
                   to={item.path}
-                  activeProps={{ className: "bg-primary text-white shadow-lg shadow-primary/20 border-primary" }}
-                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 border border-transparent transition-all group/item"
+                  activeProps={{ className: "bg-primary text-white shadow-[0_10px_20px_rgba(37,99,235,0.3)] border-white/10" }}
+                  className="flex items-center gap-4 p-4 rounded-[1.25rem] hover:bg-white/5 border border-transparent transition-all group/item"
                 >
-                  <div className="group-hover/item:scale-110 transition-transform">{item.icon}</div>
-                  {isSidebarOpen && <span className="text-xs font-bold uppercase tracking-wider">{item.name}</span>}
+                  <div className="group-hover/item:scale-110 group-hover/item:text-primary transition-all duration-300">{item.icon}</div>
+                  {isSidebarOpen && <span className="text-[11px] font-black uppercase tracking-widest leading-none">{item.name}</span>}
                 </Link>
               ))}
             </div>
