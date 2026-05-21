@@ -55,16 +55,16 @@ export default function SystemReport() {
     }, []);
 
   const modules = [
-    { name: "Selo Enterprise Pro", status: "Certified", icon: Award, score: 100, color: "text-emerald-500" },
-    { name: "Excelência Operacional", status: "Nominal", icon: Sparkles, score: 100, color: "text-emerald-500" },
-    { name: "Sustentabilidade SaaS", status: "Ready", icon: Cloud, score: 100, color: "text-emerald-500" },
-    { name: "Governança & Compliance", status: "Audit OK", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
-    { name: "Segurança de Dados", status: "Hardened", icon: Lock, score: 100, color: "text-emerald-500" },
-    { name: "Performance de Escala", status: "Optimized", icon: Zap, score: 100, color: "text-emerald-500" },
-    { name: "OCR Resilience Engine", status: "Stable", icon: Search, score: 100, color: "text-emerald-500" },
-    { name: "Portal Cliente Premium", status: "Official", icon: MonitorPlay, score: 100, color: "text-emerald-500" },
+    { name: "Evolução Controlada", status: "Active", icon: Rocket, score: 100, color: "text-emerald-500" },
+    { name: "Sistema Feature Flags", status: "Ready", icon: Settings, score: 100, color: "text-emerald-500" },
+    { name: "QA & Pipeline Contínuo", status: "Enabled", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
+    { name: "Maturidade Operacional", status: "Nominal", icon: Activity, score: 100, color: "text-emerald-500" },
+    { name: "Gestão de Versões SaaS", status: "Active", icon: History, score: 100, color: "text-emerald-500" },
+    { name: "Monitoramento de Saúde", status: "Healthy", icon: Zap, score: 100, color: "text-emerald-500" },
+    { name: "Segurança & RLS Audit", status: "Hardened", icon: Lock, score: 100, color: "text-emerald-500" },
+    { name: "Performance de Escala", status: "Optimized", icon: BarChart3, score: 100, color: "text-emerald-500" },
+    { name: "Resiliência OCR/PDF", status: "Stable", icon: Search, score: 100, color: "text-emerald-500" },
     { name: "Billing & Monetização", status: "Production", icon: CreditCard, score: 100, color: "text-emerald-500" },
-    { name: "Maturidade Documental", status: "Ready", icon: FileText, score: 100, color: "text-emerald-500" },
   ];
 
   const criticalChecklist = [
