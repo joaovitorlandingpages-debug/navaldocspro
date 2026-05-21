@@ -67,7 +67,7 @@ export async function seedPremiumDemo(companyId: string, userId: string) {
         // 5. Create Signatures
         if (docs) {
           await supabase.from('document_signatures').insert(
-            docs.map(doc => ({
+            docs.map((doc: any) => ({
               document_id: doc.id,
               company_id: companyId,
               signer_name: 'Comandante Silva',
