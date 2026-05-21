@@ -328,11 +328,18 @@ function ProcessDetail() {
                            </div>
                            <div className="flex justify-between py-3 border-b border-slate-50">
                               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Conformidade</span>
-                              <Badge variant="outline" className={`text-[10px] font-black uppercase tracking-widest border-none ${
-                                automationState?.is_ready_for_generation ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
-                              }`}>
-                                {automationState?.is_ready_for_generation ? 'Conforme' : 'Pendente'}
-                              </Badge>
+                              <div className="flex flex-col items-end gap-1">
+                                <Badge variant="outline" className={`text-[10px] font-black uppercase tracking-widest border-none ${
+                                  automationState?.is_ready_for_generation ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                                }`}>
+                                  {automationState?.is_ready_for_generation ? 'Conforme' : 'Pendente'}
+                                </Badge>
+                                {automationState?.is_ready_for_generation && (
+                                  <span className="text-[8px] text-emerald-600 font-bold uppercase tracking-tighter flex items-center gap-1">
+                                    <Zap className="h-2 w-2" /> Identificado automaticamente
+                                  </span>
+                                )}
+                              </div>
                            </div>
                            <div className="flex justify-between py-3 border-b border-slate-50">
                               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Prazo</span>
