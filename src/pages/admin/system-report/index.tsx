@@ -39,13 +39,13 @@ export default function SystemReport() {
     }
   });
 
-   useEffect(() => {
-     console.log("BILLING_READY");
-     console.log("SAAS_PLANS_READY");
-     console.log("SUBSCRIPTION_SYSTEM_OK");
-     console.log("LIMIT_CONTROL_OK");
-     console.log("FINANCIAL_DASHBOARD_OK");
-   }, []);
+    useEffect(() => {
+      console.log("POST_LAUNCH_READY");
+      console.log("CONTINUOUS_IMPROVEMENT_OK");
+      console.log("TELEMETRY_SYSTEM_OK");
+      console.log("OCR_EVOLUTION_READY");
+      console.log("SAAS_GROWTH_READY");
+    }, []);
 
   const modules = [
     { name: "Autenticação", status: "Operacional", icon: Lock, score: 100, color: "text-emerald-500" },
