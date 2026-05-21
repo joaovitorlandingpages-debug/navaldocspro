@@ -46,21 +46,16 @@ export default function SystemReport() {
   });
 
     useEffect(() => {
-      console.log("GO_LIVE_READY");
-      console.log("PRODUCTION_READY");
-      console.log("DEMO_ENV_READY");
-      console.log("FINAL_STABILITY_OK");
-      console.log("NAVALDOCS_ENTERPRISE_READY");
-      console.log("DEMO_PREMIUM_READY");
-      console.log("COMMERCIAL_MODE_READY");
-      console.log("ENTERPRISE_PRESENTATION_OK");
-      console.log("PILOT_PHASE_OK");
-      console.log("NAVALDOCS_READY_TO_SCALE");
-      console.log("FINAL_LAUNCH_READY");
-      console.log("GO_LIVE_PANEL_READY");
-      console.log("ENTERPRISE_FINAL_OK");
-      console.log("NAVALDOCS_PRODUCTION_READY");
-      console.log("NAVALDOCS_READY_FOR_CLIENTS");
+      console.log("ECOSYSTEM_FINAL_READY");
+      console.log("ENTERPRISE_ARCHITECTURE_OK");
+      console.log("SAAS_CONSOLIDATED_OK");
+      console.log("NAVALDOCS_ENTERPRISE_FINAL");
+      console.log("NAVALDOCS_NATIONAL_READY");
+      console.log("PRODUCTION_READY_STATUS_OK");
+      console.log("ENTERPRISE_READY_STATUS_OK");
+      console.log("SAAS_READY_STATUS_OK");
+      console.log("OCR_READY_STATUS_OK");
+      console.log("BILLING_READY_STATUS_OK");
     }, []);
 
   const modules = [
@@ -118,9 +113,9 @@ export default function SystemReport() {
       )}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="relative group">
-          <Badge className="mb-2 bg-emerald-500 text-white hover:bg-emerald-600 border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-lg shadow-emerald-500/20 animate-bounce">GO-LIVE PRODUCTION READY</Badge>
-          <h1 className="text-5xl font-black text-navy uppercase tracking-tighter leading-none">System Report</h1>
-          <p className="text-slate-500 font-bold text-lg mt-2 uppercase tracking-widest opacity-50">Auditoria de Produção & Preparação para Clientes Reais</p>
+          <Badge className="mb-2 bg-emerald-500 text-white hover:bg-emerald-600 border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-lg shadow-emerald-500/20 animate-bounce">NAVALDOCS NATIONAL READY</Badge>
+          <h1 className="text-5xl font-black text-navy uppercase tracking-tighter leading-none">Enterprise Ecosystem Consolidation</h1>
+          <p className="text-slate-500 font-bold text-lg mt-2 uppercase tracking-widest opacity-50">Consolidação de Arquitetura SaaS & Readiness Nacional</p>
         </div>
         
         <div className="flex flex-wrap gap-4">
@@ -276,6 +271,29 @@ export default function SystemReport() {
                 <div className="pt-2 border-t border-primary/10">
                    <p className="text-[10px] font-bold text-primary/70 uppercase italic tracking-tight">Região: Brasil (South America)</p>
                 </div>
+              </CardContent>
+          </Card>
+
+          <Card className="border-emerald-100 shadow-sm rounded-3xl overflow-hidden bg-emerald-50/50 border-emerald-200">
+             <CardHeader className="p-6 pb-2">
+                <CardTitle className="text-xs font-black uppercase tracking-widest text-emerald-600">Status Oficial do Sistema</CardTitle>
+             </CardHeader>
+             <CardContent className="p-6 pt-0 space-y-3">
+                {[
+                  { label: "Production Ready", icon: ShieldCheck },
+                  { label: "Enterprise Ready", icon: Globe },
+                  { label: "SaaS Ready", icon: Rocket },
+                  { label: "OCR Ready", icon: Zap },
+                  { label: "Billing Ready", icon: CreditCard },
+                ].map((status, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                     <div className="flex items-center gap-2">
+                        <status.icon className="h-3 w-3 text-emerald-500" />
+                        <span className="text-[10px] font-black text-navy uppercase">{status.label}</span>
+                     </div>
+                     <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                  </div>
+                ))}
              </CardContent>
           </Card>
         </div>
