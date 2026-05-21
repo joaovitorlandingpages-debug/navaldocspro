@@ -422,27 +422,27 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nº Inscrição / TIE / Chassis</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nº Inscrição / TIE / Chassis / Certificado</Label>
                     <Input 
-                      value={editedData?.inscription || editedData?.serial_numbers?.hull || editedData?.vessel?.inscricao || ''} 
+                      value={editedData?.inscription || editedData?.certificate_number || editedData?.serial_numbers?.hull || editedData?.vessel?.inscricao || ''} 
                       onChange={(e) => setEditedData({...editedData, inscription: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipo / Categoria</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipo / Categoria / Capacidade</Label>
                     <Input 
-                      value={editedData?.vessel_type || editedData?.navigation_category || editedData?.vessel?.tipo || ''} 
+                      value={editedData?.vessel_type || editedData?.navigation_category || editedData?.capacity || editedData?.vessel?.tipo || ''} 
                       onChange={(e) => setEditedData({...editedData, vessel_type: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Motorização (Extraído)</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Motorização / Responsável Técnico (CREA)</Label>
                     <Input 
-                      value={editedData?.engine || editedData?.serial_numbers?.engine || editedData?.vessel?.engine || ''} 
+                      value={editedData?.engine || editedData?.engineer_name || (editedData?.crea_number ? `${editedData.engineer_name} (${editedData.crea_number})` : '') || editedData?.serial_numbers?.engine || editedData?.vessel?.engine || ''} 
                       onChange={(e) => setEditedData({...editedData, engine: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
