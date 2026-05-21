@@ -58,6 +58,204 @@ export type Database = {
           },
         ]
       }
+      ai_copilot_interactions: {
+        Row: {
+          company_id: string
+          context_data: Json | null
+          created_at: string | null
+          id: string
+          process_id: string | null
+          prompt: string
+          rating: number | null
+          response: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          context_data?: Json | null
+          created_at?: string | null
+          id?: string
+          process_id?: string | null
+          prompt: string
+          rating?: number | null
+          response: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          context_data?: Json | null
+          created_at?: string | null
+          id?: string
+          process_id?: string | null
+          prompt?: string
+          rating?: number | null
+          response?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_copilot_interactions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_copilot_interactions_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_copilot_interactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_jobs_queue: {
+        Row: {
+          attempts: number | null
+          company_id: string
+          created_at: string | null
+          error: string | null
+          id: string
+          max_attempts: number | null
+          payload: Json
+          priority: number | null
+          processed_at: string | null
+          result: Json | null
+          status: string
+          type: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          company_id: string
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          max_attempts?: number | null
+          payload?: Json
+          priority?: number | null
+          processed_at?: string | null
+          result?: Json | null
+          status?: string
+          type: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          company_id?: string
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          max_attempts?: number | null
+          payload?: Json
+          priority?: number | null
+          processed_at?: string | null
+          result?: Json | null
+          status?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_jobs_queue_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_jobs_queue_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_model_configs: {
+        Row: {
+          id: string
+          is_active: boolean | null
+          model_name: string
+          module_key: string
+          parameters: Json | null
+          provider: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean | null
+          model_name: string
+          module_key: string
+          parameters?: Json | null
+          provider: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          is_active?: boolean | null
+          model_name?: string
+          module_key?: string
+          parameters?: Json | null
+          provider?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      ai_usage_stats: {
+        Row: {
+          company_id: string
+          estimated_cost: number | null
+          id: string
+          metadata: Json | null
+          module: string
+          recorded_at: string | null
+          request_count: number | null
+          tokens_input: number | null
+          tokens_output: number | null
+        }
+        Insert: {
+          company_id: string
+          estimated_cost?: number | null
+          id?: string
+          metadata?: Json | null
+          module: string
+          recorded_at?: string | null
+          request_count?: number | null
+          tokens_input?: number | null
+          tokens_output?: number | null
+        }
+        Update: {
+          company_id?: string
+          estimated_cost?: number | null
+          id?: string
+          metadata?: Json | null
+          module?: string
+          recorded_at?: string | null
+          request_count?: number | null
+          tokens_input?: number | null
+          tokens_output?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_stats_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       anti_error_logs: {
         Row: {
           company_id: string | null
