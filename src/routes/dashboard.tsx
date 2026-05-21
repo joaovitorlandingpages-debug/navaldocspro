@@ -396,21 +396,22 @@ export function RouteContent() {
     console.log("ENTERPRISE_FEEL_READY");
     console.log("DASHBOARD_PREMIUM_READY");
     return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="space-y-10 animate-in fade-in duration-700 pb-20 max-w-[1600px] mx-auto">
       {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (
-        <Card className="p-8 bg-gradient-to-r from-primary/10 to-transparent border-primary/20 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
-           <div className="flex items-center gap-6">
-              <div className="h-16 w-16 bg-primary rounded-3xl flex items-center justify-center shadow-xl shadow-primary/20">
-                 <Rocket className="h-8 w-8 text-white" />
+        <Card className="p-10 bg-[#000B18] text-white border-white/5 rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-8 mb-10 shadow-2xl relative overflow-hidden group">
+           <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/10 blur-[100px] -mr-20 group-hover:bg-primary/20 transition-all duration-1000" />
+           <div className="flex items-center gap-8 relative z-10">
+              <div className="h-20 w-20 bg-primary rounded-[2rem] flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.4)] group-hover:scale-110 transition-transform duration-500">
+                 <Rocket className="h-10 w-10 text-white" />
               </div>
               <div>
-                 <h3 className="text-xl font-black text-navy uppercase tracking-tight">Olá, {profile?.name}! Vamos começar?</h3>
-                 <p className="text-slate-500 font-medium">Sua conta está pronta. Siga os primeiros passos para automatizar sua operação.</p>
+                 <h3 className="text-3xl font-black tracking-tighter uppercase italic">NavalDocs <span className="text-primary">Genesis</span></h3>
+                 <p className="text-white/50 font-medium text-lg max-w-xl">Bem-vindo, {profile?.name}. Sua jornada para a automação total começa aqui. Siga nosso roteiro de implantação.</p>
               </div>
            </div>
-           <Link to="/getting-started">
-              <Button className="bg-navy hover:bg-slate-800 text-[10px] font-black uppercase tracking-widest px-8 py-6 rounded-2xl shadow-xl">
-                 Guia de Implantação <ChevronRight className="ml-2 h-4 w-4 text-primary" />
+           <Link to="/getting-started" className="relative z-10">
+              <Button className="bg-primary hover:bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest px-10 py-7 rounded-2xl shadow-xl transition-all hover:scale-105 active:scale-95">
+                 Roadmap de Sucesso <ArrowRight className="ml-3 h-5 w-5" />
               </Button>
            </Link>
         </Card>
