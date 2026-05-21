@@ -109,7 +109,12 @@ function Processes() {
           <div className="relative group w-full sm:w-[400px]">
              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
              <input 
-               placeholder="Buscar por cliente, embarcação ou tipo..." 
+               placeholder="Buscar por tipo ou identificador..." 
+               value={searchTerm}
+               onChange={(e) => {
+                 setSearchTerm(e.target.value);
+                 setPage(1);
+               }}
                className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
              />
           </div>
