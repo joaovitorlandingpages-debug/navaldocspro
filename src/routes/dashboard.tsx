@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import { 
   Anchor, LayoutDashboard, Users, Ship, ClipboardList, 
   FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
@@ -366,6 +366,7 @@ function DashboardLayout() {
 export function RouteContent() {
   const { setIsNewProcessOpen } = useNewProcess();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { profile } = useAuth();
   const { data: statsData, isLoading: isLoadingStats } = useDashboardStats();
@@ -433,6 +434,10 @@ export function RouteContent() {
     console.log("RESPONSIVE_MOBILE_OK");
     console.log("LAYOUT_OVERFLOW_FIXED");
     console.log("SINGLE_SCROLL_OK");
+    if (location.pathname !== '/dashboard') {
+      return <Outlet />;
+    }
+
     return (
     <div className="space-y-12 animate-in fade-in duration-1000 pb-12 max-w-[1800px] mx-auto">
       {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (
