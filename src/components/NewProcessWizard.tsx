@@ -220,34 +220,60 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
       case 1:
         return (
-          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             {loadingTypes ? (
               <div className="flex justify-center items-center py-20">
                 <Loader2 className="h-8 w-8 text-primary animate-spin" />
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {processTypes.map((type) => (
-                  <button
-                    key={type.id}
-                    onClick={() => handleTypeSelect(type)}
-                    className={`p-4 rounded-2xl border-2 text-left transition-all h-32 flex flex-col justify-center ${
-                      formData.typeId === type.id 
-                        ? "border-primary bg-primary/5 shadow-md" 
-                        : "border-slate-100 hover:border-slate-200 bg-white"
-                    }`}
-                  >
-                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center mb-3 ${
-                      formData.typeId === type.id ? "bg-primary text-white" : "bg-slate-50 text-slate-400"
-                    }`}>
-                      <Ship className="h-4 w-4" />
-                    </div>
-                    <p className="text-[10px] font-black text-navy uppercase leading-tight line-clamp-2">{type.name}</p>
-                  </button>
-                ))}
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Tipo de Processo</Label>
+                    <select 
+                      className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none"
+                      value={formData.typeId}
+                      onChange={(e) => {
+                        const type = processTypes.find(t => t.id === e.target.value);
+                        if (type) handleTypeSelect(type);
+                      }}
+                    >
+                      <option value="">Selecione o tipo...</option>
+                      {processTypes.map((type) => (
+                        <option key={type.id} value={type.id}>{type.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Categoria</Label>
+                    <Input 
+                      value={formData.category} 
+                      readOnly 
+                      placeholder="Categoria automática"
+                      className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-navy" 
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-slate-400">Observações do Processo</Label>
+                  <textarea 
+                    className="w-full p-4 rounded-xl border border-slate-200 bg-white text-sm min-h-[100px] outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="Adicione observações importantes para este processo..."
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  />
+                </div>
+
+                <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                   <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Dica Operacional</p>
+                   <p className="text-xs text-navy/70 leading-relaxed font-medium">A seleção do tipo de processo gera automaticamente o checklist de documentos obrigatórios.</p>
+                </div>
               </div>
             )}
           </div>
+
         );
       case 2:
         return (
