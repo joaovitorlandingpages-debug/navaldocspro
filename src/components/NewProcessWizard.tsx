@@ -341,9 +341,12 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                     >
                       <option value="">Selecione o tipo...</option>
                       {processTypes.map((type) => (
-                        <option key={type.id} value={type.id}>{type.name}</option>
+                        <option key={type.id} value={type.id}>
+                          {type.name} {type.description ? `(${type.description})` : ""}
+                        </option>
                       ))}
                     </select>
+
                   </div>
 
                   <div className="space-y-2">
