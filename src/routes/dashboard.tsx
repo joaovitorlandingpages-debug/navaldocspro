@@ -451,7 +451,7 @@ export function RouteContent() {
     console.log("ENTERPRISE_FEEL_READY");
     console.log("DASHBOARD_PREMIUM_READY");
     return (
-    <div className="space-y-10 animate-in fade-in duration-700 pb-20 max-w-[1600px] mx-auto">
+    <div className="space-y-10 animate-in fade-in duration-700 pb-8 max-w-[1600px] mx-auto">
       {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (
         <Card className="p-6 md:p-10 bg-[#000B18] text-white border-white/5 rounded-[2rem] md:rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 mb-6 md:mb-10 shadow-2xl relative overflow-hidden group">
            <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/10 blur-[100px] -mr-20 group-hover:bg-primary/20 transition-all duration-1000" />
