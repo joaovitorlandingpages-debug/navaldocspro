@@ -170,8 +170,15 @@ export default function SystemReport() {
 
       {activeTab === 'golive' ? (
         <GoLivePanel />
+      ) : activeTab === 'governance' ? (
+        <GovernancePanel />
+      ) : activeTab === 'incidents' ? (
+        <IncidentManager />
+      ) : activeTab === 'deploys' ? (
+        <DeploymentManager />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
         <Card className="md:col-span-2 border-slate-100 shadow-sm overflow-hidden rounded-3xl">
           <CardHeader className="bg-white border-b border-slate-50 p-6">
             <div className="flex justify-between items-center">
