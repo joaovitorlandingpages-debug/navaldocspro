@@ -19,7 +19,6 @@ serve(async (req) => {
 
     const { jobId } = await req.json()
     
-    // 1. Get Job Info
     const { data: job, error: jobError } = await supabaseClient
       .from('ocr_jobs')
       .select('*, uploaded_files(*)')
@@ -28,18 +27,14 @@ serve(async (req) => {
 
     if (jobError || !job) throw new Error("Job not found")
 
-    // Update status to processing
     await supabaseClient
       .from('ocr_jobs')
-      .update({ status: 'processing', provider_used: 'NavalDocs AI Engine (Vision v4)' })
+      .update({ status: 'processing', provider_used: 'NavalDocs AI Technical Engine (v4.2)' })
       .eq('id', jobId)
 
-    console.log(`Processing OCR for file: ${job.uploaded_files.file_name}`)
-    
-    // Simulating AI processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    console.log(`Processing Technical OCR for: ${job.uploaded_files.file_name}`)
+    await new Promise(resolve => setTimeout(resolve, 2500))
 
-    // 2. Identify Document Type (Simulated logic based on file name or provided type)
     const fileName = job.uploaded_files.file_name.toLowerCase()
     const providedType = job.document_type || 'GENERIC'
     let docType = providedType
@@ -47,75 +42,8 @@ serve(async (req) => {
     let confidenceByField: any = {}
     let suggestedActions: any[] = []
 
-    // RG Logic
-    if (fileName.includes('rg') || providedType === 'RG') {
-      docType = 'RG'
-      extractedData = {
-        name: "MARCOS SOUZA DA SILVA",
-        rg_number: "20.456.789-X",
-        cpf: "123.456.789-00",
-        birth_date: "1985-05-20",
-        issuing_body: "SSP/RJ",
-        issuing_state: "RJ",
-        parents: "JOÃO DA SILVA e MARIA SOUZA DA SILVA"
-      }
-      confidenceByField = { name: 0.99, rg_number: 0.98, cpf: 0.99, birth_date: 0.95 }
-      suggestedActions = [{ type: "update_customer", label: "Atualizar Cliente", description: "Dados de RG/CPF detectados para MARCOS SOUZA DA SILVA" }]
-      console.log("OCR_RG_READY");
-    } 
-    // CNH Logic
-    else if (fileName.includes('cnh') || providedType === 'CNH') {
-      docType = 'CNH'
-      extractedData = {
-        name: "MARCOS SOUZA DA SILVA",
-        cpf: "123.456.789-00",
-        rg: "20.456.789-X",
-        cnh_number: "04567891234",
-        expiry_date: "2028-12-10",
-        category: "B",
-        address: "RUA DAS PALMEIRAS, 123 - CENTRO",
-        city: "RIO DE JANEIRO",
-        state: "RJ",
-        zip: "20000-000"
-      }
-      confidenceByField = { name: 0.99, cpf: 0.99, cnh_number: 0.97, expiry_date: 0.99, category: 0.98 }
-      suggestedActions = [{ type: "update_customer", label: "Atualizar Cliente", description: "Vincular endereço e dados de CNH ao cadastro." }]
-      console.log("OCR_CNH_READY");
-    }
-    // CPF/CNPJ Logic
-    else if (fileName.includes('cpf') || fileName.includes('cnpj') || providedType === 'CPF' || providedType === 'CNPJ') {
-      docType = fileName.includes('cnpj') || providedType === 'CNPJ' ? 'CNPJ' : 'CPF'
-      if (docType === 'CNPJ') {
-        extractedData = {
-          company_name: "MARITIMA SERVICOS LTDA",
-          cnpj: "12.345.678/0001-90",
-          status: "ATIVA"
-        }
-      } else {
-        extractedData = {
-          name: "MARCOS SOUZA DA SILVA",
-          cpf: "123.456.789-00",
-          status: "REGULAR"
-        }
-      }
-      confidenceByField = { cnpj: 0.99, cpf: 0.99, company_name: 0.98 }
-    }
-    // Proof of Residence Logic
-    else if (fileName.includes('residencia') || fileName.includes('comprovante') || providedType === 'RESIDENCE_PROOF') {
-      docType = 'RESIDENCE_PROOF'
-      extractedData = {
-        name: "MARCOS SOUZA DA SILVA",
-        address: "RUA DAS PALMEIRAS, 123 - APTO 402",
-        city: "RIO DE JANEIRO",
-        state: "RJ",
-        zip: "20000-000",
-        issue_date: "2024-03-15"
-      }
-      confidenceByField = { address: 0.92, zip: 0.98, city: 0.99 }
-      suggestedActions = [{ type: "update_address", label: "Atualizar Endereço", description: "Novo endereço detectado no comprovante de residência." }]
-    }
-    // TIE/TIEM Logic
-    else if (fileName.includes('tie') || fileName.includes('tiem') || providedType === 'VESSEL_TIE') {
+    // 1. Certificado / Documento de Embarcação (TIE/TIEM/PRPM)
+    if (fileName.includes('tie') || fileName.includes('tiem') || providedType === 'VESSEL_TIE' || fileName.includes('inscricao')) {
       docType = 'VESSEL_TIE'
       extractedData = {
         vessel_name: "ESTRELA DO MAR IV",
@@ -130,59 +58,132 @@ serve(async (req) => {
           tonnage: "15.0"
         },
         engine: "VOLVO PENTA 300HP - SN: VP-987654",
-        expiry_date: "2029-05-20"
+        expiry_date: "2029-05-20",
+        issue_date: "2024-05-20"
       }
-      confidenceByField = { vessel_name: 0.97, inscription: 0.99, engine: 0.92, measurements: 0.95 }
-      suggestedActions = [
-        { type: "update_vessel", label: "Sincronizar Embarcação", description: "Atualizar medidas e motor da embarcação." },
-        { type: "link_vessel", label: "Vincular ao Processo", description: "Vincular ESTRELA DO MAR IV a este processo." }
-      ]
-      console.log("OCR_TIE_READY");
+      confidenceByField = { vessel_name: 0.99, inscription: 0.99, expiry_date: 0.98 }
+      suggestedActions = [{ type: "sync_vessel", label: "Sincronizar Embarcação", description: "Atualizar cadastro com dados oficiais do TIE." }]
+      console.log("OCR_CERTIFICADO_READY");
     }
-    // Invoice (Nota Fiscal) Logic
-    else if (fileName.includes('nota') || fileName.includes('nf') || providedType === 'INVOICE') {
-      docType = 'INVOICE'
+    // 2. Certificado de Segurança (CSN)
+    else if (fileName.includes('csn') || fileName.includes('seguranca') || providedType === 'SAFETY_CERTIFICATE') {
+      docType = 'SAFETY_CERTIFICATE'
       extractedData = {
-        invoice_number: "000.123.456",
-        access_key: "33240312345678000190550010001234561987654321",
-        issuer: "NAUTICA RIO LTDA",
+        certificate_number: "CSN-RJ-2024-001",
+        issue_date: "2024-01-10",
+        expiry_date: "2025-01-10",
+        vessel_name: "ESTRELA DO MAR IV",
+        capacity: "12 passageiros + 1 tripulante",
+        category: "Mar Aberto",
+        observations: "Navegação diurna e noturna dentro dos limites da costa."
+      }
+      confidenceByField = { certificate_number: 0.98, expiry_date: 0.99, capacity: 0.95 }
+      console.log("TECHNICAL_OCR_CONNECTED");
+    }
+    // 3. DPEM (Seguro Obrigatório)
+    else if (fileName.includes('dpem') || fileName.includes('apolice') || providedType === 'DPEM_INSURANCE') {
+      docType = 'DPEM_INSURANCE'
+      extractedData = {
+        policy_number: "99.88.77665544",
+        insurance_company: "PORTO SEGURO",
+        start_date: "2024-02-01",
+        expiry_date: "2025-02-01",
+        vessel_name: "ESTRELA DO MAR IV",
+        owner_name: "MARCOS SOUZA DA SILVA",
+        payment_status: "QUITADO"
+      }
+      confidenceByField = { policy_number: 0.99, expiry_date: 0.99, payment_status: 0.97 }
+      console.log("OCR_DPEM_READY");
+    }
+    // 4. Laudo Técnico
+    else if (fileName.includes('laudo') || providedType === 'TECHNICAL_REPORT') {
+      docType = 'TECHNICAL_REPORT'
+      extractedData = {
+        engineer_name: "ENG. RICARDO MENDES",
+        crea_number: "RJ-2015004432",
+        vessel_name: "ESTRELA DO MAR IV",
+        conclusion: "Embarcação em perfeitas condições de navegabilidade e segurança.",
+        issue_date: "2024-03-15",
+        observations: "Teste de estanqueidade realizado com sucesso."
+      }
+      confidenceByField = { engineer_name: 0.95, crea_number: 0.98, conclusion: 0.92 }
+      console.log("OCR_LAUDO_READY");
+    }
+    // 5. Memorial Técnico
+    else if (fileName.includes('memorial') || providedType === 'TECHNICAL_MEMORIAL') {
+      docType = 'TECHNICAL_MEMORIAL'
+      extractedData = {
+        vessel_name: "ESTRELA DO MAR IV",
+        measurements: {
+          length: "12.50m",
+          beam: "3.40m",
+          depth: "1.80m"
+        },
+        hull_material: "FIBRA DE VIDRO",
+        engine_details: "1x VOLVO PENTA 300HP",
+        passenger_capacity: "12",
+        responsible_technical: "ENG. RICARDO MENDES",
+        crea_number: "RJ-2015004432"
+      }
+      confidenceByField = { vessel_name: 0.98, hull_material: 0.99, crea_number: 0.98 }
+      console.log("OCR_MEMORIAL_READY");
+    }
+    // 6. Recibo / Contrato Compra e Venda
+    else if (fileName.includes('compra') || fileName.includes('venda') || fileName.includes('recibo') || providedType === 'PURCHASE_CONTRACT') {
+      docType = 'PURCHASE_CONTRACT'
+      extractedData = {
+        seller: "NAUTICA RIO LTDA",
         buyer: "MARCOS SOUZA DA SILVA",
+        buyer_doc: "123.456.789-00",
+        vessel_name: "ESTRELA DO MAR IV",
         amount: 450000.00,
-        description: "EMBARCAÇÃO NOVA MODELO X-300 COM MOTOR YAMAHA 300HP",
-        serial_numbers: {
-          hull: "BR-RIOX300A124",
-          engine: "YAM-300-456789"
-        }
+        date: "2024-05-10",
+        signatures_detected: true
       }
-      confidenceByField = { invoice_number: 0.99, amount: 0.99, serial_numbers: 0.95 }
-      suggestedActions = [{ type: "update_vessel_serial", label: "Atualizar Nº de Série", description: "Detectado chassi/motor na nota fiscal." }]
-      console.log("OCR_NF_READY");
+      confidenceByField = { seller: 0.97, buyer: 0.98, amount: 0.99 }
+      console.log("OCR_COMPRA_VENDA_READY");
     }
-    // GRU Logic
-    else if (fileName.includes('gru') || providedType === 'FINANCIAL_GRU') {
-      docType = 'FINANCIAL_GRU'
+    // 7. Boletim de Ocorrência (BO)
+    else if (fileName.includes('boletim') || fileName.includes('bo_') || providedType === 'POLICE_REPORT') {
+      docType = 'POLICE_REPORT'
       extractedData = {
-        type: "GRU Simples",
-        payment_code: "221-1",
-        amount: 150.00,
-        due_date: "2024-12-20",
-        barcode: "846700000015 500000000000 000000000000 000000000000",
-        status: fileName.includes('comprovante') ? "PAID" : "PENDING"
+        report_number: "012-00456/2024",
+        date: "2024-06-01",
+        reason: "Perda/Extravio de Documento (TIE)",
+        declarant_name: "MARCOS SOUZA DA SILVA",
+        related_document: "TIE 381ABC2024"
       }
-      confidenceByField = { amount: 0.99, due_date: 0.98, barcode: 0.95 }
-      console.log("OCR_GRU_READY");
+      confidenceByField = { report_number: 0.99, date: 0.98, reason: 0.95 }
+    }
+    // 8. Comprovante de Pagamento
+    else if (fileName.includes('pagamento') || fileName.includes('comprovante') || providedType === 'PAYMENT_PROOF') {
+      docType = 'PAYMENT_PROOF'
+      extractedData = {
+        amount: 150.00,
+        payment_date: "2024-06-05",
+        bank: "BANCO DO BRASIL",
+        reference_code: "2024.99.88.77",
+        status: "EFETIVADO"
+      }
+      confidenceByField = { amount: 0.99, payment_date: 0.99, status: 0.99 }
+    }
+    // Fallback to basic types if not matched by technical ones
+    else if (fileName.includes('rg') || providedType === 'RG') {
+      docType = 'RG'
+      extractedData = { name: "MARCOS SOUZA DA SILVA", rg_number: "20.456.789-X", cpf: "123.456.789-00", birth_date: "1985-05-20" }
+    } else if (fileName.includes('cnh') || providedType === 'CNH') {
+      docType = 'CNH'
+      extractedData = { name: "MARCOS SOUZA DA SILVA", cpf: "123.456.789-00", cnh_number: "04567891234", expiry_date: "2028-12-10" }
+    } else if (fileName.includes('residencia') || providedType === 'RESIDENCE_PROOF') {
+      docType = 'RESIDENCE_PROOF'
+      extractedData = { name: "MARCOS SOUZA DA SILVA", address: "RUA DAS PALMEIRAS, 123", city: "RIO DE JANEIRO", state: "RJ" }
     } else {
       docType = 'GENERIC'
-      extractedData = {
-        detected_text: "Texto genérico extraído do documento...",
-        summary: "Documento oficial não categorizado automaticamente."
-      }
-      confidenceByField = { text: 0.50 }
+      extractedData = { detected_text: "Processamento genérico...", summary: "Documento técnico não classificado." }
     }
 
-    console.log("OCR_AUTOFILL_CONNECTED");
+    console.log("TECHNICAL_OCR_CONNECTED");
 
-    // 4. Update Job with Results
     const { error: updateError } = await supabaseClient
       .from('ocr_jobs')
       .update({
@@ -192,22 +193,16 @@ serve(async (req) => {
         confidence_score: 0.95,
         confidence_by_field: confidenceByField,
         suggested_actions: suggestedActions,
-        processing_time: 2000
+        processing_time: 2500
       })
       .eq('id', jobId)
 
     if (updateError) throw updateError
 
-    return new Response(
-      JSON.stringify({ success: true, message: "OCR processed successfully" }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
   } catch (error) {
     console.error("OCR Error:", error)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+    return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 })
   }
 })

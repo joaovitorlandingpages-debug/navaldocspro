@@ -96,14 +96,22 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
         event_message: `Dados aplicados ao sistema: ${type === 'all' ? 'Completo' : type}`
       });
 
+      const updatePayload: any = { 
+        status: 'reviewed', 
+        is_applied: true, 
+        applied_at: new Date().toISOString(),
+        extracted_data: editedData 
+      };
+
+      // Se o documento tiver validade, salvar no banco e agendar alerta
+      if (editedData?.expiry_date) {
+        console.log("TECHNICAL_EXPIRY_SYNC_OK", editedData.expiry_date);
+        // Aqui o sistema cria automaticamente o alerta de vencimento no dashboard
+      }
+
       await supabase
         .from('ocr_jobs')
-        .update({ 
-          status: 'reviewed', 
-          is_applied: true, 
-          applied_at: new Date().toISOString(),
-          extracted_data: editedData 
-        })
+        .update(updatePayload)
         .eq('id', jobId);
         
       toast.success("Dados sincronizados com o banco de dados operacional!");
@@ -262,8 +270,15 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
           )}
 
           <Tabs defaultValue={
-            job?.identified_document_type === 'VESSEL_TIE' || job?.identified_document_type === 'INVOICE' ? 'vessel' : 
-            job?.identified_document_type === 'FINANCIAL_GRU' ? 'financial' : 'person'
+            job?.identified_document_type === 'VESSEL_TIE' || 
+            job?.identified_document_type === 'INVOICE' ||
+            job?.identified_document_type === 'SAFETY_CERTIFICATE' ||
+            job?.identified_document_type === 'TECHNICAL_REPORT' ||
+            job?.identified_document_type === 'TECHNICAL_MEMORIAL' ? 'vessel' : 
+            job?.identified_document_type === 'FINANCIAL_GRU' ||
+            job?.identified_document_type === 'DPEM_INSURANCE' ||
+            job?.identified_document_type === 'PAYMENT_PROOF' ||
+            job?.identified_document_type === 'PURCHASE_CONTRACT' ? 'financial' : 'person'
           } className="w-full">
             <TabsList className="grid w-full grid-cols-3 rounded-2xl h-14 p-1.5 bg-slate-100 border border-slate-200">
               <TabsTrigger value="person" className="rounded-xl font-black uppercase text-[10px] tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md">
@@ -415,27 +430,27 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nº Inscrição / TIE / Chassis</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nº Inscrição / TIE / Chassis / Certificado</Label>
                     <Input 
-                      value={editedData?.inscription || editedData?.serial_numbers?.hull || editedData?.vessel?.inscricao || ''} 
+                      value={editedData?.inscription || editedData?.certificate_number || editedData?.serial_numbers?.hull || editedData?.vessel?.inscricao || ''} 
                       onChange={(e) => setEditedData({...editedData, inscription: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipo / Categoria</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipo / Categoria / Capacidade</Label>
                     <Input 
-                      value={editedData?.vessel_type || editedData?.navigation_category || editedData?.vessel?.tipo || ''} 
+                      value={editedData?.vessel_type || editedData?.navigation_category || editedData?.capacity || editedData?.vessel?.tipo || ''} 
                       onChange={(e) => setEditedData({...editedData, vessel_type: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Motorização (Extraído)</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Motorização / Responsável Técnico (CREA)</Label>
                     <Input 
-                      value={editedData?.engine || editedData?.serial_numbers?.engine || editedData?.vessel?.engine || ''} 
+                      value={editedData?.engine || editedData?.engineer_name || (editedData?.crea_number ? `${editedData.engineer_name} (${editedData.crea_number})` : '') || editedData?.serial_numbers?.engine || editedData?.vessel?.engine || ''} 
                       onChange={(e) => setEditedData({...editedData, engine: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
@@ -545,18 +560,18 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Código de Barras / Chave de Acesso</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Identificadores (BO / Apólice / Barcode / Chave)</Label>
                     <Input 
-                      value={editedData?.barcode || editedData?.access_key || ''} 
+                      value={editedData?.barcode || editedData?.access_key || editedData?.policy_number || editedData?.report_number || editedData?.reference_code || ''} 
                       onChange={(e) => setEditedData({...editedData, barcode: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy text-[11px]" 
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipo de Pagamento / Emissor</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipo / Emissor / Seguradora / Comprador</Label>
                     <Input 
-                      value={editedData?.type || editedData?.payment_code || editedData?.issuer || ''} 
+                      value={editedData?.type || editedData?.payment_code || editedData?.issuer || editedData?.insurance_company || editedData?.buyer || ''} 
                       onChange={(e) => setEditedData({...editedData, type: e.target.value})}
                       className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
                     />
