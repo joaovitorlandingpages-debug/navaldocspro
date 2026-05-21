@@ -366,6 +366,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     }
     
     setIsSubmitting(true);
+    console.log("PROCESS_CREATE_SUBMIT_OK");
+    
     try {
       // 1. Create the process
       const { data: processData, error: processError } = await supabase
@@ -381,7 +383,6 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           compliance_status: 'incompleto',
           notes: formData.notes
         })
-
         .select()
         .single();
 
@@ -396,14 +397,12 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             process_id: processData.id,
             item_name: req.template?.name || "Documento sem nome",
             is_mandatory: req.is_mandatory,
-            status: 'pendente',
-            document_role: req.document_role
+            status: 'pendente'
           });
         });
       }
 
       if (checklistItems.length > 0) {
-        // First verify if column exists, then insert
         const { error: checklistError } = await supabase
           .from('document_checklists')
           .insert(checklistItems);
@@ -412,7 +411,36 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         console.log("PROCESS_CHECKLIST_CREATED", checklistItems.length);
       }
 
-      // 3. Register creation in compliance history
+      // 3. Handle File Uploads
+      if (selectedFiles.length > 0) {
+        console.log("UPLOADING_FILES", selectedFiles.length);
+        for (const file of selectedFiles) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${processData.id}/${crypto.randomUUID()}.${fileExt}`;
+          const filePath = fileName;
+
+          const { error: uploadError } = await supabase.storage
+            .from('process-attachments')
+            .upload(filePath, file);
+
+          if (uploadError) {
+            console.error("Error uploading file:", uploadError);
+          } else {
+            // Create document record
+            await supabase.from('documents').insert({
+              company_id: profile.company_id,
+              process_id: processData.id,
+              customer_id: formData.clientId,
+              vessel_id: formData.vesselId,
+              document_type: 'attachment',
+              status: 'uploaded',
+              file_url: filePath
+            });
+          }
+        }
+      }
+
+      // 4. Register creation in compliance history
       await supabase.from('compliance_history').insert({
         process_id: processData.id,
         event_type: 'creation',
@@ -421,17 +449,22 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         module: 'process_wizard'
       });
 
-
-      console.log("PROCESS_CREATED_OK");
-      toast.success("Processo e pacote documental configurados!");
+      console.log("PROCESS_CREATED_OK", processData.id);
+      toast.success("Processo criado com sucesso!");
+      
       clearDraft();
       onClose();
+      
+      // Redirect to the new process page
+      navigate({ to: `/processes/${processData.id}` });
     } catch (err: any) {
+      console.error("Error creating process:", err);
       toast.error("Erro ao criar processo: " + err.message);
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   const renderStep = () => {
     console.log("FORM_STATE_OK", formData);
