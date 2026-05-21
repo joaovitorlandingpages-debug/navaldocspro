@@ -1007,13 +1007,14 @@ function DashboardSkeleton() {
           <Skeleton className="h-10 w-24" />
         </div>
       </div>
-      <div className="grid grid-cols-4 gap-6">
-        {[1,2,3,4].map(i => <Skeleton key={i} className="h-32 rounded-3xl" />)}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-28 md:h-32 rounded-3xl" />)}
       </div>
-      <div className="grid grid-cols-3 gap-8">
-        <Skeleton className="col-span-2 h-96 rounded-3xl" />
-        <Skeleton className="h-96 rounded-3xl" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+        <Skeleton className="lg:col-span-2 h-[400px] md:h-96 rounded-3xl" />
+        <Skeleton className="h-[400px] md:h-96 rounded-3xl" />
       </div>
+
     </div>
   );
 }
