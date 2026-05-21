@@ -509,6 +509,68 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
                 )}
               </Card>
             </TabsContent>
+
+            <TabsContent value="financial" className="mt-6">
+               <Card className="p-8 border-slate-100 shadow-xl rounded-[2.5rem] bg-white">
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="font-black text-navy uppercase tracking-tight text-base flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-primary" /> Dados Financeiros
+                  </h3>
+                  <Badge variant="outline" className="border-blue-100 text-blue-600 bg-blue-50 uppercase text-[10px] font-black px-3 py-1">
+                    {job?.identified_document_type || 'Documento'}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Valor do Documento</Label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy font-black text-sm">R$</span>
+                      <Input 
+                        value={editedData?.amount || ''} 
+                        onChange={(e) => setEditedData({...editedData, amount: e.target.value})}
+                        className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy pl-10" 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Data de Vencimento</Label>
+                    <Input 
+                      type="date"
+                      value={editedData?.due_date || ''} 
+                      onChange={(e) => setEditedData({...editedData, due_date: e.target.value})}
+                      className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Código de Barras / Chave de Acesso</Label>
+                    <Input 
+                      value={editedData?.barcode || editedData?.access_key || ''} 
+                      onChange={(e) => setEditedData({...editedData, barcode: e.target.value})}
+                      className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy text-[11px]" 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipo de Pagamento / Emissor</Label>
+                    <Input 
+                      value={editedData?.type || editedData?.payment_code || editedData?.issuer || ''} 
+                      onChange={(e) => setEditedData({...editedData, type: e.target.value})}
+                      className="rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary h-12 font-bold text-navy" 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Status do Pagamento</Label>
+                    <Badge className={`${editedData?.status === 'PAID' ? 'bg-green-500' : 'bg-amber-500'} text-white border-none h-12 w-full rounded-2xl flex items-center justify-center font-black uppercase tracking-widest text-[10px]`}>
+                      {editedData?.status === 'PAID' ? 'Pago / Comprovado' : 'Aguardando Pagamento'}
+                    </Badge>
+                  </div>
+                </div>
+              </Card>
+            </TabsContent>
           </Tabs>
 
           <div className="p-6 bg-slate-900 rounded-[2.5rem] text-white flex items-center justify-between gap-6 shadow-2xl">
