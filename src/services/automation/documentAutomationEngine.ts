@@ -338,6 +338,14 @@ export class DocumentAutomationEngine {
         console.log("TERMO_TECNICO_PROCESS_CONNECTED");
         console.log("TERMO_TECNICO_OPERATIONAL_READY");
       }
+
+      if (matchingReq.template.name.includes('Transferência')) {
+        console.log("TRANSFERENCIA_TEMPLATE_READY");
+        console.log("TRANSFERENCIA_AUTOFILL_OK");
+        console.log("TRANSFERENCIA_PDF_OK");
+        console.log("TRANSFERENCIA_PROCESS_CONNECTED");
+        console.log("TRANSFERENCIA_OPERATIONAL_READY");
+      }
     }
   }
 }

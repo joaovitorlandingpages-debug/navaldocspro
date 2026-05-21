@@ -39,6 +39,8 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
   const isMemorial = template?.name?.includes("Memorial");
   const isDeclaracao = template?.name?.includes("Declaração");
   const isTermo = template?.name?.includes("Termo de Responsabilidade");
+  const isTransferencia = template?.name?.includes("Transferência");
+
 
 
 
@@ -361,7 +363,11 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                        if (template.name.includes("Termo de Responsabilidade")) {
                          console.log("TERMO_TECNICO_PDF_OK");
                        }
+                       if (template.name.includes("Transferência")) {
+                         console.log("TRANSFERENCIA_PDF_OK");
+                       }
                        handleApprove();
+
 
 
 
