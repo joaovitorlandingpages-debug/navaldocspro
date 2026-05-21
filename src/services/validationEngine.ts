@@ -146,7 +146,13 @@ export class DocumentValidationEngine {
       "cliente.endereco": data.customer?.address || "[ENDEREÇO PENDENTE]",
       "cliente.cidade": data.customer?.city || "Itajaí",
       "cliente.telefone": data.customer?.phone || "[TELEFONE PENDENTE]",
+      "vendedor.nome": data.metadata?.vendedor_nome || "[NOME VENDEDOR PENDENTE]",
+      "vendedor.cpf": data.metadata?.vendedor_cpf || "[CPF VENDEDOR PENDENTE]",
+      "vendedor.rg": data.metadata?.vendedor_rg || "[RG VENDEDOR PENDENTE]",
+      "vendedor.endereco": data.metadata?.vendedor_endereco || "[ENDEREÇO VENDEDOR PENDENTE]",
+      "data_venda": data.metadata?.data_venda || "[DATA VENDA PENDENTE]",
       "embarcacao.nome": data.vessel?.name,
+
       "embarcacao.inscricao": data.vessel?.tie || data.vessel?.registration_number,
       "embarcacao.tipo": data.vessel?.vessel_type,
       "embarcacao.atividade": data.vessel?.activity,
