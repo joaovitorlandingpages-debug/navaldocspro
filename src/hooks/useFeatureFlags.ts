@@ -16,7 +16,7 @@ export const useFeatureFlags = () => {
   });
 
   const isEnabled = (flagName: string) => {
-    return flags?.some(f => f.name === flagName) ?? false;
+    return flags?.some((f: { name: string }) => f.name === flagName) ?? false;
   };
 
   return { isEnabled, isLoading, flags };
