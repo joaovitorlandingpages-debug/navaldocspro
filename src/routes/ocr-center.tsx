@@ -73,23 +73,28 @@ function OCRCenterPage() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Grid Premium */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, idx) => (
-          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
-             <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-500">
+          <Card key={idx} className="p-8 border-none shadow-[0_20px_50px_rgba(0,0,0,0.03)] hover:shadow-2xl transition-all group overflow-hidden relative rounded-[2rem]">
+             <div className="absolute -right-6 -bottom-6 opacity-[0.03] group-hover:scale-150 group-hover:rotate-12 transition-all duration-1000 group-hover:text-primary">
                {stat.icon}
              </div>
-             <div className="flex justify-between items-start mb-4 relative z-10">
-                <div className="p-2.5 bg-slate-50 rounded-xl group-hover:bg-primary/5 group-hover:text-primary transition-colors">
+             <div className="flex justify-between items-start mb-6 relative z-10">
+                <div className="p-4 bg-slate-50 rounded-2xl group-hover:bg-primary/10 group-hover:text-primary transition-all duration-500 shadow-sm">
                    {stat.icon}
                 </div>
              </div>
-             <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest relative z-10">{stat.label}</p>
-             <h3 className="text-2xl font-black text-navy mt-1 relative z-10">{stat.value}</h3>
-             <p className="text-[9px] font-bold text-slate-400 mt-2 flex items-center gap-1">
-               {stat.trend}
-             </p>
+             <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] relative z-10">{stat.label}</p>
+             <h3 className="text-3xl font-black text-navy mt-2 relative z-10 leading-none">{stat.value}</h3>
+             <div className="flex items-center gap-2 mt-4 relative z-10">
+                <div className="h-1 w-8 bg-primary/20 rounded-full overflow-hidden">
+                   <div className="h-full bg-primary animate-pulse" style={{ width: '60%' }} />
+                </div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                  {stat.trend}
+                </p>
+             </div>
           </Card>
         ))}
       </div>
