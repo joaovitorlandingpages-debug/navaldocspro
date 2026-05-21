@@ -85,8 +85,8 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
       )}
 
       <div className="grid lg:grid-cols-4 gap-8">
-        <Card className="lg:col-span-3 border-slate-100 shadow-sm overflow-hidden bg-white min-h-[700px]">
-           <ScrollArea className="h-[700px] p-12">
+        <Card className="lg:col-span-3 border-slate-100 shadow-xl overflow-hidden bg-white min-h-[842px] max-w-[800px] mx-auto">
+           <ScrollArea className="h-[842px] p-16">
               {isEditing ? (
                 <textarea 
                   value={content}
@@ -94,32 +94,48 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                   className="w-full h-[600px] p-0 border-none focus:ring-0 text-base leading-relaxed text-slate-700 font-serif resize-none"
                 />
               ) : (
-                <div className="prose max-w-none">
-                   <div className="text-center mb-12 border-b border-slate-100 pb-8">
-                      <h1 className="text-xl font-bold text-navy uppercase">{template.name}</h1>
-                      <p className="text-xs text-slate-400 uppercase tracking-widest mt-2">Identificador: {processData.id?.substring(0,8)}</p>
+                 <div className="prose max-w-none font-serif">
+                   <div className="text-center mb-16 border-b-2 border-navy/10 pb-10 space-y-3">
+                      <div className="flex justify-center mb-4">
+                         <FileText className="h-12 w-12 text-navy opacity-20" />
+                      </div>
+                      <h1 className="text-2xl font-black text-navy uppercase tracking-tight">{template.name}</h1>
+                      <div className="flex justify-center gap-6 text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                         <span>Identificador: {processData.id?.substring(0,8)}</span>
+                         <span>•</span>
+                         <span>Código: {template.id?.substring(0,4)}</span>
+                      </div>
                    </div>
                    
-                   <div className="whitespace-pre-wrap font-serif text-lg leading-loose text-slate-800">
+                   <div className="whitespace-pre-wrap font-serif text-lg leading-[1.8] text-slate-900 px-4">
                       {content.split('\n').map((paragraph, i) => (
-                        <p key={i} className="mb-6">
-                           {paragraph.split(/(\[.*?PENDENTE\])/).map((part, j) => (
-                             part.includes("PENDENTE") ? 
-                             <span key={j} className="bg-red-100 text-red-700 px-1 rounded font-bold underline">{part}</span> : 
+                        <p key={i} className={paragraph.trim() === "" ? "h-4" : "mb-6 text-justify"}>
+                           {paragraph.split(/(\[.*?\])/).map((part, j) => (
+                             part.startsWith("[") && part.endsWith("]") ? 
+                             <span key={j} className="bg-amber-50 text-amber-900 px-1 rounded font-bold border border-amber-200/50">{part}</span> : 
                              <span key={j}>{part}</span>
                            ))}
                         </p>
                       ))}
                    </div>
 
-                   <div className="mt-20 flex flex-col items-center">
-                      <div className="w-64 h-px bg-slate-300 mb-2" />
-                      <p className="text-sm font-bold text-navy">{processData.customer?.name}</p>
-                      <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Assinatura do Requerente</p>
+                   <div className="mt-24 flex flex-col items-center">
+                      <div className="w-72 h-0.5 bg-navy/20 mb-3" />
+                      <p className="text-base font-black text-navy uppercase tracking-tight">{processData.customer?.name}</p>
+                      <p className="text-[10px] text-slate-400 uppercase font-black tracking-[0.2em] mt-1">Assinatura do Requerente / Outorgante</p>
                    </div>
 
-                   <div className="mt-12 text-center text-[10px] text-slate-300 uppercase font-black border-t border-slate-50 pt-8">
-                      Gerado eletronicamente por NavalDocs Pro v3.5 • {new Date().toLocaleString()}
+                   <div className="mt-24 pt-10 border-t border-slate-100">
+                      <div className="grid grid-cols-2 gap-8 items-end">
+                         <div className="space-y-1">
+                            <p className="text-[9px] font-black uppercase text-slate-300 tracking-widest">Emitido por</p>
+                            <p className="text-xs font-bold text-navy/40 uppercase tracking-tighter italic">NavalDocs Pro Enterprise System</p>
+                         </div>
+                         <div className="text-right space-y-1">
+                            <p className="text-[9px] font-black uppercase text-slate-300 tracking-widest">Autenticidade</p>
+                            <p className="text-[9px] font-mono text-slate-400">HASH: {processData.id?.replace(/-/g, '').substring(0, 16).toUpperCase()}</p>
+                         </div>
+                      </div>
                    </div>
                 </div>
               )}
