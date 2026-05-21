@@ -17,7 +17,10 @@ import {
   CheckCircle2,
   TrendingUp,
   Menu,
-  Database
+  Database,
+  Rocket,
+  MessageSquare,
+  BarChart3
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
