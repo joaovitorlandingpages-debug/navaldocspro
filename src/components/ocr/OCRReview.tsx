@@ -261,13 +261,19 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
              </Card>
           )}
 
-          <Tabs defaultValue={job?.identified_document_type === 'VESSEL_TIE' ? 'vessel' : 'person'} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 rounded-2xl h-14 p-1.5 bg-slate-100 border border-slate-200">
+          <Tabs defaultValue={
+            job?.identified_document_type === 'VESSEL_TIE' || job?.identified_document_type === 'INVOICE' ? 'vessel' : 
+            job?.identified_document_type === 'FINANCIAL_GRU' ? 'financial' : 'person'
+          } className="w-full">
+            <TabsList className="grid w-full grid-cols-3 rounded-2xl h-14 p-1.5 bg-slate-100 border border-slate-200">
               <TabsTrigger value="person" className="rounded-xl font-black uppercase text-[10px] tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md">
                 <User className="h-4 w-4" /> Dados Pessoais
               </TabsTrigger>
               <TabsTrigger value="vessel" className="rounded-xl font-black uppercase text-[10px] tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md">
                 <Ship className="h-4 w-4" /> Dados Técnicos
+              </TabsTrigger>
+              <TabsTrigger value="financial" className="rounded-xl font-black uppercase text-[10px] tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md">
+                <FileText className="h-4 w-4" /> Financeiro
               </TabsTrigger>
             </TabsList>
 
