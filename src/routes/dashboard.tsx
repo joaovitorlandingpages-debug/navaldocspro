@@ -140,38 +140,27 @@ function DashboardLayout() {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
-      {/* Sidebar */}
-      {/* Sidebar Premium */}
+      {/* Mobile Sidebar */}
+      <div className="lg:hidden z-[60]">
+        <Sheet open={isSidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetContent side="left" className="p-0 border-none w-72 bg-[#000B18]">
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Desktop Sidebar */}
       <aside 
         className={`${
           isSidebarOpen ? "w-72" : "w-20"
-        } transition-all duration-500 bg-[#000B18] text-white flex flex-col z-50 border-r border-white/5 shadow-[20px_0_40px_rgba(0,0,0,0.2)]`}
+        } hidden lg:flex transition-all duration-500 bg-[#000B18] text-white flex-col z-50 border-r border-white/5 shadow-[20px_0_40px_rgba(0,0,0,0.2)]`}
       >
-        <div className="p-8 flex flex-col gap-1">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)]">
-               <Anchor className="h-6 w-6 text-white" />
-            </div>
-            {isSidebarOpen && (
-              <div className="animate-in fade-in slide-in-from-left-2 duration-500">
-                <span className="font-black text-2xl tracking-tighter text-white uppercase italic">NavalDocs <span className="text-primary">Pro</span></span>
-              </div>
-            )}
-          </div>
-          {isSidebarOpen && (
-            <div className="mt-6 px-1 py-3 bg-white/5 rounded-2xl border border-white/5 animate-in zoom-in-95 duration-500">
-               <div className="flex items-center gap-3 px-3">
-                  <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-black text-[10px]">
-                     {profile?.companies?.name?.substring(0, 2).toUpperCase() || "ND"}
-                  </div>
-                  <div className="overflow-hidden">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Licença Enterprise</p>
-                    <p className="text-[10px] font-bold text-white/60 truncate">{profile?.companies?.name || "Empresa..."}</p>
-                  </div>
-               </div>
-            </div>
-          )}
-        </div>
+        <SidebarContent />
+      </aside>
+
+      {/* Sidebar Content Extracted */}
+      {/* (I'll implement the SidebarContent as a separate internal component or just include it here if simple) */}
+
 
         <nav className="flex-grow mt-6 px-4 space-y-6 overflow-y-auto custom-scrollbar">
           {navItems.map((group) => (
