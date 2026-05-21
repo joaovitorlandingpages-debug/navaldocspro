@@ -15,8 +15,9 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClo
     <div className="fixed inset-0 z-[100] flex justify-end">
       <div className="absolute inset-0 bg-navy/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
       
-      <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 rounded-l-[3rem] overflow-hidden">
-        <div className="p-8 border-b flex justify-between items-center bg-slate-50 relative overflow-hidden">
+      <div className="relative w-full md:max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 md:rounded-l-[3rem] overflow-hidden">
+        <div className="p-6 md:p-8 border-b flex justify-between items-center bg-slate-50 relative overflow-hidden">
+
            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -mr-10 -mt-10"></div>
            
            <div className="flex items-center gap-4 relative z-10">
