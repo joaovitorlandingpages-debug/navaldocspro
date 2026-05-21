@@ -31,12 +31,15 @@ interface NewProcessWizardProps {
 const INITIAL_FORM_DATA = {
   typeId: "",
   type: "",
+  category: "",
   client: "",
   clientId: "",
   vessel: "",
   vesselId: "",
+  notes: "",
   documents: [] as any[],
 };
+
 
 export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const { profile } = useAuth();
