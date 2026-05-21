@@ -129,7 +129,7 @@ function Processes() {
       </div>
 
       {view === "kanban" ? (
-        <div className="flex gap-8 overflow-x-auto pb-8 h-[calc(100vh-280px)] min-h-[650px] custom-scrollbar px-2">
+        <div className="flex gap-4 md:gap-8 overflow-x-auto pb-8 h-[calc(100vh-280px)] min-h-[650px] md:min-h-[700px] custom-scrollbar px-2">
           {columns.map((col) => (
             <div key={col.id} className="flex-shrink-0 w-80 flex flex-col gap-6">
               <div className="flex items-center justify-between px-2">
