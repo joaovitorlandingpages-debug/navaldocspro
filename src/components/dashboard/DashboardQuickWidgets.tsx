@@ -51,33 +51,48 @@ export function DashboardQuickWidgets({ recentDocs, loading }: { recentDocs?: an
         </div>
         
         <div className="divide-y divide-slate-50">
-          {filteredDocs.map((doc, i) => (
-            <div key={doc.id} className={`p-4 hover:bg-slate-50/80 transition-all flex items-center justify-between group cursor-pointer ${isMock ? 'opacity-80' : ''}`}>
-              <div className="flex items-center gap-3 overflow-hidden">
-                <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
-                  doc.compliance_status === 'conforme' ? 'bg-emerald-50 text-emerald-500' : 'bg-slate-100 text-slate-400'
-                }`}>
-                  <FileText className="h-4 w-4" />
+          {loading ? (
+            Array(4).fill(0).map((_, i) => (
+              <div key={i} className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-2 w-20" />
+                  </div>
                 </div>
-                <div className="truncate">
-                  <p className="text-xs font-bold text-navy truncate">{doc.file_name}</p>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                    {isMock && <span className="text-primary/60 mr-1">EXEMPLO •</span>}
-                    {new Date(doc.created_at).toLocaleDateString('pt-BR')}
-                  </p>
+                <Skeleton className="h-4 w-12 rounded-full" />
+              </div>
+            ))
+          ) : (
+            filteredDocs.map((doc, i) => (
+              <div key={doc.id} className={`p-4 hover:bg-slate-50/80 transition-all flex items-center justify-between group cursor-pointer ${isMock ? 'opacity-80' : ''}`}>
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
+                    doc.compliance_status === 'conforme' ? 'bg-emerald-50 text-emerald-500' : 'bg-slate-100 text-slate-400'
+                  }`}>
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <div className="truncate">
+                    <p className="text-xs font-bold text-navy truncate">{doc.file_name}</p>
+                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                      {isMock && <span className="text-primary/60 mr-1">EXEMPLO •</span>}
+                      {new Date(doc.created_at).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge variant="outline" className={`text-[8px] uppercase font-black px-1.5 h-4 border-none ${
+                    doc.compliance_status === 'conforme' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    {doc.status}
+                  </Badge>
+                  {doc.category && <span className="text-[7px] font-black text-slate-300 uppercase">{doc.category}</span>}
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-1">
-                <Badge variant="outline" className={`text-[8px] uppercase font-black px-1.5 h-4 border-none ${
-                  doc.compliance_status === 'conforme' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'
-                }`}>
-                  {doc.status}
-                </Badge>
-                {doc.category && <span className="text-[7px] font-black text-slate-300 uppercase">{doc.category}</span>}
-              </div>
-            </div>
-          ))}
-          {filteredDocs.length === 0 && (
+            ))
+          )}
+          {!loading && filteredDocs.length === 0 && (
             <div className="p-8 text-center">
               <p className="text-[10px] font-bold text-slate-400 uppercase italic">Nenhum documento encontrado</p>
             </div>
