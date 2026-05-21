@@ -170,13 +170,13 @@ export default function DeadlineCenter() {
             ) : (
               <>
                 {expiredDocs.map((doc: any) => (
-                  <DeadlineCard key={doc.id} item={doc} type="expired" />
+                  <DeadlineCard key={doc.id} item={doc} type="expired" onAction={() => navigate({ to: `/processes/${doc.process_id}` })} />
                 ))}
                 {expiringSoonDocs.map((doc: any) => (
-                  <DeadlineCard key={doc.id} item={doc} type="warning" />
+                  <DeadlineCard key={doc.id} item={doc} type="warning" onAction={() => navigate({ to: `/processes/${doc.process_id}` })} />
                 ))}
                 {delayedProcesses.map((proc: any) => (
-                  <DeadlineCard key={proc.id} item={proc} type="delayed" />
+                  <DeadlineCard key={proc.id} item={proc} type="delayed" onAction={() => navigate({ to: `/processes/${proc.id}` })} />
                 ))}
                 
                 {expiredDocs.length === 0 && expiringSoonDocs.length === 0 && delayedProcesses.length === 0 && (
@@ -189,12 +189,54 @@ export default function DeadlineCenter() {
             )}
           </div>
         </TabsContent>
+
+        <TabsContent value="expired" className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            {expiredDocs.map((doc: any) => (
+              <DeadlineCard key={doc.id} item={doc} type="expired" onAction={() => navigate({ to: `/processes/${doc.process_id}` })} />
+            ))}
+            {expiredDocs.length === 0 && (
+              <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-[3rem]">
+                <CheckCircle2 className="h-12 w-12 text-emerald-100 mx-auto mb-4" />
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhum documento vencido</p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="soon" className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            {expiringSoonDocs.map((doc: any) => (
+              <DeadlineCard key={doc.id} item={doc} type="warning" onAction={() => navigate({ to: `/processes/${doc.process_id}` })} />
+            ))}
+            {expiringSoonDocs.length === 0 && (
+              <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-[3rem]">
+                <CheckCircle2 className="h-12 w-12 text-emerald-100 mx-auto mb-4" />
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhum vencimento próximo</p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="processes" className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            {delayedProcesses.map((proc: any) => (
+              <DeadlineCard key={proc.id} item={proc} type="delayed" onAction={() => navigate({ to: `/processes/${proc.id}` })} />
+            ))}
+            {delayedProcesses.length === 0 && (
+              <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-[3rem]">
+                <CheckCircle2 className="h-12 w-12 text-emerald-100 mx-auto mb-4" />
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhum processo atrasado</p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function DeadlineCard({ item, type }: { item: any, type: 'expired' | 'warning' | 'delayed' }) {
+function DeadlineCard({ item, type, onAction }: { item: any, type: 'expired' | 'warning' | 'delayed', onAction?: () => void }) {
   const isDoc = !!item.document_type;
   const days = isDoc ? differenceInDays(parseISO(item.expiry_date), new Date()) : differenceInDays(new Date(), parseISO(item.created_at));
 
@@ -249,7 +291,7 @@ function DeadlineCard({ item, type }: { item: any, type: 'expired' | 'warning' |
              type === 'warning' ? `${days} dias` : 
              `${days} dias aberto`}
           </p>
-          <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 mt-1">
+          <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 mt-1" onClick={onAction}>
             Resolver Agora <ArrowRight className="ml-2 h-3.5 w-3.5" />
           </Button>
         </div>
