@@ -185,10 +185,18 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
                         </TooltipProvider>
                       )}
                     </h4>
-                    <div className="flex items-center gap-3 mt-1">
+                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
                       <p className="text-[10px] font-medium text-slate-400">{req.template?.description || 'Documento operacional'}</p>
-                      <span className="h-1 w-1 bg-slate-200 rounded-full" />
+                      <span className="h-0.5 w-0.5 bg-slate-200 rounded-full" />
                       <p className="text-[10px] font-black uppercase text-primary tracking-widest">{req.document_role}</p>
+                      {status === 'conforme' && (
+                        <>
+                          <span className="h-0.5 w-0.5 bg-slate-200 rounded-full" />
+                          <Badge variant="outline" className="text-[8px] h-4 font-black uppercase tracking-tighter text-emerald-600 border-emerald-100 bg-emerald-50/50 flex gap-1">
+                            <Bot className="h-2.5 w-2.5" /> Identificado automaticamente
+                          </Badge>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
