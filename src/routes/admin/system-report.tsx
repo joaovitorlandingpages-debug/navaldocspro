@@ -99,7 +99,27 @@ function SystemReport() {
               </div>
            </section>
 
+           <section className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+              <h2 className="text-xl font-bold text-navy mb-8 flex items-center gap-3">
+                 <Globe className="h-6 w-6 text-primary" /> Auditoria UX & Responsividade
+              </h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                 {report?.uxAudit.map((item, i) => (
+                   <div key={i} className="p-4 bg-slate-50 rounded-2xl flex items-start gap-4">
+                      <div className="h-8 w-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                         <CheckCircle2 className="h-5 w-5" />
+                      </div>
+                      <div>
+                         <p className="font-bold text-navy text-xs uppercase tracking-widest">{item.item}</p>
+                         <p className="text-[10px] text-slate-500 mt-1">{item.notes}</p>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+           </section>
+
            <section className="grid md:grid-cols-2 gap-6">
+
               <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
                  <h3 className="font-black text-navy uppercase tracking-widest text-xs mb-6 flex items-center gap-2">
                     <Database className="h-4 w-4 text-indigo-500" /> Infraestrutura Supabase
