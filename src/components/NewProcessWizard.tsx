@@ -848,10 +848,15 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                    <span className="text-slate-500 font-medium">Documentos vinculados</span>
                    <span className="text-navy font-bold">{requirements.length} itens</span>
                 </div>
-                <div className="flex justify-between items-center text-xs px-2">
-                   <span className="text-slate-500 font-medium">Prazo estimado</span>
-                   <span className="text-navy font-bold">15 dias úteis</span>
-                </div>
+                 <div className="flex justify-between items-center text-xs px-2">
+                    <span className="text-slate-500 font-medium">Arquivos para upload</span>
+                    <span className="text-navy font-bold">{selectedFiles.length} arquivos</span>
+                 </div>
+                 <div className="flex justify-between items-center text-xs px-2">
+                    <span className="text-slate-500 font-medium">Prazo estimado</span>
+                    <span className="text-navy font-bold">15 dias úteis</span>
+                 </div>
+
              </div>
 
              <div className="p-4 bg-green-50 border border-green-100 rounded-2xl flex items-center gap-3">
