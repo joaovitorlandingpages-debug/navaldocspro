@@ -14,13 +14,16 @@ export function DashboardQuickWidgets({ recentDocs }: { recentDocs?: any[] }) {
   const isMock = !recentDocs || recentDocs.length === 0;
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
-          <h3 className="text-xs font-black uppercase tracking-widest text-navy flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" /> Últimos Documentos
-          </h3>
-          <Link to="/documents" className="text-[10px] font-black uppercase text-primary hover:underline">Ver Todos</Link>
+    <div className="space-y-8">
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden">
+        <div className="p-8 border-b bg-slate-50/30 flex justify-between items-center">
+          <div>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-navy flex items-center gap-3">
+              <FileText className="h-5 w-5 text-primary" /> Ativos Gerados Recentemente
+            </h3>
+            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Biblioteca técnica consolidada</p>
+          </div>
+          <Link to="/documents" className="text-[10px] font-black uppercase text-primary hover:bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 transition-all">Ver Todos</Link>
         </div>
         
         <div className="divide-y divide-slate-50">
