@@ -25,13 +25,13 @@ export function WelcomeTour({
   if (!isOpen) return null;
 
   const steps: Step[] = [
-    { id: '1', title: 'Perfil da Empresa', description: 'Configure seus dados básicos.', completed: onboardingStep >= 1 },
-    { id: '2', title: 'Primeiro Cliente', description: 'Cadastre quem você atende.', completed: onboardingStep >= 4 },
-    { id: '3', title: 'Primeira Embarcação', description: 'Vincule uma embarcação.', completed: onboardingStep >= 5 },
-    { id: '4', title: 'Criar Processo', description: 'Inicie uma automação.', completed: onboardingStep >= 6 },
-    { id: '5', title: 'Enviar Documento', description: 'Upload para análise.', completed: onboardingStep >= 7 },
-    { id: '6', title: 'Executar OCR', description: 'Extração automática de dados.', completed: false },
-    { id: '7', title: 'Gerar Documento', description: 'Finalize sua primeira entrega.', completed: false },
+    { id: '1', title: 'Perfil Enterprise', description: 'Dados da sua organização naval.', completed: onboardingStep >= 1 },
+    { id: '2', title: 'Portal do Cliente', description: 'Configuração da área externa.', completed: onboardingStep >= 4 },
+    { id: '3', title: 'Gestão de Frotas', description: 'Cadastro de embarcações críticas.', completed: onboardingStep >= 5 },
+    { id: '4', title: 'Automação IA', description: 'Execução de OCR e extração.', completed: onboardingStep >= 6 },
+    { id: '5', title: 'Assinatura Digital', description: 'Fluxo de validação sem papel.', completed: onboardingStep >= 7 },
+    { id: '6', title: 'Geração de Dossiê', description: 'Exportação completa para entrega.', completed: false },
+    { id: '7', title: 'Readiness Comercial', description: 'Auditoria final de prontidão.', completed: false },
   ];
 
   const completedCount = steps.filter(s => s.completed).length;
