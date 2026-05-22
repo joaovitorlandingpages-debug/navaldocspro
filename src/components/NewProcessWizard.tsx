@@ -253,23 +253,146 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   };
 
 
+  const handleOcrFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!profile?.company_id) {
+      toast.error("Empresa não identificada.");
+      return;
+    }
+
+    setIsOcrProcessing(true);
+    console.log("QUICK_CLIENT_OCR_UPLOAD_START");
+    
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${profile.company_id}/ocr/${fileName}`;
+
+      // 1. Upload to bucket
+      const { error: uploadError } = await supabase.storage
+        .from('ocr-documents')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // 2. Register file
+      const { data: fileData, error: dbError } = await supabase
+        .from('uploaded_files')
+        .insert({
+          company_id: profile.company_id,
+          file_name: file.name,
+          file_url: filePath,
+          category: 'ocr_analysis',
+          file_type: file.type,
+          file_size: file.size,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+      setOcrUploadedFile(fileData);
+      console.log("QUICK_CLIENT_OCR_UPLOAD_OK");
+
+      // 3. Create OCR Job
+      const { data: jobData, error: jobError } = await supabase
+        .from("ocr_jobs")
+        .insert({
+          company_id: profile.company_id,
+          file_id: fileData.id,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (jobError) throw jobError;
+
+      // 4. Trigger processing
+      await supabase.functions.invoke('process-ocr', {
+        body: { jobId: jobData.id }
+      });
+
+      // 5. Poll for results (simple version)
+      let attempts = 0;
+      const maxAttempts = 15;
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        const { data: jobStatus, error: statusError } = await supabase
+          .from("ocr_jobs")
+          .select("*")
+          .eq("id", jobData.id)
+          .single();
+
+        if (statusError) {
+          clearInterval(pollInterval);
+          setIsOcrProcessing(false);
+          toast.error("Erro ao verificar status do OCR");
+          return;
+        }
+
+        if (jobStatus.status === 'completed' || jobStatus.status === 'failed') {
+          clearInterval(pollInterval);
+          setIsOcrProcessing(false);
+          
+          if (jobStatus.status === 'completed') {
+            setOcrJobResult(jobStatus);
+            console.log("QUICK_CLIENT_OCR_EXTRACT_OK");
+            toast.success("Documento processado com sucesso!");
+          } else {
+            toast.error("Falha ao processar documento.");
+          }
+        }
+
+        if (attempts >= maxAttempts) {
+          clearInterval(pollInterval);
+          setIsOcrProcessing(false);
+          toast.error("Tempo esgotado ao processar documento.");
+        }
+      }, 2000);
+
+    } catch (error: any) {
+      console.error("OCR_ERROR", error);
+      toast.error("Erro ao processar documento: " + error.message);
+      setIsOcrProcessing(false);
+    }
+  };
+
+  const applyOcrData = () => {
+    if (!ocrJobResult?.extracted_data) return;
+    
+    const data = ocrJobResult.extracted_data;
+    const person = data.person || data; // Handle different OCR output formats
+
+    setNewClient({
+      ...newClient,
+      name: person.nome || person.name || person.full_name || "",
+      document: person.cpf || person.doc_number || "",
+      rg: person.rg || "",
+      address: person.address || person.endereco || "",
+      city: person.city || person.cidade || "",
+      state: person.state || person.uf || person.estado || "",
+    });
+
+    console.log("QUICK_CLIENT_DATA_APPLIED");
+    setClientModalMode('manual');
+    toast.success("Dados preenchidos automaticamente. Por favor, confira e complete o cadastro.");
+  };
+
   const handleQuickClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("SAVE_CLIENT_CLICKED");
-    console.log("CLIENT_FORM_VALIDATE_START");
     
     if (!newClient.name) {
       toast.error("O nome é obrigatório.");
       return;
     }
 
-    console.log("CLIENT_FORM_VALID");
     setIsCreatingClient(true);
     
     try {
-      console.log("WORKSPACE_RESOLVE_START");
       const { data: { user } } = await supabase.auth.getUser();
-      console.log("AUTH_USER_FOUND", user?.id);
       
       let effectiveCompanyId = profile?.company_id;
       
@@ -278,18 +401,13 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         effectiveCompanyId = await ensureWorkspace(user, profile);
       }
 
-      console.log("WORKSPACE_RESOLVED", effectiveCompanyId);
-
       if (!effectiveCompanyId) {
-        console.error("CLIENT_INSERT_ERROR", "Workspace do usuário não encontrado");
-        toast.error("Workspace do usuário não encontrado. Por favor, tente recarregar a página.");
+        toast.error("Workspace do usuário não encontrado.");
         setIsCreatingClient(false);
         return;
       }
 
-      console.log("CLIENT_INSERT_START");
       const clientType = (newClient.document || "").length > 14 ? 'pessoa_juridica' : ((newClient.document || "").length > 11 ? 'mei' : 'pessoa_fisica');
-      console.log("CLIENT_TYPE_SELECTED", clientType);
       
       const payload = {
         company_id: effectiveCompanyId,
@@ -299,49 +417,42 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         email: newClient.email,
         address: `${newClient.address || ''} ${newClient.city || ''} ${newClient.state || ''}`.trim(),
         notes: `${newClient.notes || ''} ${newClient.rg ? '(RG: ' + newClient.rg + ')' : ''}`.trim(),
+        // If we have an OCR file, we should ideally link it here (may need schema update or use document table)
       };
       
-      console.log("CLIENT_INSERT_PAYLOAD", payload);
-
       const { data, error } = await supabase
         .from('customers')
         .insert(payload)
         .select()
         .single();
 
-      if (error) {
-        console.error("CLIENT_INSERT_ERROR", error);
-        throw error;
+      if (error) throw error;
+
+      // If we have an OCR file, link it to the customer in the documents table
+      if (ocrUploadedFile) {
+        await supabase.from('documents').insert({
+          company_id: effectiveCompanyId,
+          customer_id: data.id,
+          document_type: 'identity_doc',
+          status: 'verified',
+          file_url: ocrUploadedFile.file_url,
+          file_name: ocrUploadedFile.file_name
+        });
+        console.log("QUICK_CLIENT_DOCUMENT_ATTACHED");
       }
 
-      console.log("CLIENT_INSERT_SUCCESS", data.id);
-      console.log("CLIENT_INSERT_OK");
-      console.log("CLIENT_CREATED_WITH_WORKSPACE", data.id);
-      
-      if (clientType === 'pessoa_fisica') console.log("CLIENT_PERSON_FISICA_OK");
-      if (clientType === 'mei') console.log("CLIENT_MEI_OK");
-      if (clientType === 'pessoa_juridica') console.log("CLIENT_CNPJ_OK");
-
+      console.log("QUICK_CLIENT_SAVE_OK", data.id);
       toast.success("Cliente criado com sucesso!");
       
-      // Update form data and close quick modal
       setFormData({ ...formData, client: data.name, clientId: data.id });
-      console.log("CLIENT_SELECTED_OK", data.name);
-      
       setIsQuickClientOpen(false);
       setNewClient({
-        name: "",
-        document: "",
-        rg: "",
-        phone: "",
-        email: "",
-        address: "",
-        city: "",
-        state: "",
-        notes: ""
+        name: "", document: "", rg: "", phone: "", email: "",
+        address: "", city: "", state: "", notes: ""
       });
+      setOcrJobResult(null);
+      setOcrUploadedFile(null);
 
-      // Refresh list
       await fetchCustomersList("");
     } catch (error: any) {
       console.error("CLIENT_INSERT_ERROR", error);
