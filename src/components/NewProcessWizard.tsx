@@ -303,6 +303,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       }
 
       console.log("CLIENT_INSERT_SUCCESS", data.id);
+      console.log("CLIENT_INSERT_OK");
       console.log("CLIENT_CREATED_WITH_WORKSPACE", data.id);
       
       if (clientType === 'pessoa_fisica') console.log("CLIENT_PERSON_FISICA_OK");
