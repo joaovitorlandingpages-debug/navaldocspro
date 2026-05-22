@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { 
@@ -11,7 +11,13 @@ import {
   Settings,
   Target,
   FileSearch,
-  CheckCircle2
+  CheckCircle2,
+  Upload,
+  Sparkles,
+  Info,
+  ShieldCheck,
+  Edit2,
+  Trash2
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -75,9 +81,15 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     notes: ""
   });
 
+  // OCR and Client Modal improvements
+  const [clientModalMode, setClientModalMode] = useState<'manual' | 'ocr'>('manual');
+  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+  const [ocrJobResult, setOcrJobResult] = useState<any>(null);
+  const [ocrUploadedFile, setOcrUploadedFile] = useState<any>(null);
+  const ocrFileInputRef = useRef<HTMLInputElement>(null);
+
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [ocrStatus, setOcrStatus] = useState<Record<string, string>>({});
-
 
   const [newVessel, setNewVessel] = useState({
     name: "",
@@ -241,23 +253,146 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   };
 
 
+  const handleOcrFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!profile?.company_id) {
+      toast.error("Empresa não identificada.");
+      return;
+    }
+
+    setIsOcrProcessing(true);
+    console.log("QUICK_CLIENT_OCR_UPLOAD_START");
+    
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${profile.company_id}/ocr/${fileName}`;
+
+      // 1. Upload to bucket
+      const { error: uploadError } = await supabase.storage
+        .from('ocr-documents')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // 2. Register file
+      const { data: fileData, error: dbError } = await supabase
+        .from('uploaded_files')
+        .insert({
+          company_id: profile.company_id,
+          file_name: file.name,
+          file_url: filePath,
+          category: 'ocr_analysis',
+          file_type: file.type,
+          file_size: file.size,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+      setOcrUploadedFile(fileData);
+      console.log("QUICK_CLIENT_OCR_UPLOAD_OK");
+
+      // 3. Create OCR Job
+      const { data: jobData, error: jobError } = await supabase
+        .from("ocr_jobs")
+        .insert({
+          company_id: profile.company_id,
+          file_id: fileData.id,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (jobError) throw jobError;
+
+      // 4. Trigger processing
+      await supabase.functions.invoke('process-ocr', {
+        body: { jobId: jobData.id }
+      });
+
+      // 5. Poll for results (simple version)
+      let attempts = 0;
+      const maxAttempts = 15;
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        const { data: jobStatus, error: statusError } = await supabase
+          .from("ocr_jobs")
+          .select("*")
+          .eq("id", jobData.id)
+          .single();
+
+        if (statusError) {
+          clearInterval(pollInterval);
+          setIsOcrProcessing(false);
+          toast.error("Erro ao verificar status do OCR");
+          return;
+        }
+
+        if (jobStatus.status === 'completed' || jobStatus.status === 'failed') {
+          clearInterval(pollInterval);
+          setIsOcrProcessing(false);
+          
+          if (jobStatus.status === 'completed') {
+            setOcrJobResult(jobStatus);
+            console.log("QUICK_CLIENT_OCR_EXTRACT_OK");
+            toast.success("Documento processado com sucesso!");
+          } else {
+            toast.error("Falha ao processar documento.");
+          }
+        }
+
+        if (attempts >= maxAttempts) {
+          clearInterval(pollInterval);
+          setIsOcrProcessing(false);
+          toast.error("Tempo esgotado ao processar documento.");
+        }
+      }, 2000);
+
+    } catch (error: any) {
+      console.error("OCR_ERROR", error);
+      toast.error("Erro ao processar documento: " + error.message);
+      setIsOcrProcessing(false);
+    }
+  };
+
+  const applyOcrData = () => {
+    if (!ocrJobResult?.extracted_data) return;
+    
+    const data = ocrJobResult.extracted_data;
+    const person = data.person || data; // Handle different OCR output formats
+
+    setNewClient({
+      ...newClient,
+      name: person.nome || person.name || person.full_name || "",
+      document: person.cpf || person.doc_number || "",
+      rg: person.rg || "",
+      address: person.address || person.endereco || "",
+      city: person.city || person.cidade || "",
+      state: person.state || person.uf || person.estado || "",
+    });
+
+    console.log("QUICK_CLIENT_DATA_APPLIED");
+    setClientModalMode('manual');
+    toast.success("Dados preenchidos automaticamente. Por favor, confira e complete o cadastro.");
+  };
+
   const handleQuickClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("SAVE_CLIENT_CLICKED");
-    console.log("CLIENT_FORM_VALIDATE_START");
     
     if (!newClient.name) {
       toast.error("O nome é obrigatório.");
       return;
     }
 
-    console.log("CLIENT_FORM_VALID");
     setIsCreatingClient(true);
     
     try {
-      console.log("WORKSPACE_RESOLVE_START");
       const { data: { user } } = await supabase.auth.getUser();
-      console.log("AUTH_USER_FOUND", user?.id);
       
       let effectiveCompanyId = profile?.company_id;
       
@@ -266,18 +401,13 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         effectiveCompanyId = await ensureWorkspace(user, profile);
       }
 
-      console.log("WORKSPACE_RESOLVED", effectiveCompanyId);
-
       if (!effectiveCompanyId) {
-        console.error("CLIENT_INSERT_ERROR", "Workspace do usuário não encontrado");
-        toast.error("Workspace do usuário não encontrado. Por favor, tente recarregar a página.");
+        toast.error("Workspace do usuário não encontrado.");
         setIsCreatingClient(false);
         return;
       }
 
-      console.log("CLIENT_INSERT_START");
       const clientType = (newClient.document || "").length > 14 ? 'pessoa_juridica' : ((newClient.document || "").length > 11 ? 'mei' : 'pessoa_fisica');
-      console.log("CLIENT_TYPE_SELECTED", clientType);
       
       const payload = {
         company_id: effectiveCompanyId,
@@ -287,49 +417,42 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         email: newClient.email,
         address: `${newClient.address || ''} ${newClient.city || ''} ${newClient.state || ''}`.trim(),
         notes: `${newClient.notes || ''} ${newClient.rg ? '(RG: ' + newClient.rg + ')' : ''}`.trim(),
+        // If we have an OCR file, we should ideally link it here (may need schema update or use document table)
       };
       
-      console.log("CLIENT_INSERT_PAYLOAD", payload);
-
       const { data, error } = await supabase
         .from('customers')
         .insert(payload)
         .select()
         .single();
 
-      if (error) {
-        console.error("CLIENT_INSERT_ERROR", error);
-        throw error;
+      if (error) throw error;
+
+      // If we have an OCR file, link it to the customer in the documents table
+      if (ocrUploadedFile) {
+        await supabase.from('documents').insert({
+          company_id: effectiveCompanyId,
+          customer_id: data.id,
+          document_type: 'identity_doc',
+          status: 'verified',
+          file_url: ocrUploadedFile.file_url,
+          file_name: ocrUploadedFile.file_name
+        });
+        console.log("QUICK_CLIENT_DOCUMENT_ATTACHED");
       }
 
-      console.log("CLIENT_INSERT_SUCCESS", data.id);
-      console.log("CLIENT_INSERT_OK");
-      console.log("CLIENT_CREATED_WITH_WORKSPACE", data.id);
-      
-      if (clientType === 'pessoa_fisica') console.log("CLIENT_PERSON_FISICA_OK");
-      if (clientType === 'mei') console.log("CLIENT_MEI_OK");
-      if (clientType === 'pessoa_juridica') console.log("CLIENT_CNPJ_OK");
-
+      console.log("QUICK_CLIENT_SAVE_OK", data.id);
       toast.success("Cliente criado com sucesso!");
       
-      // Update form data and close quick modal
       setFormData({ ...formData, client: data.name, clientId: data.id });
-      console.log("CLIENT_SELECTED_OK", data.name);
-      
       setIsQuickClientOpen(false);
       setNewClient({
-        name: "",
-        document: "",
-        rg: "",
-        phone: "",
-        email: "",
-        address: "",
-        city: "",
-        state: "",
-        notes: ""
+        name: "", document: "", rg: "", phone: "", email: "",
+        address: "", city: "", state: "", notes: ""
       });
+      setOcrJobResult(null);
+      setOcrUploadedFile(null);
 
-      // Refresh list
       await fetchCustomersList("");
     } catch (error: any) {
       console.error("CLIENT_INSERT_ERROR", error);
@@ -1027,101 +1150,199 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
       {/* Modal de Criação Rápida de Cliente */}
       <Dialog open={isQuickClientOpen} onOpenChange={setIsQuickClientOpen}>
-        <DialogContent className="max-w-md w-[95vw] p-6 md:p-8 bg-white border-none rounded-[1.5rem] md:rounded-[2rem] shadow-2xl">
-
-          <DialogHeader>
-            <DialogTitle className="text-xl font-black text-navy uppercase tracking-tight">Novo Cliente Rápido</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleQuickClientSubmit} className="space-y-4 pt-4">
-            <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase font-black text-slate-400">Nome Completo</Label>
-              <Input 
-                required
-                value={newClient.name}
-                onChange={(e) => setNewClient({...newClient, name: e.target.value})}
-                placeholder="Ex: João da Silva"
-                className="rounded-xl border-slate-200" 
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-black text-slate-400">CPF/CNPJ</Label>
-                <Input 
-                  value={newClient.document}
-                  onChange={(e) => setNewClient({...newClient, document: e.target.value})}
-                  placeholder="000.000.000-00"
-                  className="rounded-xl border-slate-200" 
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-black text-slate-400">RG</Label>
-                <Input 
-                  value={newClient.rg}
-                  onChange={(e) => setNewClient({...newClient, rg: e.target.value})}
-                  placeholder="00.000.000-0"
-                  className="rounded-xl border-slate-200" 
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-black text-slate-400">Telefone</Label>
-                <Input 
-                  value={newClient.phone}
-                  onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
-                  placeholder="(00) 00000-0000"
-                  className="rounded-xl border-slate-200" 
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-black text-slate-400">E-mail</Label>
-                <Input 
-                  type="email"
-                  value={newClient.email}
-                  onChange={(e) => setNewClient({...newClient, email: e.target.value})}
-                  placeholder="email@exemplo.com"
-                  className="rounded-xl border-slate-200" 
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase font-black text-slate-400">Cidade/UF</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Input 
-                  value={newClient.city}
-                  onChange={(e) => setNewClient({...newClient, city: e.target.value})}
-                  placeholder="Cidade"
-                  className="rounded-xl border-slate-200" 
-                />
-                <Input 
-                  value={newClient.state}
-                  onChange={(e) => setNewClient({...newClient, state: e.target.value})}
-                  placeholder="UF"
-                  maxLength={2}
-                  className="rounded-xl border-slate-200 uppercase" 
-                />
-              </div>
-            </div>
-
-            <div className="pt-4 flex gap-3">
-              <Button 
-                type="button" 
-                variant="ghost" 
-                onClick={() => setIsQuickClientOpen(false)}
-                className="flex-1 rounded-xl h-12"
+        <DialogContent className="max-w-md w-[95vw] p-0 bg-white border-none rounded-[1.5rem] md:rounded-[2rem] shadow-2xl overflow-hidden">
+          <div className="p-6 md:p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <DialogHeader className="p-0">
+              <DialogTitle className="text-xl font-black text-navy uppercase tracking-tight">Novo Cliente Rápido</DialogTitle>
+            </DialogHeader>
+            <div className="flex bg-slate-200 p-1 rounded-xl">
+              <button 
+                type="button"
+                onClick={() => setClientModalMode('manual')}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${clientModalMode === 'manual' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}
               >
-                Cancelar
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isCreatingClient}
-                className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
+                Manual
+              </button>
+              <button 
+                type="button"
+                onClick={() => setClientModalMode('ocr')}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${clientModalMode === 'ocr' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}
               >
-                {isCreatingClient ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Cliente"}
-              </Button>
+                IA OCR
+              </button>
             </div>
-          </form>
+          </div>
+
+          <div className="p-6 md:p-8">
+            {clientModalMode === 'ocr' ? (
+              <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+                {!ocrJobResult ? (
+                  <div 
+                    className="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center gap-4 hover:border-primary/50 transition-all cursor-pointer bg-slate-50 group text-center"
+                    onClick={() => ocrFileInputRef.current?.click()}
+                  >
+                    <div className="h-16 w-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform border border-slate-100">
+                      {isOcrProcessing ? <Loader2 className="h-8 w-8 animate-spin" /> : <Upload className="h-8 w-8" />}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-navy uppercase">Scanner de Identidade IA</h4>
+                      <p className="text-[10px] text-slate-400 font-medium max-w-[200px] mt-1">Envie CNH ou RG para preenchimento automático ultra-rápido.</p>
+                    </div>
+                    <input 
+                      type="file" 
+                      ref={ocrFileInputRef} 
+                      className="hidden" 
+                      accept="image/*,application/pdf"
+                      onChange={handleOcrFileSelect}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-5 bg-blue-50 border border-blue-100 rounded-2xl space-y-3">
+                       <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-2">
+                             <div className="h-8 w-8 bg-blue-500 text-white rounded-lg flex items-center justify-center">
+                                <Zap className="h-4 w-4" />
+                             </div>
+                             <div>
+                                <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest">Dados Extraídos</p>
+                                <p className="text-xs font-bold text-navy">{ocrJobResult.extracted_data?.person?.nome || ocrJobResult.extracted_data?.name || "Nome não identificado"}</p>
+                             </div>
+                          </div>
+                          <Badge className="bg-green-500 text-white border-none text-[8px] uppercase">
+                             Confiança: {((ocrJobResult.confidence_score || 0.95) * 100).toFixed(0)}%
+                          </Badge>
+                       </div>
+                       
+                       <div className="grid grid-cols-1 gap-2 text-[10px]">
+                          <div className="flex justify-between py-1 border-b border-blue-100/50">
+                             <span className="text-slate-500">Documento</span>
+                             <span className="font-bold text-navy">{ocrJobResult.extracted_data?.person?.cpf || ocrJobResult.extracted_data?.doc_number || "Não extraído"}</span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-blue-100/50">
+                             <span className="text-slate-500">Endereço</span>
+                             <span className="font-bold text-navy truncate max-w-[150px]">{ocrJobResult.extracted_data?.person?.address || ocrJobResult.extracted_data?.address || "Não extraído"}</span>
+                          </div>
+                       </div>
+
+                       <Button 
+                         type="button"
+                         onClick={applyOcrData}
+                         className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-10 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-blue-200"
+                       >
+                          <Sparkles className="h-3 w-3" /> Aplicar estes dados
+                       </Button>
+                    </div>
+
+                    <Button 
+                      type="button"
+                      variant="ghost" 
+                      onClick={() => setOcrJobResult(null)}
+                      className="w-full text-[10px] font-bold text-slate-400 uppercase"
+                    >
+                       Tentar outro documento
+                    </Button>
+                  </div>
+                )}
+                
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
+                   <ShieldCheck className="h-4 w-4 text-green-500" />
+                   <p className="text-[9px] text-slate-500 font-medium">Privacidade garantida: Seus documentos são processados e armazenados com criptografia de ponta a ponta.</p>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleQuickClientSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] uppercase font-black text-slate-400">Nome Completo</Label>
+                  <Input 
+                    required
+                    value={newClient.name}
+                    onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                    placeholder="Ex: João da Silva"
+                    className="rounded-xl border-slate-200" 
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] uppercase font-black text-slate-400">CPF/CNPJ</Label>
+                    <Input 
+                      value={newClient.document}
+                      onChange={(e) => setNewClient({...newClient, document: e.target.value})}
+                      placeholder="000.000.000-00"
+                      className="rounded-xl border-slate-200" 
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] uppercase font-black text-slate-400">RG</Label>
+                    <Input 
+                      value={newClient.rg}
+                      onChange={(e) => setNewClient({...newClient, rg: e.target.value})}
+                      placeholder="00.000.000-0"
+                      className="rounded-xl border-slate-200" 
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] uppercase font-black text-slate-400">Telefone</Label>
+                    <Input 
+                      value={newClient.phone}
+                      onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
+                      placeholder="(00) 00000-0000"
+                      className="rounded-xl border-slate-200" 
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] uppercase font-black text-slate-400">E-mail</Label>
+                    <Input 
+                      type="email"
+                      value={newClient.email}
+                      onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                      placeholder="email@exemplo.com"
+                      className="rounded-xl border-slate-200" 
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] uppercase font-black text-slate-400">Cidade/UF</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input 
+                      value={newClient.city}
+                      onChange={(e) => setNewClient({...newClient, city: e.target.value})}
+                      placeholder="Cidade"
+                      className="rounded-xl border-slate-200" 
+                    />
+                    <Input 
+                      value={newClient.state}
+                      onChange={(e) => setNewClient({...newClient, state: e.target.value})}
+                      placeholder="UF"
+                      maxLength={2}
+                      className="rounded-xl border-slate-200 uppercase" 
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    onClick={() => setIsQuickClientOpen(false)}
+                    className="flex-1 rounded-xl h-12"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isCreatingClient}
+                    className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
+                  >
+                    {isCreatingClient ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Cliente"}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
