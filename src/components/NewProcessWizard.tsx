@@ -282,15 +282,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       const payload = {
         company_id: effectiveCompanyId,
         name: newClient.name,
-        document_number: newClient.document,
-        rg: newClient.rg,
+        cpf_cnpj: newClient.document,
         phone: newClient.phone,
         email: newClient.email,
-        address: newClient.address,
-        city: newClient.city,
-        state: newClient.state,
-        notes: newClient.notes,
-        status: 'active'
+        address: `${newClient.address || ''} ${newClient.city || ''} ${newClient.state || ''}`.trim(),
+        notes: `${newClient.notes || ''} ${newClient.rg ? '(RG: ' + newClient.rg + ')' : ''}`.trim(),
       };
       
       console.log("CLIENT_INSERT_PAYLOAD", payload);
