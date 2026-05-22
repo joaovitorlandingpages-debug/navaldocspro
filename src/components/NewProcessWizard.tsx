@@ -1150,101 +1150,199 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
       {/* Modal de Criação Rápida de Cliente */}
       <Dialog open={isQuickClientOpen} onOpenChange={setIsQuickClientOpen}>
-        <DialogContent className="max-w-md w-[95vw] p-6 md:p-8 bg-white border-none rounded-[1.5rem] md:rounded-[2rem] shadow-2xl">
-
-          <DialogHeader>
-            <DialogTitle className="text-xl font-black text-navy uppercase tracking-tight">Novo Cliente Rápido</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleQuickClientSubmit} className="space-y-4 pt-4">
-            <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase font-black text-slate-400">Nome Completo</Label>
-              <Input 
-                required
-                value={newClient.name}
-                onChange={(e) => setNewClient({...newClient, name: e.target.value})}
-                placeholder="Ex: João da Silva"
-                className="rounded-xl border-slate-200" 
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-black text-slate-400">CPF/CNPJ</Label>
-                <Input 
-                  value={newClient.document}
-                  onChange={(e) => setNewClient({...newClient, document: e.target.value})}
-                  placeholder="000.000.000-00"
-                  className="rounded-xl border-slate-200" 
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-black text-slate-400">RG</Label>
-                <Input 
-                  value={newClient.rg}
-                  onChange={(e) => setNewClient({...newClient, rg: e.target.value})}
-                  placeholder="00.000.000-0"
-                  className="rounded-xl border-slate-200" 
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-black text-slate-400">Telefone</Label>
-                <Input 
-                  value={newClient.phone}
-                  onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
-                  placeholder="(00) 00000-0000"
-                  className="rounded-xl border-slate-200" 
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-black text-slate-400">E-mail</Label>
-                <Input 
-                  type="email"
-                  value={newClient.email}
-                  onChange={(e) => setNewClient({...newClient, email: e.target.value})}
-                  placeholder="email@exemplo.com"
-                  className="rounded-xl border-slate-200" 
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase font-black text-slate-400">Cidade/UF</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Input 
-                  value={newClient.city}
-                  onChange={(e) => setNewClient({...newClient, city: e.target.value})}
-                  placeholder="Cidade"
-                  className="rounded-xl border-slate-200" 
-                />
-                <Input 
-                  value={newClient.state}
-                  onChange={(e) => setNewClient({...newClient, state: e.target.value})}
-                  placeholder="UF"
-                  maxLength={2}
-                  className="rounded-xl border-slate-200 uppercase" 
-                />
-              </div>
-            </div>
-
-            <div className="pt-4 flex gap-3">
-              <Button 
-                type="button" 
-                variant="ghost" 
-                onClick={() => setIsQuickClientOpen(false)}
-                className="flex-1 rounded-xl h-12"
+        <DialogContent className="max-w-md w-[95vw] p-0 bg-white border-none rounded-[1.5rem] md:rounded-[2rem] shadow-2xl overflow-hidden">
+          <div className="p-6 md:p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <DialogHeader className="p-0">
+              <DialogTitle className="text-xl font-black text-navy uppercase tracking-tight">Novo Cliente Rápido</DialogTitle>
+            </DialogHeader>
+            <div className="flex bg-slate-200 p-1 rounded-xl">
+              <button 
+                type="button"
+                onClick={() => setClientModalMode('manual')}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${clientModalMode === 'manual' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}
               >
-                Cancelar
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isCreatingClient}
-                className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
+                Manual
+              </button>
+              <button 
+                type="button"
+                onClick={() => setClientModalMode('ocr')}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${clientModalMode === 'ocr' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}
               >
-                {isCreatingClient ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Cliente"}
-              </Button>
+                IA OCR
+              </button>
             </div>
-          </form>
+          </div>
+
+          <div className="p-6 md:p-8">
+            {clientModalMode === 'ocr' ? (
+              <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+                {!ocrJobResult ? (
+                  <div 
+                    className="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center gap-4 hover:border-primary/50 transition-all cursor-pointer bg-slate-50 group text-center"
+                    onClick={() => ocrFileInputRef.current?.click()}
+                  >
+                    <div className="h-16 w-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform border border-slate-100">
+                      {isOcrProcessing ? <Loader2 className="h-8 w-8 animate-spin" /> : <Upload className="h-8 w-8" />}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-navy uppercase">Scanner de Identidade IA</h4>
+                      <p className="text-[10px] text-slate-400 font-medium max-w-[200px] mt-1">Envie CNH ou RG para preenchimento automático ultra-rápido.</p>
+                    </div>
+                    <input 
+                      type="file" 
+                      ref={ocrFileInputRef} 
+                      className="hidden" 
+                      accept="image/*,application/pdf"
+                      onChange={handleOcrFileSelect}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-5 bg-blue-50 border border-blue-100 rounded-2xl space-y-3">
+                       <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-2">
+                             <div className="h-8 w-8 bg-blue-500 text-white rounded-lg flex items-center justify-center">
+                                <Zap className="h-4 w-4" />
+                             </div>
+                             <div>
+                                <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest">Dados Extraídos</p>
+                                <p className="text-xs font-bold text-navy">{ocrJobResult.extracted_data?.person?.nome || ocrJobResult.extracted_data?.name || "Nome não identificado"}</p>
+                             </div>
+                          </div>
+                          <Badge className="bg-green-500 text-white border-none text-[8px] uppercase">
+                             Confiança: {((ocrJobResult.confidence_score || 0.95) * 100).toFixed(0)}%
+                          </Badge>
+                       </div>
+                       
+                       <div className="grid grid-cols-1 gap-2 text-[10px]">
+                          <div className="flex justify-between py-1 border-b border-blue-100/50">
+                             <span className="text-slate-500">Documento</span>
+                             <span className="font-bold text-navy">{ocrJobResult.extracted_data?.person?.cpf || ocrJobResult.extracted_data?.doc_number || "Não extraído"}</span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-blue-100/50">
+                             <span className="text-slate-500">Endereço</span>
+                             <span className="font-bold text-navy truncate max-w-[150px]">{ocrJobResult.extracted_data?.person?.address || ocrJobResult.extracted_data?.address || "Não extraído"}</span>
+                          </div>
+                       </div>
+
+                       <Button 
+                         type="button"
+                         onClick={applyOcrData}
+                         className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-10 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-blue-200"
+                       >
+                          <Sparkles className="h-3 w-3" /> Aplicar estes dados
+                       </Button>
+                    </div>
+
+                    <Button 
+                      type="button"
+                      variant="ghost" 
+                      onClick={() => setOcrJobResult(null)}
+                      className="w-full text-[10px] font-bold text-slate-400 uppercase"
+                    >
+                       Tentar outro documento
+                    </Button>
+                  </div>
+                )}
+                
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
+                   <ShieldCheck className="h-4 w-4 text-green-500" />
+                   <p className="text-[9px] text-slate-500 font-medium">Privacidade garantida: Seus documentos são processados e armazenados com criptografia de ponta a ponta.</p>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleQuickClientSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] uppercase font-black text-slate-400">Nome Completo</Label>
+                  <Input 
+                    required
+                    value={newClient.name}
+                    onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                    placeholder="Ex: João da Silva"
+                    className="rounded-xl border-slate-200" 
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] uppercase font-black text-slate-400">CPF/CNPJ</Label>
+                    <Input 
+                      value={newClient.document}
+                      onChange={(e) => setNewClient({...newClient, document: e.target.value})}
+                      placeholder="000.000.000-00"
+                      className="rounded-xl border-slate-200" 
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] uppercase font-black text-slate-400">RG</Label>
+                    <Input 
+                      value={newClient.rg}
+                      onChange={(e) => setNewClient({...newClient, rg: e.target.value})}
+                      placeholder="00.000.000-0"
+                      className="rounded-xl border-slate-200" 
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] uppercase font-black text-slate-400">Telefone</Label>
+                    <Input 
+                      value={newClient.phone}
+                      onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
+                      placeholder="(00) 00000-0000"
+                      className="rounded-xl border-slate-200" 
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] uppercase font-black text-slate-400">E-mail</Label>
+                    <Input 
+                      type="email"
+                      value={newClient.email}
+                      onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                      placeholder="email@exemplo.com"
+                      className="rounded-xl border-slate-200" 
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] uppercase font-black text-slate-400">Cidade/UF</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input 
+                      value={newClient.city}
+                      onChange={(e) => setNewClient({...newClient, city: e.target.value})}
+                      placeholder="Cidade"
+                      className="rounded-xl border-slate-200" 
+                    />
+                    <Input 
+                      value={newClient.state}
+                      onChange={(e) => setNewClient({...newClient, state: e.target.value})}
+                      placeholder="UF"
+                      maxLength={2}
+                      className="rounded-xl border-slate-200 uppercase" 
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    onClick={() => setIsQuickClientOpen(false)}
+                    className="flex-1 rounded-xl h-12"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isCreatingClient}
+                    className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
+                  >
+                    {isCreatingClient ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Cliente"}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
