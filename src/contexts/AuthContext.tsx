@@ -37,14 +37,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setSession(initialSession);
           setUser(initialSession.user);
           
-          // Fetch profile in background without blocking the UI
+          // Fetch profile in background and ensure workspace
           supabase
             .from('profiles')
             .select('*, companies(*)')
             .eq('id', initialSession.user.id)
             .maybeSingle()
-            .then(({ data }: { data: any }) => {
-              if (data) setProfile(data);
+            .then(async ({ data }: { data: any }) => {
+              if (data) {
+                setProfile(data);
+                // Auto-recovery: ensure workspace exists
+                if (!data.company_id) {
+                  const { ensureWorkspace } = await import("@/utils/workspace-recovery");
+                  await ensureWorkspace(initialSession.user, data);
+                  // Refresh profile after creation
+                  const { data: updatedProfile } = await supabase
+                    .from('profiles')
+                    .select('*, companies(*)')
+                    .eq('id', initialSession.user.id)
+                    .single();
+                  if (updatedProfile) setProfile(updatedProfile);
+                }
+              }
             });
         } else {
           console.log("GET_SESSION_EMPTY");
@@ -75,8 +89,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .select('*, companies(*)')
           .eq('id', currentSession.user.id)
           .maybeSingle()
-          .then(({ data }: { data: any }) => {
-            if (data) setProfile(data);
+          .then(async ({ data }: { data: any }) => {
+            if (data) {
+              setProfile(data);
+              // Auto-recovery for state changes
+              if (!data.company_id) {
+                const { ensureWorkspace } = await import("@/utils/workspace-recovery");
+                await ensureWorkspace(currentSession.user, data);
+                const { data: updatedProfile } = await supabase
+                  .from('profiles')
+                  .select('*, companies(*)')
+                  .eq('id', currentSession.user.id)
+                  .single();
+                if (updatedProfile) setProfile(updatedProfile);
+              }
+            }
           });
       } else {
         setProfile(null);

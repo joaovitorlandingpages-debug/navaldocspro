@@ -203,7 +203,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       const { data, error } = await supabase
         .from('vessels')
         .insert({
-          company_id: profile.company_id,
+          company_id: profile?.company_id,
           customer_id: formData.clientId,
           name: newVessel.name,
           registration_number: newVessel.registration_number,
@@ -243,8 +243,19 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
   const handleQuickClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile?.company_id) {
-      toast.error("Workspace do usuário não encontrado.");
+    
+    let effectiveCompanyId = profile?.company_id;
+
+    if (!effectiveCompanyId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { ensureWorkspace } = await import("@/utils/workspace-recovery");
+        effectiveCompanyId = await ensureWorkspace(user, profile);
+      }
+    }
+
+    if (!effectiveCompanyId) {
+      toast.error("Workspace do usuário não encontrado. Criando automaticamente...");
       return;
     }
 
@@ -255,7 +266,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
     setIsCreatingClient(true);
     const clientType = newClient.document.length > 14 ? 'pessoa_juridica' : (newClient.document.length > 11 ? 'mei' : 'pessoa_fisica');
-    console.log("USER_WORKSPACE_FOUND", profile.company_id);
+    console.log("USER_WORKSPACE_FOUND", effectiveCompanyId);
     console.log("CLIENT_TYPE_SELECTED", clientType);
     console.log("CLIENT_CREATE_SUBMIT_OK");
     
@@ -263,7 +274,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       const { data, error } = await supabase
         .from('customers')
         .insert({
-          company_id: profile.company_id,
+          company_id: effectiveCompanyId,
           name: newClient.name,
           document_number: newClient.document,
           rg: newClient.rg,
@@ -370,8 +381,18 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   };
 
   const handleCreateProcess = async () => {
-    if (!profile?.company_id) {
-      toast.error("Vínculo empresarial não encontrado. Conclua o onboarding.");
+    let effectiveCompanyId = profile?.company_id;
+
+    if (!effectiveCompanyId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { ensureWorkspace } = await import("@/utils/workspace-recovery");
+        effectiveCompanyId = await ensureWorkspace(user, profile);
+      }
+    }
+
+    if (!effectiveCompanyId) {
+      toast.error("Vínculo empresarial não encontrado. Criando automaticamente...");
       return;
     }
     
@@ -383,7 +404,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       const { data: processData, error: processError } = await supabase
         .from('processes')
         .insert({
-          company_id: profile.company_id,
+          company_id: effectiveCompanyId,
           customer_id: formData.clientId,
           vessel_id: formData.vesselId || null,
           process_type: formData.type,
@@ -438,7 +459,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           } else {
             // Create document record
             await supabase.from('documents').insert({
-              company_id: profile.company_id,
+              company_id: effectiveCompanyId,
               process_id: processData.id,
               customer_id: formData.clientId,
               vessel_id: formData.vesselId,
