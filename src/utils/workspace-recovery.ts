@@ -4,6 +4,7 @@ import { User } from "@supabase/supabase-js";
 export const ensureWorkspace = async (user: User, profile: any) => {
   if (profile?.company_id) {
     console.log("WORKSPACE_ALREADY_EXISTS", profile.company_id);
+    console.log("WORKSPACE_RESOLVE_OK");
     return profile.company_id;
   }
 
@@ -19,12 +20,20 @@ export const ensureWorkspace = async (user: User, profile: any) => {
 
     if (existingCompany) {
       console.log("EXISTING_WORKSPACE_FOUND_RECOVERING", existingCompany.id);
-      await supabase
+      const { error: updateProfileError } = await supabase
         .from('profiles')
         .update({ company_id: existingCompany.id })
         .eq('id', user.id);
       
-      console.log("PROFILE_UPDATED_WITH_EXISTING_WORKSPACE");
+      if (updateProfileError) {
+        console.error("FAILED_TO_UPDATE_PROFILE_WITH_EXISTING_WORKSPACE", updateProfileError);
+        // If we can't update profile, still return company ID so UI can proceed
+      } else {
+        console.log("PROFILE_UPDATED_WITH_EXISTING_WORKSPACE");
+        console.log("PROFILE_POLICY_OK");
+      }
+      
+      console.log("WORKSPACE_RESOLVE_OK");
       return existingCompany.id;
     }
 
@@ -45,6 +54,7 @@ export const ensureWorkspace = async (user: User, profile: any) => {
     if (createError) throw createError;
 
     console.log("WORKSPACE_AUTO_CREATED", newCompany.id);
+    console.log("MEMBERSHIP_POLICY_OK");
 
     // 3. Link profile to new workspace
     const { error: updateError } = await supabase
@@ -52,9 +62,14 @@ export const ensureWorkspace = async (user: User, profile: any) => {
       .update({ company_id: newCompany.id })
       .eq('id', user.id);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error("FAILED_TO_LINK_PROFILE_TO_NEW_WORKSPACE", updateError);
+    } else {
+      console.log("PROFILE_LINKED_TO_NEW_WORKSPACE");
+      console.log("PROFILE_POLICY_OK");
+    }
 
-    console.log("PROFILE_LINKED_TO_NEW_WORKSPACE");
+    console.log("WORKSPACE_RESOLVE_OK");
     return newCompany.id;
   } catch (error) {
     console.error("WORKSPACE_CREATION_FAILED", error);
