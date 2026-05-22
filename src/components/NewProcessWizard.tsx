@@ -81,9 +81,15 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     notes: ""
   });
 
+  // OCR and Client Modal improvements
+  const [clientModalMode, setClientModalMode] = useState<'manual' | 'ocr'>('manual');
+  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+  const [ocrJobResult, setOcrJobResult] = useState<any>(null);
+  const [ocrUploadedFile, setOcrUploadedFile] = useState<any>(null);
+  const ocrFileInputRef = useRef<HTMLInputElement>(null);
+
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [ocrStatus, setOcrStatus] = useState<Record<string, string>>({});
-
 
   const [newVessel, setNewVessel] = useState({
     name: "",
