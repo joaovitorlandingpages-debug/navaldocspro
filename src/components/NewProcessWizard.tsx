@@ -244,7 +244,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const handleQuickClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile?.company_id) {
-      toast.error("Empresa não identificada.");
+      toast.error("Workspace do usuário não encontrado.");
       return;
     }
 
@@ -254,6 +254,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     }
 
     setIsCreatingClient(true);
+    const clientType = newClient.document.length > 14 ? 'pessoa_juridica' : (newClient.document.length > 11 ? 'mei' : 'pessoa_fisica');
+    console.log("USER_WORKSPACE_FOUND", profile.company_id);
+    console.log("CLIENT_TYPE_SELECTED", clientType);
     console.log("CLIENT_CREATE_SUBMIT_OK");
     
     try {
@@ -276,6 +279,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         .single();
 
       if (error) throw error;
+
+      console.log("CLIENT_CREATED_WITH_WORKSPACE", data.id);
+      if (clientType === 'pessoa_fisica') console.log("CLIENT_PERSON_FISICA_OK");
+      if (clientType === 'mei') console.log("CLIENT_MEI_OK");
+      if (clientType === 'pessoa_juridica') console.log("CLIENT_CNPJ_OK");
 
       console.log("CLIENT_INSERT_OK", data.id);
       toast.success("Cliente criado com sucesso!");
