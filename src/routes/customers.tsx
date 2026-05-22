@@ -111,10 +111,25 @@ function Customers() {
 
   const handleCreateCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!companyId) {
-      toast.error("Workspace do usuário não encontrado.");
+    
+    let effectiveCompanyId = companyId;
+    
+    if (!effectiveCompanyId) {
+      console.log("WORKSPACE_NOT_FOUND_IN_CONTEXT_RECOVERING");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: currentProfile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        const { ensureWorkspace } = await import("@/utils/workspace-recovery");
+        effectiveCompanyId = await ensureWorkspace(user, currentProfile);
+        setCompanyId(effectiveCompanyId);
+      }
+    }
+
+    if (!effectiveCompanyId) {
+      toast.error("Não foi possível carregar seu workspace. Tente recarregar a página.");
       return;
     }
+
     setIsSubmitting(true);
     const clientType = formData.cpf_cnpj.length > 14 ? 'pessoa_juridica' : (formData.cpf_cnpj.length > 11 ? 'mei' : 'pessoa_fisica');
     console.log("USER_WORKSPACE_FOUND", companyId);
@@ -124,7 +139,7 @@ function Customers() {
       const { data, error } = await supabase
         .from('customers')
         .insert({
-          company_id: companyId,
+          company_id: effectiveCompanyId,
           name: formData.name,
           cpf_cnpj: formData.cpf_cnpj,
           email: formData.email,
