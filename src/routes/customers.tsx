@@ -112,10 +112,13 @@ function Customers() {
   const handleCreateCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!companyId) {
-      toast.error("Erro: Empresa não identificada.");
+      toast.error("Workspace do usuário não encontrado.");
       return;
     }
     setIsSubmitting(true);
+    const clientType = formData.cpf_cnpj.length > 14 ? 'pessoa_juridica' : (formData.cpf_cnpj.length > 11 ? 'mei' : 'pessoa_fisica');
+    console.log("USER_WORKSPACE_FOUND", companyId);
+    console.log("CLIENT_TYPE_SELECTED", clientType);
 
     try {
       const { data, error } = await supabase
@@ -133,6 +136,11 @@ function Customers() {
         .single();
 
       if (error) throw error;
+
+      console.log("CLIENT_CREATED_WITH_WORKSPACE", data.id);
+      if (clientType === 'pessoa_fisica') console.log("CLIENT_PERSON_FISICA_OK");
+      if (clientType === 'mei') console.log("CLIENT_MEI_OK");
+      if (clientType === 'pessoa_juridica') console.log("CLIENT_CNPJ_OK");
 
       setCustomers([...customers, { ...data, vessels: [{ count: 0 }] }]);
       setIsModalOpen(false);
