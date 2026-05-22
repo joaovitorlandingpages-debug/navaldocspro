@@ -243,60 +243,72 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
   const handleQuickClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("SAVE_CLIENT_CLICKED");
+    console.log("CLIENT_FORM_VALIDATE_START");
     
-    let effectiveCompanyId = profile?.company_id;
-
-    if (!effectiveCompanyId) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { ensureWorkspace } = await import("@/utils/workspace-recovery");
-        effectiveCompanyId = await ensureWorkspace(user, profile);
-      }
-    }
-
-    if (!effectiveCompanyId) {
-      toast.error("Workspace do usuário não encontrado. Criando automaticamente...");
-      return;
-    }
-
     if (!newClient.name) {
       toast.error("O nome é obrigatório.");
       return;
     }
 
+    console.log("CLIENT_FORM_VALID");
     setIsCreatingClient(true);
-    const clientType = newClient.document.length > 14 ? 'pessoa_juridica' : (newClient.document.length > 11 ? 'mei' : 'pessoa_fisica');
-    console.log("USER_WORKSPACE_FOUND", effectiveCompanyId);
-    console.log("CLIENT_TYPE_SELECTED", clientType);
-    console.log("CLIENT_CREATE_SUBMIT_OK");
     
     try {
+      console.log("WORKSPACE_RESOLVE_START");
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log("AUTH_USER_FOUND", user?.id);
+      
+      let effectiveCompanyId = profile?.company_id;
+      
+      if (!effectiveCompanyId && user) {
+        const { ensureWorkspace } = await import("@/utils/workspace-recovery");
+        effectiveCompanyId = await ensureWorkspace(user, profile);
+      }
+
+      console.log("WORKSPACE_RESOLVED", effectiveCompanyId);
+
+      if (!effectiveCompanyId) {
+        console.error("CLIENT_INSERT_ERROR", "Workspace do usuário não encontrado");
+        toast.error("Workspace do usuário não encontrado. Por favor, tente recarregar a página.");
+        setIsCreatingClient(false);
+        return;
+      }
+
+      console.log("CLIENT_INSERT_START");
+      const clientType = (newClient.document || "").length > 14 ? 'pessoa_juridica' : ((newClient.document || "").length > 11 ? 'mei' : 'pessoa_fisica');
+      console.log("CLIENT_TYPE_SELECTED", clientType);
+      
+      const payload = {
+        company_id: effectiveCompanyId,
+        name: newClient.name,
+        cpf_cnpj: newClient.document,
+        phone: newClient.phone,
+        email: newClient.email,
+        address: `${newClient.address || ''} ${newClient.city || ''} ${newClient.state || ''}`.trim(),
+        notes: `${newClient.notes || ''} ${newClient.rg ? '(RG: ' + newClient.rg + ')' : ''}`.trim(),
+      };
+      
+      console.log("CLIENT_INSERT_PAYLOAD", payload);
+
       const { data, error } = await supabase
         .from('customers')
-        .insert({
-          company_id: effectiveCompanyId,
-          name: newClient.name,
-          document_number: newClient.document,
-          rg: newClient.rg,
-          phone: newClient.phone,
-          email: newClient.email,
-          address: newClient.address,
-          city: newClient.city,
-          state: newClient.state,
-          notes: newClient.notes,
-          status: 'active'
-        })
+        .insert(payload)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("CLIENT_INSERT_ERROR", error);
+        throw error;
+      }
 
+      console.log("CLIENT_INSERT_SUCCESS", data.id);
       console.log("CLIENT_CREATED_WITH_WORKSPACE", data.id);
+      
       if (clientType === 'pessoa_fisica') console.log("CLIENT_PERSON_FISICA_OK");
       if (clientType === 'mei') console.log("CLIENT_MEI_OK");
       if (clientType === 'pessoa_juridica') console.log("CLIENT_CNPJ_OK");
 
-      console.log("CLIENT_INSERT_OK", data.id);
       toast.success("Cliente criado com sucesso!");
       
       // Update form data and close quick modal
@@ -319,8 +331,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       // Refresh list
       await fetchCustomersList("");
     } catch (error: any) {
-      console.error("Error creating client", error);
-      toast.error("Erro ao criar cliente: " + error.message);
+      console.error("CLIENT_INSERT_ERROR", error);
+      toast.error("Erro ao criar cliente: " + (error.message || "Erro desconhecido"));
     } finally {
       setIsCreatingClient(false);
     }
