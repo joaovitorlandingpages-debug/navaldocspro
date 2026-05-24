@@ -393,22 +393,30 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log("AUTH_USER_FOUND", user?.id);
       
       let effectiveCompanyId = profile?.company_id;
       
       if (!effectiveCompanyId && user) {
+        console.log("RESOLVING_WORKSPACE_AUTO");
         const { ensureWorkspace } = await import("@/utils/workspace-recovery");
         effectiveCompanyId = await ensureWorkspace(user, profile);
+        console.log("WORKSPACE_RESOLVED_OK", effectiveCompanyId);
       }
 
       if (!effectiveCompanyId) {
+        console.error("WORKSPACE_NOT_FOUND");
         toast.error("Workspace do usuário não encontrado.");
         setIsCreatingClient(false);
         return;
       }
 
-      const clientType = (newClient.document || "").length > 14 ? 'pessoa_juridica' : ((newClient.document || "").length > 11 ? 'mei' : 'pessoa_fisica');
-      
+      console.log("DEBUG_CONTEXT", {
+        auth_uid: user?.id,
+        workspace_id: effectiveCompanyId,
+        profile_id: profile?.id
+      });
+
       const payload = {
         company_id: effectiveCompanyId,
         name: newClient.name,
@@ -417,16 +425,22 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         email: newClient.email,
         address: `${newClient.address || ''} ${newClient.city || ''} ${newClient.state || ''}`.trim(),
         notes: `${newClient.notes || ''} ${newClient.rg ? '(RG: ' + newClient.rg + ')' : ''}`.trim(),
-        // If we have an OCR file, we should ideally link it here (may need schema update or use document table)
       };
       
+      console.log("PAYLOAD_INSERT_CLIENT", payload);
+
       const { data, error } = await supabase
         .from('customers')
         .insert(payload)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("SUPABASE_CLIENT_INSERT_ERROR", error);
+        throw error;
+      }
+
+      console.log("CLIENT_INSERT_SUCCESS", data.id);
 
       // If we have an OCR file, link it to the customer in the documents table
       if (ocrUploadedFile) {
@@ -442,6 +456,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       }
 
       console.log("QUICK_CLIENT_SAVE_OK", data.id);
+      console.log("QUICK_CLIENT_FLOW_OK");
       toast.success("Cliente criado com sucesso!");
       
       setFormData({ ...formData, client: data.name, clientId: data.id });
@@ -455,7 +470,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
       await fetchCustomersList("");
     } catch (error: any) {
-      console.error("CLIENT_INSERT_ERROR", error);
+      console.error("CLIENT_INSERT_ERROR_FULL", error);
       toast.error("Erro ao criar cliente: " + (error.message || "Erro desconhecido"));
     } finally {
       setIsCreatingClient(false);
