@@ -1176,11 +1176,12 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
       {/* Modal de Criação Rápida de Cliente */}
       <Dialog open={isQuickClientOpen} onOpenChange={setIsQuickClientOpen}>
-        <DialogContent className="max-w-md w-[95vw] p-0 bg-white border-none rounded-[1.5rem] md:rounded-[2rem] shadow-2xl overflow-hidden">
-          <div className="p-6 md:p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <DialogContent className="max-w-md w-full sm:w-[95vw] p-0 bg-white border-none sm:rounded-[1.5rem] md:rounded-[2rem] shadow-2xl overflow-hidden h-[100dvh] sm:h-auto flex flex-col">
+          <div className="p-4 md:p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
             <DialogHeader className="p-0">
-              <DialogTitle className="text-xl font-black text-navy uppercase tracking-tight">Novo Cliente Rápido</DialogTitle>
+              <DialogTitle className="text-lg md:text-xl font-black text-navy uppercase tracking-tight">Novo Cliente Rápido</DialogTitle>
             </DialogHeader>
+
             <div className="flex bg-slate-200 p-1 rounded-xl">
               <button 
                 type="button"
@@ -1199,7 +1200,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             </div>
           </div>
 
-          <div className="p-6 md:p-8">
+          <div className="p-4 md:p-8 flex-grow overflow-y-auto">
             {clientModalMode === 'ocr' ? (
               <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
                 {!ocrJobResult ? (
