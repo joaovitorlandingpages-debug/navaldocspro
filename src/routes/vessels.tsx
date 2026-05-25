@@ -375,20 +375,6 @@ function Vessels() {
           </div>
         </form>
       </ModalLayout>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all">Cancelar</button>
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="px-12 py-3 bg-navy text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-navy/20 transition-all flex items-center gap-2"
-                >
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  Confirmar Cadastro
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Modal Detalhes da Embarcação */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
