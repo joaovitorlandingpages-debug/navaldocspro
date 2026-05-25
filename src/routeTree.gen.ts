@@ -67,6 +67,7 @@ import { Route as AdminSystemReportRouteImport } from './routes/admin/system-rep
 import { Route as AdminSupportRouteImport } from './routes/admin/support'
 import { Route as AdminStorageRouteImport } from './routes/admin/storage'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminSecurityRouteImport } from './routes/admin/security'
 import { Route as AdminSaasMetricsRouteImport } from './routes/admin/saas-metrics'
 import { Route as AdminRoadmapRouteImport } from './routes/admin/roadmap'
 import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
@@ -371,6 +372,11 @@ const AdminSettingsRoute = AdminSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSecurityRoute = AdminSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSaasMetricsRoute = AdminSaasMetricsRouteImport.update({
   id: '/saas-metrics',
   path: '/saas-metrics',
@@ -480,6 +486,7 @@ export interface FileRoutesByFullPath {
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
+  '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/support': typeof AdminSupportRoute
@@ -550,6 +557,7 @@ export interface FileRoutesByTo {
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
+  '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/support': typeof AdminSupportRoute
@@ -623,6 +631,7 @@ export interface FileRoutesById {
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
+  '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/support': typeof AdminSupportRoute
@@ -697,6 +706,7 @@ export interface FileRouteTypes {
     | '/admin/ocr'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
+    | '/admin/security'
     | '/admin/settings'
     | '/admin/storage'
     | '/admin/support'
@@ -767,6 +777,7 @@ export interface FileRouteTypes {
     | '/admin/ocr'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
+    | '/admin/security'
     | '/admin/settings'
     | '/admin/storage'
     | '/admin/support'
@@ -839,6 +850,7 @@ export interface FileRouteTypes {
     | '/admin/ocr'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
+    | '/admin/security'
     | '/admin/settings'
     | '/admin/storage'
     | '/admin/support'
@@ -1317,6 +1329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/security': {
+      id: '/admin/security'
+      path: '/security'
+      fullPath: '/admin/security'
+      preLoaderRoute: typeof AdminSecurityRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/saas-metrics': {
       id: '/admin/saas-metrics'
       path: '/saas-metrics'
@@ -1417,6 +1436,7 @@ interface AdminRouteChildren {
   AdminOcrRoute: typeof AdminOcrRoute
   AdminRoadmapRoute: typeof AdminRoadmapRoute
   AdminSaasMetricsRoute: typeof AdminSaasMetricsRoute
+  AdminSecurityRoute: typeof AdminSecurityRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStorageRoute: typeof AdminStorageRoute
   AdminSupportRoute: typeof AdminSupportRoute
@@ -1438,6 +1458,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminOcrRoute: AdminOcrRoute,
   AdminRoadmapRoute: AdminRoadmapRoute,
   AdminSaasMetricsRoute: AdminSaasMetricsRoute,
+  AdminSecurityRoute: AdminSecurityRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminStorageRoute: AdminStorageRoute,
   AdminSupportRoute: AdminSupportRoute,

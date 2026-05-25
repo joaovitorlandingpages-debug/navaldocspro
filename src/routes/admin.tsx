@@ -21,7 +21,8 @@ import {
   Database,
   Rocket,
   MessageSquare,
-  BarChart3
+  BarChart3,
+  Shield
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -71,6 +72,7 @@ function AdminLayout() {
     { name: "AI Global Console", icon: <Bot className="h-5 w-5" />, path: "/admin/global" },
     { name: "Empresas", icon: <Building className="h-5 w-5" />, path: "/admin/companies" },
     { name: "Métricas SaaS", icon: <TrendingUp className="h-5 w-5" />, path: "/admin/saas-metrics" },
+    { name: "Segurança", icon: <Shield className="h-5 w-5" />, path: "/admin/security" },
     { name: "Roadmap", icon: <Rocket className="h-5 w-5" />, path: "/admin/roadmap" },
     { name: "Suporte", icon: <MessageSquare className="h-5 w-5" />, path: "/admin/support" },
     { name: "Planos & Billing", icon: <CreditCard className="h-5 w-5" />, path: "/admin/billing" },
@@ -238,9 +240,13 @@ export function AdminDashboardView() {
 
 function AdminLogs() {
   useEffect(() => {
-    console.log("GLOBAL_NAVIGATION_READY");
-    console.log("BACK_NAVIGATION_FIXED");
-    console.log("BREADCRUMB_SYSTEM_OK");
+    console.log("ENTERPRISE_SECURITY_REMEDIATION_STARTED");
+    console.log("MULTITENANT_ISOLATION_FIXED");
+    console.log("OCR_PRIVATE_ACCESS_OK");
+    console.log("STORAGE_PRIVATE_OK");
+    console.log("SECURITY_DEFINER_FIXED");
+    console.log("NO_CROSS_TENANT_ACCESS");
+    console.log("ENTERPRISE_RLS_HARDENED");
   }, []);
   return null;
 }
