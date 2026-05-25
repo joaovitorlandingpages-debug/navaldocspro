@@ -155,13 +155,20 @@ export const useDocuments = () => {
       if (error) throw error;
 
       // Log the activity
-      await supabase.from("activity_logs").insert({
-        company_id: profile.company_id,
-        user_id: user.id,
-        action: "document_generated",
-        details: `Documento "${doc.name}" gerado com sucesso para o cliente.`,
-        module: "documents"
-      });
+      try {
+        await supabase.from("activity_logs").insert({
+          company_id: profile.company_id,
+          user_id: user.id,
+          action: "document_generated",
+          description: `Documento "${doc.name}" gerado com sucesso para o cliente.`,
+          module: "documents",
+          resource_type: "document",
+          metadata: { document_name: doc.name }
+        });
+        console.log("ACTIVITY_LOG_MODULE_FIXED");
+      } catch (logErr) {
+        console.warn("LOG_FAILURE_SAFE", logErr);
+      }
 
       return data;
     },

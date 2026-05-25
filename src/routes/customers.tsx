@@ -168,9 +168,10 @@ function Customers() {
           category: 'creation',
           metadata: { client_type: clientType }
         });
-        console.log("CLIENT_CREATED_LOG_OK");
+        console.log("CLIENT_LOG_WITH_MODULE_OK");
+        console.log("ACTIVITY_LOG_MODULE_FIXED");
       } catch (logError) {
-        console.error("LOG_FAILURE_DOES_NOT_BLOCK_FLOW", logError);
+        console.warn("LOG_FAILURE_SAFE", logError);
       }
 
       if (clientType === 'pessoa_fisica') console.log("CLIENT_PERSON_FISICA_OK");

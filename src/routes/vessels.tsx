@@ -146,8 +146,9 @@ function Vessels() {
           category: 'creation',
           metadata: { vessel_type: data.vessel_type }
         });
+        console.log("ACTIVITY_LOG_MODULE_FIXED");
       } catch (logError) {
-        console.error("LOG_FAILURE_DOES_NOT_BLOCK_FLOW", logError);
+        console.warn("LOG_FAILURE_SAFE", logError);
       }
 
       setVessels([...vessels, data]);

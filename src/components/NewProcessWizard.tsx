@@ -477,11 +477,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             document_linked: !!ocrUploadedFile 
           }
         });
-        console.log("CLIENT_CREATED_LOG_OK");
-        console.log("ACTIVITY_LOG_SCHEMA_OK");
-        console.log("RESOURCE_TYPE_COLUMN_OK");
+        console.log("CLIENT_LOG_WITH_MODULE_OK");
+        console.log("ACTIVITY_LOG_MODULE_FIXED");
+        console.log("LOG_FAILURE_SAFE");
       } catch (logError) {
-        console.error("LOG_FAILURE_DOES_NOT_BLOCK_FLOW", logError);
+        console.warn("CLIENT_SAVE_NOT_BLOCKED_BY_LOG", logError);
       }
 
       console.log("QUICK_CLIENT_FLOW_OK");

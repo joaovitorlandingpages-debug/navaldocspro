@@ -1,30 +1,39 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type AuditCategory = 'auth' | 'ocr' | 'document' | 'billing' | 'process' | 'security' | 'system';
+export type AuditCategory = 'auth' | 'ocr' | 'document' | 'billing' | 'process' | 'security' | 'system' | 'customers' | 'vessels';
 
 export async function logAudit(
   action: string,
-  category: AuditCategory = 'general' as any,
+  category: AuditCategory = 'system',
   metadata: any = {},
   entityType?: string,
-  entityId?: string
+  entityId?: string,
+  module: string = 'system'
 ) {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
-    await supabase.from('activity_logs').insert({
+    const { error } = await supabase.from('activity_logs').insert({
       user_id: session?.user?.id,
       action,
       category,
+      module, // Garantindo que o module seja enviado
       metadata: {
         ...metadata,
         timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
       },
-      entity_type: entityType,
-      entity_id: entityId,
+      resource_type: entityType,
+      resource_id: entityId,
     });
-  } catch (error) {
-    console.error('Audit Log Error:', error);
+
+    if (error) {
+      console.warn('ACTIVITY_LOG_FAILURE_SILENT:', error.message);
+    } else {
+      console.log('ACTIVITY_LOG_MODULE_FIXED');
+    }
+  } catch (err) {
+    // Falha no log nunca deve interromper o fluxo principal
+    console.warn('LOG_FAILURE_SAFE:', err);
   }
 }
