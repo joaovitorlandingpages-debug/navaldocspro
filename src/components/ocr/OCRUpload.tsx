@@ -109,14 +109,15 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -mr-10 -mt-10 group-hover:bg-primary/10 transition-colors"></div>
       
       {selectedFiles.length === 0 ? (
-        <div className="flex flex-col items-center justify-center space-y-6 py-8 text-center relative z-10">
-          <div className="h-24 w-24 bg-white rounded-3xl shadow-xl shadow-primary/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 border border-slate-100">
-            <Upload className="h-10 w-10 text-primary" />
+        <div className="flex flex-col items-center justify-center space-y-8 py-12 text-center relative z-10 animate-in fade-in zoom-in-95 duration-500">
+          <div className="h-28 w-28 bg-white rounded-[2rem] shadow-2xl shadow-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-700 border border-slate-100 relative">
+            <div className="absolute inset-0 bg-primary/5 rounded-[2rem] animate-pulse"></div>
+            <Upload className="h-12 w-12 text-primary relative z-10" />
           </div>
-          <div className="space-y-2">
-            <h4 className="text-xl font-black text-navy uppercase tracking-tight">IA Scanner Naval Multi-Doc</h4>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto font-medium">
-              Envie um ou múltiplos documentos de uma vez. Nossa IA fará o resto.
+          <div className="space-y-3">
+            <h4 className="text-2xl font-black text-navy uppercase tracking-tight">IA Scanner Naval Multi-Doc</h4>
+            <p className="text-sm text-slate-500 max-w-sm mx-auto font-medium leading-relaxed italic">
+              "Digitalização inteligente com 98% de precisão em documentos náuticos."
             </p>
           </div>
 
@@ -213,11 +214,11 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
                Adicionar Mais
              </Button>
              <Button 
-               className="flex-1 bg-navy text-white rounded-xl h-12 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-navy/20 gap-2"
+               className="flex-[2] bg-navy text-white rounded-xl h-14 font-black uppercase text-xs tracking-widest shadow-xl shadow-navy/20 gap-3 active:scale-95 transition-all group"
                onClick={processBatch}
                disabled={isUploading}
              >
-               {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 text-primary" />}
+               {isUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5 text-primary group-hover:rotate-12 transition-transform" />}
                Análise Inteligente
              </Button>
           </div>
