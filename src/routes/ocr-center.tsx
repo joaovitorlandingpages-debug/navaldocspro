@@ -24,6 +24,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BackNavigation } from "@/components/navigation/BackNavigation";
+import { PageHeader } from "@/components/navigation/PageHeader";
 
 export const Route = createFileRoute("/ocr-center")({
   component: OCRCenterPage,
@@ -48,35 +49,25 @@ function OCRCenterPage() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto pb-20 p-8">
-      <BackNavigation className="w-fit lg:hidden" />
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">
-              <Zap className="h-6 w-6 text-primary" />
+    <div className="animate-in fade-in duration-700 max-w-7xl mx-auto pb-20 p-4 md:p-8">
+      <PageHeader 
+        title="Central de OCR"
+        description="Extração inteligente de dados via Visão Computacional e IA."
+        actions={
+          <div className="flex gap-2 w-full sm:w-auto">
+            <div className="relative group flex-grow md:w-64">
+               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+               <input 
+                 placeholder="Buscar em documentos..." 
+                 className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+               />
             </div>
-            <h1 className="text-3xl font-black text-navy tracking-tight uppercase">Central de OCR</h1>
+            <Badge variant="secondary" className="h-10 px-4 rounded-xl border-slate-200 bg-white text-navy font-black uppercase text-[10px] tracking-widest flex items-center gap-2">
+              <TrendingUp className="h-3 w-3 text-green-500" /> 100% Online
+            </Badge>
           </div>
-          <p className="text-slate-500 font-medium max-w-lg">
-            Extração inteligente de dados via Visão Computacional e IA. Reduza o trabalho manual em até 90%.
-          </p>
-        </div>
-        
-        <div className="flex gap-2 w-full md:w-auto">
-          <div className="relative group flex-grow md:w-64">
-             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-             <input 
-               placeholder="Buscar em documentos..." 
-               className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-             />
-          </div>
-          <Badge variant="secondary" className="h-10 px-4 rounded-xl border-slate-200 bg-white text-navy font-black uppercase text-[10px] tracking-widest flex items-center gap-2">
-            <TrendingUp className="h-3 w-3 text-green-500" /> 100% Online
-          </Badge>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stats Grid Premium */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
