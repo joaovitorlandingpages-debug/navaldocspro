@@ -10,6 +10,7 @@ import { useNewProcess } from "@/hooks/useNewProcess";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ModalLayout } from "@/components/ui/ModalLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FileUploader } from "@/components/FileUploader";
@@ -258,150 +259,154 @@ function Vessels() {
       </div>
 
       {/* Modal Nova Embarcação */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 bg-navy/20 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 h-[100dvh] sm:h-auto flex flex-col">
-            <div className="p-4 md:p-8 border-b flex justify-between items-center bg-slate-50 shrink-0">
-
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-navy text-white rounded-2xl shadow-lg"><Ship className="h-6 w-6" /></div>
-                <div>
-                  <h3 className="text-xl font-black text-navy uppercase tracking-tight">Cadastrar Embarcação</h3>
-                  <p className="text-xs text-muted-foreground font-medium mt-1">Registre os detalhes técnicos da frota.</p>
-                </div>
-              </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-                <X className="h-6 w-6 text-slate-300" />
-              </button>
+      <ModalLayout
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Cadastrar Embarcação"
+        description="Registre os detalhes técnicos da frota."
+        maxWidth="2xl"
+        footer={
+          <>
+            <button 
+              type="button" 
+              onClick={() => setIsModalOpen(false)} 
+              className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all"
+            >
+              Cancelar
+            </button>
+            <button 
+              form="create-vessel-form"
+              type="submit" 
+              disabled={isSubmitting}
+              className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-primary/20 transition-all flex items-center gap-2"
+            >
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Salvar Embarcação
+            </button>
+          </>
+        }
+      >
+        <form id="create-vessel-form" onSubmit={handleCreateVessel} className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Ship className="h-3 w-3 opacity-40" /> Nome da Embarcação</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: SS Phoenix" 
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
             </div>
-            <form onSubmit={handleCreateVessel} className="flex flex-col flex-grow overflow-hidden">
-              <div className="p-4 md:p-8 space-y-6 overflow-y-auto flex-grow">
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Ship className="h-3 w-3 opacity-40" /> Nome da Embarcação</label>
-                    <input 
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                      placeholder="Ex: SS Phoenix" 
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Zap className="h-3 w-3 opacity-40" /> Tipo de Casco / Barco</label>
-                    <input 
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                      placeholder="Ex: Petroleiro, Rebocador, Iate" 
-                      value={formData.vessel_type}
-                      onChange={(e) => setFormData({ ...formData, vessel_type: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><User className="h-3 w-3 opacity-40" /> Proprietário / Armador</label>
-                    <select 
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all"
-                      value={formData.customer_id}
-                      onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
-                      required
-                    >
-                      <option value="">Selecione um cliente</option>
-                      {customers.map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Hash className="h-3 w-3 opacity-40" /> Número de Inscrição / IMO</label>
-                    <input 
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                      placeholder="9876543-2" 
-                      value={formData.registration_number}
-                      onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Settings className="h-3 w-3 opacity-40" /> Motorização Principal</label>
-                    <input 
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                      placeholder="Ex: Wärtsilä 6R32 - 4500HP" 
-                      value={formData.engine}
-                      onChange={(e) => setFormData({ ...formData, engine: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Shield className="h-3 w-3 opacity-40" /> Categoria de Navegação</label>
-                    <select 
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all"
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    >
-                      <option>Mar Aberto (Longo Curso)</option>
-                      <option>Cabotagem</option>
-                      <option>Apoio Marítimo</option>
-                      <option>Interior</option>
-                      <option>Esporte e Recreio</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status Inicial</label>
-                  <div className="grid grid-cols-3 gap-3">
-                     {["Operacional", "Em Manutenção", "Em Vistoria"].map((s) => (
-                       <label key={s} className="cursor-pointer">
-                          <input 
-                            type="radio" 
-                            name="vesselStatus" 
-                            className="peer hidden" 
-                            checked={formData.status === s}
-                            onChange={() => setFormData({ ...formData, status: s })}
-                          />
-                          <div className="p-4 text-center rounded-xl border border-slate-200 text-xs font-black uppercase tracking-widest peer-checked:bg-navy peer-checked:text-white transition-all shadow-sm">
-                             {s}
-                          </div>
-                       </label>
-                     ))}
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 md:p-8 bg-slate-50 border-t flex justify-end gap-3 shrink-0">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all">Cancelar</button>
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="px-12 py-3 bg-navy text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-navy/20 transition-all flex items-center gap-2"
-                >
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  Confirmar Cadastro
-                </button>
-              </div>
-            </form>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Zap className="h-3 w-3 opacity-40" /> Tipo de Casco / Barco</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: Petroleiro, Rebocador, Iate" 
+                value={formData.vessel_type}
+                onChange={(e) => setFormData({ ...formData, vessel_type: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><User className="h-3 w-3 opacity-40" /> Proprietário / Armador</label>
+              <select 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all"
+                value={formData.customer_id}
+                onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
+                required
+              >
+                <option value="">Selecione um cliente</option>
+                {customers.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Hash className="h-3 w-3 opacity-40" /> Número de Inscrição / IMO</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="9876543-2" 
+                value={formData.registration_number}
+                onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Settings className="h-3 w-3 opacity-40" /> Motorização Principal</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: Wärtsilä 6R32 - 4500HP" 
+                value={formData.engine}
+                onChange={(e) => setFormData({ ...formData, engine: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Shield className="h-3 w-3 opacity-40" /> Categoria de Navegação</label>
+              <select 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              >
+                <option>Mar Aberto (Longo Curso)</option>
+                <option>Cabotagem</option>
+                <option>Apoio Marítimo</option>
+                <option>Interior</option>
+                <option>Esporte e Recreio</option>
+              </select>
+            </div>
           </div>
-        </div>
-      )}
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status Inicial</label>
+            <div className="grid grid-cols-3 gap-3">
+               {["Operacional", "Em Manutenção", "Em Vistoria"].map((s) => (
+                 <label key={s} className="cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="vesselStatus" 
+                      className="peer hidden" 
+                      checked={formData.status === s}
+                      onChange={() => setFormData({ ...formData, status: s })}
+                    />
+                    <div className="p-4 text-center rounded-xl border border-slate-200 text-xs font-black uppercase tracking-widest peer-checked:bg-navy peer-checked:text-white transition-all shadow-sm">
+                       {s}
+                    </div>
+                 </label>
+               ))}
+            </div>
+          </div>
+        </form>
+      </ModalLayout>
 
       {/* Modal Detalhes da Embarcação */}
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white border-none rounded-[2.5rem] shadow-2xl">
-          <div className="p-8 border-b bg-slate-50 flex justify-between items-start">
-            <div className="flex gap-6">
-              <div className="h-16 w-16 bg-navy text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-xl">
-                <Ship className="h-8 w-8" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedVessel?.name}</h3>
-                <div className="flex gap-4 mt-1 text-slate-500 text-xs font-bold">
-                  <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" /> {selectedVessel?.customers?.name}</span>
-                  <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedVessel?.registration_number}</span>
-                </div>
-              </div>
-            </div>
-            <button onClick={() => setIsDetailsOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-              <X className="h-6 w-6 text-slate-300" />
-            </button>
+      <ModalLayout
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        title={selectedVessel?.name || "Detalhes da Embarcação"}
+        maxWidth="4xl"
+        footer={
+          <button 
+            type="button" 
+            onClick={() => setIsDetailsOpen(false)} 
+            className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all"
+          >
+            Fechar
+          </button>
+        }
+      >
+        <div className="flex gap-6 mb-8">
+          <div className="h-16 w-16 bg-navy text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-xl shrink-0">
+            <Ship className="h-8 w-8" />
           </div>
+          <div>
+            <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedVessel?.name}</h3>
+            <div className="flex flex-wrap gap-4 mt-1 text-slate-500 text-xs font-bold">
+              <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" /> {selectedVessel?.customers?.name}</span>
+              <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedVessel?.registration_number}</span>
+            </div>
+          </div>
+        </div>
 
-          <div className="px-8 py-6 h-[600px] overflow-y-auto">
+
+          <div className="w-full">
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="bg-slate-100 p-1 rounded-xl mb-8">
                 <TabsTrigger value="overview" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Ficha Técnica</TabsTrigger>
@@ -565,8 +570,8 @@ function Vessels() {
               </TabsContent>
             </Tabs>
           </div>
-        </DialogContent>
-      </Dialog>
+      </ModalLayout>
+
       <UpgradeModal 
         isOpen={upgradeModal.isOpen} 
         onClose={() => setUpgradeModal({ ...upgradeModal, isOpen: false })} 
