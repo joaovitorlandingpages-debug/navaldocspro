@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { BackNavigation } from "@/components/navigation/BackNavigation";
+import { PageHeader } from "@/components/navigation/PageHeader";
 
 
 export const Route = createFileRoute("/vessels")({
@@ -168,40 +169,35 @@ function Vessels() {
     }
   };
 
-  return (
-    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        <div className="flex flex-col gap-2">
-          <BackNavigation className="w-fit lg:hidden" />
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-navy tracking-tight uppercase">Embarcações</h1>
-            <p className="text-muted-foreground text-xs md:text-sm font-medium">Frota cadastrada e monitoramento de status.</p>
-          </div>
-        </div>
+    <div className="animate-in fade-in duration-500 pb-20">
+      <PageHeader 
+        title="Embarcações"
+        description="Frota cadastrada e monitoramento de status."
+        actions={
+          <>
+            <button 
+              onClick={() => setIsNewProcessOpen(true)}
+              className="flex-grow sm:flex-initial bg-navy text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
+            >
+              <Plus className="h-4 w-4" /> Novo Processo
+            </button>
+            <button 
+              onClick={async () => {
+                const limit = await checkLimit('vessels' as any);
+                if (limit.reached) {
+                  setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
+                  return;
+                }
+                setIsModalOpen(true);
+              }}
 
-        <div className="flex gap-2 w-full sm:w-auto">
-          <button 
-            onClick={() => setIsNewProcessOpen(true)}
-            className="flex-grow sm:flex-initial bg-navy text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
-          >
-            <Plus className="h-4 w-4" /> Novo Processo
-          </button>
-          <button 
-            onClick={async () => {
-              const limit = await checkLimit('vessels' as any);
-              if (limit.reached) {
-                setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
-                return;
-              }
-              setIsModalOpen(true);
-            }}
-
-            className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
-          >
-            <Plus className="h-4 w-4" /> Nova Embarcação
-          </button>
-        </div>
-      </div>
+              className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+            >
+              <Plus className="h-4 w-4" /> Nova Embarcação
+            </button>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {isLoading ? (
