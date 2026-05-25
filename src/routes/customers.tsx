@@ -482,27 +482,36 @@ function Customers() {
       </ModalLayout>
 
       {/* Modal Detalhes do Cliente */}
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white border-none rounded-[2.5rem] shadow-2xl">
-          <div className="p-8 border-b bg-slate-50 flex justify-between items-start">
-            <div className="flex gap-6">
-              <div className="h-16 w-16 bg-navy text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-xl">
-                {selectedCustomer?.name?.charAt(0)}
-              </div>
-              <div>
-                <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedCustomer?.name}</h3>
-                <div className="flex gap-4 mt-1 text-slate-500 text-xs font-bold">
-                  <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> {selectedCustomer?.email}</span>
-                  <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedCustomer?.cpf_cnpj}</span>
-                </div>
-              </div>
-            </div>
-            <button onClick={() => setIsDetailsOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-              <X className="h-6 w-6 text-slate-300" />
-            </button>
+      <ModalLayout
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        title={selectedCustomer?.name || "Detalhes do Cliente"}
+        maxWidth="4xl"
+        footer={
+          <button 
+            type="button" 
+            onClick={() => setIsDetailsOpen(false)} 
+            className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all"
+          >
+            Fechar
+          </button>
+        }
+      >
+        <div className="flex gap-6 mb-8">
+          <div className="h-16 w-16 bg-navy text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-xl shrink-0">
+            {selectedCustomer?.name?.charAt(0)}
           </div>
+          <div>
+            <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedCustomer?.name}</h3>
+            <div className="flex flex-wrap gap-4 mt-1 text-slate-500 text-xs font-bold">
+              <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> {selectedCustomer?.email}</span>
+              <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedCustomer?.cpf_cnpj}</span>
+            </div>
+          </div>
+        </div>
 
-          <div className="px-8 py-6 h-[600px] overflow-y-auto">
+
+          <div className="w-full">
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="bg-slate-100 p-1 rounded-xl mb-8">
                 <TabsTrigger value="overview" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Visão Geral</TabsTrigger>
@@ -592,8 +601,8 @@ function Customers() {
               </TabsContent>
             </Tabs>
           </div>
-        </DialogContent>
-      </Dialog>
+      </ModalLayout>
+
     </div>
   );
 }
