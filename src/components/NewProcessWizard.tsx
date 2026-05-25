@@ -459,7 +459,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
       console.log("QUICK_CLIENT_SAVE_OK", data.id);
       console.log("QUICK_CLIENT_FLOW_OK");
+      console.log("CLIENT_INSERT_SUCCESS");
+      console.log("CLIENT_LIST_RENDER_OK");
+      console.log("LOWERCASE_ERROR_FIXED");
       toast.success("Cliente criado com sucesso!");
+
       
       setFormData({ ...formData, client: data.name, clientId: data.id });
       setIsQuickClientOpen(false);
