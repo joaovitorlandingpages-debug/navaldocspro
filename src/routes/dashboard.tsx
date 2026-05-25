@@ -30,7 +30,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ExpirationMonitor } from "@/components/ExpirationMonitor";
 import { EnterpriseAuditFeed } from "@/components/dashboard/EnterpriseAuditFeed";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { BackButton } from "@/components/BackButton";
+import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidgets";
 
 
@@ -301,7 +301,7 @@ function DashboardLayout() {
                  </button>
                  <div className="flex flex-col gap-1 overflow-hidden">
                     <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
-                       <div className="hidden xs:block"><BackButton /></div>
+                       <div className="flex items-center"><BackNavigation showOnMobile={true} /></div>
                        <div className="hidden xs:block h-6 w-px bg-slate-200 shrink-0" />
                        <Breadcrumbs />
                     </div>

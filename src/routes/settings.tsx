@@ -9,7 +9,7 @@ import {
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { BackButton } from "@/components/BackButton";
+import { BackNavigation } from "@/components/navigation/BackNavigation";
 
 export const Route = createFileRoute("/settings")({
   component: CompanyTeamPage,
@@ -91,7 +91,7 @@ function CompanyTeamPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col gap-4">
-        <BackButton className="w-fit lg:hidden" />
+        <BackNavigation className="w-fit lg:hidden" />
         <div className="flex justify-between items-end">
           <div>
             <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Gestão Corporativa</h1>

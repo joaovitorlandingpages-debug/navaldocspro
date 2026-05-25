@@ -30,7 +30,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { BackButton } from "@/components/BackButton";
+import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { useTelemetry } from "@/hooks/useTelemetry";
 
@@ -144,7 +144,7 @@ function AdminLayout() {
                  </button>
                  <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                       <BackButton />
+                       <BackNavigation />
                        <div className="h-4 w-px bg-slate-200 mx-1" />
                        <Breadcrumbs />
                     </div>

@@ -8,7 +8,7 @@ import {
   FilePlus, RefreshCw, ChevronLeft, AlertTriangle,
   Signature, FileSearch
 } from "lucide-react";
-import { BackButton } from "@/components/BackButton";
+import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -231,7 +231,7 @@ function ProcessDetail() {
       {/* Header - Already in Dashboard Topbar but keeping context for page specific layout */}
       <div className="flex flex-col gap-6 lg:hidden">
         <div className="flex items-center gap-4">
-          <BackButton />
+          <BackNavigation />
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-[10px] font-mono font-black text-primary bg-primary/10 px-2 py-1 rounded uppercase tracking-tighter">{id.substring(0, 8)}</span>
             <h1 className="text-2xl font-black text-navy uppercase tracking-tight">{process?.process_type || "Carregando..."}</h1>

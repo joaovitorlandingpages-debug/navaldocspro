@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
-import { BackButton } from "@/components/BackButton";
+import { BackNavigation } from "@/components/navigation/BackNavigation";
 
 export const Route = createFileRoute("/system-monitor")({
   component: SystemMonitor,
@@ -37,7 +37,7 @@ function SystemMonitor() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 p-8 max-w-7xl mx-auto">
-      <BackButton className="w-fit lg:hidden" />
+      <BackNavigation className="w-fit lg:hidden" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-4xl font-black text-navy tracking-tight uppercase flex items-center gap-4">
