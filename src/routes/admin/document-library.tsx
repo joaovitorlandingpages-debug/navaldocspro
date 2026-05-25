@@ -35,7 +35,7 @@ function DocumentLibraryPage() {
 
   const filteredTemplates = templates?.filter((t: any) => {
     const matchesCategory = selectedCategory === "Todos" || t.category === selectedCategory || t.category_details?.name === selectedCategory;
-    const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (t.name || "").toLowerCase().includes((searchTerm || "").toLowerCase());
     return matchesCategory && matchesSearch;
   });
 

@@ -42,7 +42,7 @@ export function EnterpriseAuditFeed() {
             </div>
             <div className="flex-grow">
               <div className="flex justify-between items-start">
-                <p className="text-sm font-bold text-navy capitalize">{log.action.toLowerCase()} em {log.entity_type}</p>
+                <p className="text-sm font-bold text-navy capitalize">{(log.action || "").toLowerCase()} em {log.entity_type}</p>
                 <span className="text-[9px] font-black text-slate-400 uppercase">{format(new Date(log.created_at), "HH:mm", { locale: ptBR })}</span>
               </div>
               <p className="text-[11px] text-slate-500 mt-0.5">Usuário: <span className="font-bold">{log.profiles?.name || "Sistema"}</span></p>

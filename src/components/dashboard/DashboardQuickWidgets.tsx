@@ -16,9 +16,12 @@ export function DashboardQuickWidgets({ recentDocs, loading }: { recentDocs?: an
     { id: '4', file_name: 'DPC_2211_SOLICITACAO.pdf', status: 'validado', compliance_status: 'conforme', created_at: new Date().toISOString(), category: 'Protocolo' },
   ];
 
-  const filteredDocs = displayDocs.filter(doc => 
-    doc.file_name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredDocs = displayDocs.filter(doc => {
+    const fileName = (doc.file_name || "").toLowerCase();
+    const searchTerm = (search || "").toLowerCase();
+    return fileName.includes(searchTerm);
+  });
+
 
   const isMock = !recentDocs || recentDocs.length === 0;
 

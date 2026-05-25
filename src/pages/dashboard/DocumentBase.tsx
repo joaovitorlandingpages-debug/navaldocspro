@@ -116,10 +116,13 @@ export default function DocumentBase() {
     }
   });
 
-  const filteredTemplates = templates?.filter((t: DocumentTemplate) => 
-    t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredTemplates = templates?.filter((t: DocumentTemplate) => {
+    const name = (t.name || "").toLowerCase();
+    const description = (t.description || "").toLowerCase();
+    const search = (searchQuery || "").toLowerCase();
+    return name.includes(search) || description.includes(search);
+  });
+
 
   const getIcon = (iconName: string) => {
     switch (iconName) {

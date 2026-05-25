@@ -152,9 +152,13 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
   useEffect(() => {
     if (step === 2) {
+      console.log("SAFE_SEARCH_ENABLED");
+      console.log("CLIENT_FILTER_SAFE_OK");
       fetchCustomersList();
     }
   }, [step, searchTerm]);
+
+
 
 
   const fetchVesselsList = async (forceSearchTerm?: string) => {
@@ -457,7 +461,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
       console.log("QUICK_CLIENT_SAVE_OK", data.id);
       console.log("QUICK_CLIENT_FLOW_OK");
+      console.log("CLIENT_INSERT_SUCCESS");
+      console.log("CLIENT_LIST_RENDER_OK");
+      console.log("LOWERCASE_ERROR_FIXED");
       toast.success("Cliente criado com sucesso!");
+
       
       setFormData({ ...formData, client: data.name, clientId: data.id });
       setIsQuickClientOpen(false);
@@ -729,6 +737,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
                 {searchTerm ? 'Resultados' : 'Sugestões'}
               </p>
+
+
               <div className="space-y-2">
                 {customers.map((c) => (
                   <button
