@@ -377,22 +377,33 @@ function Vessels() {
       </ModalLayout>
 
       {/* Modal Detalhes da Embarcação */}
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white border-none rounded-[2.5rem] shadow-2xl">
-          <div className="p-8 border-b bg-slate-50 flex justify-between items-start">
-            <div className="flex gap-6">
-              <div className="h-16 w-16 bg-navy text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-xl">
-                <Ship className="h-8 w-8" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedVessel?.name}</h3>
-                <div className="flex gap-4 mt-1 text-slate-500 text-xs font-bold">
-                  <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" /> {selectedVessel?.customers?.name}</span>
-                  <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedVessel?.registration_number}</span>
-                </div>
-              </div>
+      <ModalLayout
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        title={selectedVessel?.name || "Detalhes da Embarcação"}
+        maxWidth="4xl"
+        footer={
+          <button 
+            type="button" 
+            onClick={() => setIsDetailsOpen(false)} 
+            className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all"
+          >
+            Fechar
+          </button>
+        }
+      >
+        <div className="flex gap-6 mb-8">
+          <div className="h-16 w-16 bg-navy text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-xl shrink-0">
+            <Ship className="h-8 w-8" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedVessel?.name}</h3>
+            <div className="flex flex-wrap gap-4 mt-1 text-slate-500 text-xs font-bold">
+              <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" /> {selectedVessel?.customers?.name}</span>
+              <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedVessel?.registration_number}</span>
             </div>
           </div>
+        </div>
 
 
           <div className="w-full">
