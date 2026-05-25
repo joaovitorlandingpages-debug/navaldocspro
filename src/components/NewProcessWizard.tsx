@@ -152,9 +152,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
   useEffect(() => {
     if (step === 2) {
+      console.log("SAFE_SEARCH_ENABLED");
       fetchCustomersList();
     }
   }, [step, searchTerm]);
+
 
 
   const fetchVesselsList = async (forceSearchTerm?: string) => {
