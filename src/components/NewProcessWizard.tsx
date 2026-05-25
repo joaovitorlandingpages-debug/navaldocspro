@@ -1154,10 +1154,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             {step === totalSteps ? (
               <Button
                 onClick={handleCreateProcess}
-                disabled={isSubmitting}
+                loading={isSubmitting}
                 className="flex-1 sm:flex-none bg-primary hover:opacity-90 rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg shadow-primary/20 gap-2"
               >
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Processo"} <Check className="h-4 w-4" />
+                Criar Processo <Check className="h-4 w-4" />
               </Button>
             ) : (
               <Button
