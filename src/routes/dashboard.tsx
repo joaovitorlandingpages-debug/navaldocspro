@@ -286,19 +286,20 @@ function DashboardLayout() {
                 </Link>
              </div>
            )}
-            <div className="h-auto py-3 md:py-5 flex flex-col sm:flex-row items-center justify-between px-4 md:px-10 border-b border-slate-100 gap-4 md:gap-6">
-              <div className="flex items-center gap-4 md:gap-8 flex-grow w-full sm:w-auto">
-                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-3 bg-white hover:bg-slate-50 rounded-2xl transition-all shadow-sm border border-slate-100">
+            <div className="h-auto py-3 md:py-4 flex flex-col sm:flex-row items-center justify-between px-4 md:px-8 border-b border-slate-100 gap-3 md:gap-6">
+              <div className="flex items-center gap-3 md:gap-6 flex-grow w-full sm:w-auto">
+                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2.5 md:p-3 bg-white hover:bg-slate-50 rounded-xl md:rounded-2xl transition-all shadow-sm border border-slate-100">
                    <Menu className="h-5 w-5 text-navy" />
                  </button>
                  <div className="flex flex-col gap-1 overflow-hidden">
-                    <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
-                       <BackButton />
-                       <div className="h-6 w-px bg-slate-200 shrink-0" />
+                    <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
+                       <div className="hidden xs:block"><BackButton /></div>
+                       <div className="hidden xs:block h-6 w-px bg-slate-200 shrink-0" />
                        <Breadcrumbs />
                     </div>
                  </div>
               </div>
+
               
               <div className="flex items-center gap-4 md:gap-8 w-full sm:w-auto justify-end">
                   <div className="hidden xl:flex items-center gap-3 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl group/seal">
@@ -320,13 +321,14 @@ function DashboardLayout() {
 
                   <button 
                     onClick={() => setIsNewProcessOpen(true)}
-                    className="flex items-center gap-3 bg-navy text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-lg shadow-navy/20 whitespace-nowrap group"
+                    className="flex items-center gap-3 bg-navy text-white px-5 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-lg shadow-navy/20 whitespace-nowrap group shrink-0"
                   >
-                    <div className="h-5 w-5 bg-primary rounded-lg flex items-center justify-center group-hover:rotate-180 transition-transform duration-500 shrink-0">
-                      <Plus className="h-3.5 w-3.5 text-white" />
+                    <div className="h-4 w-4 md:h-5 md:w-5 bg-primary rounded-lg flex items-center justify-center group-hover:rotate-180 transition-transform duration-500 shrink-0">
+                      <Plus className="h-3 w-3 md:h-3.5 md:w-3.5 text-white" />
                     </div>
-                    <span>Novo Processo</span>
+                    <span className="hidden xs:inline">Novo Processo</span>
                   </button>
+
     
                   <div className="flex items-center gap-3 md:gap-6">
                      <button 
@@ -362,11 +364,12 @@ function DashboardLayout() {
         />
 
         {/* Dynamic Content Container */}
-        <main className="flex-grow overflow-y-auto p-4 md:p-8">
+        <main className="flex-grow overflow-y-auto p-3 sm:p-4 md:p-8">
            <Suspense fallback={<DashboardSkeleton />}>
               <RouteContent />
            </Suspense>
         </main>
+
 
 
         {showTour && profile?.companies && (
@@ -476,9 +479,9 @@ export function RouteContent() {
     }
 
     return (
-    <div className="space-y-12 animate-in fade-in duration-1000 pb-12 max-w-[1800px] mx-auto">
+    <div className="space-y-6 md:space-y-12 animate-in fade-in duration-1000 pb-12 max-w-[1800px] mx-auto">
       {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (
-        <Card className="p-8 md:p-14 bg-[#000B18] text-white border-white/5 rounded-[3rem] md:rounded-[4rem] flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 mb-12 md:mb-16 shadow-[0_50px_100px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+        <Card className="p-6 md:p-14 bg-[#000B18] text-white border-white/5 rounded-[2rem] md:rounded-[4rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12 mb-8 md:mb-16 shadow-[0_50px_100px_rgba(0,0,0,0.3)] relative overflow-hidden group">
            <div className="absolute top-0 right-0 w-2/3 h-full bg-primary/20 blur-[120px] -mr-40 group-hover:bg-primary/30 transition-all duration-1000" />
            <div className="flex flex-col md:flex-row items-center gap-10 relative z-10 text-center md:text-left">
               <div className="h-24 w-24 bg-primary rounded-[2.5rem] flex items-center justify-center shadow-[0_0_50px_rgba(37,99,235,0.5)] group-hover:scale-110 group-hover:rotate-12 transition-all duration-700">
@@ -513,8 +516,9 @@ export function RouteContent() {
       )}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-4xl font-black text-navy tracking-tighter uppercase italic">Centro de Operações <span className="text-primary">Master</span></h1>
-          <p className="text-slate-500 font-bold text-sm uppercase tracking-widest mt-1">Gestão inteligente de frota e conformidade.</p>
+          <h1 className="text-2xl sm:text-4xl font-black text-navy tracking-tighter uppercase italic">Centro de Operações <span className="text-primary">Master</span></h1>
+          <p className="text-slate-500 font-bold text-[10px] sm:text-sm uppercase tracking-widest mt-1">Gestão inteligente de frota e conformidade.</p>
+
         </div>
         
         <div className="flex flex-wrap gap-3 w-full sm:w-auto">
@@ -547,7 +551,7 @@ export function RouteContent() {
       {/* Critical Operational Center */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
          <div className="lg:col-span-3 space-y-12">
-           <div className="bg-white p-6 md:p-12 rounded-[2rem] md:rounded-[3.5rem] border border-slate-100 shadow-[0_40px_80px_rgba(0,0,0,0.03)] relative overflow-hidden group">
+           <div className="bg-white p-6 md:p-12 rounded-[1.5rem] md:rounded-[3.5rem] border border-slate-100 shadow-[0_40px_80px_rgba(0,0,0,0.03)] relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:scale-110 transition-transform duration-1000">
                  <AlertCircle className="h-48 w-48 text-red-500" />
               </div>
