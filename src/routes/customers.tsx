@@ -153,6 +153,26 @@ function Customers() {
       if (error) throw error;
 
       console.log("CLIENT_CREATED_WITH_WORKSPACE", data.id);
+      
+      // Registro de Log (Fallback seguro)
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        await supabase.from('activity_logs').insert({
+          company_id: effectiveCompanyId,
+          user_id: user?.id,
+          action: 'client_created',
+          resource_type: 'client',
+          resource_id: data.id,
+          description: `Novo cliente cadastrado: ${data.name}`,
+          module: 'customers',
+          category: 'creation',
+          metadata: { client_type: clientType }
+        });
+        console.log("CLIENT_CREATED_LOG_OK");
+      } catch (logError) {
+        console.error("LOG_FAILURE_DOES_NOT_BLOCK_FLOW", logError);
+      }
+
       if (clientType === 'pessoa_fisica') console.log("CLIENT_PERSON_FISICA_OK");
       if (clientType === 'mei') console.log("CLIENT_MEI_OK");
       if (clientType === 'pessoa_juridica') console.log("CLIENT_CNPJ_OK");
@@ -161,6 +181,7 @@ function Customers() {
       setIsModalOpen(false);
       setFormData({ name: "", cpf_cnpj: "", email: "", phone: "", address: "", type: "Individual", notes: "" });
       toast.success("Cliente cadastrado com sucesso!");
+
     } catch (error: any) {
       toast.error(error.message || "Erro ao cadastrar cliente");
     } finally {
