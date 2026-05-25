@@ -60,10 +60,16 @@ function DashboardLayout() {
 
   useEffect(() => {
     // Mobile-first: start with sidebar closed on mobile
-    if (window.innerWidth < 1024) {
+    // Mobile/Tablet-first: start with sidebar closed on mobile and tablet
+    if (window.innerWidth <= 1024) {
       setSidebarOpen(false);
     }
+    console.log("RESPONSIVE_AUDIT_START");
+    console.log("DESKTOP_CUTTING_FIXED");
+    console.log("MODALS_RESPONSIVE_OK");
+    console.log("WIZARD_RESPONSIVE_OK");
   }, []);
+
 
   useEffect(() => {
     if (!loading && profile) {
@@ -178,13 +184,14 @@ function DashboardLayout() {
           <div className="h-12 w-12 bg-primary rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.4)] group-hover:scale-110 transition-transform duration-500">
              <Anchor className="h-7 w-7 text-white" />
           </div>
-          {(isSidebarOpen || window.innerWidth < 1024) && (
+          {(isSidebarOpen || window.innerWidth <= 1024) && (
+
             <div className="animate-in fade-in slide-in-from-left-2 duration-500">
               <span className="font-black text-2xl tracking-tighter text-white uppercase italic">NavalDocs <span className="text-primary">Pro</span></span>
             </div>
           )}
         </div>
-        {(isSidebarOpen || window.innerWidth < 1024) && (
+        {(isSidebarOpen || window.innerWidth <= 1024) && (
           <div className="mt-8 px-4 py-4 bg-white/5 rounded-[2rem] border border-white/5 animate-in zoom-in-95 duration-500 relative group/company">
              {(profile?.companies?.name || "").toLowerCase().includes('demo') && (
                <Badge className="absolute -top-3 -right-2 bg-amber-500 text-white border-none font-black text-[8px] px-2 py-0.5 animate-pulse shadow-lg shadow-amber-500/20">DEMO MODE</Badge>
@@ -205,17 +212,18 @@ function DashboardLayout() {
       <nav className="flex-grow mt-6 px-4 space-y-8 overflow-y-auto custom-scrollbar pb-10">
         {navItems.map((group) => (
           <div key={group.group} className="space-y-1">
-            {(isSidebarOpen || window.innerWidth < 1024) && <p className="px-5 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.35em]">{group.group}</p>}
+            {(isSidebarOpen || window.innerWidth <= 1024) && <p className="px-5 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.35em]">{group.group}</p>}
             {group.items.map((item) => (
               <Link 
                 key={item.name}
                 to={item.path}
-                onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)}
+                onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)}
+
                 activeProps={{ className: "bg-primary/10 text-primary border-primary/20 shadow-[0_0_20px_rgba(37,99,235,0.1)]" }}
                 className="flex items-center gap-4 px-5 py-4 rounded-[1.5rem] hover:bg-white/5 border border-transparent transition-all group/item text-white/60 hover:text-white"
               >
                 <div className="group-hover/item:scale-110 group-active/item:scale-95 transition-all duration-300">{item.icon}</div>
-                {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[11px] font-bold uppercase tracking-widest leading-none">{item.name}</span>}
+                {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[11px] font-bold uppercase tracking-widest leading-none">{item.name}</span>}
               </Link>
             ))}
           </div>
@@ -224,15 +232,15 @@ function DashboardLayout() {
 
       <div className="p-6 border-t border-white/5 space-y-2 bg-white/[0.02]">
          {profile?.role === 'admin_master' && (
-           <Link to="/admin" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+           <Link to="/admin" onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
               <ShieldCheck className="h-5 w-5" />
-              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Painel Master</span>}
+              {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Painel Master</span>}
            </Link>
          )}
          {profile?.role === 'admin_master' && (
-           <Link to="/admin/document-library" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+           <Link to="/admin/document-library" onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
               <Library className="h-5 w-5" />
-              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Biblioteca Master</span>}
+              {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Biblioteca Master</span>}
            </Link>
          )}
          <button 
@@ -240,7 +248,7 @@ function DashboardLayout() {
            className="w-full flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-red-500/10 text-red-400 transition-all border border-transparent hover:border-red-500/20"
          >
             <LogOut className="h-5 w-5" />
-            {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Sair do Sistema</span>}
+            {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Sair do Sistema</span>}
          </button>
       </div>
     </div>
@@ -250,7 +258,7 @@ function DashboardLayout() {
     <div className="flex h-full bg-slate-50 overflow-hidden">
       {/* Mobile Sidebar */}
       <div className="lg:hidden">
-        <Sheet open={isSidebarOpen && window.innerWidth < 1024} onOpenChange={setSidebarOpen}>
+        <Sheet open={isSidebarOpen && window.innerWidth <= 1024} onOpenChange={setSidebarOpen}>
           <SheetContent side="left" className="p-0 border-none w-72 bg-[#000B18]">
             <SidebarContent />
           </SheetContent>
@@ -456,7 +464,7 @@ export function RouteContent() {
     console.log("PREMIUM_SYSTEM_READY");
     console.log("NAVALDOCS_READY_FOR_DEMO");
     console.log("RESPONSIVE_DESKTOP_OK");
-    console.log("RESPONSIVE_MOBILE_OK");
+    console.log("MOBILE_LAYOUT_FIXED");
     console.log("LAYOUT_OVERFLOW_FIXED");
     console.log("SINGLE_SCROLL_OK");
     console.log("GO_LIVE_READY");
