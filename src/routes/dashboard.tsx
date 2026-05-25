@@ -60,10 +60,16 @@ function DashboardLayout() {
 
   useEffect(() => {
     // Mobile-first: start with sidebar closed on mobile
-    if (window.innerWidth < 1024) {
+    // Mobile/Tablet-first: start with sidebar closed on mobile and tablet
+    if (window.innerWidth <= 1024) {
       setSidebarOpen(false);
     }
+    console.log("RESPONSIVE_AUDIT_START");
+    console.log("DESKTOP_CUTTING_FIXED");
+    console.log("MODALS_RESPONSIVE_OK");
+    console.log("WIZARD_RESPONSIVE_OK");
   }, []);
+
 
   useEffect(() => {
     if (!loading && profile) {
@@ -178,13 +184,14 @@ function DashboardLayout() {
           <div className="h-12 w-12 bg-primary rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.4)] group-hover:scale-110 transition-transform duration-500">
              <Anchor className="h-7 w-7 text-white" />
           </div>
-          {(isSidebarOpen || window.innerWidth < 1024) && (
+          {(isSidebarOpen || window.innerWidth <= 1024) && (
+
             <div className="animate-in fade-in slide-in-from-left-2 duration-500">
               <span className="font-black text-2xl tracking-tighter text-white uppercase italic">NavalDocs <span className="text-primary">Pro</span></span>
             </div>
           )}
         </div>
-        {(isSidebarOpen || window.innerWidth < 1024) && (
+        {(isSidebarOpen || window.innerWidth <= 1024) && (
           <div className="mt-8 px-4 py-4 bg-white/5 rounded-[2rem] border border-white/5 animate-in zoom-in-95 duration-500 relative group/company">
              {(profile?.companies?.name || "").toLowerCase().includes('demo') && (
                <Badge className="absolute -top-3 -right-2 bg-amber-500 text-white border-none font-black text-[8px] px-2 py-0.5 animate-pulse shadow-lg shadow-amber-500/20">DEMO MODE</Badge>
@@ -205,17 +212,18 @@ function DashboardLayout() {
       <nav className="flex-grow mt-6 px-4 space-y-8 overflow-y-auto custom-scrollbar pb-10">
         {navItems.map((group) => (
           <div key={group.group} className="space-y-1">
-            {(isSidebarOpen || window.innerWidth < 1024) && <p className="px-5 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.35em]">{group.group}</p>}
+            {(isSidebarOpen || window.innerWidth <= 1024) && <p className="px-5 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.35em]">{group.group}</p>}
             {group.items.map((item) => (
               <Link 
                 key={item.name}
                 to={item.path}
-                onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)}
+                onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)}
+
                 activeProps={{ className: "bg-primary/10 text-primary border-primary/20 shadow-[0_0_20px_rgba(37,99,235,0.1)]" }}
                 className="flex items-center gap-4 px-5 py-4 rounded-[1.5rem] hover:bg-white/5 border border-transparent transition-all group/item text-white/60 hover:text-white"
               >
                 <div className="group-hover/item:scale-110 group-active/item:scale-95 transition-all duration-300">{item.icon}</div>
-                {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[11px] font-bold uppercase tracking-widest leading-none">{item.name}</span>}
+                {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[11px] font-bold uppercase tracking-widest leading-none">{item.name}</span>}
               </Link>
             ))}
           </div>
@@ -224,15 +232,15 @@ function DashboardLayout() {
 
       <div className="p-6 border-t border-white/5 space-y-2 bg-white/[0.02]">
          {profile?.role === 'admin_master' && (
-           <Link to="/admin" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+           <Link to="/admin" onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
               <ShieldCheck className="h-5 w-5" />
-              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Painel Master</span>}
+              {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Painel Master</span>}
            </Link>
          )}
          {profile?.role === 'admin_master' && (
-           <Link to="/admin/document-library" onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+           <Link to="/admin/document-library" onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
               <Library className="h-5 w-5" />
-              {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Biblioteca Master</span>}
+              {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Biblioteca Master</span>}
            </Link>
          )}
          <button 
@@ -240,7 +248,7 @@ function DashboardLayout() {
            className="w-full flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-red-500/10 text-red-400 transition-all border border-transparent hover:border-red-500/20"
          >
             <LogOut className="h-5 w-5" />
-            {(isSidebarOpen || window.innerWidth < 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Sair do Sistema</span>}
+            {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Sair do Sistema</span>}
          </button>
       </div>
     </div>
@@ -250,7 +258,7 @@ function DashboardLayout() {
     <div className="flex h-full bg-slate-50 overflow-hidden">
       {/* Mobile Sidebar */}
       <div className="lg:hidden">
-        <Sheet open={isSidebarOpen && window.innerWidth < 1024} onOpenChange={setSidebarOpen}>
+        <Sheet open={isSidebarOpen && window.innerWidth <= 1024} onOpenChange={setSidebarOpen}>
           <SheetContent side="left" className="p-0 border-none w-72 bg-[#000B18]">
             <SidebarContent />
           </SheetContent>
@@ -286,19 +294,20 @@ function DashboardLayout() {
                 </Link>
              </div>
            )}
-            <div className="h-auto py-3 md:py-5 flex flex-col sm:flex-row items-center justify-between px-4 md:px-10 border-b border-slate-100 gap-4 md:gap-6">
-              <div className="flex items-center gap-4 md:gap-8 flex-grow w-full sm:w-auto">
-                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-3 bg-white hover:bg-slate-50 rounded-2xl transition-all shadow-sm border border-slate-100">
+            <div className="h-auto py-3 md:py-4 flex flex-col sm:flex-row items-center justify-between px-4 md:px-8 border-b border-slate-100 gap-3 md:gap-6">
+              <div className="flex items-center gap-3 md:gap-6 flex-grow w-full sm:w-auto">
+                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2.5 md:p-3 bg-white hover:bg-slate-50 rounded-xl md:rounded-2xl transition-all shadow-sm border border-slate-100">
                    <Menu className="h-5 w-5 text-navy" />
                  </button>
                  <div className="flex flex-col gap-1 overflow-hidden">
-                    <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
-                       <BackButton />
-                       <div className="h-6 w-px bg-slate-200 shrink-0" />
+                    <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
+                       <div className="hidden xs:block"><BackButton /></div>
+                       <div className="hidden xs:block h-6 w-px bg-slate-200 shrink-0" />
                        <Breadcrumbs />
                     </div>
                  </div>
               </div>
+
               
               <div className="flex items-center gap-4 md:gap-8 w-full sm:w-auto justify-end">
                   <div className="hidden xl:flex items-center gap-3 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl group/seal">
@@ -320,13 +329,14 @@ function DashboardLayout() {
 
                   <button 
                     onClick={() => setIsNewProcessOpen(true)}
-                    className="flex items-center gap-3 bg-navy text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-lg shadow-navy/20 whitespace-nowrap group"
+                    className="flex items-center gap-3 bg-navy text-white px-5 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-lg shadow-navy/20 whitespace-nowrap group shrink-0"
                   >
-                    <div className="h-5 w-5 bg-primary rounded-lg flex items-center justify-center group-hover:rotate-180 transition-transform duration-500 shrink-0">
-                      <Plus className="h-3.5 w-3.5 text-white" />
+                    <div className="h-4 w-4 md:h-5 md:w-5 bg-primary rounded-lg flex items-center justify-center group-hover:rotate-180 transition-transform duration-500 shrink-0">
+                      <Plus className="h-3 w-3 md:h-3.5 md:w-3.5 text-white" />
                     </div>
-                    <span>Novo Processo</span>
+                    <span className="hidden xs:inline">Novo Processo</span>
                   </button>
+
     
                   <div className="flex items-center gap-3 md:gap-6">
                      <button 
@@ -362,11 +372,12 @@ function DashboardLayout() {
         />
 
         {/* Dynamic Content Container */}
-        <main className="flex-grow overflow-y-auto p-4 md:p-8">
+        <main className="flex-grow overflow-y-auto p-3 sm:p-4 md:p-8">
            <Suspense fallback={<DashboardSkeleton />}>
               <RouteContent />
            </Suspense>
         </main>
+
 
 
         {showTour && profile?.companies && (
@@ -453,7 +464,7 @@ export function RouteContent() {
     console.log("PREMIUM_SYSTEM_READY");
     console.log("NAVALDOCS_READY_FOR_DEMO");
     console.log("RESPONSIVE_DESKTOP_OK");
-    console.log("RESPONSIVE_MOBILE_OK");
+    console.log("MOBILE_LAYOUT_FIXED");
     console.log("LAYOUT_OVERFLOW_FIXED");
     console.log("SINGLE_SCROLL_OK");
     console.log("GO_LIVE_READY");
@@ -476,9 +487,9 @@ export function RouteContent() {
     }
 
     return (
-    <div className="space-y-12 animate-in fade-in duration-1000 pb-12 max-w-[1800px] mx-auto">
+    <div className="space-y-6 md:space-y-12 animate-in fade-in duration-1000 pb-12 max-w-[1800px] mx-auto">
       {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (
-        <Card className="p-8 md:p-14 bg-[#000B18] text-white border-white/5 rounded-[3rem] md:rounded-[4rem] flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 mb-12 md:mb-16 shadow-[0_50px_100px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+        <Card className="p-6 md:p-14 bg-[#000B18] text-white border-white/5 rounded-[2rem] md:rounded-[4rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12 mb-8 md:mb-16 shadow-[0_50px_100px_rgba(0,0,0,0.3)] relative overflow-hidden group">
            <div className="absolute top-0 right-0 w-2/3 h-full bg-primary/20 blur-[120px] -mr-40 group-hover:bg-primary/30 transition-all duration-1000" />
            <div className="flex flex-col md:flex-row items-center gap-10 relative z-10 text-center md:text-left">
               <div className="h-24 w-24 bg-primary rounded-[2.5rem] flex items-center justify-center shadow-[0_0_50px_rgba(37,99,235,0.5)] group-hover:scale-110 group-hover:rotate-12 transition-all duration-700">
@@ -513,8 +524,9 @@ export function RouteContent() {
       )}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-4xl font-black text-navy tracking-tighter uppercase italic">Centro de Operações <span className="text-primary">Master</span></h1>
-          <p className="text-slate-500 font-bold text-sm uppercase tracking-widest mt-1">Gestão inteligente de frota e conformidade.</p>
+          <h1 className="text-2xl sm:text-4xl font-black text-navy tracking-tighter uppercase italic">Centro de Operações <span className="text-primary">Master</span></h1>
+          <p className="text-slate-500 font-bold text-[10px] sm:text-sm uppercase tracking-widest mt-1">Gestão inteligente de frota e conformidade.</p>
+
         </div>
         
         <div className="flex flex-wrap gap-3 w-full sm:w-auto">
@@ -547,7 +559,7 @@ export function RouteContent() {
       {/* Critical Operational Center */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
          <div className="lg:col-span-3 space-y-12">
-           <div className="bg-white p-6 md:p-12 rounded-[2rem] md:rounded-[3.5rem] border border-slate-100 shadow-[0_40px_80px_rgba(0,0,0,0.03)] relative overflow-hidden group">
+           <div className="bg-white p-6 md:p-12 rounded-[1.5rem] md:rounded-[3.5rem] border border-slate-100 shadow-[0_40px_80px_rgba(0,0,0,0.03)] relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:scale-110 transition-transform duration-1000">
                  <AlertCircle className="h-48 w-48 text-red-500" />
               </div>

@@ -112,17 +112,16 @@
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden;
-    position: fixed;
     width: 100%;
+    /* Removido position: fixed e overflow: hidden para permitir scroll natural do navegador em dispositivos móveis */
   }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
-    overflow: hidden;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;
+    overflow-x: hidden;
   }
 }
 
@@ -133,7 +132,9 @@
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
   overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
 }
+
 
 
 @keyframes scan {

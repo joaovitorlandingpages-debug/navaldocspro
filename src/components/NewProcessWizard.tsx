@@ -1084,17 +1084,17 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       console.log("PROCESS_MODAL_OK", open);
     }}>
 
-      <DialogContent className="max-w-2xl w-[95vw] md:w-full p-0 overflow-hidden bg-white border-none rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl max-h-[90vh] md:max-h-none">
-        <DialogHeader className="p-4 md:p-8 pb-0 border-b-0">
-          <div className="flex flex-col gap-4 w-full">
+      <DialogContent className="max-w-2xl w-full sm:w-[95vw] md:w-full p-0 overflow-hidden bg-white border-none sm:rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl h-[100dvh] sm:h-auto sm:max-h-[90vh] md:max-h-none flex flex-col">
+        <DialogHeader className="p-4 md:p-8 pb-3 md:pb-0 border-b sm:border-b-0 shrink-0">
+          <div className="flex flex-col gap-3 md:gap-4 w-full">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 md:gap-4">
-                <div className="h-10 w-10 md:h-12 md:w-12 bg-navy text-white rounded-xl md:rounded-2xl flex items-center justify-center font-black shadow-lg text-sm md:text-base">
+                <div className="h-9 w-9 md:h-12 md:w-12 bg-navy text-white rounded-xl md:rounded-2xl flex items-center justify-center font-black shadow-lg text-xs md:text-base">
                   {step}
                 </div>
                 <div className="overflow-hidden">
-                  <DialogTitle className="text-lg md:text-2xl font-black text-navy uppercase tracking-tight truncate">Novo Processo Naval</DialogTitle>
-                  <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{getStepTitle()}</p>
+                  <DialogTitle className="text-base md:text-2xl font-black text-navy uppercase tracking-tight truncate">Novo Processo Naval</DialogTitle>
+                  <p className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{getStepTitle()}</p>
                 </div>
               </div>
               <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors shrink-0">
@@ -1102,23 +1102,24 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               </button>
             </div>
             
-            <div className="flex items-center gap-3 md:gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
               <div className="flex-1">
-                <Progress value={progressPercent} className="h-1.2 md:h-1.5" />
+                <Progress value={progressPercent} className="h-1 md:h-1.5" />
               </div>
-              <span className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap shrink-0">Passo {step} / {totalSteps}</span>
+              <span className="text-[7px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap shrink-0">P. {step} / {totalSteps}</span>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="px-4 md:px-8 py-4 md:py-6 min-h-[300px] md:min-h-[420px] overflow-y-auto max-h-[60vh] md:max-h-[65vh]">
+        <div className="px-4 md:px-8 py-4 md:py-6 flex-grow overflow-y-auto">
           {renderStep()}
         </div>
 
 
 
 
-        <div className="p-4 md:p-8 pt-2 md:pt-4 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+
+        <div className="p-4 md:p-8 pt-2 md:pt-4 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0 border-t sm:border-t-0">
           <div className="flex gap-2 w-full sm:w-auto">
             <Button
               variant="ghost"
@@ -1175,11 +1176,12 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
       {/* Modal de Criação Rápida de Cliente */}
       <Dialog open={isQuickClientOpen} onOpenChange={setIsQuickClientOpen}>
-        <DialogContent className="max-w-md w-[95vw] p-0 bg-white border-none rounded-[1.5rem] md:rounded-[2rem] shadow-2xl overflow-hidden">
-          <div className="p-6 md:p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <DialogContent className="max-w-md w-full sm:w-[95vw] p-0 bg-white border-none sm:rounded-[1.5rem] md:rounded-[2rem] shadow-2xl overflow-hidden h-[100dvh] sm:h-auto flex flex-col">
+          <div className="p-4 md:p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
             <DialogHeader className="p-0">
-              <DialogTitle className="text-xl font-black text-navy uppercase tracking-tight">Novo Cliente Rápido</DialogTitle>
+              <DialogTitle className="text-lg md:text-xl font-black text-navy uppercase tracking-tight">Novo Cliente Rápido</DialogTitle>
             </DialogHeader>
+
             <div className="flex bg-slate-200 p-1 rounded-xl">
               <button 
                 type="button"
@@ -1198,7 +1200,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             </div>
           </div>
 
-          <div className="p-6 md:p-8">
+          <div className="p-4 md:p-8 flex-grow overflow-y-auto">
             {clientModalMode === 'ocr' ? (
               <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
                 {!ocrJobResult ? (

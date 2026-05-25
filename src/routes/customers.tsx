@@ -169,15 +169,16 @@ function Customers() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-8">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div className="flex flex-col gap-2">
           <BackButton className="w-fit lg:hidden" />
           <div>
-            <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Clientes</h1>
-            <p className="text-muted-foreground font-medium">Gerencie sua base de clientes e contatos.</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-navy tracking-tight uppercase">Clientes</h1>
+            <p className="text-muted-foreground text-xs md:text-sm font-medium">Gerencie sua base de clientes e contatos.</p>
           </div>
         </div>
+
         <div className="flex gap-2 w-full sm:w-auto">
           <button 
             onClick={() => setIsNewProcessOpen(true)}
@@ -202,8 +203,9 @@ function Customers() {
         </div>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b bg-slate-50/50 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-4 md:p-6 border-b bg-slate-50/50 flex flex-col md:flex-row gap-4 items-center justify-between">
+
           <div className="relative w-full md:max-w-md">
             <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
             <input 
@@ -367,9 +369,10 @@ function Customers() {
 
       {/* Modal Novo Cliente */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/20 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-8 border-b flex justify-between items-center bg-slate-50">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 bg-navy/20 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 h-[100dvh] sm:h-auto flex flex-col">
+            <div className="p-4 md:p-8 border-b flex justify-between items-center bg-slate-50 shrink-0">
+
               <div>
                 <h3 className="text-xl font-black text-navy uppercase tracking-tight">Cadastrar Novo Cliente</h3>
                 <p className="text-xs text-muted-foreground font-medium mt-1">Preencha os dados básicos para iniciar.</p>
@@ -378,8 +381,9 @@ function Customers() {
                 <X className="h-6 w-6 text-slate-300" />
               </button>
             </div>
-            <form onSubmit={handleCreateCustomer}>
-              <div className="p-8 space-y-6">
+            <form onSubmit={handleCreateCustomer} className="flex flex-col flex-grow overflow-hidden">
+              <div className="p-4 md:p-8 space-y-6 overflow-y-auto flex-grow">
+
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome / Razão Social</label>
