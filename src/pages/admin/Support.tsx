@@ -30,10 +30,13 @@ export default function AdminSupport() {
     }
   });
 
-  const filteredTickets = tickets?.filter((t: any) => 
-    t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.companies?.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTickets = tickets?.filter((t: any) => {
+    const title = (t.title || "").toLowerCase();
+    const companyName = (t.companies?.name || "").toLowerCase();
+    const search = (searchQuery || "").toLowerCase();
+    return title.includes(search) || companyName.includes(search);
+  });
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
