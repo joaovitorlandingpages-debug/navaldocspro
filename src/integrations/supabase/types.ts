@@ -20,8 +20,12 @@ export type Database = {
           category: string | null
           company_id: string
           created_at: string
+          description: string | null
           id: string
+          metadata: Json | null
           module: string
+          resource_id: string | null
+          resource_type: string | null
           source_ip: string | null
           user_agent: string | null
           user_id: string | null
@@ -31,8 +35,12 @@ export type Database = {
           category?: string | null
           company_id: string
           created_at?: string
+          description?: string | null
           id?: string
+          metadata?: Json | null
           module: string
+          resource_id?: string | null
+          resource_type?: string | null
           source_ip?: string | null
           user_agent?: string | null
           user_id?: string | null
@@ -42,8 +50,12 @@ export type Database = {
           category?: string | null
           company_id?: string
           created_at?: string
+          description?: string | null
           id?: string
+          metadata?: Json | null
           module?: string
+          resource_id?: string | null
+          resource_type?: string | null
           source_ip?: string | null
           user_agent?: string | null
           user_id?: string | null
