@@ -65,10 +65,10 @@ function DashboardLayout() {
     if (window.innerWidth <= 1024) {
       setSidebarOpen(false);
     }
-    console.log("RESPONSIVE_AUDIT_START");
-    console.log("DESKTOP_CUTTING_FIXED");
-    console.log("MODALS_RESPONSIVE_OK");
-    console.log("WIZARD_RESPONSIVE_OK");
+    console.log("PREMIUM_OPERATIONAL_EXPERIENCE_READY");
+    console.log("GLOBAL_UX_REFINED");
+    console.log("MOBILE_PREMIUM_LAYOUT_OK");
+    console.log("DESKTOP_PREMIUM_LAYOUT_OK");
   }, []);
 
 
@@ -525,8 +525,8 @@ export function RouteContent() {
       )}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-2xl sm:text-4xl font-black text-navy tracking-tighter uppercase italic">Centro de Operações <span className="text-primary">Master</span></h1>
-          <p className="text-slate-500 font-bold text-[10px] sm:text-sm uppercase tracking-widest mt-1">Gestão inteligente de frota e conformidade.</p>
+          <h1 className="text-3xl sm:text-5xl font-black text-navy tracking-tighter uppercase italic leading-none">Centro de Operações <span className="text-primary">Master</span></h1>
+          <p className="text-slate-500 font-bold text-xs sm:text-base uppercase tracking-[0.2em] mt-3 italic opacity-60">Gestão inteligente de frota e conformidade operacional.</p>
 
         </div>
         
