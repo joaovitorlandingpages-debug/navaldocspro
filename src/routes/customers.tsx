@@ -19,6 +19,7 @@ import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { Badge } from "@/components/ui/badge";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { BackNavigation } from "@/components/navigation/BackNavigation";
+import { PageHeader } from "@/components/navigation/PageHeader";
 import { ModalLayout } from "@/components/ui/ModalLayout";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -193,39 +194,35 @@ function Customers() {
   };
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        <div className="flex flex-col gap-2">
-          <BackNavigation className="w-fit lg:hidden" />
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-navy tracking-tight uppercase">Clientes</h1>
-            <p className="text-muted-foreground text-xs md:text-sm font-medium">Gerencie sua base de clientes e contatos.</p>
-          </div>
-        </div>
+    <div className="animate-in fade-in duration-500 pb-20">
+      <PageHeader 
+        title="Clientes"
+        description="Gerencie sua base de clientes e contatos."
+        actions={
+          <>
+            <button 
+              onClick={() => setIsNewProcessOpen(true)}
+              className="flex-grow sm:flex-initial bg-navy text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
+            >
+              <Plus className="h-4 w-4" /> Novo Processo
+            </button>
+            <button 
+              onClick={async () => {
+                const limit = await checkLimit('customers');
+                if (limit.reached) {
+                  setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
+                  return;
+                }
+                setIsModalOpen(true);
+              }}
 
-        <div className="flex gap-2 w-full sm:w-auto">
-          <button 
-            onClick={() => setIsNewProcessOpen(true)}
-            className="flex-grow sm:flex-initial bg-navy text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
-          >
-            <Plus className="h-4 w-4" /> Novo Processo
-          </button>
-          <button 
-            onClick={async () => {
-              const limit = await checkLimit('customers');
-              if (limit.reached) {
-                setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
-                return;
-              }
-              setIsModalOpen(true);
-            }}
-
-            className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
-          >
-            <Plus className="h-4 w-4" /> Novo Cliente
-          </button>
-        </div>
-      </div>
+              className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+            >
+              <Plus className="h-4 w-4" /> Novo Cliente
+            </button>
+          </>
+        }
+      />
 
       <div className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
         <div className="p-4 md:p-6 border-b bg-slate-50/50 flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -330,7 +327,6 @@ function Customers() {
             </div>
           ) : (
             customers.map((c, i) => {
-              console.log("TABLES_MOBILE_OK");
               return (
                 <div 
                   key={i} 
@@ -586,7 +582,13 @@ function Customers() {
                             <FileText className="h-12 w-12 text-slate-100 mx-auto mb-2" />
                             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhum documento</p>
                          </div>
-      )}
+                       )}
+                    </div>
+                  </div>
+               </TabsContent>
+            </Tabs>
+          </div>
+      </ModalLayout>
 
       <UpgradeModal 
         isOpen={upgradeModal.isOpen} 
@@ -595,14 +597,6 @@ function Customers() {
         limit={upgradeModal.limit}
         current={upgradeModal.current}
       />
-    </div>
-
-                 </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-      </ModalLayout>
-
     </div>
   );
 }

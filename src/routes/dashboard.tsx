@@ -31,6 +31,7 @@ import { ExpirationMonitor } from "@/components/ExpirationMonitor";
 import { EnterpriseAuditFeed } from "@/components/dashboard/EnterpriseAuditFeed";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { BackNavigation } from "@/components/navigation/BackNavigation";
+import { MobileNavigation } from "@/components/navigation/MobileNavigation";
 import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidgets";
 
 
@@ -301,9 +302,7 @@ function DashboardLayout() {
                  </button>
                  <div className="flex flex-col gap-1 overflow-hidden">
                     <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
-                       <div className="flex items-center"><BackNavigation showOnMobile={true} /></div>
-                       <div className="hidden xs:block h-6 w-px bg-slate-200 shrink-0" />
-                       <Breadcrumbs />
+                       <div className="hidden xs:block font-black text-navy uppercase text-[10px] tracking-widest italic opacity-40">NavalDocs Pro Ops</div>
                     </div>
                  </div>
               </div>
@@ -374,9 +373,11 @@ function DashboardLayout() {
         {/* Dynamic Content Container */}
         <main className="flex-grow overflow-y-auto p-3 sm:p-4 md:p-8">
            <Suspense fallback={<DashboardSkeleton />}>
-              <RouteContent />
-           </Suspense>
-        </main>
+               <RouteContent />
+            </Suspense>
+         </main>
+
+         <MobileNavigation />
 
 
 

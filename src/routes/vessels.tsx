@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { BackNavigation } from "@/components/navigation/BackNavigation";
+import { PageHeader } from "@/components/navigation/PageHeader";
 
 
 export const Route = createFileRoute("/vessels")({
@@ -169,39 +170,35 @@ function Vessels() {
   };
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        <div className="flex flex-col gap-2">
-          <BackNavigation className="w-fit lg:hidden" />
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-navy tracking-tight uppercase">Embarcações</h1>
-            <p className="text-muted-foreground text-xs md:text-sm font-medium">Frota cadastrada e monitoramento de status.</p>
-          </div>
-        </div>
+    <div className="animate-in fade-in duration-500 pb-20">
+      <PageHeader 
+        title="Embarcações"
+        description="Frota cadastrada e monitoramento de status."
+        actions={
+          <>
+            <button 
+              onClick={() => setIsNewProcessOpen(true)}
+              className="flex-grow sm:flex-initial bg-navy text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
+            >
+              <Plus className="h-4 w-4" /> Novo Processo
+            </button>
+            <button 
+              onClick={async () => {
+                const limit = await checkLimit('vessels' as any);
+                if (limit.reached) {
+                  setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
+                  return;
+                }
+                setIsModalOpen(true);
+              }}
 
-        <div className="flex gap-2 w-full sm:w-auto">
-          <button 
-            onClick={() => setIsNewProcessOpen(true)}
-            className="flex-grow sm:flex-initial bg-navy text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
-          >
-            <Plus className="h-4 w-4" /> Novo Processo
-          </button>
-          <button 
-            onClick={async () => {
-              const limit = await checkLimit('vessels' as any);
-              if (limit.reached) {
-                setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
-                return;
-              }
-              setIsModalOpen(true);
-            }}
-
-            className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
-          >
-            <Plus className="h-4 w-4" /> Nova Embarcação
-          </button>
-        </div>
-      </div>
+              className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+            >
+              <Plus className="h-4 w-4" /> Nova Embarcação
+            </button>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {isLoading ? (
@@ -393,113 +390,74 @@ function Vessels() {
         }
       >
         <div className="flex gap-6 mb-8">
-          <div className="h-16 w-16 bg-navy text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-xl shrink-0">
-            <Ship className="h-8 w-8" />
-          </div>
-          <div>
-            <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedVessel?.name}</h3>
-            <div className="flex flex-wrap gap-4 mt-1 text-slate-500 text-xs font-bold">
-              <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" /> {selectedVessel?.customers?.name}</span>
-              <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedVessel?.registration_number}</span>
-            </div>
-          </div>
+           <div className="h-16 w-16 bg-navy text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-xl shrink-0">
+             {selectedVessel?.name?.charAt(0)}
+           </div>
+           <div>
+             <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedVessel?.name}</h3>
+             <div className="flex flex-wrap gap-4 mt-1 text-slate-500 text-xs font-bold">
+               <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedVessel?.registration_number}</span>
+               <span className="flex items-center gap-1.5 uppercase">{selectedVessel?.vessel_type}</span>
+             </div>
+           </div>
         </div>
 
-
-          <div className="w-full">
+        <div className="w-full">
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="bg-slate-100 p-1 rounded-xl mb-8">
-                <TabsTrigger value="overview" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Ficha Técnica</TabsTrigger>
-                <TabsTrigger value="engines" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Motores</TabsTrigger>
+                <TabsTrigger value="overview" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Visão Geral</TabsTrigger>
                 <TabsTrigger value="crew" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Tripulação</TabsTrigger>
                 <TabsTrigger value="documents" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Documentos</TabsTrigger>
-                <TabsTrigger value="history" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Manutenção</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-6">
                  <div className="grid grid-cols-2 gap-8">
                     <div className="space-y-4">
-                       <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Especificações</h4>
+                       <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Detalhes Técnicos</h4>
                        <div className="space-y-3">
-                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                             <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Tipo de Embarcação</p>
-                             <p className="text-sm font-bold text-navy">{selectedVessel?.vessel_type || "Não informado"}</p>
+                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center">
+                             <span className="text-[9px] font-bold text-slate-400 uppercase">Motor</span>
+                             <span className="text-sm font-bold text-navy">{selectedVessel?.engine || "---"}</span>
                           </div>
-                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                             <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Motorização</p>
-                             <p className="text-sm font-bold text-navy">{selectedVessel?.engine || "Não informado"}</p>
+                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center">
+                             <span className="text-[9px] font-bold text-slate-400 uppercase">Categoria</span>
+                             <span className="text-sm font-bold text-navy">{selectedVessel?.category || "---"}</span>
                           </div>
                        </div>
                     </div>
                     <div className="space-y-4">
-                       <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Categoria</h4>
-                       <div className="p-4 bg-navy text-white rounded-[2rem] min-h-[120px] flex flex-col justify-center items-center text-center">
-                          <Anchor className="h-8 w-8 mb-2 opacity-50" />
-                          <p className="text-lg font-black uppercase tracking-tight">{selectedVessel?.category}</p>
-                          <p className="text-[10px] font-bold opacity-50 uppercase tracking-[0.2em]">Normam-01/DPC</p>
+                       <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Status Operacional</h4>
+                       <div className="p-6 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center text-center">
+                          <div className={`h-4 w-4 rounded-full mb-3 animate-pulse ${
+                            selectedVessel?.status === 'Operacional' ? 'bg-green-500' : 'bg-amber-500'
+                          }`} />
+                          <p className="text-lg font-black text-navy uppercase tracking-tight">{selectedVessel?.status}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Atualizado hoje às 10:45</p>
                        </div>
                     </div>
                  </div>
               </TabsContent>
 
-              <TabsContent value="engines" className="space-y-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Motorização Técnica</h4>
-                  <Button size="sm" className="bg-navy text-white text-[10px] font-black uppercase tracking-widest h-8">
-                    <Plus className="h-3 w-3 mr-2" /> Adicionar Motor
-                  </Button>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex items-center justify-between group">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center text-navy shadow-sm group-hover:bg-navy group-hover:text-white transition-all">
-                        <Zap className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-black text-navy uppercase">{selectedVessel?.engine || "Motor Principal"}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">Motor Estacionário • 1200HP</p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><Settings className="h-4 w-4 text-slate-300" /></Button>
-                  </div>
-                  
-                  <div className="p-6 border-2 border-dashed border-slate-100 rounded-[2rem] flex flex-col items-center justify-center text-slate-300 hover:border-slate-200 hover:text-slate-400 transition-all cursor-pointer">
-                    <Plus className="h-6 w-6 mb-2" />
-                    <p className="text-[10px] font-black uppercase tracking-widest">Novo Motor Auxiliar</p>
-                  </div>
-                </div>
-              </TabsContent>
-
               <TabsContent value="crew" className="space-y-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Lista de Tripulação</h4>
-                  <Button size="sm" className="bg-navy text-white text-[10px] font-black uppercase tracking-widest h-8">
-                    <Plus className="h-3 w-3 mr-2" /> Cadastrar Tripulante
-                  </Button>
-                </div>
-
-                <div className="bg-white border border-slate-100 rounded-[2rem] overflow-hidden shadow-sm">
+                 <div className="overflow-hidden rounded-2xl border border-slate-100">
                   <table className="w-full text-left">
-                    <thead className="bg-slate-50">
-                      <tr className="text-slate-400 text-[9px] font-black uppercase tracking-[0.2em]">
-                        <th className="px-6 py-4">Nome</th>
+                    <thead>
+                      <tr className="bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-widest">
+                        <th className="px-6 py-4">Tripulante</th>
                         <th className="px-6 py-4">Função</th>
                         <th className="px-6 py-4">CIR</th>
-                        <th className="px-6 py-4 text-right">Ações</th>
+                        <th className="px-6 py-4"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                       {[
-                        { name: "Carlos Silva", role: "Comandante", cir: "123456/RJ" },
-                        { name: "Ana Maria", role: "Imediato", cir: "789012/SP" }
+                        { name: "Carlos Marinha", role: "Comandante", cir: "123.456/7" },
+                        { name: "Roberto Ancoradouro", role: "Maquinista", cir: "987.654/3" }
                       ].map((member, i) => (
-                        <tr key={i} className="group hover:bg-slate-50 transition-all">
+                        <tr key={i} className="hover:bg-slate-50/50 group transition-colors">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
-                                <User className="h-4 w-4" />
-                              </div>
+                              <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-navy text-[10px]">{member.name.charAt(0)}</div>
                               <span className="text-xs font-bold text-navy">{member.name}</span>
                             </div>
                           </td>
@@ -582,4 +540,3 @@ function Vessels() {
     </div>
   );
 }
-

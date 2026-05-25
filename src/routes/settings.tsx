@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BackNavigation } from "@/components/navigation/BackNavigation";
+import { PageHeader } from "@/components/navigation/PageHeader";
 
 export const Route = createFileRoute("/settings")({
   component: CompanyTeamPage,
@@ -89,20 +90,17 @@ function CompanyTeamPage() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-      <div className="flex flex-col gap-4">
-        <BackNavigation className="w-fit lg:hidden" />
-        <div className="flex justify-between items-end">
-          <div>
-            <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Gestão Corporativa</h1>
-            <p className="text-slate-500 font-medium italic">Ambiente corporativo: {company?.name || "Carregando..."}</p>
-          </div>
+    <div className="animate-in fade-in duration-500 pb-20">
+      <PageHeader 
+        title="Gestão Corporativa"
+        description={`Ambiente corporativo: ${company?.name || "Carregando..."}`}
+        actions={
           <div className="flex gap-3">
              <button className="bg-slate-50 border border-slate-200 text-navy px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-all">Exportar Dados</button>
              <button className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20">Upgrade para Enterprise</button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="flex flex-col lg:flex-row gap-8">
         <aside className="w-full lg:w-72 space-y-2">
