@@ -97,7 +97,7 @@ function Processes() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
         <div className="flex flex-col gap-4 w-full sm:w-auto">
           <div className="flex items-center gap-3">
-            <BackButton className="w-fit lg:hidden" />
+            <BackNavigation className="w-fit lg:hidden" />
             <div>
               <h1 className="text-4xl font-black text-navy tracking-tighter uppercase leading-none">Fluxo de Processos</h1>
               <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1">Acompanhamento operacional em tempo real.</p>

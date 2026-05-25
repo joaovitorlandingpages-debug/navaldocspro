@@ -196,7 +196,7 @@ function Customers() {
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div className="flex flex-col gap-2">
-          <BackButton className="w-fit lg:hidden" />
+          <BackNavigation className="w-fit lg:hidden" />
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-navy tracking-tight uppercase">Clientes</h1>
             <p className="text-muted-foreground text-xs md:text-sm font-medium">Gerencie sua base de clientes e contatos.</p>

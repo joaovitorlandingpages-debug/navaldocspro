@@ -31,7 +31,7 @@ function LogsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 p-8 max-w-7xl mx-auto">
-       <BackButton className="w-fit lg:hidden" />
+       <BackNavigation className="w-fit lg:hidden" />
        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
             <div className="flex items-center gap-3 mb-2">

@@ -1124,14 +1124,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       footer={
         <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4">
           <div className="flex gap-2 w-full sm:w-auto">
-            <Button
-              variant="ghost"
-              onClick={handleBack}
-              disabled={step === 1}
+            <BackNavigation 
+              onBack={handleBack} 
+              label={step === 1 ? "Fechar" : "Voltar"} 
               className="flex-1 sm:flex-none rounded-xl h-12 px-6 font-black uppercase text-[10px] tracking-widest gap-2"
-            >
-              <ChevronLeft className="h-4 w-4" /> Voltar
-            </Button>
+            />
             <Button
               variant="ghost"
               onClick={() => {
@@ -1192,6 +1189,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         isOpen={isQuickClientOpen}
         onClose={() => setIsQuickClientOpen(false)}
         title="Novo Cliente Rápido"
+        showBackButton={true}
         maxWidth="md"
         footer={
           clientModalMode === 'manual' ? (

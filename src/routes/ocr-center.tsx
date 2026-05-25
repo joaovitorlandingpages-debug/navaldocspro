@@ -49,7 +49,7 @@ function OCRCenterPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto pb-20 p-8">
-      <BackButton className="w-fit lg:hidden" />
+      <BackNavigation className="w-fit lg:hidden" />
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-2">
