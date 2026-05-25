@@ -94,17 +94,44 @@ function Processes() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
-        <div className="flex flex-col gap-4 w-full sm:w-auto">
-          <div className="flex items-center gap-3">
-            <BackNavigation className="w-fit lg:hidden" />
-            <div>
-              <h1 className="text-4xl font-black text-navy tracking-tighter uppercase leading-none">Fluxo de Processos</h1>
-              <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1">Acompanhamento operacional em tempo real.</p>
+    <div className="animate-in fade-in duration-500 pb-20">
+      <PageHeader 
+        title="Fluxo de Processos"
+        description="Acompanhamento operacional em tempo real."
+        actions={
+          <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+            <div className="bg-slate-100 p-1 rounded-2xl flex border border-slate-200">
+              <button 
+                onClick={() => setView("kanban")}
+                className={`px-5 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'kanban' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
+              >
+                Kanban
+              </button>
+              <button 
+                onClick={() => setView("list")}
+                className={`px-5 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'list' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
+              >
+                Lista
+              </button>
             </div>
+            <button 
+              onClick={async () => {
+                const limit = await checkLimit('processes');
+                if (limit.reached) {
+                  setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
+                  return;
+                }
+                setIsNewProcessOpen(true);
+              }}
+              className="flex-grow sm:flex-initial bg-primary text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/20"
+            >
+              <Plus className="h-4 w-4 inline mr-2" /> Novo Processo
+            </button>
           </div>
-          
+        }
+      />
+      
+      <div className="flex flex-col gap-6 mb-8">
           <div className="relative group w-full sm:w-[400px]">
              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
              <input 
@@ -117,36 +144,6 @@ function Processes() {
                className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
              />
           </div>
-        </div>
-        <div className="flex flex-wrap gap-3 w-full sm:w-auto">
-          <div className="bg-slate-100 p-1 rounded-2xl flex border border-slate-200">
-            <button 
-              onClick={() => setView("kanban")}
-              className={`px-5 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'kanban' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
-            >
-              Kanban
-            </button>
-            <button 
-              onClick={() => setView("list")}
-              className={`px-5 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'list' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
-            >
-              Lista
-            </button>
-          </div>
-          <button 
-            onClick={async () => {
-              const limit = await checkLimit('processes');
-              if (limit.reached) {
-                setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
-                return;
-              }
-              setIsNewProcessOpen(true);
-            }}
-            className="flex-grow sm:flex-initial bg-primary text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/20"
-          >
-            <Plus className="h-4 w-4 inline mr-2" /> Novo Processo
-          </button>
-        </div>
       </div>
 
       {view === "kanban" ? (
