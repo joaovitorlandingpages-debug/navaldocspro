@@ -23,7 +23,7 @@ import { OCRJob, useOCR } from "@/hooks/useOCR";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BackButton } from "@/components/BackButton";
+import { BackNavigation } from "@/components/navigation/BackNavigation";
 
 export const Route = createFileRoute("/ocr-center")({
   component: OCRCenterPage,

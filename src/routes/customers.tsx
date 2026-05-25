@@ -18,7 +18,7 @@ import { useFiles } from "@/hooks/useFiles";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { Badge } from "@/components/ui/badge";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
-import { BackButton } from "@/components/BackButton";
+import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { ModalLayout } from "@/components/ui/ModalLayout";
 import { ScrollArea } from "@/components/ui/scroll-area";
 

@@ -18,7 +18,7 @@ import { useFiles } from "@/hooks/useFiles";
 import { Badge } from "@/components/ui/badge";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
-import { BackButton } from "@/components/BackButton";
+import { BackNavigation } from "@/components/navigation/BackNavigation";
 
 
 export const Route = createFileRoute("/vessels")({
