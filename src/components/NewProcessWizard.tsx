@@ -1110,53 +1110,20 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) onClose();
-      console.log("PROCESS_MODAL_OK", open);
-    }}>
-
-      <DialogContent className="max-w-2xl w-full sm:w-[95vw] md:w-full p-0 overflow-hidden bg-white border-none sm:rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl h-[100dvh] sm:h-auto sm:max-h-[90vh] md:max-h-none flex flex-col">
-        <DialogHeader className="p-4 md:p-8 pb-3 md:pb-0 border-b sm:border-b-0 shrink-0">
-          <div className="flex flex-col gap-3 md:gap-4 w-full">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 md:gap-4">
-                <div className="h-9 w-9 md:h-12 md:w-12 bg-navy text-white rounded-xl md:rounded-2xl flex items-center justify-center font-black shadow-lg text-xs md:text-base">
-                  {step}
-                </div>
-                <div className="overflow-hidden">
-                  <DialogTitle className="text-base md:text-2xl font-black text-navy uppercase tracking-tight truncate">Novo Processo Naval</DialogTitle>
-                  <p className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{getStepTitle()}</p>
-                </div>
-              </div>
-              <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors shrink-0">
-                <X className="h-5 w-5 md:h-6 md:w-6 text-slate-300" />
-              </button>
-            </div>
-            
-            <div className="flex items-center gap-2 md:gap-4">
-              <div className="flex-1">
-                <Progress value={progressPercent} className="h-1 md:h-1.5" />
-              </div>
-              <span className="text-[7px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap shrink-0">P. {step} / {totalSteps}</span>
-            </div>
-          </div>
-        </DialogHeader>
-
-        <div className="px-4 md:px-8 py-4 md:py-6 flex-grow overflow-y-auto">
-          {renderStep()}
-        </div>
-
-
-
-
-
-        <div className="p-4 md:p-8 pt-2 md:pt-4 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0 border-t sm:border-t-0">
+    <ModalLayout
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Novo Processo Naval"
+      description={`Passo ${step} de ${totalSteps} — ${getStepTitle()}`}
+      maxWidth="4xl"
+      footer={
+        <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4">
           <div className="flex gap-2 w-full sm:w-auto">
             <Button
               variant="ghost"
               onClick={handleBack}
               disabled={step === 1}
-              className="flex-1 sm:flex-none rounded-xl md:rounded-2xl h-12 md:h-14 px-4 md:px-6 font-black uppercase text-[10px] md:text-xs tracking-widest gap-2"
+              className="flex-1 sm:flex-none rounded-xl h-12 px-6 font-black uppercase text-[10px] tracking-widest gap-2"
             >
               <ChevronLeft className="h-4 w-4" /> Voltar
             </Button>
@@ -1167,17 +1134,17 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                 toast.success("Rascunho descartado.");
                 onClose();
               }}
-              className="rounded-xl md:rounded-2xl h-12 md:h-14 px-3 md:px-4 text-slate-400 hover:text-red-500 hover:bg-red-50"
+              className="rounded-xl h-12 px-4 text-slate-400 hover:text-red-500 hover:bg-red-50"
               title="Descartar Rascunho e Fechar"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
-
-          <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
+          
+          <div className="flex gap-3 w-full sm:w-auto">
             <Button
               variant="outline"
-              className="hidden md:flex rounded-2xl h-14 px-6 font-black uppercase text-xs tracking-widest gap-2 border-slate-200"
+              className="hidden md:flex rounded-xl h-12 px-6 font-black uppercase text-[10px] tracking-widest gap-2 border-slate-200"
               onClick={() => toast.success("Rascunho salvo no navegador")}
             >
               <Save className="h-4 w-4" /> Salvar
@@ -1187,7 +1154,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               <Button
                 onClick={handleCreateProcess}
                 disabled={isSubmitting}
-                className="flex-1 sm:flex-none bg-primary hover:opacity-90 rounded-xl md:rounded-2xl h-12 md:h-14 px-6 md:px-10 font-black uppercase text-[10px] md:text-xs tracking-widest shadow-lg shadow-primary/20 gap-2"
+                className="flex-1 sm:flex-none bg-primary hover:opacity-90 rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg shadow-primary/20 gap-2"
               >
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Processo"} <Check className="h-4 w-4" />
               </Button>
@@ -1195,15 +1162,25 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               <Button
                 onClick={handleNext}
                 disabled={(!formData.typeId && step === 1) || (!formData.clientId && step === 2)}
-                className="flex-1 sm:flex-none bg-navy hover:opacity-90 rounded-xl md:rounded-2xl h-12 md:h-14 px-6 md:px-10 font-black uppercase text-[10px] md:text-xs tracking-widest text-white shadow-lg shadow-navy/20 gap-2"
+                className="flex-1 sm:flex-none bg-navy hover:opacity-90 rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg shadow-navy/20 gap-2"
               >
                 Próximo <ChevronRight className="h-4 w-4" />
               </Button>
             )}
           </div>
         </div>
-
-      </DialogContent>
+      }
+    >
+      <div className="space-y-8">
+        <div className="flex items-center gap-4">
+          <Progress value={progressPercent} className="h-2 flex-grow" />
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
+            {Math.round(progressPercent)}% Concluído
+          </span>
+        </div>
+        {renderStep()}
+      </div>
+    </ModalLayout>
 
       {/* Modal de Criação Rápida de Cliente */}
       <ModalLayout
