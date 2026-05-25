@@ -1470,7 +1470,6 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           </div>
         </form>
       </ModalLayout>
-    </Dialog>
   );
 }
 
