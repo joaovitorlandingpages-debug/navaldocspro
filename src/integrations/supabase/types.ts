@@ -31,14 +31,14 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          action: string
+          action?: string
           category?: string | null
           company_id: string
           created_at?: string
           description?: string | null
           id?: string
           metadata?: Json | null
-          module: string
+          module?: string
           resource_id?: string | null
           resource_type?: string | null
           source_ip?: string | null
