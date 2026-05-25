@@ -55,10 +55,12 @@ export class DocumentAutomationEngine {
       const checklist_status = requirements.map((req: any) => {
         // Busca tanto em documentos formais quanto em uploads
         const existingDoc = documents?.find((d: any) => d.document_type === req.template.name);
-        const existingUpload = uploadedFiles?.find((u: any) => 
-          u.category === req.template.name || 
-          u.file_name.toLowerCase().includes(req.template.name.toLowerCase())
-        );
+        const existingUpload = uploadedFiles?.find((u: any) => {
+          const fileName = (u.file_name || "").toLowerCase();
+          const templateName = (req.template?.name || "").toLowerCase();
+          return u.category === req.template?.name || fileName.includes(templateName);
+        });
+
         
         const finalDoc = existingDoc || existingUpload;
 
