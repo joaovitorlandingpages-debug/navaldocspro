@@ -1110,6 +1110,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   };
 
   return (
+    <>
+
     <ModalLayout
       isOpen={isOpen}
       onClose={onClose}
@@ -1470,6 +1472,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           </div>
         </form>
       </ModalLayout>
+    </>
   );
 }
 
