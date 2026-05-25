@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ModalLayout } from "@/components/ui/ModalLayout";
+import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -566,7 +567,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const handleBack = () => {
     if (step > 1) {
       setStep(step - 1);
-      console.log("WIZARD_NAVIGATION_OK");
+      console.log("WIZARD_BACK_FLOW_OK");
+    } else {
+      onClose();
     }
   };
 

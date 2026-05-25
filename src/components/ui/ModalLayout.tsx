@@ -2,6 +2,7 @@ import * as React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { BackNavigation } from "@/components/navigation/BackNavigation";
 
 interface ModalLayoutProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface ModalLayoutProps {
   footer?: React.ReactNode;
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
   className?: string;
+  showBackButton?: boolean;
 }
 
 export function ModalLayout({
@@ -23,6 +25,7 @@ export function ModalLayout({
   footer,
   maxWidth = "lg",
   className,
+  showBackButton = false,
 }: ModalLayoutProps) {
   const maxWidthClass = {
     sm: "sm:max-w-sm",
@@ -44,8 +47,15 @@ export function ModalLayout({
           className
         )}
       >
-        <DialogHeader className="bg-slate-50 border-b flex flex-row items-center justify-between text-left space-y-0">
-          <div>
+        <DialogHeader className="bg-slate-50 border-b flex flex-row items-center gap-4 text-left space-y-0 px-6 py-4">
+          {showBackButton && (
+            <BackNavigation 
+              onBack={onClose} 
+              label="Fechar" 
+              className="px-0 h-auto hover:bg-transparent -ml-1" 
+            />
+          )}
+          <div className="flex-grow">
             <DialogTitle className="text-xl font-black text-navy uppercase tracking-tight">
               {title}
             </DialogTitle>
