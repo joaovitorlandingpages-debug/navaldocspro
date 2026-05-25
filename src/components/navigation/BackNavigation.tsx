@@ -21,6 +21,13 @@ export function BackNavigation({
   const navigate = useNavigate();
   const routerState = useRouterState();
 
+  React.useEffect(() => {
+    console.log("GLOBAL_BACK_NAVIGATION_READY");
+    if (window.innerWidth <= 1024) {
+      console.log("MOBILE_BACK_NAVIGATION_OK");
+    }
+  }, []);
+
   const handleBack = () => {
     console.log("BACK_NAVIGATION_TRIGGERED", { 
       hasOnBack: !!onBack, 
