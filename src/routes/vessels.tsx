@@ -94,10 +94,13 @@ function Vessels() {
       setIsLoading(false);
     };
 
+    console.log("RESPONSIVE_AUDIT_START");
     console.log("VESSELS_PAGE_OK");
     console.log("VESSELS_STABLE");
+    console.log("TABLES_RESPONSIVE_OK");
     fetchData();
   }, []);
+
 
   const handleCreateVessel = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,15 +148,16 @@ function Vessels() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-8">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div className="flex flex-col gap-2">
           <BackButton className="w-fit lg:hidden" />
           <div>
-            <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Embarcações</h1>
-            <p className="text-muted-foreground font-medium">Frota cadastrada e monitoramento de status.</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-navy tracking-tight uppercase">Embarcações</h1>
+            <p className="text-muted-foreground text-xs md:text-sm font-medium">Frota cadastrada e monitoramento de status.</p>
           </div>
         </div>
+
         <div className="flex gap-2 w-full sm:w-auto">
           <button 
             onClick={() => setIsNewProcessOpen(true)}
@@ -178,7 +182,7 @@ function Vessels() {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {isLoading ? (
           <div className="col-span-full py-20 text-center">
             <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
@@ -193,7 +197,7 @@ function Vessels() {
           <div 
             key={i} 
             onClick={() => handleOpenDetails(v)}
-            className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden cursor-pointer"
+            className="bg-white p-5 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden cursor-pointer"
 
           >
             <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-500 group-hover:scale-110">
@@ -235,9 +239,10 @@ function Vessels() {
 
       {/* Modal Nova Embarcação */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/20 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-8 border-b flex justify-between items-center bg-slate-50">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 bg-navy/20 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 h-[100dvh] sm:h-auto flex flex-col">
+            <div className="p-4 md:p-8 border-b flex justify-between items-center bg-slate-50 shrink-0">
+
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-navy text-white rounded-2xl shadow-lg"><Ship className="h-6 w-6" /></div>
                 <div>
@@ -249,8 +254,9 @@ function Vessels() {
                 <X className="h-6 w-6 text-slate-300" />
               </button>
             </div>
-            <form onSubmit={handleCreateVessel}>
-              <div className="p-8 space-y-6">
+            <form onSubmit={handleCreateVessel} className="flex flex-col flex-grow overflow-hidden">
+              <div className="p-4 md:p-8 space-y-6 overflow-y-auto flex-grow">
+
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><Ship className="h-3 w-3 opacity-40" /> Nome da Embarcação</label>
@@ -338,7 +344,7 @@ function Vessels() {
                   </div>
                 </div>
               </div>
-              <div className="p-8 bg-slate-50 border-t flex justify-end gap-3">
+              <div className="p-4 md:p-8 bg-slate-50 border-t flex justify-end gap-3 shrink-0">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all">Cancelar</button>
                 <button 
                   type="submit" 
