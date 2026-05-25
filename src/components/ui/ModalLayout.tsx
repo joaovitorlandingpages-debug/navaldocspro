@@ -2,7 +2,6 @@ import * as React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { X } from "lucide-react";
 
 interface ModalLayoutProps {
   isOpen: boolean;
@@ -45,7 +44,7 @@ export function ModalLayout({
           className
         )}
       >
-        <DialogHeader className="p-6 md:p-8 border-b bg-slate-50 shrink-0 flex flex-row items-center justify-between text-left space-y-0">
+        <DialogHeader className="bg-slate-50 border-b flex flex-row items-center justify-between text-left space-y-0">
           <div>
             <DialogTitle className="text-xl font-black text-navy uppercase tracking-tight">
               {title}
@@ -56,10 +55,6 @@ export function ModalLayout({
               </p>
             )}
           </div>
-          {/* Close button is handled by DialogContent internally in some versions, 
-              but we might want to ensure a consistent custom one if needed.
-              DialogContent usually includes DialogPrimitive.Close.
-          */}
         </DialogHeader>
 
         <ScrollArea className="flex-grow">
@@ -69,7 +64,7 @@ export function ModalLayout({
         </ScrollArea>
 
         {footer && (
-          <DialogFooter className="p-6 md:p-8 bg-slate-50 border-t flex flex-row shrink-0 items-center justify-end gap-3 sm:space-x-0">
+          <DialogFooter className="bg-slate-50 border-t flex flex-row items-center justify-end gap-3 sm:space-x-0">
             {footer}
           </DialogFooter>
         )}
