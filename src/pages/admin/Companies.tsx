@@ -48,10 +48,13 @@ export default function AdminCompanies() {
     }
   });
 
-  const filteredCompanies = companies?.filter((c: any) => 
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.plan_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCompanies = companies?.filter((c: any) => {
+    const name = (c.name || "").toLowerCase();
+    const plan = (c.plan_name || "").toLowerCase();
+    const search = (searchQuery || "").toLowerCase();
+    return name.includes(search) || plan.includes(search);
+  });
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
