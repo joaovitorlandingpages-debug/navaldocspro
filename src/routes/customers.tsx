@@ -193,6 +193,7 @@ function Customers() {
     }
   };
 
+  return (
     <div className="animate-in fade-in duration-500 pb-20">
       <PageHeader 
         title="Clientes"
@@ -326,7 +327,6 @@ function Customers() {
             </div>
           ) : (
             customers.map((c, i) => {
-              console.log("TABLES_MOBILE_OK");
               return (
                 <div 
                   key={i} 
@@ -582,7 +582,13 @@ function Customers() {
                             <FileText className="h-12 w-12 text-slate-100 mx-auto mb-2" />
                             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhum documento</p>
                          </div>
-      )}
+                       )}
+                    </div>
+                  </div>
+               </TabsContent>
+            </Tabs>
+          </div>
+      </ModalLayout>
 
       <UpgradeModal 
         isOpen={upgradeModal.isOpen} 
@@ -591,14 +597,6 @@ function Customers() {
         limit={upgradeModal.limit}
         current={upgradeModal.current}
       />
-    </div>
-
-                 </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-      </ModalLayout>
-
     </div>
   );
 }
