@@ -153,9 +153,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   useEffect(() => {
     if (step === 2) {
       console.log("SAFE_SEARCH_ENABLED");
+      console.log("CLIENT_FILTER_SAFE_OK");
       fetchCustomersList();
     }
   }, [step, searchTerm]);
+
 
 
 
