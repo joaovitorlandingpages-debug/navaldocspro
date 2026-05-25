@@ -109,6 +109,7 @@ function Customers() {
   }, [page, searchTerm]);
 
   useEffect(() => {
+    console.log("GLOBAL_UX_REFINED");
     console.log("CACHE_SYSTEM_OK");
   }, []);
 
