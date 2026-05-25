@@ -733,8 +733,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             
             <div className="space-y-2">
               <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                {searchTerm ? 'Resultados' : 'Sugestões'}
+                {searchTerm ? 'Resultados' : 'Sugestões'} {console.log("CLIENT_FILTER_SAFE_OK")}
               </p>
+
               <div className="space-y-2">
                 {customers.map((c) => (
                   <button
