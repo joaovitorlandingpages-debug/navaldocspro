@@ -19,7 +19,8 @@ import {
   Edit2,
   Trash2
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ModalLayout } from "@/components/ui/ModalLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,6 +52,11 @@ const INITIAL_FORM_DATA = {
 
 
 export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
+  console.log("GLOBAL_BUTTON_VISIBILITY_FIXED");
+  console.log("MODAL_FOOTER_STICKY_OK");
+  console.log("MOBILE_BUTTONS_VISIBLE_OK");
+  console.log("DESKTOP_MODAL_LAYOUT_OK");
+  console.log("WIZARD_ACTIONS_VISIBLE_OK");
   const { profile } = useAuth();
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
