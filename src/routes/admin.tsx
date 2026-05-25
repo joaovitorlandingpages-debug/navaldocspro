@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { BackNavigation } from "@/components/navigation/BackNavigation";
+import { PageHeader } from "@/components/navigation/PageHeader";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { useTelemetry } from "@/hooks/useTelemetry";
 

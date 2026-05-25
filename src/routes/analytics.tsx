@@ -9,6 +9,7 @@ import {
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BackNavigation } from "@/components/navigation/BackNavigation";
+import { PageHeader } from "@/components/navigation/PageHeader";
 
 export const Route = createFileRoute("/analytics")({
   component: AnalyticsPage,
@@ -79,22 +80,21 @@ function AnalyticsPage() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pb-20">
-      <BackNavigation className="w-fit lg:hidden" />
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-        <div>
-          <h1 className="text-4xl font-black text-navy tracking-tight uppercase">Analytics Executivo</h1>
-          <p className="text-slate-500 font-medium italic">Inteligência de dados e performance operacional em tempo real.</p>
-        </div>
-        <div className="flex gap-3">
-            <Link to="/analytics/operations" className="bg-white border border-slate-200 text-navy px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all">
-               Operacional
-            </Link>
-            <button className="bg-primary text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
-               <FileText className="h-4 w-4" /> Exportar Relatório
-            </button>
-        </div>
-      </div>
+    <div className="animate-in fade-in duration-700 pb-20">
+      <PageHeader 
+        title="Analytics Executivo"
+        description="Inteligência de dados e performance operacional em tempo real."
+        actions={
+          <div className="flex gap-3">
+              <Link to="/analytics/operations" className="bg-white border border-slate-200 text-navy px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all">
+                 Operacional
+              </Link>
+              <button className="bg-primary text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+                 <FileText className="h-4 w-4" /> Exportar Relatório
+              </button>
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
