@@ -132,6 +132,24 @@ function Vessels() {
 
       if (error) throw error;
 
+      // Registro de Log (Fallback seguro)
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        await supabase.from('activity_logs').insert({
+          company_id: companyId,
+          user_id: user?.id,
+          action: 'vessel_created',
+          resource_type: 'vessel',
+          resource_id: data.id,
+          description: `Nova embarcação cadastrada: ${data.name}`,
+          module: 'vessels',
+          category: 'creation',
+          metadata: { vessel_type: data.vessel_type }
+        });
+      } catch (logError) {
+        console.error("LOG_FAILURE_DOES_NOT_BLOCK_FLOW", logError);
+      }
+
       setVessels([...vessels, data]);
       setIsModalOpen(false);
       setFormData({ 
@@ -140,6 +158,7 @@ function Vessels() {
         category: "Esporte e Recreio", status: "Operacional" 
       });
       toast.success("Embarcação cadastrada com sucesso!");
+
     } catch (error: any) {
       toast.error(error.message || "Erro ao cadastrar embarcação");
     } finally {

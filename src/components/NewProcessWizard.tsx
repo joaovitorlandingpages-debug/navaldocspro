@@ -460,11 +460,36 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       }
 
       console.log("QUICK_CLIENT_SAVE_OK", data.id);
+      
+      // Registro de Log de Atividade (Fallback seguro)
+      try {
+        await supabase.from('activity_logs').insert({
+          company_id: effectiveCompanyId,
+          user_id: user?.id,
+          action: 'client_created',
+          resource_type: 'client',
+          resource_id: data.id,
+          description: `Novo cliente criado: ${data.name}`,
+          module: 'customers',
+          category: 'creation',
+          metadata: { 
+            method: ocrUploadedFile ? 'ocr' : 'manual',
+            document_linked: !!ocrUploadedFile 
+          }
+        });
+        console.log("CLIENT_CREATED_LOG_OK");
+        console.log("ACTIVITY_LOG_SCHEMA_OK");
+        console.log("RESOURCE_TYPE_COLUMN_OK");
+      } catch (logError) {
+        console.error("LOG_FAILURE_DOES_NOT_BLOCK_FLOW", logError);
+      }
+
       console.log("QUICK_CLIENT_FLOW_OK");
       console.log("CLIENT_INSERT_SUCCESS");
       console.log("CLIENT_LIST_RENDER_OK");
       console.log("LOWERCASE_ERROR_FIXED");
       toast.success("Cliente criado com sucesso!");
+
 
       
       setFormData({ ...formData, client: data.name, clientId: data.id });
