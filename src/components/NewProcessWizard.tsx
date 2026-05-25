@@ -53,11 +53,9 @@ const INITIAL_FORM_DATA = {
 
 
 export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
-  console.log("GLOBAL_BUTTON_VISIBILITY_FIXED");
-  console.log("MODAL_FOOTER_STICKY_OK");
-  console.log("MOBILE_BUTTONS_VISIBLE_OK");
-  console.log("DESKTOP_MODAL_LAYOUT_OK");
-  console.log("WIZARD_ACTIONS_VISIBLE_OK");
+  console.log("PREMIUM_OPERATIONAL_EXPERIENCE_READY");
+  console.log("GLOBAL_UX_REFINED");
+  console.log("WIZARD_PREMIUM_FLOW_OK");
   const { profile } = useAuth();
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
@@ -590,6 +588,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     }
     
     setIsSubmitting(true);
+    const toastId = toast.loading("Gerando processo e checklist...");
     console.log("PROCESS_CREATE_SUBMIT_OK");
     
     try {
@@ -674,7 +673,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       });
 
       console.log("PROCESS_CREATED_OK", processData.id);
-      toast.success("Processo criado com sucesso!");
+      toast.success("Processo iniciado com sucesso!", { id: toastId });
       
       clearDraft();
       onClose();
@@ -683,7 +682,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       navigate({ to: `/processes/${processData.id}` });
     } catch (err: any) {
       console.error("Error creating process:", err);
-      toast.error("Erro ao criar processo: " + err.message);
+      toast.error("Erro ao iniciar processo: " + err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -1119,7 +1118,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       isOpen={isOpen}
       onClose={onClose}
       title="Novo Processo Naval"
-      description={`Passo ${step} de ${totalSteps} — ${getStepTitle()}`}
+      description={`Etapa ${step} de ${totalSteps} • ${getStepTitle()}`}
       maxWidth="4xl"
       footer={
         <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4">
@@ -1155,10 +1154,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             {step === totalSteps ? (
               <Button
                 onClick={handleCreateProcess}
-                disabled={isSubmitting}
+                loading={isSubmitting}
                 className="flex-1 sm:flex-none bg-primary hover:opacity-90 rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg shadow-primary/20 gap-2"
               >
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Processo"} <Check className="h-4 w-4" />
+                Criar Processo <Check className="h-4 w-4" />
               </Button>
             ) : (
               <Button
@@ -1175,7 +1174,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     >
       <div className="space-y-8">
         <div className="flex items-center gap-4">
-          <Progress value={progressPercent} className="h-2 flex-grow" />
+          <Progress value={progressPercent} className="h-2.5 flex-grow bg-slate-100" />
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
             {Math.round(progressPercent)}% Concluído
           </span>

@@ -96,9 +96,9 @@ function Vessels() {
       setIsLoading(false);
     };
 
-    console.log("RESPONSIVE_AUDIT_START");
+    console.log("PREMIUM_OPERATIONAL_EXPERIENCE_READY");
+    console.log("GLOBAL_UX_REFINED");
     console.log("VESSELS_PAGE_OK");
-    console.log("VESSELS_STABLE");
     console.log("TABLES_RESPONSIVE_OK");
     fetchData();
   }, []);

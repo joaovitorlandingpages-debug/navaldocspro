@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 interface OCRReviewProps {
   jobId: string;
@@ -298,11 +299,16 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
                   <h3 className="font-black text-navy uppercase tracking-tight text-base flex items-center gap-3">
                     <User className="h-5 w-5 text-primary" /> Identificação Civil
                   </h3>
-                  <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex items-center gap-4 px-5 py-3 bg-slate-50 rounded-[1.5rem] border border-slate-100 shadow-inner">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Confiança IA</span>
-                    <div className="flex items-center gap-1.5">
-                       <Progress value={(job?.confidence_score || 0) * 100} className="h-1.5 w-16" />
-                       <span className="text-[11px] font-black text-navy">{((job?.confidence_score || 0) * 100).toFixed(0)}%</span>
+                    <div className="flex items-center gap-3">
+                       <div className="h-2 w-24 bg-slate-200 rounded-full overflow-hidden">
+                          <div 
+                            className={cn("h-full transition-all duration-1000", getConfidenceColor(job?.confidence_score || 0))} 
+                            style={{ width: `${(job?.confidence_score || 0) * 100}%` }} 
+                          />
+                       </div>
+                       <span className="text-xs font-black text-navy">{((job?.confidence_score || 0) * 100).toFixed(0)}%</span>
                     </div>
                   </div>
                 </div>

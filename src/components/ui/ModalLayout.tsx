@@ -42,7 +42,7 @@ export function ModalLayout({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent 
         className={cn(
-          "flex flex-col p-0 overflow-hidden bg-white border-none rounded-none sm:rounded-[2rem] shadow-2xl h-[100dvh] sm:h-auto sm:max-h-[90vh]",
+          "flex flex-col p-0 overflow-hidden bg-white border-none rounded-none sm:rounded-[2.5rem] shadow-2xl h-[100dvh] sm:h-auto sm:max-h-[90vh] animate-in zoom-in-95 fade-in duration-300",
           maxWidthClass,
           className
         )}
@@ -56,7 +56,7 @@ export function ModalLayout({
             />
           )}
           <div className="flex-grow">
-            <DialogTitle className="text-xl font-black text-navy uppercase tracking-tight">
+            <DialogTitle className="text-2xl font-black text-navy uppercase tracking-tight leading-none">
               {title}
             </DialogTitle>
             {description && (
@@ -68,13 +68,13 @@ export function ModalLayout({
         </DialogHeader>
 
         <ScrollArea className="flex-grow">
-          <div className="p-6 md:p-8">
+          <div className="p-6 md:p-10">
             {children}
           </div>
         </ScrollArea>
 
         {footer && (
-          <DialogFooter className="bg-slate-50 border-t flex flex-row items-center justify-end gap-3 sm:space-x-0">
+          <DialogFooter className="bg-slate-50 border-t flex flex-row items-center justify-end gap-3 sm:space-x-0 px-8 py-6">
             {footer}
           </DialogFooter>
         )}
