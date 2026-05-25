@@ -44,12 +44,6 @@ export const AdminCompaniesRoute = createFileRoute("/admin/companies")({
   component: AdminCompanies,
 });
 
-import AdminSecurity from "@/pages/admin/Security";
-
-export const AdminSecurityRoute = createFileRoute("/admin/security")({
-  component: AdminSecurity,
-});
-
 function AdminLayout() {
   const { profile, loading } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
