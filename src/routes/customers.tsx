@@ -3,8 +3,7 @@ import {
   Users, Search, Plus, MoreHorizontal, Mail, 
   MapPin, Filter, X, Loader2, FileText, 
   Download, Trash2, Eye, Zap, Image as ImageIcon,
-  Ship
-
+  Ship, Smartphone, Globe
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -22,6 +21,9 @@ import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { PageHeader } from "@/components/navigation/PageHeader";
 import { ModalLayout } from "@/components/ui/ModalLayout";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { safeString } from "@/utils/safe-string";
 
 
 export const Route = createFileRoute("/customers")({
