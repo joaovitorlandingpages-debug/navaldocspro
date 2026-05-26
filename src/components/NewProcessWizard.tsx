@@ -19,7 +19,8 @@ import {
   Edit2,
   Trash2,
   MapPin,
-  Smartphone
+  Smartphone,
+  Mail
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ModalLayout } from "@/components/ui/ModalLayout";
