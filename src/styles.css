@@ -41,9 +41,9 @@
 :root {
   --radius: 0.5rem;
   
-  /* Palette Naval Premium */
-  --background: oklch(0.99 0.01 240);
-  --foreground: oklch(0.25 0.04 250);
+  /* Palette Naval Premium Enterprise - Refined */
+  --background: oklch(0.99 0.005 240);
+  --foreground: oklch(0.20 0.04 250);
   
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.25 0.04 250);
