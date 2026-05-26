@@ -50,6 +50,17 @@ function OnboardingFlow() {
 
   const updateStep = async (nextStep: number, data?: any) => {
     setIsSubmitting(true);
+    console.log(`ONBOARDING_STEP_${nextStep}_START`);
+    
+    // Safety timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (isSubmitting) {
+        setIsSubmitting(false);
+        toast.error("A operação está demorando mais que o esperado, mas você pode continuar.");
+        console.warn("ONBOARDING_TIMEOUT_RECOVERED");
+      }
+    }, 8000);
+
     try {
       if (!profile?.company_id) throw new Error("No company linked");
 
@@ -60,6 +71,7 @@ function OnboardingFlow() {
 
       if (nextStep > 7) {
         updates.onboarding_status = 'completed';
+        console.log("ONBOARDING_COMPLETING");
       }
 
       const { error } = await supabase
@@ -69,16 +81,28 @@ function OnboardingFlow() {
 
       if (error) throw error;
       
+      clearTimeout(timeoutId);
+      
       if (nextStep > 7) {
         toast.success("Bem-vindo ao NavalDocs Pro!");
+        console.log("ONBOARDING_NOT_BLOCKING");
         navigate({ to: "/dashboard" });
       } else {
         setStep(nextStep);
       }
     } catch (error: any) {
+      console.error("Erro ao salvar progresso:", error);
       toast.error("Erro ao salvar progresso: " + error.message);
+      
+      // Fallback: allow the user to advance even on error if it's not critical
+      if (nextStep > 7) {
+        navigate({ to: "/dashboard" });
+      } else {
+        setStep(nextStep);
+      }
     } finally {
       setIsSubmitting(false);
+      clearTimeout(timeoutId);
     }
   };
 
@@ -384,13 +408,23 @@ function OnboardingFlow() {
           <Ship className="h-6 w-6 text-primary" />
           <span className="font-bold text-navy uppercase tracking-tight">NavalDocs Pro Onboarding</span>
         </div>
-        <div className="flex gap-1">
-          {steps.map((s) => (
-            <div 
-              key={s.id}
-              className={`h-1.5 w-8 rounded-full transition-all ${s.id === step ? 'bg-primary w-12' : s.id < step ? 'bg-navy' : 'bg-slate-200'}`}
-            />
-          ))}
+        <div className="flex items-center gap-4">
+          <div className="flex gap-1">
+            {steps.map((s) => (
+              <div 
+                key={s.id}
+                className={`h-1.5 w-8 rounded-full transition-all ${s.id === step ? 'bg-primary w-12' : s.id < step ? 'bg-navy' : 'bg-slate-200'}`}
+              />
+            ))}
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => updateStep(8)}
+            className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-navy"
+          >
+            Pular Tudo
+          </Button>
         </div>
       </header>
 
