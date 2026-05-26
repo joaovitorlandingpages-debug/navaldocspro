@@ -11,6 +11,10 @@ interface PageHeaderProps {
   className?: string;
 }
 
+/**
+ * Standard PageHeader for all pages.
+ * Ensures consistent title, breadcrumbs, and actions across the app.
+ */
 export function PageHeader({
   title,
   description,
@@ -19,23 +23,28 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <div className={cn("space-y-6 md:space-y-8 mb-8 animate-in fade-in duration-500", className)}>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
-        <div className="flex flex-col gap-4 w-full sm:w-auto">
+    <div className={cn("space-y-4 sm:space-y-8 mb-6 sm:mb-8 animate-in fade-in duration-500", className)}>
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 sm:gap-6">
+        <div className="flex flex-col gap-3 sm:gap-4 w-full lg:w-auto">
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              {showBack && <BackNavigation className="w-fit lg:hidden" />}
-              <div className="flex items-center gap-2 overflow-hidden">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              {showBack && (
+                <BackNavigation 
+                  className="w-fit lg:hidden h-10 px-3 bg-white border border-slate-100 shadow-sm" 
+                  label="Voltar"
+                />
+              )}
+              <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-[200px]">
                 <Breadcrumbs />
               </div>
             </div>
             
-            <div className="mt-2">
-              <h1 className="text-3xl md:text-4xl font-black text-navy tracking-tight uppercase leading-none">
+            <div className="mt-1 sm:mt-2">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-navy tracking-tight uppercase leading-none break-words">
                 {title}
               </h1>
               {description && (
-                <p className="text-slate-500 font-bold text-xs md:text-sm uppercase tracking-widest mt-2 italic">
+                <p className="text-slate-500 font-bold text-[10px] sm:text-xs md:text-sm uppercase tracking-widest mt-2 italic max-w-2xl">
                   {description}
                 </p>
               )}
@@ -44,7 +53,7 @@ export function PageHeader({
         </div>
         
         {actions && (
-          <div className="flex flex-wrap gap-3 w-full sm:w-auto justify-start sm:justify-end">
+          <div className="flex flex-wrap gap-2 sm:gap-3 w-full lg:w-auto justify-start lg:justify-end mt-2 lg:mt-0">
             {actions}
           </div>
         )}
@@ -52,3 +61,4 @@ export function PageHeader({
     </div>
   );
 }
+
