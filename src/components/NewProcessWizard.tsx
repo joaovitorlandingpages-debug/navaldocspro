@@ -1189,6 +1189,24 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         {renderStep()}
       </div>
     </ModalLayout>
+  );
+}
+
+function AdditionalModals({ 
+  isQuickClientOpen, setIsQuickClientOpen,
+  isCreatingClient,
+  newClient, setNewClient,
+  clientModalMode, setClientModalMode,
+  ocrFileInputRef, isOcrProcessing,
+  ocrJobResult, setOcrJobResult,
+  handleOcrFileSelect, applyOcrData,
+  handleQuickClientSubmit,
+  isQuickVesselOpen, setIsQuickVesselOpen,
+  newVessel, setNewVessel,
+  isCreatingVessel, handleQuickVesselSubmit
+}: any) {
+  return (
+    <>
 
       {/* Modal de Criação Rápida de Cliente */}
       <ModalLayout
