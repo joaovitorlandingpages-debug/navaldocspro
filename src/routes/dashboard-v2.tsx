@@ -38,6 +38,8 @@ function DashboardV2Layout() {
   const navigate = useNavigate();
   useTelemetry("Dashboard V2");
 
+  const isAdmin = profile?.role === 'admin_master' || profile?.role === 'admin_master_global';
+
   useEffect(() => {
     if (!loading && profile) {
       if (profile.role === 'customer' || profile.role === 'client') {
@@ -53,6 +55,7 @@ function DashboardV2Layout() {
     }
     console.log("USER_DASHBOARD_CLEANED");
   }, [isAdmin]);
+
 
 
   const handleLogout = async () => {
