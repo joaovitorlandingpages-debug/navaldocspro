@@ -2849,6 +2849,57 @@ export type Database = {
           },
         ]
       }
+      process_dossiers: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          file_url: string | null
+          id: string
+          metadata: Json | null
+          process_id: string
+          status: string
+          updated_at: string | null
+          version: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          process_id: string
+          status?: string
+          updated_at?: string | null
+          version?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          process_id?: string
+          status?: string
+          updated_at?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_dossiers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_dossiers_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_insights: {
         Row: {
           company_id: string | null
