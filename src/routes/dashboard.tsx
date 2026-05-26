@@ -784,8 +784,22 @@ export function RouteContent() {
       </div>
 
 
+      {/* Consumption & Plan Limits */}
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+           <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
+              <Activity className="h-4 w-4 text-primary" /> Consumo & Limites do Plano
+           </h2>
+           <Link to="/billing/subscription">
+              <Button variant="ghost" className="text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5">Gerenciar Assinatura</Button>
+           </Link>
+        </div>
+        <ConsumptionPanel />
+      </section>
+
       {/* Readiness Score Enterprise - Visible only to Admins */}
       {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && <ReadinessBanner />}
+
 
       {/* Intelligence Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
