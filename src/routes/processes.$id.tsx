@@ -571,6 +571,7 @@ function ProcessDetail() {
                                       setDossierData(data);
                                       setActiveTab("dossier");
                                       setIsPreviewingDossier(true);
+                                      console.log("DOSSIER_EXPORT_READY");
                                    }}
                                    variant="outline" 
                                    className="flex-1 md:flex-none h-14 px-8 rounded-2xl bg-white/5 border-white/10 text-white hover:bg-white/10 font-black uppercase text-[11px] tracking-widest"
