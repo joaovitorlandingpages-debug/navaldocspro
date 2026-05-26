@@ -33,6 +33,8 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { MobileNavigation } from "@/components/navigation/MobileNavigation";
 import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidgets";
+import { ConsumptionPanel } from "@/components/billing/ConsumptionPanel";
+
 
 
 
