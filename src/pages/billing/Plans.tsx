@@ -50,15 +50,16 @@ const Plans = () => {
 
   const getIcon = (slug: string) => {
     if (slug === 'starter' || slug === 'start') return Zap;
-    if (slug === 'professional') return Shield;
+    if (slug === 'pro' || slug === 'professional') return Shield;
     return Crown;
   };
 
   const getColor = (slug: string) => {
     if (slug === 'starter' || slug === 'start') return 'blue';
-    if (slug === 'professional') return 'indigo';
+    if (slug === 'pro' || slug === 'professional') return 'indigo';
     return 'purple';
   };
+
 
   return (
     <div className="container mx-auto py-12 px-4">
