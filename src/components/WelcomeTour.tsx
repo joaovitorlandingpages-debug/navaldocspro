@@ -38,6 +38,13 @@ export function WelcomeTour({
       
       try {
         // Check for generated dossiers/documents
+        const { data: dossierData } = await supabase
+          .from('process_dossiers')
+          .select('id')
+          .eq('company_id', profile.company_id)
+          .eq('status', 'generated')
+          .limit(1);
+
         const { data: docs } = await supabase
           .from('documents')
           .select('id')
@@ -45,7 +52,7 @@ export function WelcomeTour({
           .eq('document_role', 'gerado')
           .limit(1);
         
-        if (docs && docs.length > 0) {
+        if ((docs && docs.length > 0) || (dossierData && dossierData.length > 0)) {
           setDossierStatus('completed');
           console.log("DOSSIER_STEP_FIXED");
         } else {
