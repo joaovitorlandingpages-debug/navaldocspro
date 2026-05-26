@@ -253,11 +253,13 @@ function ProcessDetail() {
             <Button 
               className="flex-1 md:flex-none bg-primary text-white h-11 rounded-xl gap-2 font-bold hover:opacity-90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={automationState?.is_ready_for_generation === false}
-              onClick={() => {
+              onClick={async () => {
                 if (automationState?.is_ready_for_generation) {
-                  toast.success("Processo finalizado com sucesso!");
+                  toast.success("Processo finalizado com sucesso! Iniciando geração do dossiê...");
+                  await generateDossier();
+                  setActiveTab("dossier");
                 } else {
-                  toast.error("O processo não pode ser finalizado. Verifique as inconformidades.");
+                  toast.error("O processo não pode ser finalizado. Verifique as inconformidades no Checklist.");
                 }
               }}
             >
