@@ -20,8 +20,7 @@ function AdminBilling() {
   const { profile, loading } = useAuth();
 
   useEffect(() => {
-    console.log("GLOBAL_BILLING_OK");
-    console.log("PLAN_MANAGEMENT_OK");
+    console.log("BILLING_ADMIN_OK");
   }, []);
 
   if (loading) return null;

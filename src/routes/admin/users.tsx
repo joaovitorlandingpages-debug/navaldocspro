@@ -32,7 +32,7 @@ function AdminUsers() {
   }, []);
 
   if (loading) return null;
-  if (!profile?.isAdmin && profile?.email !== 'joaovitor.f0725@gmail.com') {
+  if (!profile?.isAdmin && profile?.role !== 'admin_master' && profile?.role !== 'admin_master_global' && profile?.email !== 'joaovitor.f0725@gmail.com') {
     return <Navigate to="/dashboard" />;
   }
 
