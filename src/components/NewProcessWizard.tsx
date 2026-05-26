@@ -1203,16 +1203,17 @@ function NewProcessWizardMain({
             <BackNavigation 
               onBack={handleBack} 
               label={step === 1 ? "Fechar" : "Voltar"} 
-              className="flex-1 sm:flex-none rounded-xl h-12 px-6 font-black uppercase text-[10px] tracking-widest gap-2"
+              className="flex-1 sm:flex-none rounded-xl h-11 sm:h-12 px-4 sm:px-6 font-black uppercase text-[10px] tracking-widest gap-2 bg-white border border-slate-100"
             />
             <Button
               variant="ghost"
+              type="button"
               onClick={() => {
                 clearDraft();
                 toast.success("Rascunho descartado.");
                 onClose();
               }}
-              className="rounded-xl h-12 px-4 text-slate-400 hover:text-red-500 hover:bg-red-50"
+              className="rounded-xl h-11 sm:h-12 px-4 text-slate-400 hover:text-red-500 hover:bg-red-50"
               title="Descartar Rascunho e Fechar"
             >
               <X className="h-4 w-4" />
@@ -1222,6 +1223,7 @@ function NewProcessWizardMain({
           <div className="flex gap-3 w-full sm:w-auto">
             <Button
               variant="outline"
+              type="button"
               className="hidden md:flex rounded-xl h-12 px-6 font-black uppercase text-[10px] tracking-widest gap-2 border-slate-200"
               onClick={() => toast.success("Rascunho salvo no navegador")}
             >
@@ -1232,15 +1234,17 @@ function NewProcessWizardMain({
               <Button
                 onClick={handleCreateProcess}
                 loading={isSubmitting}
-                className="flex-1 sm:flex-none bg-primary hover:opacity-90 rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg shadow-primary/20 gap-2"
+                type="button"
+                className="flex-1 sm:flex-none bg-primary hover:opacity-90 rounded-xl h-11 sm:h-12 px-6 sm:px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg shadow-primary/20 gap-2"
               >
-                Criar Processo <Check className="h-4 w-4" />
+                Finalizar <Check className="h-4 w-4" />
               </Button>
             ) : (
               <Button
                 onClick={handleNext}
+                type="button"
                 disabled={(!formData.typeId && step === 1) || (!formData.clientId && step === 2)}
-                className="flex-1 sm:flex-none bg-navy hover:opacity-90 rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg shadow-navy/20 gap-2"
+                className="flex-1 sm:flex-none bg-navy hover:opacity-90 rounded-xl h-11 sm:h-12 px-6 sm:px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg shadow-navy/20 gap-2"
               >
                 Próximo <ChevronRight className="h-4 w-4" />
               </Button>
@@ -1249,17 +1253,15 @@ function NewProcessWizardMain({
         </div>
       }
     >
-      <ScrollArea className="flex-grow pr-4 -mr-4">
-      <div className="space-y-8 pb-4">
+      <div className="space-y-6 sm:space-y-8">
         <div className="flex items-center gap-4">
-          <Progress value={progressPercent} className="h-2.5 flex-grow bg-slate-100" />
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
-            {Math.round(progressPercent)}% Concluído
+          <Progress value={progressPercent} className="h-2 sm:h-2.5 flex-grow bg-slate-100" />
+          <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
+            {Math.round(progressPercent)}%
           </span>
         </div>
         {renderStep()}
       </div>
-      </ScrollArea>
     </ModalLayout>
   );
 }

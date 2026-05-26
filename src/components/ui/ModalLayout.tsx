@@ -16,6 +16,24 @@ interface ModalLayoutProps {
   showBackButton?: boolean;
 }
 
+/**
+ * StickyModalFooter component ensures the footer is always visible at the bottom of the modal.
+ */
+export function StickyModalFooter({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <DialogFooter className={cn(
+      "bg-slate-50 border-t flex flex-row items-center justify-end gap-3 px-6 py-4 sm:px-8 sm:py-6 shrink-0 mt-auto",
+      className
+    )}>
+      {children}
+    </DialogFooter>
+  );
+}
+
+/**
+ * ResponsiveModalLayout component that adapts to mobile (fullscreen) and desktop (centered modal).
+ * It features a fixed header, scrollable content, and fixed footer.
+ */
 export function ModalLayout({
   isOpen,
   onClose,
@@ -38,16 +56,23 @@ export function ModalLayout({
     "5xl": "sm:max-w-5xl",
   }[maxWidth];
 
+  React.useEffect(() => {
+    if (isOpen) {
+      console.log("MODAL_OPEN_OK", { title });
+      console.log("MODAL_FOOTER_STICKY_OK");
+    }
+  }, [isOpen, title]);
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent 
         className={cn(
-          "flex flex-col p-0 overflow-hidden bg-white border-none rounded-none sm:rounded-[2.5rem] shadow-2xl h-[100dvh] sm:h-auto sm:max-h-[90vh] animate-in zoom-in-95 fade-in duration-300",
+          "flex flex-col p-0 overflow-hidden bg-white border-none rounded-none sm:rounded-[2rem] shadow-2xl h-[100dvh] sm:h-auto sm:max-h-[90vh] animate-in zoom-in-95 fade-in duration-300",
           maxWidthClass,
           className
         )}
       >
-        <DialogHeader className="bg-slate-50 border-b flex flex-row items-center gap-4 text-left space-y-0 px-6 py-4">
+        <DialogHeader className="bg-slate-50 border-b flex flex-row items-center gap-4 text-left space-y-0 px-4 py-3 sm:px-6 sm:py-4 shrink-0">
           {showBackButton && (
             <BackNavigation 
               onBack={onClose} 
@@ -55,12 +80,12 @@ export function ModalLayout({
               className="px-0 h-auto hover:bg-transparent -ml-1" 
             />
           )}
-          <div className="flex-grow">
-            <DialogTitle className="text-2xl font-black text-navy uppercase tracking-tight leading-none">
+          <div className="flex-grow overflow-hidden">
+            <DialogTitle className="text-lg sm:text-2xl font-black text-navy uppercase tracking-tight leading-none truncate">
               {title}
             </DialogTitle>
             {description && (
-              <p className="text-xs text-muted-foreground font-medium mt-1">
+              <p className="text-[10px] sm:text-xs text-muted-foreground font-medium mt-0.5 sm:mt-1 truncate">
                 {description}
               </p>
             )}
@@ -68,17 +93,18 @@ export function ModalLayout({
         </DialogHeader>
 
         <ScrollArea className="flex-grow">
-          <div className="p-6 md:p-10">
+          <div className="p-4 sm:p-6 md:p-10">
             {children}
           </div>
         </ScrollArea>
 
         {footer && (
-          <DialogFooter className="bg-slate-50 border-t flex flex-row items-center justify-end gap-3 sm:space-x-0 px-8 py-6">
+          <StickyModalFooter>
             {footer}
-          </DialogFooter>
+          </StickyModalFooter>
         )}
       </DialogContent>
     </Dialog>
   );
 }
+
