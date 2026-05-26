@@ -1601,6 +1601,5 @@ function AdditionalModals({
       </ModalLayout>
     </>
   );
-    </>
-  );
+}
 }
