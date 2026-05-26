@@ -144,7 +144,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     console.log("PROCESS_TYPES_LOADING", "customers");
     const { data, error } = await supabase
       .from('customers')
-      .select('id, name')
+      .select('id, name, cpf_cnpj')
       .ilike('name', `%${forceSearchTerm !== undefined ? forceSearchTerm : searchTerm}%`)
       .limit(10);
     
