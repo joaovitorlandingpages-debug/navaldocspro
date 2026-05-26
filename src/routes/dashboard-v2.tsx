@@ -47,8 +47,13 @@ function DashboardV2Layout() {
   }, [profile, loading, navigate]);
 
   useEffect(() => {
-    import("@/utils/enterpriseScale").then(m => m.EnterpriseScale.audit());
-  }, []);
+    if (isAdmin) {
+      import("@/utils/enterpriseScale").then(m => m.EnterpriseScale.audit());
+      console.log("PRODUCTION_UI_MODE_ACTIVE");
+    }
+    console.log("USER_DASHBOARD_CLEANED");
+  }, [isAdmin]);
+
 
   const handleLogout = async () => {
     try {
@@ -177,9 +182,12 @@ function DashboardV2Layout() {
 
         <main className="flex-grow overflow-y-auto p-8">
            <DashboardV2Content />
-           <div className="p-8 pt-0">
-             <PerformanceMonitor />
-           </div>
+           {isAdmin && (
+             <div className="p-8 pt-0">
+               <PerformanceMonitor />
+             </div>
+           )}
+
         </main>
       </div>
     </div>
@@ -301,40 +309,43 @@ function DashboardV2Content() {
                </CardContent>
             </Card>
 
-            <div className="p-8 rounded-[2.5rem] bg-navy text-white relative overflow-hidden shadow-2xl group border border-white/5">
-               <div className="absolute -right-6 -bottom-6 opacity-5 group-hover:scale-110 transition-transform duration-1000">
-                  <Anchor className="h-48 w-48" />
-               </div>
-               <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                  <Sparkles className="h-32 w-32" />
-               </div>
-               <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-6">
-                     <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse" />
-                     <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">Sistemas Operacionais</p>
-                  </div>
-                  <h4 className="text-xl font-bold mb-6 leading-snug">Infraestrutura Enterprise em conformidade.</h4>
-                  
-                  <div className="grid grid-cols-2 gap-4 mb-8">
-                     <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                        <p className="text-[8px] font-black uppercase text-white/40 mb-1">OCR Status</p>
-                        <p className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                           <Zap className="h-3 w-3" /> 98%
-                        </p>
-                     </div>
-                     <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                        <p className="text-[8px] font-black uppercase text-white/40 mb-1">SLA Ativo</p>
-                        <p className="text-xs font-bold text-blue-400 flex items-center gap-1.5">
-                           <Clock className="h-3 w-3" /> 100%
-                        </p>
-                     </div>
-                  </div>
+            {isAdmin && (
+              <div className="p-8 rounded-[2.5rem] bg-navy text-white relative overflow-hidden shadow-2xl group border border-white/5">
+                <div className="absolute -right-6 -bottom-6 opacity-5 group-hover:scale-110 transition-transform duration-1000">
+                    <Anchor className="h-48 w-48" />
+                </div>
+                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                    <Sparkles className="h-32 w-32" />
+                </div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-6">
+                      <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse" />
+                      <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">Sistemas Operacionais</p>
+                    </div>
+                    <h4 className="text-xl font-bold mb-6 leading-snug">Infraestrutura Enterprise em conformidade.</h4>
+                    
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                      <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
+                          <p className="text-[8px] font-black uppercase text-white/40 mb-1">OCR Status</p>
+                          <p className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                            <Zap className="h-3 w-3" /> 98%
+                          </p>
+                      </div>
+                      <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
+                          <p className="text-[8px] font-black uppercase text-white/40 mb-1">SLA Ativo</p>
+                          <p className="text-xs font-bold text-blue-400 flex items-center gap-1.5">
+                            <Clock className="h-3 w-3" /> 100%
+                          </p>
+                      </div>
+                    </div>
 
-                  <p className="text-[10px] font-medium text-white/40 italic leading-relaxed">
-                     NavalDocs Pro: Tecnologia de ponta para engenharia naval de alta performance.
-                  </p>
-               </div>
-            </div>
+                    <p className="text-[10px] font-medium text-white/40 italic leading-relaxed">
+                      Gerenciamento de recursos técnicos avançados ativo.
+                    </p>
+                </div>
+              </div>
+            )}
+
          </div>
       </div>
     </div>

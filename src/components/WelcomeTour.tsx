@@ -30,14 +30,18 @@ export function WelcomeTour({
   const [readinessStatus, setReadinessStatus] = useState<'pending' | 'completed' | 'waiting'>('waiting');
   const [isLoading, setIsLoading] = useState(true);
 
+  const isAdminMaster = profile?.role === 'admin_master' || profile?.role === 'admin_master_global';
+
   useEffect(() => {
-    console.log("ENTERPRISE_CHECKLIST_AUDIT_START");
+    // Only log if admin
+    if (isAdminMaster) {
+      console.log("ENTERPRISE_CHECKLIST_AUDIT_START");
+    }
     
     async function checkEnterpriseSteps() {
       if (!profile?.company_id) return;
       
       try {
-        // Check for generated dossiers/documents
         const { data: dossierData } = await supabase
           .from('process_dossiers')
           .select('id')
@@ -54,12 +58,10 @@ export function WelcomeTour({
         
         if ((docs && docs.length > 0) || (dossierData && dossierData.length > 0)) {
           setDossierStatus('completed');
-          console.log("DOSSIER_STEP_FIXED");
         } else {
           setDossierStatus('waiting');
         }
 
-        // Check for readiness scores
         const { data: scores } = await supabase
           .from('system_readiness_scores')
           .select('score');
@@ -70,7 +72,6 @@ export function WelcomeTour({
         
         if (avg > 80) {
           setReadinessStatus('completed');
-          console.log("COMMERCIAL_READINESS_FIXED");
         } else {
           setReadinessStatus('waiting');
         }
@@ -78,52 +79,35 @@ export function WelcomeTour({
         console.error("Error auditing enterprise steps:", error);
       } finally {
         setIsLoading(false);
-        console.log("CHECKLIST_FLOW_OK");
       }
     }
 
     checkEnterpriseSteps();
 
-    // Safety timeout to never block the user
     const timer = setTimeout(() => {
       if (isLoading) {
         setIsLoading(false);
-        console.log("ONBOARDING_NOT_BLOCKING_TIMEOUT");
       }
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [profile?.company_id]);
+  }, [profile?.company_id, isAdminMaster]);
 
   if (!isOpen) return null;
 
+  // If not admin, hide technical steps or show simplified version
   const steps: Step[] = [
-    { id: '1', title: 'Perfil Enterprise', description: 'Dados da sua organização naval.', completed: onboardingStep >= 1 },
-    { id: '2', title: 'Portal do Cliente', description: 'Configuração da área externa.', completed: onboardingStep >= 4 },
-    { id: '3', title: 'Gestão de Frotas', description: 'Cadastro de embarcações críticas.', completed: onboardingStep >= 5 },
-    { id: '4', title: 'Automação IA', description: 'Execução de OCR e extração.', completed: onboardingStep >= 6 },
-    { id: '5', title: 'Assinatura Digital', description: 'Fluxo de validação sem papel.', completed: onboardingStep >= 7 },
-    { 
-      id: '6', 
-      title: 'Geração de Dossiê', 
-      description: dossierStatus === 'completed' ? 'Exportação completa concluída.' : 'Aguardando primeira geração documental.', 
-      completed: dossierStatus === 'completed',
-      status: dossierStatus
-    },
-    { 
-      id: '7', 
-      title: 'Readiness Comercial', 
-      description: readinessStatus === 'completed' ? 'Auditoria de prontidão aprovada.' : 'Em configuração de conformidade.', 
-      completed: readinessStatus === 'completed',
-      status: readinessStatus
-    },
+    { id: '1', title: 'Perfil da Empresa', description: 'Configure os dados básicos da sua organização.', completed: onboardingStep >= 1 },
+    { id: '2', title: 'Portal do Cliente', description: 'Ative sua área externa para clientes.', completed: onboardingStep >= 4 },
+    { id: '3', title: 'Gestão de Frotas', description: 'Cadastre suas embarcações para gestão.', completed: onboardingStep >= 5 },
+    { id: '4', title: 'Automação IA', description: 'Experimente a extração inteligente de dados.', completed: onboardingStep >= 6 },
+    { id: '5', title: 'Fluxos de Trabalho', description: 'Organize seus processos operacionais.', completed: onboardingStep >= 7 },
   ];
 
   const completedCount = steps.filter(s => s.completed).length;
   const progress = (completedCount / steps.length) * 100;
 
   const handleFinish = () => {
-    console.log("ONBOARDING_NOT_BLOCKING");
     setIsOpen(false);
     onClose();
   };
@@ -144,14 +128,14 @@ export function WelcomeTour({
             <Rocket className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h3 className="font-black uppercase tracking-[0.25em] text-[10px] text-primary mb-1">Onboarding Premium</h3>
-            <h2 className="text-2xl font-black italic tracking-tighter leading-none uppercase">Tour NavalDocs Pro</h2>
+            <h3 className="font-black uppercase tracking-[0.25em] text-[10px] text-primary mb-1">Boas-vindas</h3>
+            <h2 className="text-2xl font-black italic tracking-tighter leading-none uppercase">NavalDocs Pro</h2>
           </div>
         </div>
         
         <div className="space-y-4 relative z-10">
            <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
-              <span className="text-white/40">Status de Implantação</span>
+              <span className="text-white/40">Progresso Inicial</span>
               <span className="text-primary">{Math.round(progress)}%</span>
            </div>
            <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
@@ -173,10 +157,6 @@ export function WelcomeTour({
                 <div className="h-7 w-7 bg-emerald-50 rounded-xl flex items-center justify-center shadow-sm">
                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                 </div>
-              ) : step.status === 'waiting' ? (
-                <div className="h-7 w-7 bg-blue-50 rounded-xl flex items-center justify-center shadow-sm">
-                   <Clock className="h-4 w-4 text-blue-500 animate-pulse" />
-                </div>
               ) : (
                 <div className="h-7 w-7 border-2 border-slate-100 rounded-xl flex items-center justify-center group-hover:border-primary/40 group-hover:bg-primary/5 transition-all">
                    <Circle className="h-3 w-3 text-slate-200 group-hover:text-primary transition-all" />
@@ -188,7 +168,7 @@ export function WelcomeTour({
                 {step.title}
               </h4>
               <p className="text-[11px] text-slate-400 font-bold mt-1 leading-relaxed">
-                {isLoading && (step.id === '6' || step.id === '7') ? 'Sincronizando...' : step.description}
+                {step.description}
               </p>
             </div>
             {!step.completed && (
@@ -206,7 +186,7 @@ export function WelcomeTour({
            onClick={handleFinish}
            className="w-full sm:w-auto bg-navy text-[11px] font-black uppercase tracking-[0.2em] px-10 py-7 rounded-2xl shadow-xl hover:bg-slate-900 transition-all border border-navy/10 active:scale-95"
          >
-            Finalizar Tour <ArrowRight className="ml-3 h-4 w-4" />
+            Começar Agora <ArrowRight className="ml-3 h-4 w-4" />
          </Button>
       </div>
     </div>
