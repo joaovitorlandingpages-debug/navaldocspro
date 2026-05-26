@@ -112,8 +112,9 @@ export function DashboardQuickWidgets({ recentDocs, loading }: { recentDocs?: an
         <div className="absolute -right-6 -top-6 p-8 opacity-10">
           <Zap className="h-24 w-24 text-primary" />
         </div>
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-4">Próximo Passo IA</p>
-        <h4 className="text-sm font-bold leading-relaxed mb-6">Você tem 4 processos com documentos pendentes que podem ser resolvidos via OCR agora.</h4>
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-4">Ação Sugerida</p>
+        <h4 className="text-sm font-bold leading-relaxed mb-6">Existem processos que podem ser acelerados via OCR para extração automática de dados.</h4>
+
         <Link to="/ocr-center">
           <button className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
             Abrir Central OCR <ChevronRight className="h-3 w-3" />

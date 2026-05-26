@@ -128,28 +128,23 @@ export function WelcomeTour({
             <Rocket className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h3 className="font-black uppercase tracking-[0.25em] text-[10px] text-primary mb-1">Boas-vindas</h3>
+            <h3 className="font-black uppercase tracking-[0.25em] text-[10px] text-primary mb-1">Configuração</h3>
             <h2 className="text-2xl font-black italic tracking-tighter leading-none uppercase">NavalDocs Pro</h2>
           </div>
         </div>
         
         <div className="space-y-4 relative z-10">
            <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
-              <span className="text-white/40">Progresso Inicial</span>
-              <span className="text-primary">{Math.round(progress)}%</span>
-           </div>
-           <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary transition-all duration-1000 relative" 
-                style={{ width: `${progress}%` }}
-              >
-                <div className="absolute top-0 right-0 h-full w-8 bg-white/20 blur-sm animate-pulse" />
-              </div>
+              <span className="text-white/40">Guia de Início</span>
+              <span className="text-primary">Ativo</span>
            </div>
         </div>
       </div>
 
       <div className="p-10 space-y-6 max-h-[450px] overflow-y-auto custom-scrollbar bg-white">
+        <div className="text-center py-4">
+           <p className="text-sm text-slate-500 font-medium">Explore as funcionalidades principais da plataforma para otimizar sua gestão naval.</p>
+        </div>
         {steps.map((step) => (
           <div key={step.id} className="flex gap-6 items-start group">
             <div className="mt-1">
@@ -171,12 +166,10 @@ export function WelcomeTour({
                 {step.description}
               </p>
             </div>
-            {!step.completed && (
-              <ChevronRight className="h-5 w-5 text-slate-200 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1" />
-            )}
           </div>
         ))}
       </div>
+
 
       <div className="p-10 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-4 justify-between">
          <button className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-navy/40 hover:text-primary transition-all">
