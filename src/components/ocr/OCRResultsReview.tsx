@@ -131,17 +131,20 @@ export function OCRResultsReview({ job }: OCRResultsReviewProps) {
       <div className="p-8 space-y-8">
         {/* Grid de Dados */}
         <div className="grid sm:grid-cols-2 gap-6">
-          {renderField("Nome Completo", editedData?.name, <User className="h-3 w-3" />, "name")}
-          {renderField("Documento / CPF", editedData?.doc_number, <FileText className="h-3 w-3" />, "doc_number")}
+          {renderField("Nome Completo", editedData?.name || editedData?.buyer_name || editedData?.tax_payer, <User className="h-3 w-3" />, "name")}
+          {renderField("Documento / CPF", editedData?.doc_number || editedData?.cpf || editedData?.cpf_cnpj || editedData?.buyer_doc, <FileText className="h-3 w-3" />, "doc_number")}
           {renderField("Local / Endereço", editedData?.address, <MapPin className="h-3 w-3" />, "address")}
-          {renderField("Data Nascimento", editedData?.birth_date, <Calendar className="h-3 w-3" />, "birth_date")}
+          {renderField("Vencimento / Validade", editedData?.expiry_date, <Calendar className="h-3 w-3" />, "expiry_date")}
           
-          {editedData?.vessel_name && (
+          {(editedData?.vessel_name || editedData?.registration_number) && (
             <>
               {renderField("Nome da Embarcação", editedData?.vessel_name, <Anchor className="h-3 w-3" />, "vessel_name")}
-              {renderField("Inscrição / TIE", editedData?.vessel_id, <Zap className="h-3 w-3" />, "vessel_id")}
+              {renderField("Inscrição / TIE", editedData?.registration_number || editedData?.inscription || editedData?.vessel_id, <Zap className="h-3 w-3" />, "registration_number")}
             </>
           )}
+
+          {editedData?.engine_serial && renderField("Motor (Série)", editedData?.engine_serial, <Zap className="h-3 w-3" />, "engine_serial")}
+          {editedData?.sale_value && renderField("Valor da Venda", `R$ ${editedData.sale_value.toLocaleString()}`, <FileText className="h-3 w-3" />, "sale_value")}
         </div>
 
         {/* Alerta de Segurança */}

@@ -352,45 +352,42 @@ export class DocumentAutomationEngine {
     // 1. Registrar Log
     await this.logEvent(processId, 'ocr_complete', `Dados extraídos de ${job.identified_document_type || 'documento'}`, extracted);
 
-    // 2. Tentar vincular automaticamente ou atualizar dados
-    if (job.identified_document_type === 'VESSEL_TIE' && extracted.vessel_name) {
-      const { data: process } = await supabase.from('processes').select('vessel_id, customer_id').eq('id', processId).single();
+    // 2. Sincronização Inteligente de Dados (Autofill)
+    const { data: process } = await supabase.from('processes').select('vessel_id, customer_id').eq('id', processId).single();
+
+    // Sincronizar Embarcação
+    if ((job.identified_document_type === 'VESSEL_TIE' || job.identified_document_type === 'TECHNICAL_MEMORIAL') && process?.vessel_id) {
+      const vesselUpdate: any = {};
+      if (extracted.vessel_name) vesselUpdate.name = extracted.vessel_name;
+      if (extracted.registration_number || extracted.inscription) vesselUpdate.registration_number = extracted.registration_number || extracted.inscription;
+      if (extracted.engine_brand) vesselUpdate.engine_brand = extracted.engine_brand;
+      if (extracted.engine_serial) vesselUpdate.engine_serial = extracted.engine_serial;
+      if (extracted.hull_material) vesselUpdate.hull_material = extracted.hull_material;
       
-      if (process?.vessel_id) {
-        // Atualizar embarcação existente
-        await supabase.from('vessels').update({
-          registration_number: extracted.inscription,
-          engine: extracted.engine,
-          category: extracted.navigation_category
-        }).eq('id', process.vessel_id);
-      }
-
-      if (process?.customer_id && extracted.owner_doc) {
-        // Atualizar cliente se o CPF bater
-        await supabase.from('customers').update({
-          cpf_cnpj: extracted.owner_doc
-        }).eq('id', process.customer_id);
-      }
+      await supabase.from('vessels').update(vesselUpdate).eq('id', process.vessel_id);
+      console.log("OCR_VESSEL_SYNC_OK");
     }
 
-    if ((job.identified_document_type === 'RG' || job.identified_document_type === 'CNH') && extracted.cpf) {
-      const { data: process } = await supabase.from('processes').select('customer_id').eq('id', processId).single();
-      if (process?.customer_id) {
-        await supabase.from('customers').update({
-          cpf_cnpj: extracted.cpf,
-          name: extracted.name,
-          address: extracted.address || extracted.endereco
-        }).eq('id', process.customer_id);
-      }
+    // Sincronizar Cliente
+    if ((job.identified_document_type === 'RG' || job.identified_document_type === 'CNH' || job.identified_document_type === 'PURCHASE_CONTRACT') && process?.customer_id) {
+      const customerUpdate: any = {};
+      if (extracted.name || extracted.buyer_name) customerUpdate.name = extracted.name || extracted.buyer_name;
+      if (extracted.doc_number || extracted.cpf || extracted.buyer_doc) customerUpdate.cpf_cnpj = extracted.doc_number || extracted.cpf || extracted.buyer_doc;
+      if (extracted.address) customerUpdate.address = extracted.address;
+      
+      await supabase.from('customers').update(customerUpdate).eq('id', process.customer_id);
+      console.log("OCR_CUSTOMER_SYNC_OK");
     }
 
-    if (job.identified_document_type === 'RESIDENCE_PROOF' && extracted.address) {
-      const { data: process } = await supabase.from('processes').select('customer_id').eq('id', processId).single();
-      if (process?.customer_id) {
-        await supabase.from('customers').update({
-          address: extracted.address
-        }).eq('id', process.customer_id);
-      }
+    // Sincronizar Processo (Metadados Técnicos)
+    if (job.identified_document_type === 'SAFETY_CERTIFICATE' || job.identified_document_type === 'DPEM_INSURANCE') {
+      await supabase.from('processes').update({
+        metadata: {
+          ...(process?.metadata || {}),
+          expiry_date: extracted.expiry_date,
+          certificate_number: extracted.certificate_number || extracted.policy_number
+        }
+      }).eq('id', processId);
     }
 
     // 3. Re-analisar o processo e gerar novos insights de IA
