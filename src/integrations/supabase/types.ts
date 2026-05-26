@@ -3393,25 +3393,34 @@ export type Database = {
       }
       saas_commercial_metrics: {
         Row: {
-          category: string
+          active_subscriptions: number | null
+          avg_revenue_per_user: number | null
+          churn_rate: number | null
+          created_at: string | null
           id: string
-          metric_name: string
-          metric_value: number
-          recorded_at: string | null
+          metric_date: string | null
+          total_mrr: number | null
+          trial_subscriptions: number | null
         }
         Insert: {
-          category: string
+          active_subscriptions?: number | null
+          avg_revenue_per_user?: number | null
+          churn_rate?: number | null
+          created_at?: string | null
           id?: string
-          metric_name: string
-          metric_value: number
-          recorded_at?: string | null
+          metric_date?: string | null
+          total_mrr?: number | null
+          trial_subscriptions?: number | null
         }
         Update: {
-          category?: string
+          active_subscriptions?: number | null
+          avg_revenue_per_user?: number | null
+          churn_rate?: number | null
+          created_at?: string | null
           id?: string
-          metric_name?: string
-          metric_value?: number
-          recorded_at?: string | null
+          metric_date?: string | null
+          total_mrr?: number | null
+          trial_subscriptions?: number | null
         }
         Relationships: []
       }
