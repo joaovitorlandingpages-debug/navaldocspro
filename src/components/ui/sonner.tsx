@@ -1,8 +1,15 @@
+"use client";
+
+import { useEffect } from "react";
 import { Toaster as Sonner } from "sonner";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
+  useEffect(() => {
+    console.log("TOAST_SYSTEM_SAFE");
+  }, []);
+
   return (
     <Sonner
       className="toaster group"
@@ -21,3 +28,4 @@ const Toaster = ({ ...props }: ToasterProps) => {
 };
 
 export { Toaster };
+
