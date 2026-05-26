@@ -323,24 +323,25 @@ function DashboardV2Content() {
                 <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-6">
                       <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse" />
-                      <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">Sistemas Operacionais</p>
+                      <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">Painel do Administrador Master</p>
                     </div>
-                    <h4 className="text-xl font-bold mb-6 leading-snug">Infraestrutura Enterprise em conformidade.</h4>
+                    <h4 className="text-xl font-bold mb-6 leading-snug">Sistema Enterprise Operacional.</h4>
                     
                     <div className="grid grid-cols-2 gap-4 mb-8">
                       <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                          <p className="text-[8px] font-black uppercase text-white/40 mb-1">OCR Status</p>
+                          <p className="text-[8px] font-black uppercase text-white/40 mb-1">Status Global</p>
                           <p className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                            <Zap className="h-3 w-3" /> 98%
+                            <Zap className="h-3 w-3" /> Online
                           </p>
                       </div>
                       <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                          <p className="text-[8px] font-black uppercase text-white/40 mb-1">SLA Ativo</p>
+                          <p className="text-[8px] font-black uppercase text-white/40 mb-1">SLA Master</p>
                           <p className="text-xs font-bold text-blue-400 flex items-center gap-1.5">
                             <Clock className="h-3 w-3" /> 100%
                           </p>
                       </div>
                     </div>
+
 
                     <p className="text-[10px] font-medium text-white/40 italic leading-relaxed">
                       Gerenciamento de recursos técnicos avançados ativo.
