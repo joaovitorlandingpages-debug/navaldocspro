@@ -1186,8 +1186,6 @@ function NewProcessWizardMain({
   renderStep, getStepTitle
 }: any) {
   return (
-    <>
-
     <ModalLayout
       isOpen={isOpen}
       onClose={onClose}
