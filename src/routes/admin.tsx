@@ -81,7 +81,9 @@ function AdminLayout() {
     { name: "Biblioteca Master", icon: <FileText className="h-5 w-5" />, path: "/admin/document-library" },
     { name: "Audit Logs", icon: <History className="h-5 w-5" />, path: "/admin/logs" },
     { name: "System Status", icon: <Activity className="h-5 w-5" />, path: "/admin/system-report" },
+    { name: "Implantação SaaS", icon: <Rocket className="h-5 w-5" />, path: "/admin/roadmap" },
     { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },
+
   ];
 
   return (

@@ -37,6 +37,14 @@ function OnboardingFlow() {
       navigate({ to: "/dashboard" });
     }
     if (profile?.companies) {
+      // Auto-skip to completion if not admin and basic data exists
+      const isNormalUser = profile.role !== 'admin_master' && profile.role !== 'admin_master_global';
+      if (isNormalUser && profile.companies.name) {
+         console.log("AUTO_SKIP_ONBOARDING_FOR_CLEAN_UI");
+         updateStep(8);
+         return;
+      }
+
       setFormData({
         companyName: profile.companies.name || "",
         cnpj: profile.companies.cnpj || "",
@@ -46,6 +54,7 @@ function OnboardingFlow() {
       });
       setStep(profile.companies.onboarding_step || 1);
     }
+
   }, [profile, loading]);
 
   const updateStep = async (nextStep: number, data?: any) => {
