@@ -123,6 +123,17 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
 
       if (error) throw error;
 
+      // Update technical checklist
+      await supabase
+        .from('processes')
+        .update({
+          automation_metadata: {
+            ...(dossierData.process.automation_metadata as any || {}),
+            dossier_ready: true
+          }
+        })
+        .eq('id', processId);
+
       // Simulate processing time
       setTimeout(async () => {
         // Update to generated
