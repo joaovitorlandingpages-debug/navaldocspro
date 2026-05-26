@@ -3,6 +3,7 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
+import { SafePortal } from "@/components/SafePortal";
 
 import { cn } from "@/lib/utils";
 
@@ -10,7 +11,22 @@ const Dialog = DialogPrimitive.Root;
 
 const DialogTrigger = DialogPrimitive.Trigger;
 
-const DialogPortal = DialogPrimitive.Portal;
+const DialogPortal = ({ children, ...props }: DialogPrimitive.DialogPortalProps) => {
+  React.useEffect(() => {
+    console.log("MODAL_PORTAL_SAFE");
+  }, []);
+  
+  return (
+    <SafePortal>
+      <DialogPrimitive.Portal {...props}>
+        {children}
+      </DialogPrimitive.Portal>
+    </SafePortal>
+  );
+};
+DialogPortal.displayName = "DialogPortal";
+
+
 
 const DialogClose = DialogPrimitive.Close;
 

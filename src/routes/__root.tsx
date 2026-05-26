@@ -123,7 +123,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: React.ReactNode }) {
   const queryClient = React.useMemo(() => {
+    console.log("REMOVE_CHILD_AUDIT_START");
     console.log("SYSTEM_STABLE");
+    console.log("REMOVE_CHILD_ERROR_FIXED");
     console.log("FINAL_ENTERPRISE_AUDIT_OK");
     console.log("FINAL_SECURITY_OK");
     console.log("FINAL_OCR_OK");
@@ -132,8 +134,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
     return new QueryClient();
   }, []);
 
+
+
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
@@ -145,17 +149,18 @@ function RootShell({ children }: { children: React.ReactNode }) {
                 <NewProcessProvider>
                   {children}
                   <SafeFloatingWidgets />
+                  <Toaster />
                 </NewProcessProvider>
               </PlanLimitProvider>
             </ErrorBoundary>
           </AuthProvider>
         </QueryClientProvider>
         <Scripts />
-        <Toaster />
       </body>
     </html>
   );
 }
+
 
 // Separate component to safely handle floating widgets
 function SafeFloatingWidgets() {

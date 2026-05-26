@@ -4,6 +4,7 @@ import * as React from "react";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
+import { SafePortal } from "@/components/SafePortal";
 
 import { cn } from "@/lib/utils";
 
@@ -13,7 +14,15 @@ const SheetTrigger = SheetPrimitive.Trigger;
 
 const SheetClose = SheetPrimitive.Close;
 
-const SheetPortal = SheetPrimitive.Portal;
+const SheetPortal = ({ children, ...props }: SheetPrimitive.DialogPortalProps) => (
+  <SafePortal>
+    <SheetPrimitive.Portal {...props}>
+      {children}
+    </SheetPrimitive.Portal>
+  </SafePortal>
+);
+SheetPortal.displayName = "SheetPortal";
+
 
 const SheetOverlay = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Overlay>,

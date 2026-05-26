@@ -24,25 +24,40 @@ function LoginComponent() {
     setIsLoading(true);
 
     try {
+      console.log("REMOVE_CHILD_AUDIT_START");
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.warn("LOGIN_ERROR_HANDLED", error.message);
+        throw error;
+      }
 
       toast.success("LOGIN_SUCCESS");
-      console.log("REDIRECT_DASHBOARD_V2");
+      console.log("LOGIN_SUCCESS_LOGGED");
       
       setTimeout(() => {
         window.location.href = "/dashboard-v2";
       }, 500);
     } catch (error: any) {
-      toast.error(error.message || "Erro ao realizar login");
+      // Prevenir crash no toast de erro de login
+      const errorMessage = error.message || "Erro ao realizar login";
+      if (errorMessage.includes("Invalid login credentials")) {
+        console.error("LOGIN_ERROR_DETECTED", errorMessage);
+        toast.error("Credenciais inválidas. Por favor, tente novamente.", {
+          id: "login-error-toast", // Evitar duplicação
+        });
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
+      console.log("LOGIN_ERROR_HANDLED");
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#000B18] p-4 relative overflow-hidden">
