@@ -3247,6 +3247,33 @@ export type Database = {
           },
         ]
       }
+      production_readiness_checks: {
+        Row: {
+          category: string
+          check_name: string
+          details: Json | null
+          id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          check_name: string
+          details?: Json | null
+          id?: string
+          status: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          check_name?: string
+          details?: Json | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company_id: string | null
@@ -3363,6 +3390,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      saas_commercial_metrics: {
+        Row: {
+          category: string
+          id: string
+          metric_name: string
+          metric_value: number
+          recorded_at: string | null
+        }
+        Insert: {
+          category: string
+          id?: string
+          metric_name: string
+          metric_value: number
+          recorded_at?: string | null
+        }
+        Update: {
+          category?: string
+          id?: string
+          metric_name?: string
+          metric_value?: number
+          recorded_at?: string | null
+        }
+        Relationships: []
       }
       saas_global_metrics: {
         Row: {
