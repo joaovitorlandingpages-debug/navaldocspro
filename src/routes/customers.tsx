@@ -57,10 +57,12 @@ function Customers() {
   const [formData, setFormData] = useState({
     name: "",
     cpf_cnpj: "",
+    rg: "",
     email: "",
     phone: "",
     address: "",
-    type: "Individual",
+    city: "",
+    state: "",
     notes: ""
   });
 
