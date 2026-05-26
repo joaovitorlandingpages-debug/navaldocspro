@@ -142,11 +142,14 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
   const fetchCustomersList = async (forceSearchTerm?: string) => {
     setLoading(true);
-    console.log("PROCESS_TYPES_LOADING", "customers");
+  const fetchCustomersList = async (forceSearchTerm?: string) => {
+    setLoading(true);
+    const safeSearch = safeString(forceSearchTerm !== undefined ? forceSearchTerm : searchTerm).toLowerCase();
+    
     const { data, error } = await supabase
       .from('customers')
       .select('id, name, cpf_cnpj')
-      .ilike('name', `%${forceSearchTerm !== undefined ? forceSearchTerm : searchTerm}%`)
+      .ilike('name', `%${safeSearch}%`)
       .limit(10);
     
     if (error) {
@@ -154,7 +157,6 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       setCustomers([]);
     } else {
       setCustomers(data || []);
-      console.log("CLIENT_REFRESH_OK", data?.length);
     }
     setLoading(false);
   };
