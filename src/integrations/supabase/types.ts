@@ -4388,6 +4388,7 @@ export type Database = {
     }
     Functions: {
       current_company_id: { Args: never; Returns: string }
+      current_user_company_id: { Args: never; Returns: string }
       duplicate_document: { Args: { doc_id: string }; Returns: string }
       get_system_readiness: { Args: never; Returns: Json }
       increment_ocr_usage: {
