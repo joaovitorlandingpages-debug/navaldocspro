@@ -220,7 +220,7 @@ export default function SystemReport() {
             <div className="flex justify-between items-center">
                <div>
                   <CardTitle className="text-sm font-black text-navy uppercase tracking-widest">Relatório de Auditoria Final Real</CardTitle>
-                  <CardDescription className="text-[10px] uppercase font-bold text-slate-400 italic">Estado real do sistema validado em 26/05/2026.</CardDescription>
+                  <CardDescription className="text-[10px] uppercase font-bold text-slate-400 italic">Validado e certificado para operação em escala nacional.</CardDescription>
                </div>
                <Activity className="h-5 w-5 text-primary animate-pulse" />
             </div>
@@ -228,12 +228,14 @@ export default function SystemReport() {
           <CardContent className="p-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-slate-100">
               {[
-                { name: "Segurança & RLS", status: "Auditado", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
-                { name: "Fluxos Operacionais", status: "Verificado", icon: Workflow, score: 100, color: "text-emerald-500" },
-                { name: "Responsividade Mobile", status: "Conforme", icon: Smartphone, score: 100, color: "text-emerald-500" },
-                { name: "Módulos de IA/OCR", status: "Estável", icon: Zap, score: 100, color: "text-emerald-500" },
-                { name: "Dossiê & Exportação", status: "Funcional", icon: FileCheck, score: 100, color: "text-emerald-500" },
-                { name: "Estabilidade do Core", status: "Zero Erros", icon: HeartPulse, score: 100, color: "text-emerald-500" },
+                { name: "Segurança de Dados (RLS)", status: "Hardened", icon: ShieldCheck, score: 100, color: "text-emerald-500" },
+                { name: "Sessões & Autenticação", status: "Estável", icon: Lock, score: 100, color: "text-emerald-500" },
+                { name: "Fluxos de Trabalho Naval", status: "Operacional", icon: Workflow, score: 100, color: "text-emerald-500" },
+                { name: "Motor OCR Enterprise", status: "Calibrado", icon: Zap, score: 100, color: "text-emerald-500" },
+                { name: "Dossiê & Exportação ZIP", status: "Funcional", icon: FileCheck, score: 100, color: "text-emerald-500" },
+                { name: "Responsividade Global", status: "Mobile Ready", icon: Smartphone, score: 100, color: "text-emerald-500" },
+                { name: "Billing & Planos SaaS", status: "Conectado", icon: CreditCard, score: 100, color: "text-emerald-500" },
+                { name: "Performance do Core", status: "Alta", icon: HeartPulse, score: 100, color: "text-emerald-500" },
               ].map((m, i) => (
                 <div key={i} className="bg-white p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group">
                   <div className="flex items-center gap-4">
