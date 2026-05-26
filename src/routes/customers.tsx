@@ -3,8 +3,7 @@ import {
   Users, Search, Plus, MoreHorizontal, Mail, 
   MapPin, Filter, X, Loader2, FileText, 
   Download, Trash2, Eye, Zap, Image as ImageIcon,
-  Ship
-
+  Ship, Smartphone, Globe, User
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -22,6 +21,9 @@ import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { PageHeader } from "@/components/navigation/PageHeader";
 import { ModalLayout } from "@/components/ui/ModalLayout";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { safeString } from "@/utils/safe-string";
 
 
 export const Route = createFileRoute("/customers")({
@@ -55,10 +57,12 @@ function Customers() {
   const [formData, setFormData] = useState({
     name: "",
     cpf_cnpj: "",
+    rg: "",
     email: "",
     phone: "",
     address: "",
-    type: "Individual",
+    city: "",
+    state: "",
     notes: ""
   });
 
@@ -87,7 +91,8 @@ function Customers() {
           .eq('company_id', profile.company_id);
 
         if (searchTerm) {
-          query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,cpf_cnpj.ilike.%${searchTerm}%`);
+          const safeSearch = safeString(searchTerm).toLowerCase();
+          query = query.or(`name.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%,cpf_cnpj.ilike.%${safeSearch}%`);
         }
 
         const { data: customerData, count, error } = await query
@@ -148,15 +153,19 @@ function Customers() {
           cpf_cnpj: formData.cpf_cnpj,
           email: formData.email,
           phone: formData.phone,
-          address: formData.address,
-          notes: formData.notes
+          address: safeString(formData.address).trim(),
+          city: safeString(formData.city).trim(),
+          state: safeString(formData.state).trim(),
+          rg: safeString(formData.rg).trim(),
+          notes: safeString(formData.notes).trim()
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      console.log("CLIENT_CREATED_WITH_WORKSPACE", data.id);
+      console.log("CLIENT_MODULE_READY");
+      console.log("CLIENT_INSERT_SUCCESS", data.id);
       
       // Registro de Log (Fallback seguro)
       try {
@@ -168,12 +177,10 @@ function Customers() {
           resource_type: 'client',
           resource_id: data.id,
           description: `Novo cliente cadastrado: ${data.name}`,
-          module: 'customers',
+          module: 'clients',
           category: 'creation',
           metadata: { client_type: clientType }
         });
-        console.log("CLIENT_LOG_WITH_MODULE_OK");
-        console.log("ACTIVITY_LOG_MODULE_FIXED");
       } catch (logError) {
         console.warn("LOG_FAILURE_SAFE", logError);
       }
@@ -184,7 +191,7 @@ function Customers() {
 
       setCustomers([...customers, { ...data, vessels: [{ count: 0 }] }]);
       setIsModalOpen(false);
-      setFormData({ name: "", cpf_cnpj: "", email: "", phone: "", address: "", type: "Individual", notes: "" });
+      setFormData({ name: "", cpf_cnpj: "", rg: "", email: "", phone: "", address: "", city: "", state: "", notes: "" });
       toast.success("Cliente cadastrado com sucesso!");
 
     } catch (error: any) {
@@ -419,51 +426,94 @@ function Customers() {
         <form id="create-customer-form" onSubmit={handleCreateCustomer} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome / Razão Social</label>
-              <input 
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                placeholder="Ex: João Silva ou Empresa LTDA" 
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome / Razão Social</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input 
+                  className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                  placeholder="Ex: João Silva ou Empresa LTDA" 
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">CPF / CNPJ</Label>
+              <div className="relative">
+                <FileText className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input 
+                  className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                  placeholder="000.000.000-00" 
+                  value={formData.cpf_cnpj}
+                  onChange={(e) => setFormData({ ...formData, cpf_cnpj: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">RG (Opcional)</Label>
+              <Input 
+                className="h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="00.000.000-0" 
+                value={formData.rg}
+                onChange={(e) => setFormData({ ...formData, rg: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">CPF / CNPJ</label>
-              <input 
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                placeholder="000.000.000-00" 
-                value={formData.cpf_cnpj}
-                onChange={(e) => setFormData({ ...formData, cpf_cnpj: e.target.value })}
-              />
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">E-mail</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input 
+                  type="email"
+                  className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                  placeholder="contato@cliente.com" 
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">E-mail</label>
-              <input 
-                type="email"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                placeholder="contato@cliente.com" 
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Telefone</Label>
+              <div className="relative">
+                <Smartphone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input 
+                  className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                  placeholder="(00) 00000-0000" 
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Telefone</label>
-              <input 
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                placeholder="(00) 00000-0000" 
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              />
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cidade/UF</Label>
+              <div className="grid grid-cols-3 gap-2">
+                <Input 
+                  className="col-span-2 h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
+                  placeholder="Cidade" 
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                />
+                <Input 
+                  className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm uppercase" 
+                  placeholder="UF" 
+                  maxLength={2}
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                />
+              </div>
             </div>
             <div className="space-y-2 md:col-span-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Endereço Completo</label>
-              <input 
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                placeholder="Rua, Número, Bairro, Cidade - UF" 
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              />
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Endereço Completo</Label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input 
+                  className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                  placeholder="Rua, Número, Bairro..." 
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                />
+              </div>
             </div>
           </div>
           <div className="space-y-2">

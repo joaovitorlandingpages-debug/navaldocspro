@@ -17,7 +17,10 @@ import {
   Info,
   ShieldCheck,
   Edit2,
-  Trash2
+  Trash2,
+  MapPin,
+  Smartphone,
+  Mail
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ModalLayout } from "@/components/ui/ModalLayout";
@@ -32,6 +35,7 @@ import { toast } from "sonner";
 import { useProcessRequirements, useProcessTypes } from "@/hooks/useProcessRequirements";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { safeToLowerCase, safeString } from "@/utils/safe-string";
 
 
 interface NewProcessWizardProps {
@@ -138,11 +142,14 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
   const fetchCustomersList = async (forceSearchTerm?: string) => {
     setLoading(true);
-    console.log("PROCESS_TYPES_LOADING", "customers");
+  const fetchCustomersList = async (forceSearchTerm?: string) => {
+    setLoading(true);
+    const safeSearch = safeString(forceSearchTerm !== undefined ? forceSearchTerm : searchTerm).toLowerCase();
+    
     const { data, error } = await supabase
       .from('customers')
-      .select('id, name')
-      .ilike('name', `%${forceSearchTerm !== undefined ? forceSearchTerm : searchTerm}%`)
+      .select('id, name, cpf_cnpj')
+      .ilike('name', `%${safeSearch}%`)
       .limit(10);
     
     if (error) {
@@ -150,7 +157,6 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       setCustomers([]);
     } else {
       setCustomers(data || []);
-      console.log("CLIENT_REFRESH_OK", data?.length);
     }
     setLoading(false);
   };
@@ -376,12 +382,12 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
     setNewClient({
       ...newClient,
-      name: person.nome || person.name || person.full_name || "",
-      document: person.cpf || person.doc_number || "",
-      rg: person.rg || "",
-      address: person.address || person.endereco || "",
-      city: person.city || person.cidade || "",
-      state: person.state || person.uf || person.estado || "",
+      name: safeString(person.nome || person.name || person.full_name || ""),
+      document: safeString(person.cpf || person.doc_number || ""),
+      rg: safeString(person.rg || ""),
+      address: safeString(person.address || person.endereco || ""),
+      city: safeString(person.city || person.cidade || ""),
+      state: safeString(person.state || person.uf || person.estado || ""),
     });
 
     console.log("QUICK_CLIENT_DATA_APPLIED");
@@ -410,7 +416,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         console.log("RESOLVING_WORKSPACE_AUTO");
         const { ensureWorkspace } = await import("@/utils/workspace-recovery");
         effectiveCompanyId = await ensureWorkspace(user, profile);
-        console.log("WORKSPACE_RESOLVED_OK", effectiveCompanyId);
+        console.log("CLIENT_WORKSPACE_RESOLVED", effectiveCompanyId);
       }
 
       if (!effectiveCompanyId) {
@@ -420,20 +426,17 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         return;
       }
 
-      console.log("DEBUG_CONTEXT", {
-        auth_uid: user?.id,
-        workspace_id: effectiveCompanyId,
-        profile_id: profile?.id
-      });
-
       const payload = {
         company_id: effectiveCompanyId,
         name: newClient.name,
         cpf_cnpj: newClient.document,
         phone: newClient.phone,
         email: newClient.email,
-        address: `${newClient.address || ''} ${newClient.city || ''} ${newClient.state || ''}`.trim(),
-        notes: `${newClient.notes || ''} ${newClient.rg ? '(RG: ' + newClient.rg + ')' : ''}`.trim(),
+        address: safeString(newClient.address).trim(),
+        city: safeString(newClient.city).trim(),
+        state: safeString(newClient.state).trim(),
+        rg: safeString(newClient.rg).trim(),
+        notes: safeString(newClient.notes).trim(),
       };
       
       console.log("PAYLOAD_INSERT_CLIENT", payload);
@@ -475,7 +478,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           resource_type: 'client',
           resource_id: data.id,
           description: `Novo cliente criado: ${data.name}`,
-          module: 'customers',
+          module: 'clients',
           category: 'creation',
           metadata: { 
             method: ocrUploadedFile ? 'ocr' : 'manual',
@@ -489,15 +492,15 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         console.warn("CLIENT_SAVE_NOT_BLOCKED_BY_LOG", logError);
       }
 
-      console.log("QUICK_CLIENT_FLOW_OK");
-      console.log("CLIENT_INSERT_SUCCESS");
-      console.log("CLIENT_LIST_RENDER_OK");
-      console.log("LOWERCASE_ERROR_FIXED");
+      console.log("CLIENT_MODULE_READY");
+      console.log("CLIENT_INSERT_SUCCESS", data.id);
+      console.log("CLIENT_SELECTED_IN_WIZARD");
+      console.log("CLIENT_OCR_READY");
       toast.success("Cliente criado com sucesso!");
-
-
       
       setFormData({ ...formData, client: data.name, clientId: data.id });
+      setIsQuickClientOpen(false);
+      setStep(3); // Liberar próximo passo (vincular embarcação)
       setIsQuickClientOpen(false);
       setNewClient({
         name: "", document: "", rg: "", phone: "", email: "",
@@ -778,20 +781,24 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                     key={c.id}
                     onClick={() => {
                       setFormData({ ...formData, client: c.name, clientId: c.id });
-                      console.log("FORM_STATE_OK", { client: c.name, clientId: c.id });
+                      setStep(3);
                     }}
-
-                    className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${
-                      formData.clientId === c.id ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
+                    className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all group ${
+                      formData.clientId === c.id ? "border-primary bg-primary/5" : "border-slate-100 hover:border-primary/20 hover:bg-slate-50"
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                      <div className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
+                        formData.clientId === c.id ? "bg-primary text-white" : "bg-slate-100 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
+                      }`}>
                         <User className="h-4 w-4" />
                       </div>
-                      <span className="text-sm font-bold text-navy">{c.name}</span>
+                      <div className="text-left">
+                        <p className="text-sm font-bold text-navy group-hover:text-primary transition-colors">{c.name}</p>
+                        <p className="text-[10px] text-slate-400 font-mono tracking-tighter uppercase">{c.cpf_cnpj}</p>
+                      </div>
                     </div>
-                    {formData.clientId === c.id && <Check className="h-4 w-4 text-primary" />}
+                    {formData.clientId === c.id && <CheckCircle2 className="h-4 w-4 text-primary animate-in zoom-in" />}
                   </button>
                 ))}
                 {customers.length === 0 && (
@@ -1310,23 +1317,30 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           <form id="quick-client-form" onSubmit={handleQuickClientSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label className="text-[10px] uppercase font-black text-slate-400">Nome Completo</Label>
-              <Input 
-                required
-                value={newClient.name}
-                onChange={(e) => setNewClient({...newClient, name: e.target.value})}
-                placeholder="Ex: João da Silva"
-                className="rounded-xl border-slate-200" 
-              />
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input 
+                  required
+                  value={newClient.name}
+                  onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                  placeholder="Ex: João da Silva"
+                  className="pl-10 rounded-xl border-slate-200" 
+                />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-[10px] uppercase font-black text-slate-400">CPF/CNPJ</Label>
-                <Input 
-                  value={newClient.document}
-                  onChange={(e) => setNewClient({...newClient, document: e.target.value})}
-                  placeholder="000.000.000-00"
-                  className="rounded-xl border-slate-200" 
-                />
+                <div className="relative">
+                  <FileText className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input 
+                    required
+                    value={newClient.document}
+                    onChange={(e) => setNewClient({...newClient, document: e.target.value})}
+                    placeholder="000.000.000-00"
+                    className="pl-10 rounded-xl border-slate-200" 
+                  />
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] uppercase font-black text-slate-400">RG</Label>
@@ -1341,34 +1355,56 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-[10px] uppercase font-black text-slate-400">Telefone</Label>
-                <Input 
-                  value={newClient.phone}
-                  onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
-                  placeholder="(00) 00000-0000"
-                  className="rounded-xl border-slate-200" 
-                />
+                <div className="relative">
+                  <Smartphone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input 
+                    value={newClient.phone}
+                    onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
+                    placeholder="(00) 00000-0000"
+                    className="pl-10 rounded-xl border-slate-200" 
+                  />
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] uppercase font-black text-slate-400">E-mail</Label>
-                <Input 
-                  type="email"
-                  value={newClient.email}
-                  onChange={(e) => setNewClient({...newClient, email: e.target.value})}
-                  placeholder="email@exemplo.com"
-                  className="rounded-xl border-slate-200" 
-                />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input 
+                    type="email"
+                    value={newClient.email}
+                    onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                    placeholder="email@exemplo.com"
+                    className="pl-10 rounded-xl border-slate-200" 
+                  />
+                </div>
               </div>
             </div>
             
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase font-black text-slate-400">Cidade/UF</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Endereço Completo</Label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input 
+                  value={newClient.address}
+                  onChange={(e) => setNewClient({...newClient, address: e.target.value})}
+                  placeholder="Rua, Número, Bairro..."
+                  className="pl-10 rounded-xl border-slate-200" 
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Cidade</Label>
                 <Input 
                   value={newClient.city}
                   onChange={(e) => setNewClient({...newClient, city: e.target.value})}
                   placeholder="Cidade"
                   className="rounded-xl border-slate-200" 
                 />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">UF</Label>
                 <Input 
                   value={newClient.state}
                   onChange={(e) => setNewClient({...newClient, state: e.target.value})}
@@ -1377,6 +1413,16 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                   className="rounded-xl border-slate-200 uppercase" 
                 />
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Observações</Label>
+              <textarea 
+                className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm min-h-[60px]"
+                value={newClient.notes}
+                onChange={(e) => setNewClient({...newClient, notes: e.target.value})}
+                placeholder="Ex: Cliente prefere contato via WhatsApp"
+              />
             </div>
           </form>
         )}
