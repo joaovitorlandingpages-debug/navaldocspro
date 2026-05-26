@@ -571,7 +571,9 @@ export function RouteContent() {
               <div className="relative z-10 space-y-8">
                  <div className="flex justify-between items-center">
                     <div>
-                       <h2 className="text-2xl font-black text-navy uppercase tracking-tighter italic">Ações Críticas <span className="text-primary">Master</span></h2>
+                       <h2 className="text-2xl font-black text-navy uppercase tracking-tighter italic">
+                         Ações Críticas {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && <span className="text-primary">Master</span>}
+                       </h2>
                        <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Intervenções manuais e validações urgentes</p>
                     </div>
                     <div className="h-10 w-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center animate-pulse">
