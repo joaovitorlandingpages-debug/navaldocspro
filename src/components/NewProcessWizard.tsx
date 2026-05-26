@@ -1314,23 +1314,30 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           <form id="quick-client-form" onSubmit={handleQuickClientSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label className="text-[10px] uppercase font-black text-slate-400">Nome Completo</Label>
-              <Input 
-                required
-                value={newClient.name}
-                onChange={(e) => setNewClient({...newClient, name: e.target.value})}
-                placeholder="Ex: João da Silva"
-                className="rounded-xl border-slate-200" 
-              />
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input 
+                  required
+                  value={newClient.name}
+                  onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                  placeholder="Ex: João da Silva"
+                  className="pl-10 rounded-xl border-slate-200" 
+                />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-[10px] uppercase font-black text-slate-400">CPF/CNPJ</Label>
-                <Input 
-                  value={newClient.document}
-                  onChange={(e) => setNewClient({...newClient, document: e.target.value})}
-                  placeholder="000.000.000-00"
-                  className="rounded-xl border-slate-200" 
-                />
+                <div className="relative">
+                  <FileText className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input 
+                    required
+                    value={newClient.document}
+                    onChange={(e) => setNewClient({...newClient, document: e.target.value})}
+                    placeholder="000.000.000-00"
+                    className="pl-10 rounded-xl border-slate-200" 
+                  />
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] uppercase font-black text-slate-400">RG</Label>
@@ -1345,34 +1352,56 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-[10px] uppercase font-black text-slate-400">Telefone</Label>
-                <Input 
-                  value={newClient.phone}
-                  onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
-                  placeholder="(00) 00000-0000"
-                  className="rounded-xl border-slate-200" 
-                />
+                <div className="relative">
+                  <Smartphone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input 
+                    value={newClient.phone}
+                    onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
+                    placeholder="(00) 00000-0000"
+                    className="pl-10 rounded-xl border-slate-200" 
+                  />
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] uppercase font-black text-slate-400">E-mail</Label>
-                <Input 
-                  type="email"
-                  value={newClient.email}
-                  onChange={(e) => setNewClient({...newClient, email: e.target.value})}
-                  placeholder="email@exemplo.com"
-                  className="rounded-xl border-slate-200" 
-                />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input 
+                    type="email"
+                    value={newClient.email}
+                    onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                    placeholder="email@exemplo.com"
+                    className="pl-10 rounded-xl border-slate-200" 
+                  />
+                </div>
               </div>
             </div>
             
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase font-black text-slate-400">Cidade/UF</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Endereço Completo</Label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input 
+                  value={newClient.address}
+                  onChange={(e) => setNewClient({...newClient, address: e.target.value})}
+                  placeholder="Rua, Número, Bairro..."
+                  className="pl-10 rounded-xl border-slate-200" 
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Cidade</Label>
                 <Input 
                   value={newClient.city}
                   onChange={(e) => setNewClient({...newClient, city: e.target.value})}
                   placeholder="Cidade"
                   className="rounded-xl border-slate-200" 
                 />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">UF</Label>
                 <Input 
                   value={newClient.state}
                   onChange={(e) => setNewClient({...newClient, state: e.target.value})}
@@ -1381,6 +1410,16 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                   className="rounded-xl border-slate-200 uppercase" 
                 />
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Observações</Label>
+              <textarea 
+                className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm min-h-[60px]"
+                value={newClient.notes}
+                onChange={(e) => setNewClient({...newClient, notes: e.target.value})}
+                placeholder="Ex: Cliente prefere contato via WhatsApp"
+              />
             </div>
           </form>
         )}
