@@ -17,7 +17,9 @@ import {
   Info,
   ShieldCheck,
   Edit2,
-  Trash2
+  Trash2,
+  MapPin,
+  Smartphone
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ModalLayout } from "@/components/ui/ModalLayout";
@@ -32,6 +34,7 @@ import { toast } from "sonner";
 import { useProcessRequirements, useProcessTypes } from "@/hooks/useProcessRequirements";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { safeToLowerCase, safeString } from "@/utils/safe-string";
 
 
 interface NewProcessWizardProps {
