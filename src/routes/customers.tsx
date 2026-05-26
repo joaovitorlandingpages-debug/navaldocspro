@@ -190,7 +190,7 @@ function Customers() {
 
       setCustomers([...customers, { ...data, vessels: [{ count: 0 }] }]);
       setIsModalOpen(false);
-      setFormData({ name: "", cpf_cnpj: "", email: "", phone: "", address: "", type: "Individual", notes: "" });
+      setFormData({ name: "", cpf_cnpj: "", rg: "", email: "", phone: "", address: "", city: "", state: "", notes: "" });
       toast.success("Cliente cadastrado com sucesso!");
 
     } catch (error: any) {
