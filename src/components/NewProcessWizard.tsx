@@ -475,7 +475,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           resource_type: 'client',
           resource_id: data.id,
           description: `Novo cliente criado: ${data.name}`,
-          module: 'customers',
+          module: 'clients',
           category: 'creation',
           metadata: { 
             method: ocrUploadedFile ? 'ocr' : 'manual',
