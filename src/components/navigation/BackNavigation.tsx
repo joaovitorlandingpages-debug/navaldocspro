@@ -12,6 +12,12 @@ interface BackNavigationProps {
   showOnMobile?: boolean;
 }
 
+/**
+ * Universal BackNavigation component that handles:
+ * 1. Custom callbacks (modals/wizards)
+ * 2. Route history navigation
+ * 3. Fallback to dashboard
+ */
 export function BackNavigation({ 
   className, 
   fallback = "/dashboard", 
@@ -20,7 +26,6 @@ export function BackNavigation({
   showOnMobile = true 
 }: BackNavigationProps) {
   const navigate = useNavigate();
-  const routerState = useRouterState();
 
   React.useEffect(() => {
     console.log("GLOBAL_BACK_NAVIGATION_READY");
@@ -57,15 +62,16 @@ export function BackNavigation({
       variant="ghost"
       size="sm"
       onClick={handleBack}
+      type="button"
       className={cn(
-        "h-9 px-2 sm:px-3 rounded-xl gap-1 sm:gap-2 font-black uppercase text-[9px] sm:text-[10px] tracking-widest text-slate-500 hover:text-navy hover:bg-slate-100 transition-all shrink-0",
-        !showOnMobile && "hidden xs:flex",
+        "h-11 sm:h-12 px-3 sm:px-6 rounded-xl gap-2 font-black uppercase text-[10px] tracking-widest text-slate-500 hover:text-navy hover:bg-slate-100 transition-all shrink-0",
+        !showOnMobile && "hidden sm:flex",
         className
       )}
     >
-      <ChevronLeft className="h-4 w-4" />
-      <span className="hidden xs:inline">{label}</span>
-      <span className="xs:hidden">Voltar</span>
+      <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
+      <span>{label}</span>
     </Button>
   );
 }
+
