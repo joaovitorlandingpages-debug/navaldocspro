@@ -4,7 +4,7 @@ import {
   Eye, Clock, History, User, Ship, 
   QrCode, Hash, Layout, List, 
   ChevronRight, ArrowRight, Loader2,
-  Lock, Globe, Award, Info
+  Lock, Globe, Award, Info, Archive
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
