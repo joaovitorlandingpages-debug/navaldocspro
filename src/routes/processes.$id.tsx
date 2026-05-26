@@ -36,6 +36,7 @@ import { OCRUpload } from "@/components/ocr/OCRUpload";
 import { useDossier } from "@/hooks/useDossier";
 import { DossierPreview } from "@/components/dossier/DossierPreview";
 import { dossierEngine } from "@/services/automation/dossierEngine";
+import { ProcessDossierTab } from "@/components/dossier/ProcessDossierTab";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
