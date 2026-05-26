@@ -379,12 +379,12 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
     setNewClient({
       ...newClient,
-      name: person.nome || person.name || person.full_name || "",
-      document: person.cpf || person.doc_number || "",
-      rg: person.rg || "",
-      address: person.address || person.endereco || "",
-      city: person.city || person.cidade || "",
-      state: person.state || person.uf || person.estado || "",
+      name: safeString(person.nome || person.name || person.full_name || ""),
+      document: safeString(person.cpf || person.doc_number || ""),
+      rg: safeString(person.rg || ""),
+      address: safeString(person.address || person.endereco || ""),
+      city: safeString(person.city || person.cidade || ""),
+      state: safeString(person.state || person.uf || person.estado || ""),
     });
 
     console.log("QUICK_CLIENT_DATA_APPLIED");
