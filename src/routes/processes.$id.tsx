@@ -32,7 +32,9 @@ import { DocumentPreviewEditor } from "@/components/documents/DocumentPreviewEdi
 import { useProcessAutomation } from "@/hooks/useProcessAutomation";
 import { IntelligencePanel } from "@/components/IntelligencePanel";
 import { useOCR } from "@/hooks/useOCR";
-import { OCRUpload } from "@/components/ocr/OCRUpload";
+import { useDossier } from "@/hooks/useDossier";
+import { DossierPreview } from "@/components/dossier/DossierPreview";
+import { dossierEngine } from "@/services/automation/dossierEngine";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
