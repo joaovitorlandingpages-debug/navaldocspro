@@ -135,6 +135,35 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* Enterprise Polish Classes */
+.enterprise-glass {
+  @apply backdrop-blur-md bg-white/70 border border-white/20 shadow-xl shadow-navy/5;
+}
+
+.enterprise-hover {
+  @apply transition-all duration-500 hover:scale-[1.01] hover:shadow-2xl hover:shadow-primary/10;
+}
+
+.premium-gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-navy via-primary to-ocean;
+}
+
+.nav-item-active {
+  @apply bg-primary/10 text-primary border-primary/20 shadow-[0_0_20px_rgba(37,99,235,0.1)];
+}
+
+.premium-card {
+  @apply rounded-[2.5rem] border border-slate-100 bg-white shadow-sm hover:shadow-2xl hover:shadow-navy/5 transition-all duration-500;
+}
+
+.mobile-footer-action {
+  @apply fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-xl border-t border-slate-100 flex gap-3 z-50 lg:hidden;
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
 
 
 @keyframes scan {
