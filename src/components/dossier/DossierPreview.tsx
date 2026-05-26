@@ -22,6 +22,18 @@ interface DossierPreviewProps {
 export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewProps) {
   const [activeSection, setActiveSection] = useState("cover");
 
+  const handleExportPdf = async () => {
+    if (onExport) onExport();
+    // Use the exported engine function
+    const { dossierEngine } = await import("@/services/automation/dossierEngine");
+    dossierEngine.exportPdf("dossier-preview-content", `NavalDocs_Dossie_${data.process?.id?.substring(0, 8)}.pdf`);
+  };
+
+  const handleExportZip = async () => {
+    const { dossierEngine } = await import("@/services/automation/dossierEngine");
+    dossierEngine.exportZip(data);
+  };
+
   if (!data) return null;
 
   const sections = [
