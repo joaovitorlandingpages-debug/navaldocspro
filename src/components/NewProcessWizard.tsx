@@ -413,7 +413,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         console.log("RESOLVING_WORKSPACE_AUTO");
         const { ensureWorkspace } = await import("@/utils/workspace-recovery");
         effectiveCompanyId = await ensureWorkspace(user, profile);
-        console.log("WORKSPACE_RESOLVED_OK", effectiveCompanyId);
+        console.log("CLIENT_WORKSPACE_RESOLVED", effectiveCompanyId);
       }
 
       if (!effectiveCompanyId) {
@@ -423,20 +423,17 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         return;
       }
 
-      console.log("DEBUG_CONTEXT", {
-        auth_uid: user?.id,
-        workspace_id: effectiveCompanyId,
-        profile_id: profile?.id
-      });
-
       const payload = {
         company_id: effectiveCompanyId,
         name: newClient.name,
         cpf_cnpj: newClient.document,
         phone: newClient.phone,
         email: newClient.email,
-        address: `${newClient.address || ''} ${newClient.city || ''} ${newClient.state || ''}`.trim(),
-        notes: `${newClient.notes || ''} ${newClient.rg ? '(RG: ' + newClient.rg + ')' : ''}`.trim(),
+        address: safeString(newClient.address).trim(),
+        city: safeString(newClient.city).trim(),
+        state: safeString(newClient.state).trim(),
+        rg: safeString(newClient.rg).trim(),
+        notes: safeString(newClient.notes).trim(),
       };
       
       console.log("PAYLOAD_INSERT_CLIENT", payload);
