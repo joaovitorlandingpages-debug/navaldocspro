@@ -1253,17 +1253,15 @@ function NewProcessWizardMain({
         </div>
       }
     >
-      <ScrollArea className="flex-grow pr-4 -mr-4">
-      <div className="space-y-8 pb-4">
+      <div className="space-y-6 sm:space-y-8">
         <div className="flex items-center gap-4">
-          <Progress value={progressPercent} className="h-2.5 flex-grow bg-slate-100" />
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
-            {Math.round(progressPercent)}% Concluído
+          <Progress value={progressPercent} className="h-2 sm:h-2.5 flex-grow bg-slate-100" />
+          <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
+            {Math.round(progressPercent)}%
           </span>
         </div>
         {renderStep()}
       </div>
-      </ScrollArea>
     </ModalLayout>
   );
 }
