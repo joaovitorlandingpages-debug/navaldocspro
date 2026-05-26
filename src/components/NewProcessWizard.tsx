@@ -778,20 +778,24 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                     key={c.id}
                     onClick={() => {
                       setFormData({ ...formData, client: c.name, clientId: c.id });
-                      console.log("FORM_STATE_OK", { client: c.name, clientId: c.id });
+                      setStep(3);
                     }}
-
-                    className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${
-                      formData.clientId === c.id ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
+                    className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all group ${
+                      formData.clientId === c.id ? "border-primary bg-primary/5" : "border-slate-100 hover:border-primary/20 hover:bg-slate-50"
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                      <div className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
+                        formData.clientId === c.id ? "bg-primary text-white" : "bg-slate-100 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
+                      }`}>
                         <User className="h-4 w-4" />
                       </div>
-                      <span className="text-sm font-bold text-navy">{c.name}</span>
+                      <div className="text-left">
+                        <p className="text-sm font-bold text-navy group-hover:text-primary transition-colors">{c.name}</p>
+                        <p className="text-[10px] text-slate-400 font-mono tracking-tighter uppercase">{c.cpf_cnpj}</p>
+                      </div>
                     </div>
-                    {formData.clientId === c.id && <Check className="h-4 w-4 text-primary" />}
+                    {formData.clientId === c.id && <CheckCircle2 className="h-4 w-4 text-primary animate-in zoom-in" />}
                   </button>
                 ))}
                 {customers.length === 0 && (
