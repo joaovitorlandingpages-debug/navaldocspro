@@ -142,8 +142,6 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
   const fetchCustomersList = async (forceSearchTerm?: string) => {
     setLoading(true);
-  const fetchCustomersList = async (forceSearchTerm?: string) => {
-    setLoading(true);
     const safeSearch = safeString(forceSearchTerm !== undefined ? forceSearchTerm : searchTerm).toLowerCase();
     
     const { data, error } = await supabase
@@ -1272,7 +1270,6 @@ function AdditionalModals({
 }: any) {
   return (
     <>
-
       {/* Modal de Criação Rápida de Cliente */}
       <ModalLayout
         isOpen={isQuickClientOpen}
