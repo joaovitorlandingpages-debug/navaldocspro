@@ -1256,6 +1256,7 @@ function NewProcessWizardMain({
         {renderStep()}
       </div>
     </ModalLayout>
+    </>
   );
 }
 
