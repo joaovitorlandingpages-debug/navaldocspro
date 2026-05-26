@@ -151,6 +151,32 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
             </div>
           )}
 
+          {activeSection === 'summary' && (
+            <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+               <h4 className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-12 flex items-center gap-3">
+                  <List className="h-4 w-4" /> Sumário Executivo do Processo
+               </h4>
+               <div className="space-y-4">
+                  {[
+                    { label: 'Capa Operacional', page: '01' },
+                    { label: 'Especificações Técnicas do Cliente', page: '02' },
+                    { label: 'Atributos da Embarcação', page: '03' },
+                    { label: 'Documentação Mandatária', page: '04' },
+                    { label: 'Evidências Fotográficas & Anexos', page: '07' },
+                    { label: 'Relatório de Compliance & Auditoria', page: '10' },
+                    { label: 'Timeline de Processamento IA', page: '11' },
+                    { label: 'Validação Final & Assinaturas', page: '12' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex justify-between items-center py-4 border-b border-slate-50 group hover:bg-slate-50/50 px-4 rounded-xl transition-all cursor-pointer">
+                       <span className="text-sm font-bold text-navy uppercase tracking-tight">{item.label}</span>
+                       <div className="flex-grow border-b border-dotted border-slate-200 mx-4 mt-1" />
+                       <span className="text-xs font-black text-primary">{item.page}</span>
+                    </div>
+                  ))}
+               </div>
+            </div>
+          )}
+
           {activeSection === 'data' && (
             <div className="max-w-2xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                <section>
