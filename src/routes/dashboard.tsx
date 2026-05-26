@@ -712,11 +712,15 @@ export function RouteContent() {
 
            
            <Card className="p-6 border-slate-100 shadow-sm space-y-4">
-              {[
+              {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') ? [
                 { label: "OCR: Certificado.pdf", status: "processando", progress: 65 },
-                { label: "Geração: Requerimento", status: "na fila", progress: 0 },
+                { label: "Geração: Dossiê", status: "na fila", progress: 0 },
                 { label: "Assinatura: Contrato", status: "enviado", progress: 100 },
-              ].map((item, i) => (
+              ] : [
+                { label: "Processo: Renovação CSN", status: "analisando", progress: 45 },
+                { label: "Upload: Documentos Mar", status: "validado", progress: 100 },
+                { label: "Status: Em Conformidade", status: "ativo", progress: 100 },
+              ]}.map((item, i) => (
                 <div key={i} className="space-y-2">
                    <div className="flex justify-between items-center text-[10px] font-bold">
                       <span className="text-slate-600 uppercase tracking-widest">{item.label}</span>
