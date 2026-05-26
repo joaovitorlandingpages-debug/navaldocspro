@@ -3,6 +3,7 @@
 import * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { Check, ChevronRight, Circle } from "lucide-react";
+import { SafePortal } from "@/components/SafePortal";
 
 import { cn } from "@/lib/utils";
 
@@ -12,7 +13,15 @@ const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 
 const DropdownMenuGroup = DropdownMenuPrimitive.Group;
 
-const DropdownMenuPortal = DropdownMenuPrimitive.Portal;
+const DropdownMenuPortal = ({ children, ...props }: DropdownMenuPrimitive.DropdownMenuPortalProps) => (
+  <SafePortal>
+    <DropdownMenuPrimitive.Portal {...props}>
+      {children}
+    </DropdownMenuPrimitive.Portal>
+  </SafePortal>
+);
+DropdownMenuPortal.displayName = "DropdownMenuPortal";
+
 
 const DropdownMenuSub = DropdownMenuPrimitive.Sub;
 
