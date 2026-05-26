@@ -538,9 +538,9 @@ function ProcessDetail() {
                               <FilePlus className="h-10 w-10 text-primary" />
                            </div>
                            <div className="max-w-md">
-                              <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-2">Geração de Dossiê Naval</h3>
+                              <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-2">Nenhum dossiê gerado ainda</h3>
                               <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                                 O Dossiê Naval Enterprise consolida todos os documentos, dados da embarcação, cliente e timeline em um único documento profissional pronto para entrega.
+                                 O Dossiê Naval consolidará todos os documentos, dados da embarcação e histórico do processo em um único documento profissional.
                               </p>
                            </div>
                            <Button 
@@ -549,7 +549,7 @@ function ProcessDetail() {
                              className="bg-navy text-white hover:bg-slate-900 h-14 px-12 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-navy/20"
                            >
                               {loadingDossier ? <Loader2 className="animate-spin h-5 w-5 mr-3" /> : <Rocket className="h-5 w-5 mr-3" />}
-                              Gerar Dossiê Agora
+                              Gerar Primeiro Dossiê
                            </Button>
                         </div>
                      ) : (
