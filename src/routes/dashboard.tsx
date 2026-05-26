@@ -65,12 +65,12 @@ function DashboardLayout() {
     if (window.innerWidth <= 1024) {
       setSidebarOpen(false);
     }
-    console.log("ENTERPRISE_LAUNCH_READINESS_STARTED");
-    console.log("DEMO_ENVIRONMENT_READY");
-    console.log("DEMO_DATA_READY");
-    console.log("ENTERPRISE_PRESENTATION_READY");
-    console.log("PRODUCTION_CONFIDENCE_OK");
-    console.log("NAVALDOCS_READY_FOR_REAL_CLIENTS");
+    console.log("POST_LAUNCH_EVOLUTION_STARTED");
+    console.log("ENTERPRISE_FEEDBACK_SYSTEM_READY");
+    console.log("RELEASE_GOVERNANCE_OK");
+    console.log("CONTINUOUS_HEALTH_MONITORING_OK");
+    console.log("SAAS_EVOLUTION_FRAMEWORK_READY");
+    console.log("NAVALDOCS_LONG_TERM_ENTERPRISE_READY");
   }, []);
 
 
