@@ -779,8 +779,8 @@ export function RouteContent() {
       </div>
 
 
-      {/* Readiness Score Enterprise */}
-      <ReadinessBanner />
+      {/* Readiness Score Enterprise - Visible only to Admins */}
+      {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && <ReadinessBanner />}
 
       {/* Intelligence Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
