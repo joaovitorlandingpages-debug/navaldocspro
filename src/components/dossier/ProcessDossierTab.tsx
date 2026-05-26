@@ -3,7 +3,7 @@ import {
   FileText, Shield, CheckCircle2, Download, 
   History, User, Ship, Loader2, Award,
   AlertCircle, ExternalLink, Archive,
-  Plus, Check
+  Plus, Check, Lock
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
