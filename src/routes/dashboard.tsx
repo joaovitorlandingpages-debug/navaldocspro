@@ -491,7 +491,7 @@ export function RouteContent() {
 
     return (
     <div className="space-y-6 md:space-y-12 animate-in fade-in duration-1000 pb-12 max-w-[1800px] mx-auto">
-      {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (
+      {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
         <Card className="p-6 md:p-14 bg-[#000B18] text-white border-white/5 rounded-[2rem] md:rounded-[4rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12 mb-8 md:mb-16 shadow-[0_50px_100px_rgba(0,0,0,0.3)] relative overflow-hidden group">
            <div className="absolute top-0 right-0 w-2/3 h-full bg-primary/20 blur-[120px] -mr-40 group-hover:bg-primary/30 transition-all duration-1000" />
            <div className="flex flex-col md:flex-row items-center gap-10 relative z-10 text-center md:text-left">
