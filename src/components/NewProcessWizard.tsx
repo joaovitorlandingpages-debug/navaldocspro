@@ -1196,6 +1196,7 @@ function NewProcessWizardMain({
       title="Novo Processo Naval"
       description={`Etapa ${step} de ${totalSteps} • ${getStepTitle()}`}
       maxWidth="4xl"
+      className="max-h-[90vh] overflow-hidden flex flex-col"
       footer={
         <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4">
           <div className="flex gap-2 w-full sm:w-auto">
