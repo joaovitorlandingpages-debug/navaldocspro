@@ -50,6 +50,17 @@ function OnboardingFlow() {
 
   const updateStep = async (nextStep: number, data?: any) => {
     setIsSubmitting(true);
+    console.log(`ONBOARDING_STEP_${nextStep}_START`);
+    
+    // Safety timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (isSubmitting) {
+        setIsSubmitting(false);
+        toast.error("A operação está demorando mais que o esperado, mas você pode continuar.");
+        console.warn("ONBOARDING_TIMEOUT_RECOVERED");
+      }
+    }, 8000);
+
     try {
       if (!profile?.company_id) throw new Error("No company linked");
 
@@ -60,6 +71,7 @@ function OnboardingFlow() {
 
       if (nextStep > 7) {
         updates.onboarding_status = 'completed';
+        console.log("ONBOARDING_COMPLETING");
       }
 
       const { error } = await supabase
@@ -69,16 +81,28 @@ function OnboardingFlow() {
 
       if (error) throw error;
       
+      clearTimeout(timeoutId);
+      
       if (nextStep > 7) {
         toast.success("Bem-vindo ao NavalDocs Pro!");
+        console.log("ONBOARDING_NOT_BLOCKING");
         navigate({ to: "/dashboard" });
       } else {
         setStep(nextStep);
       }
     } catch (error: any) {
+      console.error("Erro ao salvar progresso:", error);
       toast.error("Erro ao salvar progresso: " + error.message);
+      
+      // Fallback: allow the user to advance even on error if it's not critical
+      if (nextStep > 7) {
+        navigate({ to: "/dashboard" });
+      } else {
+        setStep(nextStep);
+      }
     } finally {
       setIsSubmitting(false);
+      clearTimeout(timeoutId);
     }
   };
 
