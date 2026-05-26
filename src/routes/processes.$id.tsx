@@ -243,8 +243,12 @@ function ProcessDetail() {
             <Button variant="outline" className="flex-1 md:flex-none h-11 rounded-xl gap-2 font-bold border-slate-200">
                <Share2 className="h-4 w-4" /> WhatsApp
             </Button>
-            <Button variant="outline" className="flex-1 md:flex-none h-11 rounded-xl gap-2 font-bold border-slate-200">
-               <Download className="h-4 w-4" /> Gerar PDF
+            <Button 
+              variant="outline" 
+              onClick={() => setActiveTab("dossier")}
+              className="flex-1 md:flex-none h-11 rounded-xl gap-2 font-bold border-slate-200"
+            >
+               <Download className="h-4 w-4" /> Dossiê Completo
             </Button>
             <Button 
               className="flex-1 md:flex-none bg-primary text-white h-11 rounded-xl gap-2 font-bold hover:opacity-90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
