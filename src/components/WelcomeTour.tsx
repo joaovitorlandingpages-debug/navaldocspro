@@ -58,7 +58,7 @@ export function WelcomeTour({
           .select('score');
         
         const avg = scores && scores.length > 0 
-          ? scores.reduce((acc, curr) => acc + curr.score, 0) / scores.length 
+          ? scores.reduce((acc: number, curr: any) => acc + curr.score, 0) / scores.length 
           : 0;
         
         if (avg > 80) {
