@@ -49,12 +49,12 @@ function DashboardV2Layout() {
   }, [profile, loading, navigate]);
 
   useEffect(() => {
-    if (isAdmin) {
+    if (profile?.role?.startsWith('admin_master')) {
       import("@/utils/enterpriseScale").then(m => m.EnterpriseScale.audit());
       console.log("PRODUCTION_UI_MODE_ACTIVE");
     }
     console.log("USER_DASHBOARD_CLEANED");
-  }, [isAdmin]);
+  }, [profile?.role]);
 
 
 
@@ -88,7 +88,6 @@ function DashboardV2Layout() {
     { name: "Configurações", icon: <Settings className="h-5 w-5" />, path: "/settings" },
   ];
 
-  const isAdmin = profile?.role === 'admin_master' || profile?.role === 'admin_master_global';
 
   const adminItems = isAdmin ? [
     { name: "Admin Global", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin" },
@@ -185,7 +184,7 @@ function DashboardV2Layout() {
 
         <main className="flex-grow overflow-y-auto p-8">
            <DashboardV2Content />
-           {isAdmin && (
+           {profile?.role?.startsWith('admin_master') && (
              <div className="p-8 pt-0">
                <PerformanceMonitor />
              </div>
@@ -312,7 +311,8 @@ function DashboardV2Content() {
                </CardContent>
             </Card>
 
-            {isAdmin && (
+            {profile?.role?.startsWith('admin_master') && (
+
               <div className="p-8 rounded-[2.5rem] bg-navy text-white relative overflow-hidden shadow-2xl group border border-white/5">
                 <div className="absolute -right-6 -bottom-6 opacity-5 group-hover:scale-110 transition-transform duration-1000">
                     <Anchor className="h-48 w-48" />
