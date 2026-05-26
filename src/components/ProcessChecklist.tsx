@@ -185,11 +185,28 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
         </div>
         <div className="flex justify-between items-center mt-2">
           <p className="text-[10px] text-slate-400 italic">Validação automática baseada em regras marítimas e OCR.</p>
-          {calculateProgress() === 100 && (
-            <Button size="sm" className="bg-navy hover:bg-navy/90 text-white font-black text-[9px] uppercase tracking-widest h-8 gap-2 animate-bounce">
+          <div className="flex gap-2">
+            {calculateProgress() < 100 && (
+              <Badge variant="outline" className="text-[9px] font-black uppercase text-amber-500 border-amber-100 bg-amber-50/50">
+                Aguardando Geração
+              </Badge>
+            )}
+            <Button 
+              size="sm" 
+              className={`font-black text-[9px] uppercase tracking-widest h-8 gap-2 ${
+                calculateProgress() === 100 ? 'bg-navy hover:bg-navy/90 text-white animate-bounce' : 'bg-slate-100 text-slate-400'
+              }`}
+              onClick={() => {
+                if (calculateProgress() < 100) {
+                  toast.info("A geração completa requer 100% de conformidade, mas você pode gerar documentos individuais abaixo.");
+                } else {
+                  console.log("DOSSIER_STEP_FIXED");
+                }
+              }}
+            >
               <FolderArchive className="h-3.5 w-3.5" /> Gerar Pacote Documental
             </Button>
-          )}
+          </div>
         </div>
       </div>
 
