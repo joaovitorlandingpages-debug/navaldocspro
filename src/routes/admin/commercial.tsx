@@ -41,9 +41,10 @@ function CommercialDashboard() {
       ]);
       
       const currentMetrics = saasMetrics?.[0] || { total_mrr: 0, active_subscriptions: 0 };
-      const totalOCR = usage?.reduce((acc, curr) => acc + (curr.ocr_usage || 0), 0) || 0;
-      const totalStorageBytes = usage?.reduce((acc, curr) => acc + (curr.storage_usage_bytes || 0), 0) || 0;
+      const totalOCR = usage?.reduce((acc: number, curr: any) => acc + (curr.ocr_usage || 0), 0) || 0;
+      const totalStorageBytes = usage?.reduce((acc: number, curr: any) => acc + (curr.storage_usage_bytes || 0), 0) || 0;
       const totalStorageGB = Math.round(totalStorageBytes / (1024 ** 3));
+
 
       return {
         companies: companies?.length || 0,
