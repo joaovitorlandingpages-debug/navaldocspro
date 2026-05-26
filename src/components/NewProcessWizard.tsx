@@ -556,7 +556,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
     if (step < totalSteps) {
       setStep(step + 1);
-      const logTags = ["STEP_1_OK", "STEP_2_CLIENT_OK", "STEP_3_VESSEL_OK", "STEP_4_CHECKLIST_OK", "STEP_5_UPLOAD_OCR_OK", "STEP_6_REVIEW_OK"];
+      const logTags = ["WIZARD_STEP_1_OK", "WIZARD_CLIENT_OK", "WIZARD_VESSEL_OK", "WIZARD_CHECKLIST_OK", "WIZARD_UPLOAD_OK", "WIZARD_REVIEW_OK"];
       console.log(logTags[step - 1]);
     }
   };
