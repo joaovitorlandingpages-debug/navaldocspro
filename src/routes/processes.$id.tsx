@@ -36,6 +36,7 @@ import { OCRUpload } from "@/components/ocr/OCRUpload";
 import { useDossier } from "@/hooks/useDossier";
 import { DossierPreview } from "@/components/dossier/DossierPreview";
 import { dossierEngine } from "@/services/automation/dossierEngine";
+import { ProcessDossierTab } from "@/components/dossier/ProcessDossierTab";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
@@ -315,8 +316,8 @@ function ProcessDetail() {
                      <Zap className="h-3 w-3" /> OCR
                    </TabsTrigger>
                     <TabsTrigger value="generation" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geração</TabsTrigger>
-                    <TabsTrigger value="dossier" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                      <FilePlus className="h-3.5 w-3.5" /> Dossiê Enterprise
+                    <TabsTrigger value="dossier_v2" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                      <FilePlus className="h-3.5 w-3.5" /> Dossiê
                     </TabsTrigger>
                     <TabsTrigger value="history" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Timeline</TabsTrigger>
                    <TabsTrigger value="signatures" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
@@ -530,75 +531,8 @@ function ProcessDetail() {
                   </div>
                </TabsContent>
                
-               <TabsContent value="dossier" className="animate-in fade-in duration-500">
-                  <div className="space-y-8">
-                     {!dossier || dossier.status === 'not_generated' ? (
-                        <div className="bg-white p-12 rounded-[3rem] border border-slate-100 shadow-xl flex flex-col items-center text-center space-y-6">
-                           <div className="h-20 w-20 bg-primary/10 rounded-[2rem] flex items-center justify-center">
-                              <FilePlus className="h-10 w-10 text-primary" />
-                           </div>
-                           <div className="max-w-md">
-                              <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-2">Nenhum dossiê gerado ainda</h3>
-                              <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                                 O Dossiê Naval consolidará todos os documentos, dados da embarcação e histórico do processo em um único documento profissional.
-                              </p>
-                           </div>
-                           <Button 
-                             onClick={generateDossier}
-                             disabled={loadingDossier}
-                             className="bg-navy text-white hover:bg-slate-900 h-14 px-12 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-navy/20"
-                           >
-                              {loadingDossier ? <Loader2 className="animate-spin h-5 w-5 mr-3" /> : <Rocket className="h-5 w-5 mr-3" />}
-                              Gerar Primeiro Dossiê
-                           </Button>
-                        </div>
-                     ) : (
-                        <div className="space-y-8">
-                           <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-navy p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
-                              <FilePlus className="absolute -right-10 -bottom-10 h-48 w-48 text-white/5 rotate-12 transition-transform group-hover:scale-110" />
-                              <div className="relative z-10">
-                                 <div className="flex items-center gap-4 mb-2">
-                                    <Badge className="bg-primary text-white border-none font-black text-[9px] uppercase tracking-widest">Enterprise Premium</Badge>
-                                    <span className="text-[10px] font-black uppercase text-white/40 tracking-widest">Versão {dossier.version}.0</span>
-                                 </div>
-                                 <h3 className="text-2xl font-black uppercase tracking-tight">Dossiê Naval Gerado</h3>
-                                 <p className="text-white/60 text-sm font-medium mt-1 italic">Consolidação completa finalizada em {new Date(dossier.updated_at).toLocaleString('pt-BR')}.</p>
-                              </div>
-                              <div className="flex gap-3 relative z-10 w-full md:w-auto">
-                                 <Button 
-                                   onClick={async () => {
-                                      const data = await dossierEngine.fetchDossierData(id);
-                                      setDossierData(data);
-                                      setActiveTab("dossier");
-                                      setIsPreviewingDossier(true);
-                                      console.log("DOSSIER_EXPORT_READY");
-                                   }}
-                                   variant="outline" 
-                                   className="flex-1 md:flex-none h-14 px-8 rounded-2xl bg-white/5 border-white/10 text-white hover:bg-white/10 font-black uppercase text-[11px] tracking-widest"
-                                 >
-                                    <Eye className="h-4 w-4 mr-2" /> Preview
-                                 </Button>
-                                 <Button 
-                                   onClick={generateDossier}
-                                   className="flex-1 md:flex-none h-14 px-8 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black uppercase text-[11px] tracking-widest shadow-xl shadow-primary/20"
-                                 >
-                                    <RefreshCw className="h-4 w-4 mr-2" /> Atualizar Dossiê
-                                 </Button>
-                              </div>
-                           </div>
-
-                           {isPreviewingDossier && dossierData && (
-                              <DossierPreview 
-                                data={{...dossierData, dossier}} 
-                                onExport={() => {
-                                   toast.success("Dossiê preparado para exportação PDF.");
-                                   console.log("DOSSIER_PDF_READY");
-                                }}
-                              />
-                           )}
-                        </div>
-                     )}
-                  </div>
+               <TabsContent value="dossier_v2" className="animate-in fade-in duration-500">
+                  <ProcessDossierTab processId={id} />
                </TabsContent>
 
                 <TabsContent value="requirements" className="space-y-8 animate-in fade-in duration-300">
