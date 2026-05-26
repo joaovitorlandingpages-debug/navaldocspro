@@ -125,7 +125,7 @@ export default function SystemReport() {
         <div className="relative group">
           <Badge className="mb-2 bg-primary text-white hover:bg-primary/90 border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-lg shadow-primary/20 animate-bounce">NAVALDOCS ENTERPRISE EDITION SEALED</Badge>
           <h1 className="text-5xl font-black text-navy uppercase tracking-tighter leading-none">Enterprise Quality Seal</h1>
-          <p className="text-slate-500 font-bold text-lg mt-2 uppercase tracking-widest opacity-50">Consolidação Final, Excelência & Robustez SaaS</p>
+          <p className="text-slate-500 font-bold text-lg mt-2 uppercase tracking-widest opacity-50">Auditoria Final de Produção Realizada</p>
         </div>
         
         <div className="flex flex-wrap gap-4">
