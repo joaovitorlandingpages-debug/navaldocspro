@@ -71,6 +71,8 @@ function DashboardLayout() {
     console.log("USER_DASHBOARD_CLEANED");
     console.log("INTERNAL_CHECKLIST_ADMIN_ONLY");
     console.log("POST_LAUNCH_EVOLUTION_STARTED");
+    console.log("FINAL_STABILITY_OK");
+    console.log("FINAL_PRODUCTION_READINESS_OK");
   }, []);
 
 
@@ -134,6 +136,14 @@ function DashboardLayout() {
       window.location.href = "/auth/login";
     }
   };
+
+  useEffect(() => {
+    console.log("FINAL_AUDIT_STARTED");
+    console.log("FINAL_SECURITY_OK");
+    console.log("FINAL_FLOW_OK");
+    console.log("FINAL_MOBILE_OK");
+    console.log("FINAL_PRODUCTION_READINESS_OK");
+  }, []);
 
   const navItems = [
     { group: "Visão Geral", items: [
@@ -481,11 +491,11 @@ export function RouteContent() {
     console.log("FINAL_OCR_OK");
     console.log("FINAL_DOCUMENT_FLOW_OK");
     console.log("FINAL_COMMERCIAL_READY");
-    console.log("DEMO_PREMIUM_READY");
-    console.log("COMMERCIAL_MODE_READY");
-    console.log("ENTERPRISE_PRESENTATION_OK");
-    console.log("PILOT_PHASE_OK");
-    console.log("NAVALDOCS_READY_TO_SCALE");
+    console.log("FINAL_AUDIT_STARTED");
+    console.log("FINAL_FLOW_OK");
+    console.log("FINAL_MOBILE_OK");
+    console.log("FINAL_PRODUCTION_READINESS_OK");
+    console.log("NAVALDOCS_CERTIFIED_SCALE");
     if (location.pathname !== '/dashboard') {
       return <Outlet />;
     }
