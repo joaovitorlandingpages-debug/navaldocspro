@@ -11,14 +11,21 @@ const Dialog = DialogPrimitive.Root;
 
 const DialogTrigger = DialogPrimitive.Trigger;
 
-const DialogPortal = ({ children, ...props }: DialogPrimitive.DialogPortalProps) => (
-  <SafePortal>
-    <DialogPrimitive.Portal {...props}>
-      {children}
-    </DialogPrimitive.Portal>
-  </SafePortal>
-);
+const DialogPortal = ({ children, ...props }: DialogPrimitive.DialogPortalProps) => {
+  React.useEffect(() => {
+    console.log("MODAL_PORTAL_SAFE");
+  }, []);
+  
+  return (
+    <SafePortal>
+      <DialogPrimitive.Portal {...props}>
+        {children}
+      </DialogPrimitive.Portal>
+    </SafePortal>
+  );
+};
 DialogPortal.displayName = "DialogPortal";
+
 
 
 const DialogClose = DialogPrimitive.Close;
