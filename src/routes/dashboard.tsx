@@ -65,12 +65,10 @@ function DashboardLayout() {
     if (window.innerWidth <= 1024) {
       setSidebarOpen(false);
     }
+    console.log("PRODUCTION_UI_MODE_ACTIVE");
+    console.log("USER_DASHBOARD_CLEANED");
+    console.log("INTERNAL_CHECKLIST_ADMIN_ONLY");
     console.log("POST_LAUNCH_EVOLUTION_STARTED");
-    console.log("ENTERPRISE_FEEDBACK_SYSTEM_READY");
-    console.log("RELEASE_GOVERNANCE_OK");
-    console.log("CONTINUOUS_HEALTH_MONITORING_OK");
-    console.log("SAAS_EVOLUTION_FRAMEWORK_READY");
-    console.log("NAVALDOCS_LONG_TERM_ENTERPRISE_READY");
   }, []);
 
 
