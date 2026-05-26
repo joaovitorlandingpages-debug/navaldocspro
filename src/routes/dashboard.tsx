@@ -604,15 +604,17 @@ export function RouteContent() {
             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
               <Zap className="h-4 w-4 text-primary" /> Inteligência Operacional
             </h2>
-            <div className="flex items-center gap-3">
-               <div className="flex flex-col items-end">
-                  <p className="text-[10px] font-black uppercase text-slate-400">Readiness Score</p>
-                   <p className="text-xs font-bold text-navy">100%</p>
-               </div>
-               <div className="h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary w-[100%]"></div>
-               </div>
-            </div>
+            {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
+              <div className="flex items-center gap-3">
+                 <div className="flex flex-col items-end">
+                    <p className="text-[10px] font-black uppercase text-slate-400">Readiness Score</p>
+                     <p className="text-xs font-bold text-navy">100%</p>
+                 </div>
+                 <div className="h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary w-[100%]"></div>
+                 </div>
+              </div>
+            )}
           </div>
 
           
