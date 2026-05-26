@@ -527,13 +527,15 @@ export function RouteContent() {
       )}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-3xl sm:text-5xl font-black text-navy tracking-tighter uppercase italic leading-none">Centro de Operações <span className="text-primary">Master</span></h1>
+          <h1 className="text-3xl sm:text-5xl font-black text-navy tracking-tighter uppercase italic leading-none">
+            Centro de Operações {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && <span className="text-primary">Master</span>}
+          </h1>
           <p className="text-slate-500 font-bold text-xs sm:text-base uppercase tracking-[0.2em] mt-3 italic opacity-60">Gestão inteligente de frota e conformidade operacional.</p>
 
         </div>
         
         <div className="flex flex-wrap gap-3 w-full sm:w-auto">
-          {profile?.companies?.onboarding_status === 'pending' && (
+          {profile?.companies?.onboarding_status === 'pending' && (profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
             <Link to="/onboarding" className="hidden xl:flex items-center gap-4 bg-primary/5 border border-primary/20 px-5 py-3 rounded-2xl animate-in slide-in-from-right duration-700">
                <Rocket className="h-5 w-5 text-primary animate-pulse" />
                <div className="text-left">
