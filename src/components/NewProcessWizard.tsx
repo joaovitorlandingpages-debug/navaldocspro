@@ -1120,7 +1120,72 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
   return (
     <>
+      <NewProcessWizardMain 
+        isOpen={isOpen}
+        onClose={onClose}
+        profile={profile}
+        step={step}
+        setStep={setStep}
+        totalSteps={totalSteps}
+        progressPercent={progressPercent}
+        formData={formData}
+        setFormData={setFormData}
+        customers={customers}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        vesselSearchTerm={vesselSearchTerm}
+        setVesselSearchTerm={setVesselSearchTerm}
+        vessels={vessels}
+        setIsQuickClientOpen={setIsQuickClientOpen}
+        setIsQuickVesselOpen={setIsQuickVesselOpen}
+        handleBack={handleBack}
+        handleNext={handleNext}
+        handleCreateProcess={handleCreateProcess}
+        clearDraft={clearDraft}
+        isSubmitting={isSubmitting}
+        requirements={requirements}
+        selectedFiles={selectedFiles}
+        setSelectedFiles={setSelectedFiles}
+        renderStep={renderStep}
+        getStepTitle={getStepTitle}
+      />
 
+      <AdditionalModals 
+        isQuickClientOpen={isQuickClientOpen}
+        setIsQuickClientOpen={setIsQuickClientOpen}
+        isCreatingClient={isCreatingClient}
+        newClient={newClient}
+        setNewClient={setNewClient}
+        clientModalMode={clientModalMode}
+        setClientModalMode={setClientModalMode}
+        ocrFileInputRef={ocrFileInputRef}
+        isOcrProcessing={isOcrProcessing}
+        ocrJobResult={ocrJobResult}
+        setOcrJobResult={setOcrJobResult}
+        handleOcrFileSelect={handleOcrFileSelect}
+        applyOcrData={applyOcrData}
+        handleQuickClientSubmit={handleQuickClientSubmit}
+        isQuickVesselOpen={isQuickVesselOpen}
+        setIsQuickVesselOpen={setIsQuickVesselOpen}
+        newVessel={newVessel}
+        setNewVessel={setNewVessel}
+        isCreatingVessel={isCreatingVessel}
+        handleQuickVesselSubmit={handleQuickVesselSubmit}
+      />
+    </>
+  );
+}
+
+function NewProcessWizardMain({ 
+  isOpen, onClose, profile, step, setStep, totalSteps, progressPercent,
+  formData, setFormData, customers, searchTerm, setSearchTerm,
+  vesselSearchTerm, setVesselSearchTerm, vessels,
+  setIsQuickClientOpen, setIsQuickVesselOpen,
+  handleBack, handleNext, handleCreateProcess, clearDraft,
+  isSubmitting, requirements, selectedFiles, setSelectedFiles,
+  renderStep, getStepTitle
+}: any) {
+  return (
     <ModalLayout
       isOpen={isOpen}
       onClose={onClose}
@@ -1189,6 +1254,24 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         {renderStep()}
       </div>
     </ModalLayout>
+  );
+}
+
+function AdditionalModals({ 
+  isQuickClientOpen, setIsQuickClientOpen,
+  isCreatingClient,
+  newClient, setNewClient,
+  clientModalMode, setClientModalMode,
+  ocrFileInputRef, isOcrProcessing,
+  ocrJobResult, setOcrJobResult,
+  handleOcrFileSelect, applyOcrData,
+  handleQuickClientSubmit,
+  isQuickVesselOpen, setIsQuickVesselOpen,
+  newVessel, setNewVessel,
+  isCreatingVessel, handleQuickVesselSubmit
+}: any) {
+  return (
+    <>
 
       {/* Modal de Criação Rápida de Cliente */}
       <ModalLayout
@@ -1521,7 +1604,3 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     </>
   );
 }
-
-
-
-
