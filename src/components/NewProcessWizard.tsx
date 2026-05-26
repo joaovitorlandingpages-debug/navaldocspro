@@ -1051,10 +1051,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
              <div className="bg-navy p-6 rounded-3xl text-white">
                 <div className="flex justify-between items-start mb-6">
                    <div>
-                      <h4 className="text-lg font-bold">Resumo do Processo</h4>
-                      <p className="text-xs text-slate-400">Revise os detalhes antes de finalizar.</p>
+                      <h4 className="text-lg font-bold">Resumo Final</h4>
+                      <p className="text-xs text-slate-400">Verifique os dados antes de consolidar o processo.</p>
                    </div>
-                   <Badge className="bg-primary text-white border-none">{formData.type}</Badge>
+                   <Badge className="bg-primary text-white border-none uppercase text-[10px]">{formData.type}</Badge>
                 </div>
 
                 <div className="space-y-4">
@@ -1075,27 +1075,33 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                 </div>
              </div>
 
-             <div className="space-y-3">
-                <div className="flex justify-between items-center text-xs px-2">
-                   <span className="text-slate-500 font-medium">Documentos vinculados</span>
-                   <span className="text-navy font-bold">{requirements.length} itens</span>
+             <div className="space-y-4">
+                <div>
+                   <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Checklist Operacional</Label>
+                   <div className="mt-2 space-y-2">
+                      {requirements.map((req: any, i: number) => (
+                         <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <div className="flex items-center gap-3">
+                               <div className="h-2 w-2 rounded-full bg-amber-500" />
+                               <span className="text-xs font-bold text-navy">{req.template?.name}</span>
+                            </div>
+                            <Badge variant="outline" className="text-[8px] uppercase">{req.is_mandatory ? "Obrigatório" : "Opcional"}</Badge>
+                         </div>
+                      ))}
+                   </div>
                 </div>
-                 <div className="flex justify-between items-center text-xs px-2">
-                    <span className="text-slate-500 font-medium">Arquivos para upload</span>
-                    <span className="text-navy font-bold">{selectedFiles.length} arquivos</span>
-                 </div>
-                 <div className="flex justify-between items-center text-xs px-2">
-                    <span className="text-slate-500 font-medium">Prazo estimado</span>
-                    <span className="text-navy font-bold">15 dias úteis</span>
-                 </div>
 
+                {formData.notes && (
+                   <div>
+                      <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Observações</Label>
+                      <p className="mt-1 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 italic">{formData.notes}</p>
+                   </div>
+                )}
              </div>
 
-             <div className="p-4 bg-green-50 border border-green-100 rounded-2xl flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-green-500 text-white flex items-center justify-center">
-                   <Check className="h-4 w-4" />
-                </div>
-                <p className="text-xs text-green-800 font-medium">Tudo pronto! O processo será criado com status "Pendente".</p>
+             <div className="p-4 bg-green-50 border border-green-100 rounded-2xl flex items-center gap-3 text-green-700">
+                <CheckCircle2 className="h-5 w-5" />
+                <p className="text-xs font-medium">Dados validados pela IA. O processo será criado com status pendente para início imediato.</p>
              </div>
           </div>
         );
