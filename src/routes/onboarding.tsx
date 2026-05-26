@@ -408,13 +408,23 @@ function OnboardingFlow() {
           <Ship className="h-6 w-6 text-primary" />
           <span className="font-bold text-navy uppercase tracking-tight">NavalDocs Pro Onboarding</span>
         </div>
-        <div className="flex gap-1">
-          {steps.map((s) => (
-            <div 
-              key={s.id}
-              className={`h-1.5 w-8 rounded-full transition-all ${s.id === step ? 'bg-primary w-12' : s.id < step ? 'bg-navy' : 'bg-slate-200'}`}
-            />
-          ))}
+        <div className="flex items-center gap-4">
+          <div className="flex gap-1">
+            {steps.map((s) => (
+              <div 
+                key={s.id}
+                className={`h-1.5 w-8 rounded-full transition-all ${s.id === step ? 'bg-primary w-12' : s.id < step ? 'bg-navy' : 'bg-slate-200'}`}
+              />
+            ))}
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => updateStep(8)}
+            className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-navy"
+          >
+            Pular Tudo
+          </Button>
         </div>
       </header>
 
