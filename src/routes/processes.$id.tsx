@@ -262,7 +262,7 @@ function ProcessDetail() {
               }}
             >
                {automationState?.is_ready_for_generation ? <CheckCircle2 className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
-               Finalizar Processo
+               Finalizar & Gerar Dossiê
             </Button>
           </div>
         }
