@@ -1249,7 +1249,8 @@ function NewProcessWizardMain({
         </div>
       }
     >
-      <div className="space-y-8">
+      <ScrollArea className="flex-grow pr-4 -mr-4">
+      <div className="space-y-8 pb-4">
         <div className="flex items-center gap-4">
           <Progress value={progressPercent} className="h-2.5 flex-grow bg-slate-100" />
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
@@ -1258,6 +1259,7 @@ function NewProcessWizardMain({
         </div>
         {renderStep()}
       </div>
+      </ScrollArea>
     </ModalLayout>
   );
 }
