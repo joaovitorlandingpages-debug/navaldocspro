@@ -80,18 +80,26 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
               <p className="text-[10px] font-black uppercase text-navy tracking-widest">Status de Geração</p>
            </div>
            <p className="text-[11px] text-slate-400 font-bold mb-4">Dossiê v1.0 consolidado com sucesso pela IA do NavalDocs Pro.</p>
-           <Button 
-             onClick={onExport}
-             disabled={isGenerating}
-             className="w-full bg-primary text-white hover:bg-primary/90 rounded-xl h-12 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20"
-           >
-             {isGenerating ? <Loader2 className="animate-spin h-4 w-4" /> : <><Download className="h-4 w-4 mr-2" /> Exportar PDF</>}
-           </Button>
+            <Button 
+              onClick={handleExportPdf}
+              disabled={isGenerating}
+              className="w-full bg-primary text-white hover:bg-primary/90 rounded-xl h-12 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 mb-3"
+            >
+              {isGenerating ? <Loader2 className="animate-spin h-4 w-4" /> : <><Download className="h-4 w-4 mr-2" /> Exportar PDF</>}
+            </Button>
+            <Button 
+              onClick={handleExportZip}
+              variant="outline"
+              disabled={isGenerating}
+              className="w-full border-slate-200 text-navy hover:bg-slate-50 rounded-xl h-12 font-black text-[10px] uppercase tracking-widest"
+            >
+              <Archive className="h-4 w-4 mr-2" /> Exportar ZIP
+            </Button>
         </div>
       </div>
 
       {/* Preview Content */}
-      <div className="lg:col-span-9 bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden flex flex-col relative group/preview">
+      <div id="dossier-preview-content" className="lg:col-span-9 bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden flex flex-col relative group/preview">
         {/* Document Header */}
         <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
            <div className="flex items-center gap-4">
