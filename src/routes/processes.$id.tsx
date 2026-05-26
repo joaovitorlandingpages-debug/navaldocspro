@@ -59,6 +59,9 @@ function ProcessDetail() {
   
   const { automationState } = useProcessAutomation(id);
   const { jobs: ocrJobs } = useOCR(id);
+  const { dossier, generate: generateDossier, isLoading: loadingDossier } = useDossier(id, profile?.company_id);
+  const [dossierData, setDossierData] = useState<any>(null);
+  const [isPreviewingDossier, setIsPreviewingDossier] = useState(false);
 
   useEffect(() => {
     console.log("PROCESS_EXPERIENCE_OK");
