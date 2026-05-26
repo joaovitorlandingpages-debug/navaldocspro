@@ -44,7 +44,7 @@ export function ReadinessBanner() {
              <span className="text-[8px] font-black uppercase text-slate-400">Readiness</span>
           </div>
        </div>
-       <div className="flex-grow grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 w-full">
+       <div className="flex-grow grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 w-full">
           {scores?.map((s: any) => (
              <div key={s.id} className="text-center group">
                 <p className="text-[8px] font-black uppercase text-slate-400 mb-2 truncate group-hover:text-primary transition-colors">{s.category}</p>
