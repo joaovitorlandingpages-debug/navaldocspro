@@ -152,15 +152,19 @@ function Customers() {
           cpf_cnpj: formData.cpf_cnpj,
           email: formData.email,
           phone: formData.phone,
-          address: formData.address,
-          notes: formData.notes
+          address: safeString(formData.address).trim(),
+          city: safeString(formData.city).trim(),
+          state: safeString(formData.state).trim(),
+          rg: safeString(formData.rg).trim(),
+          notes: safeString(formData.notes).trim()
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      console.log("CLIENT_CREATED_WITH_WORKSPACE", data.id);
+      console.log("CLIENT_MODULE_READY");
+      console.log("CLIENT_INSERT_SUCCESS", data.id);
       
       // Registro de Log (Fallback seguro)
       try {
@@ -172,12 +176,10 @@ function Customers() {
           resource_type: 'client',
           resource_id: data.id,
           description: `Novo cliente cadastrado: ${data.name}`,
-          module: 'customers',
+          module: 'clients',
           category: 'creation',
           metadata: { client_type: clientType }
         });
-        console.log("CLIENT_LOG_WITH_MODULE_OK");
-        console.log("ACTIVITY_LOG_MODULE_FIXED");
       } catch (logError) {
         console.warn("LOG_FAILURE_SAFE", logError);
       }
