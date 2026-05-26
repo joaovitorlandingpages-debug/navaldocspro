@@ -1116,3 +1116,488 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     }
   };
 
+  return (
+    <>
+      <NewProcessWizardMain 
+        isOpen={isOpen}
+        onClose={onClose}
+        profile={profile}
+        step={step}
+        setStep={setStep}
+        totalSteps={totalSteps}
+        progressPercent={progressPercent}
+        formData={formData}
+        setFormData={setFormData}
+        customers={customers}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        vesselSearchTerm={vesselSearchTerm}
+        setVesselSearchTerm={setVesselSearchTerm}
+        vessels={vessels}
+        setIsQuickClientOpen={setIsQuickClientOpen}
+        setIsQuickVesselOpen={setIsQuickVesselOpen}
+        handleBack={handleBack}
+        handleNext={handleNext}
+        handleCreateProcess={handleCreateProcess}
+        clearDraft={clearDraft}
+        isSubmitting={isSubmitting}
+        requirements={requirements}
+        selectedFiles={selectedFiles}
+        setSelectedFiles={setSelectedFiles}
+        renderStep={renderStep}
+        getStepTitle={getStepTitle}
+      />
+
+      <AdditionalModals 
+        isQuickClientOpen={isQuickClientOpen}
+        setIsQuickClientOpen={setIsQuickClientOpen}
+        isCreatingClient={isCreatingClient}
+        newClient={newClient}
+        setNewClient={setNewClient}
+        clientModalMode={clientModalMode}
+        setClientModalMode={setClientModalMode}
+        ocrFileInputRef={ocrFileInputRef}
+        isOcrProcessing={isOcrProcessing}
+        ocrJobResult={ocrJobResult}
+        setOcrJobResult={setOcrJobResult}
+        handleOcrFileSelect={handleOcrFileSelect}
+        applyOcrData={applyOcrData}
+        handleQuickClientSubmit={handleQuickClientSubmit}
+        isQuickVesselOpen={isQuickVesselOpen}
+        setIsQuickVesselOpen={setIsQuickVesselOpen}
+        newVessel={newVessel}
+        setNewVessel={setNewVessel}
+        isCreatingVessel={isCreatingVessel}
+        handleQuickVesselSubmit={handleQuickVesselSubmit}
+      />
+    </>
+  );
+}
+
+function NewProcessWizardMain({ 
+  isOpen, onClose, profile, step, setStep, totalSteps, progressPercent,
+  formData, setFormData, customers, searchTerm, setSearchTerm,
+  vesselSearchTerm, setVesselSearchTerm, vessels,
+  setIsQuickClientOpen, setIsQuickVesselOpen,
+  handleBack, handleNext, handleCreateProcess, clearDraft,
+  isSubmitting, requirements, selectedFiles, setSelectedFiles,
+  renderStep, getStepTitle
+}: any) {
+  return (
+    <ModalLayout
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Novo Processo Naval"
+      description={`Etapa ${step} de ${totalSteps} • ${getStepTitle()}`}
+      maxWidth="4xl"
+      footer={
+        <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4">
+          <div className="flex gap-2 w-full sm:w-auto">
+            <BackNavigation 
+              onBack={handleBack} 
+              label={step === 1 ? "Fechar" : "Voltar"} 
+              className="flex-1 sm:flex-none rounded-xl h-12 px-6 font-black uppercase text-[10px] tracking-widest gap-2"
+            />
+            <Button
+              variant="ghost"
+              onClick={() => {
+                clearDraft();
+                toast.success("Rascunho descartado.");
+                onClose();
+              }}
+              className="rounded-xl h-12 px-4 text-slate-400 hover:text-red-500 hover:bg-red-50"
+              title="Descartar Rascunho e Fechar"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="flex gap-3 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              className="hidden md:flex rounded-xl h-12 px-6 font-black uppercase text-[10px] tracking-widest gap-2 border-slate-200"
+              onClick={() => toast.success("Rascunho salvo no navegador")}
+            >
+              <Save className="h-4 w-4" /> Salvar
+            </Button>
+
+            {step === totalSteps ? (
+              <Button
+                onClick={handleCreateProcess}
+                loading={isSubmitting}
+                className="flex-1 sm:flex-none bg-primary hover:opacity-90 rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg shadow-primary/20 gap-2"
+              >
+                Criar Processo <Check className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleNext}
+                disabled={(!formData.typeId && step === 1) || (!formData.clientId && step === 2)}
+                className="flex-1 sm:flex-none bg-navy hover:opacity-90 rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg shadow-navy/20 gap-2"
+              >
+                Próximo <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      }
+    >
+      <div className="space-y-8">
+        <div className="flex items-center gap-4">
+          <Progress value={progressPercent} className="h-2.5 flex-grow bg-slate-100" />
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
+            {Math.round(progressPercent)}% Concluído
+          </span>
+        </div>
+        {renderStep()}
+      </div>
+    </ModalLayout>
+  );
+}
+
+function AdditionalModals({ 
+  isQuickClientOpen, setIsQuickClientOpen,
+  isCreatingClient,
+  newClient, setNewClient,
+  clientModalMode, setClientModalMode,
+  ocrFileInputRef, isOcrProcessing,
+  ocrJobResult, setOcrJobResult,
+  handleOcrFileSelect, applyOcrData,
+  handleQuickClientSubmit,
+  isQuickVesselOpen, setIsQuickVesselOpen,
+  newVessel, setNewVessel,
+  isCreatingVessel, handleQuickVesselSubmit
+}: any) {
+  return (
+    <>
+      {/* Modal de Criação Rápida de Cliente */}
+      <ModalLayout
+        isOpen={isQuickClientOpen}
+        onClose={() => setIsQuickClientOpen(false)}
+        title="Novo Cliente Rápido"
+        showBackButton={true}
+        maxWidth="md"
+        footer={
+          clientModalMode === 'manual' ? (
+            <>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setIsQuickClientOpen(false)}
+                className="flex-1 rounded-xl h-12"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                form="quick-client-form"
+                type="submit" 
+                disabled={isCreatingClient}
+                className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
+              >
+                {isCreatingClient ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Cliente"}
+              </Button>
+            </>
+          ) : null
+        }
+      >
+        <div className="flex bg-slate-200 p-1 rounded-xl mb-6">
+          <button 
+            type="button"
+            onClick={() => setClientModalMode('manual')}
+            className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${clientModalMode === 'manual' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}
+          >
+            Manual
+          </button>
+          <button 
+            type="button"
+            onClick={() => setClientModalMode('ocr')}
+            className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${clientModalMode === 'ocr' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}
+          >
+            IA OCR
+          </button>
+        </div>
+
+        {clientModalMode === 'ocr' ? (
+          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+            {!ocrJobResult ? (
+              <div 
+                className="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center gap-4 hover:border-primary/50 transition-all cursor-pointer bg-slate-50 group text-center"
+                onClick={() => ocrFileInputRef.current?.click()}
+              >
+                <div className="h-16 w-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform border border-slate-100">
+                  {isOcrProcessing ? <Loader2 className="h-8 w-8 animate-spin" /> : <Upload className="h-8 w-8" />}
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-navy uppercase">Scanner de Identidade IA</h4>
+                  <p className="text-[10px] text-slate-400 font-medium max-w-[200px] mt-1">Envie CNH ou RG para preenchimento automático ultra-rápido.</p>
+                </div>
+                <input 
+                  type="file" 
+                  ref={ocrFileInputRef} 
+                  className="hidden" 
+                  accept="image/*,application/pdf"
+                  onChange={handleOcrFileSelect}
+                />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="p-5 bg-blue-50 border border-blue-100 rounded-2xl space-y-3">
+                   <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-2">
+                         <div className="h-8 w-8 bg-blue-500 text-white rounded-lg flex items-center justify-center">
+                            <Zap className="h-4 w-4" />
+                         </div>
+                         <div>
+                            <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest">Dados Extraídos</p>
+                            <p className="text-xs font-bold text-navy">{ocrJobResult.extracted_data?.person?.nome || ocrJobResult.extracted_data?.name || "Nome não identificado"}</p>
+                         </div>
+                      </div>
+                      <Badge className="bg-green-500 text-white border-none text-[8px] uppercase">
+                         Confiança: {((ocrJobResult.confidence_score || 0.95) * 100).toFixed(0)}%
+                      </Badge>
+                   </div>
+                   
+                   <div className="grid grid-cols-1 gap-2 text-[10px]">
+                      <div className="flex justify-between py-1 border-b border-blue-100/50">
+                         <span className="text-slate-500">Documento</span>
+                         <span className="font-bold text-navy">{ocrJobResult.extracted_data?.person?.cpf || ocrJobResult.extracted_data?.doc_number || "Não extraído"}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-blue-100/50">
+                         <span className="text-slate-500">Endereço</span>
+                         <span className="font-bold text-navy truncate max-w-[150px]">{ocrJobResult.extracted_data?.person?.address || ocrJobResult.extracted_data?.address || "Não extraído"}</span>
+                      </div>
+                   </div>
+
+                   <Button 
+                     type="button"
+                     onClick={applyOcrData}
+                     className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-10 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-blue-200"
+                   >
+                      <Sparkles className="h-3 w-3" /> Aplicar estes dados
+                   </Button>
+                </div>
+
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  onClick={() => setOcrJobResult(null)}
+                  className="w-full text-[10px] font-bold text-slate-400 uppercase"
+                >
+                   Tentar outro documento
+                </Button>
+              </div>
+            )}
+            
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
+               <ShieldCheck className="h-4 w-4 text-green-500" />
+               <p className="text-[9px] text-slate-500 font-medium">Privacidade garantida: Seus documentos são processados e armazenados com criptografia de ponta a ponta.</p>
+            </div>
+          </div>
+        ) : (
+          <form id="quick-client-form" onSubmit={handleQuickClientSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Nome Completo</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input 
+                  required
+                  value={newClient.name}
+                  onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                  placeholder="Ex: João da Silva"
+                  className="pl-10 rounded-xl border-slate-200" 
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">CPF/CNPJ</Label>
+                <div className="relative">
+                  <FileText className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input 
+                    required
+                    value={newClient.document}
+                    onChange={(e) => setNewClient({...newClient, document: e.target.value})}
+                    placeholder="000.000.000-00"
+                    className="pl-10 rounded-xl border-slate-200" 
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">RG</Label>
+                <Input 
+                  value={newClient.rg}
+                  onChange={(e) => setNewClient({...newClient, rg: e.target.value})}
+                  placeholder="00.000.000-0"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Telefone</Label>
+                <div className="relative">
+                  <Smartphone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input 
+                    value={newClient.phone}
+                    onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
+                    placeholder="(00) 00000-0000"
+                    className="pl-10 rounded-xl border-slate-200" 
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">E-mail</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input 
+                    type="email"
+                    value={newClient.email}
+                    onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                    placeholder="email@exemplo.com"
+                    className="pl-10 rounded-xl border-slate-200" 
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Endereço Completo</Label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input 
+                  value={newClient.address}
+                  onChange={(e) => setNewClient({...newClient, address: e.target.value})}
+                  placeholder="Rua, Número, Bairro..."
+                  className="pl-10 rounded-xl border-slate-200" 
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Cidade</Label>
+                <Input 
+                  value={newClient.city}
+                  onChange={(e) => setNewClient({...newClient, city: e.target.value})}
+                  placeholder="Cidade"
+                  className="rounded-xl border-slate-200" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">UF</Label>
+                <Input 
+                  value={newClient.state}
+                  onChange={(e) => setNewClient({...newClient, state: e.target.value})}
+                  placeholder="UF"
+                  maxLength={2}
+                  className="rounded-xl border-slate-200 uppercase" 
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Observações</Label>
+              <textarea 
+                className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm min-h-[60px]"
+                value={newClient.notes}
+                onChange={(e) => setNewClient({...newClient, notes: e.target.value})}
+                placeholder="Ex: Cliente prefere contato via WhatsApp"
+              />
+            </div>
+          </form>
+        )}
+      </ModalLayout>
+
+      {/* Modal de Criação Rápida de Embarcação */}
+      <ModalLayout
+        isOpen={isQuickVesselOpen}
+        onClose={() => setIsQuickVesselOpen(false)}
+        title="Nova Embarcação Rápida"
+        maxWidth="md"
+        footer={
+          <>
+            <Button 
+              type="button" 
+              variant="ghost" 
+              onClick={() => setIsQuickVesselOpen(false)}
+              className="flex-1 rounded-xl h-12"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              form="quick-vessel-form"
+              type="submit" 
+              disabled={isCreatingVessel}
+              className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
+            >
+              {isCreatingVessel ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Embarcação"}
+            </Button>
+          </>
+        }
+      >
+        <form id="quick-vessel-form" onSubmit={handleQuickVesselSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase font-black text-slate-400">Nome da Embarcação</Label>
+            <Input 
+              required
+              value={newVessel.name}
+              onChange={(e) => setNewVessel({...newVessel, name: e.target.value})}
+              placeholder="Ex: My Boat"
+              className="rounded-xl border-slate-200" 
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Inscrição / TIE</Label>
+              <Input 
+                value={newVessel.registration_number}
+                onChange={(e) => setNewVessel({...newVessel, registration_number: e.target.value})}
+                placeholder="000.000000-0"
+                className="rounded-xl border-slate-200" 
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Tipo (Lancha, Veleiro...)</Label>
+              <Input 
+                value={newVessel.vessel_type}
+                onChange={(e) => setNewVessel({...newVessel, vessel_type: e.target.value})}
+                placeholder="Ex: Lancha"
+                className="rounded-xl border-slate-200" 
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Motorização</Label>
+              <Input 
+                value={newVessel.engine}
+                onChange={(e) => setNewVessel({...newVessel, engine: e.target.value})}
+                placeholder="Ex: Volvo 200HP"
+                className="rounded-xl border-slate-200" 
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Categoria (Esporte/Recreio...)</Label>
+              <Input 
+                value={newVessel.category}
+                onChange={(e) => setNewVessel({...newVessel, category: e.target.value})}
+                placeholder="Ex: Esporte"
+                className="rounded-xl border-slate-200" 
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase font-black text-slate-400">Observações Técnicas</Label>
+            <textarea 
+              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm min-h-[80px]"
+              value={newVessel.notes}
+              onChange={(e) => setNewVessel({...newVessel, notes: e.target.value})}
+              placeholder="Detalhes adicionais..."
+            />
+          </div>
+        </form>
+      </ModalLayout>
+    </>
+  );
+}
