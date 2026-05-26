@@ -65,12 +65,10 @@ function DashboardLayout() {
     if (window.innerWidth <= 1024) {
       setSidebarOpen(false);
     }
+    console.log("PRODUCTION_UI_MODE_ACTIVE");
+    console.log("USER_DASHBOARD_CLEANED");
+    console.log("INTERNAL_CHECKLIST_ADMIN_ONLY");
     console.log("POST_LAUNCH_EVOLUTION_STARTED");
-    console.log("ENTERPRISE_FEEDBACK_SYSTEM_READY");
-    console.log("RELEASE_GOVERNANCE_OK");
-    console.log("CONTINUOUS_HEALTH_MONITORING_OK");
-    console.log("SAAS_EVOLUTION_FRAMEWORK_READY");
-    console.log("NAVALDOCS_LONG_TERM_ENTERPRISE_READY");
   }, []);
 
 
@@ -491,7 +489,7 @@ export function RouteContent() {
 
     return (
     <div className="space-y-6 md:space-y-12 animate-in fade-in duration-1000 pb-12 max-w-[1800px] mx-auto">
-      {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (
+      {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
         <Card className="p-6 md:p-14 bg-[#000B18] text-white border-white/5 rounded-[2rem] md:rounded-[4rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12 mb-8 md:mb-16 shadow-[0_50px_100px_rgba(0,0,0,0.3)] relative overflow-hidden group">
            <div className="absolute top-0 right-0 w-2/3 h-full bg-primary/20 blur-[120px] -mr-40 group-hover:bg-primary/30 transition-all duration-1000" />
            <div className="flex flex-col md:flex-row items-center gap-10 relative z-10 text-center md:text-left">
@@ -527,13 +525,15 @@ export function RouteContent() {
       )}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-3xl sm:text-5xl font-black text-navy tracking-tighter uppercase italic leading-none">Centro de Operações <span className="text-primary">Master</span></h1>
+          <h1 className="text-3xl sm:text-5xl font-black text-navy tracking-tighter uppercase italic leading-none">
+            Centro de Operações {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && <span className="text-primary">Master</span>}
+          </h1>
           <p className="text-slate-500 font-bold text-xs sm:text-base uppercase tracking-[0.2em] mt-3 italic opacity-60">Gestão inteligente de frota e conformidade operacional.</p>
 
         </div>
         
         <div className="flex flex-wrap gap-3 w-full sm:w-auto">
-          {profile?.companies?.onboarding_status === 'pending' && (
+          {profile?.companies?.onboarding_status === 'pending' && (profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
             <Link to="/onboarding" className="hidden xl:flex items-center gap-4 bg-primary/5 border border-primary/20 px-5 py-3 rounded-2xl animate-in slide-in-from-right duration-700">
                <Rocket className="h-5 w-5 text-primary animate-pulse" />
                <div className="text-left">
@@ -569,7 +569,9 @@ export function RouteContent() {
               <div className="relative z-10 space-y-8">
                  <div className="flex justify-between items-center">
                     <div>
-                       <h2 className="text-2xl font-black text-navy uppercase tracking-tighter italic">Ações Críticas <span className="text-primary">Master</span></h2>
+                       <h2 className="text-2xl font-black text-navy uppercase tracking-tighter italic">
+                         Ações Críticas {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && <span className="text-primary">Master</span>}
+                       </h2>
                        <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Intervenções manuais e validações urgentes</p>
                     </div>
                     <div className="h-10 w-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center animate-pulse">
@@ -600,15 +602,17 @@ export function RouteContent() {
             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
               <Zap className="h-4 w-4 text-primary" /> Inteligência Operacional
             </h2>
-            <div className="flex items-center gap-3">
-               <div className="flex flex-col items-end">
-                  <p className="text-[10px] font-black uppercase text-slate-400">Readiness Score</p>
-                   <p className="text-xs font-bold text-navy">100%</p>
-               </div>
-               <div className="h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary w-[100%]"></div>
-               </div>
-            </div>
+            {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
+              <div className="flex items-center gap-3">
+                 <div className="flex flex-col items-end">
+                    <p className="text-[10px] font-black uppercase text-slate-400">Readiness Score</p>
+                     <p className="text-xs font-bold text-navy">100%</p>
+                 </div>
+                 <div className="h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary w-[100%]"></div>
+                 </div>
+              </div>
+            )}
           </div>
 
           
@@ -706,11 +710,15 @@ export function RouteContent() {
 
            
            <Card className="p-6 border-slate-100 shadow-sm space-y-4">
-              {[
+              {((profile?.role === 'admin_master' || profile?.role === 'admin_master_global') ? [
                 { label: "OCR: Certificado.pdf", status: "processando", progress: 65 },
-                { label: "Geração: Requerimento", status: "na fila", progress: 0 },
+                { label: "Geração: Dossiê", status: "na fila", progress: 0 },
                 { label: "Assinatura: Contrato", status: "enviado", progress: 100 },
-              ].map((item, i) => (
+              ] : [
+                { label: "Processo: Renovação CSN", status: "analisando", progress: 45 },
+                { label: "Upload: Documentos Mar", status: "validado", progress: 100 },
+                { label: "Status: Em Conformidade", status: "ativo", progress: 100 },
+              ]).map((item, i) => (
                 <div key={i} className="space-y-2">
                    <div className="flex justify-between items-center text-[10px] font-bold">
                       <span className="text-slate-600 uppercase tracking-widest">{item.label}</span>
@@ -773,8 +781,8 @@ export function RouteContent() {
       </div>
 
 
-      {/* Readiness Score Enterprise */}
-      <ReadinessBanner />
+      {/* Readiness Score Enterprise - Visible only to Admins */}
+      {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && <ReadinessBanner />}
 
       {/* Intelligence Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

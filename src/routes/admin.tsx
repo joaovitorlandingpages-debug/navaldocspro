@@ -71,19 +71,18 @@ function AdminLayout() {
     { name: "Executive Overview", icon: <Globe className="h-5 w-5" />, path: "/admin/executive-overview" },
     { name: "AI Global Console", icon: <Bot className="h-5 w-5" />, path: "/admin/global" },
     { name: "Empresas", icon: <Building className="h-5 w-5" />, path: "/admin/companies" },
-    { name: "Métricas SaaS", icon: <TrendingUp className="h-5 w-5" />, path: "/admin/saas-metrics" },
+    { name: "Comercial & Readiness", icon: <TrendingUp className="h-5 w-5" />, path: "/admin/commercial" },
+    { name: "Métricas SaaS", icon: <BarChart3 className="h-5 w-5" />, path: "/admin/saas-metrics" },
     { name: "Segurança", icon: <Shield className="h-5 w-5" />, path: "/admin/security" },
-    { name: "Roadmap", icon: <Rocket className="h-5 w-5" />, path: "/admin/roadmap" },
+    { name: "Roadmap Enterprise", icon: <Rocket className="h-5 w-5" />, path: "/admin/roadmap" },
     { name: "Suporte", icon: <MessageSquare className="h-5 w-5" />, path: "/admin/support" },
     { name: "Planos & Billing", icon: <CreditCard className="h-5 w-5" />, path: "/admin/billing" },
     { name: "OCR Admin", icon: <Zap className="h-5 w-5" />, path: "/admin/ocr" },
     { name: "Storage Admin", icon: <Database className="h-5 w-5" />, path: "/admin/storage" },
     { name: "Biblioteca Master", icon: <FileText className="h-5 w-5" />, path: "/admin/document-library" },
     { name: "Audit Logs", icon: <History className="h-5 w-5" />, path: "/admin/logs" },
-    { name: "System Status", icon: <Activity className="h-5 w-5" />, path: "/admin/system-report" },
-    { name: "Implantação SaaS", icon: <Rocket className="h-5 w-5" />, path: "/admin/roadmap" },
-    { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },
-
+    { name: "Implantação & Status", icon: <Activity className="h-5 w-5" />, path: "/admin/system-report" },
+    { name: "Ajustes Master", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },
   ];
 
   return (
