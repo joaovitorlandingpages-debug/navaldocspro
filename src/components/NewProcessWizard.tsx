@@ -489,15 +489,15 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         console.warn("CLIENT_SAVE_NOT_BLOCKED_BY_LOG", logError);
       }
 
-      console.log("QUICK_CLIENT_FLOW_OK");
-      console.log("CLIENT_INSERT_SUCCESS");
-      console.log("CLIENT_LIST_RENDER_OK");
-      console.log("LOWERCASE_ERROR_FIXED");
+      console.log("CLIENT_MODULE_READY");
+      console.log("CLIENT_INSERT_SUCCESS", data.id);
+      console.log("CLIENT_SELECTED_IN_WIZARD");
+      console.log("CLIENT_OCR_READY");
       toast.success("Cliente criado com sucesso!");
-
-
       
       setFormData({ ...formData, client: data.name, clientId: data.id });
+      setIsQuickClientOpen(false);
+      setStep(3); // Liberar próximo passo (vincular embarcação)
       setIsQuickClientOpen(false);
       setNewClient({
         name: "", document: "", rg: "", phone: "", email: "",
