@@ -91,7 +91,8 @@ function Customers() {
           .eq('company_id', profile.company_id);
 
         if (searchTerm) {
-          query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,cpf_cnpj.ilike.%${searchTerm}%`);
+          const safeSearch = safeString(searchTerm).toLowerCase();
+          query = query.or(`name.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%,cpf_cnpj.ilike.%${safeSearch}%`);
         }
 
         const { data: customerData, count, error } = await query
