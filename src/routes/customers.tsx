@@ -3,7 +3,7 @@ import {
   Users, Search, Plus, MoreHorizontal, Mail, 
   MapPin, Filter, X, Loader2, FileText, 
   Download, Trash2, Eye, Zap, Image as ImageIcon,
-  Ship, Smartphone, Globe
+  Ship, Smartphone, Globe, User
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
