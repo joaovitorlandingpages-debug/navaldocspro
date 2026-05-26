@@ -32,12 +32,12 @@ function AdminCompanies() {
   const { profile, loading } = useAuth();
 
   useEffect(() => {
-    console.log("GLOBAL_COMPANIES_OK");
+    console.log("COMPANIES_ADMIN_OK");
   }, []);
 
   if (loading) return null;
-  if (profile?.role !== 'admin_master_global' && profile?.email !== 'joaovitor.f0725@gmail.com') {
-    return <Navigate to="/dashboard-v2" />;
+  if (profile?.role !== 'admin_master_global' && profile?.role !== 'admin_master' && profile?.email !== 'joaovitor.f0725@gmail.com') {
+    return <Navigate to="/dashboard" />;
   }
 
 

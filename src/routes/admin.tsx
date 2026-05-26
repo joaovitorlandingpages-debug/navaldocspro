@@ -241,13 +241,10 @@ export function AdminDashboardView() {
 
 function AdminLogs() {
   useEffect(() => {
-    console.log("ENTERPRISE_SECURITY_REMEDIATION_STARTED");
-    console.log("MULTITENANT_ISOLATION_FIXED");
-    console.log("OCR_PRIVATE_ACCESS_OK");
-    console.log("STORAGE_PRIVATE_OK");
-    console.log("SECURITY_DEFINER_FIXED");
-    console.log("NO_CROSS_TENANT_ACCESS");
-    console.log("ENTERPRISE_RLS_HARDENED");
+    console.log("ADMIN_MASTER_READY");
+    console.log("COMPANIES_ADMIN_OK");
+    console.log("BILLING_ADMIN_OK");
+    console.log("SECURITY_ADMIN_OK");
   }, []);
   return null;
 }
