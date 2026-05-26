@@ -25,7 +25,7 @@ export function MobileNavigation() {
   ];
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-2 pb-safe-area-inset-bottom pt-2 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
       <nav className="flex items-center justify-around h-16">
         {navItems.map((item) => {
           if (item.isAction) {
