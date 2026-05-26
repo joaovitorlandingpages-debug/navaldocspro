@@ -3,6 +3,7 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { toast } from "sonner";
 
 export interface DossierData {
   process: any;
