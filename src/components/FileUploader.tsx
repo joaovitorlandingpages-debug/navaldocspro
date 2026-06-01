@@ -35,11 +35,18 @@ export function FileUploader({
   const { profile } = useAuth();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    if (acceptedFiles.length === 0) return;
+    if (acceptedFiles.length === 0) {
+      console.warn("UPLOAD_REJECTED_NO_FILES");
+      toast.error("Formato não aceito. Use PDF, JPG ou PNG.");
+      return;
+    }
 
     const file = acceptedFiles[0];
+    console.log("UPLOAD_STARTED", { name: file.name, size: file.size, type: file.type });
     setIsUploading(true);
     setProgress(10);
+
+    const loadingToast = toast.loading(`Enviando ${file.name}...`);
 
     try {
       const interval = setInterval(() => {
@@ -57,34 +64,40 @@ export function FileUploader({
 
       clearInterval(interval);
       setProgress(100);
-      
-      console.log("SMART_UPLOAD_OK", result.id);
-      
-      // Auto-trigger OCR if it's a candidate category
+
+      console.log("UPLOAD_COMPLETED", result.id);
+      toast.dismiss(loadingToast);
+      toast.success(`Arquivo "${file.name}" enviado com sucesso!`);
+
       const ocrCategories = ['RG', 'CNH', 'CPF', 'TIE', 'TIEM', 'Documentos Pessoais', 'Documentos da Embarcação'];
-      if (ocrCategories.some(cat => category?.includes(cat) || result.file_name.toUpperCase().includes(cat))) {
-        console.log("OCR_AUTOSTART_OK", result.id);
-        createBatchJobs.mutate({
-          files: [{ file, id: result.id }],
-          companyId: profile?.company_id || "",
-          docType: category || "Identidade"
-        });
+      if (ocrCategories.some(cat => category?.toUpperCase()?.includes(cat.toUpperCase()) || result.file_name?.toUpperCase().includes(cat.toUpperCase()))) {
+        console.log("OCR_DOCUMENT_ATTACHED", result.id);
+        try {
+          createBatchJobs.mutate({
+            files: [{ file, id: result.id }],
+            companyId: profile?.company_id || "",
+            docType: category || "Identidade"
+          });
+        } catch (ocrErr) {
+          console.warn("OCR_TRIGGER_FAILED_SAFE", ocrErr);
+        }
       }
 
       if (onSuccess) onSuccess(result);
-      
+
       setTimeout(() => {
         setIsUploading(false);
         setProgress(0);
-      }, 800);
+      }, 600);
 
     } catch (error: any) {
-      console.error("Upload error:", error);
-      toast.error(`Falha no envio: ${error.message || 'Erro desconhecido'}`);
+      console.error("UPLOAD_FAILED", error);
+      toast.dismiss(loadingToast);
+      toast.error(`Falha no envio: ${error?.message || 'Erro desconhecido'}`);
       setIsUploading(false);
       setProgress(0);
     }
-  }, [uploadFile, bucket, category, customerId, vesselId, processId, onSuccess]);
+  }, [uploadFile, bucket, category, customerId, vesselId, processId, onSuccess, createBatchJobs, profile?.company_id]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
