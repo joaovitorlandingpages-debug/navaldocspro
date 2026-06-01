@@ -120,9 +120,17 @@ function Customers() {
 
   const handleCreateCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    console.log("CLIENT_SAVE_CLICKED");
+
+    if (!formData.name?.trim() || !formData.cpf_cnpj?.trim()) {
+      toast.error("Nome e CPF/CNPJ são obrigatórios.");
+      console.log("CLIENT_VALIDATION_FAILED");
+      return;
+    }
+    console.log("CLIENT_VALIDATION_OK");
+
     let effectiveCompanyId = companyId;
-    
+
     if (!effectiveCompanyId) {
       console.log("WORKSPACE_NOT_FOUND_IN_CONTEXT_RECOVERING");
       const { data: { user } } = await supabase.auth.getUser();
@@ -141,33 +149,31 @@ function Customers() {
 
     setIsSubmitting(true);
     const clientType = formData.cpf_cnpj.length > 14 ? 'pessoa_juridica' : (formData.cpf_cnpj.length > 11 ? 'mei' : 'pessoa_fisica');
-    console.log("USER_WORKSPACE_FOUND", companyId);
-    console.log("CLIENT_TYPE_SELECTED", clientType);
+    console.log("CLIENT_INSERT_STARTED", { clientType, companyId: effectiveCompanyId });
+    const loadingToast = toast.loading("Salvando cliente...");
 
     try {
       const { data, error } = await supabase
         .from('customers')
         .insert({
           company_id: effectiveCompanyId,
-          name: formData.name,
-          cpf_cnpj: formData.cpf_cnpj,
-          email: formData.email,
-          phone: formData.phone,
-          address: safeString(formData.address).trim(),
-          city: safeString(formData.city).trim(),
-          state: safeString(formData.state).trim(),
-          rg: safeString(formData.rg).trim(),
-          notes: safeString(formData.notes).trim()
+          name: safeString(formData.name).trim(),
+          cpf_cnpj: safeString(formData.cpf_cnpj).trim(),
+          email: safeString(formData.email).trim() || null,
+          phone: safeString(formData.phone).trim() || null,
+          address: safeString(formData.address).trim() || null,
+          city: safeString(formData.city).trim() || null,
+          state: safeString(formData.state).trim() || null,
+          rg: safeString(formData.rg).trim() || null,
+          notes: safeString(formData.notes).trim() || null
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      console.log("CLIENT_MODULE_READY");
       console.log("CLIENT_INSERT_SUCCESS", data.id);
-      
-      // Registro de Log (Fallback seguro)
+
       try {
         const { data: { user } } = await supabase.auth.getUser();
         await supabase.from('activity_logs').insert({
@@ -185,17 +191,17 @@ function Customers() {
         console.warn("LOG_FAILURE_SAFE", logError);
       }
 
-      if (clientType === 'pessoa_fisica') console.log("CLIENT_PERSON_FISICA_OK");
-      if (clientType === 'mei') console.log("CLIENT_MEI_OK");
-      if (clientType === 'pessoa_juridica') console.log("CLIENT_CNPJ_OK");
-
-      setCustomers([...customers, { ...data, vessels: [{ count: 0 }] }]);
+      setCustomers((prev) => [{ ...data, vessels: [{ count: 0 }] }, ...prev]);
+      setSelectedCustomer({ ...data, vessels: [{ count: 0 }] });
       setIsModalOpen(false);
       setFormData({ name: "", cpf_cnpj: "", rg: "", email: "", phone: "", address: "", city: "", state: "", notes: "" });
-      toast.success("Cliente cadastrado com sucesso!");
+      toast.dismiss(loadingToast);
+      toast.success(`Cliente "${data.name}" cadastrado com sucesso!`);
 
     } catch (error: any) {
-      toast.error(error.message || "Erro ao cadastrar cliente");
+      console.error("CLIENT_INSERT_FAILED", error);
+      toast.dismiss(loadingToast);
+      toast.error(error?.message || "Erro ao cadastrar cliente. Verifique os dados e tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
