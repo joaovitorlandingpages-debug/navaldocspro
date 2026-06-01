@@ -101,8 +101,14 @@ export function FileUploader({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
+    onDropRejected: (rejections) => {
+      console.warn("UPLOAD_REJECTED", rejections);
+      const reason = rejections?.[0]?.errors?.[0]?.message || "Arquivo inválido";
+      toast.error(`Não foi possível anexar: ${reason}. Use PDF, JPG ou PNG até 20MB.`);
+    },
     maxFiles: 1,
     multiple: false,
+    maxSize: 20 * 1024 * 1024,
     accept: {
       'application/pdf': ['.pdf'],
       'image/jpeg': ['.jpg', '.jpeg'],
