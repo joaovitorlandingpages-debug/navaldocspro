@@ -701,6 +701,7 @@ export type Database = {
       customers: {
         Row: {
           address: string | null
+          city: string | null
           company_id: string
           cpf_cnpj: string | null
           created_at: string
@@ -709,10 +710,13 @@ export type Database = {
           name: string
           notes: string | null
           phone: string | null
+          rg: string | null
+          state: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
+          city?: string | null
           company_id: string
           cpf_cnpj?: string | null
           created_at?: string
@@ -721,10 +725,13 @@ export type Database = {
           name: string
           notes?: string | null
           phone?: string | null
+          rg?: string | null
+          state?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
+          city?: string | null
           company_id?: string
           cpf_cnpj?: string | null
           created_at?: string
@@ -733,6 +740,8 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          rg?: string | null
+          state?: string | null
           updated_at?: string
         }
         Relationships: [
