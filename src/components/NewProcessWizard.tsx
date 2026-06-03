@@ -211,25 +211,22 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       return;
     }
 
-    if (!formData.clientId) {
-      toast.error("Selecione um cliente primeiro.");
-      return;
-    }
-
     if (!newVessel.name) {
       toast.error("O nome da embarcação é obrigatório.");
       return;
     }
 
     setIsCreatingVessel(true);
+    console.log("VESSEL_CREATE_OPTION_OK");
     console.log("VESSEL_CREATE_SUBMIT_OK");
-    
+
     try {
       const { data, error } = await supabase
         .from('vessels')
         .insert({
           company_id: profile?.company_id,
-          customer_id: formData.clientId,
+          // Vessel may not yet belong to the process customer (transfer flow)
+          customer_id: formData.clientId || null,
           name: newVessel.name,
           registration_number: newVessel.registration_number,
           vessel_type: newVessel.vessel_type,
