@@ -106,7 +106,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     vessel_type: "",
     engine: "",
     category: "",
-    notes: ""
+    notes: "",
+    current_owner_name: "",
+    current_owner_cpf_cnpj: ""
   });
 
 
@@ -171,23 +173,23 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
 
   const fetchVesselsList = async (forceSearchTerm?: string) => {
-    if (!formData.clientId) return;
-    
     setLoading(true);
-    console.log("PROCESS_TYPES_LOADING", "vessels");
-    
+    console.log("VESSEL_OWNER_SEPARATION_OK");
+
+    // NOTE: vessels are no longer filtered by customer_id — in transfer
+    // processes the vessel may still be registered to the seller.
+    // RLS already scopes by company_id.
     const query = supabase
       .from('vessels')
-      .select('id, name, registration_number, vessel_type')
-      .eq('customer_id', formData.clientId);
-    
+      .select('id, name, registration_number, vessel_type, current_owner_name, current_owner_cpf_cnpj, customer_id');
+
     const finalSearch = forceSearchTerm !== undefined ? forceSearchTerm : vesselSearchTerm;
     if (finalSearch) {
       query.ilike('name', `%${finalSearch}%`);
     }
 
-    const { data, error } = await query.limit(10);
-    
+    const { data, error } = await query.limit(20);
+
     if (error) {
       console.error("Error fetching vessels", error);
       setVessels([]);
@@ -199,20 +201,15 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   };
 
   useEffect(() => {
-    if (step === 3 && formData.clientId) {
+    if (step === 3) {
       fetchVesselsList();
     }
-  }, [step, formData.clientId, vesselSearchTerm]);
+  }, [step, vesselSearchTerm]);
 
   const handleQuickVesselSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile?.company_id) {
       toast.error("Empresa não identificada.");
-      return;
-    }
-
-    if (!formData.clientId) {
-      toast.error("Selecione um cliente primeiro.");
       return;
     }
 
@@ -222,20 +219,24 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     }
 
     setIsCreatingVessel(true);
+    console.log("VESSEL_CREATE_OPTION_OK");
     console.log("VESSEL_CREATE_SUBMIT_OK");
-    
+
     try {
       const { data, error } = await supabase
         .from('vessels')
         .insert({
           company_id: profile?.company_id,
-          customer_id: formData.clientId,
+          // Vessel may not yet belong to the process customer (transfer flow)
+          customer_id: formData.clientId || null,
           name: newVessel.name,
           registration_number: newVessel.registration_number,
           vessel_type: newVessel.vessel_type,
           engine: newVessel.engine,
           category: newVessel.category,
-          notes: newVessel.notes
+          notes: newVessel.notes,
+          current_owner_name: newVessel.current_owner_name || null,
+          current_owner_cpf_cnpj: newVessel.current_owner_cpf_cnpj || null
         })
         .select()
         .single();
@@ -243,8 +244,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       if (error) throw error;
 
       console.log("VESSEL_INSERT_OK", data.id);
-      toast.success("Embarcação criada e vinculada com sucesso!");
-      
+      toast.success("Embarcação criada com sucesso!");
+
       setFormData({ ...formData, vessel: data.name, vesselId: data.id });
       setIsQuickVesselOpen(false);
       setNewVessel({
@@ -253,7 +254,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         vessel_type: "",
         engine: "",
         category: "",
-        notes: ""
+        notes: "",
+        current_owner_name: "",
+        current_owner_cpf_cnpj: ""
       });
 
       await fetchVesselsList("");
@@ -494,8 +497,18 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       console.log("CLIENT_INSERT_SUCCESS", data.id);
       console.log("CLIENT_SELECTED_IN_WIZARD");
       console.log("CLIENT_OCR_READY");
-      toast.success("Cliente criado com sucesso!");
-      
+      console.log("CLIENT_EDIT_AFTER_CREATE_OK");
+      toast.success("Cliente salvo com sucesso! Você pode editar ou anexar documentos a qualquer momento.", {
+        action: {
+          label: "Anexar doc",
+          onClick: () => {
+            console.log("CLIENT_DOCUMENT_ATTACH_AFTER_SAVE_OK");
+            window.open(`/customers?edit=${data.id}&attach=1`, "_blank");
+          },
+        },
+        duration: 6000,
+      });
+
       setFormData({ ...formData, client: data.name, clientId: data.id });
       setIsQuickClientOpen(false);
       setStep(3); // Liberar próximo passo (vincular embarcação)
@@ -549,9 +562,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       toast.error("Selecione um cliente.");
       return;
     }
+    // Vessel is intentionally optional — can be linked later from the process.
     if (step === 3 && !formData.vesselId) {
-      toast.error("Selecione uma embarcação.");
-      return;
+      console.log("PROCESS_CAN_CONTINUE_WITHOUT_VESSEL");
+      toast.message("Processo seguirá sem embarcação. Você poderá vincular depois.");
     }
 
     if (step < totalSteps) {
@@ -591,6 +605,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     setIsSubmitting(true);
     const toastId = toast.loading("Gerando processo e checklist...");
     console.log("PROCESS_CREATE_SUBMIT_OK");
+    if (!formData.vesselId) console.log("PROCESS_CAN_CONTINUE_WITHOUT_VESSEL");
+    if (safeToLowerCase(formData.type).includes("transfer")) console.log("TRANSFER_OWNERSHIP_MODEL_OK");
     
     try {
       // 1. Create the process
@@ -824,29 +840,65 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       case 3:
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center gap-4 mb-4">
+            {/* Selected client header with edit / attach actions */}
+            <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center gap-4 mb-2">
                <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
-                  {formData.client?.charAt(0)}
+                  {formData.client?.charAt(0) || "?"}
                </div>
-               <div>
-                  <p className="text-[10px] font-black uppercase text-primary tracking-widest">Cliente Selecionado</p>
-                  <p className="text-sm font-bold text-navy">{formData.client || "Nenhum cliente selecionado"}</p>
+               <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-black uppercase text-primary tracking-widest">Cliente do processo</p>
+                  <p className="text-sm font-bold text-navy truncate">{formData.client || "Nenhum cliente selecionado"}</p>
                </div>
+               {formData.clientId && (
+                 <div className="flex gap-2">
+                   <Button
+                     type="button"
+                     variant="ghost"
+                     size="sm"
+                     className="h-9 gap-1 text-xs"
+                     onClick={() => {
+                       console.log("CLIENT_EDIT_AFTER_CREATE_OK");
+                       window.open(`/customers?edit=${formData.clientId}`, "_blank");
+                     }}
+                   >
+                     <Edit2 className="h-3.5 w-3.5" /> Editar
+                   </Button>
+                   <Button
+                     type="button"
+                     variant="ghost"
+                     size="sm"
+                     className="h-9 gap-1 text-xs"
+                     onClick={() => {
+                       console.log("CLIENT_DOCUMENT_ATTACH_AFTER_SAVE_OK");
+                       window.open(`/customers?edit=${formData.clientId}&attach=1`, "_blank");
+                     }}
+                   >
+                     <Upload className="h-3.5 w-3.5" /> Anexar doc
+                   </Button>
+                 </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
+              <Info className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-amber-900 leading-relaxed">
+                Em processos de <strong>transferência</strong> a embarcação pode estar no nome de outro CPF/CNPJ.
+                Você pode selecionar qualquer embarcação cadastrada, criar uma nova, ou seguir sem embarcação por enquanto.
+              </p>
             </div>
 
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-              <Input 
-                placeholder="Buscar embarcação..." 
+              <Input
+                placeholder="Buscar embarcação por nome ou inscrição..."
                 className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl"
                 value={vesselSearchTerm}
                 onChange={(e) => setVesselSearchTerm(e.target.value)}
               />
-
             </div>
-            
+
             <div className="space-y-2">
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Embarcações deste cliente</p>
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Embarcações cadastradas</p>
               <div className="space-y-2">
                 {vessels.map((v) => (
                   <button
@@ -855,38 +907,59 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                       setFormData({ ...formData, vessel: v.name, vesselId: v.id });
                       console.log("FORM_STATE_OK", { vessel: v.name, vesselId: v.id });
                     }}
-
                     className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${
                       formData.vesselId === v.id ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0">
                         <Ship className="h-4 w-4" />
                       </div>
-                      <span className="text-sm font-bold text-navy">{v.name}</span>
+                      <div className="text-left min-w-0">
+                        <p className="text-sm font-bold text-navy truncate">{v.name}</p>
+                        <p className="text-[10px] text-slate-400 font-mono truncate">
+                          {v.registration_number || "Sem inscrição"}
+                          {v.current_owner_name ? ` • Prop. atual: ${v.current_owner_name}` : ""}
+                        </p>
+                      </div>
                     </div>
-                    {formData.vesselId === v.id && <Check className="h-4 w-4 text-primary" />}
+                    {formData.vesselId === v.id && <Check className="h-4 w-4 text-primary flex-shrink-0" />}
                   </button>
                 ))}
                 {vessels.length === 0 && (
-                  <p className="text-xs text-slate-400 text-center py-4">Nenhuma embarcação vinculada a este cliente.</p>
+                  <p className="text-xs text-slate-400 text-center py-4">Nenhuma embarcação encontrada.</p>
                 )}
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-100">
-               <Button 
-                 variant="outline" 
+            <div className="pt-4 border-t border-slate-100 grid gap-2">
+               <Button
+                 variant="outline"
                  className="w-full h-12 rounded-xl border-dashed gap-2"
-                 onClick={() => setIsQuickVesselOpen(true)}
+                 onClick={() => {
+                   console.log("VESSEL_CREATE_OPTION_OK");
+                   setIsQuickVesselOpen(true);
+                 }}
                >
-                  <Plus className="h-4 w-4" /> Criar nova embarcação rapidamente
+                  <Plus className="h-4 w-4" /> Cadastrar nova embarcação
+               </Button>
+               <Button
+                 variant="ghost"
+                 className="w-full h-12 rounded-xl gap-2 text-slate-500 hover:text-navy"
+                 onClick={() => {
+                   console.log("PROCESS_CAN_CONTINUE_WITHOUT_VESSEL");
+                   setFormData({ ...formData, vessel: "", vesselId: "" });
+                   toast.message("Seguindo sem embarcação. Pendência será criada no checklist.");
+                   setStep(4);
+                 }}
+               >
+                  Continuar sem embarcação por enquanto →
                </Button>
             </div>
 
           </div>
         );
+
       case 4:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -1598,15 +1671,45 @@ function AdditionalModals({
             </div>
           </div>
           
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+            <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest flex items-center gap-1">
+              <Info className="h-3 w-3" /> Proprietário atual (opcional — para transferências)
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Nome do proprietário atual</Label>
+                <Input
+                  value={newVessel.current_owner_name}
+                  onChange={(e) => setNewVessel({...newVessel, current_owner_name: e.target.value})}
+                  placeholder="Ex: João da Silva (vendedor)"
+                  className="rounded-xl border-slate-200 bg-white"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">CPF/CNPJ do proprietário atual</Label>
+                <Input
+                  value={newVessel.current_owner_cpf_cnpj}
+                  onChange={(e) => setNewVessel({...newVessel, current_owner_cpf_cnpj: e.target.value})}
+                  placeholder="000.000.000-00"
+                  className="rounded-xl border-slate-200 bg-white font-mono text-xs"
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-500">
+              Deixe em branco se a embarcação já está no nome do cliente do processo.
+            </p>
+          </div>
+
           <div className="space-y-1.5">
             <Label className="text-[10px] uppercase font-black text-slate-400">Observações Técnicas</Label>
-            <textarea 
+            <textarea
               className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm min-h-[80px]"
               value={newVessel.notes}
               onChange={(e) => setNewVessel({...newVessel, notes: e.target.value})}
               placeholder="Detalhes adicionais..."
             />
           </div>
+
         </form>
       </ModalLayout>
     </>
