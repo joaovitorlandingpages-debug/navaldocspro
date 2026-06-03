@@ -171,23 +171,23 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
 
   const fetchVesselsList = async (forceSearchTerm?: string) => {
-    if (!formData.clientId) return;
-    
     setLoading(true);
-    console.log("PROCESS_TYPES_LOADING", "vessels");
-    
+    console.log("VESSEL_OWNER_SEPARATION_OK");
+
+    // NOTE: vessels are no longer filtered by customer_id — in transfer
+    // processes the vessel may still be registered to the seller.
+    // RLS already scopes by company_id.
     const query = supabase
       .from('vessels')
-      .select('id, name, registration_number, vessel_type')
-      .eq('customer_id', formData.clientId);
-    
+      .select('id, name, registration_number, vessel_type, current_owner_name, current_owner_cpf_cnpj, customer_id');
+
     const finalSearch = forceSearchTerm !== undefined ? forceSearchTerm : vesselSearchTerm;
     if (finalSearch) {
       query.ilike('name', `%${finalSearch}%`);
     }
 
-    const { data, error } = await query.limit(10);
-    
+    const { data, error } = await query.limit(20);
+
     if (error) {
       console.error("Error fetching vessels", error);
       setVessels([]);
@@ -199,10 +199,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   };
 
   useEffect(() => {
-    if (step === 3 && formData.clientId) {
+    if (step === 3) {
       fetchVesselsList();
     }
-  }, [step, formData.clientId, vesselSearchTerm]);
+  }, [step, vesselSearchTerm]);
 
   const handleQuickVesselSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
