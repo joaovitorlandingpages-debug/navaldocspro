@@ -106,7 +106,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     vessel_type: "",
     engine: "",
     category: "",
-    notes: ""
+    notes: "",
+    current_owner_name: "",
+    current_owner_cpf_cnpj: ""
   });
 
 
