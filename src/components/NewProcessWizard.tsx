@@ -828,29 +828,65 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       case 3:
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center gap-4 mb-4">
+            {/* Selected client header with edit / attach actions */}
+            <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center gap-4 mb-2">
                <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
-                  {formData.client?.charAt(0)}
+                  {formData.client?.charAt(0) || "?"}
                </div>
-               <div>
-                  <p className="text-[10px] font-black uppercase text-primary tracking-widest">Cliente Selecionado</p>
-                  <p className="text-sm font-bold text-navy">{formData.client || "Nenhum cliente selecionado"}</p>
+               <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-black uppercase text-primary tracking-widest">Cliente do processo</p>
+                  <p className="text-sm font-bold text-navy truncate">{formData.client || "Nenhum cliente selecionado"}</p>
                </div>
+               {formData.clientId && (
+                 <div className="flex gap-2">
+                   <Button
+                     type="button"
+                     variant="ghost"
+                     size="sm"
+                     className="h-9 gap-1 text-xs"
+                     onClick={() => {
+                       console.log("CLIENT_EDIT_AFTER_CREATE_OK");
+                       window.open(`/customers?edit=${formData.clientId}`, "_blank");
+                     }}
+                   >
+                     <Edit2 className="h-3.5 w-3.5" /> Editar
+                   </Button>
+                   <Button
+                     type="button"
+                     variant="ghost"
+                     size="sm"
+                     className="h-9 gap-1 text-xs"
+                     onClick={() => {
+                       console.log("CLIENT_DOCUMENT_ATTACH_AFTER_SAVE_OK");
+                       window.open(`/customers?edit=${formData.clientId}&attach=1`, "_blank");
+                     }}
+                   >
+                     <Upload className="h-3.5 w-3.5" /> Anexar doc
+                   </Button>
+                 </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
+              <Info className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-amber-900 leading-relaxed">
+                Em processos de <strong>transferência</strong> a embarcação pode estar no nome de outro CPF/CNPJ.
+                Você pode selecionar qualquer embarcação cadastrada, criar uma nova, ou seguir sem embarcação por enquanto.
+              </p>
             </div>
 
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-              <Input 
-                placeholder="Buscar embarcação..." 
+              <Input
+                placeholder="Buscar embarcação por nome ou inscrição..."
                 className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl"
                 value={vesselSearchTerm}
                 onChange={(e) => setVesselSearchTerm(e.target.value)}
               />
-
             </div>
-            
+
             <div className="space-y-2">
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Embarcações deste cliente</p>
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Embarcações cadastradas</p>
               <div className="space-y-2">
                 {vessels.map((v) => (
                   <button
@@ -859,38 +895,59 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                       setFormData({ ...formData, vessel: v.name, vesselId: v.id });
                       console.log("FORM_STATE_OK", { vessel: v.name, vesselId: v.id });
                     }}
-
                     className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${
                       formData.vesselId === v.id ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0">
                         <Ship className="h-4 w-4" />
                       </div>
-                      <span className="text-sm font-bold text-navy">{v.name}</span>
+                      <div className="text-left min-w-0">
+                        <p className="text-sm font-bold text-navy truncate">{v.name}</p>
+                        <p className="text-[10px] text-slate-400 font-mono truncate">
+                          {v.registration_number || "Sem inscrição"}
+                          {v.current_owner_name ? ` • Prop. atual: ${v.current_owner_name}` : ""}
+                        </p>
+                      </div>
                     </div>
-                    {formData.vesselId === v.id && <Check className="h-4 w-4 text-primary" />}
+                    {formData.vesselId === v.id && <Check className="h-4 w-4 text-primary flex-shrink-0" />}
                   </button>
                 ))}
                 {vessels.length === 0 && (
-                  <p className="text-xs text-slate-400 text-center py-4">Nenhuma embarcação vinculada a este cliente.</p>
+                  <p className="text-xs text-slate-400 text-center py-4">Nenhuma embarcação encontrada.</p>
                 )}
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-100">
-               <Button 
-                 variant="outline" 
+            <div className="pt-4 border-t border-slate-100 grid gap-2">
+               <Button
+                 variant="outline"
                  className="w-full h-12 rounded-xl border-dashed gap-2"
-                 onClick={() => setIsQuickVesselOpen(true)}
+                 onClick={() => {
+                   console.log("VESSEL_CREATE_OPTION_OK");
+                   setIsQuickVesselOpen(true);
+                 }}
                >
-                  <Plus className="h-4 w-4" /> Criar nova embarcação rapidamente
+                  <Plus className="h-4 w-4" /> Cadastrar nova embarcação
+               </Button>
+               <Button
+                 variant="ghost"
+                 className="w-full h-12 rounded-xl gap-2 text-slate-500 hover:text-navy"
+                 onClick={() => {
+                   console.log("PROCESS_CAN_CONTINUE_WITHOUT_VESSEL");
+                   setFormData({ ...formData, vessel: "", vesselId: "" });
+                   toast.message("Seguindo sem embarcação. Pendência será criada no checklist.");
+                   setStep(4);
+                 }}
+               >
+                  Continuar sem embarcação por enquanto →
                </Button>
             </div>
 
           </div>
         );
+
       case 4:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
