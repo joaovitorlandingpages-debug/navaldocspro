@@ -497,8 +497,18 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       console.log("CLIENT_INSERT_SUCCESS", data.id);
       console.log("CLIENT_SELECTED_IN_WIZARD");
       console.log("CLIENT_OCR_READY");
-      toast.success("Cliente criado com sucesso!");
-      
+      console.log("CLIENT_EDIT_AFTER_CREATE_OK");
+      toast.success("Cliente salvo com sucesso! Você pode editar ou anexar documentos a qualquer momento.", {
+        action: {
+          label: "Anexar doc",
+          onClick: () => {
+            console.log("CLIENT_DOCUMENT_ATTACH_AFTER_SAVE_OK");
+            window.open(`/customers?edit=${data.id}&attach=1`, "_blank");
+          },
+        },
+        duration: 6000,
+      });
+
       setFormData({ ...formData, client: data.name, clientId: data.id });
       setIsQuickClientOpen(false);
       setStep(3); // Liberar próximo passo (vincular embarcação)
