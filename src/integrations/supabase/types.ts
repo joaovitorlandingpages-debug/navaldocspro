@@ -3071,6 +3071,7 @@ export type Database = {
           automation_level: number | null
           automation_metadata: Json | null
           automation_status: string | null
+          buyer_id: string | null
           company_id: string
           completed_at: string | null
           completion_percentage: number | null
@@ -3092,6 +3093,8 @@ export type Database = {
           last_accessed_at: string | null
           last_automation_run: string | null
           missing_signatures_count: number | null
+          new_owner_cpf_cnpj: string | null
+          new_owner_name: string | null
           notes: string | null
           pending_documents_count: number | null
           priority: string
@@ -3101,6 +3104,7 @@ export type Database = {
           protocol_at: string | null
           protocol_number: string | null
           responsible_id: string | null
+          seller_id: string | null
           sla_deadline: string | null
           sla_limit_at: string | null
           sla_status: string | null
@@ -3119,6 +3123,7 @@ export type Database = {
           automation_level?: number | null
           automation_metadata?: Json | null
           automation_status?: string | null
+          buyer_id?: string | null
           company_id: string
           completed_at?: string | null
           completion_percentage?: number | null
@@ -3140,6 +3145,8 @@ export type Database = {
           last_accessed_at?: string | null
           last_automation_run?: string | null
           missing_signatures_count?: number | null
+          new_owner_cpf_cnpj?: string | null
+          new_owner_name?: string | null
           notes?: string | null
           pending_documents_count?: number | null
           priority?: string
@@ -3149,6 +3156,7 @@ export type Database = {
           protocol_at?: string | null
           protocol_number?: string | null
           responsible_id?: string | null
+          seller_id?: string | null
           sla_deadline?: string | null
           sla_limit_at?: string | null
           sla_status?: string | null
@@ -3167,6 +3175,7 @@ export type Database = {
           automation_level?: number | null
           automation_metadata?: Json | null
           automation_status?: string | null
+          buyer_id?: string | null
           company_id?: string
           completed_at?: string | null
           completion_percentage?: number | null
@@ -3188,6 +3197,8 @@ export type Database = {
           last_accessed_at?: string | null
           last_automation_run?: string | null
           missing_signatures_count?: number | null
+          new_owner_cpf_cnpj?: string | null
+          new_owner_name?: string | null
           notes?: string | null
           pending_documents_count?: number | null
           priority?: string
@@ -3197,6 +3208,7 @@ export type Database = {
           protocol_at?: string | null
           protocol_number?: string | null
           responsible_id?: string | null
+          seller_id?: string | null
           sla_deadline?: string | null
           sla_limit_at?: string | null
           sla_status?: string | null
@@ -4348,7 +4360,9 @@ export type Database = {
           category: string | null
           company_id: string
           created_at: string
-          customer_id: string
+          current_owner_cpf_cnpj: string | null
+          current_owner_name: string | null
+          customer_id: string | null
           engine: string | null
           id: string
           name: string
@@ -4361,7 +4375,9 @@ export type Database = {
           category?: string | null
           company_id: string
           created_at?: string
-          customer_id: string
+          current_owner_cpf_cnpj?: string | null
+          current_owner_name?: string | null
+          customer_id?: string | null
           engine?: string | null
           id?: string
           name: string
@@ -4374,7 +4390,9 @@ export type Database = {
           category?: string | null
           company_id?: string
           created_at?: string
-          customer_id?: string
+          current_owner_cpf_cnpj?: string | null
+          current_owner_name?: string | null
+          customer_id?: string | null
           engine?: string | null
           id?: string
           name?: string
