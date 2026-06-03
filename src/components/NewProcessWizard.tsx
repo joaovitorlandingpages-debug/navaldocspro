@@ -605,6 +605,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     setIsSubmitting(true);
     const toastId = toast.loading("Gerando processo e checklist...");
     console.log("PROCESS_CREATE_SUBMIT_OK");
+    if (!formData.vesselId) console.log("PROCESS_CAN_CONTINUE_WITHOUT_VESSEL");
+    if (safeToLowerCase(formData.type).includes("transfer")) console.log("TRANSFER_OWNERSHIP_MODEL_OK");
     
     try {
       // 1. Create the process
