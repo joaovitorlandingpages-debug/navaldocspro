@@ -1659,15 +1659,45 @@ function AdditionalModals({
             </div>
           </div>
           
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+            <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest flex items-center gap-1">
+              <Info className="h-3 w-3" /> Proprietário atual (opcional — para transferências)
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">Nome do proprietário atual</Label>
+                <Input
+                  value={newVessel.current_owner_name}
+                  onChange={(e) => setNewVessel({...newVessel, current_owner_name: e.target.value})}
+                  placeholder="Ex: João da Silva (vendedor)"
+                  className="rounded-xl border-slate-200 bg-white"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-black text-slate-400">CPF/CNPJ do proprietário atual</Label>
+                <Input
+                  value={newVessel.current_owner_cpf_cnpj}
+                  onChange={(e) => setNewVessel({...newVessel, current_owner_cpf_cnpj: e.target.value})}
+                  placeholder="000.000.000-00"
+                  className="rounded-xl border-slate-200 bg-white font-mono text-xs"
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-500">
+              Deixe em branco se a embarcação já está no nome do cliente do processo.
+            </p>
+          </div>
+
           <div className="space-y-1.5">
             <Label className="text-[10px] uppercase font-black text-slate-400">Observações Técnicas</Label>
-            <textarea 
+            <textarea
               className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm min-h-[80px]"
               value={newVessel.notes}
               onChange={(e) => setNewVessel({...newVessel, notes: e.target.value})}
               placeholder="Detalhes adicionais..."
             />
           </div>
+
         </form>
       </ModalLayout>
     </>
