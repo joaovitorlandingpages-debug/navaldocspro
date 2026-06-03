@@ -234,7 +234,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           vessel_type: newVessel.vessel_type,
           engine: newVessel.engine,
           category: newVessel.category,
-          notes: newVessel.notes
+          notes: newVessel.notes,
+          current_owner_name: newVessel.current_owner_name || null,
+          current_owner_cpf_cnpj: newVessel.current_owner_cpf_cnpj || null
         })
         .select()
         .single();
@@ -242,8 +244,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       if (error) throw error;
 
       console.log("VESSEL_INSERT_OK", data.id);
-      toast.success("Embarcação criada e vinculada com sucesso!");
-      
+      toast.success("Embarcação criada com sucesso!");
+
       setFormData({ ...formData, vessel: data.name, vesselId: data.id });
       setIsQuickVesselOpen(false);
       setNewVessel({
@@ -252,7 +254,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         vessel_type: "",
         engine: "",
         category: "",
-        notes: ""
+        notes: "",
+        current_owner_name: "",
+        current_owner_cpf_cnpj: ""
       });
 
       await fetchVesselsList("");
