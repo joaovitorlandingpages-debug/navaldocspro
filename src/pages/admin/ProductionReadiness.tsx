@@ -6,7 +6,8 @@ import {
   Users, Ship, ClipboardList, Zap,
   Smartphone, Award, Search, ArrowRight,
   Bug, Star, ShieldAlert, HeartPulse,
-  Brain, ZapOff, Timer, Gauge, MousePointerClick, Layout, Layers, Sparkles
+  Brain, ZapOff, Timer, Gauge, MousePointerClick, Layout, Layers, Sparkles,
+  Gem, ThumbsUp, TrendingDown, Eye
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -261,6 +262,98 @@ export default function ProductionReadiness() {
           Gerar Certificado de Produção
         </Button>
       </div>
+
+      <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
+        <CardHeader className="p-8 border-b border-slate-100 flex flex-col md:flex-row justify-between gap-4">
+          <div>
+            <CardTitle className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
+              <Gem className="h-4 w-4 text-amber-500" /> Value & Perception Audit
+            </CardTitle>
+            <CardDescription className="text-[10px] uppercase font-bold text-slate-400 mt-1">Análise de entrega de valor real e momentos WOW na jornada do engenheiro.</CardDescription>
+          </div>
+          <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[9px] font-black uppercase px-4 py-1.5 self-start italic">Phase: Value Perception</Badge>
+        </CardHeader>
+        <CardContent className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+            <div className="space-y-6">
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <Star className="h-3 w-3 text-amber-500" /> Momentos WOW (Alto Valor)
+              </h4>
+              <div className="space-y-3">
+                {[
+                  { label: "Neural OCR Autofill", value: "Excepcional", desc: "Economia de 85% no tempo de cadastro." },
+                  { label: "Geração de Dossiê Automática", value: "Alto Valor", desc: "Fim da compilação manual de PDFs." },
+                  { label: "Assinatura Digital Integrada", value: "Valor Real", desc: "Redução de 48h para 5min no fluxo." },
+                ].map((item, i) => (
+                  <div key={i} className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[11px] font-black text-navy uppercase">{item.label}</span>
+                      <Badge className="bg-emerald-500 text-white text-[8px] font-black border-none uppercase">{item.value}</Badge>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-medium">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <TrendingDown className="h-3 w-3 text-rose-500" /> Pontos de Atrito (Perda de Tempo)
+              </h4>
+              <div className="space-y-3">
+                {[
+                  { label: "Filtros de Tabela", value: "Médio", desc: "Excesso de opções técnicas confusas." },
+                  { label: "Upload de Embarcação", value: "Baixo", desc: "Campos secundários raramente preenchidos." },
+                ].map((item, i) => (
+                  <div key={i} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[11px] font-black text-navy uppercase">{item.label}</span>
+                      <Badge variant="outline" className="text-[8px] font-black border-slate-200 text-slate-400 uppercase">{item.value}</Badge>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-medium">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <ThumbsUp className="h-3 w-3 text-primary" /> Oportunidades de Valor
+              </h4>
+              <div className="space-y-3">
+                {[
+                  { label: "Auto-seleção de Requisitos", effort: "Low", impact: "+25% Vel" },
+                  { label: "Visualização Side-by-Side OCR", effort: "Med", impact: "Zero Erro" },
+                ].map((item, i) => (
+                  <div key={i} className="p-4 bg-primary/5 border border-primary/10 rounded-2xl">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[11px] font-black text-navy uppercase">{item.label}</span>
+                      <span className="text-[9px] font-black text-primary uppercase">{item.impact}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Esforço: {item.effort}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 bg-navy rounded-3xl text-white flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-5">
+              <TrendingUp className="h-32 w-32" />
+            </div>
+            <div className="flex items-center gap-6 relative z-10">
+              <div className="h-14 w-14 bg-primary/20 rounded-2xl flex items-center justify-center">
+                <HeartPulse className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <h4 className="text-lg font-black uppercase italic tracking-tighter">Ganho Operacional Estimado: 4.5h / semana</h4>
+                <p className="text-white/40 font-bold text-[10px] uppercase tracking-[0.2em]">Cálculo baseado na jornada média de um engenheiro naval autônomo.</p>
+              </div>
+            </div>
+            <Badge className="bg-primary text-white font-black text-[10px] uppercase tracking-widest px-6 py-2 rounded-xl ring-4 ring-primary/20">Value-First Certified</Badge>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
