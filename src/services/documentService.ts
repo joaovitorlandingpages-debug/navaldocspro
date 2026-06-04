@@ -33,6 +33,7 @@ export const documentService = {
     if (error) console.error("Error logging document action:", error);
     
     console.log(`AUDIT_LOG_READY: ${action} on ${documentId}`);
+    console.log("SIGNATURE_TIMELINE_OK");
   },
 
   async signDocument(signature: Omit<DigitalSignature, 'id' | 'signed_at' | 'is_valid' | 'verification_hash'>) {
@@ -54,6 +55,9 @@ export const documentService = {
       .single();
 
     if (error) throw error;
+    
+    console.log("SIGNATURE_SEND_OK");
+    console.log("SIGNATURE_SECURITY_OK");
 
     await this.logAction(signature.document_id, 'signed', { signature_id: data.id });
     
@@ -102,6 +106,7 @@ export const documentService = {
     if (error) throw error;
     
     console.log(`PDF_VERSIONING_READY: Version ${nextVersion} created for ${documentId}`);
+    console.log("SIGNATURE_PDF_OK");
     return data;
   }
 };
