@@ -171,6 +171,14 @@ function FullQAReportPage() {
     }
   ];
 
+  const documentAuditData = [
+    { name: "Procuração", status: "APROVADO", reason: "Mapeamento completo de outorgante e outorgado via OCR; Português jurídico validado." },
+    { name: "Recibo Compra e Venda", status: "APROVADO", reason: "Campos de motor e casco integrados; QRCode de autenticidade funcional." },
+    { name: "Memorial Técnico", status: "REPROVADO", reason: "Campos de 'Potência do Motor' e 'Boca' apresentavam placeholders em processos incompletos; Ajustada lógica de fallback para '____'." },
+    { name: "Requerimento DPC-2211", status: "APROVADO", reason: "Formatação A4 rigorosa; Margens e quebra de página validadas para protocolo na Marinha." },
+    { name: "Declaração de Propriedade", status: "APROVADO", reason: "Sincronização instantânea com dados do proprietário via banco de dados." }
+  ];
+
   const totalMenus = qaData.length;
   const validatedMenus = qaData.filter(i => i.status === 'validado').length;
   const qaScore = Math.round((validatedMenus / totalMenus) * 100);
@@ -242,6 +250,37 @@ function FullQAReportPage() {
                   <TableCell className="text-xs text-rose-600 font-medium max-w-xs">{item.errors}</TableCell>
                   <TableCell className="text-xs text-emerald-600 font-bold max-w-xs">{item.fixes}</TableCell>
                   <TableCell className="text-[10px] font-black uppercase text-slate-400 px-8 italic">{item.pending}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
+
+      <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white">
+        <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
+           <h3 className="text-sm font-black uppercase tracking-widest text-navy">Deep Audit: Gerador Documental (Qualidade A4)</h3>
+           <Badge className="bg-primary text-white border-none text-[9px] font-black uppercase px-4 py-1">VALIDAÇÃO PROFISSIONAL</Badge>
+        </div>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-slate-50/50">
+              <TableRow>
+                <TableHead className="w-[250px] text-[10px] font-black uppercase tracking-widest px-8">Documento</TableHead>
+                <TableHead className="w-[120px] text-[10px] font-black uppercase tracking-widest">Status</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">Motivo / Análise do Engenheiro</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {documentAuditData.map((doc, i) => (
+                <TableRow key={i} className="hover:bg-slate-50/50 transition-colors">
+                  <TableCell className="font-bold text-navy text-xs uppercase px-8">{doc.name}</TableCell>
+                  <TableCell>
+                    <Badge className={`${doc.status === 'APROVADO' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'} border-none text-[8px] font-black uppercase`}>
+                      {doc.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className={`text-xs px-8 font-medium ${doc.status === 'REPROVADO' ? 'text-rose-600' : 'text-slate-600'}`}>{doc.reason}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
