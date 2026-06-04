@@ -8,7 +8,8 @@ import {
   BarChart3,
   ArrowUpRight,
   ArrowDownRight,
-  ChevronRight
+  ChevronRight,
+  MessageSquare
 } from "lucide-react";
 import { useFieldTracking } from "@/hooks/useFieldTracking";
 import { useEffect } from "react";
