@@ -34,8 +34,6 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
     dossierEngine.exportZip(data);
   };
 
-  if (!data) return null;
-
   const sections = [
     { id: 'cover', label: 'Capa Operacional', icon: <Layout className="h-4 w-4" /> },
     { id: 'summary', label: 'Sumário Executivo', icon: <List className="h-4 w-4" /> },
@@ -51,6 +49,9 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
       <span className="text-sm font-bold text-navy">{value || "---"}</span>
     </div>
   );
+
+  if (!data) return null;
+
 
   return (
     <div className="grid lg:grid-cols-12 gap-8 bg-slate-50/50 p-8 rounded-[3rem] border border-slate-100 min-h-[700px]">

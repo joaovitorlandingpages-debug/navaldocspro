@@ -93,9 +93,6 @@ export function WelcomeTour({
     return () => clearTimeout(timer);
   }, [profile?.company_id, isAdminMaster]);
 
-  if (!isOpen) return null;
-
-  // If not admin, hide technical steps or show simplified version
   const steps: Step[] = [
     { id: '1', title: 'Perfil da Empresa', description: 'Configure os dados básicos da sua organização.', completed: onboardingStep >= 1 },
     { id: '2', title: 'Portal do Cliente', description: 'Ative sua área externa para clientes.', completed: onboardingStep >= 4 },
@@ -103,6 +100,9 @@ export function WelcomeTour({
     { id: '4', title: 'Automação IA', description: 'Experimente a extração inteligente de dados.', completed: onboardingStep >= 6 },
     { id: '5', title: 'Fluxos de Trabalho', description: 'Organize seus processos operacionais.', completed: onboardingStep >= 7 },
   ];
+
+  if (!isOpen) return null;
+
 
   const completedCount = steps.filter(s => s.completed).length;
   const progress = (completedCount / steps.length) * 100;
