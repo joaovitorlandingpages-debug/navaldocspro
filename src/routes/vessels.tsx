@@ -257,10 +257,10 @@ function Vessels() {
                <h3 className="text-xl font-black text-navy mb-1 uppercase tracking-tight group-hover:text-primary transition-colors">{v.name}</h3>
                <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black mb-6">{v.vessel_type}</p>
                <div className="space-y-3 pt-6 border-t border-slate-50">
-                  <div className="flex justify-between text-[11px] font-bold">
-                     <span className="text-slate-400 uppercase tracking-widest">Proprietário</span>
-                     <span className="text-navy truncate ml-4">{v.customers?.name || "Desconhecido"}</span>
-                  </div>
+                   <div className="flex justify-between text-[11px] font-bold">
+                      <span className="text-slate-400 uppercase tracking-widest">Cliente Vinculado</span>
+                      <span className="text-navy truncate ml-4">{v.customers?.name || "Nenhum"}</span>
+                   </div>
                    <div className="flex justify-between text-[11px] font-bold">
                       <span className="text-slate-400 uppercase tracking-widest">Insc. / IMO</span>
                       <span className="font-mono text-primary">{v.registration_number || "---"}</span>
