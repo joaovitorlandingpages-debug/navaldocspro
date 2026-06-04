@@ -1657,9 +1657,13 @@ export type Database = {
           created_at: string | null
           error_message: string
           error_stack: string | null
+          fixed_in_version: string | null
           id: string
           metadata: Json | null
+          resolved_at: string | null
+          resolved_by: string | null
           route: string | null
+          status: string | null
           user_id: string | null
         }
         Insert: {
@@ -1668,9 +1672,13 @@ export type Database = {
           created_at?: string | null
           error_message: string
           error_stack?: string | null
+          fixed_in_version?: string | null
           id?: string
           metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
           route?: string | null
+          status?: string | null
           user_id?: string | null
         }
         Update: {
@@ -1679,9 +1687,13 @@ export type Database = {
           created_at?: string | null
           error_message?: string
           error_stack?: string | null
+          fixed_in_version?: string | null
           id?: string
           metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
           route?: string | null
+          status?: string | null
           user_id?: string | null
         }
         Relationships: [
