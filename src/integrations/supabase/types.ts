@@ -4454,8 +4454,6 @@ export type Database = {
         Returns: undefined
       }
       seed_demo_data: { Args: { p_company_id: string }; Returns: undefined }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
       track_usage: {
         Args: {
           p_action: string
