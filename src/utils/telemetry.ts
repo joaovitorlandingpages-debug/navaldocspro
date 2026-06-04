@@ -53,5 +53,46 @@ export const telemetry = {
 
   trackOCRPerformance: (jobId: string, docType: string, confidence: number, durationMs: number) => {
     return telemetry.track('ocr_performance', 'OCR', { jobId, docType, confidence, durationMs });
+  },
+
+  trackFrontendError: async (error: Error, componentStack?: string, metadata: any = {}) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data: profile } = session ? await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', session.user.id)
+        .single() : { data: null };
+
+      await supabase.from('frontend_errors' as any).insert({
+        user_id: session?.user.id,
+        company_id: profile?.company_id,
+        error_message: error.message,
+        error_stack: error.stack,
+        component_stack: componentStack,
+        route: window.location.pathname,
+        metadata: {
+          ...metadata,
+          url: window.location.href,
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+      // Also log to activity logs for visibility
+      if (session?.user.id && profile?.company_id) {
+        await supabase.from('activity_logs').insert({
+          company_id: profile.company_id,
+          user_id: session.user.id,
+          action: 'FRONTEND_ERROR_CAPTURED',
+          module: 'system',
+          category: 'error',
+          description: `Erro crítico de interface: ${error.message.substring(0, 100)}`,
+          metadata: { route: window.location.pathname }
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to track frontend error:', e);
+    }
   }
 };
