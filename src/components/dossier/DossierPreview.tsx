@@ -50,7 +50,10 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
     </div>
   );
 
-  if (!data) return null;
+  if (!data) {
+    return null;
+  }
+
 
 
   return (

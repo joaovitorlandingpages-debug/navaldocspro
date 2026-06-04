@@ -33,7 +33,10 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  if (!session) return null;
+  if (!session) {
+    return null;
+  }
+
 
   return <>{children}</>;
 };

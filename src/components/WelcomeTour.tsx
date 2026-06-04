@@ -101,7 +101,10 @@ export function WelcomeTour({
     { id: '5', title: 'Fluxos de Trabalho', description: 'Organize seus processos operacionais.', completed: onboardingStep >= 7 },
   ];
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
+
 
 
   const completedCount = steps.filter(s => s.completed).length;
