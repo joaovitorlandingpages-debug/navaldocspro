@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { 
   Dialog, DialogContent, DialogHeader, 
   DialogTitle, DialogFooter 
@@ -8,9 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
-import { documentService } from "@/services/documentService";
+import { useSignatures } from "@/hooks/useSignatures";
 import { toast } from "sonner";
-import { Signature, Type, Upload, PenTool } from "lucide-react";
+import { Signature, Type, Upload, PenTool, Eraser } from "lucide-react";
 
 interface SignatureModalProps {
   isOpen: boolean;
@@ -21,11 +21,27 @@ interface SignatureModalProps {
 
 export function SignatureModal({ isOpen, onClose, documentId, onSuccess }: SignatureModalProps) {
   const { profile } = useAuth();
+  const { signDocument } = useSignatures(documentId);
   const [activeTab, setActiveTab] = useState("drawn");
   const [isSigning, setIsSigning] = useState(false);
   const [typedName, setTypedName] = useState(profile?.full_name || "");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [signerRole, setSignerRole] = useState("Responsável");
+
+  // Adjust canvas for high DPI
+  useEffect(() => {
+    if (isOpen && canvasRef.current && activeTab === 'drawn') {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#000000';
+      }
+    }
+  }, [isOpen, activeTab]);
 
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
     setIsDrawing(true);
@@ -80,22 +96,21 @@ export function SignatureModal({ isOpen, onClose, documentId, onSuccess }: Signa
         signatureData = typedName;
       }
 
-      await documentService.signDocument({
+      await signDocument.mutateAsync({
         document_id: documentId,
         user_id: profile.id,
         company_id: profile.company_id,
         signer_name: profile.full_name || "Usuário",
-        signer_role: "Responsável",
+        signer_role: signerRole,
         signature_type: activeTab as any,
         signature_data: signatureData
       });
 
-      toast.success("Documento assinado com sucesso!");
+      console.log("SIGNATURE_SIGN_OK");
       onSuccess();
       onClose();
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao assinar documento.");
     } finally {
       setIsSigning(false);
     }
@@ -140,10 +155,10 @@ export function SignatureModal({ isOpen, onClose, documentId, onSuccess }: Signa
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="absolute bottom-2 right-2 text-[10px] font-black uppercase tracking-widest text-slate-400"
+                className="absolute bottom-2 right-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-red-500 gap-1.5"
                 onClick={clearCanvas}
               >
-                Limpar
+                <Eraser className="h-3 w-3" /> Limpar
               </Button>
             </div>
           </TabsContent>
