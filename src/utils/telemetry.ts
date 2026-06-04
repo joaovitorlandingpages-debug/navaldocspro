@@ -91,6 +91,9 @@ export const telemetry = {
           metadata: { route: window.location.pathname }
         });
       }
+    } catch (e) {
+      console.warn('Failed to track frontend error:', e);
+    }
   },
 
   resolveFrontendError: async (errorId: string, version?: string) => {
