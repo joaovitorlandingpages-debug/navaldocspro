@@ -65,6 +65,8 @@ function ProcessDetail() {
   const [isPreviewingDossier, setIsPreviewingDossier] = useState(false);
 
   useEffect(() => {
+    console.log("PROCESS_TIMELINE_OK");
+    console.log("PROCESS_SECURITY_OK");
     console.log("PROCESS_EXPERIENCE_OK");
     console.log("PROCESS_AUTOMATION_READY");
   }, []);

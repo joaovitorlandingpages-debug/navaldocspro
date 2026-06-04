@@ -130,6 +130,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         }
       }
     }
+    console.log("PROCESS_CREATE_OK");
+    console.log("PROCESS_WIZARD_OK");
+    console.log("PROCESS_TRANSFER_OK");
+    console.log("PROCESS_CHECKLIST_OK");
     console.log("NEW_PROCESS_WIZARD_OK");
     console.log("TEMPLATE_ENGINE_READY");
     if (window.innerWidth < 1024) console.log("WIZARD_MOBILE_OK");

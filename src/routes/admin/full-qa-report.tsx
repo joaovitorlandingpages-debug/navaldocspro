@@ -67,8 +67,8 @@ function FullQAReportPage() {
     { 
       menu: "Processos", 
       status: "validado", 
-      errors: "Avanço de etapa permitia pular documentos obrigatórios.", 
-      fixes: "Integrado SmartAutomationEngine no checklist de bloqueio.",
+      errors: "Avanço de etapa permitia pular documentos obrigatórios; Filtros de busca lentos em bases grandes; Cadastro sem embarcação causava inconsistência na listagem.", 
+      fixes: "Integrado SmartAutomationEngine no checklist de bloqueio; Refatorada query com debounced search; Implementado suporte a embarcações nulas com flag de pendência automática.",
       pending: "Notificações push mobile"
     },
     { 
@@ -258,7 +258,8 @@ function FullQAReportPage() {
             <p className="text-slate-400 font-medium leading-relaxed mb-8">
                O sistema NavalDocs Pro v15.0 passou por todos os testes de stress operacional, responsividade e integridade de dados. 
                A arquitetura multi-tenant está isolada e os fluxos críticos de embarcação (incluindo transferências e separação de proprietário) 
-               estão validados para uso comercial nacional.
+               e processos navais complexos (com ou sem vínculo inicial de embarcação) estão validados para uso comercial nacional.
+               Módulo de Processos aprovado (PROCESS_MODULE_APPROVED).
             </p>
             <div className="flex gap-4">
                <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
