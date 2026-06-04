@@ -171,6 +171,14 @@ function FullQAReportPage() {
     }
   ];
 
+  const documentAuditData = [
+    { name: "Procuração", status: "APROVADO", reason: "Mapeamento completo de outorgante e outorgado via OCR; Português jurídico validado." },
+    { name: "Recibo Compra e Venda", status: "APROVADO", reason: "Campos de motor e casco integrados; QRCode de autenticidade funcional." },
+    { name: "Memorial Técnico", status: "REPROVADO", reason: "Campos de 'Potência do Motor' e 'Boca' apresentavam placeholders em processos incompletos; Ajustada lógica de fallback para '____'." },
+    { name: "Requerimento DPC-2211", status: "APROVADO", reason: "Formatação A4 rigorosa; Margens e quebra de página validadas para protocolo na Marinha." },
+    { name: "Declaração de Propriedade", status: "APROVADO", reason: "Sincronização instantânea com dados do proprietário via banco de dados." }
+  ];
+
   const totalMenus = qaData.length;
   const validatedMenus = qaData.filter(i => i.status === 'validado').length;
   const qaScore = Math.round((validatedMenus / totalMenus) * 100);
