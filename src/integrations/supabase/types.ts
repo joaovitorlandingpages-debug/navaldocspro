@@ -4416,6 +4416,39 @@ export type Database = {
           },
         ]
       }
+      ux_usability_metrics: {
+        Row: {
+          complexity_rating: number | null
+          confusion_points: string[] | null
+          created_at: string | null
+          duration_ms: number | null
+          flow_name: string
+          id: string
+          redundant_fields: string[] | null
+          user_id: string | null
+        }
+        Insert: {
+          complexity_rating?: number | null
+          confusion_points?: string[] | null
+          created_at?: string | null
+          duration_ms?: number | null
+          flow_name: string
+          id?: string
+          redundant_fields?: string[] | null
+          user_id?: string | null
+        }
+        Update: {
+          complexity_rating?: number | null
+          confusion_points?: string[] | null
+          created_at?: string | null
+          duration_ms?: number | null
+          flow_name?: string
+          id?: string
+          redundant_fields?: string[] | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       vessel_engines: {
         Row: {
           brand: string | null
