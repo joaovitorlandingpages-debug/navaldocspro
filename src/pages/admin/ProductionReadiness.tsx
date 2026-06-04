@@ -7,7 +7,7 @@ import {
   Smartphone, Award, Search, ArrowRight,
   Bug, Star, ShieldAlert, HeartPulse,
   Brain, ZapOff, Timer, Gauge, MousePointerClick, Layout, Layers, Sparkles,
-  Gem, ThumbsUp, TrendingDown, Eye
+  Gem, ThumbsUp, TrendingDown, Eye, Shield
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
