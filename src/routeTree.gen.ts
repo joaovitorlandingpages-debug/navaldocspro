@@ -70,6 +70,7 @@ import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSecurityRouteImport } from './routes/admin/security'
 import { Route as AdminSaasMetricsRouteImport } from './routes/admin/saas-metrics'
 import { Route as AdminRoadmapRouteImport } from './routes/admin/roadmap'
+import { Route as AdminProductionReadinessRouteImport } from './routes/admin/production-readiness'
 import { Route as AdminOperationalFeedbackRouteImport } from './routes/admin/operational-feedback'
 import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
@@ -391,6 +392,12 @@ const AdminRoadmapRoute = AdminRoadmapRouteImport.update({
   path: '/roadmap',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminProductionReadinessRoute =
+  AdminProductionReadinessRouteImport.update({
+    id: '/production-readiness',
+    path: '/production-readiness',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminOperationalFeedbackRoute =
   AdminOperationalFeedbackRouteImport.update({
     id: '/operational-feedback',
@@ -514,6 +521,7 @@ export interface FileRoutesByFullPath {
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
+  '/admin/production-readiness': typeof AdminProductionReadinessRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -589,6 +597,7 @@ export interface FileRoutesByTo {
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
+  '/admin/production-readiness': typeof AdminProductionReadinessRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -667,6 +676,7 @@ export interface FileRoutesById {
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
+  '/admin/production-readiness': typeof AdminProductionReadinessRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -746,6 +756,7 @@ export interface FileRouteTypes {
     | '/admin/logs'
     | '/admin/ocr'
     | '/admin/operational-feedback'
+    | '/admin/production-readiness'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
     | '/admin/security'
@@ -821,6 +832,7 @@ export interface FileRouteTypes {
     | '/admin/logs'
     | '/admin/ocr'
     | '/admin/operational-feedback'
+    | '/admin/production-readiness'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
     | '/admin/security'
@@ -898,6 +910,7 @@ export interface FileRouteTypes {
     | '/admin/logs'
     | '/admin/ocr'
     | '/admin/operational-feedback'
+    | '/admin/production-readiness'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
     | '/admin/security'
@@ -1400,6 +1413,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRoadmapRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/production-readiness': {
+      id: '/admin/production-readiness'
+      path: '/production-readiness'
+      fullPath: '/admin/production-readiness'
+      preLoaderRoute: typeof AdminProductionReadinessRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/operational-feedback': {
       id: '/admin/operational-feedback'
       path: '/operational-feedback'
@@ -1516,6 +1536,7 @@ interface AdminRouteChildren {
   AdminLogsRoute: typeof AdminLogsRoute
   AdminOcrRoute: typeof AdminOcrRoute
   AdminOperationalFeedbackRoute: typeof AdminOperationalFeedbackRoute
+  AdminProductionReadinessRoute: typeof AdminProductionReadinessRoute
   AdminRoadmapRoute: typeof AdminRoadmapRoute
   AdminSaasMetricsRoute: typeof AdminSaasMetricsRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
@@ -1542,6 +1563,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLogsRoute: AdminLogsRoute,
   AdminOcrRoute: AdminOcrRoute,
   AdminOperationalFeedbackRoute: AdminOperationalFeedbackRoute,
+  AdminProductionReadinessRoute: AdminProductionReadinessRoute,
   AdminRoadmapRoute: AdminRoadmapRoute,
   AdminSaasMetricsRoute: AdminSaasMetricsRoute,
   AdminSecurityRoute: AdminSecurityRoute,
