@@ -89,7 +89,7 @@ export default function OperationalFeedback() {
             <p className="text-slate-400 font-medium">Nenhum feedback registrado ainda.</p>
           </div>
         ) : (
-          feedbacks?.map((item) => (
+          feedbacks?.map((item: any) => (
             <div key={item.id} className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all group">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
