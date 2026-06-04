@@ -340,7 +340,11 @@ function FullQAReportPage() {
                Módulo de Processos aprovado (PROCESS_MODULE_APPROVED).
             </p>
             <div className="flex gap-4">
-               <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
+                <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
+                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                   <span className="text-[9px] font-black uppercase">IA-OCR Certified (OCR_MODULE_APPROVED)</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                   <span className="text-[9px] font-black uppercase">Ready for Production</span>
                </div>
