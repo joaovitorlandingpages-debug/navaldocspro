@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Terminal, Search, Trash2, ShieldAlert, Activity, Filter, Download, Database, ShieldCheck, Cpu, Zap, Globe, Lock } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Terminal, Search, Trash2, ShieldAlert, Activity, Filter, Download, Database, ShieldCheck, Cpu, Zap, Globe, Lock, Bug } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 export const Route = createFileRoute("/admin/logs")({
   component: AdminLogs,
 });
+
 
 function AdminLogs() {
   const [filter, setFilter] = useState("all");
@@ -58,9 +59,16 @@ function AdminLogs() {
              <button className="bg-white border border-slate-200 text-navy px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-all shadow-sm">
                 <Download className="h-4 w-4" /> Exportar CSV
              </button>
-             <button className="bg-navy text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-lg">
+              <Link 
+                to="/admin/frontend-errors"
+                className="bg-white border border-slate-200 text-red-500 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-red-50 transition-all shadow-sm"
+              >
+                <Bug className="h-4 w-4" /> Frontend Errors
+              </Link>
+              <button className="bg-navy text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-lg">
                 <ShieldCheck className="h-4 w-4 text-primary" /> Security Scan
-             </button>
+              </button>
+
           </div>
        </div>
 

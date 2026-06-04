@@ -9,8 +9,10 @@ import {
   PenTool, FolderKanban, Star, AlertTriangle,
   History, Settings, BarChart3, Cloud, Globe, CreditCard, Sparkles, MonitorPlay, Rocket,
   Download, LifeBuoy, Terminal, Box, ShieldAlert, Award, Verified, CheckCircle, Hammer,
-  ActivitySquare, ClipboardCheck, LayoutList, Target, TrendingUp, HeartPulse, Workflow, UserCheck, FileCode
+  ActivitySquare, ClipboardCheck, LayoutList, Target, TrendingUp, HeartPulse, Workflow, UserCheck, FileCode, Bug
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+
 
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -160,13 +162,19 @@ export default function SystemReport() {
             >
               Melhorias
             </button>
+            <Link 
+              to="/admin/frontend-errors"
+              className="px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 transition-all flex items-center gap-2"
+            >
+              <Bug className="h-3 w-3" /> Erros
+            </Link>
             <button 
               onClick={() => setActiveTab('golive')}
-
               className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'golive' ? 'bg-navy text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`}
             >
               Go-Live
             </button>
+
 
           </div>
 

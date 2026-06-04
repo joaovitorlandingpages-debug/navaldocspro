@@ -94,5 +94,20 @@ export const telemetry = {
     } catch (e) {
       console.warn('Failed to track frontend error:', e);
     }
+  },
+
+  resolveFrontendError: async (errorId: string, version?: string) => {
+    try {
+      await supabase.from('frontend_errors' as any).update({
+        status: 'corriged',
+        fixed_in_version: version,
+        resolved_at: new Date().toISOString()
+      } as any).eq('id', errorId);
+      
+      await telemetry.track('FRONTEND_ERROR_ROOT_CAUSE_FIXED', undefined, { errorId, version });
+    } catch (e) {
+      console.warn('Failed to resolve frontend error:', e);
+    }
   }
 };
+
