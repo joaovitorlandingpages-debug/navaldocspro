@@ -2482,6 +2482,48 @@ export type Database = {
           },
         ]
       }
+      operational_tests: {
+        Row: {
+          created_at: string | null
+          duration_ms: number | null
+          engineer_id: string | null
+          errors_encountered: string[] | null
+          findings: string[] | null
+          id: string
+          metadata: Json | null
+          status: string | null
+          test_name: string
+          updated_at: string | null
+          ux_bottlenecks: string[] | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_ms?: number | null
+          engineer_id?: string | null
+          errors_encountered?: string[] | null
+          findings?: string[] | null
+          id?: string
+          metadata?: Json | null
+          status?: string | null
+          test_name: string
+          updated_at?: string | null
+          ux_bottlenecks?: string[] | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_ms?: number | null
+          engineer_id?: string | null
+          errors_encountered?: string[] | null
+          findings?: string[] | null
+          id?: string
+          metadata?: Json | null
+          status?: string | null
+          test_name?: string
+          updated_at?: string | null
+          ux_bottlenecks?: string[] | null
+        }
+        Relationships: []
+      }
       partners: {
         Row: {
           address: string | null
