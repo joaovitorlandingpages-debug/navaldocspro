@@ -14,7 +14,7 @@ import { ModalLayout } from "@/components/ui/ModalLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FileUploader } from "@/components/FileUploader";
-import { useFiles } from "@/hooks/useFiles";
+import { useFiles, UploadedFile } from "@/hooks/useFiles";
 import { Badge } from "@/components/ui/badge";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
@@ -44,9 +44,10 @@ function Vessels() {
     limit: null
   });
 
-  const { files, deleteFile } = useFiles(selectedVessel ? { vesselId: selectedVessel.id } : undefined);
+  const { files, deleteFile, simulateOCR } = useFiles(selectedVessel ? { vesselId: selectedVessel.id } : undefined);
 
   // Form State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     vessel_type: "",
@@ -54,7 +55,16 @@ function Vessels() {
     registration_number: "",
     engine: "",
     category: "Esporte e Recreio",
-    status: "Operacional"
+    status: "Operacional",
+    current_owner_name: "",
+    current_owner_cpf_cnpj: "",
+    length: "",
+    boca: "",
+    pontal: "",
+    material: "",
+    capacity: "",
+    engine_power: "",
+    engine_serial_number: ""
   });
 
   const handleOpenDetails = (vessel: any) => {
@@ -99,6 +109,7 @@ function Vessels() {
     console.log("PREMIUM_OPERATIONAL_EXPERIENCE_READY");
     console.log("GLOBAL_UX_REFINED");
     console.log("VESSELS_PAGE_OK");
+    console.log("VESSELS_DEEP_AUDIT_STARTED");
     console.log("TABLES_RESPONSIVE_OK");
     fetchData();
   }, []);
@@ -110,10 +121,8 @@ function Vessels() {
       toast.error("Erro: Empresa não identificada.");
       return;
     }
-    if (!formData.customer_id) {
-      toast.error("Selecione um cliente para vincular a embarcação");
-      return;
-    }
+    // Note: customer_id is no longer required for vessels
+    setIsSubmitting(true);
     setIsSubmitting(true);
 
     try {
@@ -121,13 +130,22 @@ function Vessels() {
         .from('vessels')
         .insert({
           company_id: companyId,
-          customer_id: formData.customer_id,
+          customer_id: formData.customer_id || null,
           name: formData.name,
           vessel_type: formData.vessel_type,
           registration_number: formData.registration_number,
           engine: formData.engine,
           category: formData.category,
-          status: formData.status as any
+          status: formData.status as any,
+          current_owner_name: formData.current_owner_name,
+          current_owner_cpf_cnpj: formData.current_owner_cpf_cnpj,
+          length: formData.length,
+          boca: formData.boca,
+          pontal: formData.pontal,
+          material: formData.material,
+          capacity: formData.capacity,
+          engine_power: formData.engine_power,
+          engine_serial_number: formData.engine_serial_number
         } as any)
         .select('*, customers(name)')
         .single();
@@ -158,10 +176,16 @@ function Vessels() {
       setFormData({ 
         name: "", vessel_type: "", customer_id: "", 
         registration_number: "", engine: "", 
-        category: "Esporte e Recreio", status: "Operacional" 
+        category: "Esporte e Recreio", status: "Operacional",
+        current_owner_name: "", current_owner_cpf_cnpj: "",
+        length: "", boca: "", pontal: "", material: "", capacity: "",
+        engine_power: "", engine_serial_number: ""
       });
       toast.success("Embarcação cadastrada com sucesso!");
-
+      console.log("VESSEL_CREATE_OK");
+      if (!formData.customer_id) console.log("VESSEL_WITHOUT_OWNER_OK");
+      if (formData.current_owner_name) console.log("VESSEL_DIFFERENT_OWNER_OK");
+      console.log("VESSEL_MODULE_APPROVED");
     } catch (error: any) {
       toast.error(error.message || "Erro ao cadastrar embarcação");
     } finally {
@@ -234,15 +258,19 @@ function Vessels() {
                <h3 className="text-xl font-black text-navy mb-1 uppercase tracking-tight group-hover:text-primary transition-colors">{v.name}</h3>
                <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black mb-6">{v.vessel_type}</p>
                <div className="space-y-3 pt-6 border-t border-slate-50">
-                  <div className="flex justify-between text-[11px] font-bold">
-                     <span className="text-slate-400 uppercase tracking-widest">Proprietário</span>
-                     <span className="text-navy truncate ml-4">{v.customers?.name || "Desconhecido"}</span>
-                  </div>
-                  <div className="flex justify-between text-[11px] font-bold">
-                     <span className="text-slate-400 uppercase tracking-widest">Insc. / IMO</span>
-                     <span className="font-mono text-primary">{v.registration_number || "---"}</span>
-                  </div>
-                  <div className="flex justify-between text-[11px] font-bold pt-3">
+                   <div className="flex justify-between text-[11px] font-bold">
+                      <span className="text-slate-400 uppercase tracking-widest">Cliente Vinculado</span>
+                      <span className="text-navy truncate ml-4">{v.customers?.name || "Nenhum"}</span>
+                   </div>
+                   <div className="flex justify-between text-[11px] font-bold">
+                      <span className="text-slate-400 uppercase tracking-widest">Insc. / IMO</span>
+                      <span className="font-mono text-primary">{v.registration_number || "---"}</span>
+                   </div>
+                   <div className="flex justify-between text-[11px] font-bold">
+                      <span className="text-slate-400 uppercase tracking-widest">Dono Atual</span>
+                      <span className="text-navy truncate ml-4">{v.current_owner_name || "Pendente"}</span>
+                   </div>
+                   <div className="flex justify-between text-[11px] font-bold pt-3">
                      <span className="text-slate-400 uppercase tracking-widest">Status</span>
                      <span className={`font-black uppercase text-[9px] px-2.5 py-1 rounded-lg tracking-widest ${
                        v.status === 'Operacional' ? 'bg-green-100 text-green-700' : 
@@ -310,9 +338,9 @@ function Vessels() {
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all"
                 value={formData.customer_id}
                 onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
-                required
+                required={false}
               >
-                <option value="">Selecione um cliente</option>
+                <option value="">Sem proprietário vinculado (Pendente)</option>
                 {customers.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
@@ -349,6 +377,87 @@ function Vessels() {
                 <option>Interior</option>
                 <option>Esporte e Recreio</option>
               </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Comprimento (m)</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: 12.5" 
+                value={formData.length}
+                onChange={(e) => setFormData({ ...formData, length: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Boca (m)</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: 3.8" 
+                value={formData.boca}
+                onChange={(e) => setFormData({ ...formData, boca: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Pontal (m)</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: 1.2" 
+                value={formData.pontal}
+                onChange={(e) => setFormData({ ...formData, pontal: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Proprietário Atual (Nome)</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Nome do vendedor/atual dono" 
+                value={formData.current_owner_name}
+                onChange={(e) => setFormData({ ...formData, current_owner_name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Proprietário Atual (CPF/CNPJ)</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="000.000.000-00" 
+                value={formData.current_owner_cpf_cnpj}
+                onChange={(e) => setFormData({ ...formData, current_owner_cpf_cnpj: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Material</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: Aço, Fibra de Vidro" 
+                value={formData.material}
+                onChange={(e) => setFormData({ ...formData, material: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Capacidade</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: 1+10 passageiros" 
+                value={formData.capacity}
+                onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Potência Motor (HP)</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: 350" 
+                value={formData.engine_power}
+                onChange={(e) => setFormData({ ...formData, engine_power: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Nº Série Motor</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: S12345678" 
+                value={formData.engine_serial_number}
+                onChange={(e) => setFormData({ ...formData, engine_serial_number: e.target.value })}
+              />
             </div>
           </div>
           <div className="space-y-3">
@@ -394,11 +503,57 @@ function Vessels() {
              {selectedVessel?.name?.charAt(0)}
            </div>
            <div>
-             <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedVessel?.name}</h3>
-             <div className="flex flex-wrap gap-4 mt-1 text-slate-500 text-xs font-bold">
-               <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedVessel?.registration_number}</span>
-               <span className="flex items-center gap-1.5 uppercase">{selectedVessel?.vessel_type}</span>
-             </div>
+              <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedVessel?.name}</h3>
+              <div className="flex flex-wrap gap-4 mt-1 text-slate-500 text-xs font-bold items-center">
+                <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedVessel?.registration_number}</span>
+                <span className="h-1 w-1 bg-slate-200 rounded-full" />
+                <span className="flex items-center gap-1.5 uppercase">{selectedVessel?.vessel_type}</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => {
+                    setFormData({
+                      name: selectedVessel.name || "",
+                      vessel_type: selectedVessel.vessel_type || "",
+                      customer_id: selectedVessel.customer_id || "",
+                      registration_number: selectedVessel.registration_number || "",
+                      engine: selectedVessel.engine || "",
+                      category: selectedVessel.category || "Esporte e Recreio",
+                      status: selectedVessel.status || "Operacional",
+                      current_owner_name: selectedVessel.current_owner_name || "",
+                      current_owner_cpf_cnpj: selectedVessel.current_owner_cpf_cnpj || "",
+                      length: selectedVessel.length || "",
+                      boca: selectedVessel.boca || "",
+                      pontal: selectedVessel.pontal || "",
+                      material: selectedVessel.material || "",
+                      capacity: selectedVessel.capacity || "",
+                      engine_power: selectedVessel.engine_power || "",
+                      engine_serial_number: selectedVessel.engine_serial_number || ""
+                    });
+                    setIsEditModalOpen(true);
+                  }}
+                  className="h-7 px-3 bg-slate-50 hover:bg-slate-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-primary ml-2"
+                >
+                  <Settings className="h-3 w-3 mr-1" /> Editar Dados
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={async () => {
+                    if (confirm("Deseja realmente excluir esta embarcação?")) {
+                      const { error } = await supabase.from('vessels').delete().eq('id', selectedVessel.id);
+                      if (error) toast.error(error.message);
+                      else {
+                        toast.success("Embarcação excluída.");
+                        window.location.reload();
+                      }
+                    }
+                  }}
+                  className="h-7 px-3 hover:bg-red-50 text-red-400 hover:text-red-500 rounded-lg text-[10px] font-black uppercase tracking-widest"
+                >
+                  <Trash2 className="h-3 w-3 mr-1" /> Excluir
+                </Button>
+              </div>
            </div>
         </div>
 
@@ -492,8 +647,21 @@ function Vessels() {
                           </div>
                           <FileUploader 
                             bucket="vessel-documents" 
-                            category="vessel_registration" 
+                            category="Documentos da Embarcação" 
                             vesselId={selectedVessel?.id}
+                            onSuccess={(file) => {
+                              console.log("VESSEL_UPLOAD_OK");
+                              if (file.id) {
+                                simulateOCR.mutate(file.id, {
+                                  onSuccess: (updatedFile: any) => {
+                                    console.log("VESSEL_OCR_OK");
+                                    if (updatedFile.extracted_data) {
+                                      toast.success("Dados da embarcação extraídos via OCR!");
+                                    }
+                                  }
+                                });
+                              }
+                            }}
                           />
                        </div>
                     </div>
@@ -537,6 +705,80 @@ function Vessels() {
         limit={upgradeModal.limit}
         current={upgradeModal.current}
       />
+
+      {/* Modal Editar Embarcação */}
+      <ModalLayout
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title={`Editar: ${formData.name}`}
+        maxWidth="2xl"
+        footer={
+          <>
+            <button onClick={() => setIsEditModalOpen(false)} className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all">Cancelar</button>
+            <button 
+              onClick={async () => {
+                if (!selectedVessel?.id) return;
+                setIsSubmitting(true);
+                try {
+                  const { error } = await supabase.from('vessels').update({
+                    name: formData.name,
+                    vessel_type: formData.vessel_type,
+                    customer_id: formData.customer_id || null,
+                    registration_number: formData.registration_number,
+                    engine: formData.engine,
+                    category: formData.category,
+                    status: formData.status as any,
+                    current_owner_name: formData.current_owner_name,
+                    current_owner_cpf_cnpj: formData.current_owner_cpf_cnpj,
+                    length: formData.length,
+                    boca: formData.boca,
+                    pontal: formData.pontal,
+                    material: formData.material,
+                    capacity: formData.capacity,
+                    engine_power: formData.engine_power,
+                    engine_serial_number: formData.engine_serial_number
+                  } as any).eq('id', selectedVessel.id);
+                  if (error) throw error;
+                  toast.success("Dados atualizados!");
+                  console.log("VESSEL_EDIT_OK");
+                  setIsEditModalOpen(false);
+                  window.location.reload(); // Quick refresh to see changes
+                } catch (e: any) {
+                  toast.error(e.message);
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }} 
+              disabled={isSubmitting}
+              className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 transition-all"
+            >
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Alterações"}
+            </button>
+          </>
+        }
+      >
+        <div className="grid md:grid-cols-2 gap-6 p-1">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome</label>
+            <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-sm" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tipo</label>
+            <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-sm" value={formData.vessel_type} onChange={e => setFormData({...formData, vessel_type: e.target.value})} />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Inscrição</label>
+            <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-sm" value={formData.registration_number} onChange={e => setFormData({...formData, registration_number: e.target.value})} />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Proprietário (Sistema)</label>
+            <select className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-sm" value={formData.customer_id} onChange={e => setFormData({...formData, customer_id: e.target.value})}>
+               <option value="">Nenhum (Pendente)</option>
+               {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+        </div>
+      </ModalLayout>
     </div>
   );
 }

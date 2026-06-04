@@ -4357,6 +4357,8 @@ export type Database = {
       }
       vessels: {
         Row: {
+          boca: string | null
+          capacity: string | null
           category: string | null
           company_id: string
           created_at: string
@@ -4364,14 +4366,21 @@ export type Database = {
           current_owner_name: string | null
           customer_id: string | null
           engine: string | null
+          engine_power: string | null
+          engine_serial_number: string | null
           id: string
+          length: string | null
+          material: string | null
           name: string
           notes: string | null
+          pontal: string | null
           registration_number: string | null
           updated_at: string
           vessel_type: string | null
         }
         Insert: {
+          boca?: string | null
+          capacity?: string | null
           category?: string | null
           company_id: string
           created_at?: string
@@ -4379,14 +4388,21 @@ export type Database = {
           current_owner_name?: string | null
           customer_id?: string | null
           engine?: string | null
+          engine_power?: string | null
+          engine_serial_number?: string | null
           id?: string
+          length?: string | null
+          material?: string | null
           name: string
           notes?: string | null
+          pontal?: string | null
           registration_number?: string | null
           updated_at?: string
           vessel_type?: string | null
         }
         Update: {
+          boca?: string | null
+          capacity?: string | null
           category?: string | null
           company_id?: string
           created_at?: string
@@ -4394,9 +4410,14 @@ export type Database = {
           current_owner_name?: string | null
           customer_id?: string | null
           engine?: string | null
+          engine_power?: string | null
+          engine_serial_number?: string | null
           id?: string
+          length?: string | null
+          material?: string | null
           name?: string
           notes?: string | null
+          pontal?: string | null
           registration_number?: string | null
           updated_at?: string
           vessel_type?: string | null
