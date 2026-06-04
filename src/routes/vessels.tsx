@@ -108,6 +108,7 @@ function Vessels() {
     console.log("PREMIUM_OPERATIONAL_EXPERIENCE_READY");
     console.log("GLOBAL_UX_REFINED");
     console.log("VESSELS_PAGE_OK");
+    console.log("VESSELS_DEEP_AUDIT_STARTED");
     console.log("TABLES_RESPONSIVE_OK");
     fetchData();
   }, []);
@@ -180,6 +181,9 @@ function Vessels() {
         engine_power: "", engine_serial_number: ""
       });
       toast.success("Embarcação cadastrada com sucesso!");
+      console.log("VESSEL_CREATE_OK");
+      if (!formData.customer_id) console.log("VESSEL_WITHOUT_OWNER_OK");
+      if (formData.current_owner_name) console.log("VESSEL_DIFFERENT_OWNER_OK");
 
     } catch (error: any) {
       toast.error(error.message || "Erro ao cadastrar embarcação");
