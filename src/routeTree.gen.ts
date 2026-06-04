@@ -70,6 +70,7 @@ import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSecurityRouteImport } from './routes/admin/security'
 import { Route as AdminSaasMetricsRouteImport } from './routes/admin/saas-metrics'
 import { Route as AdminRoadmapRouteImport } from './routes/admin/roadmap'
+import { Route as AdminOperationalFeedbackRouteImport } from './routes/admin/operational-feedback'
 import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminGlobalRouteImport } from './routes/admin/global'
@@ -388,6 +389,12 @@ const AdminRoadmapRoute = AdminRoadmapRouteImport.update({
   path: '/roadmap',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminOperationalFeedbackRoute =
+  AdminOperationalFeedbackRouteImport.update({
+    id: '/operational-feedback',
+    path: '/operational-feedback',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminOcrRoute = AdminOcrRouteImport.update({
   id: '/ocr',
   path: '/ocr',
@@ -491,6 +498,7 @@ export interface FileRoutesByFullPath {
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
+  '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -563,6 +571,7 @@ export interface FileRoutesByTo {
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
+  '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -638,6 +647,7 @@ export interface FileRoutesById {
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
+  '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -714,6 +724,7 @@ export interface FileRouteTypes {
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
+    | '/admin/operational-feedback'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
     | '/admin/security'
@@ -786,6 +797,7 @@ export interface FileRouteTypes {
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
+    | '/admin/operational-feedback'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
     | '/admin/security'
@@ -860,6 +872,7 @@ export interface FileRouteTypes {
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
+    | '/admin/operational-feedback'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
     | '/admin/security'
@@ -1362,6 +1375,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRoadmapRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/operational-feedback': {
+      id: '/admin/operational-feedback'
+      path: '/operational-feedback'
+      fullPath: '/admin/operational-feedback'
+      preLoaderRoute: typeof AdminOperationalFeedbackRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/ocr': {
       id: '/admin/ocr'
       path: '/ocr'
@@ -1454,6 +1474,7 @@ interface AdminRouteChildren {
   AdminGlobalRoute: typeof AdminGlobalRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminOcrRoute: typeof AdminOcrRoute
+  AdminOperationalFeedbackRoute: typeof AdminOperationalFeedbackRoute
   AdminRoadmapRoute: typeof AdminRoadmapRoute
   AdminSaasMetricsRoute: typeof AdminSaasMetricsRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
@@ -1477,6 +1498,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminGlobalRoute: AdminGlobalRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminOcrRoute: AdminOcrRoute,
+  AdminOperationalFeedbackRoute: AdminOperationalFeedbackRoute,
   AdminRoadmapRoute: AdminRoadmapRoute,
   AdminSaasMetricsRoute: AdminSaasMetricsRoute,
   AdminSecurityRoute: AdminSecurityRoute,
