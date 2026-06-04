@@ -75,6 +75,7 @@ import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminGlobalRouteImport } from './routes/admin/global'
 import { Route as AdminFullQaReportRouteImport } from './routes/admin/full-qa-report'
+import { Route as AdminFieldValidationReportRouteImport } from './routes/admin/field-validation-report'
 import { Route as AdminExecutiveOverviewRouteImport } from './routes/admin/executive-overview'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
@@ -415,6 +416,12 @@ const AdminFullQaReportRoute = AdminFullQaReportRouteImport.update({
   path: '/full-qa-report',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFieldValidationReportRoute =
+  AdminFieldValidationReportRouteImport.update({
+    id: '/field-validation-report',
+    path: '/field-validation-report',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminExecutiveOverviewRoute = AdminExecutiveOverviewRouteImport.update({
   id: '/executive-overview',
   path: '/executive-overview',
@@ -494,6 +501,7 @@ export interface FileRoutesByFullPath {
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
+  '/admin/field-validation-report': typeof AdminFieldValidationReportRoute
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
@@ -567,6 +575,7 @@ export interface FileRoutesByTo {
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
+  '/admin/field-validation-report': typeof AdminFieldValidationReportRoute
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
@@ -643,6 +652,7 @@ export interface FileRoutesById {
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
+  '/admin/field-validation-report': typeof AdminFieldValidationReportRoute
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
@@ -720,6 +730,7 @@ export interface FileRouteTypes {
     | '/admin/document-library'
     | '/admin/documents'
     | '/admin/executive-overview'
+    | '/admin/field-validation-report'
     | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
@@ -793,6 +804,7 @@ export interface FileRouteTypes {
     | '/admin/document-library'
     | '/admin/documents'
     | '/admin/executive-overview'
+    | '/admin/field-validation-report'
     | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
@@ -868,6 +880,7 @@ export interface FileRouteTypes {
     | '/admin/document-library'
     | '/admin/documents'
     | '/admin/executive-overview'
+    | '/admin/field-validation-report'
     | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
@@ -1410,6 +1423,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFullQaReportRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/field-validation-report': {
+      id: '/admin/field-validation-report'
+      path: '/field-validation-report'
+      fullPath: '/admin/field-validation-report'
+      preLoaderRoute: typeof AdminFieldValidationReportRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/executive-overview': {
       id: '/admin/executive-overview'
       path: '/executive-overview'
@@ -1470,6 +1490,7 @@ interface AdminRouteChildren {
   AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminExecutiveOverviewRoute: typeof AdminExecutiveOverviewRoute
+  AdminFieldValidationReportRoute: typeof AdminFieldValidationReportRoute
   AdminFullQaReportRoute: typeof AdminFullQaReportRoute
   AdminGlobalRoute: typeof AdminGlobalRoute
   AdminLogsRoute: typeof AdminLogsRoute
@@ -1494,6 +1515,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
   AdminExecutiveOverviewRoute: AdminExecutiveOverviewRoute,
+  AdminFieldValidationReportRoute: AdminFieldValidationReportRoute,
   AdminFullQaReportRoute: AdminFullQaReportRoute,
   AdminGlobalRoute: AdminGlobalRoute,
   AdminLogsRoute: AdminLogsRoute,
