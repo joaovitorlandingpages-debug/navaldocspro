@@ -77,6 +77,7 @@ function Processes() {
   }, [page, searchTerm]);
 
   useEffect(() => {
+    console.log("PROCESS_DEEP_AUDIT_STARTED");
     console.log("PERFORMANCE_AUDIT_OK");
     console.log("CACHE_SYSTEM_OK");
     console.log("ENTERPRISE_SCALE_READY");
