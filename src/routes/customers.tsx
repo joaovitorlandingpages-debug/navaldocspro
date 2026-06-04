@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
+import { telemetry } from "@/utils/telemetry";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -140,6 +141,7 @@ function Customers() {
     if (!formData.name?.trim() || !formData.cpf_cnpj?.trim()) {
       toast.error("Nome e CPF/CNPJ são obrigatórios.");
       console.log("CLIENT_VALIDATION_FAILED");
+      telemetry.track('error', 'customers', { errorName: 'validation_failed', message: 'Name or CPF/CNPJ missing' });
       return;
     }
     console.log("CLIENT_VALIDATION_OK");
@@ -148,16 +150,20 @@ function Customers() {
 
     if (!effectiveCompanyId) {
       console.log("WORKSPACE_NOT_FOUND_IN_CONTEXT_RECOVERING");
+      telemetry.track('workspace_recovery_started', 'customers');
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: currentProfile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
         const { ensureWorkspace } = await import("@/utils/workspace-recovery");
         effectiveCompanyId = await ensureWorkspace(user, currentProfile);
         setCompanyId(effectiveCompanyId);
+        telemetry.track('workspace_recovered', 'customers', { companyId: effectiveCompanyId });
       }
     }
 
     if (!effectiveCompanyId) {
+      console.log("WORKSPACE_RECOVERY_FAILED_FINAL");
+      telemetry.track('error', 'customers', { errorName: 'workspace_recovery_failed', message: 'Company ID still null' });
       toast.error("Não foi possível carregar seu workspace. Tente recarregar a página.");
       return;
     }
