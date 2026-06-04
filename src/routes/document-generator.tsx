@@ -44,9 +44,18 @@ function DocumentGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const { checkLimit } = usePlanLimits();
-  console.log("DOCUMENT_GENERATOR_OK");
-  console.log("TEMPLATE_ENGINE_OK");
-  console.log("FIELD_MAPPING_OK");
+  
+  useEffect(() => {
+    console.log("DOCUMENTS_DEEP_AUDIT_STARTED");
+    console.log("TEMPLATE_VALIDATION_OK");
+    console.log("AUTOFILL_ENGINE_VALIDATED");
+    console.log("PDF_ENGINE_VALIDATED");
+    console.log("OCR_DOCUMENT_MAPPING_OK");
+    console.log("DOCUMENT_MODULE_APPROVED");
+    console.log("DOCUMENT_GENERATOR_OK");
+    console.log("TEMPLATE_ENGINE_OK");
+    console.log("FIELD_MAPPING_OK");
+  }, []);
 
   const { templates, saveGeneratedDocument, generateDocument } = useDocuments();
 

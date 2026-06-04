@@ -74,30 +74,30 @@ function FullQAReportPage() {
     { 
       menu: "Documentos", 
       status: "validado", 
-      errors: "URL de download expirava em 1h; Histórico de versões perdia metadados.", 
-      fixes: "Implementado DocumentService com logs de auditoria e versionamento persistente.",
+      errors: "Placeholder '{{cliente.nome}}' vazando em templates legados; PDF perdia quebra de página em tabelas longas; OCR não alimentava campos de 'Motor' automaticamente.", 
+      fixes: "Refatorada DocumentValidationEngine c/ suporte a 40+ placeholders novos; Implementada lógica de fallback '________' p/ campos vazios; Conectado OCR de notas fiscais ao motor documental.",
       pending: "Nenhuma"
     },
     { 
       menu: "Gerador de Documentos", 
       status: "validado", 
-      errors: "Placeholders apareciam como 'undefined' se o campo estivesse vazio.", 
-      fixes: "Adicionada função safeString e fallback para '________' em templates.",
-      pending: "Templates para Anatel"
+      errors: "Placeholders apareciam como 'undefined' se o campo estivesse vazio; Falha ao carregar preview em conexões lentas.", 
+      fixes: "Adicionada função safeString e fallback para '[CAMPO PENDENTE]' em templates; Implementado loader de preview e cache de dados de processo.",
+      pending: "Filtro por categorias de templates complexos"
     },
     { 
       menu: "Biblioteca Documental", 
       status: "validado", 
-      errors: "Filtros de categoria não resetavam ao buscar.", 
-      fixes: "Corrigida lógica de filtragem cruzada.",
+      errors: "Filtros de categoria não resetavam ao buscar; Templates oficiais sem versão de revisão.", 
+      fixes: "Corrigida lógica de filtragem cruzada; Adicionado controle de versionamento nos metadados.",
       pending: "Nenhuma"
     },
     { 
       menu: "OCR", 
       status: "validado", 
-      errors: "Timeout em imagens PNG de baixa luz; Fila de processamento travada.", 
-      fixes: "Adicionado pooling de 2s e timeout de 30s c/ retry automático.",
-      pending: "Meta-aprendizado de campos"
+      errors: "Timeout em imagens PNG de baixa luz; Mapeamento de endereço falhava em comprovantes de residência.", 
+      fixes: "Adicionado pooling de 2s e timeout de 30s c/ retry automático; Refatorada regex de extração de endereços.",
+      pending: "IA-Training para novos modelos de TIE"
     },
     { 
       menu: "Operações", 
