@@ -40,7 +40,7 @@ export default function FieldValidationReport() {
       // Simple mock stats derived from real data counts for UI presentation
       const totalEvents = telemetryData?.length || 0;
       const totalFeedback = feedbackData?.length || 0;
-      const criticalBugs = feedbackData?.filter(f => f.type === 'bug' && f.severity === 'critical').length || 0;
+      const criticalBugs = feedbackData?.filter((f: any) => f.type === 'bug' && f.severity === 'critical').length || 0;
 
       return {
         events: totalEvents,
