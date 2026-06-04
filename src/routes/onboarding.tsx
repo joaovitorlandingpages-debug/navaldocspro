@@ -393,6 +393,38 @@ function OnboardingFlow() {
             </div>
           </div>
         );
+      case 8:
+        return (
+          <div className="space-y-6 text-center animate-in zoom-in-95 duration-700">
+             <div className="flex flex-col items-center space-y-2 mb-8">
+              <div className="p-5 bg-emerald-100 rounded-full text-emerald-600 mb-2 shadow-lg shadow-emerald-500/20">
+                <ShieldCheck className="h-12 w-12" />
+              </div>
+              <h2 className="text-3xl font-black text-navy uppercase italic tracking-tighter">Gold Certification</h2>
+              <p className="text-slate-500 font-medium">Sua instância NavalDocs Pro está 100% validada e certificada.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex flex-col items-center gap-3">
+                  <Zap className="h-6 w-6 text-primary" />
+                  <p className="text-[10px] font-black uppercase text-slate-400">OCR & IA</p>
+                  <p className="text-lg font-bold text-navy uppercase">Ativado</p>
+               </div>
+               <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex flex-col items-center gap-3">
+                  <Lock className="h-6 w-6 text-primary" />
+                  <p className="text-[10px] font-black uppercase text-slate-400">Hardening</p>
+                  <p className="text-lg font-bold text-navy uppercase">Certificado</p>
+               </div>
+            </div>
+
+            <Button 
+              onClick={() => navigate({ to: "/dashboard" })}
+              className="w-full h-16 bg-navy text-white text-lg font-black uppercase tracking-[0.2em] rounded-2xl shadow-2xl hover:scale-105 transition-all mt-4"
+            >
+              Assumir Comando <ChevronRight className="ml-2 h-6 w-6" />
+            </Button>
+          </div>
+        );
       default:
         return null;
     }
