@@ -418,6 +418,7 @@ export type Database = {
       }
       automation_logs: {
         Row: {
+          company_id: string | null
           created_at: string | null
           description: string
           event_type: string
@@ -426,6 +427,7 @@ export type Database = {
           process_id: string | null
         }
         Insert: {
+          company_id?: string | null
           created_at?: string | null
           description: string
           event_type: string
@@ -434,6 +436,7 @@ export type Database = {
           process_id?: string | null
         }
         Update: {
+          company_id?: string | null
           created_at?: string | null
           description?: string
           event_type?: string
@@ -442,6 +445,13 @@ export type Database = {
           process_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "automation_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "automation_logs_process_id_fkey"
             columns: ["process_id"]
