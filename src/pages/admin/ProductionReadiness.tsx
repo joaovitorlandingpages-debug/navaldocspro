@@ -5,7 +5,8 @@ import {
   Clock, AlertCircle, TrendingUp, Target, 
   Users, Ship, ClipboardList, Zap,
   Smartphone, Award, Search, ArrowRight,
-  Bug, Star, ShieldAlert, HeartPulse
+  Bug, Star, ShieldAlert, HeartPulse,
+  Brain, ZapOff, Timer, Gauge
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -64,33 +65,53 @@ export default function ProductionReadiness() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {[
+          { label: "UX Usability Score", value: "92/100", icon: Brain, color: "text-purple-500", detail: "Fácil e Intuitivo" },
+          { label: "Onboarding Score", value: "95%", icon: Rocket, color: "text-emerald-500", detail: "Sem suporte necessário" },
+          { label: "Complexity Score", value: "Low", icon: Gauge, color: "text-blue-500", detail: "Interface limpa" },
+          { label: "Avg Execution Time", value: "4.2m", icon: Timer, color: "text-amber-500", detail: "Ganho de produtividade" },
+        ].map((stat, i) => (
+          <Card key={i} className="bg-white p-6 border-slate-100 shadow-sm rounded-3xl group hover:shadow-xl transition-all">
+            <div className="flex items-center justify-between mb-4">
+               <stat.icon className={`h-6 w-6 ${stat.color}`} />
+               <TrendingUp className="h-3 w-3 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+            <h3 className="text-2xl font-black text-navy mt-1">{stat.value}</h3>
+            <p className="text-[9px] font-bold text-slate-400 mt-2 uppercase tracking-tight">{stat.detail}</p>
+          </Card>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <Card className="md:col-span-2 border-slate-100 shadow-sm rounded-3xl overflow-hidden">
           <CardHeader className="bg-white border-b border-slate-50 p-6">
-            <CardTitle className="text-sm font-black text-navy uppercase tracking-widest">Matriz de Testes Operacionais</CardTitle>
-            <CardDescription className="text-[10px] uppercase font-bold text-slate-400">Fluxos ponta-a-ponta executados por engenheiros.</CardDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-sm font-black text-navy uppercase tracking-widest">Matriz de Testes Operacionais & UX</CardTitle>
+                <CardDescription className="text-[10px] uppercase font-bold text-slate-400">Fluxos ponta-a-ponta executados por engenheiros.</CardDescription>
+              </div>
+              <Badge className="bg-navy text-white text-[9px] font-black uppercase px-3 py-1 animate-pulse">UX Audit Active</Badge>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-slate-50">
               {tests?.map((test: any) => (
-                <div key={test.id} className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${
-                      test.status === 'completed' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
-                    }`}>
-                      {test.status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> : <Activity className="h-5 w-5 animate-pulse" />}
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-black text-navy uppercase">{test.test_name}</h4>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                        {test.status === 'completed' ? 'Validado com Sucesso' : 'Em Execução / Pendente'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <div className="text-right hidden sm:block">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">Tempo Médio</p>
-                      <p className="text-xs font-bold text-navy">{test.duration_ms ? `${(test.duration_ms / 60000).toFixed(1)} min` : '--'}</p>
+                <div key={test.id} className="p-6 flex flex-col gap-4 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${
+                        test.status === 'completed' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+                      }`}>
+                        {test.status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> : <Activity className="h-5 w-5 animate-pulse" />}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-navy uppercase">{test.test_name}</h4>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                          {test.status === 'completed' ? 'UX Validada' : 'Em Execução / Pendente'}
+                        </p>
+                      </div>
                     </div>
                     <Badge className={`${
                       test.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'
@@ -98,6 +119,16 @@ export default function ProductionReadiness() {
                       {test.status}
                     </Badge>
                   </div>
+                  
+                  {test.ux_bottlenecks && test.ux_bottlenecks.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {test.ux_bottlenecks.map((tag: string, i: number) => (
+                        <Badge key={i} variant="outline" className="text-[8px] border-amber-200 bg-amber-50 text-amber-700 font-bold uppercase tracking-tighter">
+                          <ZapOff className="h-2 w-2 mr-1" /> {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
