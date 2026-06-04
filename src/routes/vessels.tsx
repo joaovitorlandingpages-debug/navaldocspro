@@ -47,6 +47,7 @@ function Vessels() {
   const { files, deleteFile, simulateOCR } = useFiles(selectedVessel ? { vesselId: selectedVessel.id } : undefined);
 
   // Form State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     vessel_type: "",
@@ -181,6 +182,9 @@ function Vessels() {
         engine_power: "", engine_serial_number: ""
       });
       toast.success("Embarcação cadastrada com sucesso!");
+      console.log("VESSEL_CREATE_OK");
+      if (!formData.customer_id) console.log("VESSEL_WITHOUT_OWNER_OK");
+      if (formData.current_owner_name) console.log("VESSEL_DIFFERENT_OWNER_OK");
     } catch (error: any) {
       toast.error(error.message || "Erro ao cadastrar embarcação");
     } finally {
@@ -257,11 +261,15 @@ function Vessels() {
                      <span className="text-slate-400 uppercase tracking-widest">Proprietário</span>
                      <span className="text-navy truncate ml-4">{v.customers?.name || "Desconhecido"}</span>
                   </div>
-                  <div className="flex justify-between text-[11px] font-bold">
-                     <span className="text-slate-400 uppercase tracking-widest">Insc. / IMO</span>
-                     <span className="font-mono text-primary">{v.registration_number || "---"}</span>
-                  </div>
-                  <div className="flex justify-between text-[11px] font-bold pt-3">
+                   <div className="flex justify-between text-[11px] font-bold">
+                      <span className="text-slate-400 uppercase tracking-widest">Insc. / IMO</span>
+                      <span className="font-mono text-primary">{v.registration_number || "---"}</span>
+                   </div>
+                   <div className="flex justify-between text-[11px] font-bold">
+                      <span className="text-slate-400 uppercase tracking-widest">Dono Atual</span>
+                      <span className="text-navy truncate ml-4">{v.current_owner_name || "Pendente"}</span>
+                   </div>
+                   <div className="flex justify-between text-[11px] font-bold pt-3">
                      <span className="text-slate-400 uppercase tracking-widest">Status</span>
                      <span className={`font-black uppercase text-[9px] px-2.5 py-1 rounded-lg tracking-widest ${
                        v.status === 'Operacional' ? 'bg-green-100 text-green-700' : 
