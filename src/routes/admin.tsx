@@ -70,6 +70,8 @@ function AdminLayout() {
     { name: "Visão Geral", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },
     { name: "Executive Overview", icon: <Globe className="h-5 w-5" />, path: "/admin/executive-overview" },
     { name: "AI Global Console", icon: <Bot className="h-5 w-5" />, path: "/admin/global" },
+    { name: "Feedback Operacional", icon: <MessageSquare className="h-5 w-5" />, path: "/admin/operational-feedback" },
+    { name: "Validação de Campo", icon: <Activity className="h-5 w-5" />, path: "/admin/field-validation-report" },
     { name: "Empresas", icon: <Building className="h-5 w-5" />, path: "/admin/companies" },
     { name: "Comercial & Readiness", icon: <TrendingUp className="h-5 w-5" />, path: "/admin/commercial" },
     { name: "Métricas SaaS", icon: <BarChart3 className="h-5 w-5" />, path: "/admin/saas-metrics" },

@@ -70,10 +70,12 @@ import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSecurityRouteImport } from './routes/admin/security'
 import { Route as AdminSaasMetricsRouteImport } from './routes/admin/saas-metrics'
 import { Route as AdminRoadmapRouteImport } from './routes/admin/roadmap'
+import { Route as AdminOperationalFeedbackRouteImport } from './routes/admin/operational-feedback'
 import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminGlobalRouteImport } from './routes/admin/global'
 import { Route as AdminFullQaReportRouteImport } from './routes/admin/full-qa-report'
+import { Route as AdminFieldValidationReportRouteImport } from './routes/admin/field-validation-report'
 import { Route as AdminExecutiveOverviewRouteImport } from './routes/admin/executive-overview'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
@@ -388,6 +390,12 @@ const AdminRoadmapRoute = AdminRoadmapRouteImport.update({
   path: '/roadmap',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminOperationalFeedbackRoute =
+  AdminOperationalFeedbackRouteImport.update({
+    id: '/operational-feedback',
+    path: '/operational-feedback',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminOcrRoute = AdminOcrRouteImport.update({
   id: '/ocr',
   path: '/ocr',
@@ -408,6 +416,12 @@ const AdminFullQaReportRoute = AdminFullQaReportRouteImport.update({
   path: '/full-qa-report',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFieldValidationReportRoute =
+  AdminFieldValidationReportRouteImport.update({
+    id: '/field-validation-report',
+    path: '/field-validation-report',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminExecutiveOverviewRoute = AdminExecutiveOverviewRouteImport.update({
   id: '/executive-overview',
   path: '/executive-overview',
@@ -487,10 +501,12 @@ export interface FileRoutesByFullPath {
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
+  '/admin/field-validation-report': typeof AdminFieldValidationReportRoute
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
+  '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -559,10 +575,12 @@ export interface FileRoutesByTo {
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
+  '/admin/field-validation-report': typeof AdminFieldValidationReportRoute
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
+  '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -634,10 +652,12 @@ export interface FileRoutesById {
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
+  '/admin/field-validation-report': typeof AdminFieldValidationReportRoute
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
+  '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -710,10 +730,12 @@ export interface FileRouteTypes {
     | '/admin/document-library'
     | '/admin/documents'
     | '/admin/executive-overview'
+    | '/admin/field-validation-report'
     | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
+    | '/admin/operational-feedback'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
     | '/admin/security'
@@ -782,10 +804,12 @@ export interface FileRouteTypes {
     | '/admin/document-library'
     | '/admin/documents'
     | '/admin/executive-overview'
+    | '/admin/field-validation-report'
     | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
+    | '/admin/operational-feedback'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
     | '/admin/security'
@@ -856,10 +880,12 @@ export interface FileRouteTypes {
     | '/admin/document-library'
     | '/admin/documents'
     | '/admin/executive-overview'
+    | '/admin/field-validation-report'
     | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
+    | '/admin/operational-feedback'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
     | '/admin/security'
@@ -1362,6 +1388,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRoadmapRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/operational-feedback': {
+      id: '/admin/operational-feedback'
+      path: '/operational-feedback'
+      fullPath: '/admin/operational-feedback'
+      preLoaderRoute: typeof AdminOperationalFeedbackRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/ocr': {
       id: '/admin/ocr'
       path: '/ocr'
@@ -1388,6 +1421,13 @@ declare module '@tanstack/react-router' {
       path: '/full-qa-report'
       fullPath: '/admin/full-qa-report'
       preLoaderRoute: typeof AdminFullQaReportRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/field-validation-report': {
+      id: '/admin/field-validation-report'
+      path: '/field-validation-report'
+      fullPath: '/admin/field-validation-report'
+      preLoaderRoute: typeof AdminFieldValidationReportRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/executive-overview': {
@@ -1450,10 +1490,12 @@ interface AdminRouteChildren {
   AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminExecutiveOverviewRoute: typeof AdminExecutiveOverviewRoute
+  AdminFieldValidationReportRoute: typeof AdminFieldValidationReportRoute
   AdminFullQaReportRoute: typeof AdminFullQaReportRoute
   AdminGlobalRoute: typeof AdminGlobalRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminOcrRoute: typeof AdminOcrRoute
+  AdminOperationalFeedbackRoute: typeof AdminOperationalFeedbackRoute
   AdminRoadmapRoute: typeof AdminRoadmapRoute
   AdminSaasMetricsRoute: typeof AdminSaasMetricsRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
@@ -1473,10 +1515,12 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
   AdminExecutiveOverviewRoute: AdminExecutiveOverviewRoute,
+  AdminFieldValidationReportRoute: AdminFieldValidationReportRoute,
   AdminFullQaReportRoute: AdminFullQaReportRoute,
   AdminGlobalRoute: AdminGlobalRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminOcrRoute: AdminOcrRoute,
+  AdminOperationalFeedbackRoute: AdminOperationalFeedbackRoute,
   AdminRoadmapRoute: AdminRoadmapRoute,
   AdminSaasMetricsRoute: AdminSaasMetricsRoute,
   AdminSecurityRoute: AdminSecurityRoute,
@@ -1587,13 +1631,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
