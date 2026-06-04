@@ -116,17 +116,17 @@ export function WelcomeTour({
   };
 
   return (
-    <div className="bg-white rounded-[2rem] md:rounded-[3rem] border border-slate-100 shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden animate-in fade-in zoom-in duration-700 max-w-[calc(100vw-2rem)] md:max-w-xl w-full relative z-[110] ring-1 ring-navy/5 flex flex-col max-h-[90vh]">
-      <div className="bg-[#000B18] p-10 text-white relative overflow-hidden group">
+    <div className="bg-white rounded-[1.5rem] md:rounded-[3rem] border border-slate-100 shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden animate-in fade-in zoom-in duration-700 max-w-[calc(100vw-1.5rem)] md:max-w-xl w-full relative z-[110] ring-1 ring-navy/5 flex flex-col max-h-[85vh] md:max-h-[90vh]">
+      <div className="bg-[#000B18] p-6 md:p-10 text-white relative overflow-hidden group shrink-0">
         <div className="absolute top-0 right-0 w-full h-full bg-primary/10 blur-[60px] -mr-40 group-hover:bg-primary/20 transition-all duration-1000" />
         <button 
           onClick={handleFinish}
-          className="absolute top-8 right-8 text-white/40 hover:text-white transition-all z-20 h-10 w-10 flex items-center justify-center rounded-full hover:bg-white/5"
+          className="absolute top-4 right-4 md:top-8 md:right-8 text-white/40 hover:text-white transition-all z-20 h-10 w-10 flex items-center justify-center rounded-full hover:bg-white/5"
         >
           <X className="h-6 w-6" />
         </button>
         
-        <div className="flex items-center gap-6 mb-8 relative z-10">
+        <div className="flex items-center gap-4 md:gap-6 mb-4 md:mb-8 relative z-10">
           <div className="p-4 bg-primary rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.4)] group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
             <Rocket className="h-6 w-6 text-white" />
           </div>
@@ -144,7 +144,7 @@ export function WelcomeTour({
         </div>
       </div>
 
-      <div className="p-8 md:p-10 space-y-6 overflow-y-auto custom-scrollbar bg-white flex-grow">
+      <div className="p-6 md:p-10 space-y-6 overflow-y-auto custom-scrollbar bg-white flex-grow">
         <div className="text-center py-4">
            <p className="text-sm text-slate-500 font-medium">Explore as funcionalidades principais da plataforma para otimizar sua gestão naval.</p>
         </div>
@@ -174,13 +174,13 @@ export function WelcomeTour({
       </div>
 
 
-      <div className="p-8 md:p-10 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-4 justify-between shrink-0">
+      <div className="p-6 md:p-10 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-4 justify-between shrink-0">
          <button className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-navy/40 hover:text-primary transition-all">
             <PlayCircle className="h-5 w-5" /> Assistir Tutorial
          </button>
          <Button 
            onClick={handleFinish}
-           className="w-full sm:w-auto bg-navy text-[11px] font-black uppercase tracking-[0.2em] px-10 py-7 rounded-2xl shadow-xl hover:bg-slate-900 transition-all border border-navy/10 active:scale-95"
+           className="w-full sm:w-auto bg-navy text-[11px] font-black uppercase tracking-[0.2em] px-8 md:px-10 py-5 md:py-7 rounded-2xl shadow-xl hover:bg-slate-900 transition-all border border-navy/10 active:scale-95"
          >
             Começar Agora <ArrowRight className="ml-3 h-4 w-4" />
          </Button>
