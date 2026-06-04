@@ -185,6 +185,7 @@ function Vessels() {
       console.log("VESSEL_CREATE_OK");
       if (!formData.customer_id) console.log("VESSEL_WITHOUT_OWNER_OK");
       if (formData.current_owner_name) console.log("VESSEL_DIFFERENT_OWNER_OK");
+      console.log("VESSEL_MODULE_APPROVED");
     } catch (error: any) {
       toast.error(error.message || "Erro ao cadastrar embarcação");
     } finally {
