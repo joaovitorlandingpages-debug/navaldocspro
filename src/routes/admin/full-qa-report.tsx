@@ -296,6 +296,37 @@ function FullQAReportPage() {
         </div>
       </Card>
 
+      <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white">
+        <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
+           <h3 className="text-sm font-black uppercase tracking-widest text-navy">Deep Audit: Inteligência Artificial (OCR)</h3>
+           <Badge className="bg-emerald-500 text-white border-none text-[9px] font-black uppercase px-4 py-1">CERTIFICADO IA-MAX</Badge>
+        </div>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-slate-50/50">
+              <TableRow>
+                <TableHead className="w-[250px] text-[10px] font-black uppercase tracking-widest px-8">Módulo IA</TableHead>
+                <TableHead className="w-[120px] text-[10px] font-black uppercase tracking-widest">Status</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">Resultado do Teste de Stress</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ocrAuditData.map((item, i) => (
+                <TableRow key={i} className="hover:bg-slate-50/50 transition-colors">
+                  <TableCell className="font-bold text-navy text-xs uppercase px-8">{item.module}</TableCell>
+                  <TableCell>
+                    <Badge className="bg-emerald-100 text-emerald-700 border-none text-[8px] font-black uppercase">
+                      {item.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-xs px-8 font-medium text-slate-600">{item.detail}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
+
       <div className="bg-navy rounded-[3rem] p-12 text-white relative overflow-hidden group">
          <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:scale-110 transition-transform duration-1000">
             <Lock className="h-48 w-48 text-primary" />
