@@ -54,7 +54,16 @@ function Vessels() {
     registration_number: "",
     engine: "",
     category: "Esporte e Recreio",
-    status: "Operacional"
+    status: "Operacional",
+    current_owner_name: "",
+    current_owner_cpf_cnpj: "",
+    length: "",
+    boca: "",
+    pontal: "",
+    material: "",
+    capacity: "",
+    engine_power: "",
+    engine_serial_number: ""
   });
 
   const handleOpenDetails = (vessel: any) => {
@@ -110,10 +119,8 @@ function Vessels() {
       toast.error("Erro: Empresa não identificada.");
       return;
     }
-    if (!formData.customer_id) {
-      toast.error("Selecione um cliente para vincular a embarcação");
-      return;
-    }
+    // Note: customer_id is no longer required for vessels
+    setIsSubmitting(true);
     setIsSubmitting(true);
 
     try {
@@ -121,13 +128,22 @@ function Vessels() {
         .from('vessels')
         .insert({
           company_id: companyId,
-          customer_id: formData.customer_id,
+          customer_id: formData.customer_id || null,
           name: formData.name,
           vessel_type: formData.vessel_type,
           registration_number: formData.registration_number,
           engine: formData.engine,
           category: formData.category,
-          status: formData.status as any
+          status: formData.status as any,
+          current_owner_name: formData.current_owner_name,
+          current_owner_cpf_cnpj: formData.current_owner_cpf_cnpj,
+          length: formData.length,
+          boca: formData.boca,
+          pontal: formData.pontal,
+          material: formData.material,
+          capacity: formData.capacity,
+          engine_power: formData.engine_power,
+          engine_serial_number: formData.engine_serial_number
         } as any)
         .select('*, customers(name)')
         .single();
@@ -158,7 +174,10 @@ function Vessels() {
       setFormData({ 
         name: "", vessel_type: "", customer_id: "", 
         registration_number: "", engine: "", 
-        category: "Esporte e Recreio", status: "Operacional" 
+        category: "Esporte e Recreio", status: "Operacional",
+        current_owner_name: "", current_owner_cpf_cnpj: "",
+        length: "", boca: "", pontal: "", material: "", capacity: "",
+        engine_power: "", engine_serial_number: ""
       });
       toast.success("Embarcação cadastrada com sucesso!");
 
@@ -310,7 +329,7 @@ function Vessels() {
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all"
                 value={formData.customer_id}
                 onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
-                required
+                required={false}
               >
                 <option value="">Selecione um cliente</option>
                 {customers.map(c => (
