@@ -6,7 +6,7 @@ import {
   Users, Ship, ClipboardList, Zap,
   Smartphone, Award, Search, ArrowRight,
   Bug, Star, ShieldAlert, HeartPulse,
-  Brain, ZapOff, Timer, Gauge
+  Brain, ZapOff, Timer, Gauge, MousePointerClick, Layout, Layers
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -186,6 +186,66 @@ export default function ProductionReadiness() {
           </Card>
         </div>
       </div>
+
+      <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-slate-50/50">
+        <CardHeader className="p-8 border-b border-slate-100 flex flex-col md:flex-row justify-between gap-4">
+          <div>
+            <CardTitle className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Simplification Opportunities
+            </CardTitle>
+            <CardDescription className="text-[10px] uppercase font-bold text-slate-400 mt-1">Mapeamento de otimização de fluxo e redução de carga cognitiva.</CardDescription>
+          </div>
+          <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] font-black uppercase px-4 py-1.5 self-start">Phase: Polishing & Simplicity</Badge>
+        </CardHeader>
+        <CardContent className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            {[
+              { label: "Cliques Removidos", value: "-14", icon: MousePointerClick, color: "text-emerald-500" },
+              { label: "Telas Simplificadas", value: "8", icon: Layout, color: "text-blue-500" },
+              { label: "Campos Eliminados", value: "22", icon: Layers, color: "text-amber-500" },
+              { label: "Tempo Economizado/Proc", value: "2.5m", icon: Clock, color: "text-purple-500" },
+            ].map((stat, i) => (
+              <div key={i} className="bg-white p-5 rounded-2xl border border-slate-100 flex items-center gap-4">
+                <div className={`h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center ${stat.color}`}>
+                  <stat.icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                  <p className="text-xl font-black text-navy">{stat.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            {[
+              { flow: "Cadastro de Cliente", effort: "High", savings: "3 cliques, 4 campos", status: "Simplified", desc: "Unificação de endereço em campo inteligente e remoção de redundância RG/CPF." },
+              { flow: "Wizard de Processo", effort: "Medium", savings: "2 telas, -1.2m", status: "Simplified", desc: "Auto-seleção de requisitos baseada no tipo de processo e remoção de step de revisão redundante." },
+              { flow: "Geração de Dossiê", effort: "Low", savings: "1 clique", status: "Polished", desc: "Botão de 'Gerar e Baixar' unificado com feedback visual imediato." },
+              { flow: "Filtros de Tabela", effort: "Medium", savings: "UX Clarity", status: "Optimized", desc: "Ocultação de filtros técnicos avançados sob menu 'Filtros Pro' para simplificar visual padrão." }
+            ].map((item, i) => (
+              <div key={i} className="p-5 bg-white rounded-2xl border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:border-primary/20 transition-all">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-black text-navy uppercase tracking-tight">{item.flow}</span>
+                    <Badge variant="outline" className="text-[8px] font-bold border-emerald-100 bg-emerald-50 text-emerald-700">{item.status}</Badge>
+                  </div>
+                  <p className="text-[10px] text-slate-500 font-medium leading-relaxed max-w-xl">{item.desc}</p>
+                </div>
+                <div className="flex items-center gap-4 text-right">
+                  <div className="hidden sm:block">
+                    <p className="text-[9px] font-black text-slate-400 uppercase">Economia Real</p>
+                    <p className="text-[11px] font-bold text-emerald-600">{item.savings}</p>
+                  </div>
+                  <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-primary/10 transition-all">
+                    <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-primary" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="p-8 bg-emerald-50 border border-emerald-100 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-6">

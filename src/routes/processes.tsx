@@ -153,9 +153,9 @@ function Processes() {
             <div key={col.id} className="flex-shrink-0 w-80 flex flex-col gap-6">
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-3">
-                  <div className={`h-3 w-3 rounded-full ${col.color} shadow-[0_0_15px_rgba(0,0,0,0.2)] animate-pulse`} />
-                  <h3 className="font-black text-navy text-[11px] uppercase tracking-[0.2em]">{col.title}</h3>
-                  <span className="bg-navy text-primary text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-lg">
+                  <div className={`h-2.5 w-2.5 rounded-full ${col.color} shadow-[0_0_10px_rgba(0,0,0,0.1)]`} />
+                  <h3 className="font-black text-navy text-[10px] uppercase tracking-[0.15em]">{col.title}</h3>
+                  <span className="bg-slate-200/50 text-navy/40 text-[9px] font-black px-2 py-0.5 rounded-full">
                     {processes.filter(p => p.status === col.id).length}
                   </span>
                 </div>
@@ -184,7 +184,7 @@ function Processes() {
                       <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest bg-slate-50 border-slate-100">{p.status === 'pending' ? 'Novo Lead' : 'Ativo'}</Badge>
                     </div>
 
-                    <h4 className="font-black text-navy text-sm mb-4 leading-tight group-hover:text-primary transition-colors min-h-[40px]">{p.process_type}</h4>
+                    <h4 className="font-black text-navy text-[13px] mb-3 leading-tight group-hover:text-primary transition-colors min-h-[32px]">{p.process_type}</h4>
                     
                     <div className="space-y-3 pb-5 mb-5 border-b border-slate-50">
                       <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
