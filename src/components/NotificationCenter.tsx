@@ -11,6 +11,7 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClo
 
   if (!isOpen) return null;
 
+
   return (
     <div className="fixed inset-0 z-[100] flex justify-end">
       <div className="absolute inset-0 bg-navy/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />

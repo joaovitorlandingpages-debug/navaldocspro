@@ -79,12 +79,13 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
 
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && profile && !isAuthPage) {
       console.log("AI_ASSISTANT_READY");
       console.log("AI_COPILOT_ARCH_READY");
       console.log("FUTURE_AUTOMATION_READY");
     }
-  }, [isOpen]);
+  }, [isOpen, profile, isAuthPage]);
+
 
   if (!isOpen) return (
     <button 
