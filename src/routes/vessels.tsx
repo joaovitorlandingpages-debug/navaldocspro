@@ -331,7 +331,7 @@ function Vessels() {
                 onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
                 required={false}
               >
-                <option value="">Selecione um cliente</option>
+                <option value="">Sem proprietário vinculado (Pendente)</option>
                 {customers.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
@@ -368,6 +368,51 @@ function Vessels() {
                 <option>Interior</option>
                 <option>Esporte e Recreio</option>
               </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Comprimento (m)</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: 12.5" 
+                value={formData.length}
+                onChange={(e) => setFormData({ ...formData, length: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Boca (m)</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: 3.8" 
+                value={formData.boca}
+                onChange={(e) => setFormData({ ...formData, boca: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Pontal (m)</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: 1.2" 
+                value={formData.pontal}
+                onChange={(e) => setFormData({ ...formData, pontal: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Proprietário Atual (Nome)</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Nome do vendedor/atual dono" 
+                value={formData.current_owner_name}
+                onChange={(e) => setFormData({ ...formData, current_owner_name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Proprietário Atual (CPF/CNPJ)</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="000.000.000-00" 
+                value={formData.current_owner_cpf_cnpj}
+                onChange={(e) => setFormData({ ...formData, current_owner_cpf_cnpj: e.target.value })}
+              />
             </div>
           </div>
           <div className="space-y-3">
