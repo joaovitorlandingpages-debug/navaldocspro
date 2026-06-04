@@ -257,6 +257,37 @@ function FullQAReportPage() {
         </div>
       </Card>
 
+      <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white">
+        <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
+           <h3 className="text-sm font-black uppercase tracking-widest text-navy">Deep Audit: Gerador Documental (Qualidade A4)</h3>
+           <Badge className="bg-primary text-white border-none text-[9px] font-black uppercase px-4 py-1">VALIDAÇÃO PROFISSIONAL</Badge>
+        </div>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-slate-50/50">
+              <TableRow>
+                <TableHead className="w-[250px] text-[10px] font-black uppercase tracking-widest px-8">Documento</TableHead>
+                <TableHead className="w-[120px] text-[10px] font-black uppercase tracking-widest">Status</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">Motivo / Análise do Engenheiro</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {documentAuditData.map((doc, i) => (
+                <TableRow key={i} className="hover:bg-slate-50/50 transition-colors">
+                  <TableCell className="font-bold text-navy text-xs uppercase px-8">{doc.name}</TableCell>
+                  <TableCell>
+                    <Badge className={`${doc.status === 'APROVADO' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'} border-none text-[8px] font-black uppercase`}>
+                      {doc.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className={`text-xs px-8 font-medium ${doc.status === 'REPROVADO' ? 'text-rose-600' : 'text-slate-600'}`}>{doc.reason}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
+
       <div className="bg-navy rounded-[3rem] p-12 text-white relative overflow-hidden group">
          <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:scale-110 transition-transform duration-1000">
             <Lock className="h-48 w-48 text-primary" />
