@@ -6,7 +6,7 @@ import {
   Users, Ship, ClipboardList, Zap,
   Smartphone, Award, Search, ArrowRight,
   Bug, Star, ShieldAlert, HeartPulse,
-  Brain, ZapOff, Timer, Gauge, MousePointerClick, Layout, Layers
+  Brain, ZapOff, Timer, Gauge, MousePointerClick, Layout, Layers, Sparkles
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
