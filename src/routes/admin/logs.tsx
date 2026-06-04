@@ -14,7 +14,7 @@ import { PageHeader } from "@/components/navigation/PageHeader";
 import { ModalLayout } from "@/components/ui/ModalLayout";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-export const Route = createFileRoute("/admin/logs")({
+export const Route = createFileRoute("/admin/logs/frontend")({
   component: FrontendErrorLogs,
 });
 
