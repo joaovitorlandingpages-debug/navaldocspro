@@ -4,7 +4,7 @@ import {
   Eye, Clock, History, User, Ship, 
   QrCode, Hash, Layout, List, 
   ChevronRight, ArrowRight, Loader2,
-  Lock, Globe, Award, Info, Archive
+  Lock, Globe, Award, Info, Archive, Zap
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
     { id: 'timeline', label: 'Timeline de Processamento', icon: <History className="h-4 w-4" /> }
   ];
 
-  const InfoRow = ({ label, value }: { label: string; value: string }) => (
+  const InfoRow = ({ label, value }: { label: string; value: string | undefined }) => (
     <div className="flex justify-between py-4 border-b border-slate-50 last:border-0">
       <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{label}</span>
       <span className="text-sm font-bold text-navy">{value || "---"}</span>
