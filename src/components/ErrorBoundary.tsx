@@ -50,7 +50,14 @@ class ErrorBoundary extends React.Component<
     if (error.message?.includes('removeChild') || error.message?.includes('appendChild')) {
       console.warn("ERROR_ROOT_CAUSE_IDENTIFIED", "DOM_RECONCILIATION_ISSUE");
     }
+
+    // New log events
+    telemetry.track('FRONTEND_ERROR_CAPTURED', undefined, {
+      error_message: error.message,
+      route: window.location.pathname
+    });
   }
+
 
   handleReset = () => {
     this.setState({ hasError: false, error: null, errorInfo: null });
