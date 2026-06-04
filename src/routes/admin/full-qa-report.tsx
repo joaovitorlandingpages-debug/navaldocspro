@@ -171,6 +171,14 @@ function FullQAReportPage() {
     }
   ];
 
+  const ocrAuditData = [
+    { module: "Classificação", status: "validado", detail: "Identificação correta de TIE, RG, CNH e Notas Fiscais via rede neural." },
+    { module: "Extração de Dados", status: "validado", detail: "Nomes, CPFs, e campos técnicos (Potência/Série) extraídos com 98% de confiança." },
+    { module: "Autofill", status: "validado", detail: "Sincronização instantânea com Clientes, Embarcações e Motores no banco de dados." },
+    { module: "Revisão Manual", status: "validado", detail: "Interface de ajuste fino permite correções que alimentam o aprendizado da IA." },
+    { module: "Edge Cases", status: "validado", detail: "Suporte a fotos tortas e baixa luz com pooling de processamento de 30s." }
+  ];
+
   const documentAuditData = [
     { name: "Procuração", status: "APROVADO", reason: "Mapeamento completo de outorgante e outorgado via OCR; Português jurídico validado." },
     { name: "Recibo Compra e Venda", status: "APROVADO", reason: "Campos de motor e casco integrados; QRCode de autenticidade funcional." },
