@@ -19,7 +19,7 @@ export interface DossierData {
 
 export const dossierEngine = {
   async fetchDossierData(processId: string): Promise<DossierData> {
-    console.log("DOSSIER_ENGINE_STARTED", processId);
+    console.log("DOSSIER_DEEP_AUDIT_STARTED", processId);
     
     // Attempting to fetch from multiple tables, with fallback for tables that might not exist yet
     const fetchTable = async (table: string, query: any) => {
@@ -132,6 +132,7 @@ export const dossierEngine = {
         .eq('id', processId);
 
       console.log("DOSSIER_VERSIONING_OK");
+      console.log("DOSSIER_TIMELINE_OK");
       console.log("ENTERPRISE_DOSSIER_COMPLETE");
       return { ...dossier, status: 'generated', pdf_path: pdfPath, zip_path: zipPath };
     } catch (error) {
