@@ -1650,6 +1650,57 @@ export type Database = {
         }
         Relationships: []
       }
+      frontend_errors: {
+        Row: {
+          company_id: string | null
+          component_stack: string | null
+          created_at: string | null
+          error_message: string
+          error_stack: string | null
+          id: string
+          metadata: Json | null
+          route: string | null
+          user_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          component_stack?: string | null
+          created_at?: string | null
+          error_message: string
+          error_stack?: string | null
+          id?: string
+          metadata?: Json | null
+          route?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          component_stack?: string | null
+          created_at?: string | null
+          error_message?: string
+          error_stack?: string | null
+          id?: string
+          metadata?: Json | null
+          route?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "frontend_errors_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "frontend_errors_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       generated_documents: {
         Row: {
           company_id: string | null
