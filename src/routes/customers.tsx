@@ -34,8 +34,11 @@ function Customers() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [customers, setCustomers] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -47,7 +50,6 @@ function Customers() {
     current: 0,
     limit: null
   });
-
 
   const { setIsNewProcessOpen } = useNewProcess();
   const { checkLimit } = usePlanLimits();
@@ -69,6 +71,18 @@ function Customers() {
   const handleOpenDetails = (customer: any) => {
     setSelectedCustomer(customer);
     setIsDetailsOpen(true);
+    setIsEditing(false);
+    setFormData({
+      name: customer.name || "",
+      cpf_cnpj: customer.cpf_cnpj || "",
+      rg: customer.rg || "",
+      email: customer.email || "",
+      phone: customer.phone || "",
+      address: customer.address || "",
+      city: customer.city || "",
+      state: customer.state || "",
+      notes: customer.notes || ""
+    });
   };
 
   useEffect(() => {
