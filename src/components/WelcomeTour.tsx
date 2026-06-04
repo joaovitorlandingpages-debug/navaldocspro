@@ -116,7 +116,7 @@ export function WelcomeTour({
   };
 
   return (
-    <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] border border-slate-100 shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden animate-in fade-in zoom-in duration-700 max-w-[calc(100vw-2rem)] md:max-w-md w-full relative z-[110] ring-1 ring-navy/5">
+    <div className="bg-white rounded-[2rem] md:rounded-[3rem] border border-slate-100 shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden animate-in fade-in zoom-in duration-700 max-w-[calc(100vw-2rem)] md:max-w-xl w-full relative z-[110] ring-1 ring-navy/5 flex flex-col max-h-[90vh]">
       <div className="bg-[#000B18] p-10 text-white relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-full h-full bg-primary/10 blur-[60px] -mr-40 group-hover:bg-primary/20 transition-all duration-1000" />
         <button 
@@ -144,7 +144,7 @@ export function WelcomeTour({
         </div>
       </div>
 
-      <div className="p-10 space-y-6 max-h-[450px] overflow-y-auto custom-scrollbar bg-white">
+      <div className="p-8 md:p-10 space-y-6 overflow-y-auto custom-scrollbar bg-white flex-grow">
         <div className="text-center py-4">
            <p className="text-sm text-slate-500 font-medium">Explore as funcionalidades principais da plataforma para otimizar sua gestão naval.</p>
         </div>
@@ -174,7 +174,7 @@ export function WelcomeTour({
       </div>
 
 
-      <div className="p-10 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-4 justify-between">
+      <div className="p-8 md:p-10 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-4 justify-between shrink-0">
          <button className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-navy/40 hover:text-primary transition-all">
             <PlayCircle className="h-5 w-5" /> Assistir Tutorial
          </button>
