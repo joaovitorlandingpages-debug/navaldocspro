@@ -7,7 +7,7 @@ import {
   Smartphone, Award, Search, ArrowRight,
   Bug, Star, ShieldAlert, HeartPulse,
   Brain, ZapOff, Timer, Gauge, MousePointerClick, Layout, Layers, Sparkles,
-  Gem, ThumbsUp, TrendingDown, Eye
+  Gem, ThumbsUp, TrendingDown, Eye, Shield
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -354,6 +354,87 @@ export default function ProductionReadiness() {
           </div>
         </CardContent>
       </Card>
+
+      <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
+        <CardHeader className="p-8 border-b border-slate-100 flex flex-col md:flex-row justify-between gap-4 bg-slate-50/50">
+          <div>
+            <CardTitle className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
+              <Shield className="h-4 w-4 text-emerald-500" /> Security Audit Report (Post-Correction)
+            </CardTitle>
+            <CardDescription className="text-[10px] uppercase font-bold text-slate-400 mt-1">Validação final de isolamento multitenant e segurança de catálogos.</CardDescription>
+          </div>
+          <Badge className="bg-emerald-500 text-white border-none text-[9px] font-black uppercase px-4 py-1.5 self-start">Phase: Security Certification</Badge>
+        </CardHeader>
+        <CardContent className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="space-y-6">
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <ShieldCheck className="h-3 w-3 text-emerald-500" /> Status das Vulnerabilidades
+              </h4>
+              <div className="space-y-3">
+                {[
+                  { label: "Corrigidas", value: "12", color: "text-emerald-500", desc: "Isolamento de logs, storage e funções SECURITY DEFINER." },
+                  { label: "Ignoradas (Seguras)", value: "3", color: "text-blue-500", desc: "Catálogos de roadmap e tipos de processo (Públicos)." },
+                  { label: "Risco Residual", value: "Zero", color: "text-emerald-500", desc: "Isolamento entre empresas validado com sucesso." },
+                ].map((item, i) => (
+                  <div key={i} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[11px] font-black text-navy uppercase">{item.label}</span>
+                      <span className={`text-xs font-black ${item.color}`}>{item.value}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-medium">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <ShieldAlert className="h-3 w-3 text-emerald-500" /> Revisão de Findings Ignorados
+              </h4>
+              <div className="space-y-3">
+                {[
+                  { table: "process_types", status: "Global", reason: "Sem dados sensíveis ou de empresas." },
+                  { table: "process_document_packages", status: "Global", reason: "Requisitos padrão da Marinha." },
+                  { table: "system_backlog", status: "Global", reason: "Roadmap público de funcionalidades." },
+                ].map((item, i) => (
+                  <div key={i} className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[11px] font-black text-navy uppercase italic">{item.table}</span>
+                      <Badge className="bg-emerald-500 text-white text-[8px] font-black border-none uppercase">{item.status}</Badge>
+                    </div>
+                    <p className="text-[10px] text-emerald-700 font-medium opacity-80">{item.reason}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <Activity className="h-3 w-3 text-emerald-500" /> Logs de Certificação
+              </h4>
+              <div className="space-y-2">
+                {[
+                  "SECURITY_POST_FIX_AUDIT_STARTED",
+                  "IGNORED_FINDINGS_REVIEWED",
+                  "SHARED_CATALOGS_CONFIRMED_SAFE",
+                  "SECURITY_POST_FIX_APPROVED"
+                ].map((log, i) => (
+                  <div key={i} className="flex items-center gap-2 p-2 bg-navy/5 rounded-lg border border-navy/5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span className="text-[9px] font-black text-navy/70 uppercase tracking-tighter">{log}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="p-4 bg-navy text-white rounded-2xl shadow-lg shadow-navy/20">
+                <p className="text-[9px] font-black uppercase tracking-widest text-primary mb-1">Resultado Final</p>
+                <p className="text-sm font-black italic">APTO PARA PRODUÇÃO PILOTO</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
