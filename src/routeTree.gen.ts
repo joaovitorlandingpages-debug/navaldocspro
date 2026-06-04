@@ -72,6 +72,7 @@ import { Route as AdminSaasMetricsRouteImport } from './routes/admin/saas-metric
 import { Route as AdminRoadmapRouteImport } from './routes/admin/roadmap'
 import { Route as AdminOperationalFeedbackRouteImport } from './routes/admin/operational-feedback'
 import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
+import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminGlobalRouteImport } from './routes/admin/global'
 import { Route as AdminFullQaReportRouteImport } from './routes/admin/full-qa-report'
 import { Route as AdminFrontendErrorsRouteImport } from './routes/admin/frontend-errors'
@@ -401,6 +402,11 @@ const AdminOcrRoute = AdminOcrRouteImport.update({
   path: '/ocr',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLogsRoute = AdminLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminGlobalRoute = AdminGlobalRouteImport.update({
   id: '/global',
   path: '/global',
@@ -505,6 +511,7 @@ export interface FileRoutesByFullPath {
   '/admin/frontend-errors': typeof AdminFrontendErrorsRoute
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
+  '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
@@ -579,6 +586,7 @@ export interface FileRoutesByTo {
   '/admin/frontend-errors': typeof AdminFrontendErrorsRoute
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
+  '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
@@ -656,6 +664,7 @@ export interface FileRoutesById {
   '/admin/frontend-errors': typeof AdminFrontendErrorsRoute
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
+  '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
@@ -734,6 +743,7 @@ export interface FileRouteTypes {
     | '/admin/frontend-errors'
     | '/admin/full-qa-report'
     | '/admin/global'
+    | '/admin/logs'
     | '/admin/ocr'
     | '/admin/operational-feedback'
     | '/admin/roadmap'
@@ -808,6 +818,7 @@ export interface FileRouteTypes {
     | '/admin/frontend-errors'
     | '/admin/full-qa-report'
     | '/admin/global'
+    | '/admin/logs'
     | '/admin/ocr'
     | '/admin/operational-feedback'
     | '/admin/roadmap'
@@ -884,6 +895,7 @@ export interface FileRouteTypes {
     | '/admin/frontend-errors'
     | '/admin/full-qa-report'
     | '/admin/global'
+    | '/admin/logs'
     | '/admin/ocr'
     | '/admin/operational-feedback'
     | '/admin/roadmap'
@@ -1402,6 +1414,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOcrRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/logs': {
+      id: '/admin/logs'
+      path: '/logs'
+      fullPath: '/admin/logs'
+      preLoaderRoute: typeof AdminLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/global': {
       id: '/admin/global'
       path: '/global'
@@ -1494,6 +1513,7 @@ interface AdminRouteChildren {
   AdminFrontendErrorsRoute: typeof AdminFrontendErrorsRoute
   AdminFullQaReportRoute: typeof AdminFullQaReportRoute
   AdminGlobalRoute: typeof AdminGlobalRoute
+  AdminLogsRoute: typeof AdminLogsRoute
   AdminOcrRoute: typeof AdminOcrRoute
   AdminOperationalFeedbackRoute: typeof AdminOperationalFeedbackRoute
   AdminRoadmapRoute: typeof AdminRoadmapRoute
@@ -1519,6 +1539,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFrontendErrorsRoute: AdminFrontendErrorsRoute,
   AdminFullQaReportRoute: AdminFullQaReportRoute,
   AdminGlobalRoute: AdminGlobalRoute,
+  AdminLogsRoute: AdminLogsRoute,
   AdminOcrRoute: AdminOcrRoute,
   AdminOperationalFeedbackRoute: AdminOperationalFeedbackRoute,
   AdminRoadmapRoute: AdminRoadmapRoute,
