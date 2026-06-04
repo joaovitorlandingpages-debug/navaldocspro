@@ -42,7 +42,7 @@ class ErrorBoundary extends React.Component<
     console.log("STACK_TRACE_RECORDED");
     
     // Tracking profundo
-    telemetry.trackFrontendError(error, errorInfo.componentStack, {
+    telemetry.trackFrontendError(error, errorInfo.componentStack || undefined, {
       timestamp: new Date().toISOString(),
       viewport: `${window.innerWidth}x${window.innerHeight}`
     });
