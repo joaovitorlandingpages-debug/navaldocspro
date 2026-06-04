@@ -13,6 +13,11 @@ import {
 } from "lucide-react";
 import { useFieldTracking } from "@/hooks/useFieldTracking";
 import { useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/admin/field-validation-report")({
+  component: FieldValidationReport,
+});
 
 export default function FieldValidationReport() {
   const { trackAction } = useFieldTracking();
