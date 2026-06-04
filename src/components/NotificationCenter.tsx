@@ -9,7 +9,10 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClo
   const { notifications, loading, markAsRead, markAllAsRead } = useNotifications();
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
+
 
 
   return (

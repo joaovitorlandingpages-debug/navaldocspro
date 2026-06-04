@@ -74,19 +74,6 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
     refetchInterval: 30000 // Refresh a cada 30s para novos insights
   });
 
-  if (!profile || isAuthPage) return null;
-
-
-
-  useEffect(() => {
-    if (isOpen && profile && !isAuthPage) {
-      console.log("AI_ASSISTANT_READY");
-      console.log("AI_COPILOT_ARCH_READY");
-      console.log("FUTURE_AUTOMATION_READY");
-    }
-  }, [isOpen, profile, isAuthPage]);
-
-
   if (!isOpen) return (
     <button 
       onClick={() => setIsOpen(true)}
@@ -98,6 +85,9 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
       </span>
     </button>
   );
+
+  if (!profile || isAuthPage) return null;
+
 
   return (
     <div className={`fixed bottom-8 right-4 md:bottom-24 md:right-8 z-[80] w-[calc(100%-2rem)] max-w-sm bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden transition-all duration-300 mb-safe-area-inset-bottom lg:mb-0 ${isMinimized ? 'h-20' : 'h-auto max-h-[80vh] md:max-h-none'}`}>
