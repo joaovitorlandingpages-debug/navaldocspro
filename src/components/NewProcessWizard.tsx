@@ -65,7 +65,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
-  const totalSteps = 6;
+  const totalSteps = 4; // Simplificado de 6 para 4 (Agrupamento inteligente de dados)
   const progressPercent = (step / totalSteps) * 100;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuickClientOpen, setIsQuickClientOpen] = useState(false);
@@ -391,8 +391,6 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       document: safeString(person.cpf || person.doc_number || ""),
       rg: safeString(person.rg || ""),
       address: safeString(person.address || person.endereco || ""),
-      city: safeString(person.city || person.cidade || ""),
-      state: safeString(person.state || person.uf || person.estado || ""),
     });
 
     console.log("QUICK_CLIENT_DATA_APPLIED");
