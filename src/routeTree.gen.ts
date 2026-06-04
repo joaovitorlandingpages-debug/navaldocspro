@@ -75,6 +75,7 @@ import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminGlobalRouteImport } from './routes/admin/global'
 import { Route as AdminFullQaReportRouteImport } from './routes/admin/full-qa-report'
+import { Route as AdminFrontendErrorsRouteImport } from './routes/admin/frontend-errors'
 import { Route as AdminFieldValidationReportRouteImport } from './routes/admin/field-validation-report'
 import { Route as AdminExecutiveOverviewRouteImport } from './routes/admin/executive-overview'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
@@ -416,6 +417,11 @@ const AdminFullQaReportRoute = AdminFullQaReportRouteImport.update({
   path: '/full-qa-report',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFrontendErrorsRoute = AdminFrontendErrorsRouteImport.update({
+  id: '/frontend-errors',
+  path: '/frontend-errors',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminFieldValidationReportRoute =
   AdminFieldValidationReportRouteImport.update({
     id: '/field-validation-report',
@@ -502,6 +508,7 @@ export interface FileRoutesByFullPath {
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
   '/admin/field-validation-report': typeof AdminFieldValidationReportRoute
+  '/admin/frontend-errors': typeof AdminFrontendErrorsRoute
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
@@ -576,6 +583,7 @@ export interface FileRoutesByTo {
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
   '/admin/field-validation-report': typeof AdminFieldValidationReportRoute
+  '/admin/frontend-errors': typeof AdminFrontendErrorsRoute
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
@@ -653,6 +661,7 @@ export interface FileRoutesById {
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
   '/admin/field-validation-report': typeof AdminFieldValidationReportRoute
+  '/admin/frontend-errors': typeof AdminFrontendErrorsRoute
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
@@ -731,6 +740,7 @@ export interface FileRouteTypes {
     | '/admin/documents'
     | '/admin/executive-overview'
     | '/admin/field-validation-report'
+    | '/admin/frontend-errors'
     | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
@@ -805,6 +815,7 @@ export interface FileRouteTypes {
     | '/admin/documents'
     | '/admin/executive-overview'
     | '/admin/field-validation-report'
+    | '/admin/frontend-errors'
     | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
@@ -881,6 +892,7 @@ export interface FileRouteTypes {
     | '/admin/documents'
     | '/admin/executive-overview'
     | '/admin/field-validation-report'
+    | '/admin/frontend-errors'
     | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
@@ -1423,6 +1435,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFullQaReportRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/frontend-errors': {
+      id: '/admin/frontend-errors'
+      path: '/frontend-errors'
+      fullPath: '/admin/frontend-errors'
+      preLoaderRoute: typeof AdminFrontendErrorsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/field-validation-report': {
       id: '/admin/field-validation-report'
       path: '/field-validation-report'
@@ -1491,6 +1510,7 @@ interface AdminRouteChildren {
   AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminExecutiveOverviewRoute: typeof AdminExecutiveOverviewRoute
   AdminFieldValidationReportRoute: typeof AdminFieldValidationReportRoute
+  AdminFrontendErrorsRoute: typeof AdminFrontendErrorsRoute
   AdminFullQaReportRoute: typeof AdminFullQaReportRoute
   AdminGlobalRoute: typeof AdminGlobalRoute
   AdminLogsRoute: typeof AdminLogsRoute
@@ -1516,6 +1536,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDocumentsRoute: AdminDocumentsRoute,
   AdminExecutiveOverviewRoute: AdminExecutiveOverviewRoute,
   AdminFieldValidationReportRoute: AdminFieldValidationReportRoute,
+  AdminFrontendErrorsRoute: AdminFrontendErrorsRoute,
   AdminFullQaReportRoute: AdminFullQaReportRoute,
   AdminGlobalRoute: AdminGlobalRoute,
   AdminLogsRoute: AdminLogsRoute,

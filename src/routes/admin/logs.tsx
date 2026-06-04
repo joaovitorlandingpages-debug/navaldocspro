@@ -14,13 +14,7 @@ function AdminLogs() {
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {
-    console.log("ECOSYSTEM_FINAL_READY");
-    console.log("ENTERPRISE_ARCHITECTURE_OK");
-    console.log("SAAS_CONSOLIDATED_OK");
-    console.log("NAVALDOCS_ENTERPRISE_FINAL");
-    console.log("NAVALDOCS_NATIONAL_READY");
     console.log("GLOBAL_LOGS_STABLE");
-    console.log("STORAGE_MONITORING_OK");
   }, []);
 
   const { data: globalLogs, isLoading: loadingGlobal } = useQuery({
@@ -71,7 +65,6 @@ function AdminLogs() {
        </div>
 
        <div className="grid lg:grid-cols-12 gap-8">
-          {/* Main Log Feed */}
           <div className="lg:col-span-8 space-y-6">
              <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white">
                 <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/30">
@@ -110,7 +103,6 @@ function AdminLogs() {
                 </div>
              </Card>
 
-             {/* Administrative Audit */}
              <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white">
                 <div className="p-6 border-b border-slate-50 bg-navy text-white flex items-center justify-between">
                    <div className="flex items-center gap-3">
@@ -146,7 +138,6 @@ function AdminLogs() {
              </Card>
           </div>
 
-          {/* Sidebar Telemetry */}
           <div className="lg:col-span-4 space-y-6">
              <Card className="p-8 border-slate-100 bg-white rounded-[2.5rem] shadow-sm relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
@@ -174,14 +165,6 @@ function AdminLogs() {
                    ))}
                 </div>
              </Card>
-
-             <div className="bg-gradient-to-br from-rose-500 to-rose-700 p-8 rounded-[2.5rem] text-white shadow-xl shadow-rose-500/20 relative overflow-hidden">
-                <ShieldAlert className="absolute -right-6 -bottom-6 h-32 w-32 opacity-10 rotate-12" />
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 text-white/60">Threat Detection</h4>
-                <p className="text-2xl font-black mb-2">Zero Alertas.</p>
-                <p className="text-xs text-white/70 leading-relaxed font-medium">O firewall perimetral NavalDocs Pro bloqueou 1.2k requisições anômalas este mês.</p>
-                <button className="mt-6 w-full py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">Analisar Firewall</button>
-             </div>
           </div>
        </div>
     </div>
