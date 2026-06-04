@@ -93,7 +93,7 @@ function DashboardV2Layout() {
     { name: "Admin Global", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin" },
     { name: "Empresas", icon: <Building2 className="h-5 w-5" />, path: "/admin/companies" },
     { name: "Usuários", icon: <UserCog className="h-5 w-5" />, path: "/admin/users" },
-    { name: "Templates Oficiais", icon: <ScrollText className="h-5 w-5" />, path: "/admin/templates" },
+    { name: "Templates Oficiais", icon: <ScrollText className="h-5 w-5" />, path: "/admin/document-library" },
     { name: "Logs", icon: <History className="h-5 w-5" />, path: "/admin/logs" },
     { name: "Segurança", icon: <ShieldAlert className="h-5 w-5" />, path: "/admin/security" },
     { name: "Monitoramento", icon: <MonitorPlay className="h-5 w-5" />, path: "/system-monitor" },
