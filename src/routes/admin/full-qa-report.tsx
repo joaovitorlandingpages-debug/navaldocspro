@@ -168,6 +168,13 @@ function FullQAReportPage() {
       errors: "Update de plano manual via admin sobrescrevia data de renovação.", 
       fixes: "Corrigida mutação updatePlanMutation para preservar metadados.",
       pending: "Nenhuma"
+    },
+    { 
+      menu: "Dossiê Naval", 
+      status: "validado", 
+      errors: "Campos 'undefined' em exportação ZIP; Timeline de auditoria incompleta; Estrutura de pastas inconsistente no download.", 
+      fixes: "Implementada sanitização rigorosa de placeholders; Integrado Log de Auditoria Jurídica (IP/Audit) no PDF/ZIP; Padronizada estrutura 01_Cliente a 06_Dossie.",
+      pending: "Nenhuma"
     }
   ];
 
@@ -376,8 +383,13 @@ function FullQAReportPage() {
                e processos navais complexos (com ou sem vínculo inicial de embarcação) estão validados para uso comercial nacional.
                 Módulo de Processos aprovado (PROCESS_MODULE_APPROVED).
                 Módulo de Assinaturas aprovado (SIGNATURE_MODULE_APPROVED).
+                Módulo de Dossiê Naval aprovado (DOSSIER_MODULE_APPROVED).
             </p>
             <div className="flex gap-4">
+                <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
+                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                   <span className="text-[9px] font-black uppercase">Dossier-Ready (DOSSIER_MODULE_APPROVED)</span>
+                </div>
                 <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                    <span className="text-[9px] font-black uppercase">IA-OCR Certified (OCR_MODULE_APPROVED)</span>
