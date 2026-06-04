@@ -83,6 +83,7 @@ function AdminLayout() {
     { name: "Audit Logs", icon: <History className="h-5 w-5" />, path: "/admin/logs" },
     { name: "Implantação & Status", icon: <Activity className="h-5 w-5" />, path: "/admin/system-report" },
     { name: "Ajustes Master", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },
+    { name: "Relatório QA Final", icon: <CheckCircle2 className="h-5 w-5" />, path: "/admin/full-qa-report" },
   ];
 
   return (

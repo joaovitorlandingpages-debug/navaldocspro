@@ -176,7 +176,7 @@ function DashboardLayout() {
     ]},
     { group: "Comercial & Evolução", items: [
       { name: "Ambiente Demo", icon: <Rocket className="h-5 w-5" />, path: "/demo" },
-      { name: "Auditoria Final", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/system-report" },
+      { name: "Auditoria QA Final", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/full-qa-report" },
       { name: "Maturidade SaaS", icon: <Activity className="h-5 w-5" />, path: "/status" },
       { name: "Changelog", icon: <History className="h-5 w-5" />, path: "/changelog" },
     ]}

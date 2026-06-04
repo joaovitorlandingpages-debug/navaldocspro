@@ -73,6 +73,7 @@ import { Route as AdminRoadmapRouteImport } from './routes/admin/roadmap'
 import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminGlobalRouteImport } from './routes/admin/global'
+import { Route as AdminFullQaReportRouteImport } from './routes/admin/full-qa-report'
 import { Route as AdminExecutiveOverviewRouteImport } from './routes/admin/executive-overview'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
@@ -402,6 +403,11 @@ const AdminGlobalRoute = AdminGlobalRouteImport.update({
   path: '/global',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFullQaReportRoute = AdminFullQaReportRouteImport.update({
+  id: '/full-qa-report',
+  path: '/full-qa-report',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminExecutiveOverviewRoute = AdminExecutiveOverviewRouteImport.update({
   id: '/executive-overview',
   path: '/executive-overview',
@@ -481,6 +487,7 @@ export interface FileRoutesByFullPath {
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
+  '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
@@ -552,6 +559,7 @@ export interface FileRoutesByTo {
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
+  '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
@@ -626,6 +634,7 @@ export interface FileRoutesById {
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
+  '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/ocr': typeof AdminOcrRoute
@@ -701,6 +710,7 @@ export interface FileRouteTypes {
     | '/admin/document-library'
     | '/admin/documents'
     | '/admin/executive-overview'
+    | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
@@ -772,6 +782,7 @@ export interface FileRouteTypes {
     | '/admin/document-library'
     | '/admin/documents'
     | '/admin/executive-overview'
+    | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
@@ -845,6 +856,7 @@ export interface FileRouteTypes {
     | '/admin/document-library'
     | '/admin/documents'
     | '/admin/executive-overview'
+    | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
     | '/admin/ocr'
@@ -1371,6 +1383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGlobalRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/full-qa-report': {
+      id: '/admin/full-qa-report'
+      path: '/full-qa-report'
+      fullPath: '/admin/full-qa-report'
+      preLoaderRoute: typeof AdminFullQaReportRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/executive-overview': {
       id: '/admin/executive-overview'
       path: '/executive-overview'
@@ -1431,6 +1450,7 @@ interface AdminRouteChildren {
   AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminExecutiveOverviewRoute: typeof AdminExecutiveOverviewRoute
+  AdminFullQaReportRoute: typeof AdminFullQaReportRoute
   AdminGlobalRoute: typeof AdminGlobalRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminOcrRoute: typeof AdminOcrRoute
@@ -1453,6 +1473,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
   AdminExecutiveOverviewRoute: AdminExecutiveOverviewRoute,
+  AdminFullQaReportRoute: AdminFullQaReportRoute,
   AdminGlobalRoute: AdminGlobalRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminOcrRoute: AdminOcrRoute,
@@ -1566,13 +1587,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
