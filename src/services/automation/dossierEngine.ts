@@ -19,7 +19,7 @@ export interface DossierData {
 
 export const dossierEngine = {
   async fetchDossierData(processId: string): Promise<DossierData> {
-    console.log("DOSSIER_ENGINE_STARTED", processId);
+    console.log("DOSSIER_DEEP_AUDIT_STARTED", processId);
     
     // Attempting to fetch from multiple tables, with fallback for tables that might not exist yet
     const fetchTable = async (table: string, query: any) => {
@@ -39,7 +39,8 @@ export const dossierEngine = {
     const { data: process } = await supabase.from('processes').select(`
       *,
       customer:customers(*),
-      vessel:vessels(*)
+      vessel:vessels(*),
+      company:companies(*)
     `).eq('id', processId).single();
 
     if (!process) throw new Error("Process not found");
@@ -52,7 +53,7 @@ export const dossierEngine = {
     ] = await Promise.all([
       fetchTable('process_documents', supabase.from('process_documents').select('*').eq('process_id', processId)),
       fetchTable('digital_signatures', supabase.from('digital_signatures').select('*').eq('process_id', processId)),
-      fetchTable('audit_logs', supabase.from('audit_logs').select('*').eq('entity_id', processId).order('created_at', { ascending: true })),
+      fetchTable('audit_logs', supabase.from('document_audit_logs').select('*, profiles(full_name)').eq('document_id', processId).order('created_at', { ascending: true })),
       fetchTable('activity_logs', supabase.from('activity_logs').select('*').eq('resource_id', processId).order('created_at', { ascending: true }))
     ]);
 
@@ -131,6 +132,7 @@ export const dossierEngine = {
         .eq('id', processId);
 
       console.log("DOSSIER_VERSIONING_OK");
+      console.log("DOSSIER_TIMELINE_OK");
       console.log("ENTERPRISE_DOSSIER_COMPLETE");
       return { ...dossier, status: 'generated', pdf_path: pdfPath, zip_path: zipPath };
     } catch (error) {
@@ -148,20 +150,23 @@ export const dossierEngine = {
     root?.folder("01_Cliente")?.file("info.json", JSON.stringify(data.customer, null, 2));
     root?.folder("02_Embarcacao")?.file("info.json", JSON.stringify(data.vessel, null, 2));
     
-    const docsEnviados = root?.folder("03_Documentos_Enviados");
-    const docsGerados = root?.folder("04_Documentos_Gerados");
+    const docs = root?.folder("03_Documentos");
+    const ocr = root?.folder("04_OCR");
+    const signatures = root?.folder("05_Assinaturas");
+    const dossierFinal = root?.folder("06_Dossie");
     
     data.documents.forEach((doc, i) => {
-      const folder = doc.is_generated ? docsGerados : docsEnviados;
-      folder?.file(`${doc.document_type || 'Documento'}_${i}.json`, JSON.stringify(doc, null, 2));
+      docs?.file(`${doc.document_type || 'Documento'}_${i}.json`, JSON.stringify(doc, null, 2));
     });
 
-    root?.folder("05_Assinaturas")?.file("signatures.json", JSON.stringify(data.signatures, null, 2));
-    root?.folder("06_OCR")?.file("timeline.json", JSON.stringify(data.timeline, null, 2));
-    root?.folder("07_Dossie_Final")?.file("summary.json", JSON.stringify({
+    signatures?.file("assinaturas.json", JSON.stringify(data.signatures, null, 2));
+    ocr?.file("ocr_data.json", JSON.stringify(data.documents.filter(d => d.extracted_data), null, 2));
+    
+    dossierFinal?.file("resumo_executivo.json", JSON.stringify({
       generated_at: new Date().toISOString(),
       process_id: data.process.id,
-      version: data.dossier?.version || 1
+      version: data.dossier?.version || 1,
+      timeline: data.timeline
     }, null, 2));
 
     const content = await zip.generateAsync({ type: "blob" });

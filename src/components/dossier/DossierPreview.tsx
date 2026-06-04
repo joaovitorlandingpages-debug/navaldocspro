@@ -4,7 +4,7 @@ import {
   Eye, Clock, History, User, Ship, 
   QrCode, Hash, Layout, List, 
   ChevronRight, ArrowRight, Loader2,
-  Lock, Globe, Award, Info, Archive
+  Lock, Globe, Award, Info, Archive, Zap
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
     { id: 'timeline', label: 'Timeline de Processamento', icon: <History className="h-4 w-4" /> }
   ];
 
-  const InfoRow = ({ label, value }: { label: string; value: string }) => (
+  const InfoRow = ({ label, value }: { label: string; value: string | undefined }) => (
     <div className="flex justify-between py-4 border-b border-slate-50 last:border-0">
       <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{label}</span>
       <span className="text-sm font-bold text-navy">{value || "---"}</span>
@@ -99,9 +99,9 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
       </div>
 
       {/* Preview Content */}
-      <div id="dossier-preview-content" className="lg:col-span-9 bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden flex flex-col relative group/preview">
+      <div id="dossier-preview-content" className="lg:col-span-9 bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden flex flex-col relative group/preview print:shadow-none print:border-none">
         {/* Document Header */}
-        <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+        <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30 print:hidden">
            <div className="flex items-center gap-4">
               <div className="h-10 w-10 bg-navy rounded-xl flex items-center justify-center">
                  <Award className="h-6 w-6 text-primary" />
@@ -121,7 +121,7 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
            </div>
         </div>
 
-        <ScrollArea className="flex-grow p-12">
+        <ScrollArea className="flex-grow p-12 print:p-0">
           {activeSection === 'cover' && (
             <div className="max-w-2xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                <div className="text-center space-y-6 pt-10">
@@ -199,28 +199,48 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
 
           {activeSection === 'data' && (
             <div className="max-w-2xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-               <section>
+               <section className="print:break-inside-avoid">
                   <h4 className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
                      <User className="h-4 w-4" /> Especificações do Cliente
                   </h4>
-                  <div className="bg-slate-50/50 rounded-[2rem] p-8 border border-slate-100">
+                  <div className="bg-slate-50/50 rounded-[2rem] p-8 border border-slate-100 print:bg-white print:border-none print:p-0">
                      <InfoRow label="Nome / Razão Social" value={data.customer?.name} />
                      <InfoRow label="CPF / CNPJ" value={data.customer?.cpf_cnpj} />
+                     <InfoRow label="RG" value={data.customer?.rg} />
+                     <InfoRow label="Endereço" value={data.customer?.address} />
+                     <InfoRow label="Telefone" value={data.customer?.phone} />
                      <InfoRow label="E-mail Operacional" value={data.customer?.email} />
                   </div>
                </section>
 
-               <section>
+               <section className="print:break-inside-avoid print:mt-10">
                   <h4 className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
                      <Ship className="h-4 w-4" /> Atributos da Embarcação
                   </h4>
-                  <div className="bg-slate-50/50 rounded-[2rem] p-8 border border-slate-100">
+                  <div className="bg-slate-50/50 rounded-[2rem] p-8 border border-slate-100 print:bg-white print:border-none print:p-0">
                      <InfoRow label="Nome da Embarcação" value={data.vessel?.name} />
-                     <InfoRow label="Atividade / Serviço" value={data.vessel?.activity} />
                      <InfoRow label="Inscrição Marinha" value={data.vessel?.registration_number} />
+                     <InfoRow label="Atividade / Serviço" value={data.vessel?.activity} />
+                     <InfoRow label="Tipo de Embarcação" value={data.vessel?.vessel_type} />
                      <InfoRow label="Arqueação Bruta" value={data.vessel?.gross_tonnage} />
+                     <InfoRow label="Comprimento" value={data.vessel?.length ? `${data.vessel.length}m` : undefined} />
+                     <InfoRow label="Capacidade" value={data.vessel?.capacity ? `${data.vessel.capacity} Pessoas` : undefined} />
                   </div>
                </section>
+
+               {data.process?.motor && (
+                 <section className="print:break-inside-avoid print:mt-10">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                       <Zap className="h-4 w-4" /> Especificações do Motor
+                    </h4>
+                    <div className="bg-slate-50/50 rounded-[2rem] p-8 border border-slate-100 print:bg-white print:border-none print:p-0">
+                       <InfoRow label="Fabricante" value={data.process.motor?.manufacturer} />
+                       <InfoRow label="Modelo" value={data.process.motor?.model} />
+                       <InfoRow label="Potência" value={data.process.motor?.power} />
+                       <InfoRow label="Número de Série" value={data.process.motor?.serial_number} />
+                    </div>
+                 </section>
+               )}
             </div>
           )}
 
