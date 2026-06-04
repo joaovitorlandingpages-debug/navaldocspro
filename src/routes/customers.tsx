@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { 
-  Users, Search, Plus, MoreHorizontal, Mail, 
-  MapPin, Filter, X, Loader2, FileText, 
-  Download, Trash2, Eye, Zap, Image as ImageIcon,
-  Ship, Smartphone, Globe, User
+   Users, Search, Plus, MoreHorizontal, Mail, 
+   MapPin, Filter, X, Loader2, FileText, 
+   Download, Trash2, Eye, Zap, Image as ImageIcon,
+   Ship, Smartphone, Globe, User, Edit2, Save
+
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -220,6 +221,149 @@ function Customers() {
       setIsSubmitting(false);
     }
   };
+
+  const handleUpdateCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCustomer) return;
+    
+    setIsSubmitting(true);
+    const loadingToast = toast.loading("Atualizando cliente...");
+
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .update({
+          name: safeString(formData.name).trim(),
+          cpf_cnpj: safeString(formData.cpf_cnpj).trim(),
+          email: safeString(formData.email).trim() || null,
+          phone: safeString(formData.phone).trim() || null,
+          address: safeString(formData.address).trim() || null,
+          city: safeString(formData.city).trim() || null,
+          state: safeString(formData.state).trim() || null,
+          rg: safeString(formData.rg).trim() || null,
+          notes: safeString(formData.notes).trim() || null
+        })
+        .eq('id', selectedCustomer.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setCustomers(prev => prev.map(c => c.id === data.id ? { ...c, ...data } : c));
+      setSelectedCustomer({ ...selectedCustomer, ...data });
+      setIsEditing(false);
+      toast.dismiss(loadingToast);
+      toast.success("Cliente atualizado com sucesso!");
+    } catch (error: any) {
+      console.error("UPDATE_FAILED", error);
+      toast.dismiss(loadingToast);
+      toast.error("Erro ao atualizar cliente.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteCustomer = async () => {
+    if (!selectedCustomer) return;
+    if (!confirm(`Tem certeza que deseja excluir o cliente "${selectedCustomer.name}"? Esta ação não pode ser desfeita.`)) return;
+
+    setIsDeleting(true);
+    const loadingToast = toast.loading("Excluindo cliente...");
+
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', selectedCustomer.id);
+
+      if (error) throw error;
+
+      setCustomers(prev => prev.filter(c => c.id !== selectedCustomer.id));
+      setIsDetailsOpen(false);
+      setSelectedCustomer(null);
+      toast.dismiss(loadingToast);
+      toast.success("Cliente excluído com sucesso!");
+    } catch (error: any) {
+      console.error("DELETE_FAILED", error);
+      toast.dismiss(loadingToast);
+      toast.error("Erro ao excluir cliente. Verifique se ele possui processos ou embarcações vinculadas.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleOcrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !companyId) return;
+
+    setIsOcrProcessing(true);
+    const loadingToast = toast.loading("Processando documento...");
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${companyId}/ocr/${fileName}`;
+
+      await supabase.storage.from('ocr-documents').upload(filePath, file);
+
+      const { data: fileData, error: dbError } = await supabase
+        .from('uploaded_files')
+        .insert({
+          company_id: companyId,
+          file_name: file.name,
+          file_url: filePath,
+          category: 'ocr_analysis',
+          file_type: file.type,
+          file_size: file.size,
+          status: 'pending'
+        })
+        .select().single();
+
+      if (dbError) throw dbError;
+
+      const { data: jobData, error: jobError } = await supabase
+        .from("ocr_jobs")
+        .insert({ company_id: companyId, file_id: fileData.id, status: 'pending' })
+        .select().single();
+
+      if (jobError) throw jobError;
+
+      await supabase.functions.invoke('process-ocr', { body: { jobId: jobData.id } });
+
+      let attempts = 0;
+      const poll = setInterval(async () => {
+        attempts++;
+        const { data: job } = await supabase.from("ocr_jobs").select("*").eq("id", jobData.id).single();
+        if (job?.status === 'completed') {
+          clearInterval(poll);
+          const p = job.extracted_data?.person || job.extracted_data;
+          setFormData(prev => ({
+            ...prev,
+            name: p.nome || p.name || prev.name,
+            cpf_cnpj: p.cpf || p.doc_number || prev.cpf_cnpj,
+            rg: p.rg || prev.rg,
+            address: p.address || p.endereco || prev.address,
+            city: p.city || p.cidade || prev.city,
+            state: p.state || p.uf || p.estado || prev.state
+          }));
+          setIsOcrProcessing(false);
+          toast.dismiss(loadingToast);
+          toast.success("Dados extraídos com sucesso!");
+        } else if (job?.status === 'failed' || attempts > 15) {
+          clearInterval(poll);
+          setIsOcrProcessing(false);
+          toast.dismiss(loadingToast);
+          toast.error("Falha no OCR ou tempo esgotado.");
+        }
+      }, 2000);
+    } catch (error) {
+      console.error("OCR_ERROR", error);
+      setIsOcrProcessing(false);
+      toast.dismiss(loadingToast);
+      toast.error("Erro no processamento OCR.");
+    }
+  };
+
 
   return (
     <div className="animate-in fade-in duration-500 pb-20">
@@ -555,27 +699,75 @@ function Customers() {
         title={selectedCustomer?.name || "Detalhes do Cliente"}
         maxWidth="4xl"
         footer={
-          <button 
-            type="button" 
-            onClick={() => setIsDetailsOpen(false)} 
-            className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all"
-          >
-            Fechar
-          </button>
-        }
-      >
-        <div className="flex gap-6 mb-8">
-          <div className="h-16 w-16 bg-navy text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-xl shrink-0">
-            {selectedCustomer?.name?.charAt(0)}
-          </div>
-          <div>
-            <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedCustomer?.name}</h3>
-            <div className="flex flex-wrap gap-4 mt-1 text-slate-500 text-xs font-bold">
-              <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> {selectedCustomer?.email}</span>
-              <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedCustomer?.cpf_cnpj}</span>
+          <div className="flex justify-between items-center w-full">
+            <div className="flex gap-3">
+              <button 
+                type="button" 
+                onClick={handleDeleteCustomer}
+                disabled={isDeleting}
+                className="px-6 py-2.5 bg-rose-50 text-rose-600 rounded-xl font-black uppercase text-[9px] tracking-widest hover:bg-rose-100 transition-all flex items-center gap-2"
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Excluir Cliente
+              </button>
+            </div>
+            <div className="flex gap-3">
+              <button 
+                type="button" 
+                onClick={() => {
+                  setIsDetailsOpen(false);
+                  setIsEditing(false);
+                }} 
+                className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all"
+              >
+                Fechar
+              </button>
+              {isEditing ? (
+                <button 
+                  type="submit"
+                  form="edit-customer-form"
+                  disabled={isSubmitting}
+                  className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-primary/20 transition-all flex items-center gap-2"
+                >
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  Salvar Alterações
+                </button>
+              ) : (
+                <button 
+                  type="button" 
+                  onClick={() => setIsEditing(true)}
+                  className="px-10 py-3 bg-navy text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 transition-all flex items-center gap-2"
+                >
+                  <Edit2 className="h-4 w-4" /> Editar Cliente
+                </button>
+              )}
             </div>
           </div>
+        }
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+          <div className="flex gap-6">
+            <div className="h-16 w-16 bg-navy text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-xl shrink-0">
+              {selectedCustomer?.name?.charAt(0)}
+            </div>
+            <div>
+              <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedCustomer?.name}</h3>
+              <div className="flex flex-wrap gap-4 mt-1 text-slate-500 text-xs font-bold">
+                <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> {selectedCustomer?.email || "Sem e-mail"}</span>
+                <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedCustomer?.cpf_cnpj}</span>
+              </div>
+            </div>
+          </div>
+          
+          {isEditing && (
+            <div className="flex shrink-0">
+               <label className="cursor-pointer bg-primary/10 text-primary hover:bg-primary/20 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all">
+                  <Zap className="h-4 w-4" /> OCR: Auto-preencher via Doc
+                  <input type="file" className="hidden" accept="image/*,application/pdf" onChange={handleOcrUpload} disabled={isOcrProcessing} />
+               </label>
+            </div>
+          )}
         </div>
+
 
 
           <div className="w-full">
@@ -588,17 +780,106 @@ function Customers() {
               </TabsList>
 
               <TabsContent value="overview" className="space-y-6">
-                 <div className="grid grid-cols-2 gap-8">
+                {isEditing ? (
+                  <form id="edit-customer-form" onSubmit={handleUpdateCustomer} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome / Razão Social</Label>
+                        <Input 
+                          className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">CPF / CNPJ</Label>
+                        <Input 
+                          className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
+                          value={formData.cpf_cnpj}
+                          onChange={(e) => setFormData({ ...formData, cpf_cnpj: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">RG</Label>
+                        <Input 
+                          className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
+                          value={formData.rg}
+                          onChange={(e) => setFormData({ ...formData, rg: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">E-mail</Label>
+                        <Input 
+                          className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Telefone</Label>
+                        <Input 
+                          className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cidade/UF</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <Input 
+                            className="col-span-2 h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
+                            placeholder="Cidade" 
+                            value={formData.city}
+                            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                          />
+                          <Input 
+                            className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm uppercase" 
+                            placeholder="UF" 
+                            maxLength={2}
+                            value={formData.state}
+                            onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Endereço Completo</Label>
+                        <Input 
+                          className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
+                          value={formData.address}
+                          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Observações</Label>
+                        <textarea 
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl h-24 resize-none font-medium text-sm transition-all" 
+                          value={formData.notes}
+                          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="grid grid-cols-2 gap-8 animate-in fade-in duration-300">
                     <div className="space-y-4">
                        <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Informações de Contato</h4>
                        <div className="space-y-3">
                           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                              <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Endereço</p>
                              <p className="text-sm font-bold text-navy">{selectedCustomer?.address || "Não informado"}</p>
+                             {selectedCustomer?.city && (
+                               <p className="text-xs text-slate-500 mt-1">{selectedCustomer.city} - {selectedCustomer.state}</p>
+                             )}
                           </div>
                           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                              <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Telefone</p>
                              <p className="text-sm font-bold text-navy">{selectedCustomer?.phone || "Não informado"}</p>
+                          </div>
+                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                             <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">E-mail</p>
+                             <p className="text-sm font-bold text-navy">{selectedCustomer?.email || "Não informado"}</p>
                           </div>
                        </div>
                     </div>
@@ -608,8 +889,10 @@ function Customers() {
                           <p className="text-sm text-amber-900 font-medium leading-relaxed">{selectedCustomer?.notes || "Sem observações adicionais."}</p>
                        </div>
                     </div>
-                 </div>
+                  </div>
+                )}
               </TabsContent>
+
 
               <TabsContent value="documents" className="space-y-8">
                  <div className="flex justify-between items-center mb-4">
