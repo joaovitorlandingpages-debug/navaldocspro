@@ -53,9 +53,9 @@ function FullQAReportPage() {
     { 
       menu: "Clientes", 
       status: "validado", 
-      errors: "Upload de RG falhando em PDFs grandes; Erro silencioso no OCR.", 
-      fixes: "Refatorado FileUploader com tratamento de erro e toast informativo.",
-      pending: "Validação de CNPJ via API externa (opcional)"
+      errors: "Edição e exclusão ausentes na listagem principal; OCR limitado apenas ao Wizard; Erro de persistência em observações longas.", 
+      fixes: "Implementado sistema completo de CRUD (Editar/Excluir) nos Detalhes; Adicionado OCR em tempo real na edição; Refatorada persistência de campos opcionais.",
+      pending: "Nenhuma"
     },
     { 
       menu: "Embarcações", 
