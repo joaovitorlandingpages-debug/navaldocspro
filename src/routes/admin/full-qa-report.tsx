@@ -62,7 +62,7 @@ function FullQAReportPage() {
       status: "validado", 
       errors: "Vínculo obrigatório com proprietário impedia processos de transferência.", 
       fixes: "Separado proprietário atual de novo proprietário; Permitida criação s/ dono inicial.",
-      pending: "Histórico de motores"
+      pending: "Nenhuma"
     },
     { 
       menu: "Processos", 
