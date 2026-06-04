@@ -414,6 +414,42 @@ function Vessels() {
                 onChange={(e) => setFormData({ ...formData, current_owner_cpf_cnpj: e.target.value })}
               />
             </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Material</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: Aço, Fibra de Vidro" 
+                value={formData.material}
+                onChange={(e) => setFormData({ ...formData, material: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Capacidade</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: 1+10 passageiros" 
+                value={formData.capacity}
+                onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Potência Motor (HP)</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: 350" 
+                value={formData.engine_power}
+                onChange={(e) => setFormData({ ...formData, engine_power: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">Nº Série Motor</label>
+              <input 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
+                placeholder="Ex: S12345678" 
+                value={formData.engine_serial_number}
+                onChange={(e) => setFormData({ ...formData, engine_serial_number: e.target.value })}
+              />
+            </div>
           </div>
           <div className="space-y-3">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status Inicial</label>
