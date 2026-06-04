@@ -18,11 +18,11 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
     };
 
     return (
-      <div className="relative">
+      <div className="relative group">
         <input
           type={showPassword ? "text" : "password"}
           className={cn(
-            "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pr-10",
+            "flex h-12 sm:h-11 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-base shadow-sm transition-all file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm font-medium pr-12",
             className
           )}
           ref={ref}
@@ -32,15 +32,15 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
           type="button"
           variant="ghost"
           size="sm"
-          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-muted-foreground"
+          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-slate-400 hover:text-navy transition-colors"
           onClick={togglePasswordVisibility}
           aria-label={showPassword ? hidePasswordLabel : showPasswordLabel}
           aria-pressed={showPassword}
         >
           {showPassword ? (
-            <EyeOff className="h-4 w-4" aria-hidden="true" />
+            <EyeOff className="h-5 w-5" aria-hidden="true" />
           ) : (
-            <Eye className="h-4 w-4" aria-hidden="true" />
+            <Eye className="h-5 w-5" aria-hidden="true" />
           )}
         </Button>
       </div>
