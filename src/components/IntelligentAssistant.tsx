@@ -40,8 +40,6 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
 
   const isAuthPage = typeof window !== 'undefined' && (window.location.pathname.startsWith('/auth') || window.location.pathname === '/');
 
-  if (!profile || isAuthPage) return null;
-
   const { data: insights, refetch } = useQuery({
     queryKey: ['operational_insights', processId, profile?.company_id],
     queryFn: async () => {
@@ -72,9 +70,13 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
       }
       return data as Insight[];
     },
-    enabled: !!profile?.company_id,
+    enabled: !!profile?.company_id && !isAuthPage,
     refetchInterval: 30000 // Refresh a cada 30s para novos insights
   });
+
+  if (!profile || isAuthPage) return null;
+
+
 
   useEffect(() => {
     if (isOpen) {
