@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { 
   Building, CreditCard, Users, Ship, 
   ClipboardList, FileText, CheckCircle2, 
-  ChevronRight, ArrowLeft, Loader2, Upload
+  ChevronRight, ArrowLeft, Loader2, Upload,
+  ShieldCheck, Zap, Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
