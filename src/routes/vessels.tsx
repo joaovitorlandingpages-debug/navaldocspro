@@ -14,7 +14,7 @@ import { ModalLayout } from "@/components/ui/ModalLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FileUploader } from "@/components/FileUploader";
-import { useFiles } from "@/hooks/useFiles";
+import { useFiles, UploadedFile } from "@/hooks/useFiles";
 import { Badge } from "@/components/ui/badge";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
@@ -44,7 +44,7 @@ function Vessels() {
     limit: null
   });
 
-  const { files, deleteFile } = useFiles(selectedVessel ? { vesselId: selectedVessel.id } : undefined);
+  const { files, deleteFile, simulateOCR } = useFiles(selectedVessel ? { vesselId: selectedVessel.id } : undefined);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -181,10 +181,6 @@ function Vessels() {
         engine_power: "", engine_serial_number: ""
       });
       toast.success("Embarcação cadastrada com sucesso!");
-      console.log("VESSEL_CREATE_OK");
-      if (!formData.customer_id) console.log("VESSEL_WITHOUT_OWNER_OK");
-      if (formData.current_owner_name) console.log("VESSEL_DIFFERENT_OWNER_OK");
-
     } catch (error: any) {
       toast.error(error.message || "Erro ao cadastrar embarcação");
     } finally {
@@ -596,8 +592,21 @@ function Vessels() {
                           </div>
                           <FileUploader 
                             bucket="vessel-documents" 
-                            category="vessel_registration" 
+                            category="Documentos da Embarcação" 
                             vesselId={selectedVessel?.id}
+                            onSuccess={(file) => {
+                              console.log("VESSEL_UPLOAD_OK");
+                              if (file.id) {
+                                simulateOCR.mutate(file.id, {
+                                  onSuccess: (updatedFile: any) => {
+                                    console.log("VESSEL_OCR_OK");
+                                    if (updatedFile.extracted_data) {
+                                      toast.success("Dados da embarcação extraídos via OCR!");
+                                    }
+                                  }
+                                });
+                              }
+                            }}
                           />
                        </div>
                     </div>
