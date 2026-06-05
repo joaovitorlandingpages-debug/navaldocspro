@@ -56,7 +56,7 @@ function DashboardLayout() {
   const [isNotificationsOpen, setNotificationsOpen] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const { profile, loading, signOut } = useAuth();
-  const { setIsNewProcessOpen } = useNewProcess();
+  const { setIsNewProcessOpen, setIsAssembleProcessOpen } = useNewProcess();
   const { checkLimit, subscription } = usePlanLimits();
   const [quotaWarnings, setQuotaWarnings] = useState<string[]>([]);
   const navigate = useNavigate();
