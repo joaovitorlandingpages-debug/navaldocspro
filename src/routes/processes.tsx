@@ -147,96 +147,110 @@ function Processes() {
           </div>
       </div>
 
+      {processes.length === 0 && !isLoading && (
+        <div className="mb-8">
+          <EmptyState 
+            icon={ClipboardList}
+            title="Nenhum processo iniciado"
+            description="Para começar, clique no botão 'Novo Processo' acima. Lá você poderá escolher o tipo de serviço, vincular o cliente e a embarcação."
+            actionLabel="Iniciar Primeiro Processo"
+            onAction={() => setIsNewProcessOpen(true)}
+          />
+        </div>
+      )}
+
       {view === "kanban" ? (
         <div className="flex gap-4 md:gap-8 overflow-x-auto pb-8 h-[calc(100vh-280px)] min-h-[650px] md:min-h-[700px] custom-scrollbar px-2">
-          {columns.map((col) => (
-            <div key={col.id} className="flex-shrink-0 w-80 flex flex-col gap-6">
-              <div className="flex items-center justify-between px-2">
-                <div className="flex items-center gap-3">
-                  <div className={`h-2.5 w-2.5 rounded-full ${col.color} shadow-[0_0_10px_rgba(0,0,0,0.1)]`} />
-                  <h3 className="font-black text-navy text-[10px] uppercase tracking-[0.15em]">{col.title}</h3>
-                  <span className="bg-slate-200/50 text-navy/40 text-[9px] font-black px-2 py-0.5 rounded-full">
-                    {processes.filter(p => p.status === col.id).length}
-                  </span>
+          {columns.map((col) => {
+            const columnProcesses = processes.filter(p => p.status === col.id);
+            return (
+              <div key={col.id} className="flex-shrink-0 w-80 flex flex-col gap-6">
+                <div className="flex items-center justify-between px-2">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-2.5 w-2.5 rounded-full ${col.color} shadow-[0_0_10px_rgba(0,0,0,0.1)]`} />
+                    <h3 className="font-black text-navy text-[10px] uppercase tracking-[0.15em]">{col.title}</h3>
+                    <span className="bg-slate-200/50 text-navy/40 text-[9px] font-black px-2 py-0.5 rounded-full">
+                      {columnProcesses.length}
+                    </span>
+                  </div>
+                  <button onClick={() => setIsNewProcessOpen(true)} className="p-1 hover:bg-slate-100 rounded-lg text-slate-300 transition-colors"><Plus className="h-4 w-4" /></button>
                 </div>
-                <button onClick={() => setIsNewProcessOpen(true)} className="p-1 hover:bg-slate-100 rounded-lg text-slate-300 transition-colors"><Plus className="h-4 w-4" /></button>
-              </div>
-              
-              <div className="flex-grow bg-slate-100/30 rounded-[2.5rem] p-5 space-y-5 border border-slate-100/50 overflow-y-auto custom-scrollbar backdrop-blur-sm">
-                {isLoading ? (
-                  <div className="py-10 text-center">
-                    <Loader2 className="h-6 w-6 animate-spin text-slate-300 mx-auto" />
-                  </div>
-                ) : processes.filter(p => p.status === col.id).map((p) => (
-                  <Link 
-                    key={p.id} 
-                    to={`/processes/${p.id}`}
-                    className="block bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-primary/40 hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden"
-                  >
-                    <div className="absolute top-0 right-0 p-4">
-                       <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-50 rounded-lg text-slate-300 transition-all">
-                          <MoreHorizontal className="h-4 w-4" />
-                       </button>
-                    </div>
-                    
-                    <div className="mb-4 flex items-center justify-between">
-                      <span className="text-[10px] font-mono font-black text-primary bg-primary/5 px-2 py-0.5 rounded uppercase tracking-tighter shadow-sm border border-primary/10">PROC-{p.id.substring(0, 6)}</span>
-                      <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest bg-slate-50 border-slate-100">{p.status === 'pending' ? 'Novo Lead' : 'Ativo'}</Badge>
-                    </div>
-
-                    <h4 className="font-black text-navy text-[13px] mb-3 leading-tight group-hover:text-primary transition-colors min-h-[32px]">{p.process_type}</h4>
-                    
-                    <div className="space-y-3 pb-5 mb-5 border-b border-slate-50">
-                      <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
-                        <div className="h-6 w-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
-                          <User className="h-3.5 w-3.5" />
-                        </div>
-                        {p.customers?.name || "Cliente"}
-                      </div>
-                      <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
-                        <div className="h-6 w-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-cyan-100 group-hover:text-cyan-600 transition-all">
-                          <Ship className="h-3.5 w-3.5" />
-                        </div>
-                        {p.vessels?.name || "Embarcação"}
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center mt-2 pt-4 border-t border-slate-50">
-                      <div className="flex flex-col gap-1">
-                         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                           <Clock className="h-3.5 w-3.5 text-amber-500" /> {p.due_date ? "Em 4 dias" : "S/ prazo"}
-                         </div>
-                         <div className="h-1 w-20 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500" style={{ width: '75%' }} />
-                         </div>
-                      </div>
-                      <div className="flex -space-x-2">
-                         <div className="h-7 w-7 rounded-full border-2 border-white bg-primary flex items-center justify-center text-[9px] font-black text-white shadow-sm">RA</div>
-                         <div className="h-7 w-7 rounded-full border-2 border-white bg-navy flex items-center justify-center text-[9px] font-black text-white shadow-sm">+1</div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
                 
-                {processes.filter(p => p.status === col.id).length === 0 && (
-                  <div className="py-8 px-4 opacity-80 group/empty transition-all">
-                    <EmptyState 
-                      icon={Package}
-                      title="Nenhum processo"
-                      description="Esta etapa está livre. Nenhuma ação pendente aqui."
-                    />
-                  </div>
-                )}
+                <div className="flex-grow bg-slate-100/30 rounded-[2.5rem] p-5 space-y-5 border border-slate-100/50 overflow-y-auto custom-scrollbar backdrop-blur-sm">
+                  {isLoading ? (
+                    <div className="py-10 text-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-slate-300 mx-auto" />
+                    </div>
+                  ) : columnProcesses.length > 0 ? (
+                    columnProcesses.map((p) => (
+                      <Link 
+                        key={p.id} 
+                        to={`/processes/${p.id}`}
+                        className="block bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-primary/40 hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 right-0 p-4">
+                          <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-50 rounded-lg text-slate-300 transition-all">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+                        </div>
+                        
+                        <div className="mb-4 flex items-center justify-between">
+                          <span className="text-[10px] font-mono font-black text-primary bg-primary/5 px-2 py-0.5 rounded uppercase tracking-tighter shadow-sm border border-primary/10">PROC-{p.id.substring(0, 6)}</span>
+                          <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest bg-slate-50 border-slate-100">{p.status === 'pending' ? 'Novo Lead' : 'Ativo'}</Badge>
+                        </div>
 
-                <button 
-                  onClick={() => setIsNewProcessOpen(true)}
-                  className="w-full py-4 border-2 border-dashed border-slate-200 rounded-3xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 hover:border-primary/30 hover:text-primary transition-all hover:bg-white/50"
-                >
-                   Adicionar Card
-                </button>
+                        <h4 className="font-black text-navy text-[13px] mb-3 leading-tight group-hover:text-primary transition-colors min-h-[32px]">{p.process_type}</h4>
+                        
+                        <div className="space-y-3 pb-5 mb-5 border-b border-slate-50">
+                          <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
+                            <div className="h-6 w-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                              <User className="h-3.5 w-3.5" />
+                            </div>
+                            {p.customers?.name || "Cliente"}
+                          </div>
+                          <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
+                            <div className="h-6 w-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-cyan-100 group-hover:text-cyan-600 transition-all">
+                              <Ship className="h-3.5 w-3.5" />
+                            </div>
+                            {p.vessels?.name || "Embarcação"}
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center mt-2 pt-4 border-t border-slate-50">
+                          <div className="flex flex-col gap-1">
+                             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                               <Clock className="h-3.5 w-3.5 text-amber-500" /> {p.due_date ? "Em 4 dias" : "S/ prazo"}
+                             </div>
+                             <div className="h-1 w-20 bg-slate-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-emerald-500" style={{ width: '75%' }} />
+                             </div>
+                          </div>
+                          <div className="flex items-center gap-1 text-primary group-hover:translate-x-1 transition-transform">
+                            <span className="text-[10px] font-black uppercase">Abrir</span>
+                            <ArrowRight className="h-3 w-3" />
+                          </div>
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="py-8 px-4 opacity-80 group/empty transition-all border-2 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center text-center">
+                      <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                        <Package className="h-6 w-6 text-slate-300" />
+                      </div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Etapa sem processos</p>
+                    </div>
+                  )}
+
+                  <button 
+                    onClick={() => setIsNewProcessOpen(true)}
+                    className="w-full py-4 border-2 border-dashed border-slate-200 rounded-3xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 hover:border-primary/30 hover:text-primary transition-all hover:bg-white/50"
+                  >
+                    Novo Card em {col.title}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">

@@ -6,10 +6,11 @@ import {
   FileCheck, History, Info, Zap, Bot, Eye, Trash2,
   Image as ImageIcon, Send, Loader2, Target, Ban,
   FilePlus, RefreshCw, ChevronLeft, AlertTriangle,
-  Signature, FileSearch, Rocket
+  Signature, FileSearch, Rocket, HelpCircle
 } from "lucide-react";
 import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { PageHeader } from "@/components/navigation/PageHeader";
+import { OperationalGuide } from "@/components/OperationalGuide";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -304,6 +305,8 @@ function ProcessDetail() {
             </div>
          </div>
       </div>
+
+      <OperationalGuide />
 
       <div className="grid lg:grid-cols-4 gap-8">
          <div className="lg:col-span-3 space-y-8">
