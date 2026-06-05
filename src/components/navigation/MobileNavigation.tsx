@@ -14,11 +14,11 @@ import { cn } from "@/lib/utils";
 export function MobileNavigation() {
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
-  const { setIsNewProcessOpen } = useNewProcess();
+  const { setIsNewProcessOpen, setIsAssembleProcessOpen } = useNewProcess();
 
   const navItems = [
     { name: "Início", icon: <LayoutGrid className="h-5 w-5" />, path: "/dashboard" },
-    { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
+    { name: "Montar", icon: <Zap className="h-5 w-5" />, isAssembleAction: true },
     { name: "Ação", icon: <PlusCircle className="h-7 w-7 text-white" />, isAction: true },
     { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
     { name: "Frotas", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
