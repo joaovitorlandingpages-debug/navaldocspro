@@ -87,18 +87,34 @@ function ProcessDetail() {
   });
 
   const fetchProcess = async () => {
-    const { data } = await supabase
-      .from('processes')
-      .select(`
-        *,
-        customer:customers(id, name, cpf_cnpj, email),
-        vessel:vessels(id, name, activity, has_radio, gross_tonnage, registration_number, vessel_type)
-      `)
-      .eq('id', id)
-      .single();
-    if (data) {
-      setProcess(data);
-      setStatus(data.status === 'in_progress' ? 'Em Andamento' : data.status);
+    console.log("PROCESS_LOAD_STARTED", { id });
+    try {
+      const { data, error } = await supabase
+        .from('processes')
+        .select(`
+          *,
+          customer:customers(id, name, cpf_cnpj, email),
+          vessel:vessels(id, name, activity, has_radio, gross_tonnage, registration_number, vessel_type)
+        `)
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("PROCESS_LOAD_FAILED", error);
+        toast.error("Erro ao carregar dados do processo.");
+        return;
+      }
+
+      if (data) {
+        setProcess(data);
+        setStatus(data.status === 'in_progress' ? 'Em Andamento' : data.status);
+        console.log("PROCESS_LOAD_SUCCESS", { id, status: data.status });
+      } else {
+        console.warn("PROCESS_LOAD_FAILED: Process not found", { id });
+        toast.error("Processo não encontrado.");
+      }
+    } catch (err) {
+      console.error("PROCESS_LOAD_FAILED: Unexpected error", err);
     }
   };
 
@@ -112,7 +128,7 @@ function ProcessDetail() {
   };
 
   useEffect(() => {
-    console.log("CHECKLIST_OK");
+    console.log("PROCESS_SELECTED", { id });
     fetchProcess();
     fetchComments();
 
@@ -237,6 +253,29 @@ function ProcessDetail() {
     );
   }
 
+  if (!process && !id) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[2rem] border border-slate-100 shadow-sm animate-in fade-in">
+        <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+          <FileSearch className="h-10 w-10 text-slate-300" />
+        </div>
+        <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-2">Processo não selecionado</h3>
+        <p className="text-sm text-slate-400 max-w-sm text-center font-medium leading-relaxed">
+          Clique em um processo na listagem para visualizar os detalhes, anexar documentos e gerar o dossiê.
+        </p>
+      </div>
+    );
+  }
+
+  if (!process) {
+    return (
+      <div className="flex flex-col items-center justify-center py-40 animate-pulse">
+        <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Sincronizando fluxo operacional...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-in fade-in duration-500 pb-20 max-w-7xl mx-auto px-4 md:px-8">
       <PageHeader 
@@ -273,6 +312,7 @@ function ProcessDetail() {
           </div>
         }
       />
+
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm mb-8">
          <div className="flex flex-wrap gap-8">
