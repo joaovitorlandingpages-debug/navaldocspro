@@ -89,9 +89,9 @@ export function AssembleProcessWizard({
       .eq("is_active", true)
       .or(`company_id.eq.${profile.company_id},company_id.is.null`)
       .order("category", { ascending: true })
-      .then(({ data, error }) => {
-        if (error) toast.error("Erro ao carregar templates: " + error.message);
-        else setTemplates((data || []) as Template[]);
+      .then((res: { data: Template[] | null; error: { message: string } | null }) => {
+        if (res.error) toast.error("Erro ao carregar templates: " + res.error.message);
+        else setTemplates((res.data || []) as Template[]);
         setLoadingTemplates(false);
       });
   }, [isOpen, profile?.company_id]);
