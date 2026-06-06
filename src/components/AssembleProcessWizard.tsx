@@ -346,45 +346,65 @@ export function AssembleProcessWizard({
                 Nenhum template disponível. Cadastre templates na biblioteca.
               </div>
             ) : (
-              Object.entries(grouped).map(([cat, list]) => (
-                <div key={cat} className="space-y-2">
-                  <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                    {cat}
-                  </h4>
-                  <div className="grid gap-2">
-                    {list.map((t) => {
-                      const checked = selectedIds.has(t.id);
-                      return (
-                        <button
-                          key={t.id}
-                          type="button"
-                          onClick={() => toggleTemplate(t.id)}
-                          className={`flex items-center gap-3 p-3 border rounded-xl text-left transition-all ${
-                            checked
-                              ? "border-primary bg-primary/5"
-                              : "border-slate-200 hover:bg-slate-50"
-                          }`}
-                        >
-                          <div
-                            className={`h-5 w-5 border rounded flex items-center justify-center shrink-0 ${
-                              checked ? "bg-primary border-primary" : "border-slate-300"
+              Object.entries(grouped).map(([cat, list]) => {
+                const allSelected = list.every((t) => selectedIds.has(t.id));
+                const toggleAll = () => {
+                  setSelectedIds((prev) => {
+                    const next = new Set(prev);
+                    if (allSelected) list.forEach((t) => next.delete(t.id));
+                    else list.forEach((t) => next.add(t.id));
+                    return next;
+                  });
+                };
+                return (
+                  <div key={cat} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                        {cat}
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={toggleAll}
+                        className="text-[10px] font-black uppercase text-primary hover:underline"
+                      >
+                        {allSelected ? "Limpar" : "Selecionar todos"}
+                      </button>
+                    </div>
+                    <div className="grid gap-2">
+                      {list.map((t) => {
+                        const checked = selectedIds.has(t.id);
+                        return (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() => toggleTemplate(t.id)}
+                            className={`flex items-center gap-3 p-3 border rounded-xl text-left transition-all ${
+                              checked
+                                ? "border-primary bg-primary/5"
+                                : "border-slate-200 hover:bg-slate-50"
                             }`}
                           >
-                            {checked && <Check className="text-white h-3 w-3" />}
-                          </div>
-                          <FileText className="h-4 w-4 text-slate-400 shrink-0" />
-                          <span className="text-sm font-bold text-navy flex-1">{t.name}</span>
-                          {t.process_type && (
-                            <Badge variant="outline" className="text-[9px]">
-                              {t.process_type}
-                            </Badge>
-                          )}
-                        </button>
-                      );
-                    })}
+                            <div
+                              className={`h-5 w-5 border rounded flex items-center justify-center shrink-0 ${
+                                checked ? "bg-primary border-primary" : "border-slate-300"
+                              }`}
+                            >
+                              {checked && <Check className="text-white h-3 w-3" />}
+                            </div>
+                            <FileText className="h-4 w-4 text-slate-400 shrink-0" />
+                            <span className="text-sm font-bold text-navy flex-1">{t.name}</span>
+                            {t.process_type && (
+                              <Badge variant="outline" className="text-[9px]">
+                                {t.process_type}
+                              </Badge>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
