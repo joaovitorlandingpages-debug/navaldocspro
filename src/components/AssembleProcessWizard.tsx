@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { ModalLayout } from "@/components/ui/ModalLayout";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
@@ -374,23 +375,19 @@ export function AssembleProcessWizard({
                       {list.map((t) => {
                         const checked = selectedIds.has(t.id);
                         return (
-                          <button
+                          <label
                             key={t.id}
-                            type="button"
-                            onClick={() => toggleTemplate(t.id)}
-                            className={`flex items-center gap-3 p-3 border rounded-xl text-left transition-all ${
+                            className={`flex items-center gap-3 p-3 border rounded-xl text-left transition-all cursor-pointer ${
                               checked
                                 ? "border-primary bg-primary/5"
                                 : "border-slate-200 hover:bg-slate-50"
                             }`}
                           >
-                            <div
-                              className={`h-5 w-5 border rounded flex items-center justify-center shrink-0 ${
-                                checked ? "bg-primary border-primary" : "border-slate-300"
-                              }`}
-                            >
-                              {checked && <Check className="text-white h-3 w-3" />}
-                            </div>
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={() => toggleTemplate(t.id)}
+                              className="h-5 w-5 shrink-0"
+                            />
                             <FileText className="h-4 w-4 text-slate-400 shrink-0" />
                             <span className="text-sm font-bold text-navy flex-1">{t.name}</span>
                             {t.process_type && (
@@ -398,7 +395,7 @@ export function AssembleProcessWizard({
                                 {t.process_type}
                               </Badge>
                             )}
-                          </button>
+                          </label>
                         );
                       })}
                     </div>
