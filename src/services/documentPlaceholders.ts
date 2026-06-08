@@ -79,8 +79,9 @@ export const CANONICAL_PLACEHOLDERS: PlaceholderSpec[] = [
     aliases: ["processo.protocolo"] },
   { key: "processo.tipo",   namespace: "processo", label: "Tipo de Processo",   sourceTable: "processes", sourceField: "process_type",
     aliases: ["process_type"] },
-  { key: "data_atual",      namespace: "sistema",  label: "Data atual", aliases: ["current_date"] },
-  { key: "hash_autenticidade", namespace: "sistema", label: "Hash de autenticidade" },
+  { key: "sistema.data_atual", namespace: "sistema", label: "Data atual", aliases: ["data_atual", "current_date"] },
+  { key: "sistema.local",      namespace: "sistema", label: "Local de emissão", aliases: ["location"] },
+  { key: "sistema.hash",       namespace: "sistema", label: "Hash de autenticidade", aliases: ["hash_autenticidade"] },
 ];
 
 export const CANONICAL_KEYS = new Set(CANONICAL_PLACEHOLDERS.map((p) => p.key));
