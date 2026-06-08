@@ -144,7 +144,7 @@ export function AssembleProcessWizard({
          )`
       )
       .eq("is_active", true)
-      .then(({ data, error }) => {
+      .then(({ data, error }: { data: any; error: { message: string } | null }) => {
         if (error) toast.error("Erro ao carregar pacotes: " + error.message);
         else setPackages((data || []) as any);
         setLoadingPkgs(false);
