@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { ModalLayout } from "@/components/ui/ModalLayout";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
