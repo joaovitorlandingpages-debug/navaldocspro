@@ -30,24 +30,27 @@ export interface PlaceholderSpec {
 export const CANONICAL_PLACEHOLDERS: PlaceholderSpec[] = [
   // ---------------- Cliente ----------------
   { key: "cliente.nome",      namespace: "cliente", label: "Nome / Razão Social", sourceTable: "customers", sourceField: "name", required: true,
-    aliases: ["customer.name", "cliente.razao_social"] },
+    aliases: ["customer.name", "customer_name", "cliente.razao_social"] },
   { key: "cliente.cpf",       namespace: "cliente", label: "CPF", sourceTable: "customers", sourceField: "cpf_cnpj",
-    aliases: ["cliente.cpf_cnpj", "cpf"] },
+    aliases: ["cliente.cpf_cnpj", "customer_cpf", "cpf"] },
   { key: "cliente.rg",        namespace: "cliente", label: "RG", sourceTable: "customers", sourceField: "rg" },
   { key: "cliente.endereco",  namespace: "cliente", label: "Endereço", sourceTable: "customers", sourceField: "address",
     aliases: ["cliente.address"] },
-  { key: "cliente.cidade",    namespace: "cliente", label: "Cidade", sourceTable: "customers", sourceField: "city" },
+  { key: "cliente.cidade",    namespace: "cliente", label: "Cidade", sourceTable: "customers", sourceField: "city",
+    aliases: ["cliente.cidade_uf", "localidade.cidade"] },
   { key: "cliente.estado",    namespace: "cliente", label: "Estado (UF)", sourceTable: "customers", sourceField: "state" },
   { key: "cliente.telefone",  namespace: "cliente", label: "Telefone", sourceTable: "customers", sourceField: "phone" },
   { key: "cliente.email",     namespace: "cliente", label: "E-mail", sourceTable: "customers", sourceField: "email" },
 
   // ---------------- Embarcação ----------------
-  { key: "embarcacao.nome",         namespace: "embarcacao", label: "Nome da Embarcação", sourceTable: "vessels", sourceField: "name", required: true },
+  { key: "embarcacao.nome",         namespace: "embarcacao", label: "Nome da Embarcação", sourceTable: "vessels", sourceField: "name", required: true,
+    aliases: ["vessel_name"] },
   { key: "embarcacao.inscricao",    namespace: "embarcacao", label: "Inscrição / TIE",     sourceTable: "vessels", sourceField: "registration_number",
-    aliases: ["vessel.registration_number", "embarcacao.tie"] },
+    aliases: ["vessel.registration_number", "vessel_id", "embarcacao.tie"] },
   { key: "embarcacao.tipo",         namespace: "embarcacao", label: "Tipo",                sourceTable: "vessels", sourceField: "vessel_type",
-    aliases: ["embarcacao.categoria"] },
-  { key: "embarcacao.material",     namespace: "embarcacao", label: "Material do Casco",   sourceTable: "vessels", sourceField: "hull_material" },
+    aliases: ["embarcacao.categoria", "vessel_type"] },
+  { key: "embarcacao.material",     namespace: "embarcacao", label: "Material do Casco",   sourceTable: "vessels", sourceField: "hull_material",
+    aliases: ["embarcacao.material_casco"] },
   { key: "embarcacao.comprimento",  namespace: "embarcacao", label: "Comprimento (m)",     sourceTable: "vessels", sourceField: "length" },
   { key: "embarcacao.boca",         namespace: "embarcacao", label: "Boca (m)",            sourceTable: "vessels", sourceField: "beam" },
   { key: "embarcacao.pontal",       namespace: "embarcacao", label: "Pontal (m)",          sourceTable: "vessels", sourceField: "depth" },
@@ -61,18 +64,22 @@ export const CANONICAL_PLACEHOLDERS: PlaceholderSpec[] = [
     aliases: ["motor.numero_serie"] },
 
   // ---------------- Empresa ----------------
-  { key: "empresa.nome", namespace: "empresa", label: "Razão Social", sourceTable: "companies", sourceField: "name", required: true },
+  { key: "empresa.nome", namespace: "empresa", label: "Razão Social", sourceTable: "companies", sourceField: "name", required: true,
+    aliases: ["company_name"] },
   { key: "empresa.cnpj", namespace: "empresa", label: "CNPJ",         sourceTable: "companies", sourceField: "cnpj" },
 
   // ---------------- Engenheiro ----------------
-  { key: "engenheiro.nome", namespace: "engenheiro", label: "Engenheiro Responsável", sourceTable: "profiles", sourceField: "name" },
-  { key: "engenheiro.crea", namespace: "engenheiro", label: "CREA / Registro Profissional", sourceTable: "profiles", sourceField: "crea" },
+  { key: "engenheiro.nome", namespace: "engenheiro", label: "Engenheiro Responsável", sourceTable: "profiles", sourceField: "name",
+    aliases: ["engineer_name"] },
+  { key: "engenheiro.crea", namespace: "engenheiro", label: "CREA / Registro Profissional", sourceTable: "profiles", sourceField: "crea",
+    aliases: ["engineer_crea"] },
 
   // ---------------- Processo / Sistema ----------------
   { key: "processo.numero", namespace: "processo", label: "Número do Processo", sourceTable: "processes", sourceField: "protocol_number",
     aliases: ["processo.protocolo"] },
-  { key: "processo.tipo",   namespace: "processo", label: "Tipo de Processo",   sourceTable: "processes", sourceField: "process_type" },
-  { key: "data_atual",      namespace: "sistema",  label: "Data atual" },
+  { key: "processo.tipo",   namespace: "processo", label: "Tipo de Processo",   sourceTable: "processes", sourceField: "process_type",
+    aliases: ["process_type"] },
+  { key: "data_atual",      namespace: "sistema",  label: "Data atual", aliases: ["current_date"] },
   { key: "hash_autenticidade", namespace: "sistema", label: "Hash de autenticidade" },
 ];
 
