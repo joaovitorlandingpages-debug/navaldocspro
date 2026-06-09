@@ -453,41 +453,73 @@ function DocumentGenerator() {
             {activeTemplate ? (
               <div
                 ref={previewRef}
-                className="bg-white w-[595px] min-h-[842px] shadow-2xl p-16 flex flex-col relative animate-in zoom-in-95 duration-500 origin-top"
+                className="bg-white w-[595px] min-h-[842px] shadow-2xl p-16 flex flex-col relative animate-in zoom-in-95 duration-500 origin-top overflow-hidden"
               >
-                <div className="flex justify-between items-start mb-12 border-b-2 border-slate-900 pb-8">
-                  <div className="space-y-1">
-                    <h2 className="text-xl font-black uppercase tracking-tighter text-navy leading-none">Marinha do Brasil</h2>
-                    <h3 className="text-xs font-bold uppercase text-slate-600 tracking-widest">Diretoria de Portos e Costas</h3>
-                  </div>
-                  <Ship className="h-8 w-8 text-navy opacity-20" />
-                </div>
+                {/* Header Dinâmico baseado no base_content */}
+                <div className="prose prose-sm max-w-none font-serif text-[11px] leading-relaxed text-slate-900 whitespace-pre-wrap">
+                  {(() => {
+                    let content = activeTemplate?.base_content || "";
+                    
+                    // Flatten values for replacement
+                    const flat = {};
+                    const flatten = (obj: any, prefix = "") => {
+                      for (const [k, v] of Object.entries(obj || {})) {
+                        const key = prefix ? `${prefix}.${k}` : k;
+                        if (v && typeof v === "object" && !Array.isArray(v) && !(v instanceof Date)) {
+                          flatten(v, key);
+                        } else {
+                          // @ts-ignore
+                          flat[key] = v;
+                        }
+                      }
+                    };
+                    
+                    // Dados reais das entidades selecionadas
+                    const customer = customers?.find((c: any) => c.id === selectedCustomerId);
+                    const vessel = vessels?.find((v: any) => v.id === selectedVesselId);
+                    const process = processes?.find((p: any) => p.id === selectedProcessId);
+                    const company = (profile as any)?.company;
+                    
+                    flatten({ 
+                      cliente: customer, 
+                      embarcacao: vessel, 
+                      processo: process, 
+                      empresa: company,
+                      sistema: {
+                        local: "Santos - SP", // Fallback ou do perfil
+                        data_atual: new Date().toLocaleDateString('pt-BR'),
+                        hash: "PREVIEW-ONLY"
+                      },
+                      // Mock engenheiro se não houver no perfil
+                      engenheiro: {
+                        nome: (profile as any)?.name || "Engenheiro Responsável",
+                        crea: "CREA-SP 123456789"
+                      }
+                    });
 
-                <div className="text-center mb-12">
-                  <h4 className="text-lg font-black uppercase underline decoration-2 underline-offset-8 text-navy">
-                    {activeTemplate?.name}
-                  </h4>
-                </div>
+                    // Merge com valores manuais do form
+                    Object.entries(formValues).forEach(([k, v]) => {
+                      // @ts-ignore
+                      flat[k] = v;
+                    });
 
-                <div className="space-y-6 text-sm leading-relaxed text-justify flex-grow text-slate-800">
-                  <p>
-                    Eu, <span className="font-bold underline decoration-slate-300">{formValues["owner_name"] || formValues["clientName"] || "________________________"}</span>,
-                    inscrito no CPF/CNPJ sob o nº <span className="font-bold underline decoration-slate-300">{formValues["owner_id"] || formValues["clientId"] || "________________"}</span>,
-                    residente em <span className="font-bold underline decoration-slate-300">{formValues["owner_address"] || formValues["clientAddress"] || "________________________"}</span>,
-                    venho solicitar o que segue em relação à embarcação <span className="font-bold underline decoration-slate-300">{formValues["vessel_name"] || "________________"}</span>.
-                  </p>
-                </div>
+                    // Replace placeholders
+                    Object.entries(flat).forEach(([k, v]) => {
+                      content = content.replace(new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, 'g'), String(v || `[${k}]`));
+                    });
 
-                <div className="mt-12 space-y-8">
-                  <div className="bg-navy/5 p-4 rounded-xl border border-navy/10 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <Building2 className="h-4 w-4 text-navy" />
-                      <div className="leading-tight">
-                        <p className="text-[10px] font-black text-navy uppercase">{(profile as any)?.company?.name || "NavalDocs Pro"}</p>
-                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Responsável: {(profile as any)?.full_name || (profile as any)?.name}</p>
-                      </div>
-                    </div>
-                  </div>
+                    // Render lines with simple formatting
+                    return content.split('\n').map((line: string, i: number) => {
+                      const isTitle = line === line.toUpperCase() && line.trim().length > 3;
+                      const isSignatureLine = line.includes("____");
+                      
+                      return (
+                        <div key={i} className={`mb-1 ${isTitle ? "font-black text-xs mt-4" : ""} ${isSignatureLine ? "mt-8 text-center" : ""}`}>
+                          {line}
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             ) : (
