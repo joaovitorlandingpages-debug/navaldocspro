@@ -509,7 +509,7 @@ function DocumentGenerator() {
                     });
 
                     // Render lines with simple formatting
-                    return content.split('\n').map((line, i) => {
+                    return content.split('\n').map((line: string, i: number) => {
                       const isTitle = line === line.toUpperCase() && line.trim().length > 3;
                       const isSignatureLine = line.includes("____");
                       
