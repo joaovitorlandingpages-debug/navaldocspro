@@ -14,6 +14,7 @@ export type PlaceholderNamespace =
   | "motor"
   | "empresa"
   | "engenheiro"
+  | "procurador"
   | "processo"
   | "sistema";
 
@@ -73,6 +74,16 @@ export const CANONICAL_PLACEHOLDERS: PlaceholderSpec[] = [
     aliases: ["engineer_name"] },
   { key: "engenheiro.crea", namespace: "engenheiro", label: "CREA / Registro Profissional", sourceTable: "profiles", sourceField: "crea",
     aliases: ["engineer_crea"] },
+
+  // ---------------- Procurador / Outorgado ----------------
+  { key: "procurador.nome",     namespace: "procurador", label: "Nome do Procurador",     required: true, aliases: ["outorgado.nome"] },
+  { key: "procurador.cpf",      namespace: "procurador", label: "CPF do Procurador",      aliases: ["outorgado.cpf"] },
+  { key: "procurador.rg",       namespace: "procurador", label: "RG do Procurador",       aliases: ["outorgado.rg"] },
+  { key: "procurador.endereco", namespace: "procurador", label: "Endereço do Procurador", aliases: ["outorgado.endereco"] },
+  { key: "procurador.cidade",   namespace: "procurador", label: "Cidade do Procurador",   aliases: ["outorgado.cidade"] },
+  { key: "procurador.estado",   namespace: "procurador", label: "Estado do Procurador",   aliases: ["outorgado.estado"] },
+  { key: "procurador.telefone", namespace: "procurador", label: "Telefone do Procurador", aliases: ["outorgado.telefone"] },
+  { key: "procurador.email",    namespace: "procurador", label: "Email do Procurador",    aliases: ["outorgado.email"] },
 
   // ---------------- Processo / Sistema ----------------
   { key: "processo.numero", namespace: "processo", label: "Número do Processo", sourceTable: "processes", sourceField: "protocol_number",
