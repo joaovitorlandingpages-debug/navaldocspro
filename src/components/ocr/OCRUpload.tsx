@@ -110,8 +110,101 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
     }
   };
 
+  useEffect(() => {
+    // Monitorar jobs para mostrar resultados assim que completarem
+    const activeJob = jobs?.find(j => j.status === 'completed' && !j.is_applied);
+    if (activeJob && !showResults) {
+      setCurrentJob(activeJob);
+      setEditedData(activeJob.extracted_data || {});
+      setShowResults(true);
+      console.log("DOCUMENT_OCR_COMPLETED", activeJob.id);
+    }
+  }, [jobs, showResults]);
+
+  const handleApplyData = async () => {
+    if (!currentJob) return;
+    
+    try {
+      console.log("OCR_DATA_APPLIED_TO_PROCESS", currentJob.id);
+      await applyOCRData.mutateAsync({
+        jobId: currentJob.id,
+        data: editedData,
+        type: currentJob.identified_document_type || currentJob.document_type
+      });
+      setShowResults(false);
+      setCurrentJob(null);
+      toast.success("Dados aplicados ao processo com sucesso!");
+    } catch (error: any) {
+      toast.error("Erro ao aplicar dados: " + error.message);
+    }
+  };
+
+  if (showResults && currentJob) {
+    return (
+      <Card className="p-8 border-primary/20 bg-white rounded-[2.5rem] shadow-2xl animate-in zoom-in-95 duration-500">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b pb-4">
+            <div>
+              <h3 className="text-xl font-black text-navy uppercase tracking-tight flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" /> Dados Encontrados (IA)
+              </h3>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                Documento: {currentJob.identified_document_type || currentJob.document_type} • Confiança: {Math.round(currentJob.confidence_score * 100)}%
+              </p>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setShowResults(false)}>
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar p-2">
+            {Object.entries(editedData).map(([key, value]: [string, any]) => (
+              <div key={key} className="space-y-1.5 p-3 bg-slate-50 rounded-xl border border-slate-100 group hover:border-primary/30 transition-all">
+                <label className="text-[9px] font-black uppercase text-slate-400 flex items-center gap-2">
+                  <Edit3 className="h-3 w-3" /> {key.replace(/_/g, ' ')}
+                </label>
+                <Input 
+                  value={String(value || "")} 
+                  onChange={(e) => setEditedData({ ...editedData, [key]: e.target.value })}
+                  className="h-9 bg-white border-slate-200 rounded-lg text-xs font-bold"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-4">
+            <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+              <Database className="h-5 w-5 text-emerald-500" />
+            </div>
+            <div>
+              <p className="text-xs font-black text-emerald-800 uppercase tracking-tight">Sincronização Obrigatória</p>
+              <p className="text-[10px] text-emerald-600 font-medium">Ao aplicar, os cadastros do cliente, embarcação e motor serão atualizados automaticamente.</p>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button 
+              variant="outline" 
+              className="flex-1 rounded-xl h-12 font-black uppercase text-[10px] tracking-widest"
+              onClick={() => setShowResults(false)}
+            >
+              Descartar
+            </Button>
+            <Button 
+              className="flex-[2] bg-primary text-white rounded-xl h-12 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20 gap-2"
+              onClick={handleApplyData}
+            >
+              <CheckCircle2 className="h-4 w-4" /> Aplicar Dados ao Processo
+            </Button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="p-8 border-dashed border-2 bg-slate-50/50 hover:bg-slate-50 transition-all group rounded-[2.5rem] relative overflow-hidden">
+
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -mr-10 -mt-10 group-hover:bg-primary/10 transition-colors"></div>
       
       {selectedFiles.length === 0 ? (
