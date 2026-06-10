@@ -482,15 +482,6 @@ function DocumentGenerator() {
             </Card>
           )}
         </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center text-white/20 gap-6">
-                <LayoutTemplate className="h-24 w-24 opacity-20" />
-                <p className="text-xl font-black uppercase tracking-widest">Selecione um ou mais modelos</p>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );
