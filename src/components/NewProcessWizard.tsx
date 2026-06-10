@@ -729,8 +729,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     }
     // Vessel is intentionally optional — can be linked later from the process.
     if (step === 3 && !formData.vesselId) {
-      console.log("PROCESS_CAN_CONTINUE_WITHOUT_VESSEL");
-      toast.message("Processo seguirá sem embarcação. Você poderá vincular depois.");
+      console.log("VESSEL_MISSING_ERROR");
+      toast.error("Por favor, selecione uma embarcação ou clique em 'Continuar sem embarcação'");
+      return;
     }
 
     if (step < totalSteps) {
