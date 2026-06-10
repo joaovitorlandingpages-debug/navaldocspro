@@ -1645,6 +1645,8 @@ function AdditionalModals({
 
       {/* Modal de Criação Rápida de Embarcação */}
       <ModalLayout
+        isOpen={isQuickVesselOpen}
+        onClose={() => setIsQuickVesselOpen(false)}
         title={vesselModalMode === 'ocr' ? "Importar TIE/TIEM (IA)" : "Nova Embarcação Rápida"}
         maxWidth="md"
         footer={
