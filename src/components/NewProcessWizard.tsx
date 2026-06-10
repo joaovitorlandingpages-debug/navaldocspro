@@ -1323,6 +1323,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       case 2: return "2. Cliente";
       case 3: return "3. Embarcação";
       case 4: return "4. Documentos";
+      case 5: return "5. Resumo Final";
       default: return "";
     }
   };
