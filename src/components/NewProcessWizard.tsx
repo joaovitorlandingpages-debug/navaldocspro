@@ -1108,19 +1108,21 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                       setFormData({ ...formData, vessel: v.name, vesselId: v.id });
                       console.log("FORM_STATE_OK", { vessel: v.name, vesselId: v.id });
                     }}
-                    className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${
-                      formData.vesselId === v.id ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
+                    className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all group/vessel-card ${
+                      formData.vesselId === v.id ? "border-primary bg-primary/5 shadow-sm shadow-primary/10" : "border-slate-50 hover:border-slate-200 hover:bg-slate-50"
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0">
-                        <Ship className="h-4 w-4" />
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                        formData.vesselId === v.id ? "bg-primary text-white" : "bg-slate-100 text-slate-400 group-hover/vessel-card:bg-white"
+                      }`}>
+                        <Ship className="h-5 w-5" />
                       </div>
                       <div className="text-left min-w-0">
-                        <p className="text-sm font-bold text-navy truncate">{v.name}</p>
-                        <p className="text-[10px] text-slate-400 font-mono truncate">
-                          {v.registration_number || "Sem inscrição"}
-                          {v.current_owner_name ? ` • Prop. atual: ${v.current_owner_name}` : ""}
+                        <p className={`text-sm font-bold truncate transition-colors ${formData.vesselId === v.id ? "text-primary" : "text-navy"}`}>{v.name}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">
+                          {v.registration_number || "INSCRIÇÃO PENDENTE"}
+                          {v.current_owner_name ? ` • PROP: ${v.current_owner_name}` : ""}
                         </p>
                       </div>
                     </div>
