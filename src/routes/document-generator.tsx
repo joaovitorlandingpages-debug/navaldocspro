@@ -412,40 +412,34 @@ function DocumentGenerator() {
             </div>
 
             <div className="pt-8 border-t border-slate-50 space-y-6 relative z-10">
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
-                  <LayoutTemplate className="h-4 w-4 text-red-500" /> Campos do Modelo em Preview
+                  <FileText className="h-4 w-4 text-emerald-500" /> Diagnóstico de Dados
                 </h3>
+                <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter bg-emerald-50 text-emerald-600 border-none">
+                  Sincronizado
+                </Badge>
               </div>
 
-              <ScrollArea className="h-[300px] pr-4">
-                {!activeTemplate ? (
-                  <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                    <FileText className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
-                      Selecione um modelo para editar os campos
-                    </p>
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  { label: "Cadastro Cliente", status: selectedCustomerId ? "OK" : "PENDENTE", color: selectedCustomerId ? "emerald" : "red" },
+                  { label: "Cadastro Embarcação", status: selectedVesselId ? "OK" : "PENDENTE", color: selectedVesselId ? "emerald" : "red" },
+                  { label: "OCR Opcional", status: "STANDBY", color: "blue" },
+                  { label: "Motor Vinculado", status: vessels?.find((v:any) => v.id === selectedVesselId)?.engine_serial ? "OK" : "PENDENTE", color: vessels?.find((v:any) => v.id === selectedVesselId)?.engine_serial ? "emerald" : "amber" },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{item.label}</span>
+                    <Badge className={`bg-${item.color}-50 text-${item.color}-600 border-none px-2 py-0.5 h-5 text-[9px] font-black uppercase`}>
+                      {item.status}
+                    </Badge>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-4">
-                    {activeTemplate?.fields?.map((field: any) => (
-                      <div key={field.id} className="space-y-1.5 animate-in slide-in-from-left-4 duration-300">
-                        <Label className="text-[9px] font-black uppercase text-slate-400 flex items-center gap-2">
-                          {field.field_label}
-                          {field.source_type !== "manual" && (
-                            <Badge className="bg-slate-100 text-slate-500 border-none px-2 py-0 h-4 text-[8px] font-black uppercase">Auto</Badge>
-                          )}
-                        </Label>
-                        <Input
-                          value={formValues[field.field_name] || ""}
-                          onChange={(e) => handleFieldChange(field.field_name, e.target.value)}
-                          className="h-10 bg-slate-50 border-slate-200 rounded-lg text-xs font-bold focus:bg-white transition-all"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
+                ))}
+              </div>
+              
+              <p className="text-[9px] text-slate-400 font-bold italic text-center uppercase tracking-widest">
+                * O sistema prioriza dados cadastrados. OCR não é obrigatório para geração.
+              </p>
             </div>
           </Card>
         </div>
