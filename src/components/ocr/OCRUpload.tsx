@@ -53,6 +53,7 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
     setUploadProgress(10);
 
     try {
+      console.log("DOCUMENT_UPLOAD_STARTED");
       const uploadedFilesInfo = [];
       
       for (let i = 0; i < selectedFiles.length; i++) {
