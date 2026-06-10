@@ -1395,12 +1395,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
   const getStepTitle = () => {
     switch (step) {
-      case 1: return "Tipo de Processo";
-      case 2: return "Selecionar Cliente";
-      case 3: return "Vincular Embarcação";
-      case 4: return "Documentos";
-      case 5: return "Preenchimento";
-      case 6: return "Revisão Final";
+      case 1: return "1. Serviço";
+      case 2: return "2. Cliente";
+      case 3: return "3. Embarcação";
+      case 4: return "4. Documentos";
       default: return "";
     }
   };
