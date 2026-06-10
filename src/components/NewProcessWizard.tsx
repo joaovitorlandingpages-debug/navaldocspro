@@ -1046,28 +1046,34 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                 <Button
-                   variant="outline"
-                   className="h-12 rounded-xl border-dashed gap-2 flex-1"
-                   onClick={() => {
-                     console.log("VESSEL_QUICK_CREATE_USED");
-                     setVesselModalMode('manual');
-                     setIsQuickVesselOpen(true);
-                   }}
-                 >
-                    <Plus className="h-4 w-4" /> Nova Embarcação
-                 </Button>
-                 <Button
-                   variant="outline"
-                   className="h-12 rounded-xl border-dashed gap-2 flex-1 border-primary/30 text-primary hover:bg-primary/5"
-                   onClick={() => {
-                      console.log("VESSEL_OCR_IMPORT_USED");
-                      setVesselModalMode('ocr');
-                      setIsQuickVesselOpen(true);
-                   }}
-                 >
-                    <Zap className="h-4 w-4" /> Importar TIE/TIEM
-                 </Button>
+                 <div className="space-y-1">
+                   <Button
+                     variant="outline"
+                     className="w-full h-12 rounded-xl border-dashed gap-2"
+                     onClick={() => {
+                       console.log("VESSEL_QUICK_CREATE_USED");
+                       setVesselModalMode('manual');
+                       setIsQuickVesselOpen(true);
+                     }}
+                   >
+                      <Plus className="h-4 w-4" /> Nova Embarcação
+                   </Button>
+                   <p className="text-[9px] text-slate-400 text-center">Cadastro manual detalhado</p>
+                 </div>
+                 <div className="space-y-1">
+                   <Button
+                     variant="outline"
+                     className="w-full h-12 rounded-xl border-dashed gap-2 border-primary/30 text-primary hover:bg-primary/5 shadow-sm shadow-primary/5"
+                     onClick={() => {
+                        console.log("VESSEL_OCR_IMPORT_USED");
+                        setVesselModalMode('ocr');
+                        setIsQuickVesselOpen(true);
+                     }}
+                   >
+                      <Zap className="h-4 w-4" /> Importar TIE/TIEM
+                   </Button>
+                   <p className="text-[9px] text-primary/60 text-center font-bold">Autopreenchimento via OCR</p>
+                 </div>
               </div>
             </div>
 
