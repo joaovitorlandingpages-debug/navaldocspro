@@ -22,6 +22,7 @@ import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { DocumentValidationEngine } from "@/services/validationEngine";
+import { DocumentPreviewEditor } from "@/components/documents/DocumentPreviewEditor";
 
 export const Route = createFileRoute("/document-generator")({
   component: DocumentGenerator,
