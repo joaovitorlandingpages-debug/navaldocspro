@@ -976,10 +976,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-100">
+            <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">
                <Button
                  variant="ghost"
-                 className="w-full h-12 rounded-xl gap-2 text-slate-500 hover:text-navy"
+                 className="w-full h-12 rounded-xl gap-2 text-slate-500 hover:text-navy border border-slate-100"
                  onClick={() => {
                    console.log("PROCESS_VESSEL_STEP_APPROVED");
                    setStep(4);
@@ -987,10 +987,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                >
                   Prosseguir com seleção acima →
                </Button>
-            </div>
                <Button
                  variant="ghost"
-                 className="w-full h-12 rounded-xl gap-2 text-slate-500 hover:text-navy"
+                 className="w-full h-12 rounded-xl gap-2 text-slate-400 hover:text-navy"
                  onClick={() => {
                    console.log("PROCESS_CAN_CONTINUE_WITHOUT_VESSEL");
                    setFormData({ ...formData, vessel: "", vesselId: "" });
