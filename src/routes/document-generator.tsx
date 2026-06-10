@@ -220,12 +220,23 @@ function DocumentGenerator() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-navy tracking-tight uppercase">Gerador Profissional</h1>
-          <p className="text-muted-foreground font-medium italic font-mono text-xs uppercase tracking-widest">
-            Selecione vários modelos · Gere todos de uma vez
-          </p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate({ to: "/" })}
+            className="h-12 w-12 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 shadow-sm shrink-0"
+            title="Voltar para o Início"
+          >
+            <ArrowLeft className="h-6 w-6 text-navy" />
+          </Button>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-black text-navy tracking-tight uppercase">Gerador Profissional</h1>
+            <p className="text-muted-foreground font-medium italic font-mono text-[10px] md:text-xs uppercase tracking-widest">
+              Selecione vários modelos · Gere todos de uma vez
+            </p>
+          </div>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
           <Button
