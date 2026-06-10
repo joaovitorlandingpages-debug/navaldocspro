@@ -1230,7 +1230,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                             input.click();
                           }}
                         >
-                           <Plus className="h-4 w-4" />
+                           <Plus className="h-3 w-3" />
+                           <span className="text-[9px] font-black uppercase tracking-widest">Anexar</span>
                         </Button>
                       </div>
                     </div>
