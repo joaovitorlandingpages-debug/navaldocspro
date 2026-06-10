@@ -92,8 +92,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
   // OCR and Client Modal improvements
   const [clientModalMode, setClientModalMode] = useState<'manual' | 'ocr'>('manual');
+  const [vesselModalMode, setVesselModalMode] = useState<'manual' | 'ocr'>('manual');
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [ocrJobResult, setOcrJobResult] = useState<any>(null);
+  const [ocrVesselJobResult, setOcrVesselJobResult] = useState<any>(null);
   const [ocrUploadedFile, setOcrUploadedFile] = useState<any>(null);
   const ocrFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -412,6 +414,151 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     console.log("QUICK_CLIENT_DATA_APPLIED");
     setClientModalMode('manual');
     toast.success("Dados preenchidos automaticamente. Por favor, confira e complete o cadastro.");
+  };
+
+  const handleVesselOcrFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!profile?.company_id) {
+      toast.error("Empresa não identificada.");
+      return;
+    }
+
+    setIsOcrProcessing(true);
+    console.log("VESSEL_OCR_IMPORT_USED");
+    
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${profile.company_id}/ocr/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('ocr-documents')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: fileData, error: dbError } = await supabase
+        .from('uploaded_files')
+        .insert({
+          company_id: profile.company_id,
+          file_name: file.name,
+          file_url: filePath,
+          category: 'ocr_analysis',
+          file_type: file.type,
+          file_size: file.size,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+
+      const { data: jobData, error: jobError } = await supabase
+        .from("ocr_jobs")
+        .insert({
+          company_id: profile.company_id,
+          file_id: fileData.id,
+          status: 'pending',
+          document_type: 'VESSEL_TIE'
+        })
+        .select()
+        .single();
+
+      if (jobError) throw jobError;
+
+      await supabase.functions.invoke('process-ocr', {
+        body: { jobId: jobData.id }
+      });
+
+      let attempts = 0;
+      const maxAttempts = 15;
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        const { data: jobStatus, error: statusError } = await supabase
+          .from("ocr_jobs")
+          .select("*")
+          .eq("id", jobData.id)
+          .single();
+
+        if (statusError) {
+          clearInterval(pollInterval);
+          setIsOcrProcessing(false);
+          toast.error("Erro ao verificar status do OCR");
+          return;
+        }
+
+        if (jobStatus.status === 'completed' || jobStatus.status === 'failed') {
+          clearInterval(pollInterval);
+          setIsOcrProcessing(false);
+          
+          if (jobStatus.status === 'completed') {
+            setOcrVesselJobResult(jobStatus);
+            console.log("VESSEL_AUTO_CREATED_PREVIEW_OK");
+            toast.success("TIE/TIEM processado com sucesso!");
+          } else {
+            toast.error("Falha ao processar TIE/TIEM.");
+          }
+        }
+
+        if (attempts >= maxAttempts) {
+          clearInterval(pollInterval);
+          setIsOcrProcessing(false);
+          toast.error("Tempo esgotado ao processar documento.");
+        }
+      }, 2000);
+
+    } catch (error: any) {
+      console.error("VESSEL_OCR_ERROR", error);
+      toast.error("Erro ao processar documento: " + error.message);
+      setIsOcrProcessing(false);
+    }
+  };
+
+  const applyVesselOcrData = async () => {
+    if (!ocrVesselJobResult?.extracted_data) return;
+    
+    const data = ocrVesselJobResult.extracted_data;
+    const vesselData = data.vessel || data;
+
+    setIsCreatingVessel(true);
+    console.log("VESSEL_AUTO_CREATED");
+
+    try {
+      const payload = {
+        company_id: profile?.company_id,
+        name: safeString(vesselData.name || vesselData.nome || ""),
+        registration_number: safeString(vesselData.registration_number || vesselData.inscricao || ""),
+        vessel_type: safeString(vesselData.type || vesselData.tipo || ""),
+        current_owner_name: safeString(vesselData.owner || vesselData.proprietario || ""),
+        capacity: safeString(vesselData.capacity || vesselData.capacidade || ""),
+        length: safeString(vesselData.length || vesselData.comprimento || ""),
+        boca: safeString(vesselData.boca || ""),
+        pontal: safeString(vesselData.pontal || ""),
+        material: safeString(vesselData.material || ""),
+        customer_id: formData.clientId || null
+      };
+
+      const { data: newV, error } = await supabase
+        .from('vessels')
+        .insert(payload)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success("Embarcação criada e vinculada automaticamente!");
+      setFormData({ ...formData, vessel: newV.name, vesselId: newV.id });
+      setIsQuickVesselOpen(false);
+      setOcrVesselJobResult(null);
+      await fetchVesselsList("");
+      setStep(4);
+    } catch (error: any) {
+      toast.error("Erro ao criar embarcação automática: " + error.message);
+    } finally {
+      setIsCreatingVessel(false);
+    }
   };
 
   const handleQuickClientSubmit = async (e: React.FormEvent) => {
@@ -904,6 +1051,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                    className="h-12 rounded-xl border-dashed gap-2 flex-1"
                    onClick={() => {
                      console.log("VESSEL_QUICK_CREATE_USED");
+                     setVesselModalMode('manual');
                      setIsQuickVesselOpen(true);
                    }}
                  >
@@ -1295,9 +1443,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         handleQuickVesselSubmit={handleQuickVesselSubmit}
         vesselModalMode={vesselModalMode}
         setVesselModalMode={setVesselModalMode}
-        isOcrProcessing={isOcrProcessing}
         handleVesselOcrFileSelect={handleVesselOcrFileSelect}
         ocrVesselJobResult={ocrVesselJobResult}
+        setOcrVesselJobResult={setOcrVesselJobResult}
         applyVesselOcrData={applyVesselOcrData}
       />
     </>
@@ -1401,7 +1549,10 @@ function AdditionalModals({
   handleQuickClientSubmit,
   isQuickVesselOpen, setIsQuickVesselOpen,
   newVessel, setNewVessel,
-  isCreatingVessel, handleQuickVesselSubmit
+  isCreatingVessel, handleQuickVesselSubmit,
+  vesselModalMode, setVesselModalMode,
+  handleVesselOcrFileSelect, ocrVesselJobResult,
+  setOcrVesselJobResult, applyVesselOcrData
 }: any) {
   return (
     <>
