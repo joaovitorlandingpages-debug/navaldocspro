@@ -19,8 +19,12 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [docType, setDocType] = useState<string>("AUTO_DETECT");
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+  const [currentJob, setCurrentJob] = useState<any>(null);
+  const [editedData, setEditedData] = useState<any>({});
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { createBatchJobs } = useOCR();
+  const { createBatchJobs, jobs, applyOCRData } = useOCR(processId);
   const { checkLimit } = usePlanLimits();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
