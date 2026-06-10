@@ -359,21 +359,38 @@ export class DocumentAutomationEngine {
     if ((job.identified_document_type === 'VESSEL_TIE' || job.identified_document_type === 'TECHNICAL_MEMORIAL') && process?.vessel_id) {
       const vesselUpdate: any = {};
       if (extracted.vessel_name) vesselUpdate.name = extracted.vessel_name;
-      if (extracted.registration_number || extracted.inscription) vesselUpdate.registration_number = extracted.registration_number || extracted.inscription;
-      if (extracted.engine_brand) vesselUpdate.engine_brand = extracted.engine_brand;
-      if (extracted.engine_serial) vesselUpdate.engine_serial = extracted.engine_serial;
+      if (extracted.registration_number || extracted.inscription || extracted.inscription_number) {
+        vesselUpdate.registration_number = extracted.registration_number || extracted.inscription || extracted.inscription_number;
+      }
+      if (extracted.vessel_type) vesselUpdate.vessel_type = extracted.vessel_type;
       if (extracted.hull_material) vesselUpdate.hull_material = extracted.hull_material;
+      if (extracted.length) vesselUpdate.length = extracted.length;
+      if (extracted.beam) vesselUpdate.beam = extracted.beam;
+      if (extracted.depth) vesselUpdate.depth = extracted.depth;
+      if (extracted.gross_tonnage) vesselUpdate.gross_tonnage = extracted.gross_tonnage;
+      if (extracted.capacity_passengers || extracted.capacity) vesselUpdate.capacity = extracted.capacity_passengers || extracted.capacity;
+      
+      // Sync Engine
+      if (extracted.engine_brand) vesselUpdate.engine_manufacturer = extracted.engine_brand;
+      if (extracted.engine_model) vesselUpdate.engine_model = extracted.engine_model;
+      if (extracted.engine_power) vesselUpdate.engine_power = extracted.engine_power;
+      if (extracted.engine_serial) vesselUpdate.engine_serial = extracted.engine_serial;
       
       await supabase.from('vessels').update(vesselUpdate).eq('id', process.vessel_id);
       console.log("OCR_VESSEL_SYNC_OK");
     }
 
     // Sincronizar Cliente
-    if ((job.identified_document_type === 'RG' || job.identified_document_type === 'CNH' || job.identified_document_type === 'PURCHASE_CONTRACT') && process?.customer_id) {
+    if ((job.identified_document_type === 'RG' || job.identified_document_type === 'CNH' || job.identified_document_type === 'PURCHASE_CONTRACT' || job.identified_document_type === 'RESIDENCE_PROOF') && process?.customer_id) {
       const customerUpdate: any = {};
       if (extracted.name || extracted.buyer_name) customerUpdate.name = extracted.name || extracted.buyer_name;
       if (extracted.doc_number || extracted.cpf || extracted.buyer_doc) customerUpdate.cpf_cnpj = extracted.doc_number || extracted.cpf || extracted.buyer_doc;
+      if (extracted.rg) customerUpdate.rg = extracted.rg;
       if (extracted.address) customerUpdate.address = extracted.address;
+      if (extracted.city) customerUpdate.city = extracted.city;
+      if (extracted.state) customerUpdate.state = extracted.state;
+      if (extracted.phone) customerUpdate.phone = extracted.phone;
+      if (extracted.email) customerUpdate.email = extracted.email;
       
       await supabase.from('customers').update(customerUpdate).eq('id', process.customer_id);
       console.log("OCR_CUSTOMER_SYNC_OK");
