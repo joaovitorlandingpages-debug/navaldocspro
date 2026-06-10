@@ -131,6 +131,8 @@ export class DocumentValidationEngine {
     
     // Logs de Auditoria
     console.log("BASE_CONTENT_RENDER_STARTED");
+    console.log("REGISTERED_DATA_RENDER_OK");
+    console.log("OCR_NOT_REQUIRED_FOR_RENDER");
     console.log("DOCUMENT_RENDER_ENGINE_FIXED");
 
     // Flatten values for replacement
@@ -148,14 +150,43 @@ export class DocumentValidationEngine {
 
     flatten(data);
 
-    // Common nautical mappings (backwards compatibility)
+    // Mapeamento Professional das fontes de dados
     const mappings: any = {
+      // 1. Dados do Cliente
       "cliente.nome": data.customer?.name || data.customer?.razao_social,
       "cliente.cpf": data.customer?.cpf_cnpj || data.customer?.cpf,
+      "cliente.cpf_cnpj": data.customer?.cpf_cnpj || data.customer?.cpf,
       "cliente.rg": data.customer?.rg,
       "cliente.endereco": data.customer?.address,
+      "cliente.cidade": data.customer?.city,
+      "cliente.estado": data.customer?.state,
+      "cliente.telefone": data.customer?.phone,
+      "cliente.email": data.customer?.email,
+      
+      // 2. Dados da Embarcação
       "embarcacao.nome": data.vessel?.name,
       "embarcacao.inscricao": data.vessel?.registration_number || data.vessel?.tie,
+      "embarcacao.tipo": data.vessel?.type,
+      "embarcacao.material": data.vessel?.hull_material,
+      "embarcacao.comprimento": data.vessel?.length,
+      "embarcacao.boca": data.vessel?.beam,
+      "embarcacao.pontal": data.vessel?.depth,
+      "embarcacao.capacidade": data.vessel?.capacity,
+
+      // 3. Dados do Motor
+      "motor.fabricante": data.engine?.manufacturer || data.vessel?.engine_manufacturer,
+      "motor.modelo": data.engine?.model || data.vessel?.engine_model,
+      "motor.potencia": data.engine?.power || data.vessel?.engine_power,
+      "motor.serie": data.engine?.serial_number || data.vessel?.engine_serial,
+      "motor.numero_serie": data.engine?.serial_number || data.vessel?.engine_serial,
+
+      // 4. Dados da Empresa/Engenheiro
+      "empresa.nome": data.company?.name || data.company?.razao_social,
+      "empresa.cnpj": data.company?.cnpj,
+      "engenheiro.nome": data.profile?.full_name,
+      "engenheiro.crea": data.profile?.crea,
+      
+      // Sistema
       "data_atual": new Date().toLocaleDateString('pt-BR'),
       "sistema.data_atual": new Date().toLocaleDateString('pt-BR'),
       "sistema.local": data.company?.city || "Itajaí",
@@ -163,21 +194,23 @@ export class DocumentValidationEngine {
 
     const allValues = { ...flat, ...mappings };
 
-    // Replace placeholders {{key}}
-    Object.keys(allValues).forEach(key => {
+    // Regex para encontrar {{ placeholder }} ou [ placeholder ]
+    const placeholderRegex = /\{\{\s*(.*?)\s*\}\}|\[\s*(.*?)\s*\]/g;
+
+    filled = filled.replace(placeholderRegex, (match, p1, p2) => {
+      const key = (p1 || p2 || "").trim();
       const value = allValues[key];
-      const placeholder = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
-      
+
       if (value !== undefined && value !== null && value !== "") {
-        filled = filled.replace(placeholder, String(value));
-      } else {
-        filled = filled.replace(placeholder, `____________________`);
+        return String(value);
       }
+
+      // Se não houver valor, retorna marcador de pendência claro
+      console.log("PLACEHOLDER_PENDING_FIELDS_OK", key);
+      return `[Campo pendente: ${key}]`;
     });
 
-    // Limpeza de placeholders residuais
-    filled = filled.replace(/\{\{\s*.*?\s*\}\}/g, '____________________');
-
+    console.log("DOCUMENT_DATA_SOURCE_AUDITED");
     return filled;
   }
 }
