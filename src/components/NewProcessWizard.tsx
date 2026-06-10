@@ -65,7 +65,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
-  const totalSteps = 4; // Simplificado de 6 para 4 (Agrupamento inteligente de dados)
+  const totalSteps = 5; // Ajustado de 4 para 5 para incluir o Resumo Final unificado
   const progressPercent = (step / totalSteps) * 100;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuickClientOpen, setIsQuickClientOpen] = useState(false);
