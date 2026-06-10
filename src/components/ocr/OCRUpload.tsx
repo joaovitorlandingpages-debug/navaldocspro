@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Upload, Camera, FileText, CheckCircle2, Loader2, X, Info, Zap, ListChecks, ShieldCheck, Sparkles } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Upload, Camera, FileText, CheckCircle2, Loader2, X, Info, Zap, ListChecks, ShieldCheck, Sparkles, AlertCircle, Edit3, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
