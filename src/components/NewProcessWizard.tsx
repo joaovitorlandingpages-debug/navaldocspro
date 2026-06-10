@@ -1525,8 +1525,8 @@ function NewProcessWizardMain({
               <Button
                 onClick={handleNext}
                 type="button"
-                disabled={(!formData.typeId && step === 1) || (!formData.clientId && step === 2)}
-                className="flex-1 sm:flex-none bg-navy hover:opacity-90 rounded-xl h-11 sm:h-12 px-6 sm:px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg shadow-navy/20 gap-2"
+                disabled={(!formData.typeId && step === 1) || (!formData.clientId && step === 2) || (step === 3 && !formData.vesselId)}
+                className="flex-1 sm:flex-none bg-navy hover:opacity-90 rounded-xl h-11 sm:h-12 px-6 sm:px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg shadow-navy/20 gap-2 disabled:opacity-50"
               >
                 Próximo <ChevronRight className="h-4 w-4" />
               </Button>
