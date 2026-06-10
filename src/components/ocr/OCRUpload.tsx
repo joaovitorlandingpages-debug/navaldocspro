@@ -42,6 +42,7 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
   const processBatch = async () => {
     if (selectedFiles.length === 0) return;
 
+    console.log("OCR_FULL_FLOW_TEST_STARTED");
     const limitStatus = await checkLimit('ocr');
     if (limitStatus.reached) {
       toast.error("Limite atingido", {
@@ -127,6 +128,7 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
     
     try {
       console.log("OCR_DATA_APPLIED_TO_PROCESS", currentJob.id);
+      console.log("OCR_APPLY_DATA_OK");
       await applyOCRData.mutateAsync({
         jobId: currentJob.id,
         data: editedData,

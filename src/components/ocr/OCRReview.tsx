@@ -90,6 +90,7 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
 
   const handleApplyData = async (type: 'client' | 'vessel' | 'all') => {
     setSaving(true);
+    console.log("OCR_REVIEW_OK");
     try {
       await supabase.from('ocr_timeline_events').insert({
         job_id: jobId,
