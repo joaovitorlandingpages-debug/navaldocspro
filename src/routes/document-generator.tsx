@@ -481,54 +481,29 @@ function DocumentGenerator() {
                       console.log("DOCUMENT_RENDER_ENGINE_FIXED");
                     }
                     
-                    // Flatten values for replacement
-                    const flat = {};
-                    const flatten = (obj: any, prefix = "") => {
-                      for (const [k, v] of Object.entries(obj || {})) {
-                        const key = prefix ? `${prefix}.${k}` : k;
-                        if (v && typeof v === "object" && !Array.isArray(v) && !(v instanceof Date)) {
-                          flatten(v, key);
-                        } else {
-                          // @ts-ignore
-                          flat[key] = v;
-                        }
-                      }
-                    };
-                    
-                    // Dados reais das entidades selecionadas
                     const customer = customers?.find((c: any) => c.id === selectedCustomerId);
                     const vessel = vessels?.find((v: any) => v.id === selectedVesselId);
                     const process = processes?.find((p: any) => p.id === selectedProcessId);
                     const company = (profile as any)?.company;
                     
-                    flatten({ 
+                    const data = { 
                       cliente: customer, 
                       embarcacao: vessel, 
                       processo: process, 
                       empresa: company,
+                      ...formValues,
                       sistema: {
-                        local: "Santos - SP", // Fallback ou do perfil
+                        local: company?.city || "Itajaí",
                         data_atual: new Date().toLocaleDateString('pt-BR'),
                         hash: "PREVIEW-ONLY"
                       },
-                      // Mock engenheiro se não houver no perfil
                       engenheiro: {
                         nome: (profile as any)?.name || "Engenheiro Responsável",
-                        crea: "CREA-SP 123456789"
+                        crea: (profile as any)?.crea || "CREA PENDENTE"
                       }
-                    });
+                    };
 
-                    // Merge com valores manuais do form
-                    Object.entries(formValues).forEach(([k, v]) => {
-                      // @ts-ignore
-                      flat[k] = v;
-                    });
-
-                    // Replace placeholders
-                    Object.entries(flat).forEach(([k, v]) => {
-                      const value = v !== undefined && v !== null && v !== "" ? String(v) : "____________________";
-                      content = content.replace(new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, 'g'), value);
-                    });
+                    content = DocumentValidationEngine.fillPlaceholder(content, data);
 
                     // Limpeza de placeholders residuais
                     content = content.replace(/\{\{\s*.*?\s*\}\}/g, "____________________");
