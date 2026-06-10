@@ -1250,87 +1250,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       case 5:
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                   <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Upload & OCR</Label>
-                   <div 
-                     className="border-2 border-dashed border-slate-200 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 hover:border-primary/50 transition-all cursor-pointer bg-slate-50/50 group"
-                     onClick={() => {
-                        const input = document.createElement('input');
-                        input.type = 'file';
-                        input.multiple = true;
-                        input.onchange = (e: any) => {
-                           const files = Array.from(e.target.files) as File[];
-                           setSelectedFiles(prev => [...prev, ...files]);
-                           console.log("UPLOAD_MOBILE_OK", files.length);
-
-                        };
-                        input.click();
-                     }}
-                   >
-                      <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform">
-                         <Plus className="h-6 w-6" />
-                      </div>
-                      <div className="text-center">
-                         <p className="text-sm font-bold text-navy">Clique para selecionar arquivos</p>
-                         <p className="text-[10px] text-slate-400 font-medium">PDF, JPG, PNG (Max 10MB)</p>
-                      </div>
-                   </div>
-
-                   <div className="space-y-2">
-                      {selectedFiles.map((file, i) => (
-                         <div key={i} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl">
-                            <div className="flex items-center gap-3 overflow-hidden">
-                               <FileCheck className="h-4 w-4 text-green-500 flex-shrink-0" />
-                               <span className="text-xs font-bold text-navy truncate">{file.name}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                               <Badge className="bg-slate-100 text-slate-500 border-none text-[8px] uppercase">Aguardando</Badge>
-                               <button 
-                                 onClick={() => setSelectedFiles(prev => prev.filter((_, idx) => idx !== i))}
-                                 className="p-1 hover:text-red-500"
-                               >
-                                  <X className="h-3 w-3" />
-                               </button>
-                            </div>
-                         </div>
-                      ))}
-                   </div>
-                </div>
-
-                <div className="space-y-4">
-                   <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Documentos Geráveis</Label>
-                   <div className="space-y-2">
-                      {[
-                        { name: "BCE - Boletim de Cadastro", status: "ready" },
-                        { name: "DPC-2211 - Inscrição", status: "ready" },
-                        { name: "Procuração Naval", status: "ready" },
-                        { name: "Declaração de Responsabilidade", status: "ready" },
-                        { name: "Memorial Descritivo", status: "ready" }
-                      ].map((doc, i) => (
-                         <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl group hover:border-primary/20 transition-all">
-                            <div className="flex items-center gap-3">
-                               <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
-                                  <Zap className="h-4 w-4" />
-                               </div>
-                               <span className="text-xs font-bold text-navy">{doc.name}</span>
-                            </div>
-                            <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full text-[10px] font-black uppercase text-primary hover:bg-primary/5">
-                               Gerar
-                            </Button>
-                         </div>
-                      ))}
-                   </div>
-                </div>
-             </div>
-          </div>
-        );
-
-      case 6:
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-             <div className="bg-navy p-6 rounded-3xl text-white">
-                <div className="flex justify-between items-start mb-6">
+             <div className="bg-navy p-6 rounded-3xl text-white relative overflow-hidden">
+                <div className="absolute right-0 top-0 h-full w-32 bg-primary/10 -skew-x-12 translate-x-16"></div>
+                <div className="flex justify-between items-start mb-6 relative z-10">
                    <div>
                       <h4 className="text-lg font-bold">Resumo Final</h4>
                       <p className="text-xs text-slate-400">Verifique os dados antes de consolidar o processo.</p>
@@ -1338,7 +1260,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                    <Badge className="bg-primary text-white border-none uppercase text-[10px]">{formData.type}</Badge>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 relative z-10">
                    <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center"><User className="h-5 w-5 text-primary" /></div>
                       <div>
@@ -1365,10 +1287,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                       {requirements.map((req: any, i: number) => (
                          <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
                             <div className="flex items-center gap-3">
-                               <div className="h-2 w-2 rounded-full bg-amber-500" />
+                               <div className={`h-2 w-2 rounded-full ${req.is_mandatory ? 'bg-amber-500' : 'bg-slate-300'}`} />
                                <span className="text-xs font-bold text-navy">{req.template?.name}</span>
                             </div>
-                            <Badge variant="outline" className="text-[8px] uppercase">{req.is_mandatory ? "Obrigatório" : "Opcional"}</Badge>
+                            <Badge variant="outline" className="text-[8px] uppercase font-black border-slate-200 text-slate-400">{req.is_mandatory ? "Obrigatório" : "Opcional"}</Badge>
                          </div>
                       ))}
                    </div>
@@ -1383,11 +1305,13 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
              </div>
 
              <div className="p-4 bg-green-50 border border-green-100 rounded-2xl flex items-center gap-3 text-green-700">
-                <CheckCircle2 className="h-5 w-5" />
+                <CheckCircle2 className="h-5 w-5 shrink-0" />
                 <p className="text-xs font-medium">Dados validados pela IA. O processo será criado com status pendente para início imediato.</p>
              </div>
           </div>
         );
+      case 6:
+        return null;
       default:
         return null;
     }
