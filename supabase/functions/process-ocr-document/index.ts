@@ -180,17 +180,6 @@ serve(async (req) => {
     if (updateError) throw updateError
 
     return new Response(JSON.stringify({ success: true, docType }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-
-  } catch (error) {
-    console.error("OCR Error:", error)
-    return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 })
-  }
-})
-
-    if (updateError) throw updateError
-
-    return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-
   } catch (error) {
     console.error("OCR Error:", error)
     return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 })
