@@ -186,6 +186,14 @@ function DocumentGenerator() {
         const tpl = (templates as any[]).find((t) => t.id === id);
         if (!tpl) continue;
         try {
+          if (!tpl.base_content) {
+            console.error("HARDCODED_TEMPLATE_REMOVED - Blocked legacy template generation", tpl.name);
+            toast.error(`O modelo "${tpl.name}" é um template legado e não pode ser gerado. Use a versão Profissional.`);
+            fail++;
+            continue;
+          }
+
+          console.log("BASE_CONTENT_PDF_VALIDATED", tpl.name);
           await generateDocument.mutateAsync({
             templateId: id,
             companyId: profile.company_id,
@@ -313,6 +321,15 @@ function DocumentGenerator() {
                                 <div className="flex items-center gap-2">
                                   <FileText className="h-3 w-3 text-slate-400 shrink-0" />
                                   <span className="text-xs font-bold text-navy truncate">{t.name}</span>
+                                  {t.base_content ? (
+                                    <Badge className="bg-emerald-50 text-emerald-600 border-none px-1.5 py-0 h-4 text-[8px] font-black uppercase">
+                                      Profissional
+                                    </Badge>
+                                  ) : (
+                                    <Badge className="bg-amber-50 text-amber-600 border-none px-1.5 py-0 h-4 text-[8px] font-black uppercase">
+                                      Legado
+                                    </Badge>
+                                  )}
                                   {checked && isActive && (
                                     <Badge className="bg-primary/10 text-primary border-0 px-1.5 py-0 h-4 text-[8px] font-black uppercase">
                                       Preview
@@ -459,6 +476,10 @@ function DocumentGenerator() {
                 <div className="prose prose-sm max-w-none font-serif text-[11px] leading-relaxed text-slate-900 whitespace-pre-wrap">
                   {(() => {
                     let content = activeTemplate?.base_content || "";
+                    if (activeTemplate?.base_content) {
+                      console.log("BASE_CONTENT_PREVIEW_VALIDATED", activeTemplate.name);
+                      console.log("DOCUMENT_RENDER_ENGINE_FIXED");
+                    }
                     
                     // Flatten values for replacement
                     const flat = {};
@@ -505,8 +526,12 @@ function DocumentGenerator() {
 
                     // Replace placeholders
                     Object.entries(flat).forEach(([k, v]) => {
-                      content = content.replace(new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, 'g'), String(v || `[${k}]`));
+                      const value = v !== undefined && v !== null && v !== "" ? String(v) : "____________________";
+                      content = content.replace(new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, 'g'), value);
                     });
+
+                    // Limpeza de placeholders residuais
+                    content = content.replace(/\{\{\s*.*?\s*\}\}/g, "____________________");
 
                     // Render lines with simple formatting
                     return content.split('\n').map((line: string, i: number) => {
