@@ -445,7 +445,6 @@ function DocumentGenerator() {
         </div>
 
         <div className="lg:col-span-7 space-y-6">
-        <div className="lg:col-span-7 space-y-6">
           {activePreviewId ? (
             <div className="animate-in slide-in-from-right duration-500">
                <DocumentPreviewEditor 
