@@ -463,7 +463,7 @@ function DocumentGenerator() {
                      power: vessels?.find((v: any) => v.id === selectedVesselId)?.engine_power,
                    }
                  }}
-                 onSave={(content) => {
+                 onSave={(content: string) => {
                    console.log("Documento revisado:", content);
                    toast.success("Revisão salva com sucesso!");
                  }}
