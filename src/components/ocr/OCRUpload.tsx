@@ -91,6 +91,7 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
         setUploadProgress(10 + ((i + 1) / selectedFiles.length) * 80);
       }
 
+      console.log("DOCUMENT_OCR_STARTED");
       // 3. Create Batch OCR Jobs
       await createBatchJobs.mutateAsync({
         files: uploadedFilesInfo,
