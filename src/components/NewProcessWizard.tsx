@@ -1009,12 +1009,13 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             {/* Selected client header with edit / attach actions */}
             <div className="flex flex-col gap-4">
-              <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center gap-4">
-                 <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+              <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center gap-4 relative overflow-hidden group/client-header">
+                 <div className="absolute right-0 top-0 h-full w-24 bg-primary/5 -skew-x-12 translate-x-12 group-hover/client-header:translate-x-8 transition-transform"></div>
+                 <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-bold relative z-10 shadow-sm">
                     {formData.client?.charAt(0) || "?"}
                  </div>
-                 <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-black uppercase text-primary tracking-widest">Cliente do processo</p>
+                 <div className="flex-1 min-w-0 relative z-10">
+                    <p className="text-[9px] font-black uppercase text-primary tracking-[0.2em] mb-0.5">Operador/Cliente Selecionado</p>
                     <p className="text-sm font-bold text-navy truncate">{formData.client || "Nenhum cliente selecionado"}</p>
                  </div>
                  {formData.clientId && (
