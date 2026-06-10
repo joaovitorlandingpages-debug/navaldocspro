@@ -28,6 +28,7 @@ export const Route = createFileRoute("/document-generator")({
 });
 
 function DocumentGenerator() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [selectedTemplateIds, setSelectedTemplateIds] = useState<string[]>([]);
   const [activePreviewId, setActivePreviewId] = useState<string>("");
