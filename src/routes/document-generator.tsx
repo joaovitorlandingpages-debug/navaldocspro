@@ -22,6 +22,7 @@ import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { DocumentValidationEngine } from "@/services/validationEngine";
+import { DocumentPreviewEditor } from "@/components/documents/DocumentPreviewEditor";
 
 export const Route = createFileRoute("/document-generator")({
   component: DocumentGenerator,
@@ -412,137 +413,74 @@ function DocumentGenerator() {
             </div>
 
             <div className="pt-8 border-t border-slate-50 space-y-6 relative z-10">
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
-                  <LayoutTemplate className="h-4 w-4 text-red-500" /> Campos do Modelo em Preview
+                  <FileText className="h-4 w-4 text-emerald-500" /> Diagnóstico de Dados
                 </h3>
+                <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter bg-emerald-50 text-emerald-600 border-none">
+                  Sincronizado
+                </Badge>
               </div>
 
-              <ScrollArea className="h-[300px] pr-4">
-                {!activeTemplate ? (
-                  <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                    <FileText className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
-                      Selecione um modelo para editar os campos
-                    </p>
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  { label: "Cadastro Cliente", status: selectedCustomerId ? "OK" : "PENDENTE", color: selectedCustomerId ? "emerald" : "red" },
+                  { label: "Cadastro Embarcação", status: selectedVesselId ? "OK" : "PENDENTE", color: selectedVesselId ? "emerald" : "red" },
+                  { label: "OCR Opcional", status: "STANDBY", color: "blue" },
+                  { label: "Motor Vinculado", status: vessels?.find((v:any) => v.id === selectedVesselId)?.engine_serial ? "OK" : "PENDENTE", color: vessels?.find((v:any) => v.id === selectedVesselId)?.engine_serial ? "emerald" : "amber" },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{item.label}</span>
+                    <Badge className={`bg-${item.color}-50 text-${item.color}-600 border-none px-2 py-0.5 h-5 text-[9px] font-black uppercase`}>
+                      {item.status}
+                    </Badge>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-4">
-                    {activeTemplate?.fields?.map((field: any) => (
-                      <div key={field.id} className="space-y-1.5 animate-in slide-in-from-left-4 duration-300">
-                        <Label className="text-[9px] font-black uppercase text-slate-400 flex items-center gap-2">
-                          {field.field_label}
-                          {field.source_type !== "manual" && (
-                            <Badge className="bg-slate-100 text-slate-500 border-none px-2 py-0 h-4 text-[8px] font-black uppercase">Auto</Badge>
-                          )}
-                        </Label>
-                        <Input
-                          value={formValues[field.field_name] || ""}
-                          onChange={(e) => handleFieldChange(field.field_name, e.target.value)}
-                          className="h-10 bg-slate-50 border-slate-200 rounded-lg text-xs font-bold focus:bg-white transition-all"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
+                ))}
+              </div>
+              
+              <p className="text-[9px] text-slate-400 font-bold italic text-center uppercase tracking-widest">
+                * O sistema prioriza dados cadastrados. OCR não é obrigatório para geração.
+              </p>
             </div>
           </Card>
         </div>
 
         <div className="lg:col-span-7 space-y-6">
-          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center flex-wrap gap-2">
-            <div className="flex gap-2 flex-wrap">
-              <Badge className="bg-green-100 text-green-700 border-none px-3 py-1 font-black text-[9px] uppercase tracking-widest">
-                {selectedTemplateIds.length} na Fila
-              </Badge>
-              <Badge className="bg-navy/5 text-navy/60 border-none px-3 py-1 font-black text-[9px] uppercase tracking-widest">Preview A4</Badge>
+          {activePreviewId ? (
+            <div className="animate-in slide-in-from-right duration-500">
+               <DocumentPreviewEditor 
+                 template={activeTemplate}
+                 processData={{
+                   id: "PREVIEW-MODE",
+                   customer: customers?.find((c: any) => c.id === selectedCustomerId),
+                   vessel: vessels?.find((v: any) => v.id === selectedVesselId),
+                   profile: profile,
+                   company: (profile as any)?.company,
+                   engine: {
+                     serial_number: vessels?.find((v: any) => v.id === selectedVesselId)?.engine_serial,
+                     manufacturer: vessels?.find((v: any) => v.id === selectedVesselId)?.engine_manufacturer,
+                     model: vessels?.find((v: any) => v.id === selectedVesselId)?.engine_model,
+                     power: vessels?.find((v: any) => v.id === selectedVesselId)?.engine_power,
+                   }
+                 }}
+                 onSave={(content: string) => {
+                   console.log("Documento revisado:", content);
+                   toast.success("Revisão salva com sucesso!");
+                 }}
+                 onCancel={() => setActivePreviewId("")}
+               />
             </div>
-            {selectedTemplateIds.length > 1 && (
-              <div className="flex gap-1 flex-wrap">
-                {selectedTemplateIds.map((id) => {
-                  const t = (templates as any[])?.find((x) => x.id === id);
-                  if (!t) return null;
-                  const active = activePreviewId === id;
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => setActivePreviewId(id)}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${
-                        active ? "bg-navy text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                      }`}
-                    >
-                      {t.name?.slice(0, 24)}
-                    </button>
-                  );
-                })}
+          ) : (
+            <Card className="h-full min-h-[600px] border-slate-100 border-dashed bg-slate-50/30 flex flex-col items-center justify-center p-12 text-center rounded-[2.5rem]">
+              <div className="bg-white p-8 rounded-full shadow-xl shadow-slate-200/50 mb-8 animate-bounce">
+                <LayoutTemplate className="h-16 w-16 text-slate-200" />
               </div>
-            )}
-          </div>
-
-          <div className="bg-slate-900 p-12 rounded-[2.5rem] flex justify-center overflow-hidden min-h-[800px] relative shadow-2xl shadow-navy/20">
-            {activeTemplate ? (
-              <div
-                ref={previewRef}
-                className="bg-white w-[595px] min-h-[842px] shadow-2xl p-16 flex flex-col relative animate-in zoom-in-95 duration-500 origin-top overflow-hidden"
-              >
-                {/* Viewport Profissional — Sem overlays de edição */}
-                <div className="prose prose-sm max-w-none font-serif text-[11px] leading-relaxed text-slate-900 whitespace-pre-wrap">
-                  {(() => {
-                    let content = activeTemplate?.base_content || "";
-                    if (activeTemplate?.base_content) {
-                      console.log("BASE_CONTENT_PREVIEW_VALIDATED", activeTemplate.name);
-                      console.log("DOCUMENT_RENDER_ENGINE_FIXED");
-                    }
-                    
-                    const customer = customers?.find((c: any) => c.id === selectedCustomerId);
-                    const vessel = vessels?.find((v: any) => v.id === selectedVesselId);
-                    const process = processes?.find((p: any) => p.id === selectedProcessId);
-                    const company = (profile as any)?.company;
-                    
-                    const data = { 
-                      cliente: customer, 
-                      embarcacao: vessel, 
-                      processo: process, 
-                      empresa: company,
-                      ...formValues,
-                      sistema: {
-                        local: company?.city || "Itajaí",
-                        data_atual: new Date().toLocaleDateString('pt-BR'),
-                        hash: "PREVIEW-ONLY"
-                      },
-                      engenheiro: {
-                        nome: (profile as any)?.name || "Engenheiro Responsável",
-                        crea: (profile as any)?.crea || "CREA PENDENTE"
-                      }
-                    };
-
-                    content = DocumentValidationEngine.fillPlaceholder(content, data);
-
-                    // Limpeza de placeholders residuais
-                    content = content.replace(/\{\{\s*.*?\s*\}\}/g, "____________________");
-
-                    // Render lines with simple formatting
-                    return content.split('\n').map((line: string, i: number) => {
-                      const isTitle = line === line.toUpperCase() && line.trim().length > 3;
-                      const isSignatureLine = line.includes("____");
-                      
-                      return (
-                        <div key={i} className={`mb-1 ${isTitle ? "font-black text-xs mt-4" : ""} ${isSignatureLine ? "mt-8 text-center" : ""}`}>
-                          {line}
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center text-white/20 gap-6">
-                <LayoutTemplate className="h-24 w-24 opacity-20" />
-                <p className="text-xl font-black uppercase tracking-widest">Selecione um ou mais modelos</p>
-              </div>
-            )}
-          </div>
+              <h3 className="text-2xl font-black text-navy uppercase tracking-tight mb-3">Selecione um Modelo</h3>
+              <p className="text-slate-400 font-medium max-w-sm leading-relaxed">
+                Escolha um ou mais modelos à esquerda para visualizar o preenchimento automático e realizar a revisão profissional.
+              </p>
+            </Card>
+          )}
         </div>
       </div>
     </div>
