@@ -50,6 +50,7 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
 
   useEffect(() => {
     if (template?.base_content) {
+      console.log("BASE_CONTENT_PREVIEW_VALIDATED", template.name);
       console.log("AUTOFILL_DOCUMENTS_OK");
       console.log("DOCUMENT_AUTOFILL_READY");
       const filled = DocumentValidationEngine.fillPlaceholder(template.base_content, processData);

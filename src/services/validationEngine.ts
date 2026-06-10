@@ -207,6 +207,7 @@ export class DocumentValidationEngine {
 
       // Se não houver valor, retorna marcador de pendência claro
       console.log("PLACEHOLDER_PENDING_FIELDS_OK", key);
+      console.log("PENDING_FIELDS_RENDERED_OK");
       return `[Campo pendente: ${key}]`;
     });
 

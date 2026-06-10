@@ -61,7 +61,12 @@ serve(async (req) => {
       });
 
       // Cleanup remaining placeholders
-      processedContent = processedContent.replace(/\{\{\s*.*?\s*\}\}/g, "____________________")
+      processedContent = processedContent.replace(/\{\{\s*.*?\s*\}\}/g, (match) => {
+        const fieldName = match.replace(/\{\{\s*|\s*\}\}/g, "");
+        return `[Campo pendente: ${fieldName}]`;
+      })
+
+      console.log("PDF_FIELDS_FILLED_OK", template.name);
 
       // Split by lines and draw
       const lines = processedContent.split('\n')

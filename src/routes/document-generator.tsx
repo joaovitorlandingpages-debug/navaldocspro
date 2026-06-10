@@ -206,13 +206,17 @@ function DocumentGenerator() {
             processId: selectedProcessId || undefined,
             fieldValues: buildValuesFor(tpl),
           });
+          console.log("PDF_FIELDS_FILLED_OK", tpl.name);
           ok++;
         } catch (e) {
           console.error("Erro ao gerar", tpl.name, e);
           fail++;
         }
       }
-      if (ok > 0) toast.success(`${ok} documento(s) gerado(s) com sucesso!`);
+      if (ok > 0) {
+        console.log("BATCH_DOCUMENT_GENERATION_OK");
+        toast.success(`${ok} documento(s) gerado(s) com sucesso!`);
+      }
       if (fail > 0) toast.error(`${fail} documento(s) falharam.`);
     } finally {
       setIsGenerating(false);
