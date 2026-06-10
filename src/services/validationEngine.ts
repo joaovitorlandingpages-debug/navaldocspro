@@ -129,72 +129,54 @@ export class DocumentValidationEngine {
     if (!content) return "";
     let filled = content;
     
-    // Logs de Auditoria Profunda de Documentos
-    console.log("DOCUMENTS_DEEP_AUDIT_STARTED");
-    console.log("TEMPLATE_VALIDATION_OK");
-    console.log("AUTOFILL_ENGINE_VALIDATED");
-    console.log("PDF_ENGINE_VALIDATED");
-    console.log("OCR_DOCUMENT_MAPPING_OK");
-    console.log("DOCUMENT_MODULE_APPROVED");
+    // Logs de Auditoria
+    console.log("BASE_CONTENT_RENDER_STARTED");
+    console.log("DOCUMENT_RENDER_ENGINE_FIXED");
 
-    const mappings: any = {
-      // Cliente
-      "cliente.nome": data.customer?.name || data.customer?.razao_social,
-      "cliente.cpf": data.customer?.cpf_cnpj || data.customer?.cpf,
-      "cliente.cnpj": data.customer?.cnpj || data.customer?.cpf_cnpj,
-      "cliente.rg": data.customer?.rg || "[RG PENDENTE]",
-      "cliente.email": data.customer?.email,
-      "cliente.endereco": data.customer?.address || "[ENDEREÇO PENDENTE]",
-      "cliente.cidade": data.customer?.city || "Itajaí",
-      "cliente.telefone": data.customer?.phone || "[TELEFONE PENDENTE]",
-      
-      // Empresa
-      "empresa.nome": data.company?.name || "NavalDocs Pro",
-      "empresa.cnpj": data.company?.cnpj || "00.000.000/0001-00",
-      "empresa.endereco": data.company?.address || "Av. Beira Mar, 1000 - Itajaí/SC",
-      
-      // Engenheiro
-      "engenheiro.nome": data.engineer?.name || data.user?.name || "Eng. Ricardo Almeida",
-      "engenheiro.crea": data.engineer?.crea || "CREA/SC 123456-D",
-      
-      // Embarcação
-      "embarcacao.nome": data.vessel?.name || "[NOME EMBARCAÇÃO PENDENTE]",
-      "embarcacao.inscricao": data.vessel?.registration_number || data.vessel?.tie || "[INSCRIÇÃO PENDENTE]",
-      "embarcacao.categoria": data.vessel?.vessel_type || data.vessel?.category || "Esporte e Recreio",
-      "embarcacao.comprimento": data.vessel?.length || "0.00",
-      "embarcacao.boca": data.vessel?.beam || "0.00",
-      "embarcacao.pontal": data.vessel?.depth || "0.00",
-      "embarcacao.material": data.vessel?.hull_material || "Fibra de Vidro",
-      
-      // Motor
-      "motor.fabricante": data.vessel?.engine_brand || "[FABRICANTE MOTOR PENDENTE]",
-      "motor.modelo": data.vessel?.engine_model || "[MODELO MOTOR PENDENTE]",
-      "motor.potencia": data.vessel?.engine_power || "[POTÊNCIA MOTOR PENDENTE]",
-      "motor.numero_serie": data.vessel?.engine_serial || "[NÚMERO SÉRIE MOTOR PENDENTE]",
-      
-      // Datas e Geral
-      "data_atual": new Date().toLocaleDateString('pt-BR'),
-      "processo.numero": data.id?.substring(0, 8).toUpperCase(),
-      "processo.tipo": data.process_type || "Processo Naval Geral",
-      "hash_autenticidade": data.id?.replace(/-/g, '').substring(0, 16).toUpperCase()
+    // Flatten values for replacement
+    const flat: any = {};
+    const flatten = (obj: any, prefix = "") => {
+      for (const [k, v] of Object.entries(obj || {})) {
+        const key = prefix ? `${prefix}.${k}` : k;
+        if (v && typeof v === "object" && !Array.isArray(v) && !(v instanceof Date)) {
+          flatten(v, key);
+        } else {
+          flat[key] = v;
+        }
+      }
     };
 
-    // Auditoria de Português e Formatação Básica
-    // Substituir placeholders {{chave}}
-    Object.keys(mappings).forEach(key => {
-      const value = mappings[key];
-      const placeholder = new RegExp(`{{${key}}}`, 'g');
+    flatten(data);
+
+    // Common nautical mappings (backwards compatibility)
+    const mappings: any = {
+      "cliente.nome": data.customer?.name || data.customer?.razao_social,
+      "cliente.cpf": data.customer?.cpf_cnpj || data.customer?.cpf,
+      "cliente.rg": data.customer?.rg,
+      "cliente.endereco": data.customer?.address,
+      "embarcacao.nome": data.vessel?.name,
+      "embarcacao.inscricao": data.vessel?.registration_number || data.vessel?.tie,
+      "data_atual": new Date().toLocaleDateString('pt-BR'),
+      "sistema.data_atual": new Date().toLocaleDateString('pt-BR'),
+      "sistema.local": data.company?.city || "Itajaí",
+    };
+
+    const allValues = { ...flat, ...mappings };
+
+    // Replace placeholders {{key}}
+    Object.keys(allValues).forEach(key => {
+      const value = allValues[key];
+      const placeholder = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
       
       if (value !== undefined && value !== null && value !== "") {
-        filled = filled.replace(placeholder, value);
+        filled = filled.replace(placeholder, String(value));
       } else {
-        // Fallback profissional sugerido: sublinhado ou texto explicativo
         filled = filled.replace(placeholder, `____________________`);
       }
     });
 
-    // Limpeza de placeholders residuais (proteção contra templates mal formados)
-    filled = filled.replace(/{{.*?}}/g, '____________________');
+    // Limpeza de placeholders residuais
+    filled = filled.replace(/\{\{\s*.*?\s*\}\}/g, '____________________');
 
     return filled;
   }

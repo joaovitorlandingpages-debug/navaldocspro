@@ -53,10 +53,15 @@ serve(async (req) => {
       let processedContent = template.base_content
       const flatValues = flattenValues(fieldValues)
       
-      // Simple regex replacement for {{key}}
+      // Strict placeholder replacement
       Object.entries(flatValues).forEach(([key, val]) => {
-        processedContent = processedContent.replace(new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), String(val || ''))
+        const placeholder = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g')
+        const replacement = (val !== undefined && val !== null && val !== "") ? String(val) : "____________________"
+        processedContent = processedContent.replace(placeholder, replacement)
       });
+
+      // Cleanup remaining placeholders
+      processedContent = processedContent.replace(/\{\{\s*.*?\s*\}\}/g, "____________________")
 
       // Split by lines and draw
       const lines = processedContent.split('\n')
@@ -179,5 +184,20 @@ function flattenValues(input: any, prefix = ""): any {
       out[key] = v;
     }
   }
+  
+  // Add common nautical mappings for consistency
+  if (!prefix) {
+    if (input.cliente) {
+      out["cliente.nome"] = input.cliente.name || input.cliente.razao_social;
+      out["cliente.cpf"] = input.cliente.cpf_cnpj || input.cliente.cpf;
+    }
+    if (input.embarcacao) {
+      out["embarcacao.nome"] = input.embarcacao.name;
+      out["embarcacao.inscricao"] = input.embarcacao.registration_number || input.embarcacao.tie;
+    }
+    out["data_atual"] = new Date().toLocaleDateString('pt-BR');
+    out["sistema.data_atual"] = new Date().toLocaleDateString('pt-BR');
+  }
+  
   return out;
 }

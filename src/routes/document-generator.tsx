@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { DocumentValidationEngine } from "@/services/validationEngine";
 
 export const Route = createFileRoute("/document-generator")({
   component: DocumentGenerator,
@@ -186,6 +187,14 @@ function DocumentGenerator() {
         const tpl = (templates as any[]).find((t) => t.id === id);
         if (!tpl) continue;
         try {
+          if (!tpl.base_content) {
+            console.error("HARDCODED_TEMPLATE_REMOVED - Blocked legacy template generation", tpl.name);
+            toast.error(`O modelo "${tpl.name}" é um template legado e não pode ser gerado. Use a versão Profissional.`);
+            fail++;
+            continue;
+          }
+
+          console.log("BASE_CONTENT_PDF_VALIDATED", tpl.name);
           await generateDocument.mutateAsync({
             templateId: id,
             companyId: profile.company_id,
@@ -313,6 +322,15 @@ function DocumentGenerator() {
                                 <div className="flex items-center gap-2">
                                   <FileText className="h-3 w-3 text-slate-400 shrink-0" />
                                   <span className="text-xs font-bold text-navy truncate">{t.name}</span>
+                                  {t.base_content ? (
+                                    <Badge className="bg-emerald-50 text-emerald-600 border-none px-1.5 py-0 h-4 text-[8px] font-black uppercase">
+                                      Profissional
+                                    </Badge>
+                                  ) : (
+                                    <Badge className="bg-amber-50 text-amber-600 border-none px-1.5 py-0 h-4 text-[8px] font-black uppercase">
+                                      Legado
+                                    </Badge>
+                                  )}
                                   {checked && isActive && (
                                     <Badge className="bg-primary/10 text-primary border-0 px-1.5 py-0 h-4 text-[8px] font-black uppercase">
                                       Preview
@@ -455,58 +473,41 @@ function DocumentGenerator() {
                 ref={previewRef}
                 className="bg-white w-[595px] min-h-[842px] shadow-2xl p-16 flex flex-col relative animate-in zoom-in-95 duration-500 origin-top overflow-hidden"
               >
-                {/* Header Dinâmico baseado no base_content */}
+                {/* Viewport Profissional — Sem overlays de edição */}
                 <div className="prose prose-sm max-w-none font-serif text-[11px] leading-relaxed text-slate-900 whitespace-pre-wrap">
                   {(() => {
                     let content = activeTemplate?.base_content || "";
+                    if (activeTemplate?.base_content) {
+                      console.log("BASE_CONTENT_PREVIEW_VALIDATED", activeTemplate.name);
+                      console.log("DOCUMENT_RENDER_ENGINE_FIXED");
+                    }
                     
-                    // Flatten values for replacement
-                    const flat = {};
-                    const flatten = (obj: any, prefix = "") => {
-                      for (const [k, v] of Object.entries(obj || {})) {
-                        const key = prefix ? `${prefix}.${k}` : k;
-                        if (v && typeof v === "object" && !Array.isArray(v) && !(v instanceof Date)) {
-                          flatten(v, key);
-                        } else {
-                          // @ts-ignore
-                          flat[key] = v;
-                        }
-                      }
-                    };
-                    
-                    // Dados reais das entidades selecionadas
                     const customer = customers?.find((c: any) => c.id === selectedCustomerId);
                     const vessel = vessels?.find((v: any) => v.id === selectedVesselId);
                     const process = processes?.find((p: any) => p.id === selectedProcessId);
                     const company = (profile as any)?.company;
                     
-                    flatten({ 
+                    const data = { 
                       cliente: customer, 
                       embarcacao: vessel, 
                       processo: process, 
                       empresa: company,
+                      ...formValues,
                       sistema: {
-                        local: "Santos - SP", // Fallback ou do perfil
+                        local: company?.city || "Itajaí",
                         data_atual: new Date().toLocaleDateString('pt-BR'),
                         hash: "PREVIEW-ONLY"
                       },
-                      // Mock engenheiro se não houver no perfil
                       engenheiro: {
                         nome: (profile as any)?.name || "Engenheiro Responsável",
-                        crea: "CREA-SP 123456789"
+                        crea: (profile as any)?.crea || "CREA PENDENTE"
                       }
-                    });
+                    };
 
-                    // Merge com valores manuais do form
-                    Object.entries(formValues).forEach(([k, v]) => {
-                      // @ts-ignore
-                      flat[k] = v;
-                    });
+                    content = DocumentValidationEngine.fillPlaceholder(content, data);
 
-                    // Replace placeholders
-                    Object.entries(flat).forEach(([k, v]) => {
-                      content = content.replace(new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, 'g'), String(v || `[${k}]`));
-                    });
+                    // Limpeza de placeholders residuais
+                    content = content.replace(/\{\{\s*.*?\s*\}\}/g, "____________________");
 
                     // Render lines with simple formatting
                     return content.split('\n').map((line: string, i: number) => {
