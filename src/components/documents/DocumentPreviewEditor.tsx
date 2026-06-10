@@ -305,22 +305,32 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
 
                     <div className="space-y-1">
                        {[
-                         { label: "Cliente", key: "cliente.nome", source: "Banco de Dados" },
-                         { label: "Embarcação", key: "embarcacao.nome", source: "OCR - TIE" },
-                         { label: "Inscrição", key: "embarcacao.inscricao", source: "OCR - TIE" },
-                         { label: "Motor", key: "motor.numero_serie", source: "OCR - Nota Fiscal" },
-                         { label: "Medidas", key: "embarcacao.comprimento", source: "OCR - Memorial" }
+                         { label: "Nome do Cliente", key: "cliente.nome", data: processData.customer?.name },
+                         { label: "CPF/CNPJ", key: "cliente.cpf", data: processData.customer?.cpf_cnpj },
+                         { label: "RG do Cliente", key: "cliente.rg", data: processData.customer?.rg },
+                         { label: "Nome da Embarcação", key: "embarcacao.nome", data: processData.vessel?.name },
+                         { label: "Inscrição", key: "embarcacao.inscricao", data: processData.vessel?.registration_number || processData.vessel?.tie },
+                         { label: "Série do Motor", key: "motor.serie", data: processData.engine?.serial_number || processData.vessel?.engine_serial },
                        ].map((field, i) => (
                          <div key={i} className="flex items-center justify-between text-[10px] font-bold py-2 border-b border-slate-100 last:border-0 group/field">
                             <div className="flex flex-col">
                                <span className="text-slate-400 uppercase tracking-widest">{field.label}</span>
-                               <span className="text-[8px] text-primary font-black italic flex items-center gap-1">
-                                 {field.source.includes('OCR') ? <Zap className="h-2 w-2" /> : <FileCheck className="h-2 w-2" />}
-                                 Preenchido via {field.source}
+                               <span className={`text-[8px] font-black italic flex items-center gap-1 ${field.data ? 'text-primary' : 'text-red-500'}`}>
+                                 {field.data ? (
+                                   <>
+                                     <FileCheck className="h-2 w-2" />
+                                     {field.data}
+                                   </>
+                                 ) : (
+                                   <>
+                                     <AlertTriangle className="h-2 w-2" />
+                                     PENDENTE NO CADASTRO
+                                   </>
+                                 )}
                                </span>
                             </div>
-                            <span className="text-emerald-600">
-                               <CheckCircle2 className="h-3.5 w-3.5" />
+                            <span className={field.data ? "text-emerald-600" : "text-red-500"}>
+                               {field.data ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
                             </span>
                          </div>
                        ))}
