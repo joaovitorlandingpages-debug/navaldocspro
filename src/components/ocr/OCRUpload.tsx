@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Upload, Camera, FileText, CheckCircle2, Loader2, X, Info, Zap, ListChecks, ShieldCheck, Sparkles, AlertCircle, Edit3, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
