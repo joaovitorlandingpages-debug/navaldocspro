@@ -1349,7 +1349,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                       <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center"><Ship className="h-5 w-5 text-cyan-400" /></div>
                       <div>
                          <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Embarcação</p>
-                         <p className="text-sm font-bold">{formData.vessel || "Não vinculada"}</p>
+                         <p className={`text-sm font-bold ${formData.vessel === "Embarcação Pendente" ? "text-amber-400" : "text-white"}`}>
+                            {formData.vessel || "Não vinculada"}
+                         </p>
                       </div>
                    </div>
                 </div>
