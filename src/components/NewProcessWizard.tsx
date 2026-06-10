@@ -1216,7 +1216,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-8 w-8 p-0 rounded-full text-slate-400 hover:text-primary"
+                          className="h-8 px-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5 flex items-center gap-1.5"
                           onClick={() => {
                             const input = document.createElement('input');
                             input.type = 'file';
