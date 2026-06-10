@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   FileText, Ship, FileCheck, RotateCcw,
   LayoutTemplate, Settings2, Loader2, Building2, Search, CheckCircle2,
+  ArrowLeft, X
 } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
