@@ -553,7 +553,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       setIsQuickVesselOpen(false);
       setOcrVesselJobResult(null);
       await fetchVesselsList("");
-      setStep(4);
+      // Não avançamos automaticamente para evitar saltos bruscos de UX
+      // setStep(4);
     } catch (error: any) {
       toast.error("Erro ao criar embarcação automática: " + error.message);
     } finally {
