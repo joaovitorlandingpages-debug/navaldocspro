@@ -1151,7 +1151,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                  className="w-full h-12 rounded-xl gap-2 text-slate-400 hover:text-navy"
                  onClick={() => {
                    console.log("PROCESS_CAN_CONTINUE_WITHOUT_VESSEL");
-                   setFormData({ ...formData, vessel: "", vesselId: "" });
+                   setFormData({ ...formData, vessel: "Embarcação Pendente", vesselId: "" });
                    toast.message("Seguindo sem embarcação. Pendência será criada no checklist.");
                    setStep(4);
                  }}
