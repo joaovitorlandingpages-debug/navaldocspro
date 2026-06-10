@@ -166,7 +166,7 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
                 </label>
                 <Input 
                   value={String(value || "")} 
-                  onChange={(e) => setEditedData({ ...editedData, [key]: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditedData({ ...editedData, [key]: e.target.value })}
                   className="h-9 bg-white border-slate-200 rounded-lg text-xs font-bold"
                 />
               </div>
