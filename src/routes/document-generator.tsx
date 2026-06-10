@@ -473,7 +473,7 @@ function DocumentGenerator() {
                 ref={previewRef}
                 className="bg-white w-[595px] min-h-[842px] shadow-2xl p-16 flex flex-col relative animate-in zoom-in-95 duration-500 origin-top overflow-hidden"
               >
-                {/* Header Dinâmico baseado no base_content */}
+                {/* Viewport Profissional — Sem overlays de edição */}
                 <div className="prose prose-sm max-w-none font-serif text-[11px] leading-relaxed text-slate-900 whitespace-pre-wrap">
                   {(() => {
                     let content = activeTemplate?.base_content || "";
