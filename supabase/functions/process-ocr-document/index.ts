@@ -19,6 +19,14 @@ serve(async (req) => {
 
     const { jobId } = await req.json()
     
+    const { data: job, error: jobError } = await supabaseClient
+      .from('ocr_jobs')
+      .select('*, uploaded_files(*)')
+      .eq('id', jobId)
+      .single()
+
+    if (jobError || !job) throw new Error('Job not found')
+
     await supabaseClient
       .from('ocr_jobs')
       .update({ 
