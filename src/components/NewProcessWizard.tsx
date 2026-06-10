@@ -1761,9 +1761,8 @@ function AdditionalModals({
                 >
                    Tentar outro documento
                 </Button>
-          </div>
-        </form>
-      )}
+              </div>
+            )}
             
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
                <Zap className="h-4 w-4 text-amber-500" />
@@ -1912,8 +1911,8 @@ function AdditionalModals({
               placeholder="Detalhes adicionais..."
             />
           </div>
-
-        )}
+        </form>
+      )}
       </ModalLayout>
     </>
   );
