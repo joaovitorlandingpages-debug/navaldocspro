@@ -108,7 +108,12 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     category: "",
     notes: "",
     current_owner_name: "",
-    current_owner_cpf_cnpj: ""
+    current_owner_cpf_cnpj: "",
+    material: "",
+    length: "",
+    boca: "",
+    pontal: "",
+    capacity: ""
   });
 
 
@@ -124,7 +129,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         try {
           const parsed = JSON.parse(savedDraft);
           setFormData(parsed.formData);
-          setStep(parsed.step);
+          // Don't auto-restore step if it might break the flow, but user feedback says they want to "return"
+          // setStep(parsed.step); 
         } catch (e) {
           console.error("Error loading draft", e);
         }
@@ -240,7 +246,12 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           category: newVessel.category,
           notes: newVessel.notes,
           current_owner_name: newVessel.current_owner_name || null,
-          current_owner_cpf_cnpj: newVessel.current_owner_cpf_cnpj || null
+          current_owner_cpf_cnpj: newVessel.current_owner_cpf_cnpj || null,
+          material: newVessel.material || null,
+          length: newVessel.length || null,
+          boca: newVessel.boca || null,
+          pontal: newVessel.pontal || null,
+          capacity: newVessel.capacity || null
         })
         .select()
         .single();
@@ -260,7 +271,12 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         category: "",
         notes: "",
         current_owner_name: "",
-        current_owner_cpf_cnpj: ""
+        current_owner_cpf_cnpj: "",
+        material: "",
+        length: "",
+        boca: "",
+        pontal: "",
+        capacity: ""
       });
 
       await fetchVesselsList("");
@@ -843,42 +859,68 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             {/* Selected client header with edit / attach actions */}
-            <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center gap-4 mb-2">
-               <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
-                  {formData.client?.charAt(0) || "?"}
-               </div>
-               <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-black uppercase text-primary tracking-widest">Cliente do processo</p>
-                  <p className="text-sm font-bold text-navy truncate">{formData.client || "Nenhum cliente selecionado"}</p>
-               </div>
-               {formData.clientId && (
-                 <div className="flex gap-2">
-                   <Button
-                     type="button"
-                     variant="ghost"
-                     size="sm"
-                     className="h-9 gap-1 text-xs"
-                     onClick={() => {
-                       console.log("CLIENT_EDIT_AFTER_CREATE_OK");
-                       window.open(`/customers?edit=${formData.clientId}`, "_blank");
-                     }}
-                   >
-                     <Edit2 className="h-3.5 w-3.5" /> Editar
-                   </Button>
-                   <Button
-                     type="button"
-                     variant="ghost"
-                     size="sm"
-                     className="h-9 gap-1 text-xs"
-                     onClick={() => {
-                       console.log("CLIENT_DOCUMENT_ATTACH_AFTER_SAVE_OK");
-                       window.open(`/customers?edit=${formData.clientId}&attach=1`, "_blank");
-                     }}
-                   >
-                     <Upload className="h-3.5 w-3.5" /> Anexar doc
-                   </Button>
+            <div className="flex flex-col gap-4">
+              <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center gap-4">
+                 <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+                    {formData.client?.charAt(0) || "?"}
                  </div>
-               )}
+                 <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-black uppercase text-primary tracking-widest">Cliente do processo</p>
+                    <p className="text-sm font-bold text-navy truncate">{formData.client || "Nenhum cliente selecionado"}</p>
+                 </div>
+                 {formData.clientId && (
+                   <div className="flex gap-2">
+                     <Button
+                       type="button"
+                       variant="ghost"
+                       size="sm"
+                       className="h-9 gap-1 text-xs"
+                       onClick={() => {
+                         console.log("CLIENT_EDIT_AFTER_CREATE_OK");
+                         window.open(`/customers?edit=${formData.clientId}`, "_blank");
+                       }}
+                     >
+                       <Edit2 className="h-3.5 w-3.5" /> Editar
+                     </Button>
+                     <Button
+                       type="button"
+                       variant="ghost"
+                       size="sm"
+                       className="h-9 gap-1 text-xs"
+                       onClick={() => {
+                         console.log("CLIENT_DOCUMENT_ATTACH_AFTER_SAVE_OK");
+                         window.open(`/customers?edit=${formData.clientId}&attach=1`, "_blank");
+                       }}
+                     >
+                       <Upload className="h-3.5 w-3.5" /> Anexar doc
+                     </Button>
+                   </div>
+                 )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                 <Button
+                   variant="outline"
+                   className="h-12 rounded-xl border-dashed gap-2 flex-1"
+                   onClick={() => {
+                     console.log("VESSEL_QUICK_CREATE_USED");
+                     setIsQuickVesselOpen(true);
+                   }}
+                 >
+                    <Plus className="h-4 w-4" /> Nova Embarcação
+                 </Button>
+                 <Button
+                   variant="outline"
+                   className="h-12 rounded-xl border-dashed gap-2 flex-1 border-primary/30 text-primary hover:bg-primary/5"
+                   onClick={() => {
+                      console.log("VESSEL_OCR_IMPORT_USED");
+                      setVesselModalMode('ocr');
+                      setIsQuickVesselOpen(true);
+                   }}
+                 >
+                    <Zap className="h-4 w-4" /> Importar TIE/TIEM
+                 </Button>
+              </div>
             </div>
 
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
@@ -934,17 +976,18 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-100 grid gap-2">
+            <div className="pt-4 border-t border-slate-100">
                <Button
-                 variant="outline"
-                 className="w-full h-12 rounded-xl border-dashed gap-2"
+                 variant="ghost"
+                 className="w-full h-12 rounded-xl gap-2 text-slate-500 hover:text-navy"
                  onClick={() => {
-                   console.log("VESSEL_CREATE_OPTION_OK");
-                   setIsQuickVesselOpen(true);
+                   console.log("PROCESS_VESSEL_STEP_APPROVED");
+                   setStep(4);
                  }}
                >
-                  <Plus className="h-4 w-4" /> Cadastrar nova embarcação
+                  Prosseguir com seleção acima →
                </Button>
+            </div>
                <Button
                  variant="ghost"
                  className="w-full h-12 rounded-xl gap-2 text-slate-500 hover:text-navy"
@@ -1227,6 +1270,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         setSelectedFiles={setSelectedFiles}
         renderStep={renderStep}
         getStepTitle={getStepTitle}
+        setVesselModalMode={setVesselModalMode}
       />
 
       <AdditionalModals 
@@ -1250,6 +1294,12 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         setNewVessel={setNewVessel}
         isCreatingVessel={isCreatingVessel}
         handleQuickVesselSubmit={handleQuickVesselSubmit}
+        vesselModalMode={vesselModalMode}
+        setVesselModalMode={setVesselModalMode}
+        isOcrProcessing={isOcrProcessing}
+        handleVesselOcrFileSelect={handleVesselOcrFileSelect}
+        ocrVesselJobResult={ocrVesselJobResult}
+        applyVesselOcrData={applyVesselOcrData}
       />
     </>
   );
@@ -1262,7 +1312,7 @@ function NewProcessWizardMain({
   setIsQuickClientOpen, setIsQuickVesselOpen,
   handleBack, handleNext, handleCreateProcess, clearDraft,
   isSubmitting, requirements, selectedFiles, setSelectedFiles,
-  renderStep, getStepTitle
+  renderStep, getStepTitle, setVesselModalMode
 }: any) {
   return (
     <ModalLayout
@@ -1596,32 +1646,130 @@ function AdditionalModals({
 
       {/* Modal de Criação Rápida de Embarcação */}
       <ModalLayout
-        isOpen={isQuickVesselOpen}
-        onClose={() => setIsQuickVesselOpen(false)}
-        title="Nova Embarcação Rápida"
+        title={vesselModalMode === 'ocr' ? "Importar TIE/TIEM (IA)" : "Nova Embarcação Rápida"}
         maxWidth="md"
         footer={
-          <>
-            <Button 
-              type="button" 
-              variant="ghost" 
-              onClick={() => setIsQuickVesselOpen(false)}
-              className="flex-1 rounded-xl h-12"
-            >
-              Cancelar
-            </Button>
-            <Button 
-              form="quick-vessel-form"
-              type="submit" 
-              disabled={isCreatingVessel}
-              className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
-            >
-              {isCreatingVessel ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Embarcação"}
-            </Button>
-          </>
+          vesselModalMode === 'manual' ? (
+            <>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setIsQuickVesselOpen(false)}
+                className="flex-1 rounded-xl h-12"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                form="quick-vessel-form"
+                type="submit" 
+                disabled={isCreatingVessel}
+                className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
+              >
+                {isCreatingVessel ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Embarcação"}
+              </Button>
+            </>
+          ) : null
         }
       >
-        <form id="quick-vessel-form" onSubmit={handleQuickVesselSubmit} className="space-y-4">
+        <div className="flex bg-slate-200 p-1 rounded-xl mb-6">
+          <button 
+            type="button"
+            onClick={() => setVesselModalMode('manual')}
+            className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${vesselModalMode === 'manual' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}
+          >
+            Manual
+          </button>
+          <button 
+            type="button"
+            onClick={() => setVesselModalMode('ocr')}
+            className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${vesselModalMode === 'ocr' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}
+          >
+            IA OCR
+          </button>
+        </div>
+
+        {vesselModalMode === 'ocr' ? (
+          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+            {!ocrVesselJobResult ? (
+              <div 
+                className="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center gap-4 hover:border-primary/50 transition-all cursor-pointer bg-slate-50 group text-center"
+                onClick={() => ocrFileInputRef.current?.click()}
+              >
+                <div className="h-16 w-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform border border-slate-100">
+                  {isOcrProcessing ? <Loader2 className="h-8 w-8 animate-spin" /> : <Upload className="h-8 w-8" />}
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-navy uppercase">IA Scanner TIE/TIEM</h4>
+                  <p className="text-[10px] text-slate-400 font-medium max-w-[200px] mt-1">Envie o documento da embarcação para extração automática.</p>
+                </div>
+                <input 
+                  type="file" 
+                  ref={ocrFileInputRef} 
+                  className="hidden" 
+                  accept="image/*,application/pdf"
+                  onChange={handleVesselOcrFileSelect}
+                />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="p-5 bg-blue-50 border border-blue-100 rounded-2xl space-y-3">
+                   <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-2">
+                         <div className="h-8 w-8 bg-blue-500 text-white rounded-lg flex items-center justify-center">
+                            <Ship className="h-4 w-4" />
+                         </div>
+                         <div>
+                            <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest">Dados da Embarcação</p>
+                            <p className="text-xs font-bold text-navy">{ocrVesselJobResult.extracted_data?.vessel?.name || "Nome não identificado"}</p>
+                         </div>
+                      </div>
+                      <Badge className="bg-green-500 text-white border-none text-[8px] uppercase">
+                         Confiança: {((ocrVesselJobResult.confidence_score || 0.95) * 100).toFixed(0)}%
+                      </Badge>
+                   </div>
+                   
+                   <div className="grid grid-cols-1 gap-2 text-[10px]">
+                      <div className="flex justify-between py-1 border-b border-blue-100/50">
+                         <span className="text-slate-500">Inscrição</span>
+                         <span className="font-bold text-navy">{ocrVesselJobResult.extracted_data?.vessel?.registration_number || "Não extraído"}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-blue-100/50">
+                         <span className="text-slate-500">Proprietário</span>
+                         <span className="font-bold text-navy">{ocrVesselJobResult.extracted_data?.vessel?.owner || "Não extraído"}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-blue-100/50">
+                         <span className="text-slate-500">Tipo/Categoria</span>
+                         <span className="font-bold text-navy">{ocrVesselJobResult.extracted_data?.vessel?.type || "Não extraído"}</span>
+                      </div>
+                   </div>
+
+                   <Button 
+                     type="button"
+                     onClick={applyVesselOcrData}
+                     className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-10 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-blue-200"
+                   >
+                      <Sparkles className="h-3 w-3" /> Criar Embarcação Automaticamente
+                   </Button>
+                </div>
+
+                <Button 
+                   type="button"
+                   variant="ghost" 
+                   onClick={() => setOcrVesselJobResult(null)}
+                   className="w-full text-[10px] font-bold text-slate-400 uppercase"
+                >
+                   Tentar outro documento
+                </Button>
+              </div>
+            )}
+            
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
+               <Zap className="h-4 w-4 text-amber-500" />
+               <p className="text-[9px] text-slate-500 font-medium italic">"IA Naval: Especializada em documentos da Marinha do Brasil."</p>
+            </div>
+          </div>
+        ) : (
+          <form id="quick-vessel-form" onSubmit={handleQuickVesselSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <Label className="text-[10px] uppercase font-black text-slate-400">Nome da Embarcação</Label>
             <Input 
@@ -1663,11 +1811,62 @@ function AdditionalModals({
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase font-black text-slate-400">Categoria (Esporte/Recreio...)</Label>
+              <Label className="text-[10px] uppercase font-black text-slate-400">Categoria</Label>
               <Input 
                 value={newVessel.category}
                 onChange={(e) => setNewVessel({...newVessel, category: e.target.value})}
                 placeholder="Ex: Esporte"
+                className="rounded-xl border-slate-200" 
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Comp. (m)</Label>
+              <Input 
+                value={newVessel.length}
+                onChange={(e) => setNewVessel({...newVessel, length: e.target.value})}
+                placeholder="0.00"
+                className="rounded-xl border-slate-200" 
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Boca (m)</Label>
+              <Input 
+                value={newVessel.boca}
+                onChange={(e) => setNewVessel({...newVessel, boca: e.target.value})}
+                placeholder="0.00"
+                className="rounded-xl border-slate-200" 
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Pontal (m)</Label>
+              <Input 
+                value={newVessel.pontal}
+                onChange={(e) => setNewVessel({...newVessel, pontal: e.target.value})}
+                placeholder="0.00"
+                className="rounded-xl border-slate-200" 
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Material</Label>
+              <Input 
+                value={newVessel.material}
+                onChange={(e) => setNewVessel({...newVessel, material: e.target.value})}
+                placeholder="Ex: Fibra"
+                className="rounded-xl border-slate-200" 
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase font-black text-slate-400">Capacidade</Label>
+              <Input 
+                value={newVessel.capacity}
+                onChange={(e) => setNewVessel({...newVessel, capacity: e.target.value})}
+                placeholder="Ex: 1+9"
                 className="rounded-xl border-slate-200" 
               />
             </div>
