@@ -30,7 +30,7 @@ export function PageHeader({
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               {showBack && (
                 <BackNavigation 
-                  className="w-fit lg:hidden h-10 px-3 bg-white border border-slate-100 shadow-sm" 
+                  className="w-fit h-10 px-3 bg-white border border-slate-100 shadow-sm" 
                   label="Voltar"
                 />
               )}

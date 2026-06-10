@@ -65,7 +65,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
-  const totalSteps = 4; // Simplificado de 6 para 4 (Agrupamento inteligente de dados)
+  const totalSteps = 5; // Ajustado de 4 para 5 para incluir o Resumo Final unificado
   const progressPercent = (step / totalSteps) * 100;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuickClientOpen, setIsQuickClientOpen] = useState(false);
@@ -553,7 +553,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       setIsQuickVesselOpen(false);
       setOcrVesselJobResult(null);
       await fetchVesselsList("");
-      setStep(4);
+      // Não avançamos automaticamente para evitar saltos bruscos de UX
+      // setStep(4);
     } catch (error: any) {
       toast.error("Erro ao criar embarcação automática: " + error.message);
     } finally {
@@ -729,8 +730,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
     }
     // Vessel is intentionally optional — can be linked later from the process.
     if (step === 3 && !formData.vesselId) {
-      console.log("PROCESS_CAN_CONTINUE_WITHOUT_VESSEL");
-      toast.message("Processo seguirá sem embarcação. Você poderá vincular depois.");
+      console.log("VESSEL_MISSING_ERROR");
+      toast.error("Por favor, selecione uma embarcação ou clique em 'Continuar sem embarcação'");
+      return;
     }
 
     if (step < totalSteps) {
@@ -1007,12 +1009,13 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             {/* Selected client header with edit / attach actions */}
             <div className="flex flex-col gap-4">
-              <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center gap-4">
-                 <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+              <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center gap-4 relative overflow-hidden group/client-header">
+                 <div className="absolute right-0 top-0 h-full w-24 bg-primary/5 -skew-x-12 translate-x-12 group-hover/client-header:translate-x-8 transition-transform"></div>
+                 <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-bold relative z-10 shadow-sm">
                     {formData.client?.charAt(0) || "?"}
                  </div>
-                 <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-black uppercase text-primary tracking-widest">Cliente do processo</p>
+                 <div className="flex-1 min-w-0 relative z-10">
+                    <p className="text-[9px] font-black uppercase text-primary tracking-[0.2em] mb-0.5">Operador/Cliente Selecionado</p>
                     <p className="text-sm font-bold text-navy truncate">{formData.client || "Nenhum cliente selecionado"}</p>
                  </div>
                  {formData.clientId && (
@@ -1046,28 +1049,34 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                 <Button
-                   variant="outline"
-                   className="h-12 rounded-xl border-dashed gap-2 flex-1"
-                   onClick={() => {
-                     console.log("VESSEL_QUICK_CREATE_USED");
-                     setVesselModalMode('manual');
-                     setIsQuickVesselOpen(true);
-                   }}
-                 >
-                    <Plus className="h-4 w-4" /> Nova Embarcação
-                 </Button>
-                 <Button
-                   variant="outline"
-                   className="h-12 rounded-xl border-dashed gap-2 flex-1 border-primary/30 text-primary hover:bg-primary/5"
-                   onClick={() => {
-                      console.log("VESSEL_OCR_IMPORT_USED");
-                      setVesselModalMode('ocr');
-                      setIsQuickVesselOpen(true);
-                   }}
-                 >
-                    <Zap className="h-4 w-4" /> Importar TIE/TIEM
-                 </Button>
+                 <div className="space-y-1">
+                   <Button
+                     variant="outline"
+                     className="w-full h-12 rounded-xl border-dashed gap-2"
+                     onClick={() => {
+                       console.log("VESSEL_QUICK_CREATE_USED");
+                       setVesselModalMode('manual');
+                       setIsQuickVesselOpen(true);
+                     }}
+                   >
+                      <Plus className="h-4 w-4" /> Nova Embarcação
+                   </Button>
+                   <p className="text-[9px] text-slate-400 text-center">Cadastro manual detalhado</p>
+                 </div>
+                 <div className="space-y-1">
+                   <Button
+                     variant="outline"
+                     className="w-full h-12 rounded-xl border-dashed gap-2 border-primary/30 text-primary hover:bg-primary/5 shadow-sm shadow-primary/5"
+                     onClick={() => {
+                        console.log("VESSEL_OCR_IMPORT_USED");
+                        setVesselModalMode('ocr');
+                        setIsQuickVesselOpen(true);
+                     }}
+                   >
+                      <Zap className="h-4 w-4" /> Importar TIE/TIEM
+                   </Button>
+                   <p className="text-[9px] text-primary/60 text-center font-bold">Autopreenchimento via OCR</p>
+                 </div>
               </div>
             </div>
 
@@ -1099,19 +1108,21 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                       setFormData({ ...formData, vessel: v.name, vesselId: v.id });
                       console.log("FORM_STATE_OK", { vessel: v.name, vesselId: v.id });
                     }}
-                    className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${
-                      formData.vesselId === v.id ? "border-primary bg-primary/5" : "border-slate-100 hover:bg-slate-50"
+                    className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all group/vessel-card ${
+                      formData.vesselId === v.id ? "border-primary bg-primary/5 shadow-sm shadow-primary/10" : "border-slate-50 hover:border-slate-200 hover:bg-slate-50"
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0">
-                        <Ship className="h-4 w-4" />
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                        formData.vesselId === v.id ? "bg-primary text-white" : "bg-slate-100 text-slate-400 group-hover/vessel-card:bg-white"
+                      }`}>
+                        <Ship className="h-5 w-5" />
                       </div>
                       <div className="text-left min-w-0">
-                        <p className="text-sm font-bold text-navy truncate">{v.name}</p>
-                        <p className="text-[10px] text-slate-400 font-mono truncate">
-                          {v.registration_number || "Sem inscrição"}
-                          {v.current_owner_name ? ` • Prop. atual: ${v.current_owner_name}` : ""}
+                        <p className={`text-sm font-bold truncate transition-colors ${formData.vesselId === v.id ? "text-primary" : "text-navy"}`}>{v.name}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">
+                          {v.registration_number || "INSCRIÇÃO PENDENTE"}
+                          {v.current_owner_name ? ` • PROP: ${v.current_owner_name}` : ""}
                         </p>
                       </div>
                     </div>
@@ -1129,6 +1140,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                  variant="ghost"
                  className="w-full h-12 rounded-xl gap-2 text-slate-500 hover:text-navy border border-slate-100"
                  onClick={() => {
+                   if (!formData.vesselId) {
+                     toast.error("Por favor, selecione uma embarcação ou clique em 'Continuar sem embarcação'");
+                     return;
+                   }
                    console.log("PROCESS_VESSEL_STEP_APPROVED");
                    setStep(4);
                  }}
@@ -1140,7 +1155,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                  className="w-full h-12 rounded-xl gap-2 text-slate-400 hover:text-navy"
                  onClick={() => {
                    console.log("PROCESS_CAN_CONTINUE_WITHOUT_VESSEL");
-                   setFormData({ ...formData, vessel: "", vesselId: "" });
+                   setFormData({ ...formData, vessel: "Embarcação Pendente", vesselId: "" });
                    toast.message("Seguindo sem embarcação. Pendência será criada no checklist.");
                    setStep(4);
                  }}
@@ -1201,7 +1216,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-8 w-8 p-0 rounded-full text-slate-400 hover:text-primary"
+                          className="h-8 px-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5 flex items-center gap-1.5"
                           onClick={() => {
                             const input = document.createElement('input');
                             input.type = 'file';
@@ -1215,7 +1230,8 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                             input.click();
                           }}
                         >
-                           <Plus className="h-4 w-4" />
+                           <Plus className="h-3 w-3" />
+                           <span className="text-[9px] font-black uppercase tracking-widest">Anexar</span>
                         </Button>
                       </div>
                     </div>
@@ -1234,87 +1250,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
       case 5:
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                   <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Upload & OCR</Label>
-                   <div 
-                     className="border-2 border-dashed border-slate-200 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 hover:border-primary/50 transition-all cursor-pointer bg-slate-50/50 group"
-                     onClick={() => {
-                        const input = document.createElement('input');
-                        input.type = 'file';
-                        input.multiple = true;
-                        input.onchange = (e: any) => {
-                           const files = Array.from(e.target.files) as File[];
-                           setSelectedFiles(prev => [...prev, ...files]);
-                           console.log("UPLOAD_MOBILE_OK", files.length);
-
-                        };
-                        input.click();
-                     }}
-                   >
-                      <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform">
-                         <Plus className="h-6 w-6" />
-                      </div>
-                      <div className="text-center">
-                         <p className="text-sm font-bold text-navy">Clique para selecionar arquivos</p>
-                         <p className="text-[10px] text-slate-400 font-medium">PDF, JPG, PNG (Max 10MB)</p>
-                      </div>
-                   </div>
-
-                   <div className="space-y-2">
-                      {selectedFiles.map((file, i) => (
-                         <div key={i} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl">
-                            <div className="flex items-center gap-3 overflow-hidden">
-                               <FileCheck className="h-4 w-4 text-green-500 flex-shrink-0" />
-                               <span className="text-xs font-bold text-navy truncate">{file.name}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                               <Badge className="bg-slate-100 text-slate-500 border-none text-[8px] uppercase">Aguardando</Badge>
-                               <button 
-                                 onClick={() => setSelectedFiles(prev => prev.filter((_, idx) => idx !== i))}
-                                 className="p-1 hover:text-red-500"
-                               >
-                                  <X className="h-3 w-3" />
-                               </button>
-                            </div>
-                         </div>
-                      ))}
-                   </div>
-                </div>
-
-                <div className="space-y-4">
-                   <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Documentos Geráveis</Label>
-                   <div className="space-y-2">
-                      {[
-                        { name: "BCE - Boletim de Cadastro", status: "ready" },
-                        { name: "DPC-2211 - Inscrição", status: "ready" },
-                        { name: "Procuração Naval", status: "ready" },
-                        { name: "Declaração de Responsabilidade", status: "ready" },
-                        { name: "Memorial Descritivo", status: "ready" }
-                      ].map((doc, i) => (
-                         <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl group hover:border-primary/20 transition-all">
-                            <div className="flex items-center gap-3">
-                               <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
-                                  <Zap className="h-4 w-4" />
-                               </div>
-                               <span className="text-xs font-bold text-navy">{doc.name}</span>
-                            </div>
-                            <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full text-[10px] font-black uppercase text-primary hover:bg-primary/5">
-                               Gerar
-                            </Button>
-                         </div>
-                      ))}
-                   </div>
-                </div>
-             </div>
-          </div>
-        );
-
-      case 6:
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-             <div className="bg-navy p-6 rounded-3xl text-white">
-                <div className="flex justify-between items-start mb-6">
+             <div className="bg-navy p-6 rounded-3xl text-white relative overflow-hidden">
+                <div className="absolute right-0 top-0 h-full w-32 bg-primary/10 -skew-x-12 translate-x-16"></div>
+                <div className="flex justify-between items-start mb-6 relative z-10">
                    <div>
                       <h4 className="text-lg font-bold">Resumo Final</h4>
                       <p className="text-xs text-slate-400">Verifique os dados antes de consolidar o processo.</p>
@@ -1322,7 +1260,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                    <Badge className="bg-primary text-white border-none uppercase text-[10px]">{formData.type}</Badge>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 relative z-10">
                    <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center"><User className="h-5 w-5 text-primary" /></div>
                       <div>
@@ -1334,7 +1272,9 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                       <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center"><Ship className="h-5 w-5 text-cyan-400" /></div>
                       <div>
                          <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Embarcação</p>
-                         <p className="text-sm font-bold">{formData.vessel || "Não vinculada"}</p>
+                         <p className={`text-sm font-bold ${formData.vessel === "Embarcação Pendente" ? "text-amber-400" : "text-white"}`}>
+                            {formData.vessel || "Não vinculada"}
+                         </p>
                       </div>
                    </div>
                 </div>
@@ -1347,10 +1287,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                       {requirements.map((req: any, i: number) => (
                          <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
                             <div className="flex items-center gap-3">
-                               <div className="h-2 w-2 rounded-full bg-amber-500" />
+                               <div className={`h-2 w-2 rounded-full ${req.is_mandatory ? 'bg-amber-500' : 'bg-slate-300'}`} />
                                <span className="text-xs font-bold text-navy">{req.template?.name}</span>
                             </div>
-                            <Badge variant="outline" className="text-[8px] uppercase">{req.is_mandatory ? "Obrigatório" : "Opcional"}</Badge>
+                            <Badge variant="outline" className="text-[8px] uppercase font-black border-slate-200 text-slate-400">{req.is_mandatory ? "Obrigatório" : "Opcional"}</Badge>
                          </div>
                       ))}
                    </div>
@@ -1365,11 +1305,13 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
              </div>
 
              <div className="p-4 bg-green-50 border border-green-100 rounded-2xl flex items-center gap-3 text-green-700">
-                <CheckCircle2 className="h-5 w-5" />
+                <CheckCircle2 className="h-5 w-5 shrink-0" />
                 <p className="text-xs font-medium">Dados validados pela IA. O processo será criado com status pendente para início imediato.</p>
              </div>
           </div>
         );
+      case 6:
+        return null;
       default:
         return null;
     }
@@ -1377,12 +1319,11 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
 
   const getStepTitle = () => {
     switch (step) {
-      case 1: return "Tipo de Processo";
-      case 2: return "Selecionar Cliente";
-      case 3: return "Vincular Embarcação";
-      case 4: return "Documentos";
-      case 5: return "Preenchimento";
-      case 6: return "Revisão Final";
+      case 1: return "1. Serviço";
+      case 2: return "2. Cliente";
+      case 3: return "3. Embarcação";
+      case 4: return "4. Documentos";
+      case 5: return "5. Resumo Final";
       default: return "";
     }
   };
@@ -1515,8 +1456,8 @@ function NewProcessWizardMain({
               <Button
                 onClick={handleNext}
                 type="button"
-                disabled={(!formData.typeId && step === 1) || (!formData.clientId && step === 2)}
-                className="flex-1 sm:flex-none bg-navy hover:opacity-90 rounded-xl h-11 sm:h-12 px-6 sm:px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg shadow-navy/20 gap-2"
+                disabled={(!formData.typeId && step === 1) || (!formData.clientId && step === 2) || (step === 3 && !formData.vesselId)}
+                className="flex-1 sm:flex-none bg-navy hover:opacity-90 rounded-xl h-11 sm:h-12 px-6 sm:px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg shadow-navy/20 gap-2 disabled:opacity-50"
               >
                 Próximo <ChevronRight className="h-4 w-4" />
               </Button>
