@@ -1129,6 +1129,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                  variant="ghost"
                  className="w-full h-12 rounded-xl gap-2 text-slate-500 hover:text-navy border border-slate-100"
                  onClick={() => {
+                   if (!formData.vesselId) {
+                     toast.error("Por favor, selecione uma embarcação ou clique em 'Continuar sem embarcação'");
+                     return;
+                   }
                    console.log("PROCESS_VESSEL_STEP_APPROVED");
                    setStep(4);
                  }}
