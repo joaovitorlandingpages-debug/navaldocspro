@@ -39,6 +39,22 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const loadSampleDocs = (kind: 'tie' | 'cnh' | 'all') => {
+    const make = (name: string) =>
+      new File(
+        [new Blob([`Documento de teste: ${name}\nGerado em ${new Date().toISOString()}`], { type: 'application/pdf' })],
+        name,
+        { type: 'application/pdf' }
+      );
+    const docs: File[] =
+      kind === 'tie' ? [make('tie-exemplo.pdf')] :
+      kind === 'cnh' ? [make('cnh-exemplo.pdf')] :
+      [make('cnh-exemplo.pdf'), make('tie-exemplo.pdf'), make('dpem-seguro.pdf')];
+    setSelectedFiles(prev => [...prev, ...docs]);
+    toast.success(`${docs.length} documento(s) de exemplo carregado(s). Clique em "Análise Inteligente".`);
+  };
+
+
   const processBatch = async () => {
     if (selectedFiles.length === 0) return;
 
