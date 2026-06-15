@@ -273,6 +273,15 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
                 >
                   <Camera className="h-4 w-4 text-primary" /> Abrir Câmera
                 </Button>
+                <div className="pt-2 border-t border-dashed border-slate-200 mt-2">
+                  <p className="text-[9px] font-black uppercase text-slate-400 mb-2 text-center">Não tem documento? Teste com amostras:</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button variant="outline" size="sm" className="rounded-lg text-[9px] font-black uppercase h-9" onClick={() => loadSampleDocs('cnh')} disabled={isUploading}>CNH</Button>
+                    <Button variant="outline" size="sm" className="rounded-lg text-[9px] font-black uppercase h-9" onClick={() => loadSampleDocs('tie')} disabled={isUploading}>TIE</Button>
+                    <Button variant="outline" size="sm" className="rounded-lg text-[9px] font-black uppercase h-9 bg-primary/5 border-primary/30 text-primary" onClick={() => loadSampleDocs('all')} disabled={isUploading}>Todos</Button>
+                  </div>
+                </div>
+
              </div>
           </div>
           
