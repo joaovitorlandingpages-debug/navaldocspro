@@ -68,7 +68,7 @@ function ExecutiveDashboard() {
     { label: "Processos Totais", value: kpis?.totalProcesses ?? 0, icon: Briefcase, color: "text-primary", trend: `${kpis?.thisMonth ?? 0} este mês` },
     { label: "Taxa de Conclusão", value: `${kpis?.completionRate ?? 0}%`, icon: Award, color: "text-emerald-500", trend: `${kpis?.completed ?? 0} concluídos` },
     { label: "Compliance Médio", value: `${kpis?.avgCompliance ?? 0}%`, icon: BarChart3, color: "text-blue-500", trend: "Score global" },
-    { label: "Crescimento Mensal", value: `${kpis?.monthGrowth >= 0 ? "+" : ""}${kpis?.monthGrowth ?? 0}%`, icon: TrendingUp, color: (kpis?.monthGrowth ?? 0) >= 0 ? "text-emerald-500" : "text-rose-500", trend: "vs mês anterior" },
+    { label: "Crescimento Mensal", value: `${(kpis?.monthGrowth ?? 0) >= 0 ? "+" : ""}${kpis?.monthGrowth ?? 0}%`, icon: TrendingUp, color: (kpis?.monthGrowth ?? 0) >= 0 ? "text-emerald-500" : "text-rose-500", trend: "vs mês anterior" },
     { label: "Clientes Ativos", value: kpis?.totalCustomers ?? 0, icon: Users, color: "text-navy", trend: "Base total" },
     { label: "Embarcações", value: kpis?.totalVessels ?? 0, icon: Activity, color: "text-navy", trend: "Frota gerida" },
     { label: "Documentos Gerados", value: kpis?.totalDocuments ?? 0, icon: DollarSign, color: "text-amber-500", trend: "Acervo total" },
