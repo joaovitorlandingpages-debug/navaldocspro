@@ -27,6 +27,7 @@ import { Route as LogsRouteImport } from './routes/logs'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as GettingStartedRouteImport } from './routes/getting-started'
 import { Route as FocoRouteImport } from './routes/foco'
+import { Route as ExigenciasRouteImport } from './routes/exigencias'
 import { Route as ExecutiveRouteImport } from './routes/executive'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
@@ -178,6 +179,11 @@ const GettingStartedRoute = GettingStartedRouteImport.update({
 const FocoRoute = FocoRouteImport.update({
   id: '/foco',
   path: '/foco',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExigenciasRoute = ExigenciasRouteImport.update({
+  id: '/exigencias',
+  path: '/exigencias',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExecutiveRoute = ExecutiveRouteImport.update({
@@ -517,6 +523,7 @@ export interface FileRoutesByFullPath {
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/executive': typeof ExecutiveRoute
+  '/exigencias': typeof ExigenciasRoute
   '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
@@ -597,6 +604,7 @@ export interface FileRoutesByTo {
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/executive': typeof ExecutiveRoute
+  '/exigencias': typeof ExigenciasRoute
   '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
@@ -680,6 +688,7 @@ export interface FileRoutesById {
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/executive': typeof ExecutiveRoute
+  '/exigencias': typeof ExigenciasRoute
   '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
@@ -764,6 +773,7 @@ export interface FileRouteTypes {
     | '/document-generator'
     | '/documents'
     | '/executive'
+    | '/exigencias'
     | '/foco'
     | '/getting-started'
     | '/home'
@@ -844,6 +854,7 @@ export interface FileRouteTypes {
     | '/document-generator'
     | '/documents'
     | '/executive'
+    | '/exigencias'
     | '/foco'
     | '/getting-started'
     | '/home'
@@ -926,6 +937,7 @@ export interface FileRouteTypes {
     | '/document-generator'
     | '/documents'
     | '/executive'
+    | '/exigencias'
     | '/foco'
     | '/getting-started'
     | '/home'
@@ -1009,6 +1021,7 @@ export interface RootRouteChildren {
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
   ExecutiveRoute: typeof ExecutiveRoute
+  ExigenciasRoute: typeof ExigenciasRoute
   FocoRoute: typeof FocoRoute
   GettingStartedRoute: typeof GettingStartedRoute
   HomeRoute: typeof HomeRoute
@@ -1162,6 +1175,13 @@ declare module '@tanstack/react-router' {
       path: '/foco'
       fullPath: '/foco'
       preLoaderRoute: typeof FocoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exigencias': {
+      id: '/exigencias'
+      path: '/exigencias'
+      fullPath: '/exigencias'
+      preLoaderRoute: typeof ExigenciasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/executive': {
@@ -1729,6 +1749,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
   ExecutiveRoute: ExecutiveRoute,
+  ExigenciasRoute: ExigenciasRoute,
   FocoRoute: FocoRoute,
   GettingStartedRoute: GettingStartedRoute,
   HomeRoute: HomeRoute,
