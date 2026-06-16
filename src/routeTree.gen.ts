@@ -19,6 +19,7 @@ import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PredictionsRouteImport } from './routes/predictions'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PerformanceCenterRouteImport } from './routes/performance-center'
+import { Route as ParceriaRouteImport } from './routes/parceria'
 import { Route as OperationsCenterRouteImport } from './routes/operations-center'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as OcrReviewCenterRouteImport } from './routes/ocr-review-center'
@@ -140,6 +141,11 @@ const PlansRoute = PlansRouteImport.update({
 const PerformanceCenterRoute = PerformanceCenterRouteImport.update({
   id: '/performance-center',
   path: '/performance-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParceriaRoute = ParceriaRouteImport.update({
+  id: '/parceria',
+  path: '/parceria',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OperationsCenterRoute = OperationsCenterRouteImport.update({
@@ -539,6 +545,7 @@ export interface FileRoutesByFullPath {
   '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/operations-center': typeof OperationsCenterRoute
+  '/parceria': typeof ParceriaRoute
   '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
@@ -621,6 +628,7 @@ export interface FileRoutesByTo {
   '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/operations-center': typeof OperationsCenterRoute
+  '/parceria': typeof ParceriaRoute
   '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
@@ -706,6 +714,7 @@ export interface FileRoutesById {
   '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/operations-center': typeof OperationsCenterRoute
+  '/parceria': typeof ParceriaRoute
   '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
@@ -792,6 +801,7 @@ export interface FileRouteTypes {
     | '/ocr-review-center'
     | '/onboarding'
     | '/operations-center'
+    | '/parceria'
     | '/performance-center'
     | '/plans'
     | '/predictions'
@@ -874,6 +884,7 @@ export interface FileRouteTypes {
     | '/ocr-review-center'
     | '/onboarding'
     | '/operations-center'
+    | '/parceria'
     | '/performance-center'
     | '/plans'
     | '/predictions'
@@ -958,6 +969,7 @@ export interface FileRouteTypes {
     | '/ocr-review-center'
     | '/onboarding'
     | '/operations-center'
+    | '/parceria'
     | '/performance-center'
     | '/plans'
     | '/predictions'
@@ -1043,6 +1055,7 @@ export interface RootRouteChildren {
   OcrReviewCenterRoute: typeof OcrReviewCenterRoute
   OnboardingRoute: typeof OnboardingRoute
   OperationsCenterRoute: typeof OperationsCenterRoute
+  ParceriaRoute: typeof ParceriaRoute
   PerformanceCenterRoute: typeof PerformanceCenterRoute
   PlansRoute: typeof PlansRoute
   PredictionsRoute: typeof PredictionsRoute
@@ -1132,6 +1145,13 @@ declare module '@tanstack/react-router' {
       path: '/performance-center'
       fullPath: '/performance-center'
       preLoaderRoute: typeof PerformanceCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parceria': {
+      id: '/parceria'
+      path: '/parceria'
+      fullPath: '/parceria'
+      preLoaderRoute: typeof ParceriaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/operations-center': {
@@ -1779,6 +1799,7 @@ const rootRouteChildren: RootRouteChildren = {
   OcrReviewCenterRoute: OcrReviewCenterRoute,
   OnboardingRoute: OnboardingRoute,
   OperationsCenterRoute: OperationsCenterRoute,
+  ParceriaRoute: ParceriaRoute,
   PerformanceCenterRoute: PerformanceCenterRoute,
   PlansRoute: PlansRoute,
   PredictionsRoute: PredictionsRoute,
