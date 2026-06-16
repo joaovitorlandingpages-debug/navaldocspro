@@ -16,6 +16,7 @@ import { Route as StatusRouteImport } from './routes/status'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SalesCenterRouteImport } from './routes/sales-center'
 import { Route as ProcessesRouteImport } from './routes/processes'
+import { Route as PredictionsRouteImport } from './routes/predictions'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PerformanceCenterRouteImport } from './routes/performance-center'
 import { Route as OperationsCenterRouteImport } from './routes/operations-center'
@@ -120,6 +121,11 @@ const SalesCenterRoute = SalesCenterRouteImport.update({
 const ProcessesRoute = ProcessesRouteImport.update({
   id: '/processes',
   path: '/processes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PredictionsRoute = PredictionsRouteImport.update({
+  id: '/predictions',
+  path: '/predictions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlansRoute = PlansRouteImport.update({
@@ -507,6 +513,7 @@ export interface FileRoutesByFullPath {
   '/operations-center': typeof OperationsCenterRoute
   '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
+  '/predictions': typeof PredictionsRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
@@ -584,6 +591,7 @@ export interface FileRoutesByTo {
   '/operations-center': typeof OperationsCenterRoute
   '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
+  '/predictions': typeof PredictionsRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
@@ -664,6 +672,7 @@ export interface FileRoutesById {
   '/operations-center': typeof OperationsCenterRoute
   '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
+  '/predictions': typeof PredictionsRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
@@ -745,6 +754,7 @@ export interface FileRouteTypes {
     | '/operations-center'
     | '/performance-center'
     | '/plans'
+    | '/predictions'
     | '/processes'
     | '/sales-center'
     | '/settings'
@@ -822,6 +832,7 @@ export interface FileRouteTypes {
     | '/operations-center'
     | '/performance-center'
     | '/plans'
+    | '/predictions'
     | '/processes'
     | '/sales-center'
     | '/settings'
@@ -901,6 +912,7 @@ export interface FileRouteTypes {
     | '/operations-center'
     | '/performance-center'
     | '/plans'
+    | '/predictions'
     | '/processes'
     | '/sales-center'
     | '/settings'
@@ -981,6 +993,7 @@ export interface RootRouteChildren {
   OperationsCenterRoute: typeof OperationsCenterRoute
   PerformanceCenterRoute: typeof PerformanceCenterRoute
   PlansRoute: typeof PlansRoute
+  PredictionsRoute: typeof PredictionsRoute
   ProcessesRoute: typeof ProcessesRouteWithChildren
   SalesCenterRoute: typeof SalesCenterRoute
   SettingsRoute: typeof SettingsRoute
@@ -1046,6 +1059,13 @@ declare module '@tanstack/react-router' {
       path: '/processes'
       fullPath: '/processes'
       preLoaderRoute: typeof ProcessesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/predictions': {
+      id: '/predictions'
+      path: '/predictions'
+      fullPath: '/predictions'
+      preLoaderRoute: typeof PredictionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/plans': {
@@ -1677,6 +1697,7 @@ const rootRouteChildren: RootRouteChildren = {
   OperationsCenterRoute: OperationsCenterRoute,
   PerformanceCenterRoute: PerformanceCenterRoute,
   PlansRoute: PlansRoute,
+  PredictionsRoute: PredictionsRoute,
   ProcessesRoute: ProcessesRouteWithChildren,
   SalesCenterRoute: SalesCenterRoute,
   SettingsRoute: SettingsRoute,
