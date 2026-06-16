@@ -41,6 +41,7 @@ import { Route as ComplianceAiRouteImport } from './routes/compliance-ai'
 import { Route as ClientPortalRouteImport } from './routes/client-portal'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as BenchmarkRouteImport } from './routes/benchmark'
 import { Route as AutomationCenterRouteImport } from './routes/automation-center'
 import { Route as AutomationRouteImport } from './routes/automation'
 import { Route as AuthDebugPublicRouteImport } from './routes/auth-debug-public'
@@ -249,6 +250,11 @@ const ChangelogRoute = ChangelogRouteImport.update({
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BenchmarkRoute = BenchmarkRouteImport.update({
+  id: '/benchmark',
+  path: '/benchmark',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AutomationCenterRoute = AutomationCenterRouteImport.update({
@@ -510,6 +516,7 @@ export interface FileRoutesByFullPath {
   '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
+  '/benchmark': typeof BenchmarkRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/client-portal': typeof ClientPortalRoute
@@ -592,6 +599,7 @@ export interface FileRoutesByTo {
   '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
+  '/benchmark': typeof BenchmarkRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/client-portal': typeof ClientPortalRoute
@@ -675,6 +683,7 @@ export interface FileRoutesById {
   '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
+  '/benchmark': typeof BenchmarkRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/client-portal': typeof ClientPortalRoute
@@ -760,6 +769,7 @@ export interface FileRouteTypes {
     | '/auth-debug-public'
     | '/automation'
     | '/automation-center'
+    | '/benchmark'
     | '/calendar'
     | '/changelog'
     | '/client-portal'
@@ -842,6 +852,7 @@ export interface FileRouteTypes {
     | '/auth-debug-public'
     | '/automation'
     | '/automation-center'
+    | '/benchmark'
     | '/calendar'
     | '/changelog'
     | '/client-portal'
@@ -924,6 +935,7 @@ export interface FileRouteTypes {
     | '/auth-debug-public'
     | '/automation'
     | '/automation-center'
+    | '/benchmark'
     | '/calendar'
     | '/changelog'
     | '/client-portal'
@@ -1008,6 +1020,7 @@ export interface RootRouteChildren {
   AuthDebugPublicRoute: typeof AuthDebugPublicRoute
   AutomationRoute: typeof AutomationRoute
   AutomationCenterRoute: typeof AutomationCenterRoute
+  BenchmarkRoute: typeof BenchmarkRoute
   CalendarRoute: typeof CalendarRoute
   ChangelogRoute: typeof ChangelogRoute
   ClientPortalRoute: typeof ClientPortalRoute
@@ -1273,6 +1286,13 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/benchmark': {
+      id: '/benchmark'
+      path: '/benchmark'
+      fullPath: '/benchmark'
+      preLoaderRoute: typeof BenchmarkRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/automation-center': {
@@ -1736,6 +1756,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthDebugPublicRoute: AuthDebugPublicRoute,
   AutomationRoute: AutomationRoute,
   AutomationCenterRoute: AutomationCenterRoute,
+  BenchmarkRoute: BenchmarkRoute,
   CalendarRoute: CalendarRoute,
   ChangelogRoute: ChangelogRoute,
   ClientPortalRoute: ClientPortalRoute,

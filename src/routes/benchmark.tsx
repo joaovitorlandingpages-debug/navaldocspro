@@ -26,8 +26,8 @@ function BenchmarkPage() {
       const processes = allProc || [];
       const myCompanyId = (await supabase.from("profiles").select("company_id").maybeSingle()).data?.company_id;
 
-      const myProc = processes.filter(p => p.company_id === myCompanyId);
-      const otherProc = processes.filter(p => p.company_id !== myCompanyId);
+      const myProc = processes.filter((p: any) => p.company_id === myCompanyId);
+      const otherProc = processes.filter((p: any) => p.company_id !== myCompanyId);
 
       const avg = (arr: any[]) => arr.length ? Math.round(arr.reduce((s, p) => s + (p.compliance_score || 0), 0) / arr.length) : 0;
       const completionRate = (arr: any[]) => {
@@ -38,7 +38,7 @@ function BenchmarkPage() {
 
       // Distribuição de processos por escritório
       const byCompany: Record<string, number> = {};
-      processes.forEach(p => { byCompany[p.company_id] = (byCompany[p.company_id] || 0) + 1; });
+      processes.forEach((p: any) => { byCompany[p.company_id] = (byCompany[p.company_id] || 0) + 1; });
       const counts = Object.values(byCompany).sort((a, b) => b - a);
       const myRank = counts.findIndex(c => c === (byCompany[myCompanyId || ""] || 0)) + 1;
 
