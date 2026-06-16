@@ -307,7 +307,7 @@ function DashboardLayout() {
                 </Link>
              </div>
            )}
-            <div className="h-auto py-3 md:py-4 flex flex-col sm:flex-row items-center justify-between px-4 md:px-8 border-b border-slate-100 gap-3 md:gap-6">
+            <div className="h-auto py-3 md:py-4 flex flex-wrap items-center justify-between px-4 md:px-8 border-b border-slate-100 gap-3 md:gap-6">
               <div className="flex items-center gap-3 md:gap-6 flex-grow w-full sm:w-auto">
                  <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2.5 md:p-3 bg-white hover:bg-slate-50 rounded-xl md:rounded-2xl transition-all shadow-sm border border-slate-100">
                    <Menu className="h-5 w-5 text-navy" />
@@ -320,7 +320,7 @@ function DashboardLayout() {
               </div>
 
               
-              <div className="flex items-center gap-4 md:gap-8 w-full sm:w-auto justify-end">
+              <div className="flex flex-wrap items-center gap-3 md:gap-6 w-full sm:w-auto justify-end">
                   <div className="hidden xl:flex items-center gap-3 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl group/seal">
                     <Award className="h-3 w-3 text-emerald-500 group-hover/seal:scale-125 transition-transform" />
                     <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Enterprise Certified</span>
