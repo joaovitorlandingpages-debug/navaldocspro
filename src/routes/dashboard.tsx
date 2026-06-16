@@ -320,7 +320,7 @@ function DashboardLayout() {
               </div>
 
               
-              <div className="flex items-center gap-4 md:gap-8 w-full sm:w-auto justify-end">
+              <div className="flex flex-wrap items-center gap-3 md:gap-6 w-full sm:w-auto justify-end">
                   <div className="hidden xl:flex items-center gap-3 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl group/seal">
                     <Award className="h-3 w-3 text-emerald-500 group-hover/seal:scale-125 transition-transform" />
                     <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Enterprise Certified</span>
