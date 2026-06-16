@@ -36,6 +36,7 @@ import { Route as DashboardV2RouteImport } from './routes/dashboard-v2'
 import { Route as DashboardSafeRouteImport } from './routes/dashboard-safe'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as ComplianceAiRouteImport } from './routes/compliance-ai'
 import { Route as ClientPortalRouteImport } from './routes/client-portal'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as CalendarRouteImport } from './routes/calendar'
@@ -222,6 +223,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const CustomersRoute = CustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComplianceAiRoute = ComplianceAiRouteImport.update({
+  id: '/compliance-ai',
+  path: '/compliance-ai',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientPortalRoute = ClientPortalRouteImport.update({
@@ -501,6 +507,7 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/client-portal': typeof ClientPortalRoute
+  '/compliance-ai': typeof ComplianceAiRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard-safe': typeof DashboardSafeRoute
@@ -581,6 +588,7 @@ export interface FileRoutesByTo {
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/client-portal': typeof ClientPortalRoute
+  '/compliance-ai': typeof ComplianceAiRoute
   '/customers': typeof CustomersRoute
   '/dashboard-safe': typeof DashboardSafeRoute
   '/dashboard-v2': typeof DashboardV2Route
@@ -662,6 +670,7 @@ export interface FileRoutesById {
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/client-portal': typeof ClientPortalRoute
+  '/compliance-ai': typeof ComplianceAiRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard-safe': typeof DashboardSafeRoute
@@ -745,6 +754,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/changelog'
     | '/client-portal'
+    | '/compliance-ai'
     | '/customers'
     | '/dashboard'
     | '/dashboard-safe'
@@ -825,6 +835,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/changelog'
     | '/client-portal'
+    | '/compliance-ai'
     | '/customers'
     | '/dashboard-safe'
     | '/dashboard-v2'
@@ -905,6 +916,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/changelog'
     | '/client-portal'
+    | '/compliance-ai'
     | '/customers'
     | '/dashboard'
     | '/dashboard-safe'
@@ -987,6 +999,7 @@ export interface RootRouteChildren {
   CalendarRoute: typeof CalendarRoute
   ChangelogRoute: typeof ChangelogRoute
   ClientPortalRoute: typeof ClientPortalRoute
+  ComplianceAiRoute: typeof ComplianceAiRoute
   CustomersRoute: typeof CustomersRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   DashboardSafeRoute: typeof DashboardSafeRoute
@@ -1212,6 +1225,13 @@ declare module '@tanstack/react-router' {
       path: '/customers'
       fullPath: '/customers'
       preLoaderRoute: typeof CustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compliance-ai': {
+      id: '/compliance-ai'
+      path: '/compliance-ai'
+      fullPath: '/compliance-ai'
+      preLoaderRoute: typeof ComplianceAiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/client-portal': {
@@ -1699,6 +1719,7 @@ const rootRouteChildren: RootRouteChildren = {
   CalendarRoute: CalendarRoute,
   ChangelogRoute: ChangelogRoute,
   ClientPortalRoute: ClientPortalRoute,
+  ComplianceAiRoute: ComplianceAiRoute,
   CustomersRoute: CustomersRoute,
   DashboardRoute: DashboardRouteWithChildren,
   DashboardSafeRoute: DashboardSafeRoute,
