@@ -65,8 +65,8 @@ function PartnerProgram() {
 
   const stats = {
     total: partners.length,
-    active: partners.filter((p) => p.is_active).length,
-    estimatedMrr: partners.filter((p) => p.is_active).length * 297, // mock R$ 297/mês por indicado ativo
+    active: partners.filter((p: any) => p.is_active).length,
+    estimatedMrr: partners.filter((p: any) => p.is_active).length * 297, // mock R$ 297/mês por indicado ativo
   };
   const estimatedCommission = stats.estimatedMrr * COMMISSION_RATE;
 
@@ -164,7 +164,7 @@ function PartnerProgram() {
             </p>
           ) : (
             <div className="space-y-2">
-              {partners.map((p) => (
+              {partners.map((p: any) => (
                 <div
                   key={p.id}
                   className="flex items-center justify-between border rounded-lg p-3"
