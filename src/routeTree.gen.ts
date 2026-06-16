@@ -16,6 +16,7 @@ import { Route as StatusRouteImport } from './routes/status'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SalesCenterRouteImport } from './routes/sales-center'
 import { Route as ProcessesRouteImport } from './routes/processes'
+import { Route as PredictionsRouteImport } from './routes/predictions'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PerformanceCenterRouteImport } from './routes/performance-center'
 import { Route as OperationsCenterRouteImport } from './routes/operations-center'
@@ -25,6 +26,8 @@ import { Route as OcrCenterRouteImport } from './routes/ocr-center'
 import { Route as LogsRouteImport } from './routes/logs'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as GettingStartedRouteImport } from './routes/getting-started'
+import { Route as FocoRouteImport } from './routes/foco'
+import { Route as ExecutiveRouteImport } from './routes/executive'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
 import { Route as DemoRouteImport } from './routes/demo'
@@ -121,6 +124,11 @@ const ProcessesRoute = ProcessesRouteImport.update({
   path: '/processes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PredictionsRoute = PredictionsRouteImport.update({
+  id: '/predictions',
+  path: '/predictions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlansRoute = PlansRouteImport.update({
   id: '/plans',
   path: '/plans',
@@ -164,6 +172,16 @@ const HomeRoute = HomeRouteImport.update({
 const GettingStartedRoute = GettingStartedRouteImport.update({
   id: '/getting-started',
   path: '/getting-started',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FocoRoute = FocoRouteImport.update({
+  id: '/foco',
+  path: '/foco',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExecutiveRoute = ExecutiveRouteImport.update({
+  id: '/executive',
+  path: '/executive',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocumentsRoute = DocumentsRouteImport.update({
@@ -491,6 +509,8 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/executive': typeof ExecutiveRoute
+  '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
   '/logs': typeof LogsRoute
@@ -500,6 +520,7 @@ export interface FileRoutesByFullPath {
   '/operations-center': typeof OperationsCenterRoute
   '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
+  '/predictions': typeof PredictionsRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
@@ -567,6 +588,8 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/executive': typeof ExecutiveRoute
+  '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
   '/logs': typeof LogsRoute
@@ -576,6 +599,7 @@ export interface FileRoutesByTo {
   '/operations-center': typeof OperationsCenterRoute
   '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
+  '/predictions': typeof PredictionsRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
@@ -646,6 +670,8 @@ export interface FileRoutesById {
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/executive': typeof ExecutiveRoute
+  '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
   '/logs': typeof LogsRoute
@@ -655,6 +681,7 @@ export interface FileRoutesById {
   '/operations-center': typeof OperationsCenterRoute
   '/performance-center': typeof PerformanceCenterRoute
   '/plans': typeof PlansRoute
+  '/predictions': typeof PredictionsRoute
   '/processes': typeof ProcessesRouteWithChildren
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
@@ -726,6 +753,8 @@ export interface FileRouteTypes {
     | '/demo'
     | '/document-generator'
     | '/documents'
+    | '/executive'
+    | '/foco'
     | '/getting-started'
     | '/home'
     | '/logs'
@@ -735,6 +764,7 @@ export interface FileRouteTypes {
     | '/operations-center'
     | '/performance-center'
     | '/plans'
+    | '/predictions'
     | '/processes'
     | '/sales-center'
     | '/settings'
@@ -802,6 +832,8 @@ export interface FileRouteTypes {
     | '/demo'
     | '/document-generator'
     | '/documents'
+    | '/executive'
+    | '/foco'
     | '/getting-started'
     | '/home'
     | '/logs'
@@ -811,6 +843,7 @@ export interface FileRouteTypes {
     | '/operations-center'
     | '/performance-center'
     | '/plans'
+    | '/predictions'
     | '/processes'
     | '/sales-center'
     | '/settings'
@@ -880,6 +913,8 @@ export interface FileRouteTypes {
     | '/demo'
     | '/document-generator'
     | '/documents'
+    | '/executive'
+    | '/foco'
     | '/getting-started'
     | '/home'
     | '/logs'
@@ -889,6 +924,7 @@ export interface FileRouteTypes {
     | '/operations-center'
     | '/performance-center'
     | '/plans'
+    | '/predictions'
     | '/processes'
     | '/sales-center'
     | '/settings'
@@ -959,6 +995,8 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
+  ExecutiveRoute: typeof ExecutiveRoute
+  FocoRoute: typeof FocoRoute
   GettingStartedRoute: typeof GettingStartedRoute
   HomeRoute: typeof HomeRoute
   LogsRoute: typeof LogsRoute
@@ -968,6 +1006,7 @@ export interface RootRouteChildren {
   OperationsCenterRoute: typeof OperationsCenterRoute
   PerformanceCenterRoute: typeof PerformanceCenterRoute
   PlansRoute: typeof PlansRoute
+  PredictionsRoute: typeof PredictionsRoute
   ProcessesRoute: typeof ProcessesRouteWithChildren
   SalesCenterRoute: typeof SalesCenterRoute
   SettingsRoute: typeof SettingsRoute
@@ -1035,6 +1074,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProcessesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/predictions': {
+      id: '/predictions'
+      path: '/predictions'
+      fullPath: '/predictions'
+      preLoaderRoute: typeof PredictionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/plans': {
       id: '/plans'
       path: '/plans'
@@ -1096,6 +1142,20 @@ declare module '@tanstack/react-router' {
       path: '/getting-started'
       fullPath: '/getting-started'
       preLoaderRoute: typeof GettingStartedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/foco': {
+      id: '/foco'
+      path: '/foco'
+      fullPath: '/foco'
+      preLoaderRoute: typeof FocoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/executive': {
+      id: '/executive'
+      path: '/executive'
+      fullPath: '/executive'
+      preLoaderRoute: typeof ExecutiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/documents': {
@@ -1647,6 +1707,8 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
+  ExecutiveRoute: ExecutiveRoute,
+  FocoRoute: FocoRoute,
   GettingStartedRoute: GettingStartedRoute,
   HomeRoute: HomeRoute,
   LogsRoute: LogsRoute,
@@ -1656,6 +1718,7 @@ const rootRouteChildren: RootRouteChildren = {
   OperationsCenterRoute: OperationsCenterRoute,
   PerformanceCenterRoute: PerformanceCenterRoute,
   PlansRoute: PlansRoute,
+  PredictionsRoute: PredictionsRoute,
   ProcessesRoute: ProcessesRouteWithChildren,
   SalesCenterRoute: SalesCenterRoute,
   SettingsRoute: SettingsRoute,
