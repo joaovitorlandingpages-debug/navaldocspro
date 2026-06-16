@@ -25,6 +25,7 @@ import { Route as OcrCenterRouteImport } from './routes/ocr-center'
 import { Route as LogsRouteImport } from './routes/logs'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as GettingStartedRouteImport } from './routes/getting-started'
+import { Route as FocoRouteImport } from './routes/foco'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
 import { Route as DemoRouteImport } from './routes/demo'
@@ -164,6 +165,11 @@ const HomeRoute = HomeRouteImport.update({
 const GettingStartedRoute = GettingStartedRouteImport.update({
   id: '/getting-started',
   path: '/getting-started',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FocoRoute = FocoRouteImport.update({
+  id: '/foco',
+  path: '/foco',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocumentsRoute = DocumentsRouteImport.update({
@@ -491,6 +497,7 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
   '/logs': typeof LogsRoute
@@ -567,6 +574,7 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
   '/logs': typeof LogsRoute
@@ -646,6 +654,7 @@ export interface FileRoutesById {
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
   '/logs': typeof LogsRoute
@@ -726,6 +735,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/document-generator'
     | '/documents'
+    | '/foco'
     | '/getting-started'
     | '/home'
     | '/logs'
@@ -802,6 +812,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/document-generator'
     | '/documents'
+    | '/foco'
     | '/getting-started'
     | '/home'
     | '/logs'
@@ -880,6 +891,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/document-generator'
     | '/documents'
+    | '/foco'
     | '/getting-started'
     | '/home'
     | '/logs'
@@ -959,6 +971,7 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
+  FocoRoute: typeof FocoRoute
   GettingStartedRoute: typeof GettingStartedRoute
   HomeRoute: typeof HomeRoute
   LogsRoute: typeof LogsRoute
@@ -1096,6 +1109,13 @@ declare module '@tanstack/react-router' {
       path: '/getting-started'
       fullPath: '/getting-started'
       preLoaderRoute: typeof GettingStartedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/foco': {
+      id: '/foco'
+      path: '/foco'
+      fullPath: '/foco'
+      preLoaderRoute: typeof FocoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/documents': {
@@ -1647,6 +1667,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
+  FocoRoute: FocoRoute,
   GettingStartedRoute: GettingStartedRoute,
   HomeRoute: HomeRoute,
   LogsRoute: LogsRoute,
