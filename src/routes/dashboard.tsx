@@ -557,9 +557,9 @@ export function RouteContent() {
 
         </div>
         
-        <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+        <div className="hidden xl:flex flex-wrap gap-3">
           {profile?.companies?.onboarding_status === 'pending' && (profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
-            <Link to="/onboarding" className="hidden xl:flex items-center gap-4 bg-primary/5 border border-primary/20 px-5 py-3 rounded-2xl animate-in slide-in-from-right duration-700">
+            <Link to="/onboarding" className="flex items-center gap-4 bg-primary/5 border border-primary/20 px-5 py-3 rounded-2xl animate-in slide-in-from-right duration-700">
                <Rocket className="h-5 w-5 text-primary animate-pulse" />
                <div className="text-left">
                  <p className="text-[10px] font-black uppercase text-primary tracking-widest">Setup Incompleto</p>
@@ -567,19 +567,6 @@ export function RouteContent() {
                </div>
             </Link>
           )}
-          
-          <Link 
-            to="/document-generator"
-            className="flex-grow sm:flex-initial bg-white border border-slate-200 text-navy px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm"
-          >
-            <FilePlus className="h-4 w-4 text-primary" /> Gerar Documento
-          </Link>
-          <button 
-            onClick={() => setIsNewProcessOpen(true)}
-            className="flex-grow sm:flex-initial bg-primary text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:opacity-90 transition-all shadow-xl shadow-primary/20"
-          >
-            <Plus className="h-5 w-5" /> Novo Processo
-          </button>
         </div>
       </div>
 
