@@ -27,6 +27,7 @@ import { Route as LogsRouteImport } from './routes/logs'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as GettingStartedRouteImport } from './routes/getting-started'
 import { Route as FocoRouteImport } from './routes/foco'
+import { Route as ExigenciasRouteImport } from './routes/exigencias'
 import { Route as ExecutiveRouteImport } from './routes/executive'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
@@ -36,9 +37,11 @@ import { Route as DashboardV2RouteImport } from './routes/dashboard-v2'
 import { Route as DashboardSafeRouteImport } from './routes/dashboard-safe'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as ComplianceAiRouteImport } from './routes/compliance-ai'
 import { Route as ClientPortalRouteImport } from './routes/client-portal'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as BenchmarkRouteImport } from './routes/benchmark'
 import { Route as AutomationCenterRouteImport } from './routes/automation-center'
 import { Route as AutomationRouteImport } from './routes/automation'
 import { Route as AuthDebugPublicRouteImport } from './routes/auth-debug-public'
@@ -179,6 +182,11 @@ const FocoRoute = FocoRouteImport.update({
   path: '/foco',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExigenciasRoute = ExigenciasRouteImport.update({
+  id: '/exigencias',
+  path: '/exigencias',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExecutiveRoute = ExecutiveRouteImport.update({
   id: '/executive',
   path: '/executive',
@@ -224,6 +232,11 @@ const CustomersRoute = CustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComplianceAiRoute = ComplianceAiRouteImport.update({
+  id: '/compliance-ai',
+  path: '/compliance-ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClientPortalRoute = ClientPortalRouteImport.update({
   id: '/client-portal',
   path: '/client-portal',
@@ -237,6 +250,11 @@ const ChangelogRoute = ChangelogRouteImport.update({
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BenchmarkRoute = BenchmarkRouteImport.update({
+  id: '/benchmark',
+  path: '/benchmark',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AutomationCenterRoute = AutomationCenterRouteImport.update({
@@ -498,9 +516,11 @@ export interface FileRoutesByFullPath {
   '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
+  '/benchmark': typeof BenchmarkRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/client-portal': typeof ClientPortalRoute
+  '/compliance-ai': typeof ComplianceAiRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard-safe': typeof DashboardSafeRoute
@@ -510,6 +530,7 @@ export interface FileRoutesByFullPath {
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/executive': typeof ExecutiveRoute
+  '/exigencias': typeof ExigenciasRoute
   '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
@@ -578,9 +599,11 @@ export interface FileRoutesByTo {
   '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
+  '/benchmark': typeof BenchmarkRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/client-portal': typeof ClientPortalRoute
+  '/compliance-ai': typeof ComplianceAiRoute
   '/customers': typeof CustomersRoute
   '/dashboard-safe': typeof DashboardSafeRoute
   '/dashboard-v2': typeof DashboardV2Route
@@ -589,6 +612,7 @@ export interface FileRoutesByTo {
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/executive': typeof ExecutiveRoute
+  '/exigencias': typeof ExigenciasRoute
   '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
@@ -659,9 +683,11 @@ export interface FileRoutesById {
   '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
+  '/benchmark': typeof BenchmarkRoute
   '/calendar': typeof CalendarRoute
   '/changelog': typeof ChangelogRoute
   '/client-portal': typeof ClientPortalRoute
+  '/compliance-ai': typeof ComplianceAiRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard-safe': typeof DashboardSafeRoute
@@ -671,6 +697,7 @@ export interface FileRoutesById {
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
   '/executive': typeof ExecutiveRoute
+  '/exigencias': typeof ExigenciasRoute
   '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
@@ -742,9 +769,11 @@ export interface FileRouteTypes {
     | '/auth-debug-public'
     | '/automation'
     | '/automation-center'
+    | '/benchmark'
     | '/calendar'
     | '/changelog'
     | '/client-portal'
+    | '/compliance-ai'
     | '/customers'
     | '/dashboard'
     | '/dashboard-safe'
@@ -754,6 +783,7 @@ export interface FileRouteTypes {
     | '/document-generator'
     | '/documents'
     | '/executive'
+    | '/exigencias'
     | '/foco'
     | '/getting-started'
     | '/home'
@@ -822,9 +852,11 @@ export interface FileRouteTypes {
     | '/auth-debug-public'
     | '/automation'
     | '/automation-center'
+    | '/benchmark'
     | '/calendar'
     | '/changelog'
     | '/client-portal'
+    | '/compliance-ai'
     | '/customers'
     | '/dashboard-safe'
     | '/dashboard-v2'
@@ -833,6 +865,7 @@ export interface FileRouteTypes {
     | '/document-generator'
     | '/documents'
     | '/executive'
+    | '/exigencias'
     | '/foco'
     | '/getting-started'
     | '/home'
@@ -902,9 +935,11 @@ export interface FileRouteTypes {
     | '/auth-debug-public'
     | '/automation'
     | '/automation-center'
+    | '/benchmark'
     | '/calendar'
     | '/changelog'
     | '/client-portal'
+    | '/compliance-ai'
     | '/customers'
     | '/dashboard'
     | '/dashboard-safe'
@@ -914,6 +949,7 @@ export interface FileRouteTypes {
     | '/document-generator'
     | '/documents'
     | '/executive'
+    | '/exigencias'
     | '/foco'
     | '/getting-started'
     | '/home'
@@ -984,9 +1020,11 @@ export interface RootRouteChildren {
   AuthDebugPublicRoute: typeof AuthDebugPublicRoute
   AutomationRoute: typeof AutomationRoute
   AutomationCenterRoute: typeof AutomationCenterRoute
+  BenchmarkRoute: typeof BenchmarkRoute
   CalendarRoute: typeof CalendarRoute
   ChangelogRoute: typeof ChangelogRoute
   ClientPortalRoute: typeof ClientPortalRoute
+  ComplianceAiRoute: typeof ComplianceAiRoute
   CustomersRoute: typeof CustomersRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   DashboardSafeRoute: typeof DashboardSafeRoute
@@ -996,6 +1034,7 @@ export interface RootRouteChildren {
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
   ExecutiveRoute: typeof ExecutiveRoute
+  ExigenciasRoute: typeof ExigenciasRoute
   FocoRoute: typeof FocoRoute
   GettingStartedRoute: typeof GettingStartedRoute
   HomeRoute: typeof HomeRoute
@@ -1151,6 +1190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FocoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/exigencias': {
+      id: '/exigencias'
+      path: '/exigencias'
+      fullPath: '/exigencias'
+      preLoaderRoute: typeof ExigenciasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/executive': {
       id: '/executive'
       path: '/executive'
@@ -1214,6 +1260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/compliance-ai': {
+      id: '/compliance-ai'
+      path: '/compliance-ai'
+      fullPath: '/compliance-ai'
+      preLoaderRoute: typeof ComplianceAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/client-portal': {
       id: '/client-portal'
       path: '/client-portal'
@@ -1233,6 +1286,13 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/benchmark': {
+      id: '/benchmark'
+      path: '/benchmark'
+      fullPath: '/benchmark'
+      preLoaderRoute: typeof BenchmarkRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/automation-center': {
@@ -1696,9 +1756,11 @@ const rootRouteChildren: RootRouteChildren = {
   AuthDebugPublicRoute: AuthDebugPublicRoute,
   AutomationRoute: AutomationRoute,
   AutomationCenterRoute: AutomationCenterRoute,
+  BenchmarkRoute: BenchmarkRoute,
   CalendarRoute: CalendarRoute,
   ChangelogRoute: ChangelogRoute,
   ClientPortalRoute: ClientPortalRoute,
+  ComplianceAiRoute: ComplianceAiRoute,
   CustomersRoute: CustomersRoute,
   DashboardRoute: DashboardRouteWithChildren,
   DashboardSafeRoute: DashboardSafeRoute,
@@ -1708,6 +1770,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
   ExecutiveRoute: ExecutiveRoute,
+  ExigenciasRoute: ExigenciasRoute,
   FocoRoute: FocoRoute,
   GettingStartedRoute: GettingStartedRoute,
   HomeRoute: HomeRoute,
