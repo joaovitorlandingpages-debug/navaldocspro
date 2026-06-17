@@ -72,6 +72,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const [isCreatingClient, setIsCreatingClient] = useState(false);
   const [isQuickVesselOpen, setIsQuickVesselOpen] = useState(false);
   const [isCreatingVessel, setIsCreatingVessel] = useState(false);
+  const [isClientAttachOpen, setIsClientAttachOpen] = useState(false);
 
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [customers, setCustomers] = useState<any[]>([]);
