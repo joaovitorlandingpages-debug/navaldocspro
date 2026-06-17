@@ -138,7 +138,7 @@ export function UpgradeModal({ isOpen, onClose, resource, limit, current }: Upgr
             className="w-full h-12 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest gap-2 shadow-xl shadow-primary/20 hover:opacity-90"
             onClick={() => {
               onClose();
-              navigate({ to: "/billing/plans" });
+              navigate({ to: "/plans" });
             }}
           >
             <ArrowUpCircle className="h-4 w-4" /> Fazer Upgrade
