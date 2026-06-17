@@ -36,6 +36,15 @@ import { useProcessRequirements, useProcessTypes } from "@/hooks/useProcessRequi
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { safeToLowerCase, safeString } from "@/utils/safe-string";
+import { FileUploader } from "@/components/FileUploader";
+const ClientDocumentUploader = ({ customerId, onSuccess }: { customerId: string; onSuccess: () => void }) => (
+  <FileUploader
+    bucket="customer-documents"
+    category="documento_pessoal"
+    customerId={customerId}
+    onSuccess={onSuccess}
+  />
+);
 
 
 interface NewProcessWizardProps {
@@ -72,6 +81,7 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
   const [isCreatingClient, setIsCreatingClient] = useState(false);
   const [isQuickVesselOpen, setIsQuickVesselOpen] = useState(false);
   const [isCreatingVessel, setIsCreatingVessel] = useState(false);
+  const [isClientAttachOpen, setIsClientAttachOpen] = useState(false);
 
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [customers, setCustomers] = useState<any[]>([]);
@@ -1037,10 +1047,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                        variant="ghost"
                        size="sm"
                        className="h-9 gap-1 text-xs"
-                       onClick={() => {
-                         console.log("CLIENT_DOCUMENT_ATTACH_AFTER_SAVE_OK");
-                         window.open(`/customers?edit=${formData.clientId}&attach=1`, "_blank");
-                       }}
+                        onClick={() => {
+                          console.log("CLIENT_DOCUMENT_ATTACH_INLINE_OPEN");
+                          setIsClientAttachOpen(true);
+                        }}
                      >
                        <Upload className="h-3.5 w-3.5" /> Anexar doc
                      </Button>
@@ -1389,6 +1399,23 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         setOcrVesselJobResult={setOcrVesselJobResult}
         applyVesselOcrData={applyVesselOcrData}
       />
+
+      <Dialog open={isClientAttachOpen} onOpenChange={setIsClientAttachOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Anexar documento do cliente</DialogTitle>
+          </DialogHeader>
+          {formData.clientId && (
+            <ClientDocumentUploader
+              customerId={formData.clientId}
+              onSuccess={() => {
+                setIsClientAttachOpen(false);
+                toast.success("Documento anexado ao cliente.");
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
