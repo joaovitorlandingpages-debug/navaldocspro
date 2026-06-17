@@ -1038,10 +1038,10 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                        variant="ghost"
                        size="sm"
                        className="h-9 gap-1 text-xs"
-                       onClick={() => {
-                         console.log("CLIENT_DOCUMENT_ATTACH_AFTER_SAVE_OK");
-                         window.open(`/customers?edit=${formData.clientId}&attach=1`, "_blank");
-                       }}
+                        onClick={() => {
+                          console.log("CLIENT_DOCUMENT_ATTACH_INLINE_OPEN");
+                          setIsClientAttachOpen(true);
+                        }}
                      >
                        <Upload className="h-3.5 w-3.5" /> Anexar doc
                      </Button>
