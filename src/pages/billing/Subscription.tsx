@@ -90,7 +90,7 @@ export default function SubscriptionUsage() {
                     <p className="text-lg font-black text-navy uppercase">{subscription.plan.name}</p>
                     <p className="text-[10px] font-bold text-primary uppercase">R$ {Number(subscription.plan.price).toLocaleString('pt-BR')}/mês</p>
                 </div>
-                <Link to="/billing/plans">
+                <Link to="/plans">
                     <Button className="bg-primary text-white font-black text-[10px] uppercase tracking-widest px-6 rounded-xl shadow-lg shadow-primary/20">Upgrade</Button>
                 </Link>
             </div>
@@ -200,7 +200,7 @@ export default function SubscriptionUsage() {
                        </li>
                     ))}
                  </ul>
-                 <Link to="/billing/plans" className="block pt-4">
+                 <Link to="/plans" className="block pt-4">
                     <Button className="w-full h-14 bg-primary text-white hover:bg-blue-600 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary/30">
                        Turbinar Operação
                     </Button>
