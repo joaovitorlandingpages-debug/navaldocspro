@@ -185,7 +185,7 @@ function Processes() {
                     columnProcesses.map((p) => (
                       <Link 
                         key={p.id} 
-                        to={`/processes/${p.id}`}
+                        to="/processes/$id" params={{ id: p.id }}
                         className="block bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-primary/40 hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden"
                       >
                         <div className="absolute top-0 right-0 p-4">
@@ -281,7 +281,7 @@ function Processes() {
                 ) : processes.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4">
-                      <Link to={`/processes/${p.id}`} className="block">
+                      <Link to="/processes/$id" params={{ id: p.id }} className="block">
                         <div className="font-bold text-navy text-sm">{p.process_type}</div>
                         <div className="text-[10px] text-primary font-mono font-black uppercase tracking-tighter">PROC-{p.id.substring(0, 6)}</div>
                       </Link>
@@ -298,7 +298,7 @@ function Processes() {
                       </Badge>
                     </td>
                     <td className="px-6 py-4 text-right">
-                       <Link to={`/processes/${p.id}`}>
+                       <Link to="/processes/$id" params={{ id: p.id }}>
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                              <ArrowRight className="h-4 w-4" />
                           </Button>
@@ -322,7 +322,7 @@ function Processes() {
             ) : processes.map((p) => (
               <Link 
                 key={p.id} 
-                to={`/processes/${p.id}`}
+                to="/processes/$id" params={{ id: p.id }}
                 className="block p-4 active:bg-slate-50 transition-colors"
               >
                 <div className="flex justify-between items-start mb-2">
