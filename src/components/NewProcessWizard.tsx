@@ -1555,7 +1555,12 @@ function AdditionalModals({
               <Button 
                 form="quick-client-form"
                 type="submit" 
+                data-testid="save-client-btn"
                 disabled={isCreatingClient}
+                onClick={() => {
+                  const form = document.getElementById('quick-client-form') as HTMLFormElement | null;
+                  if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+                }}
                 className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
               >
                 {isCreatingClient ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Cliente"}
