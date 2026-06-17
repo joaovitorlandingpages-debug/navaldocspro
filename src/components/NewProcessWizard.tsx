@@ -900,11 +900,21 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400">Tipo de Processo</Label>
                     <select 
+                      data-testid="process-type-select"
+                      aria-label="Tipo de Processo"
                       className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none"
                       value={formData.typeId}
                       onChange={(e) => {
                         const type = processTypes.find(t => t.id === e.target.value);
                         if (type) handleTypeSelect(type);
+                      }}
+                      onInput={(e) => {
+                        // Fallback for automation tools that dispatch 'input' instead of 'change'
+                        const value = (e.target as HTMLSelectElement).value;
+                        if (value && value !== formData.typeId) {
+                          const type = processTypes.find(t => t.id === value);
+                          if (type) handleTypeSelect(type);
+                        }
                       }}
                     >
                       <option value="">Selecione o tipo...</option>
