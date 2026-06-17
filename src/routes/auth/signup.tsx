@@ -14,17 +14,37 @@ export const Route = createFileRoute("/auth/signup")({
   component: SignupComponent,
 });
 
+function translateAuthError(error: any): string {
+  const msg: string = error?.message || error?.msg || "";
+  const code: string = error?.code || error?.error_code || "";
+  if (code === "weak_password" || /weak|pwned|known to be weak/i.test(msg)) {
+    return "Senha fraca ou já vazada em outros sites. Use uma senha com pelo menos 8 caracteres, misturando letras, números e símbolos únicos.";
+  }
+  if (/email.*invalid|invalid.*email|email_address_invalid/i.test(msg) || code === "email_address_invalid") {
+    return "E-mail inválido. Use um e-mail real (ex: nome@empresa.com).";
+  }
+  if (/already registered|already exists|user_already_exists/i.test(msg) || code === "user_already_exists") {
+    return "Este e-mail já está cadastrado. Faça login ou recupere a senha.";
+  }
+  if (/over_email_send_rate_limit|rate limit/i.test(msg)) {
+    return "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.";
+  }
+  return msg || "Erro ao realizar cadastro. Tente novamente.";
+}
+
 function SignupComponent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setFormError(null);
 
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -63,7 +83,9 @@ function SignupComponent() {
         navigate({ to: "/dashboard" });
       }
     } catch (error: any) {
-      toast.error(error.message || "Erro ao realizar cadastro");
+      const friendly = translateAuthError(error);
+      setFormError(friendly);
+      toast.error(friendly);
     } finally {
       setIsLoading(false);
     }
@@ -152,6 +174,14 @@ function SignupComponent() {
                   />
                 </div>
               </div>
+              <p className="text-[10px] text-white/40 leading-relaxed">
+                Use uma senha forte com pelo menos 8 caracteres, misturando letras maiúsculas, minúsculas, números e símbolos. Evite senhas comuns ou já usadas em outros sites.
+              </p>
+              {formError && (
+                <div role="alert" className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+                  {formError}
+                </div>
+              )}
             </CardContent>
             <CardFooter className="flex flex-col space-y-4 pt-2">
               <Button 
