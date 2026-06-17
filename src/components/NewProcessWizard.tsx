@@ -36,6 +36,15 @@ import { useProcessRequirements, useProcessTypes } from "@/hooks/useProcessRequi
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { safeToLowerCase, safeString } from "@/utils/safe-string";
+import { FileUploader } from "@/components/FileUploader";
+const ClientDocumentUploader = ({ customerId, onSuccess }: { customerId: string; onSuccess: () => void }) => (
+  <FileUploader
+    bucket="customer-documents"
+    category="documento_pessoal"
+    customerId={customerId}
+    onSuccess={onSuccess}
+  />
+);
 
 
 interface NewProcessWizardProps {
