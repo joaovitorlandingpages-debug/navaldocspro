@@ -27,14 +27,15 @@ function SignupComponent() {
     setIsLoading(true);
 
     try {
-      // 1. Create User in Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             full_name: fullName,
-            role: 'company_admin', // Default role for the person who signs up
+            name: fullName,
+            role: 'company_admin',
           }
         }
       });
@@ -42,25 +43,24 @@ function SignupComponent() {
       if (authError) throw authError;
 
       if (authData.user) {
-        // 2. Create Company
         const { data: companyData, error: companyError } = await supabase
           .from('companies')
-          .insert({ name: companyName })
+          .insert({ name: companyName, plan: 'starter', is_active: true, created_by: authData.user.id })
           .select()
           .single();
 
-        if (companyError) throw companyError;
+        if (companyError) {
+          console.warn("SIGNUP_COMPANY_CREATE_DEFER", companyError);
+        } else {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ company_id: companyData.id })
+            .eq('id', authData.user.id);
+          if (profileError) console.warn("SIGNUP_PROFILE_LINK_DEFER", profileError);
+        }
 
-        // 3. Link Profile to Company (The trigger handles profile creation, but we need to update company_id)
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ company_id: companyData.id })
-          .eq('id', authData.user.id);
-
-        if (profileError) throw profileError;
-
-        toast.success("Conta criada! Verifique seu e-mail para confirmar.");
-        navigate({ to: "/auth/login" });
+        toast.success("Conta criada com sucesso!");
+        navigate({ to: "/dashboard" });
       }
     } catch (error: any) {
       toast.error(error.message || "Erro ao realizar cadastro");
