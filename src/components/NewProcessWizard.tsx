@@ -900,11 +900,21 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400">Tipo de Processo</Label>
                     <select 
+                      data-testid="process-type-select"
+                      aria-label="Tipo de Processo"
                       className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none"
                       value={formData.typeId}
                       onChange={(e) => {
                         const type = processTypes.find(t => t.id === e.target.value);
                         if (type) handleTypeSelect(type);
+                      }}
+                      onInput={(e) => {
+                        // Fallback for automation tools that dispatch 'input' instead of 'change'
+                        const value = (e.target as HTMLSelectElement).value;
+                        if (value && value !== formData.typeId) {
+                          const type = processTypes.find(t => t.id === value);
+                          if (type) handleTypeSelect(type);
+                        }
                       }}
                     >
                       <option value="">Selecione o tipo...</option>
@@ -1545,7 +1555,12 @@ function AdditionalModals({
               <Button 
                 form="quick-client-form"
                 type="submit" 
+                data-testid="save-client-btn"
                 disabled={isCreatingClient}
+                onClick={() => {
+                  const form = document.getElementById('quick-client-form') as HTMLFormElement | null;
+                  if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+                }}
                 className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
               >
                 {isCreatingClient ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Cliente"}
@@ -1782,7 +1797,12 @@ function AdditionalModals({
               <Button 
                 form="quick-vessel-form"
                 type="submit" 
+                data-testid="save-vessel-btn"
                 disabled={isCreatingVessel}
+                onClick={() => {
+                  const form = document.getElementById('quick-vessel-form') as HTMLFormElement | null;
+                  if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+                }}
                 className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
               >
                 {isCreatingVessel ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Embarcação"}
