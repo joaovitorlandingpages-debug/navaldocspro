@@ -1797,7 +1797,12 @@ function AdditionalModals({
               <Button 
                 form="quick-vessel-form"
                 type="submit" 
+                data-testid="save-vessel-btn"
                 disabled={isCreatingVessel}
+                onClick={() => {
+                  const form = document.getElementById('quick-vessel-form') as HTMLFormElement | null;
+                  if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+                }}
                 className="flex-1 bg-primary text-white rounded-xl h-12 font-bold shadow-lg shadow-primary/20"
               >
                 {isCreatingVessel ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Embarcação"}
