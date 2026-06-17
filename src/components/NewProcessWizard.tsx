@@ -1390,6 +1390,23 @@ export function NewProcessWizard({ isOpen, onClose }: NewProcessWizardProps) {
         setOcrVesselJobResult={setOcrVesselJobResult}
         applyVesselOcrData={applyVesselOcrData}
       />
+
+      <Dialog open={isClientAttachOpen} onOpenChange={setIsClientAttachOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Anexar documento do cliente</DialogTitle>
+          </DialogHeader>
+          {formData.clientId && (
+            <ClientDocumentUploader
+              customerId={formData.clientId}
+              onSuccess={() => {
+                setIsClientAttachOpen(false);
+                toast.success("Documento anexado ao cliente.");
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
