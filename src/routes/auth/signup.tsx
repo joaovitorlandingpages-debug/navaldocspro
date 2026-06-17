@@ -174,6 +174,14 @@ function SignupComponent() {
                   />
                 </div>
               </div>
+              <p className="text-[10px] text-white/40 leading-relaxed">
+                Use uma senha forte com pelo menos 8 caracteres, misturando letras maiúsculas, minúsculas, números e símbolos. Evite senhas comuns ou já usadas em outros sites.
+              </p>
+              {formError && (
+                <div role="alert" className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+                  {formError}
+                </div>
+              )}
             </CardContent>
             <CardFooter className="flex flex-col space-y-4 pt-2">
               <Button 
