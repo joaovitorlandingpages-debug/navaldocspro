@@ -45,37 +45,8 @@ function DocumentGenerator() {
   const { templates, generateDocument } = useDocuments();
   const [formValues, setFormValues] = useState<Record<string, string>>({});
 
-  const { data: customers } = useQuery({
-    queryKey: ["customers-list"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("customers").select("*");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: vessels } = useQuery({
-    queryKey: ["vessels-list"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("vessels").select("*");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: processes } = useQuery({
-    queryKey: ["processes-list"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("processes")
-        .select("*, customer:customers(name), vessel:vessels(name)");
-      if (error) throw error;
-      return data;
-    },
-  });
-
   const { data: profile } = useQuery({
-    queryKey: ["profile-info"],
+    queryKey: ["profile-info", user?.id],
     queryFn: async () => {
       if (!user) return null;
       const { data, error } = await supabase
@@ -87,6 +58,58 @@ function DocumentGenerator() {
       return data;
     },
     enabled: !!user,
+  });
+
+  const companyId = (profile as any)?.company_id as string | undefined;
+  const isGlobalAdmin = (profile as any)?.role === "admin_master_global";
+  const tenantReady = !!companyId || isGlobalAdmin;
+
+  const { data: customers } = useQuery({
+    queryKey: ["customers-list", companyId, isGlobalAdmin],
+    enabled: tenantReady,
+    queryFn: async () => {
+      let q = supabase.from("customers").select("*");
+      if (!isGlobalAdmin && companyId) q = q.eq("company_id", companyId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: vessels } = useQuery({
+    queryKey: ["vessels-list", companyId, isGlobalAdmin],
+    enabled: tenantReady,
+    queryFn: async () => {
+      let q = supabase.from("vessels").select("*");
+      if (!isGlobalAdmin && companyId) q = q.eq("company_id", companyId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: processes } = useQuery({
+    queryKey: ["processes-list", companyId, isGlobalAdmin],
+    enabled: tenantReady,
+    queryFn: async () => {
+      let q = supabase
+        .from("processes")
+        .select("*, customer:customers(name), vessel:vessels(name), company_id");
+      if (!isGlobalAdmin && companyId) q = q.eq("company_id", companyId);
+      const { data, error } = await q;
+      if (error) throw error;
+      // Defense-in-depth: filter again on client
+      const filtered = isGlobalAdmin
+        ? data
+        : (data || []).filter((p: any) => p.company_id === companyId);
+      if ((data?.length || 0) !== (filtered?.length || 0)) {
+        console.error("[CROSS_TENANT_PROCESS_LEAK_DETECTED]", {
+          expected: companyId,
+          leaked: (data || []).filter((p: any) => p.company_id !== companyId).map((p: any) => p.id),
+        });
+      }
+      return filtered;
+    },
   });
 
   const filteredTemplates = useMemo(() => {
