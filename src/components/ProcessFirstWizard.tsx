@@ -558,7 +558,7 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
 function Step2({ service, docs, customer, onUpload, onChange, fileInputRef }: {
   service: ServiceDef; docs: UploadedDoc[]; customer: CustomerDraft;
   onUpload: (files: FileList | null) => void; onChange: (p: Partial<CustomerDraft>) => void;
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
 }) {
   if (!service.needsPersonal) {
     return (
@@ -605,7 +605,7 @@ function Step2({ service, docs, customer, onUpload, onChange, fileInputRef }: {
 function Step3({ service, docs, vessel, onUpload, onChange, fileInputRef }: {
   service: ServiceDef; docs: UploadedDoc[]; vessel: VesselDraft;
   onUpload: (files: FileList | null) => void; onChange: (p: Partial<VesselDraft>) => void;
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
 }) {
   if (!service.needsVessel) {
     return (
