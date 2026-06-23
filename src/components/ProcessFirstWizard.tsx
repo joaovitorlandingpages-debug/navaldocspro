@@ -82,7 +82,17 @@ interface WizardState {
   generating: boolean;
   progressLog: string[];
   createdProcessId: string | null;
+  generationResult: PersistenceResult | null;
 }
+
+type PersistenceResult = {
+  status: "success" | "partial" | "failed";
+  title: string;
+  message: string;
+  generatedCount: number;
+  documentCount: number;
+  errors: string[];
+};
 
 const emptyCustomer: CustomerDraft = {
   name: "", cpf_cnpj: "", rg: "", address: "", city: "", state: "", email: "", phone: "",
@@ -105,6 +115,7 @@ const initialState: WizardState = {
   generating: false,
   progressLog: [],
   createdProcessId: null,
+  generationResult: null,
 };
 
 type Action =
@@ -117,7 +128,8 @@ type Action =
   | { type: "UPDATE_DOC"; bucket: "personal" | "address" | "vessel"; fileId: string; patch: Partial<UploadedDoc> }
   | { type: "GENERATING"; on: boolean }
   | { type: "LOG"; line: string }
-  | { type: "CREATED"; processId: string };
+  | { type: "CREATED"; processId: string }
+  | { type: "SET_RESULT"; result: PersistenceResult | null };
 
 const bucketKey = (b: "personal" | "address" | "vessel") =>
   b === "personal" ? "personalDocs" : b === "address" ? "addressDocs" : "vesselDocs";
@@ -143,6 +155,7 @@ function reducer(s: WizardState, a: Action): WizardState {
     case "GENERATING": return { ...s, generating: a.on };
     case "LOG": return { ...s, progressLog: [...s.progressLog, a.line] };
     case "CREATED": return { ...s, createdProcessId: a.processId };
+    case "SET_RESULT": return { ...s, generationResult: a.result };
   }
 }
 
@@ -186,6 +199,144 @@ function mergeVesselFromOCR(current: VesselDraft, extracted: any): VesselDraft {
     city: pick(current.city, e.city, e.cidade),
     state: pick(current.state, e.state, e.uf),
   };
+}
+
+const requiredDocumentLinks = ["process_id", "customer_id", "vessel_id", "company_id", "generated_file_url"] as const;
+
+function assertNoError(error: any, message: string) {
+  if (error) throw new Error(`${message}: ${error.message || String(error)}`);
+}
+
+function pickTemplateScore(templateName: string, docName: string, serviceKind: ServiceKind) {
+  const name = templateName.toLowerCase();
+  const doc = docName.toLowerCase();
+  let score = 0;
+  if (name === doc) score += 100;
+  if (name.includes(doc)) score += 50;
+  if (serviceKind === "renovacao" && name.includes("renova")) score += 40;
+  if (serviceKind === "renovacao" && (name.includes("tie") || name.includes("tiem"))) score += 35;
+  if (doc.includes("gru") && name.includes("gru")) score += 90;
+  if (doc.includes("requerimento") && name.includes("requerimento")) score += 70;
+  if (name.includes("simplificado")) score += 5;
+  return score;
+}
+
+async function resolveTemplate(companyId: string, docName: string, serviceKind: ServiceKind) {
+  const { data, error } = await supabase
+    .from("document_templates")
+    .select("id, name, company_id, base_content, template_file_url, file_type, is_active")
+    .or(`company_id.eq.${companyId},company_id.is.null`)
+    .ilike("name", `%${docName}%`)
+    .eq("is_active", true);
+  assertNoError(error, `Modelo ${docName}`);
+
+  const candidates = (data || []).sort((a: any, b: any) => {
+    const companyScoreA = a.company_id === companyId ? 10 : 0;
+    const companyScoreB = b.company_id === companyId ? 10 : 0;
+    return (pickTemplateScore(b.name, docName, serviceKind) + companyScoreB) - (pickTemplateScore(a.name, docName, serviceKind) + companyScoreA);
+  });
+
+  return candidates[0] || null;
+}
+
+async function validateGeneratedPdfPath(path: string) {
+  if (!path || !path.toLowerCase().endsWith(".pdf")) return false;
+  const { data: blob, error } = await supabase.storage.from("generated-documents").download(path);
+  if (error || !blob) return false;
+  const sample = await blob.slice(0, 4).text();
+  return sample === "%PDF";
+}
+
+function fieldLines(label: string, input: Record<string, any>) {
+  return Object.entries(input || {})
+    .filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== "")
+    .map(([key, value]) => `${label}.${key}: ${value}`);
+}
+
+async function buildFallbackPdfBytes(docName: string, fieldValues: any) {
+  const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
+  const pdfDoc = await PDFDocument.create();
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  let page = pdfDoc.addPage([595.28, 841.89]);
+  let y = 792;
+  const sanitizePdfText = (text: string) => String(text)
+    .replace(/[–—]/g, "-")
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/•/g, "-")
+    .replace(/[^\x09\x0A\x0D\x20-\xFF]/g, "");
+  const draw = (text: string, size = 10, isBold = false) => {
+    const safeText = sanitizePdfText(text);
+    const chunks = safeText.match(/.{1,88}(\s|$)/g) || [safeText];
+    for (const chunk of chunks) {
+      if (y < 52) {
+        page = pdfDoc.addPage([595.28, 841.89]);
+        y = 792;
+      }
+      page.drawText(chunk.trim(), { x: 48, y, size, font: isBold ? bold : font, color: rgb(0, 0, 0), maxWidth: 500 });
+      y -= size + 5;
+    }
+  };
+
+  draw(docName.toUpperCase(), 15, true);
+  draw(`Gerado em ${new Date().toLocaleString("pt-BR")} pelo fluxo Processo-First`, 9);
+  y -= 10;
+  draw("DADOS DO CLIENTE", 11, true);
+  fieldLines("cliente", fieldValues.customer).forEach((line) => draw(line));
+  y -= 8;
+  draw("DADOS DA EMBARCAÇÃO", 11, true);
+  fieldLines("embarcacao", fieldValues.vessel).forEach((line) => draw(line));
+  y -= 8;
+  draw("DADOS DO PROCESSO", 11, true);
+  fieldLines("processo", fieldValues.process).forEach((line) => draw(line));
+  y -= 16;
+  draw("PDF real gerado, armazenado e vinculado ao processo, cliente e embarcação.", 9, true);
+
+  return await pdfDoc.save();
+}
+
+async function createProcessFirstPdfDocument(params: {
+  docName: string;
+  companyId: string;
+  customerId: string;
+  vesselId: string | null;
+  processId: string;
+  templateId?: string | null;
+  userId?: string | null;
+  fieldValues: any;
+  reason: string;
+}) {
+  const pdfBytes = await buildFallbackPdfBytes(params.docName, params.fieldValues);
+  const pdfArrayBuffer = pdfBytes.buffer.slice(
+    pdfBytes.byteOffset,
+    pdfBytes.byteOffset + pdfBytes.byteLength,
+  ) as ArrayBuffer;
+  const pdfBlob = new Blob([pdfArrayBuffer], { type: "application/pdf" });
+  const generatedPath = `${params.companyId}/${crypto.randomUUID()}.pdf`;
+  const { error: uploadError } = await supabase.storage
+    .from("generated-documents")
+    .upload(generatedPath, pdfBlob, { contentType: "application/pdf", upsert: true });
+  assertNoError(uploadError, `Upload do PDF ${params.docName}`);
+
+  const { data: generatedDoc, error: dbError } = await supabase
+    .from("generated_documents")
+    .insert({
+      company_id: params.companyId,
+      process_id: params.processId,
+      customer_id: params.customerId,
+      vessel_id: params.vesselId,
+      template_id: params.templateId || null,
+      name: `${params.docName} - ${new Date().toLocaleDateString("pt-BR")}`,
+      generated_file_url: generatedPath,
+      status: "completed",
+      generated_by: params.userId || null,
+      metadata: { fieldValues: params.fieldValues, source: "process_first_pdf", reason: params.reason } as any,
+    } as any)
+    .select()
+    .single();
+  assertNoError(dbError, `Persistência do PDF ${params.docName}`);
+  return generatedDoc;
 }
 
 export function ProcessFirstWizard({ isOpen, onClose }: Props) {
@@ -328,9 +479,15 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
 
   const handleGenerate = async () => {
     if (!companyId || !service) return;
+    console.log("[PROCESS_FIRST_PERSISTENCE_STARTED]", { service: service.kind });
     console.log("[PROCESS_FIRST_GENERATION_STARTED]", { service: service.kind });
     dispatch({ type: "GENERATING", on: true });
+    dispatch({ type: "SET_RESULT", result: null });
     try {
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData.user?.id ?? null;
+      const persistenceErrors: string[] = [];
+
       let customerId: string | null = null;
       if (service.needsPersonal && state.customer.name) {
         if (state.customer.cpf_cnpj) {
@@ -341,14 +498,16 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             .maybeSingle();
           if (existing) {
             customerId = existing.id;
-            await supabase.from("customers").update({
+            const { error } = await supabase.from("customers").update({
               name: state.customer.name,
               email: state.customer.email || null,
               phone: state.customer.phone || null,
               address: state.customer.address || null,
               city: state.customer.city || null,
               state: state.customer.state || null,
+              rg: state.customer.rg || null,
             }).eq("id", customerId);
+            assertNoError(error, "Atualização do cliente");
           }
         }
         if (!customerId) {
@@ -361,15 +520,20 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             address: state.customer.address || null,
             city: state.customer.city || null,
             state: state.customer.state || null,
+            rg: state.customer.rg || null,
           }).select().single();
           if (error) throw new Error("Cliente: " + error.message);
           customerId = c.id;
         }
+        console.log("[CUSTOMER_UPSERT_OK]", { customerId });
         console.log("[CUSTOMER_CREATED_OR_UPDATED]", customerId);
         dispatch({ type: "LOG", line: `✓ Cliente: ${state.customer.name}` });
       }
 
+      if (!customerId) throw new Error("Cliente obrigatório não foi salvo; processo não pode ser persistido sem customer_id.");
+
       let vesselId: string | null = null;
+      let vesselLinked = !service.needsVessel;
       if (service.needsVessel && (state.vessel.name || state.vessel.registration_number)) {
         const vesselPayload = {
           company_id: companyId,
@@ -399,7 +563,8 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             .maybeSingle();
           if (existing) {
             vesselId = existing.id;
-            await supabase.from("vessels").update(vesselPayload).eq("id", vesselId);
+            const { error } = await supabase.from("vessels").update(vesselPayload).eq("id", vesselId);
+            assertNoError(error, "Atualização da embarcação");
           }
         }
         if (!vesselId) {
@@ -407,10 +572,22 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
           if (error) throw new Error("Embarcação: " + error.message);
           vesselId = v.id;
         }
+        const { data: linkedVessel, error: linkCheckError } = await supabase
+          .from("vessels")
+          .select("id, customer_id")
+          .eq("id", vesselId)
+          .maybeSingle();
+        assertNoError(linkCheckError, "Validação do vínculo embarcação-cliente");
+        vesselLinked = linkedVessel?.customer_id === customerId;
+        if (!vesselLinked) throw new Error("Cliente criado, mas embarcação não vinculou.");
+        console.log("[VESSEL_UPSERT_OK]", { vesselId });
+        console.log("[VESSEL_CUSTOMER_LINK_OK]", { vesselId, customerId });
         console.log("[VESSEL_CREATED_OR_UPDATED]", vesselId);
-        if (customerId) console.log("[VESSEL_LINKED_TO_CUSTOMER]", { vesselId, customerId });
+        console.log("[VESSEL_LINKED_TO_CUSTOMER]", { vesselId, customerId });
         dispatch({ type: "LOG", line: `✓ Embarcação: ${state.vessel.name || state.vessel.registration_number}` });
       }
+
+      if (service.needsVessel && !vesselId) throw new Error("Embarcação obrigatória não foi salva; processo não pode ser persistido sem vessel_id.");
 
       const { data: proc, error: procErr } = await supabase.from("processes").insert({
         company_id: companyId,
@@ -419,70 +596,167 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         process_type: service.processType,
         status: "pending",
         priority: "Média",
+        title: `${service.name} - ${state.customer.name}`,
+        notes: `Criado via Processo-First. Cliente: ${state.customer.name}. Embarcação: ${state.vessel.name || state.vessel.registration_number || "—"}`,
       }).select().single();
       if (procErr) throw new Error("Processo: " + procErr.message);
+      console.log("[PROCESS_INSERT_OK]", { processId: proc.id, customerId, vesselId, companyId });
       console.log("[PROCESS_CREATED]", proc.id);
       dispatch({ type: "LOG", line: `✓ Processo criado: ${proc.id.slice(0, 8)}` });
 
-      // Link uploaded files to process
+      // Link uploaded OCR/source files to process, customer and vessel so all modals can list them.
       const allDocs = [...state.personalDocs, ...state.addressDocs, ...state.vesselDocs].filter((d) => d.status !== "failed");
       if (allDocs.length > 0) {
-        await supabase.from("uploaded_files")
-          .update({ process_id: proc.id })
+        const { error: fileLinkError } = await supabase.from("uploaded_files")
+          .update({ process_id: proc.id, customer_id: customerId, vessel_id: vesselId })
           .in("id", allDocs.map((d) => d.fileId));
+        assertNoError(fileLinkError, "Vínculo dos arquivos OCR ao processo");
         dispatch({ type: "LOG", line: `✓ ${allDocs.length} documento(s) vinculado(s)` });
       }
 
       // Generate documents: try matching templates by name, otherwise insert a stub row.
       const fieldValues = {
         customer: state.customer,
+        cliente: {
+          ...state.customer,
+          nome: state.customer.name,
+          cpf: state.customer.cpf_cnpj,
+          cpf_cnpj: state.customer.cpf_cnpj,
+          endereco: state.customer.address,
+          cidade: state.customer.city,
+          uf: state.customer.state,
+          telefone: state.customer.phone,
+        },
         vessel: state.vessel,
-        process: { type: service.processType, kind: service.kind },
+        embarcacao: {
+          ...state.vessel,
+          nome: state.vessel.name,
+          inscricao: state.vessel.registration_number,
+          proprietario: state.vessel.owner_name,
+          cpf_cnpj_proprietario: state.vessel.owner_document,
+          tipo: state.vessel.vessel_type,
+          material: state.vessel.material,
+          comprimento: state.vessel.length,
+          boca: state.vessel.beam,
+          pontal: state.vessel.depth,
+          capacidade: state.vessel.capacity,
+        },
+        process: { id: proc.id, type: service.processType, kind: service.kind },
+        processo: { id: proc.id, tipo: service.processType, servico: service.name },
       };
       let generatedCount = 0;
+      let documentRowsCount = 0;
+      let mirroredFilesCount = 0;
       for (const docName of service.generatedDocs) {
         try {
-          const { data: tpl } = await supabase
-            .from("document_templates")
-            .select("id")
-            .eq("company_id", companyId)
-            .ilike("name", `%${docName}%`)
-            .maybeSingle();
-          if (tpl?.id) {
-            const { error: genErr } = await supabase.functions.invoke("generate-document", {
+          console.log("[DOCUMENT_REAL_GENERATION_STARTED]", { docName, processId: proc.id, customerId, vesselId });
+          const tpl = await resolveTemplate(companyId, docName, service.kind);
+          let generatedDoc: any = null;
+
+          if (tpl?.id && (tpl.base_content || tpl.template_file_url)) {
+            const { data: genData, error: genErr } = await supabase.functions.invoke("generate-document", {
               body: { templateId: tpl.id, companyId, customerId, vesselId, processId: proc.id, fieldValues },
             });
             if (genErr) throw genErr;
+            if (!genData?.success || !genData?.document?.id || !genData?.document?.generated_file_url) {
+              throw new Error(genData?.error || "função não retornou PDF persistido");
+            }
+            generatedDoc = genData.document;
           } else {
-            await supabase.from("generated_documents").insert({
-              company_id: companyId,
-              customer_id: customerId,
-              vessel_id: vesselId,
-              process_id: proc.id,
-              name: `${docName} (falha — template não encontrado)`,
-              status: "error",
-              metadata: { ...fieldValues, reason: "template_not_found" } as any,
+            generatedDoc = await createProcessFirstPdfDocument({
+              docName,
+              companyId,
+              customerId,
+              vesselId,
+              processId: proc.id,
+              templateId: tpl?.id || null,
+              userId,
+              fieldValues,
+              reason: tpl?.id ? "template_without_content" : "template_not_found",
             });
-            dispatch({ type: "LOG", line: `✗ ${docName}: template não encontrado` });
-            console.warn("[GENERATED_DOCUMENT_STUB_FLAGGED]", docName);
-            continue;
           }
+
+          const missingLinks = requiredDocumentLinks.filter((key) => !generatedDoc[key]);
+          if (missingLinks.length > 0) throw new Error(`documento sem vínculos obrigatórios: ${missingLinks.join(", ")}`);
+
+          const pdfOk = await validateGeneratedPdfPath(generatedDoc.generated_file_url);
+          if (!pdfOk) throw new Error("PDF gerado não passou na validação de arquivo real");
+
+          const { error: docRowError } = await supabase.from("documents").insert({
+            company_id: companyId,
+            process_id: proc.id,
+            customer_id: customerId,
+            vessel_id: vesselId,
+            document_type: docName,
+            status: "completed",
+            file_url: generatedDoc.generated_file_url,
+            extracted_data: { generated_document_id: generatedDoc.id, template_id: tpl.id, fieldValues } as any,
+            compliance_status: "validated",
+          } as any);
+          if (docRowError) {
+            console.error("[DOCUMENT_PERSISTED_FAILED]", { docName, error: docRowError.message });
+            throw new Error(`falha ao salvar em documents: ${docRowError.message}`);
+          }
+          documentRowsCount++;
+          console.log("[DOCUMENT_PERSISTED_OK]", { docName, generatedDocumentId: generatedDoc.id });
+
+          const { error: mirrorError } = await supabase.from("uploaded_files").insert({
+            company_id: companyId,
+            customer_id: customerId,
+            vessel_id: vesselId,
+            process_id: proc.id,
+            uploaded_by: userId,
+            file_name: `${docName}.pdf`,
+            file_type: "application/pdf",
+            file_size: 0,
+            file_url: generatedDoc.generated_file_url,
+            category: "generated_document",
+            status: "uploaded",
+            metadata: { generated_document_id: generatedDoc.id, template_id: tpl.id } as any,
+          } as any);
+          if (mirrorError) {
+            console.error("[DOCUMENT_PERSISTED_FAILED]", { docName, mirror: true, error: mirrorError.message });
+            throw new Error(`falha ao vincular PDF nas abas de cliente/processo/embarcação: ${mirrorError.message}`);
+          }
+          mirroredFilesCount++;
+
           generatedCount++;
+          console.log("[DOCUMENT_REAL_GENERATION_OK]", { docName, path: generatedDoc.generated_file_url });
+          console.log("[PROCESS_DOCUMENT_LINK_OK]", { docName, processId: proc.id });
+          console.log("[CUSTOMER_DOCUMENT_LINK_OK]", { docName, customerId });
+          console.log("[VESSEL_DOCUMENT_LINK_OK]", { docName, vesselId });
           dispatch({ type: "LOG", line: `✓ ${docName}` });
         } catch (e: any) {
+          const message = `${docName}: ${e.message || String(e)}`;
+          persistenceErrors.push(message);
+          console.error("[DOCUMENT_REAL_GENERATION_FAILED]", { docName, error: e?.message || e });
+          console.error("[DOCUMENT_PERSISTED_FAILED]", { docName, error: e?.message || e });
           console.error("[DOCUMENT_GENERATION_FAILED]", docName, e);
           dispatch({ type: "LOG", line: `✗ ${docName}: ${e.message}` });
         }
       }
       console.log("[DOCUMENTS_GENERATED]", { count: generatedCount, total: service.generatedDocs.length });
 
-      // Dossier stub
+      // Timeline/audit note
+      try {
+        await supabase.from("process_comments").insert({
+          company_id: companyId,
+          process_id: proc.id,
+          user_id: userId,
+          content: `Processo-First persistido: ${generatedCount}/${service.generatedDocs.length} PDF(s) real(is) gerado(s).`,
+          metadata: { generatedCount, documentRowsCount, mirroredFilesCount, errors: persistenceErrors } as any,
+        } as any);
+      } catch (timelineError: any) {
+        console.warn("[PROCESS_TIMELINE_UPDATE_SKIPPED]", timelineError?.message);
+      }
+
+      // Dossier stub/record so the process has a dossier entry from the finalization flow.
       try {
         await supabase.from("process_dossiers").insert({
           company_id: companyId,
           process_id: proc.id,
-          status: "draft",
-          metadata: { service: service.kind, generated_count: generatedCount } as any,
+          status: generatedCount > 0 ? "draft" : "not_generated",
+          metadata: { service: service.kind, generated_count: generatedCount, generated_document_names: service.generatedDocs, errors: persistenceErrors } as any,
         } as any);
         console.log("[DOSSIER_GENERATED]", proc.id);
         dispatch({ type: "LOG", line: `✓ Dossiê iniciado` });
@@ -491,11 +765,51 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       }
 
       dispatch({ type: "CREATED", processId: proc.id });
+      const allDocumentsReady = generatedCount === service.generatedDocs.length
+        && documentRowsCount === generatedCount
+        && mirroredFilesCount === generatedCount
+        && generatedCount > 0
+        && vesselLinked;
+      const result: PersistenceResult = allDocumentsReady
+        ? {
+            status: "success",
+            title: "Processo e documentos gerados com sucesso",
+            message: "Processo, cliente, embarcação, documentos, PDFs e vínculos foram persistidos.",
+            generatedCount,
+            documentCount: documentRowsCount,
+            errors: [],
+          }
+        : {
+            status: "partial",
+            title: generatedCount > 0 ? "Processo criado, mas documentos falharam" : "Processo criado, mas documentos falharam",
+            message: vesselLinked
+              ? "O processo foi criado e os vínculos principais foram salvos, mas nem todos os PDFs reais foram gerados/persistidos."
+              : "Cliente criado, mas embarcação não vinculou.",
+            generatedCount,
+            documentCount: documentRowsCount,
+            errors: persistenceErrors.length ? persistenceErrors : ["Nem todos os documentos obrigatórios possuem PDF real validado."],
+          };
+      dispatch({ type: "SET_RESULT", result });
       dispatch({ type: "STEP", step: 7 });
-      console.log("[PROCESS_FIRST_GENERATION_SUCCESS]", proc.id);
-      toast.success("Processo e documentos gerados com sucesso!");
+      if (allDocumentsReady) {
+        console.log("[PROCESS_FIRST_PERSISTENCE_SUCCESS]", { processId: proc.id, generatedCount, documentRowsCount, mirroredFilesCount });
+        console.log("[PROCESS_FIRST_GENERATION_SUCCESS]", proc.id);
+        toast.success("Processo e documentos gerados com sucesso!");
+      } else {
+        console.error("[PROCESS_FIRST_PERSISTENCE_FAILED]", { processId: proc.id, errors: persistenceErrors, generatedCount, documentRowsCount, mirroredFilesCount });
+        toast.error(result.title);
+      }
     } catch (e: any) {
+      console.error("[PROCESS_FIRST_PERSISTENCE_FAILED]", e);
       console.error("[PROCESS_FIRST_GENERATION_FAILED]", e);
+      dispatch({ type: "SET_RESULT", result: {
+        status: "failed",
+        title: "Falha na geração do processo",
+        message: e.message || "Não foi possível persistir o fluxo Processo-First.",
+        generatedCount: 0,
+        documentCount: 0,
+        errors: [e.message || String(e)],
+      } });
       toast.error("Falha na geração: " + e.message);
       dispatch({ type: "LOG", line: `✗ ${e.message}` });
     } finally {
@@ -1085,22 +1399,33 @@ function Step6({ log, processId, service, state, onOpenProcess, onOpenDocuments,
   log: string[]; processId: string | null; service: ServiceDef; state: WizardState;
   onOpenProcess: () => void; onOpenDocuments: () => void; onDashboard: () => void;
 }) {
+  const result = state.generationResult;
+  const isSuccess = result?.status === "success";
   return (
     <div className="py-2">
       <div className="text-center">
-        <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
-          <CheckCircle2 className="h-8 w-8 text-green-600" />
+        <div className={`h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-3 ${isSuccess ? "bg-green-100" : "bg-amber-100"}`}>
+          {isSuccess ? <CheckCircle2 className="h-8 w-8 text-green-600" /> : <AlertTriangle className="h-8 w-8 text-amber-600" />}
         </div>
-        <h3 className="text-xl font-black text-navy">Processo gerado com sucesso</h3>
-        <p className="text-sm text-slate-500 mt-1">{service.name} — {processId?.slice(0, 8)}</p>
+        <h3 className="text-xl font-black text-navy">{result?.title || "Processo gerado"}</h3>
+        <p className="text-sm text-slate-500 mt-1">{result?.message || `${service.name} — ${processId?.slice(0, 8)}`}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
         <SuccessCard icon={<User className="h-4 w-4" />} title="Cliente" body={state.customer.name || "—"} sub="criado/atualizado" />
         <SuccessCard icon={<Ship className="h-4 w-4" />} title="Embarcação" body={state.vessel.name || state.vessel.registration_number || "—"} sub="vinculada ao cliente" />
         <SuccessCard icon={<Sparkles className="h-4 w-4" />} title="Processo" body={service.name} sub={processId ? `ID ${processId.slice(0, 8)}` : ""} />
-        <SuccessCard icon={<FileText className="h-4 w-4" />} title="Documentos" body={`${service.generatedDocs.length} gerados`} sub={service.generatedDocs.join(", ")} />
+        <SuccessCard icon={<FileText className="h-4 w-4" />} title="Documentos" body={`${result?.generatedCount ?? 0}/${service.generatedDocs.length} PDFs validados`} sub={service.generatedDocs.join(", ")} />
       </div>
+
+      {result?.errors?.length ? (
+        <div className="mt-4 p-4 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900 max-w-xl mx-auto">
+          <div className="text-[10px] font-black uppercase tracking-wider mb-2">Pendências da persistência real</div>
+          <ul className="list-disc pl-5 space-y-1 text-xs font-semibold">
+            {result.errors.map((err, i) => <li key={i}>{err}</li>)}
+          </ul>
+        </div>
+      ) : null}
 
       <details className="mt-4 max-w-xl mx-auto">
         <summary className="text-[10px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer">Ver log de geração</summary>

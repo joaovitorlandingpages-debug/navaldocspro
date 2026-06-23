@@ -36,6 +36,7 @@ import { DocumentAuditTimeline } from "@/components/documents/DocumentAuditTimel
 import { PDFPreviewer } from "@/components/documents/PDFPreviewer";
 import { documentService } from "@/services/documentService";
 import { toast } from "sonner";
+import { getStoredFileSignedUrl } from "@/utils/file-preview";
 
 export default function DocumentCenter() {
   const { profile } = useAuth();
@@ -58,8 +59,7 @@ export default function DocumentCenter() {
         .select(`
           *,
           vessels(name),
-          customers(name),
-          profiles:created_by_profile_id(full_name)
+          customers(name)
         `, { count: 'exact' })
         .eq("company_id", profile?.company_id);
 
@@ -99,10 +99,11 @@ export default function DocumentCenter() {
 
   const handleDownload = async (doc: any) => {
     if (doc.file_url) {
-      window.open(doc.file_url, '_blank');
+      const signedUrl = await getStoredFileSignedUrl(doc);
+      window.open(signedUrl, '_blank');
       await documentService.logAction(doc.id, 'downloaded');
     } else {
-      toast.error("URL do arquivo não encontrada.");
+      toast.error("PDF não gerado. Clique em regenerar.");
     }
   };
 
@@ -117,10 +118,17 @@ export default function DocumentCenter() {
     setIsAuditOpen(true);
   };
 
-  const handlePreviewRequest = (doc: any) => {
-    setSelectedDoc(doc);
-    setIsPreviewOpen(true);
-    documentService.logAction(doc.id, 'viewed');
+  const handlePreviewRequest = async (doc: any) => {
+    try {
+      if (!doc.file_url) throw new Error("PDF não gerado. Clique em regenerar.");
+      const signedUrl = await getStoredFileSignedUrl(doc);
+      setSelectedDoc({ ...doc, signed_file_url: signedUrl });
+      setIsPreviewOpen(true);
+      documentService.logAction(doc.id, 'viewed');
+      console.log('[GENERATED_DOCUMENT_PREVIEW_FIXED]', { documentId: doc.id });
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao abrir documento.");
+    }
   };
 
   return (
@@ -349,7 +357,7 @@ export default function DocumentCenter() {
         <PDFPreviewer 
           isOpen={isPreviewOpen}
           onClose={() => setIsPreviewOpen(false)}
-          fileUrl={selectedDoc.file_url || ""}
+          fileUrl={selectedDoc.signed_file_url || selectedDoc.file_url || ""}
           title={selectedDoc.document_type}
         />
       )}

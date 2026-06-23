@@ -26,6 +26,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { safeString } from "@/utils/safe-string";
+import { openStoredFile } from "@/utils/file-preview";
 
 
 export const Route = createFileRoute("/customers")({
@@ -144,7 +145,7 @@ function Customers() {
     }
     (async () => {
       const [{ data: vs }, { data: ps }] = await Promise.all([
-        supabase.from("vessels").select("id, name, registration_number, vessel_type, current_owner_name, status").eq("customer_id", selectedCustomer.id).order("created_at", { ascending: false }),
+        supabase.from("vessels").select("id, name, registration_number, vessel_type, current_owner_name").eq("customer_id", selectedCustomer.id).order("created_at", { ascending: false }),
         supabase.from("processes").select("id, process_type, status, created_at").eq("customer_id", selectedCustomer.id).order("created_at", { ascending: false }).limit(20),
       ]);
       setCustomerVessels(vs || []);
@@ -950,7 +951,7 @@ function Customers() {
                                 </div>
                             </div>
                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                               <a href={file.file_url} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></a>
+                               <button onClick={() => openStoredFile(file)} className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></button>
                                <button onClick={() => deleteFile.mutate(file.id)} className="p-2 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
                             </div>
                          </div>
