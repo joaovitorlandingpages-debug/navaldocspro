@@ -366,7 +366,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       dispatch({ type: "LOG", line: `✓ Processo criado: ${proc.id.slice(0, 8)}` });
 
       // Link uploaded files to process
-      const allDocs = [...state.personalDocs, ...state.vesselDocs].filter((d) => d.status !== "failed");
+      const allDocs = [...state.personalDocs, ...state.addressDocs, ...state.vesselDocs].filter((d) => d.status !== "failed");
       if (allDocs.length > 0) {
         await supabase.from("uploaded_files")
           .update({ process_id: proc.id })
@@ -375,7 +375,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       }
 
       dispatch({ type: "CREATED", processId: proc.id });
-      dispatch({ type: "STEP", step: 6 });
+      dispatch({ type: "STEP", step: 7 });
       toast.success("Processo criado com sucesso!");
     } catch (e: any) {
       toast.error(e.message);
