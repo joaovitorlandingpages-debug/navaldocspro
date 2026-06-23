@@ -35,10 +35,7 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
       // Fetch the latest dossier version
       const { data: dossiers, error: dossierError } = await supabase
         .from('process_dossiers')
-        .select(`
-          *,
-          created_by_profile:profiles(full_name)
-        `)
+        .select('*')
         .eq('process_id', processId)
         .order('version', { ascending: false });
 
@@ -52,13 +49,17 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
           customer:customers(*),
           vessel:vessels(*),
           company:companies(*),
-          documents:process_documents(*),
           audit_logs:audit_logs(*)
         `)
         .eq('id', processId)
         .single();
 
       if (processError) throw processError;
+
+      const [{ data: documents }, { data: generatedDocuments }] = await Promise.all([
+        supabase.from('documents').select('*').eq('process_id', processId).order('created_at', { ascending: false }),
+        supabase.from('generated_documents').select('*').eq('process_id', processId).order('created_at', { ascending: false }),
+      ]);
 
       const latestDossier = dossiers && dossiers.length > 0 ? dossiers[0] : null;
       
@@ -67,7 +68,7 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
         process: process,
         customer: process.customer,
         vessel: process.vessel,
-        documents: process.documents,
+        documents: [...(generatedDocuments || []), ...(documents || [])],
         auditLogs: process.audit_logs
       });
       
@@ -109,7 +110,6 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
         .insert({
           process_id: processId,
           company_id: profile.company_id,
-          created_by: user.id,
           version: newVersion,
           status: 'generating',
           metadata: {
@@ -141,8 +141,11 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
           .from('process_dossiers')
           .update({ 
             status: 'generated',
-            pdf_path: `${profile.company_id}/${processId}/dossier_v${newVersion}.pdf`,
-            zip_path: `${profile.company_id}/${processId}/dossier_v${newVersion}.zip`
+            file_url: `${profile.company_id}/${processId}/dossier_v${newVersion}.pdf`,
+            metadata: {
+              generated_at: new Date().toISOString(),
+              zip_path: `${profile.company_id}/${processId}/dossier_v${newVersion}.zip`
+            }
           })
           .eq('id', newDossier.id);
         
@@ -235,7 +238,7 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
                       <Badge className="bg-white text-navy border-slate-200 text-[8px] font-black">v{version.version}.0</Badge>
                       <span className="text-[8px] font-bold text-slate-400">{new Date(version.created_at).toLocaleDateString()}</span>
                     </div>
-                    <p className="text-[10px] font-bold text-navy truncate mb-2">Por: {version.created_by_profile?.full_name || "Sistema"}</p>
+                    <p className="text-[10px] font-bold text-navy truncate mb-2">Por: Sistema</p>
                     <div className="flex gap-2">
                       <Button variant="ghost" className="h-7 px-2 text-[8px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 rounded-lg flex-1">
                         <Download className="h-3 w-3 mr-1" /> PDF
