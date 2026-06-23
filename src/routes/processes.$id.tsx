@@ -95,7 +95,7 @@ function ProcessDetail() {
         .select(`
           *,
           customer:customers(id, name, cpf_cnpj, email),
-          vessel:vessels(id, name, activity, has_radio, gross_tonnage, registration_number, vessel_type)
+          vessel:vessels(id, name, registration_number, vessel_type, current_owner_name, current_owner_cpf_cnpj, length, boca, pontal, material, capacity)
         `)
         .eq('id', id)
         .maybeSingle();

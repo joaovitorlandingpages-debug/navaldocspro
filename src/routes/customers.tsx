@@ -145,7 +145,7 @@ function Customers() {
     }
     (async () => {
       const [{ data: vs }, { data: ps }] = await Promise.all([
-        supabase.from("vessels").select("id, name, registration_number, vessel_type, current_owner_name, status").eq("customer_id", selectedCustomer.id).order("created_at", { ascending: false }),
+        supabase.from("vessels").select("id, name, registration_number, vessel_type, current_owner_name").eq("customer_id", selectedCustomer.id).order("created_at", { ascending: false }),
         supabase.from("processes").select("id, process_type, status, created_at").eq("customer_id", selectedCustomer.id).order("created_at", { ascending: false }).limit(20),
       ]);
       setCustomerVessels(vs || []);
