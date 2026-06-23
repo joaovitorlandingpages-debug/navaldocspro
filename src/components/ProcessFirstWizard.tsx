@@ -605,8 +605,32 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       // Generate documents: try matching templates by name, otherwise insert a stub row.
       const fieldValues = {
         customer: state.customer,
+        cliente: {
+          ...state.customer,
+          nome: state.customer.name,
+          cpf: state.customer.cpf_cnpj,
+          cpf_cnpj: state.customer.cpf_cnpj,
+          endereco: state.customer.address,
+          cidade: state.customer.city,
+          uf: state.customer.state,
+          telefone: state.customer.phone,
+        },
         vessel: state.vessel,
+        embarcacao: {
+          ...state.vessel,
+          nome: state.vessel.name,
+          inscricao: state.vessel.registration_number,
+          proprietario: state.vessel.owner_name,
+          cpf_cnpj_proprietario: state.vessel.owner_document,
+          tipo: state.vessel.vessel_type,
+          material: state.vessel.material,
+          comprimento: state.vessel.length,
+          boca: state.vessel.beam,
+          pontal: state.vessel.depth,
+          capacidade: state.vessel.capacity,
+        },
         process: { id: proc.id, type: service.processType, kind: service.kind },
+        processo: { id: proc.id, tipo: service.processType, servico: service.name },
       };
       let generatedCount = 0;
       let documentRowsCount = 0;
