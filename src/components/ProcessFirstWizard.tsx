@@ -390,7 +390,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
     setTimeout(() => dispatch({ type: "RESET" }), 200);
   };
 
-  const steps = ["Serviço", "Pessoais", "Embarcação", "Montagem", "Pré-visualização", "Concluído"];
+  const steps = ["Serviço", "Identidade", "Endereço", "Embarcação", "Montagem", "Pré-visualização", "Concluído"];
 
   const content = (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
