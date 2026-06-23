@@ -30,19 +30,36 @@ function Documents() {
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   
   const handleViewDocument = async (doc: any) => {
+    if (doc.status === 'error') {
+      toast.error("Falha na geração do PDF — revise o template e tente gerar novamente.");
+      return;
+    }
+    if (!doc.generated_file_url) {
+      toast.warning("Documento ainda não possui PDF. Status: " + (doc.status || 'pendente'));
+      return;
+    }
     try {
-      if (doc.generated_file_url) {
-        // If it's a full URL (legacy), use it. If it's just a path, get signed URL.
-        const path = doc.generated_file_url.includes('http') 
-          ? doc.generated_file_url.split('/').slice(-2).join('/')
-          : doc.generated_file_url;
-        
-        const url = await getSignedUrl('generated-documents', path);
-        window.open(url, '_blank');
+      const raw = doc.generated_file_url as string;
+      let url = raw;
+      if (raw.startsWith('http')) {
+        // Try to derive path from public URL (company_id/file.ext)
+        const match = raw.match(/generated-documents\/(.+)$/);
+        if (match) url = await getSignedUrl('generated-documents', match[1]);
+      } else {
+        url = await getSignedUrl('generated-documents', raw);
       }
+      window.open(url, '_blank');
     } catch (e) {
+      console.error('[GENERATED_DOCUMENT_PREVIEW_FAILED]', e);
       toast.error("Erro ao abrir documento.");
     }
+  };
+
+  const statusBadge = (s?: string) => {
+    if (s === 'completed') return { label: 'Concluído', cls: 'bg-green-100 text-green-700' };
+    if (s === 'error') return { label: 'Falha — revisar', cls: 'bg-rose-100 text-rose-700' };
+    if (s === 'pending') return { label: 'Pendente', cls: 'bg-amber-100 text-amber-700' };
+    return { label: 'Rascunho', cls: 'bg-slate-100 text-slate-600' };
   };
 
   const categories = ["Todos", ...(officialCategories?.map((c: any) => c.name) || [])];
