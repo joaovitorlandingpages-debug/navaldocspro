@@ -584,16 +584,20 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
               onJumpStep={(s) => dispatch({ type: "STEP", step: s })}
             />
           )}
-          {state.step === 7 && (
+          {state.step === 7 && service && (
             <Step6
               log={state.progressLog}
               processId={state.createdProcessId}
-              onOpen={() => {
+              service={service}
+              state={state}
+              onOpenProcess={() => {
                 if (state.createdProcessId) {
                   navigate({ to: "/processes/$id", params: { id: state.createdProcessId } });
                   close();
                 }
               }}
+              onOpenDocuments={() => { navigate({ to: "/documents" }); close(); }}
+              onDashboard={() => { navigate({ to: "/dashboard" }); close(); }}
             />
           )}
         </div>
