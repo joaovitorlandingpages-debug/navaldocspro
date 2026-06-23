@@ -38,6 +38,7 @@ import { useDossier } from "@/hooks/useDossier";
 import { DossierPreview } from "@/components/dossier/DossierPreview";
 import { dossierEngine } from "@/services/automation/dossierEngine";
 import { ProcessDossierTab } from "@/components/dossier/ProcessDossierTab";
+import { openStoredFile } from "@/utils/file-preview";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
@@ -619,9 +620,9 @@ function ProcessDetail() {
                                  <FileText className="h-5 w-5" />
                               </div>
                               <div className="flex gap-1">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
-                                  <a href={file.file_url} target="_blank" rel="noreferrer"><Eye className="h-4 w-4" /></a>
-                                </Button>
+                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => openStoredFile(file)}>
+                                   <Eye className="h-4 w-4" />
+                                 </Button>
                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500" onClick={() => deleteFile.mutate(file.id)}>
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
