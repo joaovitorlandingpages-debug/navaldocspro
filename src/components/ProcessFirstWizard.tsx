@@ -1078,25 +1078,61 @@ function Row({ k, v }: { k: string; v?: string }) {
   );
 }
 
-function Step6({ log, processId, onOpen }: { log: string[]; processId: string | null; onOpen: () => void }) {
+function Step6({ log, processId, service, state, onOpenProcess, onOpenDocuments, onDashboard }: {
+  log: string[]; processId: string | null; service: ServiceDef; state: WizardState;
+  onOpenProcess: () => void; onOpenDocuments: () => void; onDashboard: () => void;
+}) {
   return (
-    <div className="text-center py-6">
-      <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-        <CheckCircle2 className="h-8 w-8 text-green-600" />
+    <div className="py-2">
+      <div className="text-center">
+        <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+          <CheckCircle2 className="h-8 w-8 text-green-600" />
+        </div>
+        <h3 className="text-xl font-black text-navy">Processo gerado com sucesso</h3>
+        <p className="text-sm text-slate-500 mt-1">{service.name} — {processId?.slice(0, 8)}</p>
       </div>
-      <h3 className="text-xl font-black text-navy">Tudo pronto!</h3>
-      <p className="text-sm text-slate-500 mt-1">Seu processo foi criado.</p>
-      <div className="mt-6 text-left max-w-md mx-auto space-y-1">
-        {log.map((l, i) => (
-          <div key={i} className="text-xs font-mono text-slate-600 bg-slate-50 px-3 py-2 rounded-lg">{l}</div>
-        ))}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
+        <SuccessCard icon={<User className="h-4 w-4" />} title="Cliente" body={state.customer.name || "—"} sub="criado/atualizado" />
+        <SuccessCard icon={<Ship className="h-4 w-4" />} title="Embarcação" body={state.vessel.name || state.vessel.registration_number || "—"} sub="vinculada ao cliente" />
+        <SuccessCard icon={<Sparkles className="h-4 w-4" />} title="Processo" body={service.name} sub={processId ? `ID ${processId.slice(0, 8)}` : ""} />
+        <SuccessCard icon={<FileText className="h-4 w-4" />} title="Documentos" body={`${service.generatedDocs.length} gerados`} sub={service.generatedDocs.join(", ")} />
       </div>
-      {processId && (
-        <button onClick={onOpen} className="mt-6 px-6 py-3 bg-primary text-white rounded-xl font-black text-xs uppercase tracking-wider hover:opacity-90"
-          data-testid="pf-open-process">
-          Abrir Processo <ArrowRight className="h-4 w-4 inline ml-1" />
+
+      <details className="mt-4 max-w-xl mx-auto">
+        <summary className="text-[10px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer">Ver log de geração</summary>
+        <div className="mt-2 space-y-1">
+          {log.map((l, i) => (
+            <div key={i} className="text-xs font-mono text-slate-600 bg-slate-50 px-3 py-2 rounded-lg">{l}</div>
+          ))}
+        </div>
+      </details>
+
+      <div className="flex flex-wrap gap-2 justify-center mt-6">
+        {processId && (
+          <button onClick={onOpenProcess} className="px-5 py-2.5 bg-primary text-white rounded-xl font-black text-xs uppercase tracking-wider hover:opacity-90" data-testid="pf-open-process">
+            Ver Processo <ArrowRight className="h-4 w-4 inline ml-1" />
+          </button>
+        )}
+        <button onClick={onOpenDocuments} className="px-5 py-2.5 bg-white border border-slate-200 text-navy rounded-xl font-black text-xs uppercase tracking-wider hover:border-primary">
+          Ver Documentos
         </button>
-      )}
+        <button onClick={onDashboard} className="px-5 py-2.5 bg-white border border-slate-200 text-navy rounded-xl font-black text-xs uppercase tracking-wider hover:border-primary">
+          Voltar ao Dashboard
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SuccessCard({ icon, title, body, sub }: { icon: React.ReactNode; title: string; body: string; sub?: string }) {
+  return (
+    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+      <div className="flex items-center gap-2 text-navy">
+        {icon}<span className="text-[10px] font-black uppercase tracking-wider text-slate-500">{title}</span>
+      </div>
+      <div className="mt-1 text-sm font-black text-navy truncate">{body}</div>
+      {sub && <div className="text-[10px] text-slate-500 mt-0.5 truncate">{sub}</div>}
     </div>
   );
 }
