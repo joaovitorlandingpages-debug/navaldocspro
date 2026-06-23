@@ -166,6 +166,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   const { createBatchJobs } = useOCR();
   const navigate = useNavigate();
   const personalInputRef = useRef<HTMLInputElement>(null);
+  const addressInputRef = useRef<HTMLInputElement>(null);
   const vesselInputRef = useRef<HTMLInputElement>(null);
 
   // Load company id once
