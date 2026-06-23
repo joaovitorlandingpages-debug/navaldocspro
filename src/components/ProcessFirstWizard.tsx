@@ -184,7 +184,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   // Poll OCR jobs for any docs still in 'ocr' status
   useEffect(() => {
     if (!isOpen) return;
-    const pending = [...state.personalDocs, ...state.vesselDocs].filter(
+    const pending = [...state.personalDocs, ...state.addressDocs, ...state.vesselDocs].filter(
       (d) => d.status === "ocr" && d.ocrJobId,
     );
     if (pending.length === 0) return;
@@ -198,11 +198,14 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       for (const job of data) {
         if (job.status !== "completed" && job.status !== "failed") continue;
         const personal = state.personalDocs.find((d) => d.ocrJobId === job.id);
+        const address = state.addressDocs.find((d) => d.ocrJobId === job.id);
         const vessel = state.vesselDocs.find((d) => d.ocrJobId === job.id);
-        const bucket = personal ? "personal" : vessel ? "vessel" : null;
+        const bucket: "personal" | "address" | "vessel" | null =
+          personal ? "personal" : address ? "address" : vessel ? "vessel" : null;
         if (!bucket) continue;
+        const doc = personal ?? address ?? vessel!;
         dispatch({
-          type: "UPDATE_DOC", bucket, fileId: (personal ?? vessel)!.fileId,
+          type: "UPDATE_DOC", bucket, fileId: doc.fileId,
           patch: {
             status: job.status === "completed" ? "done" : "failed",
             extracted: job.extracted_data,
@@ -210,13 +213,15 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         });
         const hasData = job.status === "completed"
           && job.extracted_data && (job.extracted_data as any)._has_data === true;
-        console.log("[OCR_UI_STATUS_FIXED]", { jobId: job.id, status: job.status, hasData });
+        console.log("[OCR_UI_STATUS_FIXED]", { jobId: job.id, status: job.status, hasData, bucket });
         if (hasData) {
           console.log("[OCR_FORM_AUTOFILL_APPLIED]", { jobId: job.id, bucket });
-          if (bucket === "personal") {
-            dispatch({ type: "PATCH_CUSTOMER", patch: mergeCustomerFromOCR(state.customer, job.extracted_data) as any });
-          } else {
+          if (bucket === "vessel") {
             dispatch({ type: "PATCH_VESSEL", patch: mergeVesselFromOCR(state.vessel, job.extracted_data) as any });
+          } else {
+            // personal (CNH/RG → name/cpf/rg) and address (comprovante → address/city/state)
+            // both feed the same customer draft; merge helpers only fill empty fields.
+            dispatch({ type: "PATCH_CUSTOMER", patch: mergeCustomerFromOCR(state.customer, job.extracted_data) as any });
           }
         } else if (job.status === "completed") {
           console.log("[OCR_EMPTY_RESULT_HANDLED]", { jobId: job.id });
@@ -224,7 +229,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       }
     }, 2500);
     return () => clearInterval(interval);
-  }, [isOpen, state.personalDocs, state.vesselDocs, state.customer, state.vessel]);
+  }, [isOpen, state.personalDocs, state.addressDocs, state.vesselDocs, state.customer, state.vessel]);
 
   if (!isOpen) return null;
 
