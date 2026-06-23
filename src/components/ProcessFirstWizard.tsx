@@ -65,6 +65,7 @@ interface WizardState {
   customer: CustomerDraft;
   vessel: VesselDraft;
   personalDocs: UploadedDoc[];
+  addressDocs: UploadedDoc[];
   vesselDocs: UploadedDoc[];
   generating: boolean;
   progressLog: string[];
@@ -84,6 +85,7 @@ const initialState: WizardState = {
   customer: emptyCustomer,
   vessel: emptyVessel,
   personalDocs: [],
+  addressDocs: [],
   vesselDocs: [],
   generating: false,
   progressLog: [],
@@ -96,11 +98,14 @@ type Action =
   | { type: "SET_SERVICE"; service: ServiceKind }
   | { type: "PATCH_CUSTOMER"; patch: Partial<CustomerDraft> }
   | { type: "PATCH_VESSEL"; patch: Partial<VesselDraft> }
-  | { type: "ADD_DOC"; bucket: "personal" | "vessel"; doc: UploadedDoc }
-  | { type: "UPDATE_DOC"; bucket: "personal" | "vessel"; fileId: string; patch: Partial<UploadedDoc> }
+  | { type: "ADD_DOC"; bucket: "personal" | "address" | "vessel"; doc: UploadedDoc }
+  | { type: "UPDATE_DOC"; bucket: "personal" | "address" | "vessel"; fileId: string; patch: Partial<UploadedDoc> }
   | { type: "GENERATING"; on: boolean }
   | { type: "LOG"; line: string }
   | { type: "CREATED"; processId: string };
+
+const bucketKey = (b: "personal" | "address" | "vessel") =>
+  b === "personal" ? "personalDocs" : b === "address" ? "addressDocs" : "vesselDocs";
 
 function reducer(s: WizardState, a: Action): WizardState {
   switch (a.type) {
@@ -110,11 +115,11 @@ function reducer(s: WizardState, a: Action): WizardState {
     case "PATCH_CUSTOMER": return { ...s, customer: { ...s.customer, ...a.patch } };
     case "PATCH_VESSEL": return { ...s, vessel: { ...s.vessel, ...a.patch } };
     case "ADD_DOC": {
-      const key = a.bucket === "personal" ? "personalDocs" : "vesselDocs";
+      const key = bucketKey(a.bucket);
       return { ...s, [key]: [...s[key], a.doc] } as WizardState;
     }
     case "UPDATE_DOC": {
-      const key = a.bucket === "personal" ? "personalDocs" : "vesselDocs";
+      const key = bucketKey(a.bucket);
       return {
         ...s,
         [key]: s[key].map((d) => (d.fileId === a.fileId ? { ...d, ...a.patch } : d)),
@@ -161,6 +166,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   const { createBatchJobs } = useOCR();
   const navigate = useNavigate();
   const personalInputRef = useRef<HTMLInputElement>(null);
+  const addressInputRef = useRef<HTMLInputElement>(null);
   const vesselInputRef = useRef<HTMLInputElement>(null);
 
   // Load company id once
@@ -178,7 +184,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   // Poll OCR jobs for any docs still in 'ocr' status
   useEffect(() => {
     if (!isOpen) return;
-    const pending = [...state.personalDocs, ...state.vesselDocs].filter(
+    const pending = [...state.personalDocs, ...state.addressDocs, ...state.vesselDocs].filter(
       (d) => d.status === "ocr" && d.ocrJobId,
     );
     if (pending.length === 0) return;
@@ -192,11 +198,14 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       for (const job of data) {
         if (job.status !== "completed" && job.status !== "failed") continue;
         const personal = state.personalDocs.find((d) => d.ocrJobId === job.id);
+        const address = state.addressDocs.find((d) => d.ocrJobId === job.id);
         const vessel = state.vesselDocs.find((d) => d.ocrJobId === job.id);
-        const bucket = personal ? "personal" : vessel ? "vessel" : null;
+        const bucket: "personal" | "address" | "vessel" | null =
+          personal ? "personal" : address ? "address" : vessel ? "vessel" : null;
         if (!bucket) continue;
+        const doc = personal ?? address ?? vessel!;
         dispatch({
-          type: "UPDATE_DOC", bucket, fileId: (personal ?? vessel)!.fileId,
+          type: "UPDATE_DOC", bucket, fileId: doc.fileId,
           patch: {
             status: job.status === "completed" ? "done" : "failed",
             extracted: job.extracted_data,
@@ -204,13 +213,15 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         });
         const hasData = job.status === "completed"
           && job.extracted_data && (job.extracted_data as any)._has_data === true;
-        console.log("[OCR_UI_STATUS_FIXED]", { jobId: job.id, status: job.status, hasData });
+        console.log("[OCR_UI_STATUS_FIXED]", { jobId: job.id, status: job.status, hasData, bucket });
         if (hasData) {
           console.log("[OCR_FORM_AUTOFILL_APPLIED]", { jobId: job.id, bucket });
-          if (bucket === "personal") {
-            dispatch({ type: "PATCH_CUSTOMER", patch: mergeCustomerFromOCR(state.customer, job.extracted_data) as any });
-          } else {
+          if (bucket === "vessel") {
             dispatch({ type: "PATCH_VESSEL", patch: mergeVesselFromOCR(state.vessel, job.extracted_data) as any });
+          } else {
+            // personal (CNH/RG → name/cpf/rg) and address (comprovante → address/city/state)
+            // both feed the same customer draft; merge helpers only fill empty fields.
+            dispatch({ type: "PATCH_CUSTOMER", patch: mergeCustomerFromOCR(state.customer, job.extracted_data) as any });
           }
         } else if (job.status === "completed") {
           console.log("[OCR_EMPTY_RESULT_HANDLED]", { jobId: job.id });
@@ -218,13 +229,13 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       }
     }, 2500);
     return () => clearInterval(interval);
-  }, [isOpen, state.personalDocs, state.vesselDocs, state.customer, state.vessel]);
+  }, [isOpen, state.personalDocs, state.addressDocs, state.vesselDocs, state.customer, state.vessel]);
 
   if (!isOpen) return null;
 
   const service = state.service ? findService(state.service) : null;
 
-  const handleUpload = async (files: FileList | null, bucket: "personal" | "vessel") => {
+  const handleUpload = async (files: FileList | null, bucket: "personal" | "address" | "vessel") => {
     if (!files || !companyId) return;
     const arr = Array.from(files);
     const uploaded: { file: File; id: string }[] = [];
@@ -248,7 +259,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
           company_id: companyId,
           file_name: file.name,
           file_url: filePath,
-          category: bucket === "personal" ? "personal_doc" : "vessel_doc",
+          category: bucket === "personal" ? "personal_doc" : bucket === "address" ? "address_doc" : "vessel_doc",
           file_type: file.type,
           file_size: file.size,
           status: "pending",
@@ -268,7 +279,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       try {
         const jobs = await createBatchJobs.mutateAsync({
           files: uploaded, companyId,
-          docType: bucket === "personal" ? "personal_document" : "vessel_document",
+          docType: bucket === "vessel" ? "vessel_document" : "personal_document",
         });
         for (const job of jobs) {
           dispatch({ type: "UPDATE_DOC", bucket, fileId: job.uploaded_file_id, patch: { ocrJobId: job.id } });
@@ -282,7 +293,8 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   const canAdvance = (() => {
     if (state.step === 1) return !!state.service;
     if (state.step === 2) return !service?.needsPersonal || !!state.customer.name;
-    if (state.step === 3) return !service?.needsVessel || !!state.vessel.name || !!state.vessel.registration_number;
+    if (state.step === 3) return !service?.needsPersonal || !!state.customer.address || !!state.customer.city;
+    if (state.step === 4) return !service?.needsVessel || !!state.vessel.name || !!state.vessel.registration_number;
     return true;
   })();
 
@@ -354,7 +366,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       dispatch({ type: "LOG", line: `✓ Processo criado: ${proc.id.slice(0, 8)}` });
 
       // Link uploaded files to process
-      const allDocs = [...state.personalDocs, ...state.vesselDocs].filter((d) => d.status !== "failed");
+      const allDocs = [...state.personalDocs, ...state.addressDocs, ...state.vesselDocs].filter((d) => d.status !== "failed");
       if (allDocs.length > 0) {
         await supabase.from("uploaded_files")
           .update({ process_id: proc.id })
@@ -363,7 +375,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       }
 
       dispatch({ type: "CREATED", processId: proc.id });
-      dispatch({ type: "STEP", step: 6 });
+      dispatch({ type: "STEP", step: 7 });
       toast.success("Processo criado com sucesso!");
     } catch (e: any) {
       toast.error(e.message);
@@ -378,7 +390,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
     setTimeout(() => dispatch({ type: "RESET" }), 200);
   };
 
-  const steps = ["Serviço", "Pessoais", "Embarcação", "Montagem", "Pré-visualização", "Concluído"];
+  const steps = ["Serviço", "Identidade", "Endereço", "Embarcação", "Montagem", "Pré-visualização", "Concluído"];
 
   const content = (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -416,7 +428,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         <div className="flex-1 overflow-y-auto px-8 py-6">
           {state.step === 1 && <Step1 onPick={(k) => { dispatch({ type: "SET_SERVICE", service: k }); dispatch({ type: "STEP", step: 2 }); }} />}
           {state.step === 2 && service && (
-            <Step2
+            <Step2Identity
               service={service}
               docs={state.personalDocs}
               customer={state.customer}
@@ -426,6 +438,16 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             />
           )}
           {state.step === 3 && service && (
+            <Step3Address
+              service={service}
+              docs={state.addressDocs}
+              customer={state.customer}
+              onUpload={(files) => handleUpload(files, "address")}
+              onChange={(p) => dispatch({ type: "PATCH_CUSTOMER", patch: p })}
+              fileInputRef={addressInputRef}
+            />
+          )}
+          {state.step === 4 && service && (
             <Step3
               service={service}
               docs={state.vesselDocs}
@@ -435,13 +457,13 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
               fileInputRef={vesselInputRef}
             />
           )}
-          {state.step === 4 && service && (
+          {state.step === 5 && service && (
             <Step4 service={service} state={state} />
           )}
-          {state.step === 5 && service && (
+          {state.step === 6 && service && (
             <Step5 service={service} state={state} />
           )}
-          {state.step === 6 && (
+          {state.step === 7 && (
             <Step6
               log={state.progressLog}
               processId={state.createdProcessId}
@@ -456,7 +478,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         </div>
 
         {/* Footer */}
-        {state.step < 6 && (
+        {state.step < 7 && (
           <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-between gap-3 bg-slate-50">
             <button
               onClick={() => dispatch({ type: "STEP", step: Math.max(1, state.step - 1) })}
@@ -466,7 +488,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             >
               <ChevronLeft className="h-4 w-4 inline" /> Voltar
             </button>
-            {state.step < 5 && (
+            {state.step < 6 && (
               <button
                 onClick={() => dispatch({ type: "STEP", step: state.step + 1 })}
                 disabled={!canAdvance}
@@ -476,7 +498,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
                 Avançar <ChevronRight className="h-4 w-4 inline" />
               </button>
             )}
-            {state.step === 5 && (
+            {state.step === 6 && (
               <button
                 onClick={handleGenerate}
                 disabled={state.generating}
@@ -639,7 +661,7 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
   );
 }
 
-function Step2({ service, docs, customer, onUpload, onChange, fileInputRef }: {
+function Step2Identity({ service, docs, customer, onUpload, onChange, fileInputRef }: {
   service: ServiceDef; docs: UploadedDoc[]; customer: CustomerDraft;
   onUpload: (files: FileList | null) => void; onChange: (p: Partial<CustomerDraft>) => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -648,21 +670,22 @@ function Step2({ service, docs, customer, onUpload, onChange, fileInputRef }: {
     return (
       <div className="text-center py-8">
         <User className="h-12 w-12 text-slate-300 mx-auto" />
-        <p className="text-sm text-slate-500 mt-3">Este serviço não exige documentos pessoais. Avance para a embarcação.</p>
+        <p className="text-sm text-slate-500 mt-3">Este serviço não exige documento de identificação. Avance.</p>
       </div>
     );
   }
+  console.log("[OCR_IDENTITY_STEP_CREATED]");
   return (
     <div>
-      <h3 className="text-lg font-black text-navy mb-1">Documentos pessoais</h3>
-      <p className="text-sm text-slate-500 mb-4">Envie {service.personalDocs.join(", ")}. O OCR extrai os dados.</p>
+      <h3 className="text-lg font-black text-navy mb-1">Documento de identificação</h3>
+      <p className="text-sm text-slate-500 mb-4">Envie a <strong>CNH</strong> ou o <strong>RG</strong>. O OCR extrai nome, CPF, RG e data de nascimento.</p>
       <button
         onClick={() => fileInputRef.current?.click()}
         className="w-full border-2 border-dashed border-slate-200 hover:border-primary rounded-2xl p-8 text-center group transition-all"
-        data-testid="pf-upload-personal"
+        data-testid="pf-upload-identity"
       >
         <Upload className="h-8 w-8 text-slate-300 group-hover:text-primary mx-auto" />
-        <p className="text-sm font-bold text-navy mt-2">Clique para enviar (CNH, RG, CPF, Comprovante)</p>
+        <p className="text-sm font-bold text-navy mt-2">Clique para enviar (CNH ou RG)</p>
         <p className="text-xs text-slate-400">PDF, JPG, PNG</p>
       </button>
       <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf" className="hidden"
@@ -671,13 +694,54 @@ function Step2({ service, docs, customer, onUpload, onChange, fileInputRef }: {
       <OCRDebugPanel docs={docs} scope="personal" />
 
       <div className="mt-6 p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
-        <div className="text-xs font-black text-blue-700 uppercase tracking-wider mb-2">Dados encontrados</div>
+        <div className="text-xs font-black text-blue-700 uppercase tracking-wider mb-2">Dados de identificação</div>
         <FieldGrid>
           <Field label="Nome" value={customer.name} onChange={(v) => onChange({ name: v })} />
           <Field label="CPF / CNPJ" value={customer.cpf_cnpj} onChange={(v) => onChange({ cpf_cnpj: v })} />
           <Field label="RG" value={customer.rg} onChange={(v) => onChange({ rg: v })} />
           <Field label="Email" value={customer.email} onChange={(v) => onChange({ email: v })} />
           <Field label="Telefone" value={customer.phone} onChange={(v) => onChange({ phone: v })} />
+        </FieldGrid>
+      </div>
+    </div>
+  );
+}
+
+function Step3Address({ service, docs, customer, onUpload, onChange, fileInputRef }: {
+  service: ServiceDef; docs: UploadedDoc[]; customer: CustomerDraft;
+  onUpload: (files: FileList | null) => void; onChange: (p: Partial<CustomerDraft>) => void;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+}) {
+  if (!service.needsPersonal) {
+    return (
+      <div className="text-center py-8">
+        <User className="h-12 w-12 text-slate-300 mx-auto" />
+        <p className="text-sm text-slate-500 mt-3">Este serviço não exige comprovante de residência. Avance.</p>
+      </div>
+    );
+  }
+  console.log("[OCR_ADDRESS_STEP_CREATED]");
+  return (
+    <div>
+      <h3 className="text-lg font-black text-navy mb-1">Comprovante de residência</h3>
+      <p className="text-sm text-slate-500 mb-4">Envie uma conta de <strong>água</strong>, <strong>luz</strong>, <strong>internet</strong> ou <strong>telefone</strong>. O OCR extrai o endereço.</p>
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        className="w-full border-2 border-dashed border-slate-200 hover:border-primary rounded-2xl p-8 text-center group transition-all"
+        data-testid="pf-upload-address"
+      >
+        <Upload className="h-8 w-8 text-slate-300 group-hover:text-primary mx-auto" />
+        <p className="text-sm font-bold text-navy mt-2">Clique para enviar (Água, Luz, Internet, Telefone)</p>
+        <p className="text-xs text-slate-400">PDF, JPG, PNG</p>
+      </button>
+      <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf" className="hidden"
+        onChange={(e) => onUpload(e.target.files)} />
+      <DocsList docs={docs} />
+      <OCRDebugPanel docs={docs} scope="personal" />
+
+      <div className="mt-6 p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+        <div className="text-xs font-black text-emerald-700 uppercase tracking-wider mb-2">Endereço identificado</div>
+        <FieldGrid>
           <Field label="Endereço" value={customer.address} onChange={(v) => onChange({ address: v })} />
           <Field label="Cidade" value={customer.city} onChange={(v) => onChange({ city: v })} />
           <Field label="UF" value={customer.state} onChange={(v) => onChange({ state: v })} />
@@ -700,6 +764,7 @@ function Step3({ service, docs, vessel, onUpload, onChange, fileInputRef }: {
       </div>
     );
   }
+  console.log("[OCR_VESSEL_STEP_CREATED]");
   return (
     <div>
       <h3 className="text-lg font-black text-navy mb-1">Documentos da embarcação</h3>
@@ -734,14 +799,17 @@ function Step3({ service, docs, vessel, onUpload, onChange, fileInputRef }: {
 }
 
 function Step4({ service, state }: { service: ServiceDef; state: WizardState }) {
-  const personalOk = !service.needsPersonal || state.personalDocs.some((d) => d.status === "done" || d.status === "ocr") || !!state.customer.name;
+  const identityOk = !service.needsPersonal || state.personalDocs.some((d) => d.status === "done" || d.status === "ocr") || !!state.customer.name;
+  const addressOk = !service.needsPersonal || state.addressDocs.some((d) => d.status === "done" || d.status === "ocr") || !!state.customer.address;
   const vesselOk = !service.needsVessel || state.vesselDocs.some((d) => d.status === "done" || d.status === "ocr") || !!state.vessel.name;
+  console.log("[PROCESS_FIRST_UX_IMPROVED]", { identityOk, addressOk, vesselOk });
   return (
     <div>
       <h3 className="text-lg font-black text-navy mb-1">Montagem inteligente</h3>
       <p className="text-sm text-slate-500 mb-4">Para <strong>{service.name}</strong>, vamos precisar de:</p>
       <div className="space-y-2">
-        {service.needsPersonal && <Check label="Documentos pessoais enviados" ok={personalOk} />}
+        {service.needsPersonal && <Check label="Documento de identificação enviado" ok={identityOk} />}
+        {service.needsPersonal && <Check label="Comprovante de residência enviado" ok={addressOk} />}
         {service.needsVessel && <Check label="Documentos da embarcação enviados" ok={vesselOk} />}
         {service.generatedDocs.map((d) => (
           <Check key={d} label={`${d} — será gerado automaticamente`} ok={true} info />
