@@ -235,7 +235,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
 
   const service = state.service ? findService(state.service) : null;
 
-  const handleUpload = async (files: FileList | null, bucket: "personal" | "vessel") => {
+  const handleUpload = async (files: FileList | null, bucket: "personal" | "address" | "vessel") => {
     if (!files || !companyId) return;
     const arr = Array.from(files);
     const uploaded: { file: File; id: string }[] = [];
