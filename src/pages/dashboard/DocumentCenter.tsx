@@ -59,7 +59,7 @@ export default function DocumentCenter() {
         .select(`
           *,
           vessels(name),
-          customers(name),
+          customers(name)
         `, { count: 'exact' })
         .eq("company_id", profile?.company_id);
 
@@ -357,7 +357,6 @@ export default function DocumentCenter() {
         <PDFPreviewer 
           isOpen={isPreviewOpen}
           onClose={() => setIsPreviewOpen(false)}
-          fileUrl={selectedDoc.file_url || ""}
           fileUrl={selectedDoc.signed_file_url || selectedDoc.file_url || ""}
           title={selectedDoc.document_type}
         />
