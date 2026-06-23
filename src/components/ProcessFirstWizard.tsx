@@ -951,39 +951,105 @@ function Check({ label, ok, info }: { label: string; ok: boolean; info?: boolean
   );
 }
 
-function Step5({ service, state }: { service: ServiceDef; state: WizardState }) {
+function Step5Review({ service, state, onPatchCustomer, onPatchVessel, onJumpStep }: {
+  service: ServiceDef;
+  state: WizardState;
+  onPatchCustomer: (p: Partial<CustomerDraft>) => void;
+  onPatchVessel: (p: Partial<VesselDraft>) => void;
+  onJumpStep: (s: number) => void;
+}) {
+  React.useEffect(() => { console.log("[FINAL_REVIEW_STARTED]", service.kind); }, [service.kind]);
+  const c = state.customer; const v = state.vessel;
   return (
     <div>
-      <h3 className="text-lg font-black text-navy mb-1">Pré-visualização</h3>
-      <p className="text-sm text-slate-500 mb-4">Confira antes de gerar.</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card title="Cliente" icon={<User className="h-4 w-4" />}>
-          {state.customer.name ? (
-            <>
-              <Row k="Nome" v={state.customer.name} />
-              <Row k="CPF/CNPJ" v={state.customer.cpf_cnpj} />
-              <Row k="Cidade/UF" v={`${state.customer.city}${state.customer.state ? "/" + state.customer.state : ""}`} />
-            </>
-          ) : <p className="text-xs text-slate-400">Sem cliente</p>}
-        </Card>
-        <Card title="Embarcação" icon={<Ship className="h-4 w-4" />}>
-          {state.vessel.name || state.vessel.registration_number ? (
-            <>
-              <Row k="Nome" v={state.vessel.name} />
-              <Row k="Inscrição" v={state.vessel.registration_number} />
-              <Row k="Tipo" v={state.vessel.vessel_type} />
-            </>
-          ) : <p className="text-xs text-slate-400">Sem embarcação</p>}
-        </Card>
-        <Card title="Processo" icon={<Sparkles className="h-4 w-4" />}>
-          <Row k="Serviço" v={service.name} />
-          <Row k="Status inicial" v="Pendente" />
-        </Card>
-        <Card title="Documentos" icon={<FileText className="h-4 w-4" />}>
-          <Row k="Enviados" v={String(state.personalDocs.length + state.vesselDocs.length)} />
-          <Row k="A gerar" v={service.generatedDocs.join(", ")} />
-        </Card>
+      <h3 className="text-lg font-black text-navy mb-1">Revisão e correção</h3>
+      <p className="text-sm text-slate-500 mb-4">Confira e edite. Os dados aqui são usados na geração final.</p>
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        <JumpBtn label="Voltar p/ Identificação" onClick={() => onJumpStep(2)} />
+        <JumpBtn label="Voltar p/ Endereço" onClick={() => onJumpStep(3)} />
+        <JumpBtn label="Voltar p/ Embarcação" onClick={() => onJumpStep(4)} />
       </div>
+
+      {service.needsPersonal && (
+        <SectionCard title="Dados do cliente" icon={<User className="h-4 w-4" />}>
+          <FieldGrid>
+            <Field label="Nome" value={c.name} onChange={(x) => onPatchCustomer({ name: x })} />
+            <Field label="CPF/CNPJ" value={c.cpf_cnpj} onChange={(x) => onPatchCustomer({ cpf_cnpj: x })} />
+            <Field label="RG" value={c.rg} onChange={(x) => onPatchCustomer({ rg: x })} />
+            <Field label="Telefone" value={c.phone} onChange={(x) => onPatchCustomer({ phone: x })} />
+            <Field label="E-mail" value={c.email} onChange={(x) => onPatchCustomer({ email: x })} />
+            <Field label="Endereço" value={c.address} onChange={(x) => onPatchCustomer({ address: x })} />
+            <Field label="Cidade" value={c.city} onChange={(x) => onPatchCustomer({ city: x })} />
+            <Field label="UF" value={c.state} onChange={(x) => onPatchCustomer({ state: x })} />
+          </FieldGrid>
+        </SectionCard>
+      )}
+
+      {service.needsVessel && (
+        <SectionCard title="Dados da embarcação" icon={<Ship className="h-4 w-4" />}>
+          <FieldGrid>
+            <Field label="Nome" value={v.name} onChange={(x) => onPatchVessel({ name: x })} />
+            <Field label="Inscrição" value={v.registration_number} onChange={(x) => onPatchVessel({ registration_number: x })} />
+            <Field label="Proprietário" value={v.owner_name} onChange={(x) => onPatchVessel({ owner_name: x })} />
+            <Field label="CPF/CNPJ Proprietário" value={v.owner_document} onChange={(x) => onPatchVessel({ owner_document: x })} />
+            <Field label="Tipo" value={v.vessel_type} onChange={(x) => onPatchVessel({ vessel_type: x })} />
+            <Field label="Material" value={v.material} onChange={(x) => onPatchVessel({ material: x })} />
+            <Field label="Comprimento" value={v.length} onChange={(x) => onPatchVessel({ length: x })} />
+            <Field label="Boca" value={v.beam} onChange={(x) => onPatchVessel({ beam: x })} />
+            <Field label="Pontal" value={v.depth} onChange={(x) => onPatchVessel({ depth: x })} />
+            <Field label="Capacidade" value={v.capacity} onChange={(x) => onPatchVessel({ capacity: x })} />
+            <Field label="Área de navegação" value={v.navigation_area} onChange={(x) => onPatchVessel({ navigation_area: x })} />
+            <Field label="Atividade/Serviço" value={v.activity_service} onChange={(x) => onPatchVessel({ activity_service: x })} />
+            <Field label="Ano de construção" value={v.construction_year} onChange={(x) => onPatchVessel({ construction_year: x })} />
+            <Field label="Construtor" value={v.builder} onChange={(x) => onPatchVessel({ builder: x })} />
+          </FieldGrid>
+        </SectionCard>
+      )}
+
+      {service.needsVessel && (
+        <SectionCard title="Dados do motor" icon={<Sparkles className="h-4 w-4" />}>
+          <FieldGrid>
+            <Field label="Potência" value={v.engine_power} onChange={(x) => onPatchVessel({ engine_power: x })} />
+            <Field label="Série" value={v.engine_serial} onChange={(x) => onPatchVessel({ engine_serial: x })} />
+          </FieldGrid>
+        </SectionCard>
+      )}
+
+      <SectionCard title="Processo" icon={<FileText className="h-4 w-4" />}>
+        <div className="text-xs space-y-1">
+          <Row k="Tipo de serviço" v={service.name} />
+          <Row k="Documentos a gerar" v={service.generatedDocs.join(", ")} />
+          <Row k="Documentos enviados" v={String(state.personalDocs.length + state.addressDocs.length + state.vesselDocs.length)} />
+        </div>
+      </SectionCard>
+
+      <button
+        onClick={() => { console.log("[FINAL_REVIEW_SAVED]"); toast.success("Correções salvas. Clique em Gerar."); }}
+        className="mt-3 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-slate-100 text-slate-700 hover:bg-slate-200"
+        data-testid="pf-save-review"
+      >
+        Salvar correções
+      </button>
+    </div>
+  );
+}
+
+function JumpBtn({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-white border border-slate-200 text-slate-600 hover:border-primary hover:text-primary">
+      <ChevronLeft className="h-3 w-3 inline" /> {label}
+    </button>
+  );
+}
+
+function SectionCard({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+      <div className="flex items-center gap-2 mb-2 text-navy">
+        {icon}<span className="text-xs font-black uppercase tracking-wider">{title}</span>
+      </div>
+      {children}
     </div>
   );
 }
