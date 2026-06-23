@@ -576,7 +576,13 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             <Step4 service={service} state={state} />
           )}
           {state.step === 6 && service && (
-            <Step5 service={service} state={state} />
+            <Step5Review
+              service={service}
+              state={state}
+              onPatchCustomer={(p) => { console.log("[FINAL_REVIEW_FIELDS_EDITED]", "customer", Object.keys(p)); dispatch({ type: "PATCH_CUSTOMER", patch: p }); }}
+              onPatchVessel={(p) => { console.log("[FINAL_REVIEW_FIELDS_EDITED]", "vessel", Object.keys(p)); dispatch({ type: "PATCH_VESSEL", patch: p }); }}
+              onJumpStep={(s) => dispatch({ type: "STEP", step: s })}
+            />
           )}
           {state.step === 7 && (
             <Step6
