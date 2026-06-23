@@ -519,20 +519,98 @@ function Step1({ onPick }: { onPick: (k: ServiceKind) => void }) {
   );
 }
 
+const CUSTOMER_FIELD_LABELS: Record<string, string> = {
+  name: "Nome", cpf_cnpj: "CPF/CNPJ", rg: "RG", email: "E-mail",
+  phone: "Telefone", address: "Endereço", city: "Cidade", state: "UF",
+};
+const VESSEL_FIELD_LABELS: Record<string, string> = {
+  name: "Nome", registration_number: "Inscrição", owner_name: "Proprietário",
+  vessel_type: "Tipo", material: "Material", capacity: "Capacidade",
+};
+
+function ocrStatusLabel(d: UploadedDoc): { label: string; tone: "ok" | "warn" | "err" | "load" } {
+  if (d.status === "uploading") return { label: "Enviando", tone: "load" };
+  if (d.status === "ocr") return { label: "Lendo", tone: "load" };
+  if (d.status === "failed") return { label: "Falha na leitura OCR.", tone: "err" };
+  const hasData = d.extracted && d.extracted._has_data === true;
+  if (hasData) return { label: "OCR OK", tone: "ok" };
+  return { label: "OCR executado, mas nenhum dado identificado.", tone: "warn" };
+}
+
 function DocsList({ docs }: { docs: UploadedDoc[] }) {
   if (docs.length === 0) return null;
   return (
     <div className="space-y-2 mt-4">
-      {docs.map((d) => (
-        <div key={d.fileId} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-          <FileText className="h-4 w-4 text-slate-400" />
-          <span className="flex-1 text-sm font-medium text-navy truncate">{d.fileName}</span>
-          {d.status === "uploading" && <span className="text-xs text-slate-400 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Enviando</span>}
-          {d.status === "ocr" && <span className="text-xs text-blue-500 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Lendo</span>}
-          {d.status === "done" && <span className="text-xs text-green-600 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> OCR ok</span>}
-          {d.status === "failed" && <span className="text-xs text-red-500 flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Falhou</span>}
-        </div>
-      ))}
+      {docs.map((d) => {
+        const s = ocrStatusLabel(d);
+        return (
+          <div key={d.fileId} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+            <FileText className="h-4 w-4 text-slate-400" />
+            <span className="flex-1 text-sm font-medium text-navy truncate">{d.fileName}</span>
+            {s.tone === "load" && <span className="text-xs text-blue-500 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> {s.label}</span>}
+            {s.tone === "ok" && <span className="text-xs text-green-600 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> {s.label}</span>}
+            {s.tone === "warn" && <span className="text-xs text-amber-600 flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> {s.label}</span>}
+            {s.tone === "err" && <span className="text-xs text-red-500 flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> {s.label}</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function OCRDebugPanel({ docs, scope }: { docs: UploadedDoc[]; scope: "personal" | "vessel" }) {
+  const completed = docs.filter((d) => d.status === "done" || d.status === "failed");
+  if (completed.length === 0) return null;
+  const labels = scope === "personal" ? CUSTOMER_FIELD_LABELS : VESSEL_FIELD_LABELS;
+  return (
+    <div className="mt-4 p-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60">
+      <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">
+        Debug OCR (temporário)
+      </div>
+      <div className="space-y-3">
+        {completed.map((d) => {
+          const ex = d.extracted || {};
+          const raw = (ex._raw_text || "") as string;
+          const fieldsFound = (ex._fields_found ?? 0) as number;
+          const filled: string[] = [];
+          const pending: string[] = [];
+          const e = ex.fields ?? ex;
+          for (const key of Object.keys(labels)) {
+            const ocrKeys =
+              key === "cpf_cnpj" ? ["cpf", "cnpj", "cpf_cnpj"] :
+              (key === "name" && scope === "vessel") ? ["vessel_name", "nome_embarcacao", "nome", "name"] :
+              key === "registration_number" ? ["registration_number", "inscricao", "inscrição"] :
+              [key];
+            const val = ocrKeys.map((k) => (e as any)?.[k]).find((v) => v && String(v).trim());
+            (val ? filled : pending).push(labels[key]);
+          }
+          return (
+            <div key={d.fileId} className="rounded-xl bg-white p-3 border border-slate-100">
+              <div className="text-[11px] font-bold text-navy truncate">{d.fileName}</div>
+              <div className="text-[10px] text-slate-500 mt-1">
+                Campos encontrados: <span className="font-black text-navy">{fieldsFound}</span>
+                {ex._has_data ? null : <span className="ml-2 text-amber-600 font-bold">(sem dados aplicáveis)</span>}
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-2 text-[10px]">
+                <div>
+                  <div className="font-black text-green-700 mb-0.5">Preenchidos</div>
+                  <div className="text-slate-600">{filled.length ? filled.join(", ") : "—"}</div>
+                </div>
+                <div>
+                  <div className="font-black text-amber-700 mb-0.5">Pendentes</div>
+                  <div className="text-slate-600">{pending.length ? pending.join(", ") : "—"}</div>
+                </div>
+              </div>
+              {raw && (
+                <details className="mt-2">
+                  <summary className="text-[10px] font-bold text-slate-500 cursor-pointer">Texto bruto extraído</summary>
+                  <pre className="mt-1 text-[10px] text-slate-600 whitespace-pre-wrap max-h-40 overflow-auto bg-slate-50 p-2 rounded-lg">{raw}</pre>
+                </details>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
