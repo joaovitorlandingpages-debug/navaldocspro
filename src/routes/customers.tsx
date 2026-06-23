@@ -42,6 +42,8 @@ function Customers() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [customerVessels, setCustomerVessels] = useState<any[]>([]);
+  const [customerProcesses, setCustomerProcesses] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 12;
