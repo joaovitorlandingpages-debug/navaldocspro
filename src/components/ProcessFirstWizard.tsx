@@ -45,9 +45,21 @@ type VesselDraft = {
   name: string;
   registration_number: string;
   owner_name: string;
+  owner_document: string;
   material: string;
   capacity: string;
   vessel_type: string;
+  length: string;
+  beam: string;
+  depth: string;
+  construction_year: string;
+  navigation_area: string;
+  activity_service: string;
+  builder: string;
+  engine_power: string;
+  engine_serial: string;
+  city: string;
+  state: string;
 };
 
 type UploadedDoc = {
@@ -76,7 +88,10 @@ const emptyCustomer: CustomerDraft = {
   name: "", cpf_cnpj: "", rg: "", address: "", city: "", state: "", email: "", phone: "",
 };
 const emptyVessel: VesselDraft = {
-  name: "", registration_number: "", owner_name: "", material: "", capacity: "", vessel_type: "",
+  name: "", registration_number: "", owner_name: "", owner_document: "", material: "",
+  capacity: "", vessel_type: "", length: "", beam: "", depth: "", construction_year: "",
+  navigation_area: "", activity_service: "", builder: "", engine_power: "", engine_serial: "",
+  city: "", state: "",
 };
 
 const initialState: WizardState = {
@@ -150,13 +165,26 @@ function mergeCustomerFromOCR(current: CustomerDraft, extracted: any): CustomerD
 function mergeVesselFromOCR(current: VesselDraft, extracted: any): VesselDraft {
   if (!extracted || typeof extracted !== "object") return current;
   const e = extracted.fields ?? extracted;
+  const pick = (cur: string, ...alts: any[]) => cur || alts.find((v) => v !== null && v !== undefined && String(v).trim() !== "") || "";
   return {
-    name: current.name || e.vessel_name || e.nome_embarcacao || e.nome || "",
-    registration_number: current.registration_number || e.registration_number || e.inscricao || e.inscrição || "",
-    owner_name: current.owner_name || e.owner || e.proprietario || e.proprietário || "",
-    material: current.material || e.material || "",
-    capacity: current.capacity || e.capacity || e.capacidade || "",
-    vessel_type: current.vessel_type || e.vessel_type || e.tipo || "",
+    name: pick(current.name, e.vessel_name, e.nome_embarcacao, e.nome),
+    registration_number: pick(current.registration_number, e.registration_number, e.inscricao, e.inscrição),
+    owner_name: pick(current.owner_name, e.owner_name, e.owner, e.proprietario, e.proprietário),
+    owner_document: pick(current.owner_document, e.owner_document, e.cpf_cnpj, e.cnpj, e.cpf),
+    material: pick(current.material, e.hull_material, e.material),
+    capacity: pick(current.capacity, e.capacity, e.capacidade),
+    vessel_type: pick(current.vessel_type, e.vessel_type, e.tipo),
+    length: pick(current.length, e.length, e.comprimento),
+    beam: pick(current.beam, e.beam, e.boca),
+    depth: pick(current.depth, e.depth, e.pontal),
+    construction_year: pick(current.construction_year, e.construction_year, e.ano),
+    navigation_area: pick(current.navigation_area, e.navigation_area, e.area_navegacao),
+    activity_service: pick(current.activity_service, e.activity_service, e.atividade),
+    builder: pick(current.builder, e.builder, e.construtor),
+    engine_power: pick(current.engine_power, e.engine_power, e.potencia),
+    engine_serial: pick(current.engine_serial, e.engine_serial),
+    city: pick(current.city, e.city, e.cidade),
+    state: pick(current.state, e.state, e.uf),
   };
 }
 
@@ -347,9 +375,24 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             name: state.vessel.name || "Embarcação sem nome",
             registration_number: state.vessel.registration_number || null,
             vessel_type: state.vessel.vessel_type || null,
+            material: state.vessel.material || null,
+            length: state.vessel.length || null,
+            boca: state.vessel.beam || null,
+            pontal: state.vessel.depth || null,
+            capacity: state.vessel.capacity || null,
+            current_owner_name: state.vessel.owner_name || null,
+            current_owner_cpf_cnpj: state.vessel.owner_document || null,
+            engine_power: state.vessel.engine_power || null,
+            engine_serial_number: state.vessel.engine_serial || null,
+            notes: [state.vessel.construction_year && `Ano: ${state.vessel.construction_year}`,
+                    state.vessel.navigation_area && `Área: ${state.vessel.navigation_area}`,
+                    state.vessel.activity_service && `Atividade: ${state.vessel.activity_service}`,
+                    state.vessel.builder && `Construtor: ${state.vessel.builder}`].filter(Boolean).join(" | ") || null,
           }).select().single();
           if (error) throw new Error("Embarcação: " + error.message);
           vesselId = v.id;
+          console.log("[VESSEL_AUTO_CREATED]", vesselId);
+          if (customerId) console.log("[VESSEL_LINKED_TO_CUSTOMER]", { vesselId, customerId });
         }
         dispatch({ type: "LOG", line: `✓ Embarcação: ${state.vessel.name || state.vessel.registration_number}` });
       }
