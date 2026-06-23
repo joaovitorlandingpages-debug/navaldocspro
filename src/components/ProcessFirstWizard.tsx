@@ -328,18 +328,28 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
 
   const handleGenerate = async () => {
     if (!companyId || !service) return;
+    console.log("[PROCESS_FIRST_GENERATION_STARTED]", { service: service.kind });
     dispatch({ type: "GENERATING", on: true });
     try {
       let customerId: string | null = null;
       if (service.needsPersonal && state.customer.name) {
-        // Dedup by CPF/CNPJ if provided
         if (state.customer.cpf_cnpj) {
           const { data: existing } = await supabase
             .from("customers").select("id")
             .eq("company_id", companyId)
             .eq("cpf_cnpj", state.customer.cpf_cnpj)
             .maybeSingle();
-          if (existing) customerId = existing.id;
+          if (existing) {
+            customerId = existing.id;
+            await supabase.from("customers").update({
+              name: state.customer.name,
+              email: state.customer.email || null,
+              phone: state.customer.phone || null,
+              address: state.customer.address || null,
+              city: state.customer.city || null,
+              state: state.customer.state || null,
+            }).eq("id", customerId);
+          }
         }
         if (!customerId) {
           const { data: c, error } = await supabase.from("customers").insert({
@@ -355,45 +365,50 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
           if (error) throw new Error("Cliente: " + error.message);
           customerId = c.id;
         }
+        console.log("[CUSTOMER_CREATED_OR_UPDATED]", customerId);
         dispatch({ type: "LOG", line: `✓ Cliente: ${state.customer.name}` });
       }
 
       let vesselId: string | null = null;
       if (service.needsVessel && (state.vessel.name || state.vessel.registration_number)) {
+        const vesselPayload = {
+          company_id: companyId,
+          customer_id: customerId,
+          name: state.vessel.name || "Embarcação sem nome",
+          registration_number: state.vessel.registration_number || null,
+          vessel_type: state.vessel.vessel_type || null,
+          material: state.vessel.material || null,
+          length: state.vessel.length || null,
+          boca: state.vessel.beam || null,
+          pontal: state.vessel.depth || null,
+          capacity: state.vessel.capacity || null,
+          current_owner_name: state.vessel.owner_name || null,
+          current_owner_cpf_cnpj: state.vessel.owner_document || null,
+          engine_power: state.vessel.engine_power || null,
+          engine_serial_number: state.vessel.engine_serial || null,
+          notes: [state.vessel.construction_year && `Ano: ${state.vessel.construction_year}`,
+                  state.vessel.navigation_area && `Área: ${state.vessel.navigation_area}`,
+                  state.vessel.activity_service && `Atividade: ${state.vessel.activity_service}`,
+                  state.vessel.builder && `Construtor: ${state.vessel.builder}`].filter(Boolean).join(" | ") || null,
+        };
         if (state.vessel.registration_number) {
           const { data: existing } = await supabase
             .from("vessels").select("id")
             .eq("company_id", companyId)
             .eq("registration_number", state.vessel.registration_number)
             .maybeSingle();
-          if (existing) vesselId = existing.id;
+          if (existing) {
+            vesselId = existing.id;
+            await supabase.from("vessels").update(vesselPayload).eq("id", vesselId);
+          }
         }
         if (!vesselId) {
-          const { data: v, error } = await supabase.from("vessels").insert({
-            company_id: companyId,
-            customer_id: customerId,
-            name: state.vessel.name || "Embarcação sem nome",
-            registration_number: state.vessel.registration_number || null,
-            vessel_type: state.vessel.vessel_type || null,
-            material: state.vessel.material || null,
-            length: state.vessel.length || null,
-            boca: state.vessel.beam || null,
-            pontal: state.vessel.depth || null,
-            capacity: state.vessel.capacity || null,
-            current_owner_name: state.vessel.owner_name || null,
-            current_owner_cpf_cnpj: state.vessel.owner_document || null,
-            engine_power: state.vessel.engine_power || null,
-            engine_serial_number: state.vessel.engine_serial || null,
-            notes: [state.vessel.construction_year && `Ano: ${state.vessel.construction_year}`,
-                    state.vessel.navigation_area && `Área: ${state.vessel.navigation_area}`,
-                    state.vessel.activity_service && `Atividade: ${state.vessel.activity_service}`,
-                    state.vessel.builder && `Construtor: ${state.vessel.builder}`].filter(Boolean).join(" | ") || null,
-          }).select().single();
+          const { data: v, error } = await supabase.from("vessels").insert(vesselPayload).select().single();
           if (error) throw new Error("Embarcação: " + error.message);
           vesselId = v.id;
-          console.log("[VESSEL_AUTO_CREATED]", vesselId);
-          if (customerId) console.log("[VESSEL_LINKED_TO_CUSTOMER]", { vesselId, customerId });
         }
+        console.log("[VESSEL_CREATED_OR_UPDATED]", vesselId);
+        if (customerId) console.log("[VESSEL_LINKED_TO_CUSTOMER]", { vesselId, customerId });
         dispatch({ type: "LOG", line: `✓ Embarcação: ${state.vessel.name || state.vessel.registration_number}` });
       }
 
@@ -406,6 +421,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         priority: "Média",
       }).select().single();
       if (procErr) throw new Error("Processo: " + procErr.message);
+      console.log("[PROCESS_CREATED]", proc.id);
       dispatch({ type: "LOG", line: `✓ Processo criado: ${proc.id.slice(0, 8)}` });
 
       // Link uploaded files to process
@@ -417,11 +433,67 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         dispatch({ type: "LOG", line: `✓ ${allDocs.length} documento(s) vinculado(s)` });
       }
 
+      // Generate documents: try matching templates by name, otherwise insert a stub row.
+      const fieldValues = {
+        customer: state.customer,
+        vessel: state.vessel,
+        process: { type: service.processType, kind: service.kind },
+      };
+      let generatedCount = 0;
+      for (const docName of service.generatedDocs) {
+        try {
+          const { data: tpl } = await supabase
+            .from("document_templates")
+            .select("id")
+            .eq("company_id", companyId)
+            .ilike("name", `%${docName}%`)
+            .maybeSingle();
+          if (tpl?.id) {
+            const { error: genErr } = await supabase.functions.invoke("generate-document", {
+              body: { templateId: tpl.id, companyId, customerId, vesselId, processId: proc.id, fieldValues },
+            });
+            if (genErr) throw genErr;
+          } else {
+            await supabase.from("generated_documents").insert({
+              company_id: companyId,
+              customer_id: customerId,
+              vessel_id: vesselId,
+              process_id: proc.id,
+              name: docName,
+              status: "pending",
+              metadata: fieldValues as any,
+            });
+          }
+          generatedCount++;
+          dispatch({ type: "LOG", line: `✓ ${docName}` });
+        } catch (e: any) {
+          console.error("[DOCUMENT_GENERATION_FAILED]", docName, e);
+          dispatch({ type: "LOG", line: `✗ ${docName}: ${e.message}` });
+        }
+      }
+      console.log("[DOCUMENTS_GENERATED]", { count: generatedCount, total: service.generatedDocs.length });
+
+      // Dossier stub
+      try {
+        await supabase.from("process_dossiers").insert({
+          company_id: companyId,
+          process_id: proc.id,
+          status: "draft",
+          metadata: { service: service.kind, generated_count: generatedCount } as any,
+        } as any);
+        console.log("[DOSSIER_GENERATED]", proc.id);
+        dispatch({ type: "LOG", line: `✓ Dossiê iniciado` });
+      } catch (e: any) {
+        console.warn("[DOSSIER_SKIPPED]", e?.message);
+      }
+
       dispatch({ type: "CREATED", processId: proc.id });
       dispatch({ type: "STEP", step: 7 });
-      toast.success("Processo criado com sucesso!");
+      console.log("[PROCESS_FIRST_GENERATION_SUCCESS]", proc.id);
+      toast.success("Processo e documentos gerados com sucesso!");
     } catch (e: any) {
-      toast.error(e.message);
+      console.error("[PROCESS_FIRST_GENERATION_FAILED]", e);
+      toast.error("Falha na geração: " + e.message);
       dispatch({ type: "LOG", line: `✗ ${e.message}` });
     } finally {
       dispatch({ type: "GENERATING", on: false });
