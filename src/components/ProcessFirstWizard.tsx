@@ -279,7 +279,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       try {
         const jobs = await createBatchJobs.mutateAsync({
           files: uploaded, companyId,
-          docType: bucket === "personal" ? "personal_document" : "vessel_document",
+          docType: bucket === "vessel" ? "vessel_document" : "personal_document",
         });
         for (const job of jobs) {
           dispatch({ type: "UPDATE_DOC", bucket, fileId: job.uploaded_file_id, patch: { ocrJobId: job.id } });
