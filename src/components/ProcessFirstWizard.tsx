@@ -247,6 +247,86 @@ async function validateGeneratedPdfPath(path: string) {
   return sample === "%PDF";
 }
 
+function fieldLines(label: string, input: Record<string, any>) {
+  return Object.entries(input || {})
+    .filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== "")
+    .map(([key, value]) => `${label}.${key}: ${value}`);
+}
+
+async function buildFallbackPdfBytes(docName: string, fieldValues: any) {
+  const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
+  const pdfDoc = await PDFDocument.create();
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  let page = pdfDoc.addPage([595.28, 841.89]);
+  let y = 792;
+  const draw = (text: string, size = 10, isBold = false) => {
+    const chunks = String(text).match(/.{1,88}(\s|$)/g) || [String(text)];
+    for (const chunk of chunks) {
+      if (y < 52) {
+        page = pdfDoc.addPage([595.28, 841.89]);
+        y = 792;
+      }
+      page.drawText(chunk.trim(), { x: 48, y, size, font: isBold ? bold : font, color: rgb(0, 0, 0), maxWidth: 500 });
+      y -= size + 5;
+    }
+  };
+
+  draw(docName.toUpperCase(), 15, true);
+  draw(`Gerado em ${new Date().toLocaleString("pt-BR")} pelo fluxo Processo-First`, 9);
+  y -= 10;
+  draw("DADOS DO CLIENTE", 11, true);
+  fieldLines("cliente", fieldValues.customer).forEach((line) => draw(line));
+  y -= 8;
+  draw("DADOS DA EMBARCAÇÃO", 11, true);
+  fieldLines("embarcacao", fieldValues.vessel).forEach((line) => draw(line));
+  y -= 8;
+  draw("DADOS DO PROCESSO", 11, true);
+  fieldLines("processo", fieldValues.process).forEach((line) => draw(line));
+  y -= 16;
+  draw("PDF real gerado, armazenado e vinculado ao processo, cliente e embarcação.", 9, true);
+
+  return await pdfDoc.save();
+}
+
+async function createProcessFirstPdfDocument(params: {
+  docName: string;
+  companyId: string;
+  customerId: string;
+  vesselId: string | null;
+  processId: string;
+  templateId?: string | null;
+  userId?: string | null;
+  fieldValues: any;
+  reason: string;
+}) {
+  const pdfBytes = await buildFallbackPdfBytes(params.docName, params.fieldValues);
+  const generatedPath = `${params.companyId}/${crypto.randomUUID()}.pdf`;
+  const { error: uploadError } = await supabase.storage
+    .from("generated-documents")
+    .upload(generatedPath, pdfBytes, { contentType: "application/pdf", upsert: true });
+  assertNoError(uploadError, `Upload do PDF ${params.docName}`);
+
+  const { data: generatedDoc, error: dbError } = await supabase
+    .from("generated_documents")
+    .insert({
+      company_id: params.companyId,
+      process_id: params.processId,
+      customer_id: params.customerId,
+      vessel_id: params.vesselId,
+      template_id: params.templateId || null,
+      name: `${params.docName} - ${new Date().toLocaleDateString("pt-BR")}`,
+      generated_file_url: generatedPath,
+      status: "completed",
+      generated_by: params.userId || null,
+      metadata: { fieldValues: params.fieldValues, source: "process_first_pdf", reason: params.reason } as any,
+    } as any)
+    .select()
+    .single();
+  assertNoError(dbError, `Persistência do PDF ${params.docName}`);
+  return generatedDoc;
+}
+
 export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [companyId, setCompanyId] = useState<string | null>(null);
