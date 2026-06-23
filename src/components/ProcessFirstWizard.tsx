@@ -662,6 +662,7 @@ function Step2({ service, docs, customer, onUpload, onChange, fileInputRef }: {
       <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf" className="hidden"
         onChange={(e) => onUpload(e.target.files)} />
       <DocsList docs={docs} />
+      <OCRDebugPanel docs={docs} scope="personal" />
 
       <div className="mt-6 p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
         <div className="text-xs font-black text-blue-700 uppercase tracking-wider mb-2">Dados encontrados</div>
