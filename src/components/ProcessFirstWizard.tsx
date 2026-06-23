@@ -718,6 +718,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
           const message = `${docName}: ${e.message || String(e)}`;
           persistenceErrors.push(message);
           console.error("[DOCUMENT_REAL_GENERATION_FAILED]", { docName, error: e?.message || e });
+          console.error("[DOCUMENT_PERSISTED_FAILED]", { docName, error: e?.message || e });
           console.error("[DOCUMENT_GENERATION_FAILED]", docName, e);
           dispatch({ type: "LOG", line: `✗ ${docName}: ${e.message}` });
         }
