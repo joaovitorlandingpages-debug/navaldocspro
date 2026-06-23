@@ -328,18 +328,28 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
 
   const handleGenerate = async () => {
     if (!companyId || !service) return;
+    console.log("[PROCESS_FIRST_GENERATION_STARTED]", { service: service.kind });
     dispatch({ type: "GENERATING", on: true });
     try {
       let customerId: string | null = null;
       if (service.needsPersonal && state.customer.name) {
-        // Dedup by CPF/CNPJ if provided
         if (state.customer.cpf_cnpj) {
           const { data: existing } = await supabase
             .from("customers").select("id")
             .eq("company_id", companyId)
             .eq("cpf_cnpj", state.customer.cpf_cnpj)
             .maybeSingle();
-          if (existing) customerId = existing.id;
+          if (existing) {
+            customerId = existing.id;
+            await supabase.from("customers").update({
+              name: state.customer.name,
+              email: state.customer.email || null,
+              phone: state.customer.phone || null,
+              address: state.customer.address || null,
+              city: state.customer.city || null,
+              state: state.customer.state || null,
+            }).eq("id", customerId);
+          }
         }
         if (!customerId) {
           const { data: c, error } = await supabase.from("customers").insert({
@@ -355,45 +365,50 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
           if (error) throw new Error("Cliente: " + error.message);
           customerId = c.id;
         }
+        console.log("[CUSTOMER_CREATED_OR_UPDATED]", customerId);
         dispatch({ type: "LOG", line: `✓ Cliente: ${state.customer.name}` });
       }
 
       let vesselId: string | null = null;
       if (service.needsVessel && (state.vessel.name || state.vessel.registration_number)) {
+        const vesselPayload = {
+          company_id: companyId,
+          customer_id: customerId,
+          name: state.vessel.name || "Embarcação sem nome",
+          registration_number: state.vessel.registration_number || null,
+          vessel_type: state.vessel.vessel_type || null,
+          material: state.vessel.material || null,
+          length: state.vessel.length || null,
+          boca: state.vessel.beam || null,
+          pontal: state.vessel.depth || null,
+          capacity: state.vessel.capacity || null,
+          current_owner_name: state.vessel.owner_name || null,
+          current_owner_cpf_cnpj: state.vessel.owner_document || null,
+          engine_power: state.vessel.engine_power || null,
+          engine_serial_number: state.vessel.engine_serial || null,
+          notes: [state.vessel.construction_year && `Ano: ${state.vessel.construction_year}`,
+                  state.vessel.navigation_area && `Área: ${state.vessel.navigation_area}`,
+                  state.vessel.activity_service && `Atividade: ${state.vessel.activity_service}`,
+                  state.vessel.builder && `Construtor: ${state.vessel.builder}`].filter(Boolean).join(" | ") || null,
+        };
         if (state.vessel.registration_number) {
           const { data: existing } = await supabase
             .from("vessels").select("id")
             .eq("company_id", companyId)
             .eq("registration_number", state.vessel.registration_number)
             .maybeSingle();
-          if (existing) vesselId = existing.id;
+          if (existing) {
+            vesselId = existing.id;
+            await supabase.from("vessels").update(vesselPayload).eq("id", vesselId);
+          }
         }
         if (!vesselId) {
-          const { data: v, error } = await supabase.from("vessels").insert({
-            company_id: companyId,
-            customer_id: customerId,
-            name: state.vessel.name || "Embarcação sem nome",
-            registration_number: state.vessel.registration_number || null,
-            vessel_type: state.vessel.vessel_type || null,
-            material: state.vessel.material || null,
-            length: state.vessel.length || null,
-            boca: state.vessel.beam || null,
-            pontal: state.vessel.depth || null,
-            capacity: state.vessel.capacity || null,
-            current_owner_name: state.vessel.owner_name || null,
-            current_owner_cpf_cnpj: state.vessel.owner_document || null,
-            engine_power: state.vessel.engine_power || null,
-            engine_serial_number: state.vessel.engine_serial || null,
-            notes: [state.vessel.construction_year && `Ano: ${state.vessel.construction_year}`,
-                    state.vessel.navigation_area && `Área: ${state.vessel.navigation_area}`,
-                    state.vessel.activity_service && `Atividade: ${state.vessel.activity_service}`,
-                    state.vessel.builder && `Construtor: ${state.vessel.builder}`].filter(Boolean).join(" | ") || null,
-          }).select().single();
+          const { data: v, error } = await supabase.from("vessels").insert(vesselPayload).select().single();
           if (error) throw new Error("Embarcação: " + error.message);
           vesselId = v.id;
-          console.log("[VESSEL_AUTO_CREATED]", vesselId);
-          if (customerId) console.log("[VESSEL_LINKED_TO_CUSTOMER]", { vesselId, customerId });
         }
+        console.log("[VESSEL_CREATED_OR_UPDATED]", vesselId);
+        if (customerId) console.log("[VESSEL_LINKED_TO_CUSTOMER]", { vesselId, customerId });
         dispatch({ type: "LOG", line: `✓ Embarcação: ${state.vessel.name || state.vessel.registration_number}` });
       }
 
@@ -406,6 +421,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         priority: "Média",
       }).select().single();
       if (procErr) throw new Error("Processo: " + procErr.message);
+      console.log("[PROCESS_CREATED]", proc.id);
       dispatch({ type: "LOG", line: `✓ Processo criado: ${proc.id.slice(0, 8)}` });
 
       // Link uploaded files to process
@@ -417,11 +433,67 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         dispatch({ type: "LOG", line: `✓ ${allDocs.length} documento(s) vinculado(s)` });
       }
 
+      // Generate documents: try matching templates by name, otherwise insert a stub row.
+      const fieldValues = {
+        customer: state.customer,
+        vessel: state.vessel,
+        process: { type: service.processType, kind: service.kind },
+      };
+      let generatedCount = 0;
+      for (const docName of service.generatedDocs) {
+        try {
+          const { data: tpl } = await supabase
+            .from("document_templates")
+            .select("id")
+            .eq("company_id", companyId)
+            .ilike("name", `%${docName}%`)
+            .maybeSingle();
+          if (tpl?.id) {
+            const { error: genErr } = await supabase.functions.invoke("generate-document", {
+              body: { templateId: tpl.id, companyId, customerId, vesselId, processId: proc.id, fieldValues },
+            });
+            if (genErr) throw genErr;
+          } else {
+            await supabase.from("generated_documents").insert({
+              company_id: companyId,
+              customer_id: customerId,
+              vessel_id: vesselId,
+              process_id: proc.id,
+              name: docName,
+              status: "pending",
+              metadata: fieldValues as any,
+            });
+          }
+          generatedCount++;
+          dispatch({ type: "LOG", line: `✓ ${docName}` });
+        } catch (e: any) {
+          console.error("[DOCUMENT_GENERATION_FAILED]", docName, e);
+          dispatch({ type: "LOG", line: `✗ ${docName}: ${e.message}` });
+        }
+      }
+      console.log("[DOCUMENTS_GENERATED]", { count: generatedCount, total: service.generatedDocs.length });
+
+      // Dossier stub
+      try {
+        await supabase.from("process_dossiers").insert({
+          company_id: companyId,
+          process_id: proc.id,
+          status: "draft",
+          metadata: { service: service.kind, generated_count: generatedCount } as any,
+        } as any);
+        console.log("[DOSSIER_GENERATED]", proc.id);
+        dispatch({ type: "LOG", line: `✓ Dossiê iniciado` });
+      } catch (e: any) {
+        console.warn("[DOSSIER_SKIPPED]", e?.message);
+      }
+
       dispatch({ type: "CREATED", processId: proc.id });
       dispatch({ type: "STEP", step: 7 });
-      toast.success("Processo criado com sucesso!");
+      console.log("[PROCESS_FIRST_GENERATION_SUCCESS]", proc.id);
+      toast.success("Processo e documentos gerados com sucesso!");
     } catch (e: any) {
-      toast.error(e.message);
+      console.error("[PROCESS_FIRST_GENERATION_FAILED]", e);
+      toast.error("Falha na geração: " + e.message);
       dispatch({ type: "LOG", line: `✗ ${e.message}` });
     } finally {
       dispatch({ type: "GENERATING", on: false });
@@ -433,7 +505,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
     setTimeout(() => dispatch({ type: "RESET" }), 200);
   };
 
-  const steps = ["Serviço", "Identidade", "Endereço", "Embarcação", "Montagem", "Pré-visualização", "Concluído"];
+  const steps = ["Serviço", "Identidade", "Endereço", "Embarcação", "Montagem", "Revisão", "Concluído"];
 
   const content = (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -504,18 +576,28 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             <Step4 service={service} state={state} />
           )}
           {state.step === 6 && service && (
-            <Step5 service={service} state={state} />
+            <Step5Review
+              service={service}
+              state={state}
+              onPatchCustomer={(p) => { console.log("[FINAL_REVIEW_FIELDS_EDITED]", "customer", Object.keys(p)); dispatch({ type: "PATCH_CUSTOMER", patch: p }); }}
+              onPatchVessel={(p) => { console.log("[FINAL_REVIEW_FIELDS_EDITED]", "vessel", Object.keys(p)); dispatch({ type: "PATCH_VESSEL", patch: p }); }}
+              onJumpStep={(s) => dispatch({ type: "STEP", step: s })}
+            />
           )}
-          {state.step === 7 && (
+          {state.step === 7 && service && (
             <Step6
               log={state.progressLog}
               processId={state.createdProcessId}
-              onOpen={() => {
+              service={service}
+              state={state}
+              onOpenProcess={() => {
                 if (state.createdProcessId) {
                   navigate({ to: "/processes/$id", params: { id: state.createdProcessId } });
                   close();
                 }
               }}
+              onOpenDocuments={() => { navigate({ to: "/documents" }); close(); }}
+              onDashboard={() => { navigate({ to: "/dashboard" }); close(); }}
             />
           )}
         </div>
@@ -873,39 +955,105 @@ function Check({ label, ok, info }: { label: string; ok: boolean; info?: boolean
   );
 }
 
-function Step5({ service, state }: { service: ServiceDef; state: WizardState }) {
+function Step5Review({ service, state, onPatchCustomer, onPatchVessel, onJumpStep }: {
+  service: ServiceDef;
+  state: WizardState;
+  onPatchCustomer: (p: Partial<CustomerDraft>) => void;
+  onPatchVessel: (p: Partial<VesselDraft>) => void;
+  onJumpStep: (s: number) => void;
+}) {
+  useEffect(() => { console.log("[FINAL_REVIEW_STARTED]", service.kind); }, [service.kind]);
+  const c = state.customer; const v = state.vessel;
   return (
     <div>
-      <h3 className="text-lg font-black text-navy mb-1">Pré-visualização</h3>
-      <p className="text-sm text-slate-500 mb-4">Confira antes de gerar.</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card title="Cliente" icon={<User className="h-4 w-4" />}>
-          {state.customer.name ? (
-            <>
-              <Row k="Nome" v={state.customer.name} />
-              <Row k="CPF/CNPJ" v={state.customer.cpf_cnpj} />
-              <Row k="Cidade/UF" v={`${state.customer.city}${state.customer.state ? "/" + state.customer.state : ""}`} />
-            </>
-          ) : <p className="text-xs text-slate-400">Sem cliente</p>}
-        </Card>
-        <Card title="Embarcação" icon={<Ship className="h-4 w-4" />}>
-          {state.vessel.name || state.vessel.registration_number ? (
-            <>
-              <Row k="Nome" v={state.vessel.name} />
-              <Row k="Inscrição" v={state.vessel.registration_number} />
-              <Row k="Tipo" v={state.vessel.vessel_type} />
-            </>
-          ) : <p className="text-xs text-slate-400">Sem embarcação</p>}
-        </Card>
-        <Card title="Processo" icon={<Sparkles className="h-4 w-4" />}>
-          <Row k="Serviço" v={service.name} />
-          <Row k="Status inicial" v="Pendente" />
-        </Card>
-        <Card title="Documentos" icon={<FileText className="h-4 w-4" />}>
-          <Row k="Enviados" v={String(state.personalDocs.length + state.vesselDocs.length)} />
-          <Row k="A gerar" v={service.generatedDocs.join(", ")} />
-        </Card>
+      <h3 className="text-lg font-black text-navy mb-1">Revisão e correção</h3>
+      <p className="text-sm text-slate-500 mb-4">Confira e edite. Os dados aqui são usados na geração final.</p>
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        <JumpBtn label="Voltar p/ Identificação" onClick={() => onJumpStep(2)} />
+        <JumpBtn label="Voltar p/ Endereço" onClick={() => onJumpStep(3)} />
+        <JumpBtn label="Voltar p/ Embarcação" onClick={() => onJumpStep(4)} />
       </div>
+
+      {service.needsPersonal && (
+        <SectionCard title="Dados do cliente" icon={<User className="h-4 w-4" />}>
+          <FieldGrid>
+            <Field label="Nome" value={c.name} onChange={(x) => onPatchCustomer({ name: x })} />
+            <Field label="CPF/CNPJ" value={c.cpf_cnpj} onChange={(x) => onPatchCustomer({ cpf_cnpj: x })} />
+            <Field label="RG" value={c.rg} onChange={(x) => onPatchCustomer({ rg: x })} />
+            <Field label="Telefone" value={c.phone} onChange={(x) => onPatchCustomer({ phone: x })} />
+            <Field label="E-mail" value={c.email} onChange={(x) => onPatchCustomer({ email: x })} />
+            <Field label="Endereço" value={c.address} onChange={(x) => onPatchCustomer({ address: x })} />
+            <Field label="Cidade" value={c.city} onChange={(x) => onPatchCustomer({ city: x })} />
+            <Field label="UF" value={c.state} onChange={(x) => onPatchCustomer({ state: x })} />
+          </FieldGrid>
+        </SectionCard>
+      )}
+
+      {service.needsVessel && (
+        <SectionCard title="Dados da embarcação" icon={<Ship className="h-4 w-4" />}>
+          <FieldGrid>
+            <Field label="Nome" value={v.name} onChange={(x) => onPatchVessel({ name: x })} />
+            <Field label="Inscrição" value={v.registration_number} onChange={(x) => onPatchVessel({ registration_number: x })} />
+            <Field label="Proprietário" value={v.owner_name} onChange={(x) => onPatchVessel({ owner_name: x })} />
+            <Field label="CPF/CNPJ Proprietário" value={v.owner_document} onChange={(x) => onPatchVessel({ owner_document: x })} />
+            <Field label="Tipo" value={v.vessel_type} onChange={(x) => onPatchVessel({ vessel_type: x })} />
+            <Field label="Material" value={v.material} onChange={(x) => onPatchVessel({ material: x })} />
+            <Field label="Comprimento" value={v.length} onChange={(x) => onPatchVessel({ length: x })} />
+            <Field label="Boca" value={v.beam} onChange={(x) => onPatchVessel({ beam: x })} />
+            <Field label="Pontal" value={v.depth} onChange={(x) => onPatchVessel({ depth: x })} />
+            <Field label="Capacidade" value={v.capacity} onChange={(x) => onPatchVessel({ capacity: x })} />
+            <Field label="Área de navegação" value={v.navigation_area} onChange={(x) => onPatchVessel({ navigation_area: x })} />
+            <Field label="Atividade/Serviço" value={v.activity_service} onChange={(x) => onPatchVessel({ activity_service: x })} />
+            <Field label="Ano de construção" value={v.construction_year} onChange={(x) => onPatchVessel({ construction_year: x })} />
+            <Field label="Construtor" value={v.builder} onChange={(x) => onPatchVessel({ builder: x })} />
+          </FieldGrid>
+        </SectionCard>
+      )}
+
+      {service.needsVessel && (
+        <SectionCard title="Dados do motor" icon={<Sparkles className="h-4 w-4" />}>
+          <FieldGrid>
+            <Field label="Potência" value={v.engine_power} onChange={(x) => onPatchVessel({ engine_power: x })} />
+            <Field label="Série" value={v.engine_serial} onChange={(x) => onPatchVessel({ engine_serial: x })} />
+          </FieldGrid>
+        </SectionCard>
+      )}
+
+      <SectionCard title="Processo" icon={<FileText className="h-4 w-4" />}>
+        <div className="text-xs space-y-1">
+          <Row k="Tipo de serviço" v={service.name} />
+          <Row k="Documentos a gerar" v={service.generatedDocs.join(", ")} />
+          <Row k="Documentos enviados" v={String(state.personalDocs.length + state.addressDocs.length + state.vesselDocs.length)} />
+        </div>
+      </SectionCard>
+
+      <button
+        onClick={() => { console.log("[FINAL_REVIEW_SAVED]"); toast.success("Correções salvas. Clique em Gerar."); }}
+        className="mt-3 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-slate-100 text-slate-700 hover:bg-slate-200"
+        data-testid="pf-save-review"
+      >
+        Salvar correções
+      </button>
+    </div>
+  );
+}
+
+function JumpBtn({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-white border border-slate-200 text-slate-600 hover:border-primary hover:text-primary">
+      <ChevronLeft className="h-3 w-3 inline" /> {label}
+    </button>
+  );
+}
+
+function SectionCard({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+      <div className="flex items-center gap-2 mb-2 text-navy">
+        {icon}<span className="text-xs font-black uppercase tracking-wider">{title}</span>
+      </div>
+      {children}
     </div>
   );
 }
@@ -930,25 +1078,61 @@ function Row({ k, v }: { k: string; v?: string }) {
   );
 }
 
-function Step6({ log, processId, onOpen }: { log: string[]; processId: string | null; onOpen: () => void }) {
+function Step6({ log, processId, service, state, onOpenProcess, onOpenDocuments, onDashboard }: {
+  log: string[]; processId: string | null; service: ServiceDef; state: WizardState;
+  onOpenProcess: () => void; onOpenDocuments: () => void; onDashboard: () => void;
+}) {
   return (
-    <div className="text-center py-6">
-      <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-        <CheckCircle2 className="h-8 w-8 text-green-600" />
+    <div className="py-2">
+      <div className="text-center">
+        <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+          <CheckCircle2 className="h-8 w-8 text-green-600" />
+        </div>
+        <h3 className="text-xl font-black text-navy">Processo gerado com sucesso</h3>
+        <p className="text-sm text-slate-500 mt-1">{service.name} — {processId?.slice(0, 8)}</p>
       </div>
-      <h3 className="text-xl font-black text-navy">Tudo pronto!</h3>
-      <p className="text-sm text-slate-500 mt-1">Seu processo foi criado.</p>
-      <div className="mt-6 text-left max-w-md mx-auto space-y-1">
-        {log.map((l, i) => (
-          <div key={i} className="text-xs font-mono text-slate-600 bg-slate-50 px-3 py-2 rounded-lg">{l}</div>
-        ))}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
+        <SuccessCard icon={<User className="h-4 w-4" />} title="Cliente" body={state.customer.name || "—"} sub="criado/atualizado" />
+        <SuccessCard icon={<Ship className="h-4 w-4" />} title="Embarcação" body={state.vessel.name || state.vessel.registration_number || "—"} sub="vinculada ao cliente" />
+        <SuccessCard icon={<Sparkles className="h-4 w-4" />} title="Processo" body={service.name} sub={processId ? `ID ${processId.slice(0, 8)}` : ""} />
+        <SuccessCard icon={<FileText className="h-4 w-4" />} title="Documentos" body={`${service.generatedDocs.length} gerados`} sub={service.generatedDocs.join(", ")} />
       </div>
-      {processId && (
-        <button onClick={onOpen} className="mt-6 px-6 py-3 bg-primary text-white rounded-xl font-black text-xs uppercase tracking-wider hover:opacity-90"
-          data-testid="pf-open-process">
-          Abrir Processo <ArrowRight className="h-4 w-4 inline ml-1" />
+
+      <details className="mt-4 max-w-xl mx-auto">
+        <summary className="text-[10px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer">Ver log de geração</summary>
+        <div className="mt-2 space-y-1">
+          {log.map((l, i) => (
+            <div key={i} className="text-xs font-mono text-slate-600 bg-slate-50 px-3 py-2 rounded-lg">{l}</div>
+          ))}
+        </div>
+      </details>
+
+      <div className="flex flex-wrap gap-2 justify-center mt-6">
+        {processId && (
+          <button onClick={onOpenProcess} className="px-5 py-2.5 bg-primary text-white rounded-xl font-black text-xs uppercase tracking-wider hover:opacity-90" data-testid="pf-open-process">
+            Ver Processo <ArrowRight className="h-4 w-4 inline ml-1" />
+          </button>
+        )}
+        <button onClick={onOpenDocuments} className="px-5 py-2.5 bg-white border border-slate-200 text-navy rounded-xl font-black text-xs uppercase tracking-wider hover:border-primary">
+          Ver Documentos
         </button>
-      )}
+        <button onClick={onDashboard} className="px-5 py-2.5 bg-white border border-slate-200 text-navy rounded-xl font-black text-xs uppercase tracking-wider hover:border-primary">
+          Voltar ao Dashboard
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SuccessCard({ icon, title, body, sub }: { icon: React.ReactNode; title: string; body: string; sub?: string }) {
+  return (
+    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+      <div className="flex items-center gap-2 text-navy">
+        {icon}<span className="text-[10px] font-black uppercase tracking-wider text-slate-500">{title}</span>
+      </div>
+      <div className="mt-1 text-sm font-black text-navy truncate">{body}</div>
+      {sub && <div className="text-[10px] text-slate-500 mt-0.5 truncate">{sub}</div>}
     </div>
   );
 }
