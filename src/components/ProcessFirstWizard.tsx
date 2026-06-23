@@ -202,6 +202,110 @@ function mergeVesselFromOCR(current: VesselDraft, extracted: any): VesselDraft {
   };
 }
 
+const requiredDocumentLinks = ["process_id", "customer_id", "vessel_id", "company_id", "generated_file_url"] as const;
+
+function assertNoError(error: any, message: string) {
+  if (error) throw new Error(`${message}: ${error.message || String(error)}`);
+}
+
+function pickTemplateScore(templateName: string, docName: string, serviceKind: ServiceKind) {
+  const name = templateName.toLowerCase();
+  const doc = docName.toLowerCase();
+  let score = 0;
+  if (name === doc) score += 100;
+  if (name.includes(doc)) score += 50;
+  if (serviceKind === "renovacao" && name.includes("renova")) score += 40;
+  if (serviceKind === "renovacao" && (name.includes("tie") || name.includes("tiem"))) score += 35;
+  if (doc.includes("gru") && name.includes("gru")) score += 90;
+  if (doc.includes("requerimento") && name.includes("requerimento")) score += 70;
+  if (name.includes("simplificado")) score += 5;
+  return score;
+}
+
+async function resolveTemplate(companyId: string, docName: string, serviceKind: ServiceKind) {
+  const { data, error } = await supabase
+    .from("document_templates")
+    .select("id, name, company_id, base_content, template_file_url, file_type, is_active")
+    .or(`company_id.eq.${companyId},company_id.is.null`)
+    .ilike("name", `%${docName}%`)
+    .eq("is_active", true);
+  assertNoError(error, `Modelo ${docName}`);
+
+  const candidates = (data || []).sort((a: any, b: any) => {
+    const companyScoreA = a.company_id === companyId ? 10 : 0;
+    const companyScoreB = b.company_id === companyId ? 10 : 0;
+    return (pickTemplateScore(b.name, docName, serviceKind) + companyScoreB) - (pickTemplateScore(a.name, docName, serviceKind) + companyScoreA);
+  });
+
+  return candidates[0] || null;
+}
+
+function toFieldRows(label: string, input: Record<string, any>) {
+  return Object.entries(input)
+    .filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== "")
+    .map(([key, value]) => `${label}.${key}: ${value}`);
+}
+
+function wrapLine(text: string, maxChars = 88) {
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    if ((current + " " + word).trim().length > maxChars) {
+      if (current) lines.push(current);
+      current = word;
+    } else {
+      current = (current + " " + word).trim();
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+async function buildProcessFirstPdf(docName: string, fieldValues: any) {
+  const pdfDoc = await PDFDocument.create();
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  let page = pdfDoc.addPage([595.28, 841.89]);
+  const margin = 48;
+  let y = 792;
+
+  const draw = (text: string, size = 10, isBold = false) => {
+    for (const line of wrapLine(text)) {
+      if (y < 56) {
+        page = pdfDoc.addPage([595.28, 841.89]);
+        y = 792;
+      }
+      page.drawText(line, { x: margin, y, size, font: isBold ? bold : font, color: rgb(0, 0, 0), maxWidth: 500 });
+      y -= size + 5;
+    }
+  };
+
+  draw(docName.toUpperCase(), 15, true);
+  draw(`Gerado pelo fluxo Processo-First em ${new Date().toLocaleString("pt-BR")}`, 9);
+  y -= 10;
+  draw("DADOS DO CLIENTE", 11, true);
+  toFieldRows("cliente", fieldValues.customer || {}).forEach((line) => draw(line));
+  y -= 8;
+  draw("DADOS DA EMBARCAÇÃO", 11, true);
+  toFieldRows("embarcacao", fieldValues.vessel || {}).forEach((line) => draw(line));
+  y -= 8;
+  draw("DADOS DO PROCESSO", 11, true);
+  toFieldRows("processo", fieldValues.process || {}).forEach((line) => draw(line));
+  y -= 18;
+  draw("Arquivo PDF criado e persistido com vínculos obrigatórios de processo, cliente e embarcação.", 9);
+
+  return await pdfDoc.save();
+}
+
+async function validateGeneratedPdfPath(path: string) {
+  if (!path || !path.toLowerCase().endsWith(".pdf")) return false;
+  const { data: blob, error } = await supabase.storage.from("generated-documents").download(path);
+  if (error || !blob) return false;
+  const sample = await blob.slice(0, 4).text();
+  return sample === "%PDF";
+}
+
 export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [companyId, setCompanyId] = useState<string | null>(null);
