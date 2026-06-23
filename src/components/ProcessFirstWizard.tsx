@@ -958,7 +958,7 @@ function Step5Review({ service, state, onPatchCustomer, onPatchVessel, onJumpSte
   onPatchVessel: (p: Partial<VesselDraft>) => void;
   onJumpStep: (s: number) => void;
 }) {
-  React.useEffect(() => { console.log("[FINAL_REVIEW_STARTED]", service.kind); }, [service.kind]);
+  useEffect(() => { console.log("[FINAL_REVIEW_STARTED]", service.kind); }, [service.kind]);
   const c = state.customer; const v = state.vessel;
   return (
     <div>
