@@ -308,10 +308,11 @@ async function createProcessFirstPdfDocument(params: {
   reason: string;
 }) {
   const pdfBytes = await buildFallbackPdfBytes(params.docName, params.fieldValues);
+  const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
   const generatedPath = `${params.companyId}/${crypto.randomUUID()}.pdf`;
   const { error: uploadError } = await supabase.storage
     .from("generated-documents")
-    .upload(generatedPath, pdfBytes, { contentType: "application/pdf", upsert: true });
+    .upload(generatedPath, pdfBlob, { contentType: "application/pdf", upsert: true });
   assertNoError(uploadError, `Upload do PDF ${params.docName}`);
 
   const { data: generatedDoc, error: dbError } = await supabase
