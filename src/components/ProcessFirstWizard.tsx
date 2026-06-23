@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { supabase } from "@/integrations/supabase/client";
 import { useOCR } from "@/hooks/useOCR";
 import {
