@@ -98,11 +98,14 @@ type Action =
   | { type: "SET_SERVICE"; service: ServiceKind }
   | { type: "PATCH_CUSTOMER"; patch: Partial<CustomerDraft> }
   | { type: "PATCH_VESSEL"; patch: Partial<VesselDraft> }
-  | { type: "ADD_DOC"; bucket: "personal" | "vessel"; doc: UploadedDoc }
-  | { type: "UPDATE_DOC"; bucket: "personal" | "vessel"; fileId: string; patch: Partial<UploadedDoc> }
+  | { type: "ADD_DOC"; bucket: "personal" | "address" | "vessel"; doc: UploadedDoc }
+  | { type: "UPDATE_DOC"; bucket: "personal" | "address" | "vessel"; fileId: string; patch: Partial<UploadedDoc> }
   | { type: "GENERATING"; on: boolean }
   | { type: "LOG"; line: string }
   | { type: "CREATED"; processId: string };
+
+const bucketKey = (b: "personal" | "address" | "vessel") =>
+  b === "personal" ? "personalDocs" : b === "address" ? "addressDocs" : "vesselDocs";
 
 function reducer(s: WizardState, a: Action): WizardState {
   switch (a.type) {
@@ -112,11 +115,11 @@ function reducer(s: WizardState, a: Action): WizardState {
     case "PATCH_CUSTOMER": return { ...s, customer: { ...s.customer, ...a.patch } };
     case "PATCH_VESSEL": return { ...s, vessel: { ...s.vessel, ...a.patch } };
     case "ADD_DOC": {
-      const key = a.bucket === "personal" ? "personalDocs" : "vesselDocs";
+      const key = bucketKey(a.bucket);
       return { ...s, [key]: [...s[key], a.doc] } as WizardState;
     }
     case "UPDATE_DOC": {
-      const key = a.bucket === "personal" ? "personalDocs" : "vesselDocs";
+      const key = bucketKey(a.bucket);
       return {
         ...s,
         [key]: s[key].map((d) => (d.fileId === a.fileId ? { ...d, ...a.patch } : d)),
