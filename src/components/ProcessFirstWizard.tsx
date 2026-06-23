@@ -375,9 +375,24 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             name: state.vessel.name || "Embarcação sem nome",
             registration_number: state.vessel.registration_number || null,
             vessel_type: state.vessel.vessel_type || null,
+            material: state.vessel.material || null,
+            length: state.vessel.length || null,
+            boca: state.vessel.beam || null,
+            pontal: state.vessel.depth || null,
+            capacity: state.vessel.capacity || null,
+            current_owner_name: state.vessel.owner_name || null,
+            current_owner_cpf_cnpj: state.vessel.owner_document || null,
+            engine_power: state.vessel.engine_power || null,
+            engine_serial_number: state.vessel.engine_serial || null,
+            notes: [state.vessel.construction_year && `Ano: ${state.vessel.construction_year}`,
+                    state.vessel.navigation_area && `Área: ${state.vessel.navigation_area}`,
+                    state.vessel.activity_service && `Atividade: ${state.vessel.activity_service}`,
+                    state.vessel.builder && `Construtor: ${state.vessel.builder}`].filter(Boolean).join(" | ") || null,
           }).select().single();
           if (error) throw new Error("Embarcação: " + error.message);
           vesselId = v.id;
+          console.log("[VESSEL_AUTO_CREATED]", vesselId);
+          if (customerId) console.log("[VESSEL_LINKED_TO_CUSTOMER]", { vesselId, customerId });
         }
         dispatch({ type: "LOG", line: `✓ Embarcação: ${state.vessel.name || state.vessel.registration_number}` });
       }
