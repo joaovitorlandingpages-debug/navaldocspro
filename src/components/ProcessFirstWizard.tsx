@@ -1362,22 +1362,33 @@ function Step6({ log, processId, service, state, onOpenProcess, onOpenDocuments,
   log: string[]; processId: string | null; service: ServiceDef; state: WizardState;
   onOpenProcess: () => void; onOpenDocuments: () => void; onDashboard: () => void;
 }) {
+  const result = state.generationResult;
+  const isSuccess = result?.status === "success";
   return (
     <div className="py-2">
       <div className="text-center">
-        <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
-          <CheckCircle2 className="h-8 w-8 text-green-600" />
+        <div className={`h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-3 ${isSuccess ? "bg-green-100" : "bg-amber-100"}`}>
+          {isSuccess ? <CheckCircle2 className="h-8 w-8 text-green-600" /> : <AlertTriangle className="h-8 w-8 text-amber-600" />}
         </div>
-        <h3 className="text-xl font-black text-navy">Processo gerado com sucesso</h3>
-        <p className="text-sm text-slate-500 mt-1">{service.name} — {processId?.slice(0, 8)}</p>
+        <h3 className="text-xl font-black text-navy">{result?.title || "Processo gerado"}</h3>
+        <p className="text-sm text-slate-500 mt-1">{result?.message || `${service.name} — ${processId?.slice(0, 8)}`}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
         <SuccessCard icon={<User className="h-4 w-4" />} title="Cliente" body={state.customer.name || "—"} sub="criado/atualizado" />
         <SuccessCard icon={<Ship className="h-4 w-4" />} title="Embarcação" body={state.vessel.name || state.vessel.registration_number || "—"} sub="vinculada ao cliente" />
         <SuccessCard icon={<Sparkles className="h-4 w-4" />} title="Processo" body={service.name} sub={processId ? `ID ${processId.slice(0, 8)}` : ""} />
-        <SuccessCard icon={<FileText className="h-4 w-4" />} title="Documentos" body={`${service.generatedDocs.length} gerados`} sub={service.generatedDocs.join(", ")} />
+        <SuccessCard icon={<FileText className="h-4 w-4" />} title="Documentos" body={`${result?.generatedCount ?? 0}/${service.generatedDocs.length} PDFs validados`} sub={service.generatedDocs.join(", ")} />
       </div>
+
+      {result?.errors?.length ? (
+        <div className="mt-4 p-4 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900 max-w-xl mx-auto">
+          <div className="text-[10px] font-black uppercase tracking-wider mb-2">Pendências da persistência real</div>
+          <ul className="list-disc pl-5 space-y-1 text-xs font-semibold">
+            {result.errors.map((err, i) => <li key={i}>{err}</li>)}
+          </ul>
+        </div>
+      ) : null}
 
       <details className="mt-4 max-w-xl mx-auto">
         <summary className="text-[10px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer">Ver log de geração</summary>
