@@ -65,6 +65,7 @@ interface WizardState {
   customer: CustomerDraft;
   vessel: VesselDraft;
   personalDocs: UploadedDoc[];
+  addressDocs: UploadedDoc[];
   vesselDocs: UploadedDoc[];
   generating: boolean;
   progressLog: string[];
@@ -84,6 +85,7 @@ const initialState: WizardState = {
   customer: emptyCustomer,
   vessel: emptyVessel,
   personalDocs: [],
+  addressDocs: [],
   vesselDocs: [],
   generating: false,
   progressLog: [],
