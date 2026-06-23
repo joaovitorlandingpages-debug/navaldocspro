@@ -48,17 +48,18 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
           *,
           customer:customers(*),
           vessel:vessels(*),
-          company:companies(*),
-          audit_logs:audit_logs(*)
+          company:companies(*)
         `)
         .eq('id', processId)
         .single();
 
       if (processError) throw processError;
 
-      const [{ data: documents }, { data: generatedDocuments }] = await Promise.all([
+      const [{ data: documents }, { data: generatedDocuments }, { data: auditLogs }, { data: comments }] = await Promise.all([
         supabase.from('documents').select('*').eq('process_id', processId).order('created_at', { ascending: false }),
         supabase.from('generated_documents').select('*').eq('process_id', processId).order('created_at', { ascending: false }),
+        supabase.from('activity_logs').select('*').eq('resource_id', processId).order('created_at', { ascending: true }),
+        supabase.from('process_comments').select('*').eq('process_id', processId).order('created_at', { ascending: true }),
       ]);
 
       const latestDossier = dossiers && dossiers.length > 0 ? dossiers[0] : null;
@@ -69,7 +70,7 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
         customer: process.customer,
         vessel: process.vessel,
         documents: [...(generatedDocuments || []), ...(documents || [])],
-        auditLogs: process.audit_logs
+        auditLogs: [...(auditLogs || []), ...(comments || [])]
       });
       
       setHistory(dossiers || []);
