@@ -47,11 +47,13 @@ export const dossierEngine = {
 
     const [
       documents,
+      generatedDocuments,
       signatures,
       auditLogs,
       timelineEvents
     ] = await Promise.all([
-      fetchTable('process_documents', supabase.from('process_documents').select('*').eq('process_id', processId)),
+      fetchTable('documents', supabase.from('documents').select('*').eq('process_id', processId)),
+      fetchTable('generated_documents', supabase.from('generated_documents').select('*').eq('process_id', processId)),
       fetchTable('digital_signatures', supabase.from('digital_signatures').select('*').eq('process_id', processId)),
       fetchTable('audit_logs', supabase.from('document_audit_logs').select('*, profiles(full_name)').eq('document_id', processId).order('created_at', { ascending: true })),
       fetchTable('activity_logs', supabase.from('activity_logs').select('*').eq('resource_id', processId).order('created_at', { ascending: true }))
@@ -61,7 +63,7 @@ export const dossierEngine = {
       process,
       customer: process.customer,
       vessel: process.vessel,
-      documents: documents || [],
+      documents: [...(generatedDocuments || []), ...(documents || [])],
       signatures: signatures || [],
       timeline: timelineEvents || [],
       auditLogs: auditLogs || [],
@@ -108,10 +110,10 @@ export const dossierEngine = {
         .from('process_dossiers')
         .update({
           status: 'generated',
-          pdf_path: pdfPath,
-          zip_path: zipPath,
+          file_url: pdfPath,
           metadata: {
             generated_at: new Date().toISOString(),
+            zip_path: zipPath,
             document_count: data.documents.length,
             signature_count: data.signatures.length,
             client_name: data.customer?.name,
@@ -134,7 +136,7 @@ export const dossierEngine = {
       console.log("DOSSIER_VERSIONING_OK");
       console.log("DOSSIER_TIMELINE_OK");
       console.log("ENTERPRISE_DOSSIER_COMPLETE");
-      return { ...dossier, status: 'generated', pdf_path: pdfPath, zip_path: zipPath };
+      return { ...dossier, status: 'generated', file_url: pdfPath, metadata: { zip_path: zipPath } };
     } catch (error) {
       console.error("Dossier generation error:", error);
       throw error;
