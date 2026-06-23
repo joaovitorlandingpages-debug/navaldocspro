@@ -20,6 +20,7 @@ import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { PageHeader } from "@/components/navigation/PageHeader";
+import { openStoredFile } from "@/utils/file-preview";
 
 
 export const Route = createFileRoute("/vessels")({
@@ -679,7 +680,7 @@ function Vessels() {
                                </div>
                             </div>
                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                               <a href={file.file_url} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></a>
+                                <button onClick={() => openStoredFile(file)} className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></button>
                                <button onClick={() => deleteFile.mutate(file.id)} className="p-2 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
                             </div>
                          </div>
