@@ -165,13 +165,26 @@ function mergeCustomerFromOCR(current: CustomerDraft, extracted: any): CustomerD
 function mergeVesselFromOCR(current: VesselDraft, extracted: any): VesselDraft {
   if (!extracted || typeof extracted !== "object") return current;
   const e = extracted.fields ?? extracted;
+  const pick = (cur: string, ...alts: any[]) => cur || alts.find((v) => v !== null && v !== undefined && String(v).trim() !== "") || "";
   return {
-    name: current.name || e.vessel_name || e.nome_embarcacao || e.nome || "",
-    registration_number: current.registration_number || e.registration_number || e.inscricao || e.inscrição || "",
-    owner_name: current.owner_name || e.owner || e.proprietario || e.proprietário || "",
-    material: current.material || e.material || "",
-    capacity: current.capacity || e.capacity || e.capacidade || "",
-    vessel_type: current.vessel_type || e.vessel_type || e.tipo || "",
+    name: pick(current.name, e.vessel_name, e.nome_embarcacao, e.nome),
+    registration_number: pick(current.registration_number, e.registration_number, e.inscricao, e.inscrição),
+    owner_name: pick(current.owner_name, e.owner_name, e.owner, e.proprietario, e.proprietário),
+    owner_document: pick(current.owner_document, e.owner_document, e.cpf_cnpj, e.cnpj, e.cpf),
+    material: pick(current.material, e.hull_material, e.material),
+    capacity: pick(current.capacity, e.capacity, e.capacidade),
+    vessel_type: pick(current.vessel_type, e.vessel_type, e.tipo),
+    length: pick(current.length, e.length, e.comprimento),
+    beam: pick(current.beam, e.beam, e.boca),
+    depth: pick(current.depth, e.depth, e.pontal),
+    construction_year: pick(current.construction_year, e.construction_year, e.ano),
+    navigation_area: pick(current.navigation_area, e.navigation_area, e.area_navegacao),
+    activity_service: pick(current.activity_service, e.activity_service, e.atividade),
+    builder: pick(current.builder, e.builder, e.construtor),
+    engine_power: pick(current.engine_power, e.engine_power, e.potencia),
+    engine_serial: pick(current.engine_serial, e.engine_serial),
+    city: pick(current.city, e.city, e.cidade),
+    state: pick(current.state, e.state, e.uf),
   };
 }
 
