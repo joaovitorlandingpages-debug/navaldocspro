@@ -661,7 +661,7 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
   );
 }
 
-function Step2({ service, docs, customer, onUpload, onChange, fileInputRef }: {
+function Step2Identity({ service, docs, customer, onUpload, onChange, fileInputRef }: {
   service: ServiceDef; docs: UploadedDoc[]; customer: CustomerDraft;
   onUpload: (files: FileList | null) => void; onChange: (p: Partial<CustomerDraft>) => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -670,21 +670,22 @@ function Step2({ service, docs, customer, onUpload, onChange, fileInputRef }: {
     return (
       <div className="text-center py-8">
         <User className="h-12 w-12 text-slate-300 mx-auto" />
-        <p className="text-sm text-slate-500 mt-3">Este serviço não exige documentos pessoais. Avance para a embarcação.</p>
+        <p className="text-sm text-slate-500 mt-3">Este serviço não exige documento de identificação. Avance.</p>
       </div>
     );
   }
+  console.log("[OCR_IDENTITY_STEP_CREATED]");
   return (
     <div>
-      <h3 className="text-lg font-black text-navy mb-1">Documentos pessoais</h3>
-      <p className="text-sm text-slate-500 mb-4">Envie {service.personalDocs.join(", ")}. O OCR extrai os dados.</p>
+      <h3 className="text-lg font-black text-navy mb-1">Documento de identificação</h3>
+      <p className="text-sm text-slate-500 mb-4">Envie a <strong>CNH</strong> ou o <strong>RG</strong>. O OCR extrai nome, CPF, RG e data de nascimento.</p>
       <button
         onClick={() => fileInputRef.current?.click()}
         className="w-full border-2 border-dashed border-slate-200 hover:border-primary rounded-2xl p-8 text-center group transition-all"
-        data-testid="pf-upload-personal"
+        data-testid="pf-upload-identity"
       >
         <Upload className="h-8 w-8 text-slate-300 group-hover:text-primary mx-auto" />
-        <p className="text-sm font-bold text-navy mt-2">Clique para enviar (CNH, RG, CPF, Comprovante)</p>
+        <p className="text-sm font-bold text-navy mt-2">Clique para enviar (CNH ou RG)</p>
         <p className="text-xs text-slate-400">PDF, JPG, PNG</p>
       </button>
       <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf" className="hidden"
@@ -693,13 +694,54 @@ function Step2({ service, docs, customer, onUpload, onChange, fileInputRef }: {
       <OCRDebugPanel docs={docs} scope="personal" />
 
       <div className="mt-6 p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
-        <div className="text-xs font-black text-blue-700 uppercase tracking-wider mb-2">Dados encontrados</div>
+        <div className="text-xs font-black text-blue-700 uppercase tracking-wider mb-2">Dados de identificação</div>
         <FieldGrid>
           <Field label="Nome" value={customer.name} onChange={(v) => onChange({ name: v })} />
           <Field label="CPF / CNPJ" value={customer.cpf_cnpj} onChange={(v) => onChange({ cpf_cnpj: v })} />
           <Field label="RG" value={customer.rg} onChange={(v) => onChange({ rg: v })} />
           <Field label="Email" value={customer.email} onChange={(v) => onChange({ email: v })} />
           <Field label="Telefone" value={customer.phone} onChange={(v) => onChange({ phone: v })} />
+        </FieldGrid>
+      </div>
+    </div>
+  );
+}
+
+function Step3Address({ service, docs, customer, onUpload, onChange, fileInputRef }: {
+  service: ServiceDef; docs: UploadedDoc[]; customer: CustomerDraft;
+  onUpload: (files: FileList | null) => void; onChange: (p: Partial<CustomerDraft>) => void;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+}) {
+  if (!service.needsPersonal) {
+    return (
+      <div className="text-center py-8">
+        <User className="h-12 w-12 text-slate-300 mx-auto" />
+        <p className="text-sm text-slate-500 mt-3">Este serviço não exige comprovante de residência. Avance.</p>
+      </div>
+    );
+  }
+  console.log("[OCR_ADDRESS_STEP_CREATED]");
+  return (
+    <div>
+      <h3 className="text-lg font-black text-navy mb-1">Comprovante de residência</h3>
+      <p className="text-sm text-slate-500 mb-4">Envie uma conta de <strong>água</strong>, <strong>luz</strong>, <strong>internet</strong> ou <strong>telefone</strong>. O OCR extrai o endereço.</p>
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        className="w-full border-2 border-dashed border-slate-200 hover:border-primary rounded-2xl p-8 text-center group transition-all"
+        data-testid="pf-upload-address"
+      >
+        <Upload className="h-8 w-8 text-slate-300 group-hover:text-primary mx-auto" />
+        <p className="text-sm font-bold text-navy mt-2">Clique para enviar (Água, Luz, Internet, Telefone)</p>
+        <p className="text-xs text-slate-400">PDF, JPG, PNG</p>
+      </button>
+      <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf" className="hidden"
+        onChange={(e) => onUpload(e.target.files)} />
+      <DocsList docs={docs} />
+      <OCRDebugPanel docs={docs} scope="personal" />
+
+      <div className="mt-6 p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+        <div className="text-xs font-black text-emerald-700 uppercase tracking-wider mb-2">Endereço identificado</div>
+        <FieldGrid>
           <Field label="Endereço" value={customer.address} onChange={(v) => onChange({ address: v })} />
           <Field label="Cidade" value={customer.city} onChange={(v) => onChange({ city: v })} />
           <Field label="UF" value={customer.state} onChange={(v) => onChange({ state: v })} />
