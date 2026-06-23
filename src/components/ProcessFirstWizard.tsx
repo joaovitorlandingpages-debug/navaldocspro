@@ -615,18 +615,31 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         try {
           console.log("[DOCUMENT_REAL_GENERATION_STARTED]", { docName, processId: proc.id, customerId, vesselId });
           const tpl = await resolveTemplate(companyId, docName, service.kind);
-          if (!tpl?.id) throw new Error("template real não encontrado");
-          if (!tpl.base_content && !tpl.template_file_url) throw new Error(`template "${tpl.name}" não possui conteúdo/arquivo para gerar PDF real`);
+          let generatedDoc: any = null;
 
-          const { data: genData, error: genErr } = await supabase.functions.invoke("generate-document", {
-            body: { templateId: tpl.id, companyId, customerId, vesselId, processId: proc.id, fieldValues },
-          });
-          if (genErr) throw genErr;
-          if (!genData?.success || !genData?.document?.id || !genData?.document?.generated_file_url) {
-            throw new Error(genData?.error || "função não retornou PDF persistido");
+          if (tpl?.id && (tpl.base_content || tpl.template_file_url)) {
+            const { data: genData, error: genErr } = await supabase.functions.invoke("generate-document", {
+              body: { templateId: tpl.id, companyId, customerId, vesselId, processId: proc.id, fieldValues },
+            });
+            if (genErr) throw genErr;
+            if (!genData?.success || !genData?.document?.id || !genData?.document?.generated_file_url) {
+              throw new Error(genData?.error || "função não retornou PDF persistido");
+            }
+            generatedDoc = genData.document;
+          } else {
+            generatedDoc = await createProcessFirstPdfDocument({
+              docName,
+              companyId,
+              customerId,
+              vesselId,
+              processId: proc.id,
+              templateId: tpl?.id || null,
+              userId,
+              fieldValues,
+              reason: tpl?.id ? "template_without_content" : "template_not_found",
+            });
           }
 
-          const generatedDoc = genData.document;
           const missingLinks = requiredDocumentLinks.filter((key) => !generatedDoc[key]);
           if (missingLinks.length > 0) throw new Error(`documento sem vínculos obrigatórios: ${missingLinks.join(", ")}`);
 
