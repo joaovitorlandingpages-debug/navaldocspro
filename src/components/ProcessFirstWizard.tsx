@@ -260,8 +260,15 @@ async function buildFallbackPdfBytes(docName: string, fieldValues: any) {
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   let page = pdfDoc.addPage([595.28, 841.89]);
   let y = 792;
+  const sanitizePdfText = (text: string) => String(text)
+    .replace(/[–—]/g, "-")
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/•/g, "-")
+    .replace(/[^\x09\x0A\x0D\x20-\xFF]/g, "");
   const draw = (text: string, size = 10, isBold = false) => {
-    const chunks = String(text).match(/.{1,88}(\s|$)/g) || [String(text)];
+    const safeText = sanitizePdfText(text);
+    const chunks = safeText.match(/.{1,88}(\s|$)/g) || [safeText];
     for (const chunk of chunks) {
       if (y < 52) {
         page = pdfDoc.addPage([595.28, 841.89]);
