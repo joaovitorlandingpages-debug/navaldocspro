@@ -764,6 +764,7 @@ function Step3({ service, docs, vessel, onUpload, onChange, fileInputRef }: {
       </div>
     );
   }
+  console.log("[OCR_VESSEL_STEP_CREATED]");
   return (
     <div>
       <h3 className="text-lg font-black text-navy mb-1">Documentos da embarcação</h3>
