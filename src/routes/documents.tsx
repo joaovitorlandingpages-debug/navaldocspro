@@ -35,7 +35,7 @@ function Documents() {
       return;
     }
     if (!doc.generated_file_url) {
-      toast.warning("Documento ainda não possui PDF. Status: " + (doc.status || 'pendente'));
+      toast.error("PDF não gerado. Clique em regenerar.");
       return;
     }
     try {
@@ -52,6 +52,32 @@ function Documents() {
     } catch (e) {
       console.error('[GENERATED_DOCUMENT_PREVIEW_FAILED]', e);
       toast.error("Erro ao abrir documento.");
+    }
+  };
+
+  const handleDownloadDocument = async (doc: any) => {
+    if (doc.status === 'error' || !doc.generated_file_url) {
+      toast.error("PDF não gerado. Clique em regenerar.");
+      return;
+    }
+    try {
+      const raw = doc.generated_file_url as string;
+      const path = raw.startsWith('http')
+        ? raw.match(/generated-documents\/(.+)$/)?.[1]
+        : raw;
+      if (!path) throw new Error('Caminho do PDF inválido');
+      const url = await getSignedUrl('generated-documents', path);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${doc.name || 'documento'}.pdf`;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      console.log('[REAL_PDF_VALIDATED]', { documentId: doc.id, path });
+    } catch (e) {
+      console.error('[GENERATED_DOCUMENT_PREVIEW_FAILED]', e);
+      toast.error("Erro ao baixar PDF.");
     }
   };
 
@@ -172,7 +198,7 @@ function Documents() {
                   >
                     Visualizar
                   </button>
-                  <button className="p-2 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200">
+                  <button onClick={() => handleDownloadDocument(doc)} className="p-2 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200">
                     <Download className="h-3 w-3" />
                   </button>
                 </div>
@@ -210,7 +236,7 @@ function Documents() {
                     <td className="px-4 py-4 text-right">
                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                           <button onClick={() => handleViewDocument(doc)} className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></button>
-                          <button className="p-2 text-slate-400 hover:text-navy"><Download className="h-4 w-4" /></button>
+                           <button onClick={() => handleDownloadDocument(doc)} className="p-2 text-slate-400 hover:text-navy"><Download className="h-4 w-4" /></button>
                        </div>
                     </td>
                   </tr>
