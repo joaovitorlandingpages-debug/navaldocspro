@@ -798,14 +798,17 @@ function Step3({ service, docs, vessel, onUpload, onChange, fileInputRef }: {
 }
 
 function Step4({ service, state }: { service: ServiceDef; state: WizardState }) {
-  const personalOk = !service.needsPersonal || state.personalDocs.some((d) => d.status === "done" || d.status === "ocr") || !!state.customer.name;
+  const identityOk = !service.needsPersonal || state.personalDocs.some((d) => d.status === "done" || d.status === "ocr") || !!state.customer.name;
+  const addressOk = !service.needsPersonal || state.addressDocs.some((d) => d.status === "done" || d.status === "ocr") || !!state.customer.address;
   const vesselOk = !service.needsVessel || state.vesselDocs.some((d) => d.status === "done" || d.status === "ocr") || !!state.vessel.name;
+  console.log("[PROCESS_FIRST_UX_IMPROVED]", { identityOk, addressOk, vesselOk });
   return (
     <div>
       <h3 className="text-lg font-black text-navy mb-1">Montagem inteligente</h3>
       <p className="text-sm text-slate-500 mb-4">Para <strong>{service.name}</strong>, vamos precisar de:</p>
       <div className="space-y-2">
-        {service.needsPersonal && <Check label="Documentos pessoais enviados" ok={personalOk} />}
+        {service.needsPersonal && <Check label="Documento de identificação enviado" ok={identityOk} />}
+        {service.needsPersonal && <Check label="Comprovante de residência enviado" ok={addressOk} />}
         {service.needsVessel && <Check label="Documentos da embarcação enviados" ok={vesselOk} />}
         {service.generatedDocs.map((d) => (
           <Check key={d} label={`${d} — será gerado automaticamente`} ok={true} info />
