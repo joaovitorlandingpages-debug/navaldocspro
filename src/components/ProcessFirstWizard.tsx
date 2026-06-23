@@ -202,12 +202,18 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             extracted: job.extracted_data,
           },
         });
-        if (job.status === "completed" && job.extracted_data) {
+        const hasData = job.status === "completed"
+          && job.extracted_data && (job.extracted_data as any)._has_data === true;
+        console.log("[OCR_UI_STATUS_FIXED]", { jobId: job.id, status: job.status, hasData });
+        if (hasData) {
+          console.log("[OCR_FORM_AUTOFILL_APPLIED]", { jobId: job.id, bucket });
           if (bucket === "personal") {
             dispatch({ type: "PATCH_CUSTOMER", patch: mergeCustomerFromOCR(state.customer, job.extracted_data) as any });
           } else {
             dispatch({ type: "PATCH_VESSEL", patch: mergeVesselFromOCR(state.vessel, job.extracted_data) as any });
           }
+        } else if (job.status === "completed") {
+          console.log("[OCR_EMPTY_RESULT_HANDLED]", { jobId: job.id });
         }
       }
     }, 2500);
