@@ -203,9 +203,9 @@ function Documents() {
                     <td className="px-4 py-4 text-xs text-slate-500">{doc.vessel?.name || '-'}</td>
                     <td className="px-4 py-4 text-xs text-slate-500">{format(new Date(doc.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</td>
                     <td className="px-4 py-4">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        doc.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                      }`}>{doc.status === 'completed' ? 'Concluído' : 'Rascunho'}</span>
+                      {(() => { const b = statusBadge(doc.status); return (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${b.cls}`}>{b.label}</span>
+                      ); })()}
                     </td>
                     <td className="px-4 py-4 text-right">
                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
