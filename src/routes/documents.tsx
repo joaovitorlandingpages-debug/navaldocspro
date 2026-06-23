@@ -152,9 +152,9 @@ function Documents() {
                 <h4 className="font-bold text-navy text-sm mb-1 truncate" title={doc.name}>{doc.name}</h4>
                 <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium mb-4">
                   <span>PDF • {doc.customer?.name || 'Geral'}</span>
-                  <span className={`px-2 py-0.5 rounded-full ${
-                    doc.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                  }`}>{doc.status === 'completed' ? 'Concluído' : 'Rascunho'}</span>
+                  {(() => { const b = statusBadge(doc.status); return (
+                    <span className={`px-2 py-0.5 rounded-full ${b.cls}`}>{b.label}</span>
+                  ); })()}
                 </div>
                 
                 <div className="flex flex-wrap gap-1 mb-4">
