@@ -92,7 +92,7 @@ export function ModalLayout({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-grow">
+        <ScrollArea className="flex-1 min-h-0 h-full">
           <div className="p-4 sm:p-6 md:p-10">
             {children}
           </div>
