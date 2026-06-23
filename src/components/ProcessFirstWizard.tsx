@@ -82,7 +82,17 @@ interface WizardState {
   generating: boolean;
   progressLog: string[];
   createdProcessId: string | null;
+  generationResult: PersistenceResult | null;
 }
+
+type PersistenceResult = {
+  status: "success" | "partial" | "failed";
+  title: string;
+  message: string;
+  generatedCount: number;
+  documentCount: number;
+  errors: string[];
+};
 
 const emptyCustomer: CustomerDraft = {
   name: "", cpf_cnpj: "", rg: "", address: "", city: "", state: "", email: "", phone: "",
@@ -105,6 +115,7 @@ const initialState: WizardState = {
   generating: false,
   progressLog: [],
   createdProcessId: null,
+  generationResult: null,
 };
 
 type Action =
@@ -117,7 +128,8 @@ type Action =
   | { type: "UPDATE_DOC"; bucket: "personal" | "address" | "vessel"; fileId: string; patch: Partial<UploadedDoc> }
   | { type: "GENERATING"; on: boolean }
   | { type: "LOG"; line: string }
-  | { type: "CREATED"; processId: string };
+  | { type: "CREATED"; processId: string }
+  | { type: "SET_RESULT"; result: PersistenceResult | null };
 
 const bucketKey = (b: "personal" | "address" | "vessel") =>
   b === "personal" ? "personalDocs" : b === "address" ? "addressDocs" : "vesselDocs";
@@ -143,6 +155,7 @@ function reducer(s: WizardState, a: Action): WizardState {
     case "GENERATING": return { ...s, generating: a.on };
     case "LOG": return { ...s, progressLog: [...s.progressLog, a.line] };
     case "CREATED": return { ...s, createdProcessId: a.processId };
+    case "SET_RESULT": return { ...s, generationResult: a.result };
   }
 }
 
