@@ -30,19 +30,36 @@ function Documents() {
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   
   const handleViewDocument = async (doc: any) => {
+    if (doc.status === 'error') {
+      toast.error("Falha na geração do PDF — revise o template e tente gerar novamente.");
+      return;
+    }
+    if (!doc.generated_file_url) {
+      toast.warning("Documento ainda não possui PDF. Status: " + (doc.status || 'pendente'));
+      return;
+    }
     try {
-      if (doc.generated_file_url) {
-        // If it's a full URL (legacy), use it. If it's just a path, get signed URL.
-        const path = doc.generated_file_url.includes('http') 
-          ? doc.generated_file_url.split('/').slice(-2).join('/')
-          : doc.generated_file_url;
-        
-        const url = await getSignedUrl('generated-documents', path);
-        window.open(url, '_blank');
+      const raw = doc.generated_file_url as string;
+      let url = raw;
+      if (raw.startsWith('http')) {
+        // Try to derive path from public URL (company_id/file.ext)
+        const match = raw.match(/generated-documents\/(.+)$/);
+        if (match) url = await getSignedUrl('generated-documents', match[1]);
+      } else {
+        url = await getSignedUrl('generated-documents', raw);
       }
+      window.open(url, '_blank');
     } catch (e) {
+      console.error('[GENERATED_DOCUMENT_PREVIEW_FAILED]', e);
       toast.error("Erro ao abrir documento.");
     }
+  };
+
+  const statusBadge = (s?: string) => {
+    if (s === 'completed') return { label: 'Concluído', cls: 'bg-green-100 text-green-700' };
+    if (s === 'error') return { label: 'Falha — revisar', cls: 'bg-rose-100 text-rose-700' };
+    if (s === 'pending') return { label: 'Pendente', cls: 'bg-amber-100 text-amber-700' };
+    return { label: 'Rascunho', cls: 'bg-slate-100 text-slate-600' };
   };
 
   const categories = ["Todos", ...(officialCategories?.map((c: any) => c.name) || [])];
@@ -135,9 +152,9 @@ function Documents() {
                 <h4 className="font-bold text-navy text-sm mb-1 truncate" title={doc.name}>{doc.name}</h4>
                 <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium mb-4">
                   <span>PDF • {doc.customer?.name || 'Geral'}</span>
-                  <span className={`px-2 py-0.5 rounded-full ${
-                    doc.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                  }`}>{doc.status === 'completed' ? 'Concluído' : 'Rascunho'}</span>
+                  {(() => { const b = statusBadge(doc.status); return (
+                    <span className={`px-2 py-0.5 rounded-full ${b.cls}`}>{b.label}</span>
+                  ); })()}
                 </div>
                 
                 <div className="flex flex-wrap gap-1 mb-4">
@@ -186,9 +203,9 @@ function Documents() {
                     <td className="px-4 py-4 text-xs text-slate-500">{doc.vessel?.name || '-'}</td>
                     <td className="px-4 py-4 text-xs text-slate-500">{format(new Date(doc.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</td>
                     <td className="px-4 py-4">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        doc.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                      }`}>{doc.status === 'completed' ? 'Concluído' : 'Rascunho'}</span>
+                      {(() => { const b = statusBadge(doc.status); return (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${b.cls}`}>{b.label}</span>
+                      ); })()}
                     </td>
                     <td className="px-4 py-4 text-right">
                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">

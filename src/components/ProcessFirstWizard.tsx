@@ -459,10 +459,13 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
               customer_id: customerId,
               vessel_id: vesselId,
               process_id: proc.id,
-              name: docName,
-              status: "pending",
-              metadata: fieldValues as any,
+              name: `${docName} (falha — template não encontrado)`,
+              status: "error",
+              metadata: { ...fieldValues, reason: "template_not_found" } as any,
             });
+            dispatch({ type: "LOG", line: `✗ ${docName}: template não encontrado` });
+            console.warn("[GENERATED_DOCUMENT_STUB_FLAGGED]", docName);
+            continue;
           }
           generatedCount++;
           dispatch({ type: "LOG", line: `✓ ${docName}` });
