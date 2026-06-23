@@ -965,6 +965,62 @@ function Customers() {
                     </div>
                   </div>
                </TabsContent>
+
+              <TabsContent value="vessels" className="space-y-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Embarcações vinculadas</h4>
+                  <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-widest">{customerVessels.length}</Badge>
+                </div>
+                {customerVessels.length === 0 ? (
+                  <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-[2rem]">
+                    <Ship className="h-12 w-12 text-slate-200 mx-auto mb-2" />
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhuma embarcação vinculada a este cliente.</p>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {customerVessels.map((v) => (
+                      <div key={v.id} className="p-5 bg-white border border-slate-100 rounded-2xl hover:border-primary/30 hover:shadow-md transition-all">
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 bg-navy/5 text-navy rounded-xl flex items-center justify-center"><Ship className="h-5 w-5" /></div>
+                            <div>
+                              <p className="font-black text-navy text-sm uppercase tracking-tight">{v.name || 'Sem nome'}</p>
+                              <p className="text-[10px] text-slate-400 font-mono">{v.registration_number || '—'}</p>
+                            </div>
+                          </div>
+                          {v.status && <Badge className="bg-slate-100 text-slate-600 border-none text-[9px] uppercase">{v.status}</Badge>}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500">
+                          <div><span className="font-bold text-slate-400">Tipo:</span> {v.vessel_type || '—'}</div>
+                          <div className="truncate"><span className="font-bold text-slate-400">Proprietário:</span> {v.current_owner_name || '—'}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="history" className="space-y-3">
+                <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Histórico de processos</h4>
+                {customerProcesses.length === 0 ? (
+                  <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-[2rem]">
+                    <FileText className="h-12 w-12 text-slate-200 mx-auto mb-2" />
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Sem histórico de processos</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {customerProcesses.map((p) => (
+                      <div key={p.id} className="p-4 bg-white border border-slate-100 rounded-xl flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-bold text-navy">{p.process_type}</p>
+                          <p className="text-[10px] text-slate-400">{new Date(p.created_at).toLocaleDateString('pt-BR')}</p>
+                        </div>
+                        <Badge className="bg-slate-100 text-slate-600 border-none text-[9px] uppercase">{p.status}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
             </Tabs>
           </div>
       </ModalLayout>
