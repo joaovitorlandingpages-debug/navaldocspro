@@ -45,9 +45,21 @@ type VesselDraft = {
   name: string;
   registration_number: string;
   owner_name: string;
+  owner_document: string;
   material: string;
   capacity: string;
   vessel_type: string;
+  length: string;
+  beam: string;
+  depth: string;
+  construction_year: string;
+  navigation_area: string;
+  activity_service: string;
+  builder: string;
+  engine_power: string;
+  engine_serial: string;
+  city: string;
+  state: string;
 };
 
 type UploadedDoc = {
@@ -76,7 +88,10 @@ const emptyCustomer: CustomerDraft = {
   name: "", cpf_cnpj: "", rg: "", address: "", city: "", state: "", email: "", phone: "",
 };
 const emptyVessel: VesselDraft = {
-  name: "", registration_number: "", owner_name: "", material: "", capacity: "", vessel_type: "",
+  name: "", registration_number: "", owner_name: "", owner_document: "", material: "",
+  capacity: "", vessel_type: "", length: "", beam: "", depth: "", construction_year: "",
+  navigation_area: "", activity_service: "", builder: "", engine_power: "", engine_serial: "",
+  city: "", state: "",
 };
 
 const initialState: WizardState = {
