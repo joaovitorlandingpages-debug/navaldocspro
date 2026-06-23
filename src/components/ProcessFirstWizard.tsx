@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { supabase } from "@/integrations/supabase/client";
 import { useOCR } from "@/hooks/useOCR";
 import {
@@ -238,64 +237,6 @@ async function resolveTemplate(companyId: string, docName: string, serviceKind: 
   });
 
   return candidates[0] || null;
-}
-
-function toFieldRows(label: string, input: Record<string, any>) {
-  return Object.entries(input)
-    .filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== "")
-    .map(([key, value]) => `${label}.${key}: ${value}`);
-}
-
-function wrapLine(text: string, maxChars = 88) {
-  const words = text.split(/\s+/);
-  const lines: string[] = [];
-  let current = "";
-  for (const word of words) {
-    if ((current + " " + word).trim().length > maxChars) {
-      if (current) lines.push(current);
-      current = word;
-    } else {
-      current = (current + " " + word).trim();
-    }
-  }
-  if (current) lines.push(current);
-  return lines;
-}
-
-async function buildProcessFirstPdf(docName: string, fieldValues: any) {
-  const pdfDoc = await PDFDocument.create();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  let page = pdfDoc.addPage([595.28, 841.89]);
-  const margin = 48;
-  let y = 792;
-
-  const draw = (text: string, size = 10, isBold = false) => {
-    for (const line of wrapLine(text)) {
-      if (y < 56) {
-        page = pdfDoc.addPage([595.28, 841.89]);
-        y = 792;
-      }
-      page.drawText(line, { x: margin, y, size, font: isBold ? bold : font, color: rgb(0, 0, 0), maxWidth: 500 });
-      y -= size + 5;
-    }
-  };
-
-  draw(docName.toUpperCase(), 15, true);
-  draw(`Gerado pelo fluxo Processo-First em ${new Date().toLocaleString("pt-BR")}`, 9);
-  y -= 10;
-  draw("DADOS DO CLIENTE", 11, true);
-  toFieldRows("cliente", fieldValues.customer || {}).forEach((line) => draw(line));
-  y -= 8;
-  draw("DADOS DA EMBARCAÇÃO", 11, true);
-  toFieldRows("embarcacao", fieldValues.vessel || {}).forEach((line) => draw(line));
-  y -= 8;
-  draw("DADOS DO PROCESSO", 11, true);
-  toFieldRows("processo", fieldValues.process || {}).forEach((line) => draw(line));
-  y -= 18;
-  draw("Arquivo PDF criado e persistido com vínculos obrigatórios de processo, cliente e embarcação.", 9);
-
-  return await pdfDoc.save();
 }
 
 async function validateGeneratedPdfPath(path: string) {
