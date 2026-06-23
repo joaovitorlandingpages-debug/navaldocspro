@@ -210,10 +210,24 @@ serve(async (req) => {
     }
 
     const rawText: string = parsed.raw_text || ''
-    const fields: Record<string, any> = parsed.fields || {}
+    let fields: Record<string, any> = parsed.fields || {}
     const docType: string = parsed.document_type || job.document_type || 'GENERIC'
 
-    // Count non-null fields
+    // TIE/TIEM specialized parser — fill gaps the LLM missed using regex over raw_text
+    const isTie = /VESSEL_TIE|TIE|TIEM/i.test(docType) ||
+                  /TÍTULO\s+DE\s+INSCRI[ÇC][ÃA]O/i.test(rawText) ||
+                  /CAPITANIA\s+DOS\s+PORTOS/i.test(rawText)
+    if (isTie) {
+      const before = { ...fields }
+      fields = parseTieFields(rawText, fields)
+      for (const k of Object.keys(fields)) {
+        if (fields[k] && !before[k]) console.log('[TIE_FIELD_DETECTED]', k, fields[k])
+      }
+      const tieKeys = ['owner_name','owner_document','vessel_name','registration_number','vessel_type','hull_material','length','beam','depth','capacity','construction_year','navigation_area','activity_service','builder','engine_power','engine_serial']
+      for (const k of tieKeys) if (!fields[k]) console.log('[TIE_FIELD_NOT_FOUND]', k)
+      console.log('[VESSEL_OCR_MAPPING_COMPLETED]', { filled: tieKeys.filter(k => fields[k]).length, total: tieKeys.length })
+    }
+
     const foundEntries = Object.entries(fields).filter(([_, v]) => v !== null && v !== undefined && String(v).trim() !== '')
     const foundCount = foundEntries.length
 
@@ -227,6 +241,7 @@ serve(async (req) => {
       _raw_text: rawText,
       _fields_found: foundCount,
       _has_data: foundCount > 0,
+      _is_tie: isTie,
     }
 
     const confidence_by_field: Record<string, number> = {}
