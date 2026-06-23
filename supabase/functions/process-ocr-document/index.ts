@@ -1,3 +1,4 @@
+// Real OCR using Lovable AI Gateway (Gemini 2.5 Flash vision)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
@@ -6,182 +7,222 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+const EXTRACTION_PROMPT = `Você é um OCR especialista em documentos brasileiros (CNH, RG, CPF, comprovantes, TIE/TIEM de embarcações, CSN, DPEM, GRU, recibos, laudos).
+
+Analise a imagem/documento anexado e devolva ESTRITAMENTE um JSON válido (sem markdown, sem comentários) com a seguinte estrutura:
+
+{
+  "raw_text": "TODO o texto literal extraído do documento, linha a linha",
+  "document_type": "CNH | RG | CPF | COMPROVANTE_RESIDENCIA | VESSEL_TIE | SAFETY_CERTIFICATE | DPEM_INSURANCE | FINANCIAL_GRU | PURCHASE_CONTRACT | TECHNICAL_MEMORIAL | TECHNICAL_REPORT | GENERIC",
+  "fields": {
+    "name": "nome completo da pessoa (se houver)",
+    "cpf": "CPF formatado 000.000.000-00 (se houver)",
+    "cnpj": "CNPJ formatado (se houver)",
+    "rg": "RG (se houver)",
+    "birth_date": "AAAA-MM-DD (se houver)",
+    "email": "email (se houver)",
+    "phone": "telefone (se houver)",
+    "address": "endereço/logradouro (se houver)",
+    "city": "cidade (se houver)",
+    "state": "UF 2 letras (se houver)",
+    "zip_code": "CEP (se houver)",
+    "vessel_name": "nome da embarcação (se houver)",
+    "registration_number": "número de inscrição/registro (se houver)",
+    "expiry_date": "AAAA-MM-DD (se houver)",
+    "issue_date": "AAAA-MM-DD (se houver)",
+    "engine_brand": "marca do motor (se houver)",
+    "engine_model": "modelo do motor (se houver)",
+    "engine_serial": "série do motor (se houver)",
+    "engine_power": "potência (se houver)"
   }
+}
+
+REGRAS CRÍTICAS:
+- Use null para campos não encontrados. NÃO invente dados.
+- "raw_text" deve conter SEMPRE o texto bruto, mesmo que nenhum campo seja extraído.
+- Se não conseguir ler nada, retorne raw_text: "" e fields com todos null.`
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  )
+
+  let jobId: string | undefined
+  const startedAt = Date.now()
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const body = await req.json()
+    jobId = body.jobId
+    if (!jobId) throw new Error('jobId required')
 
-    const { jobId } = await req.json()
-    
-    const { data: job, error: jobError } = await supabaseClient
+    console.log('[OCR_UPLOAD_STARTED]', jobId)
+
+    const { data: job, error: jobError } = await supabase
       .from('ocr_jobs')
       .select('*, uploaded_files(*)')
       .eq('id', jobId)
       .single()
+    if (jobError || !job) throw new Error('Job not found: ' + jobError?.message)
 
-    if (jobError || !job) throw new Error('Job not found')
+    await supabase.from('ocr_jobs').update({
+      status: 'processing',
+      provider_used: 'Lovable AI / google/gemini-2.5-flash',
+      updated_at: new Date().toISOString(),
+    }).eq('id', jobId)
 
-    await supabaseClient
-      .from('ocr_jobs')
-      .update({ 
-        status: 'processing', 
-        provider_used: 'NavalDocs AI Enterprise Engine (v5.0)',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', jobId)
+    const file = job.uploaded_files
+    if (!file) throw new Error('Uploaded file record missing')
 
-    console.log(`Processing Enterprise OCR for: ${job.uploaded_files.file_name}`)
-    await new Promise(resolve => setTimeout(resolve, 3000))
+    // Resolve file bytes — try storage download first, fall back to URL fetch
+    const fileUrl: string = file.file_url || ''
+    let bytes: Uint8Array | null = null
+    let mime = file.file_type || 'image/png'
 
-    const fileName = job.uploaded_files.file_name.toLowerCase()
-    const providedType = job.document_type || 'AUTO_DETECT'
-    let docType = providedType
-    let extractedData: any = {}
-    let confidenceByField: any = {}
-    let suggestedActions: any[] = []
+    const tryDownload = async (bucket: string, path: string) => {
+      const { data, error } = await supabase.storage.from(bucket).download(path)
+      if (error || !data) return null
+      return new Uint8Array(await data.arrayBuffer())
+    }
 
-    // 1. Classification & Extraction Logic
-    if (fileName.includes('tie') || fileName.includes('tiem') || providedType === 'VESSEL_TIE' || fileName.includes('inscricao')) {
-      docType = 'VESSEL_TIE'
-      extractedData = {
-        vessel_name: "ESTRELA DO MAR IV",
-        registration_number: "381ABC2024",
-        owner_name: "MARCOS SOUZA DA SILVA",
-        owner_doc: "123.456.789-00",
-        vessel_type: "LANCHA",
-        navigation_category: "ESPORTE E RECREIO",
-        length: "12.50m",
-        beam: "3.40m",
-        gross_tonnage: "15.0",
-        engine_brand: "VOLVO PENTA",
-        engine_model: "D6-300",
-        engine_serial: "VP-987654",
-        engine_power: "300HP",
-        expiry_date: "2029-05-20",
-        issue_date: "2024-05-20"
+    if (fileUrl.startsWith('http')) {
+      // Try to parse "/storage/v1/object/(public|sign)/<bucket>/<path>"
+      const m = fileUrl.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/]+)\/(.+?)(?:\?|$)/)
+      if (m) bytes = await tryDownload(m[1], decodeURIComponent(m[2]))
+      if (!bytes) {
+        const r = await fetch(fileUrl)
+        if (r.ok) {
+          bytes = new Uint8Array(await r.arrayBuffer())
+          mime = r.headers.get('content-type') || mime
+        }
       }
-      confidenceByField = { vessel_name: 0.99, registration_number: 0.99, expiry_date: 0.98, engine_serial: 0.95 }
-      suggestedActions = [{ type: "sync_vessel", label: "Sincronizar Embarcação", description: "Atualizar cadastro técnico." }]
-      console.log("OCR_CLASSIFICATION_OK", docType);
-    } 
-    else if (fileName.includes('csn') || fileName.includes('seguranca') || providedType === 'SAFETY_CERTIFICATE') {
-      docType = 'SAFETY_CERTIFICATE'
-      extractedData = {
-        certificate_number: "CSN-RJ-2024-001",
-        issue_date: "2024-01-10",
-        expiry_date: "2025-01-10",
-        vessel_name: "ESTRELA DO MAR IV",
-        capacity_passengers: 12,
-        capacity_crew: 1,
-        navigation_area: "Mar Aberto"
-      }
-      confidenceByField = { certificate_number: 0.98, expiry_date: 0.99, capacity_passengers: 0.95 }
-      console.log("OCR_CLASSIFICATION_OK", docType);
-    }
-    else if (fileName.includes('dpem') || fileName.includes('seguro') || providedType === 'DPEM_INSURANCE') {
-      docType = 'DPEM_INSURANCE'
-      extractedData = {
-        policy_number: "99.88.77665544",
-        insurance_company: "PORTO SEGURO",
-        start_date: "2024-02-01",
-        expiry_date: "2025-02-01",
-        vessel_name: "ESTRELA DO MAR IV",
-        payment_status: "QUITADO"
-      }
-      confidenceByField = { policy_number: 0.99, expiry_date: 0.99 }
-      console.log("OCR_CLASSIFICATION_OK", docType);
-    }
-    else if (fileName.includes('gru') || fileName.includes('guia') || providedType === 'FINANCIAL_GRU') {
-      docType = 'FINANCIAL_GRU'
-      extractedData = {
-        reference_number: "20240500123",
-        amount: 155.40,
-        expiry_date: "2024-12-30",
-        tax_payer: "MARCOS SOUZA DA SILVA",
-        cpf_cnpj: "123.456.789-00"
-      }
-      confidenceByField = { amount: 1.0, reference_number: 0.99 }
-      console.log("OCR_CLASSIFICATION_OK", docType);
-    }
-    else if (fileName.includes('recibo') || fileName.includes('venda') || providedType === 'PURCHASE_CONTRACT') {
-      docType = 'PURCHASE_CONTRACT'
-      extractedData = {
-        seller_name: "NAUTICA RIO LTDA",
-        buyer_name: "MARCOS SOUZA DA SILVA",
-        vessel_name: "ESTRELA DO MAR IV",
-        sale_value: 450000.00,
-        sale_date: "2024-05-10"
-      }
-      confidenceByField = { sale_value: 0.99, buyer_name: 0.98 }
-      console.log("OCR_CLASSIFICATION_OK", docType);
-    }
-    else if (fileName.includes('cnh') || providedType === 'CNH') {
-      docType = 'CNH'
-      extractedData = { name: "MARCOS SOUZA DA SILVA", doc_number: "123.456.789-00", rg: "20.456.789-X", expiry_date: "2028-12-10" }
-      confidenceByField = { name: 0.99, doc_number: 0.99 }
-      console.log("OCR_CLASSIFICATION_OK", docType);
-    }
-    else if (fileName.includes('rg') || providedType === 'RG') {
-      docType = 'RG'
-      extractedData = { name: "MARCOS SOUZA DA SILVA", doc_number: "123.456.789-00", rg: "20.456.789-X", birth_date: "1985-05-20" }
-      confidenceByField = { name: 0.99, rg: 0.99 }
-      console.log("OCR_CLASSIFICATION_OK", docType);
-    }
-    else if (fileName.includes('memorial') || providedType === 'TECHNICAL_MEMORIAL') {
-      docType = 'TECHNICAL_MEMORIAL'
-      extractedData = {
-        vessel_name: "ESTRELA DO MAR IV",
-        hull_material: "FIBRA DE VIDRO",
-        engine_power: "300HP",
-        engineer_name: "ENG. RICARDO MENDES",
-        crea_number: "RJ-2015004432"
-      }
-      confidenceByField = { engine_power: 0.97, crea_number: 0.99 }
-      console.log("OCR_CLASSIFICATION_OK", docType);
-    }
-    else if (fileName.includes('laudo') || providedType === 'TECHNICAL_REPORT') {
-      docType = 'TECHNICAL_REPORT'
-      extractedData = {
-        report_number: "L-2024-001",
-        issue_date: "2024-05-10",
-        vessel_name: "ESTRELA DO MAR IV",
-        conclusion: "Aprovado"
-      }
-      confidenceByField = { conclusion: 0.95 }
-      console.log("OCR_CLASSIFICATION_OK", docType);
-    }
-    else {
-      docType = 'GENERIC'
-      extractedData = { detected_text: "Processamento genérico...", summary: "Digitalização de documento não classificado." }
-      confidenceByField = { summary: 0.5 }
+    } else {
+      // Assume storage path in ocr-documents bucket
+      bytes = await tryDownload('ocr-documents', fileUrl)
+      if (!bytes) bytes = await tryDownload('customer-documents', fileUrl)
+      if (!bytes) bytes = await tryDownload('vessel-documents', fileUrl)
     }
 
-    console.log("OCR_ENTERPRISE_READY");
+    if (!bytes) throw new Error('OCR_UPLOAD_FAILED: could not read file bytes for ' + fileUrl)
+    console.log('[OCR_UPLOAD_SUCCESS]', { bytes: bytes.length, mime })
 
-    const { error: updateError } = await supabaseClient
-      .from('ocr_jobs')
-      .update({
-        status: 'completed',
-        identified_document_type: docType,
-        extracted_data: extractedData,
-        confidence_score: Object.values(confidenceByField).reduce((a: any, b: any) => a + b, 0) / Object.values(confidenceByField).length || 0.5,
-        confidence_by_field: confidenceByField,
-        suggested_actions: suggestedActions,
-        processing_time: 3000
-      })
-      .eq('id', jobId)
+    // Base64 encode
+    let binary = ''
+    const chunk = 0x8000
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunk))
+    }
+    const b64 = btoa(binary)
 
-    if (updateError) throw updateError
+    const isPdf = mime.includes('pdf') || fileUrl.toLowerCase().endsWith('.pdf')
+    const contentBlock = isPdf
+      ? { type: 'file', file: { filename: file.file_name || 'doc.pdf', file_data: `data:application/pdf;base64,${b64}` } }
+      : { type: 'image_url', image_url: { url: `data:${mime};base64,${b64}` } }
 
-    return new Response(JSON.stringify({ success: true, docType }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
+    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured')
+
+    const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: EXTRACTION_PROMPT },
+          { role: 'user', content: [
+            { type: 'text', text: 'Extraia os dados deste documento conforme o esquema JSON solicitado.' },
+            contentBlock,
+          ]},
+        ],
+      }),
+    })
+
+    if (!aiRes.ok) {
+      const errText = await aiRes.text()
+      throw new Error(`AI Gateway ${aiRes.status}: ${errText}`)
+    }
+
+    const aiJson = await aiRes.json()
+    const content: string = aiJson.choices?.[0]?.message?.content ?? ''
+    console.log('[OCR_RAW_RESPONSE]', content.slice(0, 500))
+
+    // Parse JSON (strip code fences if present)
+    let parsed: any = {}
+    try {
+      const clean = content.replace(/```json\s*|\s*```/g, '').trim()
+      const start = clean.indexOf('{')
+      const end = clean.lastIndexOf('}')
+      parsed = JSON.parse(clean.slice(start, end + 1))
+    } catch (e) {
+      console.error('[OCR_PARSE_FAILED]', e)
+      parsed = { raw_text: content, fields: {} }
+    }
+
+    const rawText: string = parsed.raw_text || ''
+    const fields: Record<string, any> = parsed.fields || {}
+    const docType: string = parsed.document_type || job.document_type || 'GENERIC'
+
+    // Count non-null fields
+    const foundEntries = Object.entries(fields).filter(([_, v]) => v !== null && v !== undefined && String(v).trim() !== '')
+    const foundCount = foundEntries.length
+
+    console.log('[OCR_RAW_TEXT]', rawText.slice(0, 300))
+    for (const [k, v] of Object.entries(fields)) {
+      console.log(v ? '[OCR_FIELD_DETECTED]' : '[OCR_FIELD_NOT_FOUND]', k, v ?? '')
+    }
+
+    const extracted_data = {
+      ...fields,
+      _raw_text: rawText,
+      _fields_found: foundCount,
+      _has_data: foundCount > 0,
+    }
+
+    const confidence_by_field: Record<string, number> = {}
+    for (const [k] of foundEntries) confidence_by_field[k] = 0.9
+    const avgConf = foundCount > 0 ? 0.9 : 0
+
+    const finalStatus = foundCount > 0 ? 'completed' : (rawText ? 'completed' : 'failed')
+    const errMsg = foundCount === 0
+      ? (rawText ? 'OCR executado, mas nenhum dado identificado.' : 'Falha na leitura OCR.')
+      : null
+
+    await supabase.from('ocr_jobs').update({
+      status: finalStatus,
+      identified_document_type: docType,
+      extracted_data,
+      confidence_score: avgConf,
+      confidence_by_field,
+      suggested_actions: [],
+      processing_time: Date.now() - startedAt,
+      error_message: errMsg,
+    }).eq('id', jobId)
+
+    console.log('[OCR_DONE]', { jobId, foundCount, finalStatus })
+    return new Response(JSON.stringify({
+      success: true,
+      docType,
+      fields_found: foundCount,
+      has_data: foundCount > 0,
+      raw_text_preview: rawText.slice(0, 200),
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   } catch (error) {
-    console.error("OCR Error:", error)
-    return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 })
+    console.error('[OCR_ERROR]', error)
+    if (jobId) {
+      await supabase.from('ocr_jobs').update({
+        status: 'failed',
+        error_message: String(error?.message || error),
+        processing_time: Date.now() - startedAt,
+      }).eq('id', jobId)
+    }
+    return new Response(JSON.stringify({ error: String(error?.message || error) }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500,
+    })
   }
 })
