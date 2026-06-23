@@ -259,7 +259,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
           company_id: companyId,
           file_name: file.name,
           file_url: filePath,
-          category: bucket === "personal" ? "personal_doc" : "vessel_doc",
+          category: bucket === "personal" ? "personal_doc" : bucket === "address" ? "address_doc" : "vessel_doc",
           file_type: file.type,
           file_size: file.size,
           status: "pending",
