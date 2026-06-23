@@ -428,7 +428,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         <div className="flex-1 overflow-y-auto px-8 py-6">
           {state.step === 1 && <Step1 onPick={(k) => { dispatch({ type: "SET_SERVICE", service: k }); dispatch({ type: "STEP", step: 2 }); }} />}
           {state.step === 2 && service && (
-            <Step2
+            <Step2Identity
               service={service}
               docs={state.personalDocs}
               customer={state.customer}
@@ -438,6 +438,16 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             />
           )}
           {state.step === 3 && service && (
+            <Step3Address
+              service={service}
+              docs={state.addressDocs}
+              customer={state.customer}
+              onUpload={(files) => handleUpload(files, "address")}
+              onChange={(p) => dispatch({ type: "PATCH_CUSTOMER", patch: p })}
+              fileInputRef={addressInputRef}
+            />
+          )}
+          {state.step === 4 && service && (
             <Step3
               service={service}
               docs={state.vesselDocs}
@@ -447,13 +457,13 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
               fileInputRef={vesselInputRef}
             />
           )}
-          {state.step === 4 && service && (
+          {state.step === 5 && service && (
             <Step4 service={service} state={state} />
           )}
-          {state.step === 5 && service && (
+          {state.step === 6 && service && (
             <Step5 service={service} state={state} />
           )}
-          {state.step === 6 && (
+          {state.step === 7 && (
             <Step6
               log={state.progressLog}
               processId={state.createdProcessId}
@@ -468,7 +478,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         </div>
 
         {/* Footer */}
-        {state.step < 6 && (
+        {state.step < 7 && (
           <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-between gap-3 bg-slate-50">
             <button
               onClick={() => dispatch({ type: "STEP", step: Math.max(1, state.step - 1) })}
@@ -478,7 +488,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             >
               <ChevronLeft className="h-4 w-4 inline" /> Voltar
             </button>
-            {state.step < 5 && (
+            {state.step < 6 && (
               <button
                 onClick={() => dispatch({ type: "STEP", step: state.step + 1 })}
                 disabled={!canAdvance}
@@ -488,7 +498,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
                 Avançar <ChevronRight className="h-4 w-4 inline" />
               </button>
             )}
-            {state.step === 5 && (
+            {state.step === 6 && (
               <button
                 onClick={handleGenerate}
                 disabled={state.generating}
