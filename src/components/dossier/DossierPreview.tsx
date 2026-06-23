@@ -261,7 +261,7 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
                              <FileText className="h-6 w-6" />
                           </div>
                           <div>
-                             <p className="text-[11px] font-black uppercase text-navy tracking-tight">{doc.document_type || doc.file_name}</p>
+                              <p className="text-[11px] font-black uppercase text-navy tracking-tight">{doc.document_type || doc.file_name || doc.name}</p>
                              <p className="text-[9px] font-bold text-slate-400 mt-0.5">Validado via OCR Neural em {new Date(doc.created_at).toLocaleDateString()}</p>
                           </div>
                        </div>
