@@ -12,35 +12,81 @@ const EXTRACTION_PROMPT = `Você é um OCR especialista em documentos brasileiro
 Analise a imagem/documento anexado e devolva ESTRITAMENTE um JSON válido (sem markdown, sem comentários) com a seguinte estrutura:
 
 {
-  "raw_text": "TODO o texto literal extraído do documento, linha a linha",
+  "raw_text": "TODO o texto literal extraído do documento, linha a linha, preservando rótulos e valores",
   "document_type": "CNH | RG | CPF | COMPROVANTE_RESIDENCIA | VESSEL_TIE | SAFETY_CERTIFICATE | DPEM_INSURANCE | FINANCIAL_GRU | PURCHASE_CONTRACT | TECHNICAL_MEMORIAL | TECHNICAL_REPORT | GENERIC",
   "fields": {
-    "name": "nome completo da pessoa (se houver)",
-    "cpf": "CPF formatado 000.000.000-00 (se houver)",
-    "cnpj": "CNPJ formatado (se houver)",
-    "rg": "RG (se houver)",
-    "birth_date": "AAAA-MM-DD (se houver)",
-    "email": "email (se houver)",
-    "phone": "telefone (se houver)",
-    "address": "endereço/logradouro (se houver)",
-    "city": "cidade (se houver)",
-    "state": "UF 2 letras (se houver)",
-    "zip_code": "CEP (se houver)",
-    "vessel_name": "nome da embarcação (se houver)",
-    "registration_number": "número de inscrição/registro (se houver)",
-    "expiry_date": "AAAA-MM-DD (se houver)",
-    "issue_date": "AAAA-MM-DD (se houver)",
-    "engine_brand": "marca do motor (se houver)",
-    "engine_model": "modelo do motor (se houver)",
-    "engine_serial": "série do motor (se houver)",
-    "engine_power": "potência (se houver)"
+    "name": "nome completo da pessoa",
+    "cpf": "CPF 000.000.000-00",
+    "cnpj": "CNPJ formatado",
+    "rg": "RG",
+    "birth_date": "AAAA-MM-DD",
+    "email": "email",
+    "phone": "telefone",
+    "address": "endereço/logradouro",
+    "city": "cidade",
+    "state": "UF 2 letras",
+    "zip_code": "CEP",
+    "vessel_name": "nome da embarcação",
+    "registration_number": "número de inscrição/registro (ex: 381P2023001)",
+    "owner_name": "PROPRIETÁRIO da embarcação",
+    "owner_document": "CPF/CNPJ do proprietário",
+    "vessel_type": "tipo (BALSA, REBOQUE, LANCHA, etc.)",
+    "hull_material": "material do casco (AÇO, MADEIRA, FIBRA, ALUMÍNIO)",
+    "length": "comprimento total (ex: 19,30m)",
+    "beam": "boca (largura)",
+    "depth": "pontal",
+    "capacity": "capacidade de passageiros/carga",
+    "construction_year": "ano (AAAA)",
+    "navigation_area": "área de navegação",
+    "activity_service": "atividade ou serviço",
+    "builder": "construtor/estaleiro",
+    "expiry_date": "AAAA-MM-DD",
+    "issue_date": "AAAA-MM-DD",
+    "engine_brand": "marca do motor",
+    "engine_model": "modelo do motor",
+    "engine_serial": "número de série do motor",
+    "engine_power": "potência do motor"
   }
 }
 
 REGRAS CRÍTICAS:
 - Use null para campos não encontrados. NÃO invente dados.
-- "raw_text" deve conter SEMPRE o texto bruto, mesmo que nenhum campo seja extraído.
-- Se não conseguir ler nada, retorne raw_text: "" e fields com todos null.`
+- Para TIE/TIEM, procure ATIVAMENTE rótulos: PROPRIETÁRIO, CPF/CNPJ, NOME DA EMBARCAÇÃO, INSCRIÇÃO, TIPO, MAT. CONSTRUÇÃO CASCO, COMPRIMENTO TOTAL, BOCA, PONTAL, CAPACIDADE, ANO DE CONSTRUÇÃO, ÁREA DE NAVEGAÇÃO, ATIVIDADE/SERVIÇO, POTÊNCIA, MOTOR, CONSTRUTOR.
+- "raw_text" deve conter SEMPRE o texto bruto completo.
+- Se nada legível, retorne raw_text: "" e fields com todos null.`
+
+// Regex fallback parser for TIE/TIEM — fills gaps the model missed.
+function parseTieFields(rawText: string, current: Record<string, any>): Record<string, any> {
+  if (!rawText) return current
+  const out: Record<string, any> = { ...current }
+  const txt = rawText.replace(/\r/g, '')
+  const grab = (re: RegExp): string | null => {
+    const m = txt.match(re)
+    return m ? m[1].trim().replace(/\s+/g, ' ') : null
+  }
+  const setIf = (k: string, v: string | null) => {
+    if (v && (out[k] === null || out[k] === undefined || out[k] === '')) out[k] = v
+  }
+  setIf('owner_name', grab(/PROPRIET[ÁA]RIO[:\s]+([^\n]+?)(?:\n|CPF|CNPJ|$)/i))
+  setIf('owner_document', grab(/(?:CPF|CNPJ)[:\s/]*([\d.\-/]{11,20})/i))
+  setIf('vessel_name', grab(/(?:NOME\s+DA\s+EMBARCA[ÇC][ÃA]O|EMBARCA[ÇC][ÃA]O)[:\s]+([^\n]+)/i))
+  setIf('registration_number', grab(/(?:INSCRI[ÇC][ÃA]O|N[ºO\.]\s*INSCRI[ÇC][ÃA]O)[:\s]+([A-Z0-9\-]+)/i))
+  setIf('vessel_type', grab(/TIPO(?:\s+DA\s+EMBARCA[ÇC][ÃA]O)?[:\s]+([A-ZÁ-Úa-zá-ú ]+?)(?:\n|$)/i))
+  setIf('hull_material', grab(/(?:MAT(?:ERIAL)?\.?\s*(?:CONSTRU[ÇC][ÃA]O\s+)?CASCO|MATERIAL\s+DO\s+CASCO)[:\s]+([A-ZÁ-Úa-zá-ú ]+?)(?:\n|$)/i))
+  setIf('length', grab(/COMPRIMENTO(?:\s+TOTAL)?[:\s]+([\d.,]+\s*m?)/i))
+  setIf('beam', grab(/BOCA[:\s]+([\d.,]+\s*m?)/i))
+  setIf('depth', grab(/PONTAL[:\s]+([\d.,]+\s*m?)/i))
+  setIf('capacity', grab(/CAPACIDADE[^\n:]*[:\s]+([\d.,]+)/i))
+  setIf('construction_year', grab(/ANO(?:\s+DE)?\s+CONSTRU[ÇC][ÃA]O[:\s]+(\d{4})/i))
+  setIf('navigation_area', grab(/[ÁA]REA\s+DE\s+NAVEGA[ÇC][ÃA]O[:\s]+([^\n]+)/i))
+  setIf('activity_service', grab(/ATIVIDADE(?:\s*\/\s*SERVI[ÇC]O)?[:\s]+([^\n]+)/i))
+  setIf('builder', grab(/CONSTRUTOR[:\s]+([^\n]+)/i))
+  setIf('engine_power', grab(/POT[ÊE]NCIA[:\s]+([\d.,]+\s*(?:HP|KW|CV)?)/i))
+  setIf('engine_serial', grab(/(?:S[ÉE]RIE|N[ºO\.]\s*S[ÉE]RIE)\s*(?:DO\s+)?MOTOR[:\s]+([A-Z0-9\-]+)/i))
+  setIf('city', grab(/(?:CIDADE|MUNIC[ÍI]PIO)[:\s]+([^\n\/,]+)/i))
+  setIf('state', grab(/\b(?:UF|ESTADO)[:\s]+([A-Z]{2})\b/i))
+  return out
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
