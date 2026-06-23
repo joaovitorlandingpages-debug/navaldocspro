@@ -293,7 +293,8 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   const canAdvance = (() => {
     if (state.step === 1) return !!state.service;
     if (state.step === 2) return !service?.needsPersonal || !!state.customer.name;
-    if (state.step === 3) return !service?.needsVessel || !!state.vessel.name || !!state.vessel.registration_number;
+    if (state.step === 3) return !service?.needsPersonal || !!state.customer.address || !!state.customer.city;
+    if (state.step === 4) return !service?.needsVessel || !!state.vessel.name || !!state.vessel.registration_number;
     return true;
   })();
 
