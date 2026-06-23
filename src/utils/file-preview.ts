@@ -44,3 +44,15 @@ export async function openStoredFile(file: any) {
     toast.error("Erro ao abrir documento.");
   }
 }
+
+export async function getStoredFileSignedUrl(file: any) {
+  const raw = String(file?.file_url || file?.generated_file_url || "");
+  if (!raw) throw new Error("PDF não gerado. Clique em regenerar.");
+  if (raw.startsWith("http") && !raw.includes("/storage/v1/object/")) return raw;
+  const bucket = inferBucket(file);
+  const path = extractStoragePath(raw, bucket);
+  if (!path) throw new Error("Caminho do arquivo inválido");
+  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 60);
+  if (error) throw error;
+  return data.signedUrl;
+}
