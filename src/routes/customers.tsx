@@ -136,6 +136,23 @@ function Customers() {
     console.log("CACHE_SYSTEM_OK");
   }, []);
 
+  useEffect(() => {
+    if (!selectedCustomer?.id) {
+      setCustomerVessels([]);
+      setCustomerProcesses([]);
+      return;
+    }
+    (async () => {
+      const [{ data: vs }, { data: ps }] = await Promise.all([
+        supabase.from("vessels").select("id, name, registration_number, vessel_type, current_owner_name, status").eq("customer_id", selectedCustomer.id).order("created_at", { ascending: false }),
+        supabase.from("processes").select("id, process_type, status, created_at").eq("customer_id", selectedCustomer.id).order("created_at", { ascending: false }).limit(20),
+      ]);
+      setCustomerVessels(vs || []);
+      setCustomerProcesses(ps || []);
+      console.log("[CUSTOMER_VESSEL_RELATION_FIXED]", { customerId: selectedCustomer.id, vessels: vs?.length || 0 });
+    })();
+  }, [selectedCustomer?.id]);
+
   const handleCreateCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("CLIENT_SAVE_CLICKED");
