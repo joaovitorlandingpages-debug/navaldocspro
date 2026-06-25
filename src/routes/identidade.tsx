@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -178,14 +178,18 @@ function IdentidadePage() {
         <Section title="Logos" icon={<ImageIcon className="h-5 w-5" />}>
           <div className="grid md:grid-cols-2 gap-6">
             <UploadField
+              inputId="logo-upload"
               label="Logo principal"
+              actionLabel="Enviar Logo"
               value={data.logo_primary_url}
               busy={uploadingField === "logo_primary_url"}
               onFile={(f) => upload("logo_primary_url", f)}
               onClear={() => clearField("logo_primary_url")}
             />
             <UploadField
+              inputId="logo-secondary-upload"
               label="Logo secundário (opcional)"
+              actionLabel="Enviar Logo secundário"
               value={data.logo_secondary_url}
               busy={uploadingField === "logo_secondary_url"}
               onFile={(f) => upload("logo_secondary_url", f)}
@@ -231,21 +235,27 @@ function IdentidadePage() {
         <Section title="Assinatura, carimbo e marca d'água" icon={<Stamp className="h-5 w-5" />}>
           <div className="grid md:grid-cols-3 gap-6">
             <UploadField
+              inputId="signature-upload"
               label="Assinatura digital"
+              actionLabel="Enviar assinatura"
               value={data.signature_url}
               busy={uploadingField === "signature_url"}
               onFile={(f) => upload("signature_url", f)}
               onClear={() => clearField("signature_url")}
             />
             <UploadField
+              inputId="stamp-upload"
               label="Carimbo"
+              actionLabel="Enviar carimbo"
               value={data.stamp_url}
               busy={uploadingField === "stamp_url"}
               onFile={(f) => upload("stamp_url", f)}
               onClear={() => clearField("stamp_url")}
             />
             <UploadField
+              inputId="watermark-upload"
               label="Marca d'água (PDF)"
+              actionLabel="Enviar marca d'água"
               value={data.watermark_url}
               busy={uploadingField === "watermark_url"}
               onFile={(f) => upload("watermark_url", f)}
@@ -315,24 +325,23 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
 }
 
 function UploadField({
+  inputId,
   label,
+  actionLabel,
   value,
   busy,
   onFile,
   onClear,
 }: {
+  inputId: string;
   label: string;
+  actionLabel: string;
   value: string | null;
   busy: boolean;
   onFile: (f: File) => void;
   onClear: () => void;
 }) {
-  const ref = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
-  const openPicker = () => {
-    if (busy) return;
-    ref.current?.click();
-  };
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
@@ -343,14 +352,14 @@ function UploadField({
   return (
     <div>
       <Label className="text-xs">{label}</Label>
-      {/* Input file SEMPRE no DOM, fora do card, para nunca ser bloqueado por overlay */}
+      {/* Input file no DOM e associado nativamente ao label, sem ref/click programático */}
       <input
-        ref={ref}
+        id={inputId}
+        name={inputId}
         type="file"
         accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
-        style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
-        tabIndex={-1}
-        aria-hidden="true"
+        className="sr-only"
+        disabled={busy}
         onChange={(e) => {
           const f = e.target.files?.[0];
           if (f) onFile(f);
@@ -358,40 +367,36 @@ function UploadField({
         }}
       />
       <div
-        role="button"
-        tabIndex={0}
-        onClick={openPicker}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            openPicker();
-          }
-        }}
         onDragOver={(e) => {
           e.preventDefault();
           setDragOver(true);
         }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
-        className={`relative z-[1] mt-1.5 rounded-xl border-2 border-dashed p-4 flex flex-col items-center justify-center min-h-[140px] transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-primary/40 select-none ${
+        className={`mt-1.5 rounded-xl border-2 border-dashed p-4 flex flex-col items-center justify-center min-h-[140px] transition-colors select-none ${
           dragOver ? "border-primary bg-primary/5" : "border-slate-300 bg-slate-50 hover:bg-slate-100"
-        } ${busy ? "opacity-60 cursor-wait" : ""}`}
+        } ${busy ? "opacity-60" : ""}`}
       >
         {value ? (
           <>
             <img src={value} alt={label} className="max-h-20 max-w-full object-contain mb-2 pointer-events-none" />
-            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-              <Button size="sm" variant="outline" onClick={openPicker} disabled={busy} type="button">
+            <div className="flex gap-2">
+              <label
+                htmlFor={inputId}
+                className={`inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
+                  busy ? "pointer-events-none opacity-50" : "cursor-pointer"
+                }`}
+              >
                 {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Trocar
-              </Button>
+              </label>
               <Button size="sm" variant="ghost" onClick={onClear} disabled={busy} type="button">
                 Remover
               </Button>
             </div>
           </>
         ) : (
-          <div className="flex flex-col items-center text-center pointer-events-none">
+          <div className="flex flex-col items-center text-center">
             {busy ? (
               <Loader2 className="h-6 w-6 animate-spin text-primary mb-2" />
             ) : (
@@ -404,22 +409,18 @@ function UploadField({
           </div>
         )}
       </div>
-      {/* Botão visível de fallback — independente do card */}
+      {/* Label visível nativo — abre o seletor sem JS programático */}
       <div className="mt-2 flex justify-center">
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          disabled={busy}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            ref.current?.click();
-          }}
+        <label
+          htmlFor={inputId}
+          data-upload-label={inputId}
+          className={`inline-flex h-9 items-center justify-center rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/80 ${
+            busy ? "pointer-events-none opacity-50" : "cursor-pointer"
+          }`}
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
-          {value ? "Trocar arquivo" : "Enviar arquivo"}
-        </Button>
+          {value ? "Trocar arquivo" : actionLabel}
+        </label>
       </div>
     </div>
   );
