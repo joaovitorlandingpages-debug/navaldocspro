@@ -182,14 +182,14 @@ function IdentidadePage() {
               value={data.logo_primary_url}
               busy={uploadingField === "logo_primary_url"}
               onFile={(f) => upload("logo_primary_url", f)}
-              onClear={() => setData((d) => ({ ...d, logo_primary_url: null }))}
+              onClear={() => clearField("logo_primary_url")}
             />
             <UploadField
               label="Logo secundário (opcional)"
               value={data.logo_secondary_url}
               busy={uploadingField === "logo_secondary_url"}
               onFile={(f) => upload("logo_secondary_url", f)}
-              onClear={() => setData((d) => ({ ...d, logo_secondary_url: null }))}
+              onClear={() => clearField("logo_secondary_url")}
             />
           </div>
         </Section>
@@ -235,21 +235,21 @@ function IdentidadePage() {
               value={data.signature_url}
               busy={uploadingField === "signature_url"}
               onFile={(f) => upload("signature_url", f)}
-              onClear={() => setData((d) => ({ ...d, signature_url: null }))}
+              onClear={() => clearField("signature_url")}
             />
             <UploadField
               label="Carimbo"
               value={data.stamp_url}
               busy={uploadingField === "stamp_url"}
               onFile={(f) => upload("stamp_url", f)}
-              onClear={() => setData((d) => ({ ...d, stamp_url: null }))}
+              onClear={() => clearField("stamp_url")}
             />
             <UploadField
               label="Marca d'água (PDF)"
               value={data.watermark_url}
               busy={uploadingField === "watermark_url"}
               onFile={(f) => upload("watermark_url", f)}
-              onClear={() => setData((d) => ({ ...d, watermark_url: null }))}
+              onClear={() => clearField("watermark_url")}
             />
           </div>
         </Section>
