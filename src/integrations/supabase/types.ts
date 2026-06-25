@@ -549,6 +549,192 @@ export type Database = {
           },
         ]
       }
+      client_portal_access: {
+        Row: {
+          access_token: string
+          allowed_actions: Json
+          company_id: string
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          id: string
+          last_access_at: string | null
+          process_id: string
+          status: string
+          token_expires_at: string
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          allowed_actions?: Json
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          id?: string
+          last_access_at?: string | null
+          process_id: string
+          status?: string
+          token_expires_at?: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          allowed_actions?: Json
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          id?: string
+          last_access_at?: string | null
+          process_id?: string
+          status?: string
+          token_expires_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_portal_access_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_portal_access_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_portal_access_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_portal_activity_logs: {
+        Row: {
+          access_id: string | null
+          company_id: string
+          created_at: string
+          event_type: string
+          id: string
+          ip_address: string | null
+          message: string | null
+          metadata: Json
+          process_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          access_id?: string | null
+          company_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          message?: string | null
+          metadata?: Json
+          process_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          access_id?: string | null
+          company_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          message?: string | null
+          metadata?: Json
+          process_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_portal_activity_logs_access_id_fkey"
+            columns: ["access_id"]
+            isOneToOne: false
+            referencedRelation: "client_portal_access"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_portal_activity_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_portal_activity_logs_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_portal_messages: {
+        Row: {
+          access_id: string | null
+          company_id: string
+          created_at: string
+          id: string
+          message: string
+          process_id: string
+          read_at: string | null
+          sender: string
+          sender_user_id: string | null
+        }
+        Insert: {
+          access_id?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          message: string
+          process_id: string
+          read_at?: string | null
+          sender: string
+          sender_user_id?: string | null
+        }
+        Update: {
+          access_id?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          process_id?: string
+          read_at?: string | null
+          sender?: string
+          sender_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_portal_messages_access_id_fkey"
+            columns: ["access_id"]
+            isOneToOne: false
+            referencedRelation: "client_portal_access"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_portal_messages_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_portal_messages_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           cnpj: string | null
