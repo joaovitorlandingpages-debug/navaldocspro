@@ -25,6 +25,13 @@ import {
   type ServiceDef,
 } from "@/types/service-requirements";
 import { validateCriticalFields } from "@/services/documentNormalizer";
+import {
+  fetchLibrary,
+  suggestTemplatesForWizard,
+  persistProcessDocuments,
+  logLibraryEvent,
+  type SuggestedTemplate,
+} from "@/services/documentLibrary";
 
 interface Props {
   isOpen: boolean;
