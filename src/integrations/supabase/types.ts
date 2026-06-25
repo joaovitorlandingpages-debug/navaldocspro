@@ -3068,6 +3068,84 @@ export type Database = {
           },
         ]
       }
+      process_document_uploads: {
+        Row: {
+          company_id: string
+          confidence_score: number | null
+          created_at: string
+          detected_document_type: string | null
+          extracted_fields: Json
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          ocr_status: string
+          ocr_text: string | null
+          process_document_id: string
+          process_id: string
+          updated_at: string
+          uploaded_by: string | null
+          validation_errors: Json
+          validation_status: string
+        }
+        Insert: {
+          company_id: string
+          confidence_score?: number | null
+          created_at?: string
+          detected_document_type?: string | null
+          extracted_fields?: Json
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          ocr_status?: string
+          ocr_text?: string | null
+          process_document_id: string
+          process_id: string
+          updated_at?: string
+          uploaded_by?: string | null
+          validation_errors?: Json
+          validation_status?: string
+        }
+        Update: {
+          company_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          detected_document_type?: string | null
+          extracted_fields?: Json
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          ocr_status?: string
+          ocr_text?: string | null
+          process_document_id?: string
+          process_id?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          validation_errors?: Json
+          validation_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_document_uploads_process_document_id_fkey"
+            columns: ["process_document_id"]
+            isOneToOne: false
+            referencedRelation: "process_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_document_uploads_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_documents: {
         Row: {
           approved_at: string | null

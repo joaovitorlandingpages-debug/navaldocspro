@@ -39,6 +39,7 @@ import { DossierPreview } from "@/components/dossier/DossierPreview";
 import { dossierEngine } from "@/services/automation/dossierEngine";
 import { ProcessDossierTab } from "@/components/dossier/ProcessDossierTab";
 import { openStoredFile } from "@/utils/file-preview";
+import { ProcessDocumentsPanel } from "@/components/process/ProcessDocumentsPanel";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
@@ -358,6 +359,9 @@ function ProcessDetail() {
                      Checklist
                    </TabsTrigger>
                    <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Uploads</TabsTrigger>
+                   <TabsTrigger value="library_docs" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
+                     <FileCheck className="h-3 w-3" /> Documentos
+                   </TabsTrigger>
                    <TabsTrigger value="ocr" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
                      <Zap className="h-3 w-3" /> OCR
                    </TabsTrigger>
@@ -641,6 +645,18 @@ function ProcessDetail() {
                         </div>
                       )}
                     </div>
+                  </div>
+               </TabsContent>
+
+               <TabsContent value="library_docs" className="animate-in fade-in duration-300">
+                  <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                    <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-1 flex items-center gap-2">
+                      <FileCheck className="h-5 w-5 text-primary" /> Documentos do processo
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">
+                      Anexe arquivos, execute OCR, valide e aplique dados aos modelos vinculados
+                    </p>
+                    <ProcessDocumentsPanel processId={id} />
                   </div>
                </TabsContent>
 
