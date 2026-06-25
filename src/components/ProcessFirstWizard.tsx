@@ -825,56 +825,83 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       let mirroredFilesCount = 0;
       for (const docName of service.generatedDocs) {
         try {
+          const review = state.reviewDocs.find((r) => r.name === docName);
+          if (!review) throw new Error("documento ausente no painel de revisão");
+          if (review.status !== "approved") throw new Error("documento não aprovado no painel de revisão");
+
+          console.log("[DOCUMENT_READY_FOR_FINAL_PDF]", { docName });
           console.log("[DOCUMENT_REAL_GENERATION_STARTED]", { docName, processId: proc.id, customerId, vesselId });
-          const tpl = await resolveTemplate(companyId, docName, service.kind);
-          let generatedDoc: any = null;
 
-          if (tpl?.id && (tpl.base_content || tpl.template_file_url)) {
-            const { data: genData, error: genErr } = await supabase.functions.invoke("generate-document", {
-              body: { templateId: tpl.id, companyId, customerId, vesselId, processId: proc.id, fieldValues },
-            });
-            if (genErr) throw genErr;
-            if (!genData?.success || !genData?.document?.id || !genData?.document?.generated_file_url) {
-              throw new Error(genData?.error || "função não retornou PDF persistido");
-            }
-            generatedDoc = genData.document;
-          } else {
-            generatedDoc = await createProcessFirstPdfDocument({
-              docName,
-              companyId,
-              customerId,
-              vesselId,
-              processId: proc.id,
-              templateId: tpl?.id || null,
-              userId,
-              fieldValues,
-              reason: tpl?.id ? "template_without_content" : "template_not_found",
-            });
-          }
+          const pdfBytes = await buildEditedTextPdfBytes(docName, review.content);
+          const pdfArrayBuffer = pdfBytes.buffer.slice(
+            pdfBytes.byteOffset,
+            pdfBytes.byteOffset + pdfBytes.byteLength,
+          ) as ArrayBuffer;
+          const pdfBlob = new Blob([pdfArrayBuffer], { type: "application/pdf" });
+          const generatedPath = `${companyId}/${crypto.randomUUID()}.pdf`;
+          const { error: uploadError } = await supabase.storage
+            .from("generated-documents")
+            .upload(generatedPath, pdfBlob, { contentType: "application/pdf", upsert: true });
+          assertNoError(uploadError, `Upload do PDF ${docName}`);
 
-          const missingLinks = requiredDocumentLinks.filter((key) => !generatedDoc[key]);
+          const { data: generatedDoc, error: dbError } = await supabase
+            .from("generated_documents")
+            .insert({
+              company_id: companyId,
+              process_id: proc.id,
+              customer_id: customerId,
+              vessel_id: vesselId,
+              template_id: null,
+              name: `${docName} - ${new Date().toLocaleDateString("pt-BR")}`,
+              generated_file_url: generatedPath,
+              status: "completed",
+              generated_by: userId,
+              metadata: {
+                source: "process_first_review_approved",
+                versions: review.versions.length,
+                content_length: review.content.length,
+              } as any,
+            } as any)
+            .select()
+            .single();
+          assertNoError(dbError, `Persistência do PDF ${docName}`);
+
+          const missingLinks = requiredDocumentLinks.filter((key) => !(generatedDoc as any)[key]);
           if (missingLinks.length > 0) throw new Error(`documento sem vínculos obrigatórios: ${missingLinks.join(", ")}`);
-
-          const pdfOk = await validateGeneratedPdfPath(generatedDoc.generated_file_url);
+          const pdfOk = await validateGeneratedPdfPath((generatedDoc as any).generated_file_url);
           if (!pdfOk) throw new Error("PDF gerado não passou na validação de arquivo real");
 
-          const { error: docRowError } = await supabase.from("documents").insert({
+          const { data: docRow, error: docRowError } = await supabase.from("documents").insert({
             company_id: companyId,
             process_id: proc.id,
             customer_id: customerId,
             vessel_id: vesselId,
             document_type: docName,
             status: "completed",
-            file_url: generatedDoc.generated_file_url,
-            extracted_data: { generated_document_id: generatedDoc.id, template_id: tpl.id, fieldValues } as any,
+            file_url: (generatedDoc as any).generated_file_url,
+            extracted_data: { generated_document_id: (generatedDoc as any).id, fieldValues, edited_content: review.content } as any,
             compliance_status: "validated",
-          } as any);
+          } as any).select("id").single();
           if (docRowError) {
             console.error("[DOCUMENT_PERSISTED_FAILED]", { docName, error: docRowError.message });
             throw new Error(`falha ao salvar em documents: ${docRowError.message}`);
           }
           documentRowsCount++;
-          console.log("[DOCUMENT_PERSISTED_OK]", { docName, generatedDocumentId: generatedDoc.id });
+          console.log("[DOCUMENT_PERSISTED_OK]", { docName, generatedDocumentId: (generatedDoc as any).id });
+
+          // Persist every in-memory review version into document_versions for full history
+          if (docRow?.id && review.versions.length > 0) {
+            const versionRows = review.versions.map((v) => ({
+              document_id: docRow.id,
+              version_number: v.n,
+              file_url: (generatedDoc as any).generated_file_url,
+              created_by: userId,
+              change_summary: v.reason || `Versão ${v.n} salva durante revisão`,
+            }));
+            const { error: versionsError } = await supabase.from("document_versions").insert(versionRows as any);
+            if (versionsError) console.warn("[DOCUMENT_VERSIONS_INSERT_FAILED]", versionsError.message);
+            else console.log("[DOCUMENT_VERSIONS_PERSISTED]", { docName, count: versionRows.length });
+          }
 
           const { error: mirrorError } = await supabase.from("uploaded_files").insert({
             company_id: companyId,
@@ -885,10 +912,10 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             file_name: `${docName}.pdf`,
             file_type: "application/pdf",
             file_size: 0,
-            file_url: generatedDoc.generated_file_url,
+            file_url: (generatedDoc as any).generated_file_url,
             category: "generated_document",
             status: "uploaded",
-            metadata: { generated_document_id: generatedDoc.id, template_id: tpl.id } as any,
+            metadata: { generated_document_id: (generatedDoc as any).id } as any,
           } as any);
           if (mirrorError) {
             console.error("[DOCUMENT_PERSISTED_FAILED]", { docName, mirror: true, error: mirrorError.message });
@@ -897,7 +924,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
           mirroredFilesCount++;
 
           generatedCount++;
-          console.log("[DOCUMENT_REAL_GENERATION_OK]", { docName, path: generatedDoc.generated_file_url });
+          console.log("[DOCUMENT_REAL_GENERATION_OK]", { docName, path: (generatedDoc as any).generated_file_url });
           console.log("[PROCESS_DOCUMENT_LINK_OK]", { docName, processId: proc.id });
           console.log("[CUSTOMER_DOCUMENT_LINK_OK]", { docName, customerId });
           console.log("[VESSEL_DOCUMENT_LINK_OK]", { docName, vesselId });
@@ -912,6 +939,8 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         }
       }
       console.log("[DOCUMENTS_GENERATED]", { count: generatedCount, total: service.generatedDocs.length });
+
+
 
       // Timeline/audit note
       try {
