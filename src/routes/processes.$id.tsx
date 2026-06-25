@@ -358,6 +358,9 @@ function ProcessDetail() {
                      Checklist
                    </TabsTrigger>
                    <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Uploads</TabsTrigger>
+                   <TabsTrigger value="library_docs" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
+                     <FileCheck className="h-3 w-3" /> Documentos
+                   </TabsTrigger>
                    <TabsTrigger value="ocr" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
                      <Zap className="h-3 w-3" /> OCR
                    </TabsTrigger>
