@@ -26,6 +26,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as OcrReviewCenterRouteImport } from './routes/ocr-review-center'
 import { Route as OcrCenterRouteImport } from './routes/ocr-center'
 import { Route as LogsRouteImport } from './routes/logs'
+import { Route as IdentidadeRouteImport } from './routes/identidade'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as GettingStartedRouteImport } from './routes/getting-started'
 import { Route as FocoRouteImport } from './routes/foco'
@@ -181,6 +182,11 @@ const OcrCenterRoute = OcrCenterRouteImport.update({
 const LogsRoute = LogsRouteImport.update({
   id: '/logs',
   path: '/logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IdentidadeRoute = IdentidadeRouteImport.update({
+  id: '/identidade',
+  path: '/identidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeRoute = HomeRouteImport.update({
@@ -571,6 +577,7 @@ export interface FileRoutesByFullPath {
   '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
+  '/identidade': typeof IdentidadeRoute
   '/logs': typeof LogsRoute
   '/ocr-center': typeof OcrCenterRoute
   '/ocr-review-center': typeof OcrReviewCenterRoute
@@ -659,6 +666,7 @@ export interface FileRoutesByTo {
   '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
+  '/identidade': typeof IdentidadeRoute
   '/logs': typeof LogsRoute
   '/ocr-center': typeof OcrCenterRoute
   '/ocr-review-center': typeof OcrReviewCenterRoute
@@ -750,6 +758,7 @@ export interface FileRoutesById {
   '/foco': typeof FocoRoute
   '/getting-started': typeof GettingStartedRoute
   '/home': typeof HomeRoute
+  '/identidade': typeof IdentidadeRoute
   '/logs': typeof LogsRoute
   '/ocr-center': typeof OcrCenterRoute
   '/ocr-review-center': typeof OcrReviewCenterRoute
@@ -842,6 +851,7 @@ export interface FileRouteTypes {
     | '/foco'
     | '/getting-started'
     | '/home'
+    | '/identidade'
     | '/logs'
     | '/ocr-center'
     | '/ocr-review-center'
@@ -930,6 +940,7 @@ export interface FileRouteTypes {
     | '/foco'
     | '/getting-started'
     | '/home'
+    | '/identidade'
     | '/logs'
     | '/ocr-center'
     | '/ocr-review-center'
@@ -1020,6 +1031,7 @@ export interface FileRouteTypes {
     | '/foco'
     | '/getting-started'
     | '/home'
+    | '/identidade'
     | '/logs'
     | '/ocr-center'
     | '/ocr-review-center'
@@ -1111,6 +1123,7 @@ export interface RootRouteChildren {
   FocoRoute: typeof FocoRoute
   GettingStartedRoute: typeof GettingStartedRoute
   HomeRoute: typeof HomeRoute
+  IdentidadeRoute: typeof IdentidadeRoute
   LogsRoute: typeof LogsRoute
   OcrCenterRoute: typeof OcrCenterRoute
   OcrReviewCenterRoute: typeof OcrReviewCenterRoute
@@ -1258,6 +1271,13 @@ declare module '@tanstack/react-router' {
       path: '/logs'
       fullPath: '/logs'
       preLoaderRoute: typeof LogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/identidade': {
+      id: '/identidade'
+      path: '/identidade'
+      fullPath: '/identidade'
+      preLoaderRoute: typeof IdentidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/home': {
@@ -1896,6 +1916,7 @@ const rootRouteChildren: RootRouteChildren = {
   FocoRoute: FocoRoute,
   GettingStartedRoute: GettingStartedRoute,
   HomeRoute: HomeRoute,
+  IdentidadeRoute: IdentidadeRoute,
   LogsRoute: LogsRoute,
   OcrCenterRoute: OcrCenterRoute,
   OcrReviewCenterRoute: OcrReviewCenterRoute,
