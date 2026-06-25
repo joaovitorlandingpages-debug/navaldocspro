@@ -148,19 +148,6 @@ type Action =
   | { type: "CREATED"; processId: string }
   | { type: "SET_RESULT"; result: PersistenceResult | null };
 
-type Action =
-  | { type: "RESET" }
-  | { type: "STEP"; step: number }
-  | { type: "SET_SERVICE"; service: ServiceKind }
-  | { type: "PATCH_CUSTOMER"; patch: Partial<CustomerDraft> }
-  | { type: "PATCH_VESSEL"; patch: Partial<VesselDraft> }
-  | { type: "ADD_DOC"; bucket: "personal" | "address" | "vessel"; doc: UploadedDoc }
-  | { type: "UPDATE_DOC"; bucket: "personal" | "address" | "vessel"; fileId: string; patch: Partial<UploadedDoc> }
-  | { type: "GENERATING"; on: boolean }
-  | { type: "LOG"; line: string }
-  | { type: "CREATED"; processId: string }
-  | { type: "SET_RESULT"; result: PersistenceResult | null };
-
 const bucketKey = (b: "personal" | "address" | "vessel") =>
   b === "personal" ? "personalDocs" : b === "address" ? "addressDocs" : "vesselDocs";
 
