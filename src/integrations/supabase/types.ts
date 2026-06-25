@@ -3068,6 +3068,72 @@ export type Database = {
           },
         ]
       }
+      process_documents: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          company_id: string
+          created_at: string
+          final_pdf_url: string | null
+          id: string
+          is_required: boolean
+          metadata: Json
+          process_id: string
+          selected_by: string | null
+          source: string
+          status: string
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id: string
+          created_at?: string
+          final_pdf_url?: string | null
+          id?: string
+          is_required?: boolean
+          metadata?: Json
+          process_id: string
+          selected_by?: string | null
+          source?: string
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id?: string
+          created_at?: string
+          final_pdf_url?: string | null
+          id?: string
+          is_required?: boolean
+          metadata?: Json
+          process_id?: string
+          selected_by?: string | null
+          source?: string
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_documents_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_documents_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_dossiers: {
         Row: {
           company_id: string
