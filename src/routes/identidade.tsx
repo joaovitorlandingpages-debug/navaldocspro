@@ -328,32 +328,71 @@ function UploadField({
   onClear: () => void;
 }) {
   const ref = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const openPicker = () => {
+    if (busy) return;
+    ref.current?.click();
+  };
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (busy) return;
+    const f = e.dataTransfer.files?.[0];
+    if (f) onFile(f);
+  };
   return (
     <div>
       <Label className="text-xs">{label}</Label>
-      <div className="mt-1.5 rounded-xl border border-dashed border-slate-300 p-4 bg-slate-50 flex flex-col items-center justify-center min-h-[140px]">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={openPicker}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openPicker();
+          }
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        className={`mt-1.5 rounded-xl border-2 border-dashed p-4 flex flex-col items-center justify-center min-h-[140px] transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-primary/40 ${
+          dragOver ? "border-primary bg-primary/5" : "border-slate-300 bg-slate-50 hover:bg-slate-100"
+        } ${busy ? "opacity-60 cursor-wait" : ""}`}
+      >
         {value ? (
           <>
             <img src={value} alt={label} className="max-h-20 max-w-full object-contain mb-2" />
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => ref.current?.click()} disabled={busy}>
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+              <Button size="sm" variant="outline" onClick={openPicker} disabled={busy} type="button">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Trocar
               </Button>
-              <Button size="sm" variant="ghost" onClick={onClear} disabled={busy}>
+              <Button size="sm" variant="ghost" onClick={onClear} disabled={busy} type="button">
                 Remover
               </Button>
             </div>
           </>
         ) : (
-          <Button variant="outline" size="sm" onClick={() => ref.current?.click()} disabled={busy}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
-            Enviar arquivo
-          </Button>
+          <div className="flex flex-col items-center text-center pointer-events-none">
+            {busy ? (
+              <Loader2 className="h-6 w-6 animate-spin text-primary mb-2" />
+            ) : (
+              <Upload className="h-6 w-6 text-slate-400 mb-2" />
+            )}
+            <p className="text-sm font-medium text-slate-700">
+              {busy ? "Enviando..." : "Clique ou arraste uma imagem"}
+            </p>
+            <p className="text-[11px] text-slate-500 mt-0.5">PNG, JPG, WEBP ou SVG · até 5 MB</p>
+          </div>
         )}
         <input
           ref={ref}
           type="file"
-          accept="image/*"
+          accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0];
