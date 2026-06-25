@@ -300,18 +300,33 @@ export const portalUploadDocument = createServerFn({ method: "POST" })
       .upload(path, bytes, { contentType: data.contentType || "application/octet-stream", upsert: false });
     if (upErr) throw new Error(upErr.message);
 
+    // Ensure we have a process_document_id (required FK)
+    let docId = data.documentId ?? null;
+    if (!docId) {
+      const { data: pd } = await supa.from("process_documents").insert({
+        company_id: access.company_id,
+        process_id: access.process_id,
+        is_required: false,
+        source: "client_portal",
+        status: "pending",
+        metadata: { label: data.label ?? "Documento enviado pelo cliente" },
+      } as any).select("id").single();
+      docId = pd?.id ?? null;
+    }
+    if (!docId) throw new Error("Não foi possível vincular o documento");
+
     const { data: row, error } = await supa.from("process_document_uploads").insert({
       company_id: access.company_id,
       process_id: access.process_id,
-      process_document_id: data.documentId ?? null,
-      file_path: path,
+      process_document_id: docId,
+      file_url: path,
       file_name: safeName,
-      mime_type: data.contentType,
-      size_bytes: bytes.byteLength,
-      status: "pending_review",
-      source: "client_portal",
-      uploaded_via: "client_portal",
-      metadata: { label: data.label ?? null, access_id: access.id },
+      file_type: data.contentType,
+      file_size: bytes.byteLength,
+      validation_status: "pending",
+      ocr_status: "pending",
+      extracted_fields: {},
+      validation_errors: [],
     } as any).select("*").single();
     if (error) {
       // best-effort insert with reduced columns if some are missing
