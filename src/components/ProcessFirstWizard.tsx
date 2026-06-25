@@ -1231,7 +1231,15 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             />
           )}
           {state.step === 5 && service && (
-            <Step4 service={service} state={state} />
+            <Step4
+              service={service}
+              state={state}
+              suggestedTemplates={suggestedTemplates}
+              loadingSuggested={loadingSuggested}
+              selectedOptionalIds={selectedOptionalIds}
+              ignoredOptionalIds={ignoredOptionalIds}
+              onToggleOptional={toggleOptional}
+            />
           )}
           {state.step === 6 && service && (
             <Step5Review
