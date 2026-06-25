@@ -169,6 +169,28 @@ function reducer(s: WizardState, a: Action): WizardState {
         [key]: s[key].map((d) => (d.fileId === a.fileId ? { ...d, ...a.patch } : d)),
       } as WizardState;
     }
+    case "INIT_REVIEW": return { ...s, reviewDocs: a.docs };
+    case "SET_REVIEW_CONTENT": {
+      return {
+        ...s,
+        reviewDocs: s.reviewDocs.map((d) => {
+          if (d.name !== a.name) return d;
+          const nextN = (d.versions[d.versions.length - 1]?.n ?? 0) + 1;
+          const version: ReviewVersion = { n: nextN, content: a.content, at: new Date().toISOString(), reason: a.reason };
+          const wasApproved = d.status === "approved";
+          if (wasApproved) console.log("[DOCUMENT_APPROVAL_REVOKED]", { name: a.name });
+          console.log("[DOCUMENT_TEXT_EDITED]", { name: a.name, version: nextN });
+          console.log("[DOCUMENT_VERSION_CREATED]", { name: a.name, version: nextN });
+          return { ...d, content: a.content, status: "editing" as ReviewStatus, versions: [...d.versions, version] };
+        }),
+      };
+    }
+    case "SET_REVIEW_STATUS": {
+      return {
+        ...s,
+        reviewDocs: s.reviewDocs.map((d) => (d.name === a.name ? { ...d, status: a.status } : d)),
+      };
+    }
     case "GENERATING": return { ...s, generating: a.on };
     case "LOG": return { ...s, progressLog: [...s.progressLog, a.line] };
     case "CREATED": return { ...s, createdProcessId: a.processId };
