@@ -509,6 +509,12 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   const addressInputRef = useRef<HTMLInputElement>(null);
   const vesselInputRef = useRef<HTMLInputElement>(null);
 
+  // ---- Bloco 5: library-suggested templates state ----
+  const [suggestedTemplates, setSuggestedTemplates] = useState<SuggestedTemplate[]>([]);
+  const [selectedOptionalIds, setSelectedOptionalIds] = useState<Set<string>>(new Set());
+  const [ignoredOptionalIds, setIgnoredOptionalIds] = useState<Set<string>>(new Set());
+  const [loadingSuggested, setLoadingSuggested] = useState(false);
+
   // Load company id once
   useEffect(() => {
     if (!isOpen) return;
@@ -520,6 +526,51 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       setCompanyId(profile?.company_id ?? null);
     })();
   }, [isOpen]);
+
+  // ---- Bloco 5: fetch & suggest templates when service/company changes ----
+  useEffect(() => {
+    if (!isOpen || !state.service || !companyId) return;
+    const svc = findService(state.service);
+    if (!svc) return;
+    (async () => {
+      setLoadingSuggested(true);
+      try {
+        const all = await fetchLibrary();
+        const suggested = suggestTemplatesForWizard(all, svc.processType, companyId);
+        setSuggestedTemplates(suggested);
+        // Pre-select all required; clear stale optional toggles
+        setSelectedOptionalIds(new Set());
+        setIgnoredOptionalIds(new Set());
+        await logLibraryEvent("process_templates_suggested", {
+          process_type: svc.processType,
+          required: suggested.filter((s) => s.is_required).map((s) => s.id),
+          optional: suggested.filter((s) => !s.is_required).map((s) => s.id),
+        });
+      } catch (e) {
+        console.warn("[Bloco 5 suggest] failed", e);
+      } finally {
+        setLoadingSuggested(false);
+      }
+    })();
+  }, [isOpen, state.service, companyId]);
+
+  const toggleOptional = (tplId: string, select: boolean) => {
+    setSelectedOptionalIds((prev) => {
+      const next = new Set(prev);
+      if (select) next.add(tplId); else next.delete(tplId);
+      return next;
+    });
+    setIgnoredOptionalIds((prev) => {
+      const next = new Set(prev);
+      if (select) next.delete(tplId); else next.add(tplId);
+      return next;
+    });
+    logLibraryEvent(
+      select ? "process_document_optional_selected" : "process_document_optional_ignored",
+      { template_id: tplId },
+    );
+  };
+
 
   // Poll OCR jobs for any docs still in 'ocr' status
   useEffect(() => {
