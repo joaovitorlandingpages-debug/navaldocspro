@@ -349,23 +349,15 @@ function UploadField({
     const f = e.dataTransfer.files?.[0];
     if (f) onFile(f);
   };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("[UPLOAD]", inputId, "change event", e.target.files);
+    const f = e.target.files?.[0];
+    if (f) onFile(f);
+    e.target.value = "";
+  };
   return (
     <div>
       <Label className="text-xs">{label}</Label>
-      {/* Input file no DOM e associado nativamente ao label, sem ref/click programático */}
-      <input
-        id={inputId}
-        name={inputId}
-        type="file"
-        accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
-        className="sr-only"
-        disabled={busy}
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) onFile(f);
-          e.target.value = "";
-        }}
-      />
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -378,49 +370,56 @@ function UploadField({
         } ${busy ? "opacity-60" : ""}`}
       >
         {value ? (
-          <>
-            <img src={value} alt={label} className="max-h-20 max-w-full object-contain mb-2 pointer-events-none" />
-            <div className="flex gap-2">
-              <label
-                htmlFor={inputId}
-                className={`inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
-                  busy ? "pointer-events-none opacity-50" : "cursor-pointer"
-                }`}
-              >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Trocar
-              </label>
-              <Button size="sm" variant="ghost" onClick={onClear} disabled={busy} type="button">
-                Remover
-              </Button>
-            </div>
-          </>
+          <img src={value} alt={label} className="max-h-20 max-w-full object-contain mb-2 pointer-events-none" />
         ) : (
-          <div className="flex flex-col items-center text-center">
+          <div className="flex flex-col items-center text-center pointer-events-none">
             {busy ? (
               <Loader2 className="h-6 w-6 animate-spin text-primary mb-2" />
             ) : (
               <Upload className="h-6 w-6 text-slate-400 mb-2" />
             )}
             <p className="text-sm font-medium text-slate-700">
-              {busy ? "Enviando..." : "Clique ou arraste uma imagem"}
+              {busy ? "Enviando..." : "Clique no botão abaixo ou arraste uma imagem"}
             </p>
             <p className="text-[11px] text-slate-500 mt-0.5">PNG, JPG, WEBP ou SVG · até 5 MB</p>
           </div>
         )}
       </div>
-      {/* Label visível nativo — abre o seletor sem JS programático */}
-      <div className="mt-2 flex justify-center">
-        <label
-          htmlFor={inputId}
-          data-upload-label={inputId}
-          className={`inline-flex h-9 items-center justify-center rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/80 ${
-            busy ? "pointer-events-none opacity-50" : "cursor-pointer"
-          }`}
-        >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
-          {value ? "Trocar arquivo" : actionLabel}
-        </label>
+
+      {/* Botão com o INPUT FILE NATIVO sobreposto (opacity:0).
+          O clique do usuário cai diretamente no <input type=file> — o browser
+          nunca bloqueia isso porque é gesto nativo no próprio input. */}
+      <div className="mt-2 flex justify-center gap-2">
+        <div className="relative inline-flex">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => console.log("[UPLOAD]", inputId, "button click registered")}
+            className={`inline-flex h-9 items-center justify-center rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/80 ${
+              busy ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            }`}
+          >
+            {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+            {value ? "Trocar arquivo" : actionLabel}
+          </button>
+          <input
+            id={inputId}
+            name={inputId}
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+            disabled={busy}
+            onChange={handleChange}
+            onClick={() => console.log("[UPLOAD]", inputId, "native input click")}
+            aria-label={actionLabel}
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+            style={{ fontSize: 0 }}
+          />
+        </div>
+        {value ? (
+          <Button size="sm" variant="ghost" onClick={onClear} disabled={busy} type="button">
+            Remover
+          </Button>
+        ) : null}
       </div>
     </div>
   );
