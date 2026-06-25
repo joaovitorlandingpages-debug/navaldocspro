@@ -172,6 +172,7 @@ function DashboardLayout() {
       { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
       { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
       { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
+      { name: "Identidade Corporativa", icon: <Award className="h-5 w-5" />, path: "/identidade" },
       { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
     ]},
     { group: "Comercial & Evolução", items: [
@@ -291,7 +292,7 @@ function DashboardLayout() {
       {/* Main Content */}
       <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
-        <header className="h-auto min-h-16 bg-white border-b flex flex-col z-40">
+        <header className="relative h-auto min-h-16 bg-white border-b flex flex-col z-40 shrink-0">
            {quotaWarnings.length > 0 && (
              <div className="bg-amber-50 border-b border-amber-100 px-4 md:px-8 py-2 flex items-center justify-between animate-in slide-in-from-top duration-500">
                 <div className="flex items-center gap-3">
@@ -395,7 +396,7 @@ function DashboardLayout() {
         />
 
         {/* Dynamic Content Container */}
-        <main className="flex-grow overflow-y-auto p-3 sm:p-4 md:p-8 space-y-8">
+        <main className="flex-grow overflow-y-auto p-3 sm:p-4 md:p-8 pb-32 lg:pb-12 space-y-8 relative">
            <Suspense fallback={<DashboardSkeleton />}>
                <RouteContent />
             </Suspense>

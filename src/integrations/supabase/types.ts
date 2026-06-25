@@ -742,7 +742,14 @@ export type Database = {
           billing_notes: string | null
           billing_payment_method: string | null
           billing_status: string
+          brand_primary_color: string | null
+          brand_secondary_color: string | null
           cnpj: string | null
+          contact_address: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          contact_website: string | null
+          contact_whatsapp: string | null
           created_at: string
           created_by: string | null
           email: string | null
@@ -751,18 +758,26 @@ export type Database = {
           is_demo: boolean | null
           is_pilot: boolean | null
           last_access_at: string | null
+          logo_primary_url: string | null
+          logo_secondary_url: string | null
           logo_url: string | null
           name: string
           onboarding_status: string | null
           onboarding_step: number | null
+          pdf_footer_text: string | null
           phone: string | null
           pilot_feedback_score: number | null
           plan: string | null
           plan_id: string | null
           responsible_name: string | null
+          signature_url: string | null
+          stamp_url: string | null
           suspended_at: string | null
           suspended_reason: string | null
+          technical_responsible_name: string | null
+          technical_responsible_registry: string | null
           updated_at: string
+          watermark_url: string | null
         }
         Insert: {
           billing_due_date?: string | null
@@ -770,7 +785,14 @@ export type Database = {
           billing_notes?: string | null
           billing_payment_method?: string | null
           billing_status?: string
+          brand_primary_color?: string | null
+          brand_secondary_color?: string | null
           cnpj?: string | null
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          contact_website?: string | null
+          contact_whatsapp?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
@@ -779,18 +801,26 @@ export type Database = {
           is_demo?: boolean | null
           is_pilot?: boolean | null
           last_access_at?: string | null
+          logo_primary_url?: string | null
+          logo_secondary_url?: string | null
           logo_url?: string | null
           name: string
           onboarding_status?: string | null
           onboarding_step?: number | null
+          pdf_footer_text?: string | null
           phone?: string | null
           pilot_feedback_score?: number | null
           plan?: string | null
           plan_id?: string | null
           responsible_name?: string | null
+          signature_url?: string | null
+          stamp_url?: string | null
           suspended_at?: string | null
           suspended_reason?: string | null
+          technical_responsible_name?: string | null
+          technical_responsible_registry?: string | null
           updated_at?: string
+          watermark_url?: string | null
         }
         Update: {
           billing_due_date?: string | null
@@ -798,7 +828,14 @@ export type Database = {
           billing_notes?: string | null
           billing_payment_method?: string | null
           billing_status?: string
+          brand_primary_color?: string | null
+          brand_secondary_color?: string | null
           cnpj?: string | null
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          contact_website?: string | null
+          contact_whatsapp?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
@@ -807,18 +844,26 @@ export type Database = {
           is_demo?: boolean | null
           is_pilot?: boolean | null
           last_access_at?: string | null
+          logo_primary_url?: string | null
+          logo_secondary_url?: string | null
           logo_url?: string | null
           name?: string
           onboarding_status?: string | null
           onboarding_step?: number | null
+          pdf_footer_text?: string | null
           phone?: string | null
           pilot_feedback_score?: number | null
           plan?: string | null
           plan_id?: string | null
           responsible_name?: string | null
+          signature_url?: string | null
+          stamp_url?: string | null
           suspended_at?: string | null
           suspended_reason?: string | null
+          technical_responsible_name?: string | null
+          technical_responsible_registry?: string | null
           updated_at?: string
+          watermark_url?: string | null
         }
         Relationships: [
           {
