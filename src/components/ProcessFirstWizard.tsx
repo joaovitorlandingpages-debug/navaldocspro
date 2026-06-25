@@ -724,9 +724,32 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       const names = notApproved.map((n) => n.name).join(", ") || "todos";
       toast.error(`Existem documentos pendentes de aprovação: ${names}`);
       console.warn("[DOCUMENT_FINAL_GENERATION_BLOCKED]", { notApproved: notApproved.map((n) => n.name) });
+      await logLibraryEvent("process_final_pdf_blocked", { reason: "review_not_approved", names });
       dispatch({ type: "GENERATING", on: false });
       return;
     }
+
+    // ---- Bloco 5: bloquear se há templates obrigatórios da biblioteca sem aprovação ----
+    const requiredLibrary = suggestedTemplates.filter((t) => t.is_required);
+    const missingRequired = requiredLibrary.filter((tpl) => {
+      // Considera aprovado se há um reviewDoc com nome equivalente OK,
+      // OU se o usuário marcou explicitamente o template como aceito (required = sempre incluído)
+      return !state.reviewDocs.some((r) => r.status === "approved" && r.name.toLowerCase().includes((tpl.name || "").toLowerCase().slice(0, 6)));
+    });
+    if (missingRequired.length > 0) {
+      const labels = missingRequired.map((m) => m.name).join(", ");
+      toast.error(`Faltam documentos obrigatórios da biblioteca: ${labels}`);
+      await logLibraryEvent("process_final_pdf_blocked", {
+        reason: "library_required_missing",
+        templates: missingRequired.map((m) => m.id),
+      });
+      await logLibraryEvent("process_document_approval_required", {
+        templates: missingRequired.map((m) => m.id),
+      });
+      dispatch({ type: "GENERATING", on: false });
+      return;
+    }
+
     try {
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData.user?.id ?? null;
