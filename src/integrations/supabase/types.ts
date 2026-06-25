@@ -737,6 +737,11 @@ export type Database = {
       }
       companies: {
         Row: {
+          billing_due_date: string | null
+          billing_monthly_amount: number | null
+          billing_notes: string | null
+          billing_payment_method: string | null
+          billing_status: string
           cnpj: string | null
           created_at: string
           created_by: string | null
@@ -745,6 +750,7 @@ export type Database = {
           is_active: boolean | null
           is_demo: boolean | null
           is_pilot: boolean | null
+          last_access_at: string | null
           logo_url: string | null
           name: string
           onboarding_status: string | null
@@ -752,9 +758,18 @@ export type Database = {
           phone: string | null
           pilot_feedback_score: number | null
           plan: string | null
+          plan_id: string | null
+          responsible_name: string | null
+          suspended_at: string | null
+          suspended_reason: string | null
           updated_at: string
         }
         Insert: {
+          billing_due_date?: string | null
+          billing_monthly_amount?: number | null
+          billing_notes?: string | null
+          billing_payment_method?: string | null
+          billing_status?: string
           cnpj?: string | null
           created_at?: string
           created_by?: string | null
@@ -763,6 +778,7 @@ export type Database = {
           is_active?: boolean | null
           is_demo?: boolean | null
           is_pilot?: boolean | null
+          last_access_at?: string | null
           logo_url?: string | null
           name: string
           onboarding_status?: string | null
@@ -770,9 +786,18 @@ export type Database = {
           phone?: string | null
           pilot_feedback_score?: number | null
           plan?: string | null
+          plan_id?: string | null
+          responsible_name?: string | null
+          suspended_at?: string | null
+          suspended_reason?: string | null
           updated_at?: string
         }
         Update: {
+          billing_due_date?: string | null
+          billing_monthly_amount?: number | null
+          billing_notes?: string | null
+          billing_payment_method?: string | null
+          billing_status?: string
           cnpj?: string | null
           created_at?: string
           created_by?: string | null
@@ -781,6 +806,7 @@ export type Database = {
           is_active?: boolean | null
           is_demo?: boolean | null
           is_pilot?: boolean | null
+          last_access_at?: string | null
           logo_url?: string | null
           name?: string
           onboarding_status?: string | null
@@ -788,9 +814,65 @@ export type Database = {
           phone?: string | null
           pilot_feedback_score?: number | null
           plan?: string | null
+          plan_id?: string | null
+          responsible_name?: string | null
+          suspended_at?: string | null
+          suspended_reason?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_billing_history: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          paid_at: string
+          payment_method: string | null
+          reference: string | null
+        }
+        Insert: {
+          amount: number
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string
+          payment_method?: string | null
+          reference?: string | null
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string
+          payment_method?: string | null
+          reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_billing_history_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       compliance_history: {
         Row: {
@@ -2305,6 +2387,47 @@ export type Database = {
           rule_name?: string
         }
         Relationships: []
+      }
+      master_audit_logs: {
+        Row: {
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          message: string | null
+          metadata: Json
+          target_company_id: string | null
+        }
+        Insert: {
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          target_company_id?: string | null
+        }
+        Update: {
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          target_company_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_audit_logs_target_company_id_fkey"
+            columns: ["target_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -5050,6 +5173,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      company_can_perform: {
+        Args: { p_action: string; p_company_id: string }
+        Returns: Json
+      }
       current_company_id: { Args: never; Returns: string }
       current_user_company_id: { Args: never; Returns: string }
       duplicate_document: { Args: { doc_id: string }; Returns: string }
