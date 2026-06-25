@@ -127,91 +127,86 @@ export class DocumentValidationEngine {
 
   static fillPlaceholder(content: string, data: any): string {
     if (!content) return "";
-    let filled = content;
-    
-    // Logs de Auditoria
-    console.log("BASE_CONTENT_RENDER_STARTED");
-    console.log("REGISTERED_DATA_RENDER_OK");
-    console.log("OCR_NOT_REQUIRED_FOR_RENDER");
-    console.log("DOCUMENT_RENDER_ENGINE_FIXED");
 
-    // Flatten values for replacement
-    const flat: any = {};
-    const flatten = (obj: any, prefix = "") => {
-      for (const [k, v] of Object.entries(obj || {})) {
-        const key = prefix ? `${prefix}.${k}` : k;
-        if (v && typeof v === "object" && !Array.isArray(v) && !(v instanceof Date)) {
-          flatten(v, key);
-        } else {
-          flat[key] = v;
-        }
-      }
+    // Lazy imports to avoid circular deps at load time.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { ALIAS_TO_CANONICAL } = require("./documentPlaceholders");
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const N = require("./documentNormalizer");
+
+    const isBlank = (v: any) =>
+      v === undefined || v === null ||
+      (typeof v === "number" && Number.isNaN(v)) ||
+      (typeof v === "string" && (v.trim() === "" || /^(undefined|null|nan)$/i.test(v.trim())));
+
+    // Fallback chain: embarcação → cliente → empresa → engenheiro → sistema → "—"
+    const pick = (...vals: any[]) => {
+      for (const v of vals) if (!isBlank(v)) return v;
+      return "";
     };
 
-    flatten(data);
+    const cli = data.customer || {};
+    const ves = data.vessel || {};
+    const eng = data.engine || {};
+    const emp = data.company || {};
+    const prof = data.profile || {};
+    const proc = data.process || data.processo || {};
 
-    // Mapeamento Professional das fontes de dados
-    const mappings: any = {
-      // 1. Dados do Cliente
-      "cliente.nome": data.customer?.name || data.customer?.razao_social,
-      "cliente.cpf": data.customer?.cpf_cnpj || data.customer?.cpf,
-      "cliente.cpf_cnpj": data.customer?.cpf_cnpj || data.customer?.cpf,
-      "cliente.rg": data.customer?.rg,
-      "cliente.endereco": data.customer?.address,
-      "cliente.cidade": data.customer?.city,
-      "cliente.estado": data.customer?.state,
-      "cliente.telefone": data.customer?.phone,
-      "cliente.email": data.customer?.email,
-      
-      // 2. Dados da Embarcação
-      "embarcacao.nome": data.vessel?.name,
-      "embarcacao.inscricao": data.vessel?.registration_number || data.vessel?.tie,
-      "embarcacao.tipo": data.vessel?.type,
-      "embarcacao.material": data.vessel?.hull_material,
-      "embarcacao.comprimento": data.vessel?.length,
-      "embarcacao.boca": data.vessel?.beam,
-      "embarcacao.pontal": data.vessel?.depth,
-      "embarcacao.capacidade": data.vessel?.capacity,
+    // Mapeamento canônico com normalização aplicada
+    const canonical: Record<string, string> = {
+      "cliente.nome":      N.cleanString(pick(cli.name, cli.razao_social, data.cliente?.nome)),
+      "cliente.cpf":       N.normalizeCpfCnpj(pick(cli.cpf_cnpj, cli.cpf, data.cliente?.cpf)),
+      "cliente.rg":        N.cleanString(pick(cli.rg, data.cliente?.rg)),
+      "cliente.endereco":  N.cleanString(pick(cli.address, data.cliente?.endereco)),
+      "cliente.cidade":    N.cleanString(pick(cli.city, data.cliente?.cidade, emp.city)),
+      "cliente.estado":    N.normalizeState(pick(cli.state, data.cliente?.uf, data.cliente?.estado, emp.state)),
+      "cliente.telefone":  N.normalizePhone(pick(cli.phone, data.cliente?.telefone)),
+      "cliente.email":     N.cleanString(pick(cli.email, data.cliente?.email)),
 
-      // 3. Dados do Motor
-      "motor.fabricante": data.engine?.manufacturer || data.vessel?.engine_manufacturer,
-      "motor.modelo": data.engine?.model || data.vessel?.engine_model,
-      "motor.potencia": data.engine?.power || data.vessel?.engine_power,
-      "motor.serie": data.engine?.serial_number || data.vessel?.engine_serial,
-      "motor.numero_serie": data.engine?.serial_number || data.vessel?.engine_serial,
+      "embarcacao.nome":         N.cleanString(pick(ves.name, data.embarcacao?.nome)),
+      "embarcacao.inscricao":    N.cleanString(pick(ves.registration_number, ves.tie, data.embarcacao?.inscricao)),
+      "embarcacao.tipo":         N.cleanString(pick(ves.vessel_type, ves.type, data.embarcacao?.tipo)),
+      "embarcacao.material":     N.cleanString(pick(ves.material, ves.hull_material, data.embarcacao?.material)),
+      "embarcacao.comprimento":  N.formatMeasurement(pick(ves.length, data.embarcacao?.comprimento), "m"),
+      "embarcacao.boca":         N.formatMeasurement(pick(ves.beam, ves.boca, data.embarcacao?.boca), "m"),
+      "embarcacao.pontal":       N.formatMeasurement(pick(ves.depth, ves.pontal, data.embarcacao?.pontal), "m"),
+      "embarcacao.capacidade":   N.cleanString(pick(ves.capacity, data.embarcacao?.capacidade)),
 
-      // 4. Dados da Empresa/Engenheiro
-      "empresa.nome": data.company?.name || data.company?.razao_social,
-      "empresa.cnpj": data.company?.cnpj,
-      "engenheiro.nome": data.profile?.full_name,
-      "engenheiro.crea": data.profile?.crea,
-      
-      // Sistema
-      "data_atual": new Date().toLocaleDateString('pt-BR'),
-      "sistema.data_atual": new Date().toLocaleDateString('pt-BR'),
-      "sistema.local": data.company?.city || "Itajaí",
+      "motor.fabricante":  N.cleanString(pick(eng.manufacturer, ves.engine_manufacturer, ves.engine_brand)),
+      "motor.modelo":      N.cleanString(pick(eng.model, ves.engine_model)),
+      "motor.potencia":    N.formatPower(pick(eng.power, ves.engine_power)),
+      "motor.serie":       N.cleanString(pick(eng.serial_number, ves.engine_serial, ves.engine_serial_number)),
+
+      "empresa.nome":      N.cleanString(pick(emp.name, emp.razao_social)),
+      "empresa.cnpj":      N.normalizeCpfCnpj(pick(emp.cnpj)),
+
+      "engenheiro.nome":   N.cleanString(pick(prof.full_name, prof.name)),
+      "engenheiro.crea":   N.cleanString(pick(prof.crea)),
+
+      "processo.numero":   N.cleanString(pick(proc.protocol_number, proc.numero, proc.id)),
+      "processo.tipo":     N.cleanString(pick(proc.process_type, proc.tipo, proc.type)),
+
+      "sistema.data_atual": new Date().toLocaleDateString("pt-BR"),
+      "sistema.local":      N.cleanString(pick(emp.city, data.sistema?.local), "Itajaí"),
+      "sistema.hash":       N.cleanString(data.sistema?.hash),
     };
 
-    const allValues = { ...flat, ...mappings };
+    const placeholderRegex = /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}|\[\s*([a-zA-Z0-9_.]+)\s*\]/g;
+    const unresolved: string[] = [];
 
-    // Regex para encontrar {{ placeholder }} ou [ placeholder ]
-    const placeholderRegex = /\{\{\s*(.*?)\s*\}\}|\[\s*(.*?)\s*\]/g;
-
-    filled = filled.replace(placeholderRegex, (match, p1, p2) => {
-      const key = (p1 || p2 || "").trim();
-      const value = allValues[key];
-
-      if (value !== undefined && value !== null && value !== "") {
-        return String(value);
-      }
-
-      // Se não houver valor, retorna marcador de pendência claro
-      console.log("PLACEHOLDER_PENDING_FIELDS_OK", key);
-      console.log("PENDING_FIELDS_RENDERED_OK");
-      return `[Campo pendente: ${key}]`;
+    const filled = content.replace(placeholderRegex, (_match, p1, p2) => {
+      const raw = (p1 || p2 || "").trim();
+      const canonicalKey = ALIAS_TO_CANONICAL[raw] ?? raw;
+      const value = canonical[canonicalKey];
+      if (!isBlank(value)) return String(value);
+      unresolved.push(canonicalKey);
+      // NUNCA emitir undefined/null/NaN/[Campo pendente] no PDF final.
+      return "—";
     });
 
-    console.log("DOCUMENT_DATA_SOURCE_AUDITED");
+    if (unresolved.length) {
+      console.warn("[PLACEHOLDER_FALLBACK_TO_DASH]", Array.from(new Set(unresolved)));
+    }
     return filled;
   }
 }
