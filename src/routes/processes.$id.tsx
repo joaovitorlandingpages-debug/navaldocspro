@@ -39,6 +39,7 @@ import { DossierPreview } from "@/components/dossier/DossierPreview";
 import { dossierEngine } from "@/services/automation/dossierEngine";
 import { ProcessDossierTab } from "@/components/dossier/ProcessDossierTab";
 import { openStoredFile } from "@/utils/file-preview";
+import { ProcessDocumentsPanel } from "@/components/process/ProcessDocumentsPanel";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
