@@ -224,7 +224,7 @@ export const getPortalContext = createServerFn({ method: "POST" })
         supa.from("process_document_uploads").select("*").eq("process_id", access.process_id).order("created_at", { ascending: false }),
         supa.from("client_portal_messages").select("*").eq("process_id", access.process_id).order("created_at", { ascending: true }),
         supa.from("client_portal_activity_logs").select("event_type,message,created_at").eq("process_id", access.process_id).order("created_at", { ascending: false }).limit(30),
-        supa.from("generated_documents").select("id,name,file_path,created_at,status").eq("process_id", access.process_id).in("status", ["aprovado", "assinado", "liberado", "concluido"]),
+        supa.from("generated_documents").select("id,name,generated_file_url,signed_file_url,created_at,status").eq("process_id", access.process_id).in("status", ["aprovado", "assinado", "liberado", "concluido"]),
       ]);
 
     await supa.from("client_portal_access").update({ last_access_at: new Date().toISOString() } as any).eq("id", access.id);
