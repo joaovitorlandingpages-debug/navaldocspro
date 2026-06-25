@@ -6,7 +6,7 @@ import {
   FileCheck, History, Info, Zap, Bot, Eye, Trash2,
   Image as ImageIcon, Send, Loader2, Target, Ban,
   FilePlus, RefreshCw, ChevronLeft, AlertTriangle,
-  Signature, FileSearch, Rocket, HelpCircle
+  Signature, FileSearch, Rocket, HelpCircle, Link2
 } from "lucide-react";
 import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { PageHeader } from "@/components/navigation/PageHeader";
@@ -41,6 +41,7 @@ import { ProcessDossierTab } from "@/components/dossier/ProcessDossierTab";
 import ProcessFinalDossierTab from "@/components/process/ProcessFinalDossierTab";
 import { openStoredFile } from "@/utils/file-preview";
 import { ProcessDocumentsPanel } from "@/components/process/ProcessDocumentsPanel";
+import { ClientPortalPanel } from "@/components/process/ClientPortalPanel";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
@@ -375,6 +376,9 @@ function ProcessDetail() {
                      <Signature className="h-3 w-3" /> Assinaturas
                    </TabsTrigger>
                    <TabsTrigger value="protocol" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Protocolo</TabsTrigger>
+                   <TabsTrigger value="client_portal" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                     <Link2 className="h-3 w-3" /> Portal Cliente
+                   </TabsTrigger>
                 </TabsList>
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
@@ -668,6 +672,10 @@ function ProcessDetail() {
                     </h3>
                     <ProcessTimeline events={timelineEvents} />
                   </div>
+               </TabsContent>
+
+               <TabsContent value="client_portal" className="animate-in fade-in duration-300">
+                 <ClientPortalPanel processId={id} />
                </TabsContent>
             </Tabs>
          </div>

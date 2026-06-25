@@ -54,6 +54,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
+import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as DocumentosBibliotecaRouteImport } from './routes/documentos.biblioteca'
 import { Route as DebugSystemRouteImport } from './routes/debug.system'
 import { Route as DebugAuthRouteImport } from './routes/debug.auth'
@@ -319,6 +320,11 @@ const ProcessesIdRoute = ProcessesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ProcessesRoute,
+} as any)
+const PortalTokenRoute = PortalTokenRouteImport.update({
+  id: '/portal/$token',
+  path: '/portal/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DocumentosBibliotecaRoute = DocumentosBibliotecaRouteImport.update({
   id: '/documentos/biblioteca',
@@ -608,6 +614,7 @@ export interface FileRoutesByFullPath {
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
+  '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -693,6 +700,7 @@ export interface FileRoutesByTo {
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
+  '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -781,6 +789,7 @@ export interface FileRoutesById {
   '/debug/auth': typeof DebugAuthRoute
   '/debug/system': typeof DebugSystemRoute
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
+  '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -870,6 +879,7 @@ export interface FileRouteTypes {
     | '/debug/auth'
     | '/debug/system'
     | '/documentos/biblioteca'
+    | '/portal/$token'
     | '/processes/$id'
     | '/admin/'
     | '/dashboard/'
@@ -955,6 +965,7 @@ export interface FileRouteTypes {
     | '/debug/auth'
     | '/debug/system'
     | '/documentos/biblioteca'
+    | '/portal/$token'
     | '/processes/$id'
     | '/admin'
     | '/dashboard'
@@ -1042,6 +1053,7 @@ export interface FileRouteTypes {
     | '/debug/auth'
     | '/debug/system'
     | '/documentos/biblioteca'
+    | '/portal/$token'
     | '/processes/$id'
     | '/admin/'
     | '/dashboard/'
@@ -1098,6 +1110,7 @@ export interface RootRouteChildren {
   DebugAuthRoute: typeof DebugAuthRoute
   DebugSystemRoute: typeof DebugSystemRoute
   DocumentosBibliotecaRoute: typeof DocumentosBibliotecaRoute
+  PortalTokenRoute: typeof PortalTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1416,6 +1429,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/processes/$id'
       preLoaderRoute: typeof ProcessesIdRouteImport
       parentRoute: typeof ProcessesRoute
+    }
+    '/portal/$token': {
+      id: '/portal/$token'
+      path: '/portal/$token'
+      fullPath: '/portal/$token'
+      preLoaderRoute: typeof PortalTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/documentos/biblioteca': {
       id: '/documentos/biblioteca'
@@ -1859,6 +1879,7 @@ const rootRouteChildren: RootRouteChildren = {
   DebugAuthRoute: DebugAuthRoute,
   DebugSystemRoute: DebugSystemRoute,
   DocumentosBibliotecaRoute: DocumentosBibliotecaRoute,
+  PortalTokenRoute: PortalTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
