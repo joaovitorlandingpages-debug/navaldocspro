@@ -72,6 +72,17 @@ type UploadedDoc = {
   status: "uploading" | "ocr" | "done" | "failed";
 };
 
+type ReviewStatus = "pending_data" | "ready" | "editing" | "approved" | "failed";
+type ReviewVersion = { n: number; content: string; at: string; reason?: string };
+type ReviewDoc = {
+  name: string;
+  status: ReviewStatus;
+  content: string;
+  baseContent: string;
+  versions: ReviewVersion[];
+  missing: string[];
+};
+
 interface WizardState {
   step: number;
   service: ServiceKind | null;
@@ -80,6 +91,7 @@ interface WizardState {
   personalDocs: UploadedDoc[];
   addressDocs: UploadedDoc[];
   vesselDocs: UploadedDoc[];
+  reviewDocs: ReviewDoc[];
   generating: boolean;
   progressLog: string[];
   createdProcessId: string | null;
@@ -113,6 +125,7 @@ const initialState: WizardState = {
   personalDocs: [],
   addressDocs: [],
   vesselDocs: [],
+  reviewDocs: [],
   generating: false,
   progressLog: [],
   createdProcessId: null,
@@ -127,6 +140,9 @@ type Action =
   | { type: "PATCH_VESSEL"; patch: Partial<VesselDraft> }
   | { type: "ADD_DOC"; bucket: "personal" | "address" | "vessel"; doc: UploadedDoc }
   | { type: "UPDATE_DOC"; bucket: "personal" | "address" | "vessel"; fileId: string; patch: Partial<UploadedDoc> }
+  | { type: "INIT_REVIEW"; docs: ReviewDoc[] }
+  | { type: "SET_REVIEW_CONTENT"; name: string; content: string; reason?: string }
+  | { type: "SET_REVIEW_STATUS"; name: string; status: ReviewStatus }
   | { type: "GENERATING"; on: boolean }
   | { type: "LOG"; line: string }
   | { type: "CREATED"; processId: string }
@@ -152,6 +168,28 @@ function reducer(s: WizardState, a: Action): WizardState {
         ...s,
         [key]: s[key].map((d) => (d.fileId === a.fileId ? { ...d, ...a.patch } : d)),
       } as WizardState;
+    }
+    case "INIT_REVIEW": return { ...s, reviewDocs: a.docs };
+    case "SET_REVIEW_CONTENT": {
+      return {
+        ...s,
+        reviewDocs: s.reviewDocs.map((d) => {
+          if (d.name !== a.name) return d;
+          const nextN = (d.versions[d.versions.length - 1]?.n ?? 0) + 1;
+          const version: ReviewVersion = { n: nextN, content: a.content, at: new Date().toISOString(), reason: a.reason };
+          const wasApproved = d.status === "approved";
+          if (wasApproved) console.log("[DOCUMENT_APPROVAL_REVOKED]", { name: a.name });
+          console.log("[DOCUMENT_TEXT_EDITED]", { name: a.name, version: nextN });
+          console.log("[DOCUMENT_VERSION_CREATED]", { name: a.name, version: nextN });
+          return { ...d, content: a.content, status: "editing" as ReviewStatus, versions: [...d.versions, version] };
+        }),
+      };
+    }
+    case "SET_REVIEW_STATUS": {
+      return {
+        ...s,
+        reviewDocs: s.reviewDocs.map((d) => (d.name === a.name ? { ...d, status: a.status } : d)),
+      };
     }
     case "GENERATING": return { ...s, generating: a.on };
     case "LOG": return { ...s, progressLog: [...s.progressLog, a.line] };
@@ -252,6 +290,121 @@ function fieldLines(label: string, input: Record<string, any>) {
   return Object.entries(input || {})
     .filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== "")
     .map(([key, value]) => `${label}.${key}: ${value}`);
+}
+
+// ---------- Bloco 2: text builder + missing-field detection + edited-text PDF ----------
+
+function buildDocumentText(
+  docName: string,
+  customer: CustomerDraft,
+  vessel: VesselDraft,
+  service: ServiceDef,
+): string {
+  const has = (v: string | undefined | null) => !!(v && String(v).trim());
+  const line = (label: string, v?: string) => (has(v) ? `${label}: ${v}` : null);
+  const parts: (string | null)[] = [];
+  parts.push(docName.toUpperCase());
+  parts.push(`Emitido em ${new Date().toLocaleDateString("pt-BR")}`);
+  parts.push("");
+  parts.push("SERVIÇO");
+  parts.push(`Tipo: ${service.name}`);
+  parts.push(`Processo administrativo: ${service.processType}`);
+  parts.push("");
+  if (service.needsPersonal) {
+    parts.push("DADOS DO REQUERENTE");
+    parts.push(line("Nome", customer.name));
+    parts.push(line("CPF/CNPJ", customer.cpf_cnpj));
+    parts.push(line("RG", customer.rg));
+    parts.push(line("Endereço", customer.address));
+    parts.push(line("Cidade", customer.city));
+    parts.push(line("UF", customer.state));
+    parts.push(line("Telefone", customer.phone));
+    parts.push(line("E-mail", customer.email));
+    parts.push("");
+  }
+  if (service.needsVessel) {
+    parts.push("DADOS DA EMBARCAÇÃO");
+    parts.push(line("Nome", vessel.name));
+    parts.push(line("Inscrição", vessel.registration_number));
+    parts.push(line("Proprietário", vessel.owner_name));
+    parts.push(line("CPF/CNPJ do proprietário", vessel.owner_document));
+    parts.push(line("Tipo", vessel.vessel_type));
+    parts.push(line("Material", vessel.material));
+    parts.push(line("Comprimento (m)", vessel.length));
+    parts.push(line("Boca (m)", vessel.beam));
+    parts.push(line("Pontal (m)", vessel.depth));
+    parts.push(line("Capacidade", vessel.capacity));
+    parts.push(line("Área de navegação", vessel.navigation_area));
+    parts.push(line("Atividade", vessel.activity_service));
+    parts.push(line("Ano de construção", vessel.construction_year));
+    parts.push(line("Construtor", vessel.builder));
+    parts.push("");
+    if (/motor/i.test(docName) || has(vessel.engine_power) || has(vessel.engine_serial)) {
+      parts.push("DADOS DO MOTOR");
+      parts.push(line("Potência (HP)", vessel.engine_power));
+      parts.push(line("Número de série", vessel.engine_serial));
+      parts.push("");
+    }
+  }
+  parts.push("DECLARAÇÃO");
+  parts.push(
+    `Declaro, para os devidos fins, que as informações acima são verdadeiras e correspondem à realidade do(a) ${docName.toLowerCase()} para a solicitação de ${service.name}.`,
+  );
+  return parts.filter((v) => v !== null).join("\n");
+}
+
+function detectMissingForDoc(
+  docName: string,
+  customer: CustomerDraft,
+  vessel: VesselDraft,
+  service: ServiceDef,
+): string[] {
+  const missing: string[] = [];
+  const empty = (v: string) => !v || !v.trim();
+  if (service.needsPersonal) {
+    if (empty(customer.name)) missing.push("Nome");
+    if (empty(customer.cpf_cnpj)) missing.push("CPF/CNPJ");
+  }
+  if (service.needsVessel) {
+    if (empty(vessel.name)) missing.push("Nome da embarcação");
+    if (empty(vessel.registration_number)) missing.push("Inscrição");
+  }
+  if (/motor/i.test(docName)) {
+    if (empty(vessel.engine_power)) missing.push("Potência do motor");
+    if (empty(vessel.engine_serial)) missing.push("Série do motor");
+  }
+  return missing;
+}
+
+async function buildEditedTextPdfBytes(docName: string, content: string) {
+  const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
+  const pdfDoc = await PDFDocument.create();
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  let page = pdfDoc.addPage([595.28, 841.89]);
+  let y = 792;
+  const sanitize = (text: string) => String(text)
+    .replace(/[–—]/g, "-").replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+    .replace(/•/g, "-").replace(/[^\x09\x0A\x0D\x20-\xFF]/g, "");
+  const draw = (text: string, size = 10, isBold = false) => {
+    const safe = sanitize(text);
+    const chunks = safe.length ? (safe.match(/.{1,92}(\s|$)/g) || [safe]) : [""];
+    for (const chunk of chunks) {
+      if (y < 52) { page = pdfDoc.addPage([595.28, 841.89]); y = 792; }
+      page.drawText(chunk.trimEnd(), { x: 48, y, size, font: isBold ? bold : font, color: rgb(0, 0, 0), maxWidth: 500 });
+      y -= size + 5;
+    }
+  };
+  draw(docName.toUpperCase(), 15, true);
+  draw(`Documento revisado e aprovado em ${new Date().toLocaleString("pt-BR")}`, 9);
+  y -= 8;
+  const lines = content.split("\n");
+  for (const ln of lines) {
+    if (ln.trim() === "") { y -= 6; continue; }
+    const isHeading = /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ ]+$/.test(ln) && ln.length < 40;
+    draw(ln, isHeading ? 11 : 10, isHeading);
+  }
+  return await pdfDoc.save();
 }
 
 async function buildFallbackPdfBytes(docName: string, fieldValues: any) {
@@ -506,6 +659,16 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       return;
     }
     console.log("[DOCUMENT_VALIDATION_SUCCESS]", { fields: "ok" });
+
+    // ---- Bloco 2: Aprovação obrigatória de todos os documentos ----
+    const notApproved = state.reviewDocs.filter((r) => r.status !== "approved");
+    if (state.reviewDocs.length === 0 || notApproved.length > 0) {
+      const names = notApproved.map((n) => n.name).join(", ") || "todos";
+      toast.error(`Existem documentos pendentes de aprovação: ${names}`);
+      console.warn("[DOCUMENT_FINAL_GENERATION_BLOCKED]", { notApproved: notApproved.map((n) => n.name) });
+      dispatch({ type: "GENERATING", on: false });
+      return;
+    }
     try {
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData.user?.id ?? null;
@@ -672,56 +835,83 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       let mirroredFilesCount = 0;
       for (const docName of service.generatedDocs) {
         try {
+          const review = state.reviewDocs.find((r) => r.name === docName);
+          if (!review) throw new Error("documento ausente no painel de revisão");
+          if (review.status !== "approved") throw new Error("documento não aprovado no painel de revisão");
+
+          console.log("[DOCUMENT_READY_FOR_FINAL_PDF]", { docName });
           console.log("[DOCUMENT_REAL_GENERATION_STARTED]", { docName, processId: proc.id, customerId, vesselId });
-          const tpl = await resolveTemplate(companyId, docName, service.kind);
-          let generatedDoc: any = null;
 
-          if (tpl?.id && (tpl.base_content || tpl.template_file_url)) {
-            const { data: genData, error: genErr } = await supabase.functions.invoke("generate-document", {
-              body: { templateId: tpl.id, companyId, customerId, vesselId, processId: proc.id, fieldValues },
-            });
-            if (genErr) throw genErr;
-            if (!genData?.success || !genData?.document?.id || !genData?.document?.generated_file_url) {
-              throw new Error(genData?.error || "função não retornou PDF persistido");
-            }
-            generatedDoc = genData.document;
-          } else {
-            generatedDoc = await createProcessFirstPdfDocument({
-              docName,
-              companyId,
-              customerId,
-              vesselId,
-              processId: proc.id,
-              templateId: tpl?.id || null,
-              userId,
-              fieldValues,
-              reason: tpl?.id ? "template_without_content" : "template_not_found",
-            });
-          }
+          const pdfBytes = await buildEditedTextPdfBytes(docName, review.content);
+          const pdfArrayBuffer = pdfBytes.buffer.slice(
+            pdfBytes.byteOffset,
+            pdfBytes.byteOffset + pdfBytes.byteLength,
+          ) as ArrayBuffer;
+          const pdfBlob = new Blob([pdfArrayBuffer], { type: "application/pdf" });
+          const generatedPath = `${companyId}/${crypto.randomUUID()}.pdf`;
+          const { error: uploadError } = await supabase.storage
+            .from("generated-documents")
+            .upload(generatedPath, pdfBlob, { contentType: "application/pdf", upsert: true });
+          assertNoError(uploadError, `Upload do PDF ${docName}`);
 
-          const missingLinks = requiredDocumentLinks.filter((key) => !generatedDoc[key]);
+          const { data: generatedDoc, error: dbError } = await supabase
+            .from("generated_documents")
+            .insert({
+              company_id: companyId,
+              process_id: proc.id,
+              customer_id: customerId,
+              vessel_id: vesselId,
+              template_id: null,
+              name: `${docName} - ${new Date().toLocaleDateString("pt-BR")}`,
+              generated_file_url: generatedPath,
+              status: "completed",
+              generated_by: userId,
+              metadata: {
+                source: "process_first_review_approved",
+                versions: review.versions.length,
+                content_length: review.content.length,
+              } as any,
+            } as any)
+            .select()
+            .single();
+          assertNoError(dbError, `Persistência do PDF ${docName}`);
+
+          const missingLinks = requiredDocumentLinks.filter((key) => !(generatedDoc as any)[key]);
           if (missingLinks.length > 0) throw new Error(`documento sem vínculos obrigatórios: ${missingLinks.join(", ")}`);
-
-          const pdfOk = await validateGeneratedPdfPath(generatedDoc.generated_file_url);
+          const pdfOk = await validateGeneratedPdfPath((generatedDoc as any).generated_file_url);
           if (!pdfOk) throw new Error("PDF gerado não passou na validação de arquivo real");
 
-          const { error: docRowError } = await supabase.from("documents").insert({
+          const { data: docRow, error: docRowError } = await supabase.from("documents").insert({
             company_id: companyId,
             process_id: proc.id,
             customer_id: customerId,
             vessel_id: vesselId,
             document_type: docName,
             status: "completed",
-            file_url: generatedDoc.generated_file_url,
-            extracted_data: { generated_document_id: generatedDoc.id, template_id: tpl.id, fieldValues } as any,
+            file_url: (generatedDoc as any).generated_file_url,
+            extracted_data: { generated_document_id: (generatedDoc as any).id, fieldValues, edited_content: review.content } as any,
             compliance_status: "validated",
-          } as any);
+          } as any).select("id").single();
           if (docRowError) {
             console.error("[DOCUMENT_PERSISTED_FAILED]", { docName, error: docRowError.message });
             throw new Error(`falha ao salvar em documents: ${docRowError.message}`);
           }
           documentRowsCount++;
-          console.log("[DOCUMENT_PERSISTED_OK]", { docName, generatedDocumentId: generatedDoc.id });
+          console.log("[DOCUMENT_PERSISTED_OK]", { docName, generatedDocumentId: (generatedDoc as any).id });
+
+          // Persist every in-memory review version into document_versions for full history
+          if (docRow?.id && review.versions.length > 0) {
+            const versionRows = review.versions.map((v) => ({
+              document_id: docRow.id,
+              version_number: v.n,
+              file_url: (generatedDoc as any).generated_file_url,
+              created_by: userId,
+              change_summary: v.reason || `Versão ${v.n} salva durante revisão`,
+            }));
+            const { error: versionsError } = await supabase.from("document_versions").insert(versionRows as any);
+            if (versionsError) console.warn("[DOCUMENT_VERSIONS_INSERT_FAILED]", versionsError.message);
+            else console.log("[DOCUMENT_VERSIONS_PERSISTED]", { docName, count: versionRows.length });
+          }
 
           const { error: mirrorError } = await supabase.from("uploaded_files").insert({
             company_id: companyId,
@@ -732,10 +922,10 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             file_name: `${docName}.pdf`,
             file_type: "application/pdf",
             file_size: 0,
-            file_url: generatedDoc.generated_file_url,
+            file_url: (generatedDoc as any).generated_file_url,
             category: "generated_document",
             status: "uploaded",
-            metadata: { generated_document_id: generatedDoc.id, template_id: tpl.id } as any,
+            metadata: { generated_document_id: (generatedDoc as any).id } as any,
           } as any);
           if (mirrorError) {
             console.error("[DOCUMENT_PERSISTED_FAILED]", { docName, mirror: true, error: mirrorError.message });
@@ -744,7 +934,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
           mirroredFilesCount++;
 
           generatedCount++;
-          console.log("[DOCUMENT_REAL_GENERATION_OK]", { docName, path: generatedDoc.generated_file_url });
+          console.log("[DOCUMENT_REAL_GENERATION_OK]", { docName, path: (generatedDoc as any).generated_file_url });
           console.log("[PROCESS_DOCUMENT_LINK_OK]", { docName, processId: proc.id });
           console.log("[CUSTOMER_DOCUMENT_LINK_OK]", { docName, customerId });
           console.log("[VESSEL_DOCUMENT_LINK_OK]", { docName, vesselId });
@@ -759,6 +949,8 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         }
       }
       console.log("[DOCUMENTS_GENERATED]", { count: generatedCount, total: service.generatedDocs.length });
+
+
 
       // Timeline/audit note
       try {
@@ -845,7 +1037,32 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
     setTimeout(() => dispatch({ type: "RESET" }), 200);
   };
 
-  const steps = ["Serviço", "Identidade", "Endereço", "Embarcação", "Montagem", "Revisão", "Concluído"];
+  const steps = ["Serviço", "Identidade", "Endereço", "Embarcação", "Montagem", "Revisão", "Aprovação", "Concluído"];
+
+  const enterApprovalStep = () => {
+    if (!service) return;
+    const existingByName = new Map(state.reviewDocs.map((d) => [d.name, d] as const));
+    const docs: ReviewDoc[] = service.generatedDocs.map((name) => {
+      const baseContent = buildDocumentText(name, state.customer, state.vessel, service);
+      const missing = detectMissingForDoc(name, state.customer, state.vessel, service);
+      const prev = existingByName.get(name);
+      if (prev) {
+        // Keep user edits but recompute missing
+        return { ...prev, baseContent, missing, status: missing.length > 0 && prev.status !== "approved" ? "pending_data" : prev.status };
+      }
+      return {
+        name,
+        baseContent,
+        content: baseContent,
+        status: (missing.length > 0 ? "pending_data" : "ready") as ReviewStatus,
+        versions: [],
+        missing,
+      };
+    });
+    dispatch({ type: "INIT_REVIEW", docs });
+    console.log("[DOCUMENT_REVIEW_PANEL_OPENED]", { count: docs.length });
+    dispatch({ type: "STEP", step: 7 });
+  };
 
   const content = (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -925,6 +1142,32 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             />
           )}
           {state.step === 7 && service && (
+            <Step7Approval
+              docs={state.reviewDocs}
+              onEditSave={(name, content, reason) => dispatch({ type: "SET_REVIEW_CONTENT", name, content, reason })}
+              onApprove={(name) => {
+                const doc = state.reviewDocs.find((d) => d.name === name);
+                if (!doc) return;
+                if (doc.missing.length > 0) {
+                  toast.error(`Não é possível aprovar "${name}": ${doc.missing.join(", ")}`);
+                  return;
+                }
+                dispatch({ type: "SET_REVIEW_STATUS", name, status: "approved" });
+                console.log("[DOCUMENT_APPROVED]", { name });
+              }}
+              onRevoke={(name) => {
+                dispatch({ type: "SET_REVIEW_STATUS", name, status: "ready" });
+                console.log("[DOCUMENT_APPROVAL_REVOKED]", { name });
+              }}
+              onRegenerate={(name) => {
+                const doc = state.reviewDocs.find((d) => d.name === name);
+                if (!doc || !service) return;
+                const fresh = buildDocumentText(name, state.customer, state.vessel, service);
+                dispatch({ type: "SET_REVIEW_CONTENT", name, content: fresh, reason: "Prévia regerada" });
+              }}
+            />
+          )}
+          {state.step === 8 && service && (
             <Step6
               log={state.progressLog}
               processId={state.createdProcessId}
@@ -943,7 +1186,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         </div>
 
         {/* Footer */}
-        {state.step < 7 && (
+        {state.step < 8 && (
           <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-between gap-3 bg-slate-50">
             <button
               onClick={() => dispatch({ type: "STEP", step: Math.max(1, state.step - 1) })}
@@ -965,8 +1208,17 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             )}
             {state.step === 6 && (
               <button
+                onClick={enterApprovalStep}
+                className="px-6 py-3 bg-primary text-white rounded-xl font-black text-xs uppercase tracking-wider hover:opacity-90 shadow-lg shadow-primary/20"
+                data-testid="pf-to-approval"
+              >
+                Ir para aprovação <ChevronRight className="h-4 w-4 inline" />
+              </button>
+            )}
+            {state.step === 7 && (
+              <button
                 onClick={handleGenerate}
-                disabled={state.generating}
+                disabled={state.generating || state.reviewDocs.some((d) => d.status !== "approved")}
                 className="px-6 py-3 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-wider hover:opacity-90 disabled:opacity-40 shadow-lg shadow-green-600/20"
                 data-testid="pf-generate"
               >
@@ -1484,6 +1736,205 @@ function SuccessCard({ icon, title, body, sub }: { icon: React.ReactNode; title:
       </div>
       <div className="mt-1 text-sm font-black text-navy truncate">{body}</div>
       {sub && <div className="text-[10px] text-slate-500 mt-0.5 truncate">{sub}</div>}
+    </div>
+  );
+}
+
+// ============================================================================
+// Bloco 2 — Painel de revisão / edição / aprovação dos documentos
+// ============================================================================
+function Step7Approval({
+  docs,
+  onEditSave,
+  onApprove,
+  onRevoke,
+  onRegenerate,
+}: {
+  docs: ReviewDoc[];
+  onEditSave: (name: string, content: string, reason?: string) => void;
+  onApprove: (name: string) => void;
+  onRevoke: (name: string) => void;
+  onRegenerate: (name: string) => void;
+}) {
+  const [previewName, setPreviewName] = useState<string | null>(null);
+  const [editName, setEditName] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const [editReason, setEditReason] = useState("");
+
+  const previewDoc = docs.find((d) => d.name === previewName) || null;
+  const editDoc = docs.find((d) => d.name === editName) || null;
+
+  const statusBadge = (s: ReviewStatus) => {
+    const map: Record<ReviewStatus, { label: string; cls: string }> = {
+      pending_data: { label: "Pendente de dados", cls: "bg-amber-100 text-amber-700" },
+      ready: { label: "Pronto para revisão", cls: "bg-blue-100 text-blue-700" },
+      editing: { label: "Em edição", cls: "bg-purple-100 text-purple-700" },
+      approved: { label: "Aprovado", cls: "bg-green-100 text-green-700" },
+      failed: { label: "Falhou", cls: "bg-red-100 text-red-700" },
+    };
+    const v = map[s];
+    return <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${v.cls}`}>{v.label}</span>;
+  };
+
+  const allApproved = docs.length > 0 && docs.every((d) => d.status === "approved");
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="text-xs font-black uppercase tracking-wider text-slate-500 mb-1">Revisão e aprovação</div>
+        <h3 className="text-2xl font-black text-navy">Revise cada documento antes de gerar o PDF final</h3>
+        <p className="text-sm text-slate-600 mt-1">
+          Visualize, edite e aprove. O PDF final só será gerado a partir do texto aprovado.
+        </p>
+      </div>
+
+      {!allApproved && (
+        <div className="px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
+          Existem documentos pendentes de aprovação. Aprove todos para liberar a geração final.
+        </div>
+      )}
+
+      <div className="grid gap-3">
+        {docs.map((d) => (
+          <div key={d.name} className="border border-slate-200 rounded-2xl p-4 bg-white">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="text-sm font-black text-navy truncate">{d.name}</div>
+                  {statusBadge(d.status)}
+                  {d.versions.length > 0 && (
+                    <span className="text-[10px] font-bold text-slate-500">v{d.versions[d.versions.length - 1].n}</span>
+                  )}
+                </div>
+                <div className="mt-1 text-[11px] text-slate-500">
+                  {d.missing.length === 0 ? (
+                    <span className="text-green-600 font-bold">Todos os campos obrigatórios preenchidos</span>
+                  ) : (
+                    <span className="text-amber-700 font-bold">Faltando: {d.missing.join(", ")}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                onClick={() => {
+                  setPreviewName(d.name);
+                  console.log("[DOCUMENT_PREVIEW_OPENED]", { name: d.name });
+                }}
+                className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-slate-100 hover:bg-slate-200 text-navy"
+              >
+                Visualizar
+              </button>
+              <button
+                onClick={() => {
+                  setEditName(d.name);
+                  setEditText(d.content);
+                  setEditReason("");
+                }}
+                className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-700"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => onRegenerate(d.name)}
+                className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700"
+              >
+                Regenerar prévia
+              </button>
+              {d.status === "approved" ? (
+                <button
+                  onClick={() => onRevoke(d.name)}
+                  className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800"
+                >
+                  Revogar aprovação
+                </button>
+              ) : (
+                <button
+                  onClick={() => onApprove(d.name)}
+                  disabled={d.missing.length > 0}
+                  className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-green-600 hover:opacity-90 text-white disabled:opacity-40"
+                >
+                  Aprovar
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Preview modal */}
+      {previewDoc && (
+        <div className="fixed inset-0 z-[110] bg-black/60 flex items-center justify-center p-4" onClick={() => setPreviewName(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Prévia</div>
+                <div className="text-lg font-black text-navy">{previewDoc.name}</div>
+              </div>
+              <button onClick={() => setPreviewName(null)} className="p-2 hover:bg-slate-100 rounded-xl">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-8 bg-slate-50">
+              <div className="mx-auto max-w-2xl bg-white shadow rounded-lg p-10 whitespace-pre-wrap font-mono text-[12px] leading-relaxed text-slate-800">
+                {previewDoc.content}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Editor modal */}
+      {editDoc && (
+        <div className="fixed inset-0 z-[110] bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Editar documento</div>
+                <div className="text-lg font-black text-navy">{editDoc.name}</div>
+              </div>
+              <button onClick={() => setEditName(null)} className="p-2 hover:bg-slate-100 rounded-xl">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-3">
+              <textarea
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                className="w-full min-h-[400px] border border-slate-200 rounded-xl p-4 font-mono text-[12px] leading-relaxed text-slate-800 focus:outline-none focus:border-primary"
+              />
+              <input
+                type="text"
+                value={editReason}
+                onChange={(e) => setEditReason(e.target.value)}
+                placeholder="Motivo da alteração (opcional)"
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs"
+              />
+              <p className="text-[11px] text-slate-500">
+                O template original não é alterado. Cada salvamento cria uma nova versão do documento.
+              </p>
+            </div>
+            <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-2 bg-slate-50">
+              <button
+                onClick={() => setEditName(null)}
+                className="px-4 py-2 text-xs font-bold rounded-lg hover:bg-slate-100 text-slate-600"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  onEditSave(editDoc.name, editText, editReason || undefined);
+                  setEditName(null);
+                }}
+                className="px-4 py-2 text-xs font-black uppercase tracking-wider rounded-lg bg-primary text-white hover:opacity-90"
+              >
+                Salvar versão
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
