@@ -24,6 +24,7 @@ import {
   type ServiceKind,
   type ServiceDef,
 } from "@/types/service-requirements";
+import { validateCriticalFields } from "@/services/documentNormalizer";
 
 interface Props {
   isOpen: boolean;
