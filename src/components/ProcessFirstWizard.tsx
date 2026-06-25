@@ -729,26 +729,11 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       return;
     }
 
-    // ---- Bloco 5: bloquear se há templates obrigatórios da biblioteca sem aprovação ----
-    const requiredLibrary = suggestedTemplates.filter((t) => t.is_required);
-    const missingRequired = requiredLibrary.filter((tpl) => {
-      // Considera aprovado se há um reviewDoc com nome equivalente OK,
-      // OU se o usuário marcou explicitamente o template como aceito (required = sempre incluído)
-      return !state.reviewDocs.some((r) => r.status === "approved" && r.name.toLowerCase().includes((tpl.name || "").toLowerCase().slice(0, 6)));
-    });
-    if (missingRequired.length > 0) {
-      const labels = missingRequired.map((m) => m.name).join(", ");
-      toast.error(`Faltam documentos obrigatórios da biblioteca: ${labels}`);
-      await logLibraryEvent("process_final_pdf_blocked", {
-        reason: "library_required_missing",
-        templates: missingRequired.map((m) => m.id),
-      });
-      await logLibraryEvent("process_document_approval_required", {
-        templates: missingRequired.map((m) => m.id),
-      });
-      dispatch({ type: "GENERATING", on: false });
-      return;
-    }
+    // ---- Bloco 5: templates obrigatórios da biblioteca são SEMPRE persistidos
+    // por persistProcessDocuments (is_required=true). Não exigimos correspondência
+    // com state.reviewDocs (que são uploads OCR de origem como RG/CNH/TIE — natureza
+    // distinta dos documentos a serem GERADOS, ex.: Capa do Processo, Guia GRU).
+    // A aprovação dos documentos a gerar acontece via state.reviewDocs (Bloco 2 acima).
 
     try {
       const { data: authData } = await supabase.auth.getUser();
