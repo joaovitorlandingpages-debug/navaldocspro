@@ -125,11 +125,28 @@ const initialState: WizardState = {
   personalDocs: [],
   addressDocs: [],
   vesselDocs: [],
+  reviewDocs: [],
   generating: false,
   progressLog: [],
   createdProcessId: null,
   generationResult: null,
 };
+
+type Action =
+  | { type: "RESET" }
+  | { type: "STEP"; step: number }
+  | { type: "SET_SERVICE"; service: ServiceKind }
+  | { type: "PATCH_CUSTOMER"; patch: Partial<CustomerDraft> }
+  | { type: "PATCH_VESSEL"; patch: Partial<VesselDraft> }
+  | { type: "ADD_DOC"; bucket: "personal" | "address" | "vessel"; doc: UploadedDoc }
+  | { type: "UPDATE_DOC"; bucket: "personal" | "address" | "vessel"; fileId: string; patch: Partial<UploadedDoc> }
+  | { type: "INIT_REVIEW"; docs: ReviewDoc[] }
+  | { type: "SET_REVIEW_CONTENT"; name: string; content: string; reason?: string }
+  | { type: "SET_REVIEW_STATUS"; name: string; status: ReviewStatus }
+  | { type: "GENERATING"; on: boolean }
+  | { type: "LOG"; line: string }
+  | { type: "CREATED"; processId: string }
+  | { type: "SET_RESULT"; result: PersistenceResult | null };
 
 type Action =
   | { type: "RESET" }
