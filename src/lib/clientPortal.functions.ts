@@ -341,8 +341,8 @@ export const portalDownloadFile = createServerFn({ method: "POST" })
       // still verify by lookup in generated_documents
       const supaCheck = await adminClient();
       const { data: g } = await supaCheck.from("generated_documents")
-        .select("id").eq("process_id", access.process_id).eq("file_path", data.path).maybeSingle();
-      if (!g) throw new Error("Arquivo não autorizado");
+        .select("id,generated_file_url,signed_file_url").eq("process_id", access.process_id).maybeSingle();
+      if (!g || (g.generated_file_url !== data.path && g.signed_file_url !== data.path)) throw new Error("Arquivo não autorizado");
     }
 
     const supa = await adminClient();
