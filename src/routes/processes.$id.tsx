@@ -647,6 +647,18 @@ function ProcessDetail() {
                   </div>
                </TabsContent>
 
+               <TabsContent value="library_docs" className="animate-in fade-in duration-300">
+                  <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                    <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-1 flex items-center gap-2">
+                      <FileCheck className="h-5 w-5 text-primary" /> Documentos do processo
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">
+                      Anexe arquivos, execute OCR, valide e aplique dados aos modelos vinculados
+                    </p>
+                    <ProcessDocumentsPanel processId={id} />
+                  </div>
+               </TabsContent>
+
                <TabsContent value="history" className="animate-in fade-in duration-300">
                   <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
                     <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-10 flex items-center gap-2">
