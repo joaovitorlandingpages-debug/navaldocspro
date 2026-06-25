@@ -38,6 +38,7 @@ import { useDossier } from "@/hooks/useDossier";
 import { DossierPreview } from "@/components/dossier/DossierPreview";
 import { dossierEngine } from "@/services/automation/dossierEngine";
 import { ProcessDossierTab } from "@/components/dossier/ProcessDossierTab";
+import ProcessFinalDossierTab from "@/components/process/ProcessFinalDossierTab";
 import { openStoredFile } from "@/utils/file-preview";
 import { ProcessDocumentsPanel } from "@/components/process/ProcessDocumentsPanel";
 
@@ -582,7 +583,7 @@ function ProcessDetail() {
                </TabsContent>
                
                <TabsContent value="dossier_v2" className="animate-in fade-in duration-500">
-                  <ProcessDossierTab processId={id} />
+                  <ProcessFinalDossierTab processId={id} />
                </TabsContent>
 
                 <TabsContent value="requirements" className="space-y-8 animate-in fade-in duration-300">

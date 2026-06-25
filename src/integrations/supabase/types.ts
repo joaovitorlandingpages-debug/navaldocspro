@@ -3214,37 +3214,70 @@ export type Database = {
       }
       process_dossiers: {
         Row: {
+          attachments_snapshot: Json | null
+          audit_snapshot: Json | null
+          checklist_snapshot: Json | null
           company_id: string
           created_at: string | null
+          delivered_at: string | null
+          documents_snapshot: Json | null
+          dossier_number: string | null
           file_url: string | null
+          final_pdf_url: string | null
+          generated_at: string | null
+          generated_by: string | null
           id: string
           metadata: Json | null
           process_id: string
           status: string
           updated_at: string | null
+          verification_code: string | null
           version: number
+          zip_url: string | null
         }
         Insert: {
+          attachments_snapshot?: Json | null
+          audit_snapshot?: Json | null
+          checklist_snapshot?: Json | null
           company_id: string
           created_at?: string | null
+          delivered_at?: string | null
+          documents_snapshot?: Json | null
+          dossier_number?: string | null
           file_url?: string | null
+          final_pdf_url?: string | null
+          generated_at?: string | null
+          generated_by?: string | null
           id?: string
           metadata?: Json | null
           process_id: string
           status?: string
           updated_at?: string | null
+          verification_code?: string | null
           version?: number
+          zip_url?: string | null
         }
         Update: {
+          attachments_snapshot?: Json | null
+          audit_snapshot?: Json | null
+          checklist_snapshot?: Json | null
           company_id?: string
           created_at?: string | null
+          delivered_at?: string | null
+          documents_snapshot?: Json | null
+          dossier_number?: string | null
           file_url?: string | null
+          final_pdf_url?: string | null
+          generated_at?: string | null
+          generated_by?: string | null
           id?: string
           metadata?: Json | null
           process_id?: string
           status?: string
           updated_at?: string | null
+          verification_code?: string | null
           version?: number
+          zip_url?: string | null
         }
         Relationships: [
           {
