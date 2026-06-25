@@ -375,6 +375,9 @@ function ProcessDetail() {
                      <Signature className="h-3 w-3" /> Assinaturas
                    </TabsTrigger>
                    <TabsTrigger value="protocol" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Protocolo</TabsTrigger>
+                   <TabsTrigger value="client_portal" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                     <Link2 className="h-3 w-3" /> Portal Cliente
+                   </TabsTrigger>
                 </TabsList>
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
