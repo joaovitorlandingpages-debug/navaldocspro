@@ -871,6 +871,26 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       console.log("[PROCESS_CREATED]", proc.id);
       dispatch({ type: "LOG", line: `✓ Processo criado: ${proc.id.slice(0, 8)}` });
 
+      // ---- Bloco 5: persistir process_documents (sugeridos da biblioteca) ----
+      try {
+        const { inserted } = await persistProcessDocuments({
+          processId: proc.id,
+          companyId,
+          userId,
+          templates: suggestedTemplates,
+          selectedOptionalIds,
+          ignoredOptionalIds,
+        });
+        if (inserted > 0) {
+          dispatch({ type: "LOG", line: `✓ ${inserted} documento(s) da biblioteca vinculado(s)` });
+        }
+        await logLibraryEvent("process_final_pdf_unlocked", { process_id: proc.id, inserted });
+      } catch (e: any) {
+        console.warn("[Bloco 5 process_documents] persist failed", e);
+        dispatch({ type: "LOG", line: `⚠ Falha ao vincular documentos da biblioteca: ${e.message}` });
+      }
+
+
       // Link uploaded OCR/source files to process, customer and vessel so all modals can list them.
       const allDocs = [...state.personalDocs, ...state.addressDocs, ...state.vesselDocs].filter((d) => d.status !== "failed");
       if (allDocs.length > 0) {
