@@ -506,6 +506,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       return;
     }
     console.log("[DOCUMENT_VALIDATION_SUCCESS]", { fields: "ok" });
+    try {
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData.user?.id ?? null;
       const persistenceErrors: string[] = [];
