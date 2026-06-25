@@ -1037,7 +1037,32 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
     setTimeout(() => dispatch({ type: "RESET" }), 200);
   };
 
-  const steps = ["Serviço", "Identidade", "Endereço", "Embarcação", "Montagem", "Revisão", "Concluído"];
+  const steps = ["Serviço", "Identidade", "Endereço", "Embarcação", "Montagem", "Revisão", "Aprovação", "Concluído"];
+
+  const enterApprovalStep = () => {
+    if (!service) return;
+    const existingByName = new Map(state.reviewDocs.map((d) => [d.name, d] as const));
+    const docs: ReviewDoc[] = service.generatedDocs.map((name) => {
+      const baseContent = buildDocumentText(name, state.customer, state.vessel, service);
+      const missing = detectMissingForDoc(name, state.customer, state.vessel, service);
+      const prev = existingByName.get(name);
+      if (prev) {
+        // Keep user edits but recompute missing
+        return { ...prev, baseContent, missing, status: missing.length > 0 && prev.status !== "approved" ? "pending_data" : prev.status };
+      }
+      return {
+        name,
+        baseContent,
+        content: baseContent,
+        status: (missing.length > 0 ? "pending_data" : "ready") as ReviewStatus,
+        versions: [],
+        missing,
+      };
+    });
+    dispatch({ type: "INIT_REVIEW", docs });
+    console.log("[DOCUMENT_REVIEW_PANEL_OPENED]", { count: docs.length });
+    dispatch({ type: "STEP", step: 7 });
+  };
 
   const content = (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1117,6 +1142,32 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             />
           )}
           {state.step === 7 && service && (
+            <Step7Approval
+              docs={state.reviewDocs}
+              onEditSave={(name, content, reason) => dispatch({ type: "SET_REVIEW_CONTENT", name, content, reason })}
+              onApprove={(name) => {
+                const doc = state.reviewDocs.find((d) => d.name === name);
+                if (!doc) return;
+                if (doc.missing.length > 0) {
+                  toast.error(`Não é possível aprovar "${name}": ${doc.missing.join(", ")}`);
+                  return;
+                }
+                dispatch({ type: "SET_REVIEW_STATUS", name, status: "approved" });
+                console.log("[DOCUMENT_APPROVED]", { name });
+              }}
+              onRevoke={(name) => {
+                dispatch({ type: "SET_REVIEW_STATUS", name, status: "ready" });
+                console.log("[DOCUMENT_APPROVAL_REVOKED]", { name });
+              }}
+              onRegenerate={(name) => {
+                const doc = state.reviewDocs.find((d) => d.name === name);
+                if (!doc || !service) return;
+                const fresh = buildDocumentText(name, state.customer, state.vessel, service);
+                dispatch({ type: "SET_REVIEW_CONTENT", name, content: fresh, reason: "Prévia regerada" });
+              }}
+            />
+          )}
+          {state.step === 8 && service && (
             <Step6
               log={state.progressLog}
               processId={state.createdProcessId}
@@ -1135,7 +1186,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         </div>
 
         {/* Footer */}
-        {state.step < 7 && (
+        {state.step < 8 && (
           <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-between gap-3 bg-slate-50">
             <button
               onClick={() => dispatch({ type: "STEP", step: Math.max(1, state.step - 1) })}
@@ -1157,8 +1208,17 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             )}
             {state.step === 6 && (
               <button
+                onClick={enterApprovalStep}
+                className="px-6 py-3 bg-primary text-white rounded-xl font-black text-xs uppercase tracking-wider hover:opacity-90 shadow-lg shadow-primary/20"
+                data-testid="pf-to-approval"
+              >
+                Ir para aprovação <ChevronRight className="h-4 w-4 inline" />
+              </button>
+            )}
+            {state.step === 7 && (
+              <button
                 onClick={handleGenerate}
-                disabled={state.generating}
+                disabled={state.generating || state.reviewDocs.some((d) => d.status !== "approved")}
                 className="px-6 py-3 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-wider hover:opacity-90 disabled:opacity-40 shadow-lg shadow-green-600/20"
                 data-testid="pf-generate"
               >
