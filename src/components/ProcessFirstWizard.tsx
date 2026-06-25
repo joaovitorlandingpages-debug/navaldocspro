@@ -659,6 +659,16 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       return;
     }
     console.log("[DOCUMENT_VALIDATION_SUCCESS]", { fields: "ok" });
+
+    // ---- Bloco 2: Aprovação obrigatória de todos os documentos ----
+    const notApproved = state.reviewDocs.filter((r) => r.status !== "approved");
+    if (state.reviewDocs.length === 0 || notApproved.length > 0) {
+      const names = notApproved.map((n) => n.name).join(", ") || "todos";
+      toast.error(`Existem documentos pendentes de aprovação: ${names}`);
+      console.warn("[DOCUMENT_FINAL_GENERATION_BLOCKED]", { notApproved: notApproved.map((n) => n.name) });
+      dispatch({ type: "GENERATING", on: false });
+      return;
+    }
     try {
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData.user?.id ?? null;
