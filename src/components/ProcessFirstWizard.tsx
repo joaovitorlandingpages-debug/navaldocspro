@@ -72,6 +72,17 @@ type UploadedDoc = {
   status: "uploading" | "ocr" | "done" | "failed";
 };
 
+type ReviewStatus = "pending_data" | "ready" | "editing" | "approved" | "failed";
+type ReviewVersion = { n: number; content: string; at: string; reason?: string };
+type ReviewDoc = {
+  name: string;
+  status: ReviewStatus;
+  content: string;
+  baseContent: string;
+  versions: ReviewVersion[];
+  missing: string[];
+};
+
 interface WizardState {
   step: number;
   service: ServiceKind | null;
@@ -80,6 +91,7 @@ interface WizardState {
   personalDocs: UploadedDoc[];
   addressDocs: UploadedDoc[];
   vesselDocs: UploadedDoc[];
+  reviewDocs: ReviewDoc[];
   generating: boolean;
   progressLog: string[];
   createdProcessId: string | null;
