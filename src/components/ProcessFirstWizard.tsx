@@ -484,7 +484,28 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
     console.log("[PROCESS_FIRST_GENERATION_STARTED]", { service: service.kind });
     dispatch({ type: "GENERATING", on: true });
     dispatch({ type: "SET_RESULT", result: null });
-    try {
+
+    // ---- Bloco 1: Validação crítica antes de gerar QUALQUER PDF ----
+    const needsEngine = service.generatedDocs.some((n) => /motor/i.test(n));
+    const critical = validateCriticalFields(
+      {
+        cliente: { nome: state.customer.name, cpf: state.customer.cpf_cnpj },
+        embarcacao: { nome: state.vessel.name, inscricao: state.vessel.registration_number },
+        motor: { potencia: state.vessel.engine_power, serie: state.vessel.engine_serial },
+        empresa: { nome: "ok", cnpj: "ok" }, // empresa validada via RLS no insert; UI completa virá no Bloco 2
+      },
+      { needsPersonal: !!service.needsPersonal, needsVessel: !!service.needsVessel, needsEngine }
+    );
+    if (!critical.ok) {
+      console.warn("[DOCUMENT_VALIDATION_FAILED]", critical.missing);
+      toast.error(
+        `Não é possível gerar: ${critical.missing.length} campo(s) crítico(s) faltando: ` +
+          critical.missing.map((m) => m.label).join(", ")
+      );
+      dispatch({ type: "GENERATING", on: false });
+      return;
+    }
+    console.log("[DOCUMENT_VALIDATION_SUCCESS]", { fields: "ok" });
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData.user?.id ?? null;
       const persistenceErrors: string[] = [];
