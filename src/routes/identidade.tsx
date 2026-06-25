@@ -343,6 +343,20 @@ function UploadField({
   return (
     <div>
       <Label className="text-xs">{label}</Label>
+      {/* Input file SEMPRE no DOM, fora do card, para nunca ser bloqueado por overlay */}
+      <input
+        ref={ref}
+        type="file"
+        accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+        style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onFile(f);
+          e.target.value = "";
+        }}
+      />
       <div
         role="button"
         tabIndex={0}
@@ -359,13 +373,13 @@ function UploadField({
         }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
-        className={`mt-1.5 rounded-xl border-2 border-dashed p-4 flex flex-col items-center justify-center min-h-[140px] transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-primary/40 ${
+        className={`relative z-[1] mt-1.5 rounded-xl border-2 border-dashed p-4 flex flex-col items-center justify-center min-h-[140px] transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-primary/40 select-none ${
           dragOver ? "border-primary bg-primary/5" : "border-slate-300 bg-slate-50 hover:bg-slate-100"
         } ${busy ? "opacity-60 cursor-wait" : ""}`}
       >
         {value ? (
           <>
-            <img src={value} alt={label} className="max-h-20 max-w-full object-contain mb-2" />
+            <img src={value} alt={label} className="max-h-20 max-w-full object-contain mb-2 pointer-events-none" />
             <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
               <Button size="sm" variant="outline" onClick={openPicker} disabled={busy} type="button">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
@@ -389,17 +403,23 @@ function UploadField({
             <p className="text-[11px] text-slate-500 mt-0.5">PNG, JPG, WEBP ou SVG · até 5 MB</p>
           </div>
         )}
-        <input
-          ref={ref}
-          type="file"
-          accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) onFile(f);
-            e.target.value = "";
+      </div>
+      {/* Botão visível de fallback — independente do card */}
+      <div className="mt-2 flex justify-center">
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          disabled={busy}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            ref.current?.click();
           }}
-        />
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+          {value ? "Trocar arquivo" : "Enviar arquivo"}
+        </Button>
       </div>
     </div>
   );
