@@ -25,6 +25,13 @@ import {
   type ServiceDef,
 } from "@/types/service-requirements";
 import { validateCriticalFields } from "@/services/documentNormalizer";
+import {
+  fetchLibrary,
+  suggestTemplatesForWizard,
+  persistProcessDocuments,
+  logLibraryEvent,
+  type SuggestedTemplate,
+} from "@/services/documentLibrary";
 
 interface Props {
   isOpen: boolean;
@@ -502,6 +509,12 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   const addressInputRef = useRef<HTMLInputElement>(null);
   const vesselInputRef = useRef<HTMLInputElement>(null);
 
+  // ---- Bloco 5: library-suggested templates state ----
+  const [suggestedTemplates, setSuggestedTemplates] = useState<SuggestedTemplate[]>([]);
+  const [selectedOptionalIds, setSelectedOptionalIds] = useState<Set<string>>(new Set());
+  const [ignoredOptionalIds, setIgnoredOptionalIds] = useState<Set<string>>(new Set());
+  const [loadingSuggested, setLoadingSuggested] = useState(false);
+
   // Load company id once
   useEffect(() => {
     if (!isOpen) return;
@@ -513,6 +526,51 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       setCompanyId(profile?.company_id ?? null);
     })();
   }, [isOpen]);
+
+  // ---- Bloco 5: fetch & suggest templates when service/company changes ----
+  useEffect(() => {
+    if (!isOpen || !state.service || !companyId) return;
+    const svc = findService(state.service);
+    if (!svc) return;
+    (async () => {
+      setLoadingSuggested(true);
+      try {
+        const all = await fetchLibrary();
+        const suggested = suggestTemplatesForWizard(all, svc.processType, companyId);
+        setSuggestedTemplates(suggested);
+        // Pre-select all required; clear stale optional toggles
+        setSelectedOptionalIds(new Set());
+        setIgnoredOptionalIds(new Set());
+        await logLibraryEvent("process_templates_suggested", {
+          process_type: svc.processType,
+          required: suggested.filter((s) => s.is_required).map((s) => s.id),
+          optional: suggested.filter((s) => !s.is_required).map((s) => s.id),
+        });
+      } catch (e) {
+        console.warn("[Bloco 5 suggest] failed", e);
+      } finally {
+        setLoadingSuggested(false);
+      }
+    })();
+  }, [isOpen, state.service, companyId]);
+
+  const toggleOptional = (tplId: string, select: boolean) => {
+    setSelectedOptionalIds((prev) => {
+      const next = new Set(prev);
+      if (select) next.add(tplId); else next.delete(tplId);
+      return next;
+    });
+    setIgnoredOptionalIds((prev) => {
+      const next = new Set(prev);
+      if (select) next.delete(tplId); else next.add(tplId);
+      return next;
+    });
+    logLibraryEvent(
+      select ? "process_document_optional_selected" : "process_document_optional_ignored",
+      { template_id: tplId },
+    );
+  };
+
 
   // Poll OCR jobs for any docs still in 'ocr' status
   useEffect(() => {
@@ -666,9 +724,32 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       const names = notApproved.map((n) => n.name).join(", ") || "todos";
       toast.error(`Existem documentos pendentes de aprovação: ${names}`);
       console.warn("[DOCUMENT_FINAL_GENERATION_BLOCKED]", { notApproved: notApproved.map((n) => n.name) });
+      await logLibraryEvent("process_final_pdf_blocked", { reason: "review_not_approved", names });
       dispatch({ type: "GENERATING", on: false });
       return;
     }
+
+    // ---- Bloco 5: bloquear se há templates obrigatórios da biblioteca sem aprovação ----
+    const requiredLibrary = suggestedTemplates.filter((t) => t.is_required);
+    const missingRequired = requiredLibrary.filter((tpl) => {
+      // Considera aprovado se há um reviewDoc com nome equivalente OK,
+      // OU se o usuário marcou explicitamente o template como aceito (required = sempre incluído)
+      return !state.reviewDocs.some((r) => r.status === "approved" && r.name.toLowerCase().includes((tpl.name || "").toLowerCase().slice(0, 6)));
+    });
+    if (missingRequired.length > 0) {
+      const labels = missingRequired.map((m) => m.name).join(", ");
+      toast.error(`Faltam documentos obrigatórios da biblioteca: ${labels}`);
+      await logLibraryEvent("process_final_pdf_blocked", {
+        reason: "library_required_missing",
+        templates: missingRequired.map((m) => m.id),
+      });
+      await logLibraryEvent("process_document_approval_required", {
+        templates: missingRequired.map((m) => m.id),
+      });
+      dispatch({ type: "GENERATING", on: false });
+      return;
+    }
+
     try {
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData.user?.id ?? null;
@@ -789,6 +870,26 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       console.log("[PROCESS_INSERT_OK]", { processId: proc.id, customerId, vesselId, companyId });
       console.log("[PROCESS_CREATED]", proc.id);
       dispatch({ type: "LOG", line: `✓ Processo criado: ${proc.id.slice(0, 8)}` });
+
+      // ---- Bloco 5: persistir process_documents (sugeridos da biblioteca) ----
+      try {
+        const { inserted } = await persistProcessDocuments({
+          processId: proc.id,
+          companyId,
+          userId,
+          templates: suggestedTemplates,
+          selectedOptionalIds,
+          ignoredOptionalIds,
+        });
+        if (inserted > 0) {
+          dispatch({ type: "LOG", line: `✓ ${inserted} documento(s) da biblioteca vinculado(s)` });
+        }
+        await logLibraryEvent("process_final_pdf_unlocked", { process_id: proc.id, inserted });
+      } catch (e: any) {
+        console.warn("[Bloco 5 process_documents] persist failed", e);
+        dispatch({ type: "LOG", line: `⚠ Falha ao vincular documentos da biblioteca: ${e.message}` });
+      }
+
 
       // Link uploaded OCR/source files to process, customer and vessel so all modals can list them.
       const allDocs = [...state.personalDocs, ...state.addressDocs, ...state.vesselDocs].filter((d) => d.status !== "failed");
@@ -1130,7 +1231,15 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             />
           )}
           {state.step === 5 && service && (
-            <Step4 service={service} state={state} />
+            <Step4
+              service={service}
+              state={state}
+              suggestedTemplates={suggestedTemplates}
+              loadingSuggested={loadingSuggested}
+              selectedOptionalIds={selectedOptionalIds}
+              ignoredOptionalIds={ignoredOptionalIds}
+              onToggleOptional={toggleOptional}
+            />
           )}
           {state.step === 6 && service && (
             <Step5Review
@@ -1515,16 +1624,33 @@ function Step3({ service, docs, vessel, onUpload, onChange, fileInputRef }: {
   );
 }
 
-function Step4({ service, state }: { service: ServiceDef; state: WizardState }) {
+function Step4({
+  service,
+  state,
+  suggestedTemplates,
+  loadingSuggested,
+  selectedOptionalIds,
+  ignoredOptionalIds,
+  onToggleOptional,
+}: {
+  service: ServiceDef;
+  state: WizardState;
+  suggestedTemplates: SuggestedTemplate[];
+  loadingSuggested: boolean;
+  selectedOptionalIds: Set<string>;
+  ignoredOptionalIds: Set<string>;
+  onToggleOptional: (tplId: string, select: boolean) => void;
+}) {
   const identityOk = !service.needsPersonal || state.personalDocs.some((d) => d.status === "done" || d.status === "ocr") || !!state.customer.name;
   const addressOk = !service.needsPersonal || state.addressDocs.some((d) => d.status === "done" || d.status === "ocr") || !!state.customer.address;
   const vesselOk = !service.needsVessel || state.vesselDocs.some((d) => d.status === "done" || d.status === "ocr") || !!state.vessel.name;
-  console.log("[PROCESS_FIRST_UX_IMPROVED]", { identityOk, addressOk, vesselOk });
+  const required = suggestedTemplates.filter((t) => t.is_required);
+  const optional = suggestedTemplates.filter((t) => !t.is_required);
   return (
     <div>
       <h3 className="text-lg font-black text-navy mb-1">Montagem inteligente</h3>
       <p className="text-sm text-slate-500 mb-4">Para <strong>{service.name}</strong>, vamos precisar de:</p>
-      <div className="space-y-2">
+      <div className="space-y-2 mb-6">
         {service.needsPersonal && <Check label="Documento de identificação enviado" ok={identityOk} />}
         {service.needsPersonal && <Check label="Comprovante de residência enviado" ok={addressOk} />}
         {service.needsVessel && <Check label="Documentos da embarcação enviados" ok={vesselOk} />}
@@ -1532,9 +1658,108 @@ function Step4({ service, state }: { service: ServiceDef; state: WizardState }) 
           <Check key={d} label={`${d} — será gerado automaticamente`} ok={true} info />
         ))}
       </div>
+
+      {/* ---- Bloco 5: Documentos sugeridos da Biblioteca Nacional ---- */}
+      <div className="mt-6 border-t border-slate-100 pt-5">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-black uppercase tracking-wider text-navy">
+            Documentos sugeridos para este processo
+          </h4>
+          {loadingSuggested && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
+        </div>
+        {!loadingSuggested && suggestedTemplates.length === 0 && (
+          <div className="text-xs text-slate-500 bg-slate-50 rounded-xl p-4">
+            Nenhum modelo na Biblioteca Nacional corresponde a este tipo de processo ainda.
+          </div>
+        )}
+        {required.length > 0 && (
+          <div className="mb-4">
+            <p className="text-[10px] font-black uppercase tracking-wider text-red-600 mb-2">Obrigatórios</p>
+            <div className="space-y-2">
+              {required.map((t) => (
+                <SuggestedRow key={t.id} tpl={t} checked disabled />
+              ))}
+            </div>
+          </div>
+        )}
+        {optional.length > 0 && (
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">Opcionais</p>
+            <div className="space-y-2">
+              {optional.map((t) => {
+                const checked = selectedOptionalIds.has(t.id);
+                return (
+                  <SuggestedRow
+                    key={t.id}
+                    tpl={t}
+                    checked={checked}
+                    onChange={(v) => onToggleOptional(t.id, v)}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {suggestedTemplates.length > 0 && (
+          <p className="text-[10px] text-slate-400 mt-3">
+            Os obrigatórios são incluídos automaticamente. Opcionais marcados serão criados; desmarcados ficam como <em>ignorados</em> e não bloqueiam o processo.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
+
+function SuggestedRow({
+  tpl,
+  checked,
+  disabled,
+  onChange,
+}: {
+  tpl: SuggestedTemplate;
+  checked: boolean;
+  disabled?: boolean;
+  onChange?: (v: boolean) => void;
+}) {
+  const orgao = tpl.metadata?.orgao || tpl.metadata?.órgão || null;
+  const mandatoryFields: string[] = tpl.metadata?.mandatory_fields || [];
+  const deps: string[] = tpl.metadata?.dependencies || [];
+  return (
+    <label
+      className={`flex items-start gap-3 p-3 rounded-xl border ${
+        checked ? "border-primary bg-primary/5" : "border-slate-200 bg-white"
+      } ${disabled ? "opacity-90" : "cursor-pointer hover:border-slate-300"}`}
+    >
+      <input
+        type="checkbox"
+        className="mt-1 h-4 w-4 accent-primary"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange?.(e.target.checked)}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-bold text-navy">{tpl.name}</span>
+          {tpl.code && <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded font-mono">{tpl.code}</span>}
+          {orgao && <span className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-bold">{orgao}</span>}
+          {disabled && <span className="text-[10px] px-2 py-0.5 bg-red-50 text-red-700 rounded font-bold">Obrigatório</span>}
+        </div>
+        <p className="text-[11px] text-slate-500 mt-0.5">{tpl.reason}</p>
+        {mandatoryFields.length > 0 && (
+          <p className="text-[10px] text-amber-700 mt-1">
+            <strong>Campos obrigatórios:</strong> {mandatoryFields.join(", ")}
+          </p>
+        )}
+        {deps.length > 0 && (
+          <p className="text-[10px] text-slate-500 mt-0.5">
+            <strong>Depende de:</strong> {deps.join(", ")}
+          </p>
+        )}
+      </div>
+    </label>
+  );
+}
+
 
 function Check({ label, ok, info }: { label: string; ok: boolean; info?: boolean }) {
   return (

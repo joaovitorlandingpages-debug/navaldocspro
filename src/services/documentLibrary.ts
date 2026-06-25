@@ -44,6 +44,60 @@ export const STATUS_COLOR: Record<DocStatus, string> = {
   rejected: "bg-red-100 text-red-700",
 };
 
+// ---- Bloco 5: Process document statuses (storage layer) ----
+export type ProcessDocStatus =
+  | "pendente"
+  | "em_preenchimento"
+  | "aguardando_revisao"
+  | "aguardando_aprovacao"
+  | "aprovado"
+  | "pdf_gerado"
+  | "rejeitado"
+  | "ignorado";
+
+export const PROCESS_DOC_STATUS_LABELS: Record<ProcessDocStatus, string> = {
+  pendente: "Pendente",
+  em_preenchimento: "Em preenchimento",
+  aguardando_revisao: "Aguardando revisão",
+  aguardando_aprovacao: "Aguardando aprovação",
+  aprovado: "Aprovado",
+  pdf_gerado: "PDF gerado",
+  rejeitado: "Rejeitado",
+  ignorado: "Ignorado",
+};
+
+export type SuggestedTemplate = LibraryTemplate & {
+  is_required: boolean;
+  reason: string;
+};
+
+export function suggestTemplatesForWizard(
+  all: LibraryTemplate[],
+  processType: string | null | undefined,
+  companyId: string | null,
+): SuggestedTemplate[] {
+  if (!processType) return [];
+  const norm = processType.toLowerCase();
+  const visible = all.filter(
+    (t) => t.is_global || (companyId && t.company_id === companyId),
+  );
+  return visible
+    .filter((t) => {
+      const pt = (t.process_type || "").toLowerCase();
+      return pt === "geral" || norm.includes(pt) || pt.includes(norm);
+    })
+    .map((t) => {
+      const mandatory = !!t.metadata?.mandatory_in_process;
+      const pt = (t.process_type || "").toLowerCase();
+      const reason = mandatory
+        ? `Obrigatório para ${t.process_type || "este processo"}`
+        : pt === "geral"
+          ? "Sugerido (modelo geral)"
+          : `Sugerido para ${t.process_type}`;
+      return { ...t, is_required: mandatory, reason };
+    });
+}
+
 export async function fetchLibrary(): Promise<LibraryTemplate[]> {
   const { data, error } = await supabase
     .from("document_templates")
@@ -91,7 +145,15 @@ export async function logLibraryEvent(
     | "process_required_document_missing"
     | "process_document_status_changed"
     | "process_library_validation_passed"
-    | "process_library_validation_failed",
+    | "process_library_validation_failed"
+    | "process_templates_suggested"
+    | "process_document_created"
+    | "process_document_optional_selected"
+    | "process_document_optional_ignored"
+    | "process_document_duplicate_skipped"
+    | "process_document_approval_required"
+    | "process_final_pdf_blocked"
+    | "process_final_pdf_unlocked",
   metadata: Record<string, any> = {},
 ) {
   try {
@@ -103,9 +165,12 @@ export async function logLibraryEvent(
       .maybeSingle();
     await supabase.from("document_generation_logs").insert({
       event_type: eventType,
-      severity: eventType.includes("missing") || eventType.includes("failed")
-        ? "warning"
-        : "info",
+      severity:
+        eventType.includes("missing") ||
+        eventType.includes("failed") ||
+        eventType.includes("blocked")
+          ? "warning"
+          : "info",
       message: `[library] ${eventType}`,
       metadata,
       user_id: auth.user?.id,
@@ -117,3 +182,57 @@ export async function logLibraryEvent(
     console.warn("[library log failed]", e);
   }
 }
+
+// ---- Bloco 5: persist suggested/selected docs into process_documents ----
+export async function persistProcessDocuments(args: {
+  processId: string;
+  companyId: string;
+  userId: string | null;
+  templates: SuggestedTemplate[];
+  selectedOptionalIds: Set<string>;
+  ignoredOptionalIds: Set<string>;
+}) {
+  const { processId, companyId, userId, templates, selectedOptionalIds, ignoredOptionalIds } = args;
+  // Skip duplicates
+  const { data: existing } = await (supabase as any)
+    .from("process_documents")
+    .select("template_id")
+    .eq("process_id", processId);
+  const existingIds = new Set<string>((existing || []).map((r: any) => r.template_id));
+  const rows: any[] = [];
+  for (const tpl of templates) {
+    if (existingIds.has(tpl.id)) {
+      await logLibraryEvent("process_document_duplicate_skipped", {
+        process_id: processId, template_id: tpl.id, template_name: tpl.name,
+      });
+      continue;
+    }
+    const isIgnored = !tpl.is_required && ignoredOptionalIds.has(tpl.id);
+    const isIncluded = tpl.is_required || selectedOptionalIds.has(tpl.id);
+    if (!isIncluded && !isIgnored) continue;
+    rows.push({
+      process_id: processId,
+      template_id: tpl.id,
+      company_id: companyId,
+      status: isIgnored ? "ignorado" : "pendente",
+      is_required: tpl.is_required,
+      source: tpl.is_required ? "required_auto" : "optional_selected",
+      selected_by: userId,
+      metadata: { reason: tpl.reason, template_name: tpl.name, template_code: tpl.code } as any,
+    });
+  }
+  if (rows.length === 0) return { inserted: 0 };
+  const { error } = await (supabase as any).from("process_documents").insert(rows);
+  if (error) {
+    console.error("[process_documents insert]", error);
+    throw error;
+  }
+  for (const r of rows) {
+    await logLibraryEvent("process_document_created", {
+      process_id: processId, template_id: r.template_id,
+      status: r.status, is_required: r.is_required,
+    });
+  }
+  return { inserted: rows.length };
+}
+
