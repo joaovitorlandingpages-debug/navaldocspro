@@ -172,6 +172,7 @@ function DashboardLayout() {
       { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
       { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
       { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
+      { name: "Identidade Corporativa", icon: <Award className="h-5 w-5" />, path: "/identidade" },
       { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
     ]},
     { group: "Comercial & Evolução", items: [
