@@ -672,6 +672,10 @@ function ProcessDetail() {
                     <ProcessTimeline events={timelineEvents} />
                   </div>
                </TabsContent>
+
+               <TabsContent value="client_portal" className="animate-in fade-in duration-300">
+                 <ClientPortalPanel processId={id} />
+               </TabsContent>
             </Tabs>
          </div>
 
