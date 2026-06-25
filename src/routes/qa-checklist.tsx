@@ -49,13 +49,13 @@ const STEPS: Step[] = [
 
 const STORAGE_KEY = "qa-checklist-naval-v1";
 
-type Record = { status: Status; note: string; evidence: string };
+type QARecord = { status: Status; note: string; evidence: string };
 
-function emptyState(): Record[] {
+function emptyState(): QARecord[] {
   return STEPS.map(() => ({ status: "pendente" as Status, note: "", evidence: "" }));
 }
 
-const STATUS_STYLES: Record<Status, string> & { [k: string]: string } = {
+const STATUS_STYLES: Record<Status, string> = {
   pendente: "bg-muted text-muted-foreground",
   ok: "bg-green-500/15 text-green-700 dark:text-green-400",
   falha: "bg-red-500/15 text-red-700 dark:text-red-400",
@@ -63,7 +63,7 @@ const STATUS_STYLES: Record<Status, string> & { [k: string]: string } = {
 } as any;
 
 function QAChecklistPage() {
-  const [records, setRecords] = useState<Record[]>(emptyState);
+  const [records, setRecords] = useState<QARecord[]>(emptyState);
 
   useEffect(() => {
     try {
@@ -85,7 +85,7 @@ function QAChecklistPage() {
     return c;
   }, [records]);
 
-  const update = (idx: number, patch: Partial<Record>) => {
+  const update = (idx: number, patch: Partial<QARecord>) => {
     setRecords((prev) => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
   };
 
