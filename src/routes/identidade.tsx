@@ -83,27 +83,62 @@ function IdentidadePage() {
     })();
   }, [companyId]);
 
+  const ACCEPTED = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
+  const MAX_BYTES = 5 * 1024 * 1024;
+
   const upload = async (field: keyof BrandingFields, file: File) => {
-    if (!companyId) return;
+    if (!companyId) {
+      toast.error("Empresa não identificada");
+      return;
+    }
+    if (!ACCEPTED.includes(file.type)) {
+      toast.error("Formato inválido. Use PNG, JPG, WEBP ou SVG.");
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      toast.error("Arquivo muito grande. Máximo 5 MB.");
+      return;
+    }
     setUploadingField(field);
     try {
-      const ext = file.name.split(".").pop() || "png";
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
       const path = `${companyId}/${field}-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("company-branding")
         .upload(path, file, { upsert: true, contentType: file.type });
       if (upErr) throw upErr;
-      const { data: signed } = await supabase.storage
+      const { data: signed, error: signErr } = await supabase.storage
         .from("company-branding")
         .createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (signErr) throw signErr;
       const url = signed?.signedUrl || path;
+      const { error: dbErr } = await supabase
+        .from("companies")
+        .update({ [field]: url } as any)
+        .eq("id", companyId);
+      if (dbErr) throw dbErr;
       setData((d) => ({ ...d, [field]: url }));
-      toast.success("Arquivo enviado");
+      toast.success("Arquivo enviado e salvo");
     } catch (e: any) {
       toast.error(e.message || "Falha no upload");
     } finally {
       setUploadingField(null);
     }
+  };
+
+  const clearField = async (field: keyof BrandingFields) => {
+    if (!companyId) return;
+    if (!confirm("Remover este arquivo?")) return;
+    const { error } = await supabase
+      .from("companies")
+      .update({ [field]: null } as any)
+      .eq("id", companyId);
+    if (error) {
+      toast.error("Erro ao remover: " + error.message);
+      return;
+    }
+    setData((d) => ({ ...d, [field]: null }));
+    toast.success("Removido");
   };
 
   const save = async () => {
@@ -147,14 +182,14 @@ function IdentidadePage() {
               value={data.logo_primary_url}
               busy={uploadingField === "logo_primary_url"}
               onFile={(f) => upload("logo_primary_url", f)}
-              onClear={() => setData((d) => ({ ...d, logo_primary_url: null }))}
+              onClear={() => clearField("logo_primary_url")}
             />
             <UploadField
               label="Logo secundário (opcional)"
               value={data.logo_secondary_url}
               busy={uploadingField === "logo_secondary_url"}
               onFile={(f) => upload("logo_secondary_url", f)}
-              onClear={() => setData((d) => ({ ...d, logo_secondary_url: null }))}
+              onClear={() => clearField("logo_secondary_url")}
             />
           </div>
         </Section>
@@ -200,21 +235,21 @@ function IdentidadePage() {
               value={data.signature_url}
               busy={uploadingField === "signature_url"}
               onFile={(f) => upload("signature_url", f)}
-              onClear={() => setData((d) => ({ ...d, signature_url: null }))}
+              onClear={() => clearField("signature_url")}
             />
             <UploadField
               label="Carimbo"
               value={data.stamp_url}
               busy={uploadingField === "stamp_url"}
               onFile={(f) => upload("stamp_url", f)}
-              onClear={() => setData((d) => ({ ...d, stamp_url: null }))}
+              onClear={() => clearField("stamp_url")}
             />
             <UploadField
               label="Marca d'água (PDF)"
               value={data.watermark_url}
               busy={uploadingField === "watermark_url"}
               onFile={(f) => upload("watermark_url", f)}
-              onClear={() => setData((d) => ({ ...d, watermark_url: null }))}
+              onClear={() => clearField("watermark_url")}
             />
           </div>
         </Section>
@@ -293,32 +328,71 @@ function UploadField({
   onClear: () => void;
 }) {
   const ref = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const openPicker = () => {
+    if (busy) return;
+    ref.current?.click();
+  };
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (busy) return;
+    const f = e.dataTransfer.files?.[0];
+    if (f) onFile(f);
+  };
   return (
     <div>
       <Label className="text-xs">{label}</Label>
-      <div className="mt-1.5 rounded-xl border border-dashed border-slate-300 p-4 bg-slate-50 flex flex-col items-center justify-center min-h-[140px]">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={openPicker}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openPicker();
+          }
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        className={`mt-1.5 rounded-xl border-2 border-dashed p-4 flex flex-col items-center justify-center min-h-[140px] transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-primary/40 ${
+          dragOver ? "border-primary bg-primary/5" : "border-slate-300 bg-slate-50 hover:bg-slate-100"
+        } ${busy ? "opacity-60 cursor-wait" : ""}`}
+      >
         {value ? (
           <>
             <img src={value} alt={label} className="max-h-20 max-w-full object-contain mb-2" />
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => ref.current?.click()} disabled={busy}>
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+              <Button size="sm" variant="outline" onClick={openPicker} disabled={busy} type="button">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Trocar
               </Button>
-              <Button size="sm" variant="ghost" onClick={onClear} disabled={busy}>
+              <Button size="sm" variant="ghost" onClick={onClear} disabled={busy} type="button">
                 Remover
               </Button>
             </div>
           </>
         ) : (
-          <Button variant="outline" size="sm" onClick={() => ref.current?.click()} disabled={busy}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
-            Enviar arquivo
-          </Button>
+          <div className="flex flex-col items-center text-center pointer-events-none">
+            {busy ? (
+              <Loader2 className="h-6 w-6 animate-spin text-primary mb-2" />
+            ) : (
+              <Upload className="h-6 w-6 text-slate-400 mb-2" />
+            )}
+            <p className="text-sm font-medium text-slate-700">
+              {busy ? "Enviando..." : "Clique ou arraste uma imagem"}
+            </p>
+            <p className="text-[11px] text-slate-500 mt-0.5">PNG, JPG, WEBP ou SVG · até 5 MB</p>
+          </div>
         )}
         <input
           ref={ref}
           type="file"
-          accept="image/*"
+          accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0];
