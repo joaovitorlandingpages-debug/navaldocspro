@@ -44,6 +44,60 @@ export const STATUS_COLOR: Record<DocStatus, string> = {
   rejected: "bg-red-100 text-red-700",
 };
 
+// ---- Bloco 5: Process document statuses (storage layer) ----
+export type ProcessDocStatus =
+  | "pendente"
+  | "em_preenchimento"
+  | "aguardando_revisao"
+  | "aguardando_aprovacao"
+  | "aprovado"
+  | "pdf_gerado"
+  | "rejeitado"
+  | "ignorado";
+
+export const PROCESS_DOC_STATUS_LABELS: Record<ProcessDocStatus, string> = {
+  pendente: "Pendente",
+  em_preenchimento: "Em preenchimento",
+  aguardando_revisao: "Aguardando revisão",
+  aguardando_aprovacao: "Aguardando aprovação",
+  aprovado: "Aprovado",
+  pdf_gerado: "PDF gerado",
+  rejeitado: "Rejeitado",
+  ignorado: "Ignorado",
+};
+
+export type SuggestedTemplate = LibraryTemplate & {
+  is_required: boolean;
+  reason: string;
+};
+
+export function suggestTemplatesForWizard(
+  all: LibraryTemplate[],
+  processType: string | null | undefined,
+  companyId: string | null,
+): SuggestedTemplate[] {
+  if (!processType) return [];
+  const norm = processType.toLowerCase();
+  const visible = all.filter(
+    (t) => t.is_global || (companyId && t.company_id === companyId),
+  );
+  return visible
+    .filter((t) => {
+      const pt = (t.process_type || "").toLowerCase();
+      return pt === "geral" || norm.includes(pt) || pt.includes(norm);
+    })
+    .map((t) => {
+      const mandatory = !!t.metadata?.mandatory_in_process;
+      const pt = (t.process_type || "").toLowerCase();
+      const reason = mandatory
+        ? `Obrigatório para ${t.process_type || "este processo"}`
+        : pt === "geral"
+          ? "Sugerido (modelo geral)"
+          : `Sugerido para ${t.process_type}`;
+      return { ...t, is_required: mandatory, reason };
+    });
+}
+
 export async function fetchLibrary(): Promise<LibraryTemplate[]> {
   const { data, error } = await supabase
     .from("document_templates")
