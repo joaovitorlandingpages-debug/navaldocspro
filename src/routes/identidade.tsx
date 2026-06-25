@@ -83,27 +83,62 @@ function IdentidadePage() {
     })();
   }, [companyId]);
 
+  const ACCEPTED = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
+  const MAX_BYTES = 5 * 1024 * 1024;
+
   const upload = async (field: keyof BrandingFields, file: File) => {
-    if (!companyId) return;
+    if (!companyId) {
+      toast.error("Empresa não identificada");
+      return;
+    }
+    if (!ACCEPTED.includes(file.type)) {
+      toast.error("Formato inválido. Use PNG, JPG, WEBP ou SVG.");
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      toast.error("Arquivo muito grande. Máximo 5 MB.");
+      return;
+    }
     setUploadingField(field);
     try {
-      const ext = file.name.split(".").pop() || "png";
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
       const path = `${companyId}/${field}-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("company-branding")
         .upload(path, file, { upsert: true, contentType: file.type });
       if (upErr) throw upErr;
-      const { data: signed } = await supabase.storage
+      const { data: signed, error: signErr } = await supabase.storage
         .from("company-branding")
         .createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (signErr) throw signErr;
       const url = signed?.signedUrl || path;
+      const { error: dbErr } = await supabase
+        .from("companies")
+        .update({ [field]: url } as any)
+        .eq("id", companyId);
+      if (dbErr) throw dbErr;
       setData((d) => ({ ...d, [field]: url }));
-      toast.success("Arquivo enviado");
+      toast.success("Arquivo enviado e salvo");
     } catch (e: any) {
       toast.error(e.message || "Falha no upload");
     } finally {
       setUploadingField(null);
     }
+  };
+
+  const clearField = async (field: keyof BrandingFields) => {
+    if (!companyId) return;
+    if (!confirm("Remover este arquivo?")) return;
+    const { error } = await supabase
+      .from("companies")
+      .update({ [field]: null } as any)
+      .eq("id", companyId);
+    if (error) {
+      toast.error("Erro ao remover: " + error.message);
+      return;
+    }
+    setData((d) => ({ ...d, [field]: null }));
+    toast.success("Removido");
   };
 
   const save = async () => {
