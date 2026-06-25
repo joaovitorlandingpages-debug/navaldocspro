@@ -64,7 +64,10 @@ function IdentidadePage() {
   const [uploadingField, setUploadingField] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!companyId) return;
+    if (!companyId) {
+      setLoading(false);
+      return;
+    }
     (async () => {
       setLoading(true);
       const { data: row, error } = await supabase
