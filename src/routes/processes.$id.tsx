@@ -583,7 +583,7 @@ function ProcessDetail() {
                </TabsContent>
                
                <TabsContent value="dossier_v2" className="animate-in fade-in duration-500">
-                  <ProcessDossierTab processId={id} />
+                  <ProcessFinalDossierTab processId={id} />
                </TabsContent>
 
                 <TabsContent value="requirements" className="space-y-8 animate-in fade-in duration-300">
