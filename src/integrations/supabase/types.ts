@@ -1076,6 +1076,51 @@ export type Database = {
           },
         ]
       }
+      document_generation_logs: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          document_name: string | null
+          document_template_id: string | null
+          event_type: string
+          generated_document_id: string | null
+          id: string
+          message: string | null
+          metadata: Json
+          process_id: string | null
+          severity: string
+          user_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          document_name?: string | null
+          document_template_id?: string | null
+          event_type: string
+          generated_document_id?: string | null
+          id?: string
+          message?: string | null
+          metadata?: Json
+          process_id?: string | null
+          severity?: string
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          document_name?: string | null
+          document_template_id?: string | null
+          event_type?: string
+          generated_document_id?: string | null
+          id?: string
+          message?: string | null
+          metadata?: Json
+          process_id?: string | null
+          severity?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       document_library_imports: {
         Row: {
           company_id: string | null
@@ -1314,11 +1359,56 @@ export type Database = {
           },
         ]
       }
+      document_template_rules: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          is_active: boolean
+          rule_expression: Json
+          rule_key: string
+          rule_type: string
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          is_active?: boolean
+          rule_expression?: Json
+          rule_key: string
+          rule_type: string
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          is_active?: boolean
+          rule_expression?: Json
+          rule_key?: string
+          rule_type?: string
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_template_rules_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_templates: {
         Row: {
           base_content: string | null
           category: string | null
           category_id: string | null
+          code: string | null
           company_id: string | null
           created_at: string
           description: string | null
@@ -1328,6 +1418,7 @@ export type Database = {
           file_type: string | null
           id: string
           is_active: boolean | null
+          is_global: boolean
           metadata: Json | null
           name: string
           ocr_enabled: boolean | null
@@ -1346,6 +1437,7 @@ export type Database = {
           base_content?: string | null
           category?: string | null
           category_id?: string | null
+          code?: string | null
           company_id?: string | null
           created_at?: string
           description?: string | null
@@ -1355,6 +1447,7 @@ export type Database = {
           file_type?: string | null
           id?: string
           is_active?: boolean | null
+          is_global?: boolean
           metadata?: Json | null
           name: string
           ocr_enabled?: boolean | null
@@ -1373,6 +1466,7 @@ export type Database = {
           base_content?: string | null
           category?: string | null
           category_id?: string | null
+          code?: string | null
           company_id?: string | null
           created_at?: string
           description?: string | null
@@ -1382,6 +1476,7 @@ export type Database = {
           file_type?: string | null
           id?: string
           is_active?: boolean | null
+          is_global?: boolean
           metadata?: Json | null
           name?: string
           ocr_enabled?: boolean | null
