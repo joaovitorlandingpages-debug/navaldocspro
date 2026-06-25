@@ -15,6 +15,7 @@ import { Route as SupportRouteImport } from './routes/support'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SalesCenterRouteImport } from './routes/sales-center'
+import { Route as QaChecklistRouteImport } from './routes/qa-checklist'
 import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PredictionsRouteImport } from './routes/predictions'
 import { Route as PlansRouteImport } from './routes/plans'
@@ -125,6 +126,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const SalesCenterRoute = SalesCenterRouteImport.update({
   id: '/sales-center',
   path: '/sales-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QaChecklistRoute = QaChecklistRouteImport.update({
+  id: '/qa-checklist',
+  path: '/qa-checklist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProcessesRoute = ProcessesRouteImport.update({
@@ -575,6 +581,7 @@ export interface FileRoutesByFullPath {
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
   '/processes': typeof ProcessesRouteWithChildren
+  '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
@@ -662,6 +669,7 @@ export interface FileRoutesByTo {
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
   '/processes': typeof ProcessesRouteWithChildren
+  '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
@@ -752,6 +760,7 @@ export interface FileRoutesById {
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
   '/processes': typeof ProcessesRouteWithChildren
+  '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
@@ -843,6 +852,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/predictions'
     | '/processes'
+    | '/qa-checklist'
     | '/sales-center'
     | '/settings'
     | '/status'
@@ -930,6 +940,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/predictions'
     | '/processes'
+    | '/qa-checklist'
     | '/sales-center'
     | '/settings'
     | '/status'
@@ -1019,6 +1030,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/predictions'
     | '/processes'
+    | '/qa-checklist'
     | '/sales-center'
     | '/settings'
     | '/status'
@@ -1109,6 +1121,7 @@ export interface RootRouteChildren {
   PlansRoute: typeof PlansRoute
   PredictionsRoute: typeof PredictionsRoute
   ProcessesRoute: typeof ProcessesRouteWithChildren
+  QaChecklistRoute: typeof QaChecklistRoute
   SalesCenterRoute: typeof SalesCenterRoute
   SettingsRoute: typeof SettingsRoute
   StatusRoute: typeof StatusRoute
@@ -1168,6 +1181,13 @@ declare module '@tanstack/react-router' {
       path: '/sales-center'
       fullPath: '/sales-center'
       preLoaderRoute: typeof SalesCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qa-checklist': {
+      id: '/qa-checklist'
+      path: '/qa-checklist'
+      fullPath: '/qa-checklist'
+      preLoaderRoute: typeof QaChecklistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/processes': {
@@ -1886,6 +1906,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlansRoute: PlansRoute,
   PredictionsRoute: PredictionsRoute,
   ProcessesRoute: ProcessesRouteWithChildren,
+  QaChecklistRoute: QaChecklistRoute,
   SalesCenterRoute: SalesCenterRoute,
   SettingsRoute: SettingsRoute,
   StatusRoute: StatusRoute,
