@@ -87,6 +87,7 @@ import { Route as AdminFrontendErrorsRouteImport } from './routes/admin/frontend
 import { Route as AdminFieldValidationReportRouteImport } from './routes/admin/field-validation-report'
 import { Route as AdminExecutiveOverviewRouteImport } from './routes/admin/executive-overview'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
+import { Route as AdminDocumentosRouteImport } from './routes/admin/documentos'
 import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
 import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
 import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
@@ -487,6 +488,11 @@ const AdminDocumentsRoute = AdminDocumentsRouteImport.update({
   path: '/documents',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDocumentosRoute = AdminDocumentosRouteImport.update({
+  id: '/documentos',
+  path: '/documentos',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDocumentLibraryRoute = AdminDocumentLibraryRouteImport.update({
   id: '/document-library',
   path: '/document-library',
@@ -561,6 +567,7 @@ export interface FileRoutesByFullPath {
   '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
+  '/admin/documentos': typeof AdminDocumentosRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
   '/admin/field-validation-report': typeof AdminFieldValidationReportRoute
@@ -644,6 +651,7 @@ export interface FileRoutesByTo {
   '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
+  '/admin/documentos': typeof AdminDocumentosRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
   '/admin/field-validation-report': typeof AdminFieldValidationReportRoute
@@ -730,6 +738,7 @@ export interface FileRoutesById {
   '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
+  '/admin/documentos': typeof AdminDocumentosRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
   '/admin/field-validation-report': typeof AdminFieldValidationReportRoute
@@ -817,6 +826,7 @@ export interface FileRouteTypes {
     | '/admin/commercial'
     | '/admin/companies'
     | '/admin/document-library'
+    | '/admin/documentos'
     | '/admin/documents'
     | '/admin/executive-overview'
     | '/admin/field-validation-report'
@@ -900,6 +910,7 @@ export interface FileRouteTypes {
     | '/admin/commercial'
     | '/admin/companies'
     | '/admin/document-library'
+    | '/admin/documentos'
     | '/admin/documents'
     | '/admin/executive-overview'
     | '/admin/field-validation-report'
@@ -985,6 +996,7 @@ export interface FileRouteTypes {
     | '/admin/commercial'
     | '/admin/companies'
     | '/admin/document-library'
+    | '/admin/documentos'
     | '/admin/documents'
     | '/admin/executive-overview'
     | '/admin/field-validation-report'
@@ -1623,6 +1635,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocumentsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/documentos': {
+      id: '/admin/documentos'
+      path: '/documentos'
+      fullPath: '/admin/documentos'
+      preLoaderRoute: typeof AdminDocumentosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/document-library': {
       id: '/admin/document-library'
       path: '/document-library'
@@ -1667,6 +1686,7 @@ interface AdminRouteChildren {
   AdminCommercialRoute: typeof AdminCommercialRoute
   AdminCompaniesRoute: typeof AdminCompaniesRoute
   AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
+  AdminDocumentosRoute: typeof AdminDocumentosRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminExecutiveOverviewRoute: typeof AdminExecutiveOverviewRoute
   AdminFieldValidationReportRoute: typeof AdminFieldValidationReportRoute
@@ -1694,6 +1714,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCommercialRoute: AdminCommercialRoute,
   AdminCompaniesRoute: AdminCompaniesRoute,
   AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
+  AdminDocumentosRoute: AdminDocumentosRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
   AdminExecutiveOverviewRoute: AdminExecutiveOverviewRoute,
   AdminFieldValidationReportRoute: AdminFieldValidationReportRoute,
