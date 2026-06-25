@@ -292,6 +292,121 @@ function fieldLines(label: string, input: Record<string, any>) {
     .map(([key, value]) => `${label}.${key}: ${value}`);
 }
 
+// ---------- Bloco 2: text builder + missing-field detection + edited-text PDF ----------
+
+function buildDocumentText(
+  docName: string,
+  customer: CustomerDraft,
+  vessel: VesselDraft,
+  service: ServiceDef,
+): string {
+  const has = (v: string | undefined | null) => !!(v && String(v).trim());
+  const line = (label: string, v?: string) => (has(v) ? `${label}: ${v}` : null);
+  const parts: (string | null)[] = [];
+  parts.push(docName.toUpperCase());
+  parts.push(`Emitido em ${new Date().toLocaleDateString("pt-BR")}`);
+  parts.push("");
+  parts.push("SERVIÇO");
+  parts.push(`Tipo: ${service.name}`);
+  parts.push(`Processo administrativo: ${service.processType}`);
+  parts.push("");
+  if (service.needsPersonal) {
+    parts.push("DADOS DO REQUERENTE");
+    parts.push(line("Nome", customer.name));
+    parts.push(line("CPF/CNPJ", customer.cpf_cnpj));
+    parts.push(line("RG", customer.rg));
+    parts.push(line("Endereço", customer.address));
+    parts.push(line("Cidade", customer.city));
+    parts.push(line("UF", customer.state));
+    parts.push(line("Telefone", customer.phone));
+    parts.push(line("E-mail", customer.email));
+    parts.push("");
+  }
+  if (service.needsVessel) {
+    parts.push("DADOS DA EMBARCAÇÃO");
+    parts.push(line("Nome", vessel.name));
+    parts.push(line("Inscrição", vessel.registration_number));
+    parts.push(line("Proprietário", vessel.owner_name));
+    parts.push(line("CPF/CNPJ do proprietário", vessel.owner_document));
+    parts.push(line("Tipo", vessel.vessel_type));
+    parts.push(line("Material", vessel.material));
+    parts.push(line("Comprimento (m)", vessel.length));
+    parts.push(line("Boca (m)", vessel.beam));
+    parts.push(line("Pontal (m)", vessel.depth));
+    parts.push(line("Capacidade", vessel.capacity));
+    parts.push(line("Área de navegação", vessel.navigation_area));
+    parts.push(line("Atividade", vessel.activity_service));
+    parts.push(line("Ano de construção", vessel.construction_year));
+    parts.push(line("Construtor", vessel.builder));
+    parts.push("");
+    if (/motor/i.test(docName) || has(vessel.engine_power) || has(vessel.engine_serial)) {
+      parts.push("DADOS DO MOTOR");
+      parts.push(line("Potência (HP)", vessel.engine_power));
+      parts.push(line("Número de série", vessel.engine_serial));
+      parts.push("");
+    }
+  }
+  parts.push("DECLARAÇÃO");
+  parts.push(
+    `Declaro, para os devidos fins, que as informações acima são verdadeiras e correspondem à realidade do(a) ${docName.toLowerCase()} para a solicitação de ${service.name}.`,
+  );
+  return parts.filter((v) => v !== null).join("\n");
+}
+
+function detectMissingForDoc(
+  docName: string,
+  customer: CustomerDraft,
+  vessel: VesselDraft,
+  service: ServiceDef,
+): string[] {
+  const missing: string[] = [];
+  const empty = (v: string) => !v || !v.trim();
+  if (service.needsPersonal) {
+    if (empty(customer.name)) missing.push("Nome");
+    if (empty(customer.cpf_cnpj)) missing.push("CPF/CNPJ");
+  }
+  if (service.needsVessel) {
+    if (empty(vessel.name)) missing.push("Nome da embarcação");
+    if (empty(vessel.registration_number)) missing.push("Inscrição");
+  }
+  if (/motor/i.test(docName)) {
+    if (empty(vessel.engine_power)) missing.push("Potência do motor");
+    if (empty(vessel.engine_serial)) missing.push("Série do motor");
+  }
+  return missing;
+}
+
+async function buildEditedTextPdfBytes(docName: string, content: string) {
+  const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
+  const pdfDoc = await PDFDocument.create();
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  let page = pdfDoc.addPage([595.28, 841.89]);
+  let y = 792;
+  const sanitize = (text: string) => String(text)
+    .replace(/[–—]/g, "-").replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+    .replace(/•/g, "-").replace(/[^\x09\x0A\x0D\x20-\xFF]/g, "");
+  const draw = (text: string, size = 10, isBold = false) => {
+    const safe = sanitize(text);
+    const chunks = safe.length ? (safe.match(/.{1,92}(\s|$)/g) || [safe]) : [""];
+    for (const chunk of chunks) {
+      if (y < 52) { page = pdfDoc.addPage([595.28, 841.89]); y = 792; }
+      page.drawText(chunk.trimEnd(), { x: 48, y, size, font: isBold ? bold : font, color: rgb(0, 0, 0), maxWidth: 500 });
+      y -= size + 5;
+    }
+  };
+  draw(docName.toUpperCase(), 15, true);
+  draw(`Documento revisado e aprovado em ${new Date().toLocaleString("pt-BR")}`, 9);
+  y -= 8;
+  const lines = content.split("\n");
+  for (const ln of lines) {
+    if (ln.trim() === "") { y -= 6; continue; }
+    const isHeading = /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ ]+$/.test(ln) && ln.length < 40;
+    draw(ln, isHeading ? 11 : 10, isHeading);
+  }
+  return await pdfDoc.save();
+}
+
 async function buildFallbackPdfBytes(docName: string, fieldValues: any) {
   const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
   const pdfDoc = await PDFDocument.create();
