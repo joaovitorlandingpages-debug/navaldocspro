@@ -1624,16 +1624,33 @@ function Step3({ service, docs, vessel, onUpload, onChange, fileInputRef }: {
   );
 }
 
-function Step4({ service, state }: { service: ServiceDef; state: WizardState }) {
+function Step4({
+  service,
+  state,
+  suggestedTemplates,
+  loadingSuggested,
+  selectedOptionalIds,
+  ignoredOptionalIds,
+  onToggleOptional,
+}: {
+  service: ServiceDef;
+  state: WizardState;
+  suggestedTemplates: SuggestedTemplate[];
+  loadingSuggested: boolean;
+  selectedOptionalIds: Set<string>;
+  ignoredOptionalIds: Set<string>;
+  onToggleOptional: (tplId: string, select: boolean) => void;
+}) {
   const identityOk = !service.needsPersonal || state.personalDocs.some((d) => d.status === "done" || d.status === "ocr") || !!state.customer.name;
   const addressOk = !service.needsPersonal || state.addressDocs.some((d) => d.status === "done" || d.status === "ocr") || !!state.customer.address;
   const vesselOk = !service.needsVessel || state.vesselDocs.some((d) => d.status === "done" || d.status === "ocr") || !!state.vessel.name;
-  console.log("[PROCESS_FIRST_UX_IMPROVED]", { identityOk, addressOk, vesselOk });
+  const required = suggestedTemplates.filter((t) => t.is_required);
+  const optional = suggestedTemplates.filter((t) => !t.is_required);
   return (
     <div>
       <h3 className="text-lg font-black text-navy mb-1">Montagem inteligente</h3>
       <p className="text-sm text-slate-500 mb-4">Para <strong>{service.name}</strong>, vamos precisar de:</p>
-      <div className="space-y-2">
+      <div className="space-y-2 mb-6">
         {service.needsPersonal && <Check label="Documento de identificação enviado" ok={identityOk} />}
         {service.needsPersonal && <Check label="Comprovante de residência enviado" ok={addressOk} />}
         {service.needsVessel && <Check label="Documentos da embarcação enviados" ok={vesselOk} />}
@@ -1641,9 +1658,108 @@ function Step4({ service, state }: { service: ServiceDef; state: WizardState }) 
           <Check key={d} label={`${d} — será gerado automaticamente`} ok={true} info />
         ))}
       </div>
+
+      {/* ---- Bloco 5: Documentos sugeridos da Biblioteca Nacional ---- */}
+      <div className="mt-6 border-t border-slate-100 pt-5">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-black uppercase tracking-wider text-navy">
+            Documentos sugeridos para este processo
+          </h4>
+          {loadingSuggested && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
+        </div>
+        {!loadingSuggested && suggestedTemplates.length === 0 && (
+          <div className="text-xs text-slate-500 bg-slate-50 rounded-xl p-4">
+            Nenhum modelo na Biblioteca Nacional corresponde a este tipo de processo ainda.
+          </div>
+        )}
+        {required.length > 0 && (
+          <div className="mb-4">
+            <p className="text-[10px] font-black uppercase tracking-wider text-red-600 mb-2">Obrigatórios</p>
+            <div className="space-y-2">
+              {required.map((t) => (
+                <SuggestedRow key={t.id} tpl={t} checked disabled />
+              ))}
+            </div>
+          </div>
+        )}
+        {optional.length > 0 && (
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">Opcionais</p>
+            <div className="space-y-2">
+              {optional.map((t) => {
+                const checked = selectedOptionalIds.has(t.id);
+                return (
+                  <SuggestedRow
+                    key={t.id}
+                    tpl={t}
+                    checked={checked}
+                    onChange={(v) => onToggleOptional(t.id, v)}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {suggestedTemplates.length > 0 && (
+          <p className="text-[10px] text-slate-400 mt-3">
+            Os obrigatórios são incluídos automaticamente. Opcionais marcados serão criados; desmarcados ficam como <em>ignorados</em> e não bloqueiam o processo.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
+
+function SuggestedRow({
+  tpl,
+  checked,
+  disabled,
+  onChange,
+}: {
+  tpl: SuggestedTemplate;
+  checked: boolean;
+  disabled?: boolean;
+  onChange?: (v: boolean) => void;
+}) {
+  const orgao = tpl.metadata?.orgao || tpl.metadata?.órgão || null;
+  const mandatoryFields: string[] = tpl.metadata?.mandatory_fields || [];
+  const deps: string[] = tpl.metadata?.dependencies || [];
+  return (
+    <label
+      className={`flex items-start gap-3 p-3 rounded-xl border ${
+        checked ? "border-primary bg-primary/5" : "border-slate-200 bg-white"
+      } ${disabled ? "opacity-90" : "cursor-pointer hover:border-slate-300"}`}
+    >
+      <input
+        type="checkbox"
+        className="mt-1 h-4 w-4 accent-primary"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange?.(e.target.checked)}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-bold text-navy">{tpl.name}</span>
+          {tpl.code && <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded font-mono">{tpl.code}</span>}
+          {orgao && <span className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-bold">{orgao}</span>}
+          {disabled && <span className="text-[10px] px-2 py-0.5 bg-red-50 text-red-700 rounded font-bold">Obrigatório</span>}
+        </div>
+        <p className="text-[11px] text-slate-500 mt-0.5">{tpl.reason}</p>
+        {mandatoryFields.length > 0 && (
+          <p className="text-[10px] text-amber-700 mt-1">
+            <strong>Campos obrigatórios:</strong> {mandatoryFields.join(", ")}
+          </p>
+        )}
+        {deps.length > 0 && (
+          <p className="text-[10px] text-slate-500 mt-0.5">
+            <strong>Depende de:</strong> {deps.join(", ")}
+          </p>
+        )}
+      </div>
+    </label>
+  );
+}
+
 
 function Check({ label, ok, info }: { label: string; ok: boolean; info?: boolean }) {
   return (
