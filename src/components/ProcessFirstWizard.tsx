@@ -2040,6 +2040,16 @@ function Step7Approval({
         </p>
       </div>
 
+      <TemplateGalleryPanel
+        effectiveTemplate={templateOverride ?? companyBranding?.pdf_template ?? "classico"}
+        companyDefault={companyBranding?.pdf_template ?? null}
+        primary={companyBranding?.primary_color ?? "#0a2a5e"}
+        open={showTemplateGallery}
+        onToggle={() => setShowTemplateGallery((v) => !v)}
+        onSelect={(id) => onTemplateChange(id)}
+        onResetToCompany={() => onTemplateChange(null)}
+      />
+
       {!allApproved && (
         <div className="px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
           Existem documentos pendentes de aprovação. Aprove todos para liberar a geração final.
