@@ -2224,9 +2224,7 @@ function TemplateGalleryPanel({
   onSelect: (id: string) => void;
   onResetToCompany: () => void;
 }) {
-  const PDF_TEMPLATES = require("@/services/companyBranding").PDF_TEMPLATES as Array<{
-    id: string; label: string; description: string; bestFor: string;
-  }>;
+  // PDF_TEMPLATES is imported at top of file
   const current = PDF_TEMPLATES.find((t) => t.id === effectiveTemplate) ?? PDF_TEMPLATES[0];
   return (
     <div className="border border-slate-200 rounded-2xl bg-white">
