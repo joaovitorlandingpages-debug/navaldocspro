@@ -901,7 +901,10 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       let documentRowsCount = 0;
       let mirroredFilesCount = 0;
       const { loadCompanyBranding } = await import("@/services/companyBranding");
-      const branding = await loadCompanyBranding(companyId).catch(() => null);
+      const rawBranding = await loadCompanyBranding(companyId).catch(() => null);
+      const branding = templateOverride
+        ? ({ ...(rawBranding ?? {}), pdf_template: templateOverride } as any)
+        : rawBranding;
       for (const docName of service.generatedDocs) {
         try {
           const review = state.reviewDocs.find((r) => r.name === docName);
