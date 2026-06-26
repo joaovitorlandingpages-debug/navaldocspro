@@ -210,6 +210,80 @@ export async function buildBrandedDocumentPdf(opts: {
       y -= 3;
       page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.5, color: gold });
       y -= 18;
+    } else if (template === "premium-branco") {
+      const tw = measure(title, 17, bold);
+      page.drawText(title, { x: (W - tw) / 2, y: y - 18, size: 17, font: bold, color: primary });
+      y -= 26;
+      page.drawLine({ start: { x: (W - 90) / 2, y }, end: { x: (W + 90) / 2, y }, thickness: 1, color: gold });
+      y -= 20;
+    } else if (template === "azul-profundo") {
+      page.drawText(title, { x: LEFT, y: y - 20, size: 18, font: bold, color: ink });
+      y -= 28;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.8, color: secondary });
+      y -= 20;
+    } else if (template === "oficial") {
+      page.drawText(title, { x: LEFT, y: y - 18, size: 17, font: bold, color: ink });
+      y -= 26;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1, color: secondary });
+      y -= 4;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.4, color: secondary });
+      y -= 18;
+    } else if (template === "engenharia-naval") {
+      page.drawText("MEMORIAL TÉCNICO", { x: LEFT, y: y - 10, size: 8, font: bold, color: secondary });
+      y -= 22;
+      page.drawText(title, { x: LEFT, y: y - 18, size: 16, font: bold, color: ink });
+      y -= 28;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1.4, color: secondary });
+      y -= 18;
+    } else if (template === "protocolo") {
+      const protocolo = `PROTOCOLO ${new Date().getFullYear()}/${verificationCode.slice(0, 4)}`;
+      const pw = measure(protocolo, 8, bold);
+      page.drawRectangle({ x: RIGHT_X - pw - 12, y: y - 14, width: pw + 12, height: 16, color: lightBg, borderColor: secondary, borderWidth: 0.5 });
+      page.drawText(protocolo, { x: RIGHT_X - pw - 6, y: y - 10, size: 8, font: bold, color: secondary });
+      page.drawText(title, { x: LEFT, y: y - 16, size: 15, font: bold, color: ink });
+      y -= 30;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: LEFT + 50, y }, thickness: 1, color: secondary });
+      y -= 18;
+    } else if (template === "capa-executiva") {
+      // Title rendered inside header already; here add subtitle line
+      page.drawText("DOCUMENTO OFICIAL", { x: LEFT, y: y - 8, size: 8, font: bold, color: muted });
+      y -= 20;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.6, color: lightBorder });
+      y -= 18;
+    } else if (template === "relatorio-tecnico") {
+      page.drawText("RELATÓRIO TÉCNICO", { x: LEFT, y: y - 10, size: 8.5, font: bold, color: primary });
+      y -= 22;
+      page.drawText(title, { x: LEFT, y: y - 18, size: 17, font: bold, color: ink });
+      y -= 26;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1.2, color: primary });
+      y -= 4;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: LEFT + 60, y }, thickness: 1.2, color: gold });
+      y -= 18;
+    } else if (template === "corporate-clean") {
+      page.drawRectangle({ x: LEFT, y: y - 22, width: 4, height: 22, color: primary });
+      page.drawText(title, { x: LEFT + 14, y: y - 16, size: 16, font: bold, color: ink });
+      y -= 32;
+      page.drawText(`Emitido em ${new Date().toLocaleDateString("pt-BR")}`, {
+        x: LEFT + 14, y, size: 8.5, font: italic, color: muted,
+      });
+      y -= 18;
+    } else if (template === "timbrado") {
+      page.drawText(title, { x: LEFT, y: y - 18, size: 17, font: bold, color: ink });
+      y -= 24;
+      page.drawText(`Documento emitido em ${new Date().toLocaleString("pt-BR")}`, {
+        x: LEFT, y, size: 9, font: italic, color: secondary,
+      });
+      y -= 16;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.6, color: secondary });
+      y -= 18;
+    } else if (template === "naval-premium") {
+      const tw = measure(title, 18, bold);
+      page.drawText(title, { x: (W - tw) / 2, y: y - 20, size: 18, font: bold, color: ink });
+      y -= 30;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1.4, color: gold });
+      y -= 3;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.5, color: primary });
+      y -= 18;
     } else {
       // classico
       page.drawText(title, { x: LEFT, y: y - 18, size: 17, font: bold, color: ink });
