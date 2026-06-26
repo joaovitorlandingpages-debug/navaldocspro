@@ -765,6 +765,7 @@ export type Database = {
           onboarding_status: string | null
           onboarding_step: number | null
           pdf_footer_text: string | null
+          pdf_template: string
           phone: string | null
           pilot_feedback_score: number | null
           plan: string | null
@@ -808,6 +809,7 @@ export type Database = {
           onboarding_status?: string | null
           onboarding_step?: number | null
           pdf_footer_text?: string | null
+          pdf_template?: string
           phone?: string | null
           pilot_feedback_score?: number | null
           plan?: string | null
@@ -851,6 +853,7 @@ export type Database = {
           onboarding_status?: string | null
           onboarding_step?: number | null
           pdf_footer_text?: string | null
+          pdf_template?: string
           phone?: string | null
           pilot_feedback_score?: number | null
           plan?: string | null

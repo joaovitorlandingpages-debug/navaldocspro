@@ -1,0 +1,2 @@
+ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS pdf_template text NOT NULL DEFAULT 'classico';
+COMMENT ON COLUMN public.companies.pdf_template IS 'Modelo visual aplicado aos PDFs: classico, executivo, naval-azul, minimalista, laudo, checklist.';
