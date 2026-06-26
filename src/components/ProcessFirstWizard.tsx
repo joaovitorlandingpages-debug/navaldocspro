@@ -898,6 +898,8 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       let generatedCount = 0;
       let documentRowsCount = 0;
       let mirroredFilesCount = 0;
+      const { loadCompanyBranding } = await import("@/services/companyBranding");
+      const branding = await loadCompanyBranding(companyId).catch(() => null);
       for (const docName of service.generatedDocs) {
         try {
           const review = state.reviewDocs.find((r) => r.name === docName);
