@@ -517,6 +517,45 @@ export async function buildBrandedDocumentPdf(opts: {
       p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.04, 0.09, 0.2) });
       p.drawRectangle({ x: 0, y: H - headerHeight - 2, width: W, height: 2, color: gold });
       p.drawRectangle({ x: 0, y: H - headerHeight - 6, width: W, height: 1, color: gold });
+    } else if (template === "premium-branco") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(1, 1, 1) });
+      p.drawLine({ start: { x: LEFT, y: H - headerHeight + 2 }, end: { x: RIGHT_X, y: H - headerHeight + 2 }, thickness: 1.4, color: gold });
+    } else if (template === "azul-profundo") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.024, 0.125, 0.273) });
+    } else if (template === "oficial") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: secondary });
+      p.drawRectangle({ x: 0, y: H - headerHeight - 2, width: W, height: 2, color: primary });
+    } else if (template === "engenharia-naval") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: lightBg });
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: 8, height: headerHeight, color: secondary });
+      p.drawLine({ start: { x: 0, y: H - headerHeight }, end: { x: W, y: H - headerHeight }, thickness: 0.6, color: secondary });
+    } else if (template === "protocolo") {
+      p.drawLine({ start: { x: LEFT, y: H - headerHeight }, end: { x: RIGHT_X, y: H - headerHeight }, thickness: 0.8, color: secondary });
+    } else if (template === "capa-executiva") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: primary });
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: secondary, opacity: 0.5 });
+      p.drawRectangle({ x: 0, y: H - headerHeight - 3, width: W, height: 3, color: gold });
+      if (idx === 0) {
+        const title = sanitize(opts.docName).toUpperCase();
+        const tw = measure(title, 20, bold);
+        p.drawText(title, { x: (W - tw) / 2, y: H - headerHeight / 2 - 6, size: 20, font: bold, color: rgb(1, 1, 1), maxWidth: W - 80 });
+      }
+    } else if (template === "relatorio-tecnico") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: secondary });
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: primary, opacity: 0.55 });
+      p.drawRectangle({ x: 0, y: H - headerHeight - 2, width: W, height: 2, color: gold });
+    } else if (template === "corporate-clean") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(1, 1, 1) });
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: 80, height: headerHeight, color: primary });
+      p.drawLine({ start: { x: 0, y: H - headerHeight }, end: { x: W, y: H - headerHeight }, thickness: 0.4, color: lightBorder });
+    } else if (template === "timbrado") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: primary });
+      p.drawRectangle({ x: 0, y: H - headerHeight - 6, width: W, height: 4, color: secondary });
+    } else if (template === "naval-premium") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.024, 0.094, 0.22) });
+      p.drawRectangle({ x: W - 90, y: H - headerHeight, width: 90, height: headerHeight, color: primary, opacity: 0.7 });
+      p.drawRectangle({ x: 0, y: H - headerHeight - 2, width: W, height: 2, color: gold });
+      p.drawRectangle({ x: 0, y: H - headerHeight - 6, width: W, height: 1, color: gold });
     } else {
       // classico
       p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: primary });
@@ -528,7 +567,13 @@ export async function buildBrandedDocumentPdf(opts: {
       template === "naval-azul" ||
       template === "institucional" ||
       template === "moderno" ||
-      template === "luxo";
+      template === "luxo" ||
+      template === "azul-profundo" ||
+      template === "oficial" ||
+      template === "capa-executiva" ||
+      template === "relatorio-tecnico" ||
+      template === "timbrado" ||
+      template === "naval-premium";
     const headerTextColor = onDarkHeader ? rgb(1, 1, 1) : ink;
 
     // Logo or company name
