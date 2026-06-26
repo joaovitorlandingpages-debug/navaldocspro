@@ -25,6 +25,7 @@ import {
   type ServiceDef,
 } from "@/types/service-requirements";
 import { validateCriticalFields } from "@/services/documentNormalizer";
+import { PDF_TEMPLATES } from "@/services/companyBranding";
 import {
   fetchLibrary,
   suggestTemplatesForWizard,
@@ -493,6 +494,8 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   const [selectedOptionalIds, setSelectedOptionalIds] = useState<Set<string>>(new Set());
   const [ignoredOptionalIds, setIgnoredOptionalIds] = useState<Set<string>>(new Set());
   const [loadingSuggested, setLoadingSuggested] = useState(false);
+  // Template do documento (sobrescreve o padrão da empresa para esta geração)
+  const [templateOverride, setTemplateOverride] = useState<string | null>(null);
 
   // Load company id once
   useEffect(() => {
@@ -899,7 +902,10 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       let documentRowsCount = 0;
       let mirroredFilesCount = 0;
       const { loadCompanyBranding } = await import("@/services/companyBranding");
-      const branding = await loadCompanyBranding(companyId).catch(() => null);
+      const rawBranding = await loadCompanyBranding(companyId).catch(() => null);
+      const branding = templateOverride
+        ? ({ ...(rawBranding ?? {}), pdf_template: templateOverride } as any)
+        : rawBranding;
       for (const docName of service.generatedDocs) {
         try {
           const review = state.reviewDocs.find((r) => r.name === docName);
@@ -1219,6 +1225,8 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
           {state.step === 7 && service && (
             <Step7Approval
               companyId={companyId}
+              templateOverride={templateOverride}
+              onTemplateChange={setTemplateOverride}
               docs={state.reviewDocs}
               onEditSave={(name, content, reason) => dispatch({ type: "SET_REVIEW_CONTENT", name, content, reason })}
               onApprove={(name) => {
@@ -1937,6 +1945,8 @@ function SuccessCard({ icon, title, body, sub }: { icon: React.ReactNode; title:
 // ============================================================================
 function Step7Approval({
   companyId,
+  templateOverride,
+  onTemplateChange,
   docs,
   onEditSave,
   onApprove,
@@ -1944,6 +1954,8 @@ function Step7Approval({
   onRegenerate,
 }: {
   companyId: string | null;
+  templateOverride: string | null;
+  onTemplateChange: (id: string | null) => void;
   docs: ReviewDoc[];
   onEditSave: (name: string, content: string, reason?: string) => void;
   onApprove: (name: string) => void;
@@ -1956,6 +1968,8 @@ function Step7Approval({
   const [editReason, setEditReason] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [companyBranding, setCompanyBranding] = useState<any | null>(null);
+  const [showTemplateGallery, setShowTemplateGallery] = useState(false);
 
   const previewDoc = docs.find((d) => d.name === previewName) || null;
   const editDoc = docs.find((d) => d.name === editName) || null;
@@ -1974,7 +1988,11 @@ function Step7Approval({
           import("@/services/companyBranding"),
           import("@/services/brandedPdfBuilder"),
         ]);
-        const branding = companyId ? await loadCompanyBranding(companyId).catch(() => null) : null;
+        const rawBranding = companyId ? await loadCompanyBranding(companyId).catch(() => null) : null;
+        if (!cancelled) setCompanyBranding(rawBranding);
+        const branding = templateOverride
+          ? ({ ...(rawBranding ?? {}), pdf_template: templateOverride } as any)
+          : rawBranding;
         const { bytes } = await buildBrandedDocumentPdf({
           docName: previewDoc.name,
           content: previewDoc.content,
@@ -1996,7 +2014,7 @@ function Step7Approval({
       cancelled = true;
       if (createdUrl) URL.revokeObjectURL(createdUrl);
     };
-  }, [previewDoc?.name, previewDoc?.content, companyId]);
+  }, [previewDoc?.name, previewDoc?.content, companyId, templateOverride]);
 
 
   const statusBadge = (s: ReviewStatus) => {
@@ -2022,6 +2040,16 @@ function Step7Approval({
           Visualize, edite e aprove. O PDF final só será gerado a partir do texto aprovado.
         </p>
       </div>
+
+      <TemplateGalleryPanel
+        effectiveTemplate={templateOverride ?? companyBranding?.pdf_template ?? "classico"}
+        companyDefault={companyBranding?.pdf_template ?? null}
+        primary={companyBranding?.primary_color ?? "#0a2a5e"}
+        open={showTemplateGallery}
+        onToggle={() => setShowTemplateGallery((v) => !v)}
+        onSelect={(id) => onTemplateChange(id)}
+        onResetToCompany={() => onTemplateChange(null)}
+      />
 
       {!allApproved && (
         <div className="px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
@@ -2174,6 +2202,188 @@ function Step7Approval({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ------------------- Template Gallery (Step 7) -------------------
+function TemplateGalleryPanel({
+  effectiveTemplate,
+  companyDefault,
+  primary,
+  open,
+  onToggle,
+  onSelect,
+  onResetToCompany,
+}: {
+  effectiveTemplate: string;
+  companyDefault: string | null;
+  primary: string;
+  open: boolean;
+  onToggle: () => void;
+  onSelect: (id: string) => void;
+  onResetToCompany: () => void;
+}) {
+  // PDF_TEMPLATES is imported at top of file
+  const current = PDF_TEMPLATES.find((t) => t.id === effectiveTemplate) ?? PDF_TEMPLATES[0];
+  return (
+    <div className="border border-slate-200 rounded-2xl bg-white">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left"
+      >
+        <div className="min-w-0">
+          <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+            Template do Documento
+          </div>
+          <div className="text-sm font-black text-navy truncate">
+            {current.label}
+            <span className="ml-2 text-[10px] font-bold uppercase text-slate-400">
+              {companyDefault === effectiveTemplate || (!companyDefault && effectiveTemplate === "classico")
+                ? "padrão da empresa"
+                : "específico deste processo"}
+            </span>
+          </div>
+          <div className="text-[11px] text-slate-500 truncate">{current.description}</div>
+        </div>
+        <div className="text-xs font-bold text-primary shrink-0">
+          {open ? "Fechar galeria" : "Escolher template ▾"}
+        </div>
+      </button>
+      {open && (
+        <div className="border-t border-slate-200 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-[11px] text-slate-500">
+              Selecione um dos 20 modelos. A escolha vale apenas para este processo — para mudar o padrão da empresa use Identidade Corporativa.
+            </div>
+            {companyDefault && effectiveTemplate !== companyDefault && (
+              <button
+                type="button"
+                onClick={onResetToCompany}
+                className="text-[11px] font-bold text-primary hover:underline shrink-0 ml-3"
+              >
+                Voltar ao padrão da empresa
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-[480px] overflow-y-auto pr-1">
+            {PDF_TEMPLATES.map((t) => {
+              const selected = t.id === effectiveTemplate;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => onSelect(t.id)}
+                  className={`text-left rounded-xl border-2 p-2 transition ${
+                    selected ? "border-primary ring-2 ring-primary/20 bg-primary/5" : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <TemplateMiniPreview id={t.id} primary={primary} />
+                  <div className="mt-2 text-[11px] font-black text-navy truncate">{t.label}</div>
+                  <div className="text-[10px] text-slate-500 line-clamp-2">{t.description}</div>
+                  <div className="text-[9px] text-slate-400 mt-1 truncate">Ideal: {t.bestFor}</div>
+                  {selected && (
+                    <div className="mt-1 inline-block text-[9px] font-black uppercase tracking-wider text-primary">
+                      ✓ Selecionado
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TemplateMiniPreview({ id, primary }: { id: string; primary: string }) {
+  const gold = "#c9a13a";
+  const light = "#f1f5f9";
+  const ink = "#0f172a";
+  const navy = "#0d1f45";
+  const navyDeep = "#062046";
+  // Simplified visual differentiator per template
+  return (
+    <div className="aspect-[3/4] rounded-md border border-slate-200 bg-white overflow-hidden relative text-[0px]">
+      {/* Header band */}
+      {(() => {
+        const h = id === "minimalista" || id === "protocolo" || id === "corporate-clean" ? 6
+          : id === "capa-executiva" ? 22
+          : id === "azul-profundo" || id === "naval-premium" ? 16
+          : id === "luxo" || id === "relatorio-tecnico" ? 14
+          : id === "executivo" || id === "moderno" ? 14
+          : 10;
+        const bg =
+          id === "azul-profundo" ? navyDeep
+          : id === "naval-azul" || id === "naval-premium" ? navy
+          : id === "institucional" ? "#0f213f"
+          : id === "luxo" ? "#0a1733"
+          : id === "premium-branco" || id === "corporate-clean" ? "#ffffff"
+          : id === "escritorio" ? "#f8fafc"
+          : id === "engenharia-naval" ? light
+          : id === "oficial" ? "#1f2937"
+          : id === "timbrado" ? primary
+          : id === "capa-executiva" ? primary
+          : id === "relatorio-tecnico" ? primary
+          : id === "executivo" || id === "moderno" ? primary
+          : id === "minimalista" ? "transparent"
+          : id === "protocolo" ? "transparent"
+          : primary;
+        return (
+          <div style={{ background: bg, height: `${h}px`, position: "relative" }}>
+            {id === "corporate-clean" && <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 10, background: primary }} />}
+            {id === "engenharia-naval" && <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 4, background: ink }} />}
+            {id === "naval-premium" && <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 14, background: primary, opacity: 0.7 }} />}
+            {(id === "naval-azul" || id === "naval-premium" || id === "luxo" || id === "oficial" || id === "timbrado" || id === "capa-executiva" || id === "relatorio-tecnico" || id === "premium-branco") && (
+              <div style={{ position: "absolute", left: 0, right: 0, bottom: -2, height: 2, background: gold }} />
+            )}
+            {id === "luxo" && <div style={{ position: "absolute", left: 0, right: 0, bottom: -5, height: 1, background: gold }} />}
+            {id === "capa-executiva" && (
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: "60%", height: 2, background: "#fff" }} />
+              </div>
+            )}
+          </div>
+        );
+      })()}
+      {/* Body lines */}
+      <div className="px-1.5 pt-1.5 space-y-1">
+        {id === "checklist" ? (
+          <>
+            {[0,1,2,3].map((i) => (
+              <div key={i} className="flex items-center gap-1">
+                <div style={{ width: 5, height: 5, border: `1px solid ${primary}` }} />
+                <div className="h-[2px] flex-1 bg-slate-200" />
+              </div>
+            ))}
+          </>
+        ) : id === "engenharia-naval" || id === "relatorio-tecnico" || id === "laudo" ? (
+          <>
+            <div className="h-[3px] w-1/3 rounded-sm" style={{ background: ink }} />
+            <div className="flex items-center gap-1">
+              <div style={{ width: 6, height: 6, background: id === "relatorio-tecnico" ? primary : "#64748b" }} />
+              <div className="h-[2px] w-2/3 bg-slate-200" />
+            </div>
+            <div className="flex items-center gap-1">
+              <div style={{ width: 6, height: 6, background: id === "relatorio-tecnico" ? primary : "#64748b" }} />
+              <div className="h-[2px] w-1/2 bg-slate-200" />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className={`h-[3px] rounded-sm`} style={{ background: ink, width: id === "premium-branco" || id === "institucional" || id === "naval-premium" ? "50%" : "66%", marginLeft: id === "premium-branco" || id === "institucional" || id === "naval-premium" ? "25%" : 0 }} />
+            <div className="h-[1px] w-full" style={{ background: id === "timbrado" ? "#94a3b8" : id === "luxo" || id === "naval-premium" ? gold : "#e2e8f0" }} />
+            <div className="h-[2px] w-full bg-slate-100" />
+            <div className="h-[2px] w-5/6 bg-slate-100" />
+            <div className="h-[2px] w-3/4 bg-slate-100" />
+            <div className="h-[2px] w-4/6 bg-slate-100" />
+          </>
+        )}
+      </div>
+      {/* Footer */}
+      <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 4, background: id === "minimalista" ? "transparent" : id === "luxo" || id === "naval-premium" ? gold : light }} />
     </div>
   );
 }
