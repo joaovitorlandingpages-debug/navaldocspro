@@ -405,6 +405,55 @@ function TemplatePreview({ id, primary }: { id: PdfTemplateId; primary: string }
           </div>
         </>
       )}
+      {id === "escritorio" && (
+        <>
+          <div className="h-3 bg-slate-50 border-b border-slate-200" />
+          <div className="h-[2px]" style={{ background: primary }} />
+          <div className="px-1.5 pt-1 space-y-0.5">
+            <div className="h-1 w-1/2 rounded-sm" style={{ background: ink }} />
+            <div className="h-px w-full" style={{ background: primary }} />
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-5/6 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "institucional" && (
+        <>
+          <div className="h-4" style={{ background: "#0f213f" }} />
+          <div className="px-1.5 pt-1 flex flex-col items-center space-y-0.5">
+            <div className="h-1 w-1/2 rounded-sm" style={{ background: ink }} />
+            <div className="h-px w-6" style={{ background: "#0f213f" }} />
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-4/5 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "moderno" && (
+        <>
+          <div className="h-5" style={{ background: `linear-gradient(135deg, ${primary}, ${ink})` }} />
+          <div className="m-1.5 p-1 rounded-md" style={{ background: light, borderTop: `2px solid ${primary}` }}>
+            <div className="h-1 w-3/4 rounded-sm" style={{ background: ink }} />
+          </div>
+          <div className="px-1.5 space-y-0.5">
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-5/6 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "luxo" && (
+        <>
+          <div className="h-3" style={{ background: "#0a1733" }} />
+          <div className="h-[2px]" style={{ background: gold }} />
+          <div className="h-px" style={{ background: gold }} />
+          <div className="px-1.5 pt-1 space-y-0.5">
+            <div className="h-1 w-2/3 rounded-sm" style={{ background: ink }} />
+            <div className="h-px w-full" style={{ background: gold }} />
+            <div className="h-px w-full" style={{ background: gold, opacity: 0.5 }} />
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-4/5 bg-slate-100" />
+          </div>
+        </>
+      )}
       {id === "checklist" && (
         <>
           <div className="h-3" style={{ background: light }} />
