@@ -1218,6 +1218,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
           )}
           {state.step === 7 && service && (
             <Step7Approval
+              companyId={companyId}
               docs={state.reviewDocs}
               onEditSave={(name, content, reason) => dispatch({ type: "SET_REVIEW_CONTENT", name, content, reason })}
               onApprove={(name) => {
