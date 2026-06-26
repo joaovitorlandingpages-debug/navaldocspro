@@ -9,7 +9,8 @@ import { Card } from "@/components/ui/card";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageHeader } from "@/components/navigation/PageHeader";
 import { toast } from "sonner";
-import { Loader2, Upload, Image as ImageIcon, Palette, Building2, PenTool, Stamp, Droplet } from "lucide-react";
+import { Loader2, Upload, Image as ImageIcon, Palette, Building2, PenTool, Stamp, Droplet, LayoutTemplate, Check } from "lucide-react";
+import { PDF_TEMPLATES, type PdfTemplateId } from "@/services/companyBranding";
 
 export const Route = createFileRoute("/identidade")({
   component: () => (
@@ -35,6 +36,7 @@ type BrandingFields = {
   stamp_url: string | null;
   watermark_url: string | null;
   pdf_footer_text: string;
+  pdf_template: PdfTemplateId;
 };
 
 const EMPTY: BrandingFields = {
@@ -53,6 +55,7 @@ const EMPTY: BrandingFields = {
   stamp_url: null,
   watermark_url: null,
   pdf_footer_text: "",
+  pdf_template: "classico",
 };
 
 function IdentidadePage() {
@@ -73,7 +76,7 @@ function IdentidadePage() {
       const { data: row, error } = await supabase
         .from("companies")
         .select(
-          "logo_primary_url, logo_secondary_url, brand_primary_color, brand_secondary_color, contact_phone, contact_whatsapp, contact_email, contact_website, contact_address, technical_responsible_name, technical_responsible_registry, signature_url, stamp_url, watermark_url, pdf_footer_text"
+          "logo_primary_url, logo_secondary_url, brand_primary_color, brand_secondary_color, contact_phone, contact_whatsapp, contact_email, contact_website, contact_address, technical_responsible_name, technical_responsible_registry, signature_url, stamp_url, watermark_url, pdf_footer_text, pdf_template"
         )
         .eq("id", companyId)
         .maybeSingle();
@@ -201,6 +204,40 @@ function IdentidadePage() {
           </div>
         </Section>
 
+        <Section title="Modelo de PDF" icon={<LayoutTemplate className="h-5 w-5" />}>
+          <p className="text-xs text-slate-500 mb-4">
+            Modelo aplicado automaticamente em todos os PDFs (Requerimento, GRU, Checklists, Capa, Laudos, Dossiê).
+            Se nenhum for escolhido, usamos o <strong>Clássico Oficial</strong>.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {PDF_TEMPLATES.map((tpl) => {
+              const active = data.pdf_template === tpl.id;
+              return (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  onClick={() => setData((d) => ({ ...d, pdf_template: tpl.id }))}
+                  className={`relative text-left rounded-xl border p-3 transition-all ${
+                    active
+                      ? "border-primary bg-primary/5 shadow-md"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
+                >
+                  <TemplatePreview id={tpl.id} primary={data.brand_primary_color} />
+                  <div className="mt-2 text-[11px] font-black uppercase tracking-wider text-navy">{tpl.label}</div>
+                  <div className="text-[10px] text-slate-500 leading-snug mt-0.5">{tpl.description}</div>
+                  {active && (
+                    <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary text-white grid place-items-center">
+                      <Check className="h-3 w-3" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </Section>
+
+
         <Section title="Cores da marca" icon={<Palette className="h-5 w-5" />}>
           <div className="grid md:grid-cols-2 gap-6">
             <ColorField
@@ -300,6 +337,98 @@ function Section({ title, icon, children }: { title: string; icon: React.ReactNo
     </Card>
   );
 }
+
+function TemplatePreview({ id, primary }: { id: PdfTemplateId; primary: string }) {
+  const gold = "#c9a13a";
+  const light = "#f1f5f9";
+  const ink = "#0f172a";
+  return (
+    <div className="aspect-[3/4] rounded-md border border-slate-200 bg-white overflow-hidden relative">
+      {id === "classico" && (
+        <>
+          <div className="h-3" style={{ background: primary }} />
+          <div className="px-1.5 pt-1 space-y-0.5">
+            <div className="h-1 w-2/3 rounded-sm" style={{ background: ink }} />
+            <div className="h-px w-full bg-slate-200 mt-1" />
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-5/6 bg-slate-100" />
+            <div className="h-0.5 w-3/4 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "executivo" && (
+        <>
+          <div className="h-4" style={{ background: `linear-gradient(90deg, ${ink}, ${primary})` }} />
+          <div className="h-[2px]" style={{ background: gold }} />
+          <div className="m-1.5 p-1 rounded-sm border-l-2" style={{ background: light, borderColor: primary }}>
+            <div className="h-1 w-3/4 rounded-sm" style={{ background: ink }} />
+          </div>
+          <div className="px-1.5 space-y-0.5">
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-5/6 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "naval-azul" && (
+        <>
+          <div className="h-3" style={{ background: "#0d1f45" }} />
+          <div className="h-[2px]" style={{ background: gold }} />
+          <div className="px-1.5 pt-1 space-y-0.5">
+            <div className="h-1 w-2/3 rounded-sm" style={{ background: ink }} />
+            <div className="h-px w-full" style={{ background: gold }} />
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-4/5 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "minimalista" && (
+        <div className="px-1.5 pt-2 space-y-1">
+          <div className="h-1 w-1/2 rounded-sm" style={{ background: ink }} />
+          <div className="h-px w-6" style={{ background: primary }} />
+          <div className="h-0.5 w-full bg-slate-100" />
+          <div className="h-0.5 w-5/6 bg-slate-100" />
+          <div className="h-0.5 w-3/4 bg-slate-100" />
+        </div>
+      )}
+      {id === "laudo" && (
+        <>
+          <div className="h-4 flex items-stretch" style={{ background: light }}>
+            <div className="w-1" style={{ background: primary }} />
+          </div>
+          <div className="px-1.5 pt-1 space-y-1">
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-sm" style={{ background: primary }} />
+              <div className="h-1 w-2/3 rounded-sm" style={{ background: ink }} />
+            </div>
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-4/5 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "checklist" && (
+        <>
+          <div className="h-3" style={{ background: light }} />
+          <div className="h-[2px]" style={{ background: primary }} />
+          <div className="px-1.5 pt-1 space-y-0.5">
+            <div className="flex items-center gap-1">
+              <div className="h-1.5 w-1.5 border" style={{ borderColor: primary }} />
+              <div className="h-0.5 w-3/4 bg-slate-200" />
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-1.5 w-1.5 border" style={{ borderColor: primary }} />
+              <div className="h-0.5 w-2/3 bg-slate-200" />
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-1.5 w-1.5 border" style={{ borderColor: primary }} />
+              <div className="h-0.5 w-1/2 bg-slate-200" />
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 
 function TextField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
