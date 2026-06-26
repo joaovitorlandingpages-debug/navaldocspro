@@ -2101,20 +2101,24 @@ function Step7Approval({
       {/* Preview modal */}
       {previewDoc && (
         <div className="fixed inset-0 z-[110] bg-black/60 flex items-center justify-center p-4" onClick={() => setPreviewName(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Prévia</div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Prévia exata do PDF final (WYSIWYG)</div>
                 <div className="text-lg font-black text-navy">{previewDoc.name}</div>
               </div>
               <button onClick={() => setPreviewName(null)} className="p-2 hover:bg-slate-100 rounded-xl">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-8 bg-slate-50">
-              <div className="mx-auto max-w-2xl bg-white shadow rounded-lg p-10 whitespace-pre-wrap font-mono text-[12px] leading-relaxed text-slate-800">
-                {previewDoc.content}
-              </div>
+            <div className="flex-1 bg-slate-100">
+              {previewLoading || !previewUrl ? (
+                <div className="h-full flex items-center justify-center text-slate-500 text-sm">
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" /> Renderizando PDF…
+                </div>
+              ) : (
+                <iframe title={`Prévia ${previewDoc.name}`} src={previewUrl} className="w-full h-full border-0" />
+              )}
             </div>
           </div>
         </div>
