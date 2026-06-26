@@ -383,35 +383,14 @@ function detectMissingForDoc(
   return missing;
 }
 
-async function buildEditedTextPdfBytes(docName: string, content: string) {
-  const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
-  const pdfDoc = await PDFDocument.create();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  let page = pdfDoc.addPage([595.28, 841.89]);
-  let y = 792;
-  const sanitize = (text: string) => String(text)
-    .replace(/[–—]/g, "-").replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
-    .replace(/•/g, "-").replace(/[^\x09\x0A\x0D\x20-\xFF]/g, "");
-  const draw = (text: string, size = 10, isBold = false) => {
-    const safe = sanitize(text);
-    const chunks = safe.length ? (safe.match(/.{1,92}(\s|$)/g) || [safe]) : [""];
-    for (const chunk of chunks) {
-      if (y < 52) { page = pdfDoc.addPage([595.28, 841.89]); y = 792; }
-      page.drawText(chunk.trimEnd(), { x: 48, y, size, font: isBold ? bold : font, color: rgb(0, 0, 0), maxWidth: 500 });
-      y -= size + 5;
-    }
-  };
-  draw(docName.toUpperCase(), 15, true);
-  draw(`Documento revisado e aprovado em ${new Date().toLocaleString("pt-BR")}`, 9);
-  y -= 8;
-  const lines = content.split("\n");
-  for (const ln of lines) {
-    if (ln.trim() === "") { y -= 6; continue; }
-    const isHeading = /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ ]+$/.test(ln) && ln.length < 40;
-    draw(ln, isHeading ? 11 : 10, isHeading);
-  }
-  return await pdfDoc.save();
+async function buildEditedTextPdfBytes(
+  docName: string,
+  content: string,
+  branding: import("@/services/companyBranding").CompanyBranding | null,
+): Promise<Uint8Array> {
+  const { buildBrandedDocumentPdf } = await import("@/services/brandedPdfBuilder");
+  const { bytes } = await buildBrandedDocumentPdf({ docName, content, branding });
+  return bytes;
 }
 
 async function buildFallbackPdfBytes(docName: string, fieldValues: any) {
@@ -919,6 +898,8 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
       let generatedCount = 0;
       let documentRowsCount = 0;
       let mirroredFilesCount = 0;
+      const { loadCompanyBranding } = await import("@/services/companyBranding");
+      const branding = await loadCompanyBranding(companyId).catch(() => null);
       for (const docName of service.generatedDocs) {
         try {
           const review = state.reviewDocs.find((r) => r.name === docName);
@@ -928,7 +909,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
           console.log("[DOCUMENT_READY_FOR_FINAL_PDF]", { docName });
           console.log("[DOCUMENT_REAL_GENERATION_STARTED]", { docName, processId: proc.id, customerId, vesselId });
 
-          const pdfBytes = await buildEditedTextPdfBytes(docName, review.content);
+          const pdfBytes = await buildEditedTextPdfBytes(docName, review.content, branding);
           const pdfArrayBuffer = pdfBytes.buffer.slice(
             pdfBytes.byteOffset,
             pdfBytes.byteOffset + pdfBytes.byteLength,
@@ -1091,7 +1072,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             errors: persistenceErrors.length ? persistenceErrors : ["Nem todos os documentos obrigatórios possuem PDF real validado."],
           };
       dispatch({ type: "SET_RESULT", result });
-      dispatch({ type: "STEP", step: 7 });
+      dispatch({ type: "STEP", step: 8 });
       if (allDocumentsReady) {
         console.log("[PROCESS_FIRST_PERSISTENCE_SUCCESS]", { processId: proc.id, generatedCount, documentRowsCount, mirroredFilesCount });
         console.log("[PROCESS_FIRST_GENERATION_SUCCESS]", proc.id);
@@ -1237,6 +1218,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
           )}
           {state.step === 7 && service && (
             <Step7Approval
+              companyId={companyId}
               docs={state.reviewDocs}
               onEditSave={(name, content, reason) => dispatch({ type: "SET_REVIEW_CONTENT", name, content, reason })}
               onApprove={(name) => {
@@ -1954,12 +1936,14 @@ function SuccessCard({ icon, title, body, sub }: { icon: React.ReactNode; title:
 // Bloco 2 — Painel de revisão / edição / aprovação dos documentos
 // ============================================================================
 function Step7Approval({
+  companyId,
   docs,
   onEditSave,
   onApprove,
   onRevoke,
   onRegenerate,
 }: {
+  companyId: string | null;
   docs: ReviewDoc[];
   onEditSave: (name: string, content: string, reason?: string) => void;
   onApprove: (name: string) => void;
@@ -1970,9 +1954,50 @@ function Step7Approval({
   const [editName, setEditName] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
   const [editReason, setEditReason] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const previewDoc = docs.find((d) => d.name === previewName) || null;
   const editDoc = docs.find((d) => d.name === editName) || null;
+
+  useEffect(() => {
+    let cancelled = false;
+    let createdUrl: string | null = null;
+    if (!previewDoc) {
+      setPreviewUrl(null);
+      return;
+    }
+    setPreviewLoading(true);
+    (async () => {
+      try {
+        const [{ loadCompanyBranding }, { buildBrandedDocumentPdf }] = await Promise.all([
+          import("@/services/companyBranding"),
+          import("@/services/brandedPdfBuilder"),
+        ]);
+        const branding = companyId ? await loadCompanyBranding(companyId).catch(() => null) : null;
+        const { bytes } = await buildBrandedDocumentPdf({
+          docName: previewDoc.name,
+          content: previewDoc.content,
+          branding,
+        });
+        if (cancelled) return;
+        const ab = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+        const blob = new Blob([ab], { type: "application/pdf" });
+        createdUrl = URL.createObjectURL(blob);
+        setPreviewUrl(createdUrl);
+      } catch (e) {
+        console.error("[PREVIEW_PDF_FAILED]", e);
+        if (!cancelled) setPreviewUrl(null);
+      } finally {
+        if (!cancelled) setPreviewLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (createdUrl) URL.revokeObjectURL(createdUrl);
+    };
+  }, [previewDoc?.name, previewDoc?.content, companyId]);
+
 
   const statusBadge = (s: ReviewStatus) => {
     const map: Record<ReviewStatus, { label: string; cls: string }> = {
@@ -2076,20 +2101,24 @@ function Step7Approval({
       {/* Preview modal */}
       {previewDoc && (
         <div className="fixed inset-0 z-[110] bg-black/60 flex items-center justify-center p-4" onClick={() => setPreviewName(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Prévia</div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Prévia exata do PDF final (WYSIWYG)</div>
                 <div className="text-lg font-black text-navy">{previewDoc.name}</div>
               </div>
               <button onClick={() => setPreviewName(null)} className="p-2 hover:bg-slate-100 rounded-xl">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-8 bg-slate-50">
-              <div className="mx-auto max-w-2xl bg-white shadow rounded-lg p-10 whitespace-pre-wrap font-mono text-[12px] leading-relaxed text-slate-800">
-                {previewDoc.content}
-              </div>
+            <div className="flex-1 bg-slate-100">
+              {previewLoading || !previewUrl ? (
+                <div className="h-full flex items-center justify-center text-slate-500 text-sm">
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" /> Renderizando PDF…
+                </div>
+              ) : (
+                <iframe title={`Prévia ${previewDoc.name}`} src={previewUrl} className="w-full h-full border-0" />
+              )}
             </div>
           </div>
         </div>
