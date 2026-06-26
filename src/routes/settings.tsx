@@ -202,8 +202,8 @@ function CompanyTeamPage() {
                          aria-label="Enviar logo da empresa"
                          disabled={isLogoUploading}
                          onChange={handleLogoUpload}
-                         className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
-                         style={{ fontSize: 0 }}
+                         className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-[0.01] disabled:cursor-not-allowed"
+                         style={{ fontSize: 999 }}
                        />
                    </div>
                     <div className="space-y-4">

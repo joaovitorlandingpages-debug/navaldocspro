@@ -414,8 +414,8 @@ function UploadField({
             onChange={handleChange}
             onClick={() => console.log("[UPLOAD]", inputId, "native input click")}
             aria-label={actionLabel}
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
-            style={{ fontSize: 0 }}
+            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-[0.01] disabled:cursor-not-allowed"
+            style={{ fontSize: 999 }}
           />
         </div>
         {value ? (
