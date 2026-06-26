@@ -9,7 +9,8 @@ import { Card } from "@/components/ui/card";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageHeader } from "@/components/navigation/PageHeader";
 import { toast } from "sonner";
-import { Loader2, Upload, Image as ImageIcon, Palette, Building2, PenTool, Stamp, Droplet } from "lucide-react";
+import { Loader2, Upload, Image as ImageIcon, Palette, Building2, PenTool, Stamp, Droplet, LayoutTemplate, Check } from "lucide-react";
+import { PDF_TEMPLATES, type PdfTemplateId } from "@/services/companyBranding";
 
 export const Route = createFileRoute("/identidade")({
   component: () => (
@@ -35,6 +36,7 @@ type BrandingFields = {
   stamp_url: string | null;
   watermark_url: string | null;
   pdf_footer_text: string;
+  pdf_template: PdfTemplateId;
 };
 
 const EMPTY: BrandingFields = {
@@ -53,6 +55,7 @@ const EMPTY: BrandingFields = {
   stamp_url: null,
   watermark_url: null,
   pdf_footer_text: "",
+  pdf_template: "classico",
 };
 
 function IdentidadePage() {
@@ -73,7 +76,7 @@ function IdentidadePage() {
       const { data: row, error } = await supabase
         .from("companies")
         .select(
-          "logo_primary_url, logo_secondary_url, brand_primary_color, brand_secondary_color, contact_phone, contact_whatsapp, contact_email, contact_website, contact_address, technical_responsible_name, technical_responsible_registry, signature_url, stamp_url, watermark_url, pdf_footer_text"
+          "logo_primary_url, logo_secondary_url, brand_primary_color, brand_secondary_color, contact_phone, contact_whatsapp, contact_email, contact_website, contact_address, technical_responsible_name, technical_responsible_registry, signature_url, stamp_url, watermark_url, pdf_footer_text, pdf_template"
         )
         .eq("id", companyId)
         .maybeSingle();
