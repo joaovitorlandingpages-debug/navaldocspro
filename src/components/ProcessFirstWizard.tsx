@@ -25,6 +25,7 @@ import {
   type ServiceDef,
 } from "@/types/service-requirements";
 import { validateCriticalFields } from "@/services/documentNormalizer";
+import { PDF_TEMPLATES } from "@/services/companyBranding";
 import {
   fetchLibrary,
   suggestTemplatesForWizard,
