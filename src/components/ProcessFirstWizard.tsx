@@ -383,35 +383,14 @@ function detectMissingForDoc(
   return missing;
 }
 
-async function buildEditedTextPdfBytes(docName: string, content: string) {
-  const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
-  const pdfDoc = await PDFDocument.create();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  let page = pdfDoc.addPage([595.28, 841.89]);
-  let y = 792;
-  const sanitize = (text: string) => String(text)
-    .replace(/[–—]/g, "-").replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
-    .replace(/•/g, "-").replace(/[^\x09\x0A\x0D\x20-\xFF]/g, "");
-  const draw = (text: string, size = 10, isBold = false) => {
-    const safe = sanitize(text);
-    const chunks = safe.length ? (safe.match(/.{1,92}(\s|$)/g) || [safe]) : [""];
-    for (const chunk of chunks) {
-      if (y < 52) { page = pdfDoc.addPage([595.28, 841.89]); y = 792; }
-      page.drawText(chunk.trimEnd(), { x: 48, y, size, font: isBold ? bold : font, color: rgb(0, 0, 0), maxWidth: 500 });
-      y -= size + 5;
-    }
-  };
-  draw(docName.toUpperCase(), 15, true);
-  draw(`Documento revisado e aprovado em ${new Date().toLocaleString("pt-BR")}`, 9);
-  y -= 8;
-  const lines = content.split("\n");
-  for (const ln of lines) {
-    if (ln.trim() === "") { y -= 6; continue; }
-    const isHeading = /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ ]+$/.test(ln) && ln.length < 40;
-    draw(ln, isHeading ? 11 : 10, isHeading);
-  }
-  return await pdfDoc.save();
+async function buildEditedTextPdfBytes(
+  docName: string,
+  content: string,
+  branding: import("@/services/companyBranding").CompanyBranding | null,
+): Promise<Uint8Array> {
+  const { buildBrandedDocumentPdf } = await import("@/services/brandedPdfBuilder");
+  const { bytes } = await buildBrandedDocumentPdf({ docName, content, branding });
+  return bytes;
 }
 
 async function buildFallbackPdfBytes(docName: string, fieldValues: any) {
