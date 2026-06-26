@@ -1987,7 +1987,11 @@ function Step7Approval({
           import("@/services/companyBranding"),
           import("@/services/brandedPdfBuilder"),
         ]);
-        const branding = companyId ? await loadCompanyBranding(companyId).catch(() => null) : null;
+        const rawBranding = companyId ? await loadCompanyBranding(companyId).catch(() => null) : null;
+        if (!cancelled) setCompanyBranding(rawBranding);
+        const branding = templateOverride
+          ? ({ ...(rawBranding ?? {}), pdf_template: templateOverride } as any)
+          : rawBranding;
         const { bytes } = await buildBrandedDocumentPdf({
           docName: previewDoc.name,
           content: previewDoc.content,
