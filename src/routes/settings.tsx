@@ -21,6 +21,7 @@ function CompanyTeamPage() {
   const [company, setCompany] = useState<any>(null);
   const [team, setTeam] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLogoUploading, setIsLogoUploading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,6 +82,54 @@ function CompanyTeamPage() {
     }
   };
 
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !company?.id || isLogoUploading) return;
+
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
+    const maxBytes = 5 * 1024 * 1024;
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Formato inválido. Use PNG, JPG, WEBP ou SVG.");
+      return;
+    }
+
+    if (file.size > maxBytes) {
+      toast.error("Arquivo muito grande. Máximo 5 MB.");
+      return;
+    }
+
+    setIsLogoUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      const path = `${company.id}/logo_primary_url-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("company-branding")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (uploadError) throw uploadError;
+
+      const { data: signed, error: signError } = await supabase.storage
+        .from("company-branding")
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (signError) throw signError;
+
+      const logoUrl = signed?.signedUrl || path;
+      const { error: dbError } = await supabase
+        .from("companies")
+        .update({ logo_primary_url: logoUrl })
+        .eq("id", company.id);
+      if (dbError) throw dbError;
+
+      setCompany((current: any) => ({ ...current, logo_primary_url: logoUrl }));
+      toast.success("Logo enviado e salvo com sucesso");
+    } catch (error: any) {
+      toast.error(error?.message || "Erro ao enviar logo");
+    } finally {
+      setIsLogoUploading(false);
+    }
+  };
+
   const roles = [
     { name: "Admin Master", users: 0, permissions: "Acesso Total" },
     { name: "company_admin", users: team.filter(t => t.role === 'company_admin').length, permissions: "Gestão de Equipe e Financeiro" },
@@ -138,9 +187,24 @@ function CompanyTeamPage() {
            {activeTab === "empresa" && (
              <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 md:p-10 shadow-sm space-y-10 animate-in slide-in-from-right-4 duration-500">
                 <div className="flex flex-col md:flex-row gap-10 items-start md:items-center pb-10 border-b border-slate-100">
-                   <div className="h-32 w-32 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 p-4 text-center group hover:border-primary/50 transition-all cursor-pointer">
-                      <Building className="h-8 w-8 mb-2 opacity-30 group-hover:text-primary transition-all" />
-                      <span className="text-[10px] font-black uppercase tracking-tight">Logo da Empresa</span>
+                   <div className={`relative h-32 w-32 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 p-4 text-center group hover:border-primary/50 transition-all overflow-hidden ${isLogoUploading ? "opacity-70" : "cursor-pointer"}`}>
+                       {company?.logo_primary_url ? (
+                         <img src={company.logo_primary_url} alt="Logo da empresa" className="max-h-20 max-w-full object-contain mb-2 pointer-events-none" />
+                       ) : isLogoUploading ? (
+                         <Loader2 className="h-8 w-8 mb-2 animate-spin text-primary" />
+                       ) : (
+                         <Building className="h-8 w-8 mb-2 opacity-30 group-hover:text-primary transition-all" />
+                       )}
+                       <span className="text-[10px] font-black uppercase tracking-tight text-slate-500">{isLogoUploading ? "Enviando..." : "Logo da Empresa"}</span>
+                       <input
+                         type="file"
+                         accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                         aria-label="Enviar logo da empresa"
+                         disabled={isLogoUploading || !company?.id}
+                         onChange={handleLogoUpload}
+                         className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+                         style={{ fontSize: 0 }}
+                       />
                    </div>
                     <div className="space-y-4">
                        <div>
