@@ -176,6 +176,34 @@ export async function buildBrandedDocumentPdf(opts: {
       y -= 26;
       page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.7, color: gold });
       y -= 18;
+    } else if (template === "escritorio") {
+      page.drawText(title, { x: LEFT, y: y - 16, size: 15, font: bold, color: ink });
+      y -= 22;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1.2, color: primary });
+      y -= 4;
+      page.drawText(`Emitido em ${new Date().toLocaleString("pt-BR")}`, {
+        x: LEFT, y: y - 10, size: 8.5, font: italic, color: muted,
+      });
+      y -= 22;
+    } else if (template === "institucional") {
+      const tw = measure(title, 18, bold);
+      page.drawText(title, { x: (W - tw) / 2, y: y - 20, size: 18, font: bold, color: ink });
+      y -= 30;
+      page.drawLine({ start: { x: (W - 120) / 2, y }, end: { x: (W + 120) / 2, y }, thickness: 1, color: secondary });
+      y -= 22;
+    } else if (template === "moderno") {
+      const boxH = 60;
+      page.drawRectangle({ x: LEFT, y: y - boxH, width: CONTENT_W, height: boxH, color: lightBg });
+      page.drawRectangle({ x: LEFT, y: y - boxH, width: CONTENT_W, height: 3, color: primary });
+      page.drawText(title, { x: LEFT + 18, y: y - 32, size: 17, font: bold, color: ink, maxWidth: CONTENT_W - 36 });
+      y -= boxH + 18;
+    } else if (template === "luxo") {
+      page.drawText(title, { x: LEFT, y: y - 20, size: 18, font: bold, color: ink });
+      y -= 28;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1.4, color: gold });
+      y -= 3;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.5, color: gold });
+      y -= 18;
     } else {
       // classico
       page.drawText(title, { x: LEFT, y: y - 18, size: 17, font: bold, color: ink });
