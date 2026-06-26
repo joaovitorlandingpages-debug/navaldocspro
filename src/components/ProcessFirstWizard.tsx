@@ -1072,7 +1072,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
             errors: persistenceErrors.length ? persistenceErrors : ["Nem todos os documentos obrigatórios possuem PDF real validado."],
           };
       dispatch({ type: "SET_RESULT", result });
-      dispatch({ type: "STEP", step: 7 });
+      dispatch({ type: "STEP", step: 8 });
       if (allDocumentsReady) {
         console.log("[PROCESS_FIRST_PERSISTENCE_SUCCESS]", { processId: proc.id, generatedCount, documentRowsCount, mirroredFilesCount });
         console.log("[PROCESS_FIRST_GENERATION_SUCCESS]", proc.id);
