@@ -1936,12 +1936,14 @@ function SuccessCard({ icon, title, body, sub }: { icon: React.ReactNode; title:
 // Bloco 2 — Painel de revisão / edição / aprovação dos documentos
 // ============================================================================
 function Step7Approval({
+  companyId,
   docs,
   onEditSave,
   onApprove,
   onRevoke,
   onRegenerate,
 }: {
+  companyId: string | null;
   docs: ReviewDoc[];
   onEditSave: (name: string, content: string, reason?: string) => void;
   onApprove: (name: string) => void;
@@ -1952,9 +1954,50 @@ function Step7Approval({
   const [editName, setEditName] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
   const [editReason, setEditReason] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const previewDoc = docs.find((d) => d.name === previewName) || null;
   const editDoc = docs.find((d) => d.name === editName) || null;
+
+  useEffect(() => {
+    let cancelled = false;
+    let createdUrl: string | null = null;
+    if (!previewDoc) {
+      setPreviewUrl(null);
+      return;
+    }
+    setPreviewLoading(true);
+    (async () => {
+      try {
+        const [{ loadCompanyBranding }, { buildBrandedDocumentPdf }] = await Promise.all([
+          import("@/services/companyBranding"),
+          import("@/services/brandedPdfBuilder"),
+        ]);
+        const branding = companyId ? await loadCompanyBranding(companyId).catch(() => null) : null;
+        const { bytes } = await buildBrandedDocumentPdf({
+          docName: previewDoc.name,
+          content: previewDoc.content,
+          branding,
+        });
+        if (cancelled) return;
+        const ab = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+        const blob = new Blob([ab], { type: "application/pdf" });
+        createdUrl = URL.createObjectURL(blob);
+        setPreviewUrl(createdUrl);
+      } catch (e) {
+        console.error("[PREVIEW_PDF_FAILED]", e);
+        if (!cancelled) setPreviewUrl(null);
+      } finally {
+        if (!cancelled) setPreviewLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (createdUrl) URL.revokeObjectURL(createdUrl);
+    };
+  }, [previewDoc?.name, previewDoc?.content, companyId]);
+
 
   const statusBadge = (s: ReviewStatus) => {
     const map: Record<ReviewStatus, { label: string; cls: string }> = {
