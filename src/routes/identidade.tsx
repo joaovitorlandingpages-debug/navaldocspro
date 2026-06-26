@@ -204,6 +204,40 @@ function IdentidadePage() {
           </div>
         </Section>
 
+        <Section title="Modelo de PDF" icon={<LayoutTemplate className="h-5 w-5" />}>
+          <p className="text-xs text-slate-500 mb-4">
+            Modelo aplicado automaticamente em todos os PDFs (Requerimento, GRU, Checklists, Capa, Laudos, Dossiê).
+            Se nenhum for escolhido, usamos o <strong>Clássico Oficial</strong>.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {PDF_TEMPLATES.map((tpl) => {
+              const active = data.pdf_template === tpl.id;
+              return (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  onClick={() => setData((d) => ({ ...d, pdf_template: tpl.id }))}
+                  className={`relative text-left rounded-xl border p-3 transition-all ${
+                    active
+                      ? "border-primary bg-primary/5 shadow-md"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
+                >
+                  <TemplatePreview id={tpl.id} primary={data.brand_primary_color} />
+                  <div className="mt-2 text-[11px] font-black uppercase tracking-wider text-navy">{tpl.label}</div>
+                  <div className="text-[10px] text-slate-500 leading-snug mt-0.5">{tpl.description}</div>
+                  {active && (
+                    <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary text-white grid place-items-center">
+                      <Check className="h-3 w-3" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </Section>
+
+
         <Section title="Cores da marca" icon={<Palette className="h-5 w-5" />}>
           <div className="grid md:grid-cols-2 gap-6">
             <ColorField
