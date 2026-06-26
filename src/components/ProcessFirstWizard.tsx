@@ -1944,6 +1944,8 @@ function SuccessCard({ icon, title, body, sub }: { icon: React.ReactNode; title:
 // ============================================================================
 function Step7Approval({
   companyId,
+  templateOverride,
+  onTemplateChange,
   docs,
   onEditSave,
   onApprove,
@@ -1951,6 +1953,8 @@ function Step7Approval({
   onRegenerate,
 }: {
   companyId: string | null;
+  templateOverride: string | null;
+  onTemplateChange: (id: string | null) => void;
   docs: ReviewDoc[];
   onEditSave: (name: string, content: string, reason?: string) => void;
   onApprove: (name: string) => void;
@@ -1963,6 +1967,8 @@ function Step7Approval({
   const [editReason, setEditReason] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [companyBranding, setCompanyBranding] = useState<any | null>(null);
+  const [showTemplateGallery, setShowTemplateGallery] = useState(false);
 
   const previewDoc = docs.find((d) => d.name === previewName) || null;
   const editDoc = docs.find((d) => d.name === editName) || null;
