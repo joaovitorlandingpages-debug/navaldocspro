@@ -493,6 +493,8 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   const [selectedOptionalIds, setSelectedOptionalIds] = useState<Set<string>>(new Set());
   const [ignoredOptionalIds, setIgnoredOptionalIds] = useState<Set<string>>(new Set());
   const [loadingSuggested, setLoadingSuggested] = useState(false);
+  // Template do documento (sobrescreve o padrão da empresa para esta geração)
+  const [templateOverride, setTemplateOverride] = useState<string | null>(null);
 
   // Load company id once
   useEffect(() => {
