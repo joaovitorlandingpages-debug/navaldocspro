@@ -1,5 +1,22 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export type PdfTemplateId =
+  | "classico"
+  | "executivo"
+  | "naval-azul"
+  | "minimalista"
+  | "laudo"
+  | "checklist";
+
+export const PDF_TEMPLATES: { id: PdfTemplateId; label: string; description: string }[] = [
+  { id: "classico", label: "Clássico Oficial", description: "Cabeçalho sólido na cor primária, padrão institucional." },
+  { id: "executivo", label: "Executivo Premium", description: "Cabeçalho com gradiente e tipografia ampla." },
+  { id: "naval-azul", label: "Naval Azul", description: "Faixa azul-marinho com filete dourado." },
+  { id: "minimalista", label: "Minimalista", description: "Sem barra colorida, apenas filete sutil." },
+  { id: "laudo", label: "Laudo Técnico", description: "Caixa de identificação e numeração de seções." },
+  { id: "checklist", label: "Checklist Moderno", description: "Estilo enxuto otimizado para listas e itens." },
+];
+
 export type CompanyBranding = {
   company_name: string;
   logo_primary_url: string | null;
@@ -17,6 +34,7 @@ export type CompanyBranding = {
   stamp_url: string | null;
   watermark_url: string | null;
   pdf_footer_text: string | null;
+  pdf_template: PdfTemplateId;
 };
 
 export const DEFAULT_BRANDING: Omit<CompanyBranding, "company_name"> = {
@@ -35,13 +53,14 @@ export const DEFAULT_BRANDING: Omit<CompanyBranding, "company_name"> = {
   stamp_url: null,
   watermark_url: null,
   pdf_footer_text: null,
+  pdf_template: "classico",
 };
 
 export async function loadCompanyBranding(companyId: string): Promise<CompanyBranding | null> {
   const { data, error } = await supabase
     .from("companies")
     .select(
-      "name, logo_primary_url, logo_secondary_url, brand_primary_color, brand_secondary_color, contact_phone, contact_whatsapp, contact_email, contact_website, contact_address, technical_responsible_name, technical_responsible_registry, signature_url, stamp_url, watermark_url, pdf_footer_text"
+      "name, logo_primary_url, logo_secondary_url, brand_primary_color, brand_secondary_color, contact_phone, contact_whatsapp, contact_email, contact_website, contact_address, technical_responsible_name, technical_responsible_registry, signature_url, stamp_url, watermark_url, pdf_footer_text, pdf_template",
     )
     .eq("id", companyId)
     .maybeSingle();
@@ -51,5 +70,6 @@ export async function loadCompanyBranding(companyId: string): Promise<CompanyBra
     company_name: row.name || "Empresa",
     ...DEFAULT_BRANDING,
     ...row,
+    pdf_template: (row.pdf_template as PdfTemplateId) || "classico",
   };
 }
