@@ -75,16 +75,22 @@ export async function buildBrandedDocumentPdf(opts: {
 
   // Header/footer dimensions vary per template
   const headerHeight =
-    template === "minimalista"
-      ? 50
+    template === "minimalista" || template === "protocolo" || template === "corporate-clean"
+      ? 52
+      : template === "capa-executiva"
+      ? 110
       : template === "executivo" || template === "moderno"
       ? 92
-      : template === "luxo"
+      : template === "azul-profundo"
+      ? 88
+      : template === "luxo" || template === "naval-premium" || template === "relatorio-tecnico"
       ? 86
-      : template === "institucional"
+      : template === "institucional" || template === "oficial"
       ? 80
-      : template === "escritorio"
-      ? 62
+      : template === "premium-branco"
+      ? 74
+      : template === "escritorio" || template === "timbrado"
+      ? 66
       : 72;
   const TOP_MARGIN = headerHeight + 30;
   const BOTTOM_MARGIN = 80;
