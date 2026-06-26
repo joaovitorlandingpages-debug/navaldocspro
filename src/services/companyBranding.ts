@@ -10,19 +10,39 @@ export type PdfTemplateId =
   | "institucional"
   | "moderno"
   | "luxo"
-  | "checklist";
+  | "checklist"
+  | "premium-branco"
+  | "azul-profundo"
+  | "oficial"
+  | "engenharia-naval"
+  | "protocolo"
+  | "capa-executiva"
+  | "relatorio-tecnico"
+  | "corporate-clean"
+  | "timbrado"
+  | "naval-premium";
 
-export const PDF_TEMPLATES: { id: PdfTemplateId; label: string; description: string }[] = [
-  { id: "classico", label: "Clássico Oficial", description: "Cabeçalho sólido na cor primária — padrão institucional." },
-  { id: "executivo", label: "Executivo Premium", description: "Cabeçalho com gradiente e caixa de título em destaque." },
-  { id: "naval-azul", label: "Naval Azul", description: "Faixa azul-marinho profunda com filete dourado." },
-  { id: "minimalista", label: "Minimalista", description: "Sem barra colorida, apenas filete sutil e tipografia limpa." },
-  { id: "laudo", label: "Técnico Engenharia", description: "Caixa lateral, seções numeradas, ideal para laudos técnicos." },
-  { id: "escritorio", label: "Escritório Despachante", description: "Cabeçalho claro corporativo com filete primário e blocos formais." },
-  { id: "institucional", label: "Institucional Marinha", description: "Cabeçalho navy, título centralizado e estética oficial." },
-  { id: "moderno", label: "Moderno Corporativo", description: "Cabeçalho amplo em gradiente e caixa de título arredondada." },
-  { id: "luxo", label: "Luxo Azul/Dourado", description: "Navy escuro com duas linhas douradas e tipografia premium." },
-  { id: "checklist", label: "Checklist Operacional", description: "Layout enxuto otimizado para listas e conferências." },
+export const PDF_TEMPLATES: { id: PdfTemplateId; label: string; description: string; bestFor: string }[] = [
+  { id: "classico", label: "Clássico Oficial", description: "Cabeçalho sólido na cor primária — padrão institucional.", bestFor: "Requerimentos, GRU, ofícios" },
+  { id: "executivo", label: "Executivo Premium", description: "Cabeçalho com gradiente e caixa de título em destaque.", bestFor: "Propostas e relatórios executivos" },
+  { id: "naval-azul", label: "Naval Azul", description: "Faixa azul-marinho profunda com filete dourado.", bestFor: "Documentos náuticos e marinha" },
+  { id: "minimalista", label: "Minimalista", description: "Sem barra colorida, apenas filete sutil e tipografia limpa.", bestFor: "Memorandos curtos" },
+  { id: "laudo", label: "Técnico Engenharia", description: "Caixa lateral, seções numeradas, ideal para laudos técnicos.", bestFor: "Laudos e pareceres técnicos" },
+  { id: "escritorio", label: "Escritório Despachante", description: "Cabeçalho claro corporativo com filete primário e blocos formais.", bestFor: "Despachos administrativos" },
+  { id: "institucional", label: "Institucional Marinha", description: "Cabeçalho navy, título centralizado e estética oficial.", bestFor: "Comunicações à Marinha" },
+  { id: "moderno", label: "Moderno Corporativo", description: "Cabeçalho amplo em gradiente e caixa de título arredondada.", bestFor: "Apresentações comerciais" },
+  { id: "luxo", label: "Luxo Azul/Dourado", description: "Navy escuro com duas linhas douradas e tipografia premium.", bestFor: "Certificados e contratos" },
+  { id: "checklist", label: "Checklist Operacional", description: "Layout enxuto otimizado para listas e conferências.", bestFor: "Checklists de embarcação" },
+  { id: "premium-branco", label: "Premium Branco", description: "Cabeçalho branco com linha dourada e título centralizado.", bestFor: "Convites e documentos elegantes" },
+  { id: "azul-profundo", label: "Azul Profundo", description: "Header alto em azul-marinho profundo, tipografia branca.", bestFor: "Memorandos institucionais" },
+  { id: "oficial", label: "Documento Oficial", description: "Cabeçalho escuro com dupla linha de assinatura sob o título.", bestFor: "Atas e protocolos formais" },
+  { id: "engenharia-naval", label: "Engenharia Naval", description: "Barra lateral secundária, seções numeradas, identidade técnica.", bestFor: "Memoriais de cálculo" },
+  { id: "protocolo", label: "Protocolo Marítimo", description: "Cabeçalho enxuto com selo de protocolo no canto direito.", bestFor: "Comunicações com protocolo" },
+  { id: "capa-executiva", label: "Capa Executiva", description: "Header alto com título dentro do cabeçalho — estilo capa.", bestFor: "Capas de processo e dossiês" },
+  { id: "relatorio-tecnico", label: "Relatório Técnico", description: "Gradiente secundário→primário, seções numeradas com filete.", bestFor: "Relatórios extensos" },
+  { id: "corporate-clean", label: "Corporate Clean", description: "Header branco com bloco primário lateral e título limpo.", bestFor: "Comunicados corporativos" },
+  { id: "timbrado", label: "Timbrado Elegante", description: "Faixa primária + sub-faixa secundária e itálico no subtítulo.", bestFor: "Papel timbrado clássico" },
+  { id: "naval-premium", label: "Naval Premium", description: "Navy escuro com duas linhas douradas e coluna primária à direita.", bestFor: "Documentos de alto padrão" },
 ];
 
 export type CompanyBranding = {
