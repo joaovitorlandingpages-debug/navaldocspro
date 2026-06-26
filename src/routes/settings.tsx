@@ -85,7 +85,11 @@ function CompanyTeamPage() {
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
-    if (!file || !company?.id || isLogoUploading) return;
+    if (!file || isLogoUploading) return;
+    if (!company?.id) {
+      toast.error("Empresa ainda não carregada. Aguarde alguns segundos e tente novamente.");
+      return;
+    }
 
     const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
     const maxBytes = 5 * 1024 * 1024;
