@@ -909,7 +909,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
           console.log("[DOCUMENT_READY_FOR_FINAL_PDF]", { docName });
           console.log("[DOCUMENT_REAL_GENERATION_STARTED]", { docName, processId: proc.id, customerId, vesselId });
 
-          const pdfBytes = await buildEditedTextPdfBytes(docName, review.content);
+          const pdfBytes = await buildEditedTextPdfBytes(docName, review.content, branding);
           const pdfArrayBuffer = pdfBytes.buffer.slice(
             pdfBytes.byteOffset,
             pdfBytes.byteOffset + pdfBytes.byteLength,
