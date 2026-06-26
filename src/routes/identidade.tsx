@@ -474,6 +474,142 @@ function TemplatePreview({ id, primary }: { id: PdfTemplateId; primary: string }
           </div>
         </>
       )}
+      {id === "premium-branco" && (
+        <>
+          <div className="h-3 bg-white border-b" style={{ borderColor: gold }} />
+          <div className="px-1.5 pt-1 flex flex-col items-center space-y-0.5">
+            <div className="h-1 w-1/2 rounded-sm" style={{ background: primary }} />
+            <div className="h-px w-6" style={{ background: gold }} />
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-4/5 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "azul-profundo" && (
+        <>
+          <div className="h-4" style={{ background: "#062046" }} />
+          <div className="px-1.5 pt-1 space-y-0.5">
+            <div className="h-1 w-2/3 rounded-sm" style={{ background: ink }} />
+            <div className="h-px w-full" style={{ background: "#062046" }} />
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-5/6 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "oficial" && (
+        <>
+          <div className="h-3" style={{ background: "#1f2937" }} />
+          <div className="h-[1px]" style={{ background: primary }} />
+          <div className="px-1.5 pt-1 space-y-0.5">
+            <div className="h-1 w-2/3 rounded-sm" style={{ background: ink }} />
+            <div className="h-px w-full bg-slate-300" />
+            <div className="h-px w-full bg-slate-200" />
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-4/5 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "engenharia-naval" && (
+        <>
+          <div className="h-3 flex" style={{ background: light }}>
+            <div className="w-1" style={{ background: ink }} />
+          </div>
+          <div className="px-1.5 pt-1 space-y-0.5">
+            <div className="h-1 w-1/3 rounded-sm" style={{ background: ink }} />
+            <div className="flex items-center gap-1">
+              <div className="h-1.5 w-1.5" style={{ background: "#64748b" }} />
+              <div className="h-0.5 w-2/3 bg-slate-200" />
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-1.5 w-1.5" style={{ background: "#64748b" }} />
+              <div className="h-0.5 w-1/2 bg-slate-200" />
+            </div>
+          </div>
+        </>
+      )}
+      {id === "protocolo" && (
+        <div className="px-1.5 pt-2 space-y-1">
+          <div className="flex justify-end">
+            <div className="h-1.5 w-8 border" style={{ borderColor: "#64748b" }} />
+          </div>
+          <div className="h-1 w-1/2 rounded-sm" style={{ background: ink }} />
+          <div className="h-px w-6 bg-slate-400" />
+          <div className="h-0.5 w-full bg-slate-100" />
+          <div className="h-0.5 w-5/6 bg-slate-100" />
+        </div>
+      )}
+      {id === "capa-executiva" && (
+        <>
+          <div className="h-7 relative" style={{ background: `linear-gradient(135deg, ${primary}, #334155)` }}>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-1 w-2/3 bg-white/90 rounded-sm" />
+            </div>
+            <div className="absolute left-0 right-0 -bottom-0.5 h-[2px]" style={{ background: gold }} />
+          </div>
+          <div className="px-1.5 pt-1 space-y-0.5">
+            <div className="h-px w-full bg-slate-200" />
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-5/6 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "relatorio-tecnico" && (
+        <>
+          <div className="h-4" style={{ background: `linear-gradient(90deg, ${ink}, ${primary})` }} />
+          <div className="h-[2px]" style={{ background: gold }} />
+          <div className="px-1.5 pt-1 space-y-0.5">
+            <div className="h-1 w-2/3 rounded-sm" style={{ background: ink }} />
+            <div className="h-px w-full" style={{ background: primary }} />
+            <div className="h-px w-1/4" style={{ background: gold }} />
+            <div className="flex items-center gap-1">
+              <div className="h-1.5 w-1.5" style={{ background: primary }} />
+              <div className="h-0.5 w-3/4 bg-slate-200" />
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-1.5 w-1.5" style={{ background: primary }} />
+              <div className="h-0.5 w-2/3 bg-slate-200" />
+            </div>
+          </div>
+        </>
+      )}
+      {id === "corporate-clean" && (
+        <div className="flex h-full">
+          <div className="w-2" style={{ background: primary }} />
+          <div className="flex-1 px-1.5 pt-2 space-y-1">
+            <div className="h-1 w-1/2 rounded-sm" style={{ background: ink }} />
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-5/6 bg-slate-100" />
+            <div className="h-0.5 w-3/4 bg-slate-100" />
+          </div>
+        </div>
+      )}
+      {id === "timbrado" && (
+        <>
+          <div className="h-3" style={{ background: primary }} />
+          <div className="h-1" style={{ background: "#94a3b8" }} />
+          <div className="px-1.5 pt-1 space-y-0.5">
+            <div className="h-1 w-2/3 rounded-sm" style={{ background: ink }} />
+            <div className="h-px w-1/2 bg-slate-400 italic" />
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-5/6 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "naval-premium" && (
+        <>
+          <div className="h-4 relative" style={{ background: "#061838" }}>
+            <div className="absolute right-0 top-0 bottom-0 w-3" style={{ background: primary, opacity: 0.7 }} />
+          </div>
+          <div className="h-[2px]" style={{ background: gold }} />
+          <div className="h-px" style={{ background: gold, opacity: 0.6 }} />
+          <div className="px-1.5 pt-1 flex flex-col items-center space-y-0.5">
+            <div className="h-1 w-1/2 rounded-sm" style={{ background: ink }} />
+            <div className="h-px w-full" style={{ background: gold }} />
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-4/5 bg-slate-100" />
+          </div>
+        </>
+      )}
     </div>
   );
 }
