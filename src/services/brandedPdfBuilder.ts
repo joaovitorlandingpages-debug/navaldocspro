@@ -74,7 +74,18 @@ export async function buildBrandedDocumentPdf(opts: {
   const CONTENT_W = W - LEFT * 2;
 
   // Header/footer dimensions vary per template
-  const headerHeight = template === "minimalista" ? 50 : template === "executivo" ? 90 : 72;
+  const headerHeight =
+    template === "minimalista"
+      ? 50
+      : template === "executivo" || template === "moderno"
+      ? 92
+      : template === "luxo"
+      ? 86
+      : template === "institucional"
+      ? 80
+      : template === "escritorio"
+      ? 62
+      : 72;
   const TOP_MARGIN = headerHeight + 30;
   const BOTTOM_MARGIN = 80;
 
