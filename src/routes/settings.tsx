@@ -200,7 +200,7 @@ function CompanyTeamPage() {
                          type="file"
                          accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
                          aria-label="Enviar logo da empresa"
-                         disabled={isLogoUploading || !company?.id}
+                         disabled={isLogoUploading}
                          onChange={handleLogoUpload}
                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
                          style={{ fontSize: 0 }}
