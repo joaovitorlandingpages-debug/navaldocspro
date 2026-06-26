@@ -74,7 +74,18 @@ export async function buildBrandedDocumentPdf(opts: {
   const CONTENT_W = W - LEFT * 2;
 
   // Header/footer dimensions vary per template
-  const headerHeight = template === "minimalista" ? 50 : template === "executivo" ? 90 : 72;
+  const headerHeight =
+    template === "minimalista"
+      ? 50
+      : template === "executivo" || template === "moderno"
+      ? 92
+      : template === "luxo"
+      ? 86
+      : template === "institucional"
+      ? 80
+      : template === "escritorio"
+      ? 62
+      : 72;
   const TOP_MARGIN = headerHeight + 30;
   const BOTTOM_MARGIN = 80;
 
@@ -164,6 +175,34 @@ export async function buildBrandedDocumentPdf(opts: {
       page.drawText(title, { x: LEFT, y: y - 18, size: 17, font: bold, color: ink });
       y -= 26;
       page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.7, color: gold });
+      y -= 18;
+    } else if (template === "escritorio") {
+      page.drawText(title, { x: LEFT, y: y - 16, size: 15, font: bold, color: ink });
+      y -= 22;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1.2, color: primary });
+      y -= 4;
+      page.drawText(`Emitido em ${new Date().toLocaleString("pt-BR")}`, {
+        x: LEFT, y: y - 10, size: 8.5, font: italic, color: muted,
+      });
+      y -= 22;
+    } else if (template === "institucional") {
+      const tw = measure(title, 18, bold);
+      page.drawText(title, { x: (W - tw) / 2, y: y - 20, size: 18, font: bold, color: ink });
+      y -= 30;
+      page.drawLine({ start: { x: (W - 120) / 2, y }, end: { x: (W + 120) / 2, y }, thickness: 1, color: secondary });
+      y -= 22;
+    } else if (template === "moderno") {
+      const boxH = 60;
+      page.drawRectangle({ x: LEFT, y: y - boxH, width: CONTENT_W, height: boxH, color: lightBg });
+      page.drawRectangle({ x: LEFT, y: y - boxH, width: CONTENT_W, height: 3, color: primary });
+      page.drawText(title, { x: LEFT + 18, y: y - 32, size: 17, font: bold, color: ink, maxWidth: CONTENT_W - 36 });
+      y -= boxH + 18;
+    } else if (template === "luxo") {
+      page.drawText(title, { x: LEFT, y: y - 20, size: 18, font: bold, color: ink });
+      y -= 28;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1.4, color: gold });
+      y -= 3;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.5, color: gold });
       y -= 18;
     } else {
       // classico
@@ -378,13 +417,38 @@ export async function buildBrandedDocumentPdf(opts: {
         thickness: 2,
         color: primary,
       });
+    } else if (template === "escritorio") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.98, 0.98, 0.99) });
+      p.drawRectangle({ x: 0, y: H - headerHeight - 2, width: W, height: 2, color: primary });
+      p.drawLine({
+        start: { x: 0, y: H - headerHeight },
+        end: { x: W, y: H - headerHeight },
+        thickness: 0.3,
+        color: lightBorder,
+      });
+    } else if (template === "institucional") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.06, 0.13, 0.28) });
+    } else if (template === "moderno") {
+      // Gradient bands primary -> secondary
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: primary });
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: secondary, opacity: 0.45 });
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W / 2, height: headerHeight, color: primary, opacity: 0.3 });
+    } else if (template === "luxo") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.04, 0.09, 0.2) });
+      p.drawRectangle({ x: 0, y: H - headerHeight - 2, width: W, height: 2, color: gold });
+      p.drawRectangle({ x: 0, y: H - headerHeight - 6, width: W, height: 1, color: gold });
     } else {
       // classico
       p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: primary });
     }
 
     const onDarkHeader =
-      template === "classico" || template === "executivo" || template === "naval-azul";
+      template === "classico" ||
+      template === "executivo" ||
+      template === "naval-azul" ||
+      template === "institucional" ||
+      template === "moderno" ||
+      template === "luxo";
     const headerTextColor = onDarkHeader ? rgb(1, 1, 1) : ink;
 
     // Logo or company name

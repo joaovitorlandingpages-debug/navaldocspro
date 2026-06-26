@@ -6,15 +6,23 @@ export type PdfTemplateId =
   | "naval-azul"
   | "minimalista"
   | "laudo"
+  | "escritorio"
+  | "institucional"
+  | "moderno"
+  | "luxo"
   | "checklist";
 
 export const PDF_TEMPLATES: { id: PdfTemplateId; label: string; description: string }[] = [
-  { id: "classico", label: "Clássico Oficial", description: "Cabeçalho sólido na cor primária, padrão institucional." },
-  { id: "executivo", label: "Executivo Premium", description: "Cabeçalho com gradiente e tipografia ampla." },
-  { id: "naval-azul", label: "Naval Azul", description: "Faixa azul-marinho com filete dourado." },
-  { id: "minimalista", label: "Minimalista", description: "Sem barra colorida, apenas filete sutil." },
-  { id: "laudo", label: "Laudo Técnico", description: "Caixa de identificação e numeração de seções." },
-  { id: "checklist", label: "Checklist Moderno", description: "Estilo enxuto otimizado para listas e itens." },
+  { id: "classico", label: "Clássico Oficial", description: "Cabeçalho sólido na cor primária — padrão institucional." },
+  { id: "executivo", label: "Executivo Premium", description: "Cabeçalho com gradiente e caixa de título em destaque." },
+  { id: "naval-azul", label: "Naval Azul", description: "Faixa azul-marinho profunda com filete dourado." },
+  { id: "minimalista", label: "Minimalista", description: "Sem barra colorida, apenas filete sutil e tipografia limpa." },
+  { id: "laudo", label: "Técnico Engenharia", description: "Caixa lateral, seções numeradas, ideal para laudos técnicos." },
+  { id: "escritorio", label: "Escritório Despachante", description: "Cabeçalho claro corporativo com filete primário e blocos formais." },
+  { id: "institucional", label: "Institucional Marinha", description: "Cabeçalho navy, título centralizado e estética oficial." },
+  { id: "moderno", label: "Moderno Corporativo", description: "Cabeçalho amplo em gradiente e caixa de título arredondada." },
+  { id: "luxo", label: "Luxo Azul/Dourado", description: "Navy escuro com duas linhas douradas e tipografia premium." },
+  { id: "checklist", label: "Checklist Operacional", description: "Layout enxuto otimizado para listas e conferências." },
 ];
 
 export type CompanyBranding = {
