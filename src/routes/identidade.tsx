@@ -226,6 +226,7 @@ function IdentidadePage() {
                   <TemplatePreview id={tpl.id} primary={data.brand_primary_color} />
                   <div className="mt-2 text-[11px] font-black uppercase tracking-wider text-navy">{tpl.label}</div>
                   <div className="text-[10px] text-slate-500 leading-snug mt-0.5">{tpl.description}</div>
+                  <div className="text-[9px] text-slate-400 mt-1">Ideal: {tpl.bestFor}</div>
                   {active && (
                     <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary text-white grid place-items-center">
                       <Check className="h-3 w-3" />
