@@ -2013,7 +2013,7 @@ function Step7Approval({
       cancelled = true;
       if (createdUrl) URL.revokeObjectURL(createdUrl);
     };
-  }, [previewDoc?.name, previewDoc?.content, companyId]);
+  }, [previewDoc?.name, previewDoc?.content, companyId, templateOverride]);
 
 
   const statusBadge = (s: ReviewStatus) => {
