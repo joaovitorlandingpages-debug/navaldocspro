@@ -338,6 +338,98 @@ function Section({ title, icon, children }: { title: string; icon: React.ReactNo
   );
 }
 
+function TemplatePreview({ id, primary }: { id: PdfTemplateId; primary: string }) {
+  const gold = "#c9a13a";
+  const light = "#f1f5f9";
+  const ink = "#0f172a";
+  return (
+    <div className="aspect-[3/4] rounded-md border border-slate-200 bg-white overflow-hidden relative">
+      {id === "classico" && (
+        <>
+          <div className="h-3" style={{ background: primary }} />
+          <div className="px-1.5 pt-1 space-y-0.5">
+            <div className="h-1 w-2/3 rounded-sm" style={{ background: ink }} />
+            <div className="h-px w-full bg-slate-200 mt-1" />
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-5/6 bg-slate-100" />
+            <div className="h-0.5 w-3/4 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "executivo" && (
+        <>
+          <div className="h-4" style={{ background: `linear-gradient(90deg, ${ink}, ${primary})` }} />
+          <div className="h-[2px]" style={{ background: gold }} />
+          <div className="m-1.5 p-1 rounded-sm border-l-2" style={{ background: light, borderColor: primary }}>
+            <div className="h-1 w-3/4 rounded-sm" style={{ background: ink }} />
+          </div>
+          <div className="px-1.5 space-y-0.5">
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-5/6 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "naval-azul" && (
+        <>
+          <div className="h-3" style={{ background: "#0d1f45" }} />
+          <div className="h-[2px]" style={{ background: gold }} />
+          <div className="px-1.5 pt-1 space-y-0.5">
+            <div className="h-1 w-2/3 rounded-sm" style={{ background: ink }} />
+            <div className="h-px w-full" style={{ background: gold }} />
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-4/5 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "minimalista" && (
+        <div className="px-1.5 pt-2 space-y-1">
+          <div className="h-1 w-1/2 rounded-sm" style={{ background: ink }} />
+          <div className="h-px w-6" style={{ background: primary }} />
+          <div className="h-0.5 w-full bg-slate-100" />
+          <div className="h-0.5 w-5/6 bg-slate-100" />
+          <div className="h-0.5 w-3/4 bg-slate-100" />
+        </div>
+      )}
+      {id === "laudo" && (
+        <>
+          <div className="h-4 flex items-stretch" style={{ background: light }}>
+            <div className="w-1" style={{ background: primary }} />
+          </div>
+          <div className="px-1.5 pt-1 space-y-1">
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-sm" style={{ background: primary }} />
+              <div className="h-1 w-2/3 rounded-sm" style={{ background: ink }} />
+            </div>
+            <div className="h-0.5 w-full bg-slate-100" />
+            <div className="h-0.5 w-4/5 bg-slate-100" />
+          </div>
+        </>
+      )}
+      {id === "checklist" && (
+        <>
+          <div className="h-3" style={{ background: light }} />
+          <div className="h-[2px]" style={{ background: primary }} />
+          <div className="px-1.5 pt-1 space-y-0.5">
+            <div className="flex items-center gap-1">
+              <div className="h-1.5 w-1.5 border" style={{ borderColor: primary }} />
+              <div className="h-0.5 w-3/4 bg-slate-200" />
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-1.5 w-1.5 border" style={{ borderColor: primary }} />
+              <div className="h-0.5 w-2/3 bg-slate-200" />
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-1.5 w-1.5 border" style={{ borderColor: primary }} />
+              <div className="h-0.5 w-1/2 bg-slate-200" />
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+
 function TextField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
