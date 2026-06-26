@@ -417,13 +417,38 @@ export async function buildBrandedDocumentPdf(opts: {
         thickness: 2,
         color: primary,
       });
+    } else if (template === "escritorio") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.98, 0.98, 0.99) });
+      p.drawRectangle({ x: 0, y: H - headerHeight - 2, width: W, height: 2, color: primary });
+      p.drawLine({
+        start: { x: 0, y: H - headerHeight },
+        end: { x: W, y: H - headerHeight },
+        thickness: 0.3,
+        color: lightBorder,
+      });
+    } else if (template === "institucional") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.06, 0.13, 0.28) });
+    } else if (template === "moderno") {
+      // Gradient bands primary -> secondary
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: primary });
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: secondary, opacity: 0.45 });
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W / 2, height: headerHeight, color: primary, opacity: 0.3 });
+    } else if (template === "luxo") {
+      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.04, 0.09, 0.2) });
+      p.drawRectangle({ x: 0, y: H - headerHeight - 2, width: W, height: 2, color: gold });
+      p.drawRectangle({ x: 0, y: H - headerHeight - 6, width: W, height: 1, color: gold });
     } else {
       // classico
       p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: primary });
     }
 
     const onDarkHeader =
-      template === "classico" || template === "executivo" || template === "naval-azul";
+      template === "classico" ||
+      template === "executivo" ||
+      template === "naval-azul" ||
+      template === "institucional" ||
+      template === "moderno" ||
+      template === "luxo";
     const headerTextColor = onDarkHeader ? rgb(1, 1, 1) : ink;
 
     // Logo or company name
