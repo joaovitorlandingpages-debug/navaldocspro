@@ -576,10 +576,10 @@ export async function buildBrandedDocumentPdf(opts: {
       template === "naval-premium";
     const headerTextColor = onDarkHeader ? rgb(1, 1, 1) : ink;
 
-    // Logo or company name
+    // Logo or company name (logo ~30% larger; elegant text fallback)
     if (logoImg) {
-      const maxLh = headerHeight - 20;
-      const lw = Math.min(110, (logoImg.width / logoImg.height) * maxLh);
+      const maxLh = headerHeight - 12;
+      const lw = Math.min(150, (logoImg.width / logoImg.height) * maxLh);
       const lh = (logoImg.height / logoImg.width) * lw;
       p.drawImage(logoImg, {
         x: LEFT,
@@ -589,7 +589,7 @@ export async function buildBrandedDocumentPdf(opts: {
       });
       if (b?.company_name) {
         p.drawText(sanitize(b.company_name), {
-          x: LEFT + lw + 12,
+          x: LEFT + lw + 14,
           y: H - headerHeight / 2 - 4,
           size: 11,
           font: bold,
@@ -597,12 +597,20 @@ export async function buildBrandedDocumentPdf(opts: {
         });
       }
     } else if (b?.company_name) {
-      p.drawText(sanitize(b.company_name.toUpperCase()), {
+      const name = sanitize(b.company_name.toUpperCase());
+      p.drawText(name, {
         x: LEFT,
-        y: H - headerHeight / 2 - 4,
-        size: 14,
+        y: H - headerHeight / 2 - 2,
+        size: 15,
         font: bold,
         color: headerTextColor,
+      });
+      const nw = measure(name, 15, bold);
+      p.drawLine({
+        start: { x: LEFT, y: H - headerHeight / 2 - 8 },
+        end: { x: LEFT + Math.min(nw, 180), y: H - headerHeight / 2 - 8 },
+        thickness: 0.6,
+        color: onDarkHeader ? gold : primary,
       });
     }
 
@@ -618,25 +626,28 @@ export async function buildBrandedDocumentPdf(opts: {
       maxWidth: 240,
     });
 
-    // Watermark
+    // Watermark (menor, mais transparente, centralizada)
     if (watermarkImg) {
-      const ww = 380;
+      const ww = 260;
       const wh = (watermarkImg.height / watermarkImg.width) * ww;
       p.drawImage(watermarkImg, {
         x: (W - ww) / 2,
         y: (H - wh) / 2,
         width: ww,
         height: wh,
-        opacity: 0.06,
+        opacity: 0.04,
       });
     } else if (b?.company_name) {
-      p.drawText(sanitize(b.company_name.toUpperCase()), {
-        x: 80,
-        y: H / 2,
-        size: 60,
+      const wmText = sanitize(b.company_name.toUpperCase());
+      const wmSize = 46;
+      const wmW = measure(wmText, wmSize, bold);
+      p.drawText(wmText, {
+        x: (W - wmW) / 2 + wmSize * 0.6,
+        y: H / 2 - wmSize * 0.3,
+        size: wmSize,
         font: bold,
         color: secondary,
-        opacity: 0.05,
+        opacity: 0.04,
         rotate: degrees(-30),
       });
     }
