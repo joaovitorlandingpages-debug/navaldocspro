@@ -2217,6 +2217,8 @@ function TemplateGalleryPanel({
   onToggle,
   onSelect,
   onResetToCompany,
+  sampleDoc,
+  branding,
 }: {
   effectiveTemplate: string;
   companyDefault: string | null;
@@ -2225,9 +2227,57 @@ function TemplateGalleryPanel({
   onToggle: () => void;
   onSelect: (id: string) => void;
   onResetToCompany: () => void;
+  sampleDoc: { name: string; content: string } | null;
+  branding: any;
 }) {
-  // PDF_TEMPLATES is imported at top of file
   const current = PDF_TEMPLATES.find((t) => t.id === effectiveTemplate) ?? PDF_TEMPLATES[0];
+  const [fullPreviewIdx, setFullPreviewIdx] = useState<number | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [loadingFull, setLoadingFull] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let url: string | null = null;
+    if (fullPreviewIdx === null) {
+      setPreviewUrl(null);
+      return;
+    }
+    const tpl = PDF_TEMPLATES[fullPreviewIdx];
+    if (!tpl) return;
+    setLoadingFull(true);
+    (async () => {
+      try {
+        const { buildBrandedDocumentPdf } = await import("@/services/brandedPdfBuilder");
+        const fallbackContent =
+          "REQUERIMENTO\n\nObjeto: Demonstração do modelo de documento.\n\nDADOS DO REQUERENTE\nNome: João da Silva\nCPF: 000.000.000-00\nEndereço: Rua Exemplo, 123 - Rio de Janeiro/RJ\n\nDADOS DA EMBARCAÇÃO\nNome: Mar Aberto\nTIE: 9999999\nComprimento: 8,50 m\n\nDECLARAÇÃO\nDeclaro, sob as penas da lei, que as informações prestadas são verdadeiras.\n\n- Documento de identidade\n- Comprovante de residência\n- TIE/TIEM\n";
+        const docName = sampleDoc?.name || "Documento Modelo";
+        const content = sampleDoc?.content || fallbackContent;
+        const mergedBranding = { ...(branding ?? {}), pdf_template: tpl.id };
+        const { bytes } = await buildBrandedDocumentPdf({
+          docName,
+          content,
+          branding: mergedBranding as any,
+        });
+        if (cancelled) return;
+        const ab = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+        const blob = new Blob([ab], { type: "application/pdf" });
+        url = URL.createObjectURL(blob);
+        setPreviewUrl(url);
+      } catch (e) {
+        console.error("[TEMPLATE_FULL_PREVIEW_FAILED]", e);
+        if (!cancelled) setPreviewUrl(null);
+      } finally {
+        if (!cancelled) setLoadingFull(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [fullPreviewIdx, sampleDoc?.name, sampleDoc?.content, branding]);
+
+  const fullTpl = fullPreviewIdx !== null ? PDF_TEMPLATES[fullPreviewIdx] : null;
+
   return (
     <div className="border border-slate-200 rounded-2xl bg-white">
       <button
@@ -2255,44 +2305,130 @@ function TemplateGalleryPanel({
       </button>
       {open && (
         <div className="border-t border-slate-200 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-[11px] text-slate-500">
+          <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+            <div className="text-[11px] text-slate-500 flex-1 min-w-0">
               Selecione um dos 20 modelos. A escolha vale apenas para este processo — para mudar o padrão da empresa use Identidade Corporativa.
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                const idx = PDF_TEMPLATES.findIndex((t) => t.id === effectiveTemplate);
+                setFullPreviewIdx(idx >= 0 ? idx : 0);
+              }}
+              className="text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg bg-primary text-white hover:opacity-90 shrink-0"
+            >
+              Visualizar Template
+            </button>
             {companyDefault && effectiveTemplate !== companyDefault && (
               <button
                 type="button"
                 onClick={onResetToCompany}
-                className="text-[11px] font-bold text-primary hover:underline shrink-0 ml-3"
+                className="text-[11px] font-bold text-primary hover:underline shrink-0"
               >
                 Voltar ao padrão da empresa
               </button>
             )}
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-[480px] overflow-y-auto pr-1">
-            {PDF_TEMPLATES.map((t) => {
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[480px] overflow-y-auto pr-1">
+            {PDF_TEMPLATES.map((t, i) => {
               const selected = t.id === effectiveTemplate;
               return (
-                <button
+                <div
                   key={t.id}
-                  type="button"
-                  onClick={() => onSelect(t.id)}
                   className={`text-left rounded-xl border-2 p-2 transition ${
                     selected ? "border-primary ring-2 ring-primary/20 bg-primary/5" : "border-slate-200 hover:border-slate-300"
                   }`}
                 >
-                  <TemplateMiniPreview id={t.id} primary={primary} />
-                  <div className="mt-2 text-[11px] font-black text-navy truncate">{t.label}</div>
-                  <div className="text-[10px] text-slate-500 line-clamp-2">{t.description}</div>
-                  <div className="text-[9px] text-slate-400 mt-1 truncate">Ideal: {t.bestFor}</div>
-                  {selected && (
-                    <div className="mt-1 inline-block text-[9px] font-black uppercase tracking-wider text-primary">
-                      ✓ Selecionado
-                    </div>
-                  )}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => onSelect(t.id)}
+                    className="block w-full text-left"
+                  >
+                    <TemplateMiniPreview id={t.id} primary={primary} />
+                    <div className="mt-2 text-[11px] font-black text-navy truncate">{t.label}</div>
+                    <div className="text-[10px] text-slate-500 line-clamp-2">{t.description}</div>
+                    <div className="text-[9px] text-slate-400 mt-1 truncate">Ideal: {t.bestFor}</div>
+                    {selected && (
+                      <div className="mt-1 inline-block text-[9px] font-black uppercase tracking-wider text-primary">
+                        ✓ Selecionado
+                      </div>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFullPreviewIdx(i)}
+                    className="mt-2 w-full text-[10px] font-bold text-primary hover:underline"
+                  >
+                    Ver em tela cheia
+                  </button>
+                </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {fullPreviewIdx !== null && fullTpl && (
+        <div className="fixed inset-0 z-[100] bg-slate-900/80 flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-white rounded-2xl w-full max-w-5xl h-[95vh] sm:h-[92vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between gap-3 px-3 sm:px-5 py-3 border-b border-slate-200 shrink-0">
+              <div className="min-w-0">
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                  Modelo {fullPreviewIdx + 1} de {PDF_TEMPLATES.length}
+                </div>
+                <div className="text-sm sm:text-base font-black text-navy truncate">{fullTpl.label}</div>
+                <div className="text-[11px] text-slate-500 truncate hidden sm:block">{fullTpl.description}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFullPreviewIdx(null)}
+                className="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-100 hover:bg-slate-200 shrink-0"
+              >
+                Fechar
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 bg-slate-100 relative">
+              {loadingFull && (
+                <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-500">
+                  Gerando prévia A4…
+                </div>
+              )}
+              {previewUrl ? (
+                <iframe src={previewUrl} title="Prévia do template" className="w-full h-full" />
+              ) : (
+                !loadingFull && (
+                  <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-500">
+                    Não foi possível gerar a prévia.
+                  </div>
+                )
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-2 px-3 sm:px-5 py-3 border-t border-slate-200 bg-white shrink-0 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setFullPreviewIdx((i) => (i === null ? 0 : (i - 1 + PDF_TEMPLATES.length) % PDF_TEMPLATES.length))}
+                className="px-3 py-2 text-xs font-bold rounded-lg bg-slate-100 hover:bg-slate-200"
+              >
+                ← Anterior
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onSelect(fullTpl.id);
+                  setFullPreviewIdx(null);
+                }}
+                className="flex-1 min-w-[160px] px-3 py-2 text-xs font-black uppercase tracking-wider rounded-lg bg-primary text-white hover:opacity-90"
+              >
+                Usar este modelo
+              </button>
+              <button
+                type="button"
+                onClick={() => setFullPreviewIdx((i) => (i === null ? 0 : (i + 1) % PDF_TEMPLATES.length))}
+                className="px-3 py-2 text-xs font-bold rounded-lg bg-slate-100 hover:bg-slate-200"
+              >
+                Próximo →
+              </button>
+            </div>
           </div>
         </div>
       )}
