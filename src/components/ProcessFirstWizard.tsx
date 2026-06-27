@@ -2049,6 +2049,8 @@ function Step7Approval({
         onToggle={() => setShowTemplateGallery((v) => !v)}
         onSelect={(id) => onTemplateChange(id)}
         onResetToCompany={() => onTemplateChange(null)}
+        sampleDoc={docs[0] ? { name: docs[0].name, content: docs[0].content } : null}
+        branding={companyBranding}
       />
 
       {!allApproved && (
