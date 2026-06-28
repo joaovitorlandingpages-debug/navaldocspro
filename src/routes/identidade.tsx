@@ -371,11 +371,20 @@ function IdentidadePage() {
                         {t.is_default && " · Padrão"}
                       </div>
                     </div>
-                    <div className="flex gap-1 shrink-0">
-                      <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => openStudio(t)}>
+                    <div className="flex flex-wrap gap-1 shrink-0">
+                      <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => openStudio(t)} title="Editar">
                         <Wand2 className="h-3 w-3" /> Editar
                       </Button>
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500" onClick={() => removeTemplate(t.id)}>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => duplicateTemplate(t)} title="Duplicar">
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => renameTemplate(t)} title="Renomear">
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className={`h-8 w-8 p-0 ${t.is_default ? "text-amber-500" : ""}`} onClick={() => setAsDefault(t)} title={t.is_default ? "Remover padrão" : "Definir como padrão"}>
+                        <Star className={`h-3 w-3 ${t.is_default ? "fill-current" : ""}`} />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500" onClick={() => removeTemplate(t.id)} title="Excluir">
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
