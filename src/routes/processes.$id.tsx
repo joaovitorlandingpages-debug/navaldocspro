@@ -341,7 +341,7 @@ function ProcessDetail() {
       <div className="grid lg:grid-cols-4 gap-8">
          <div className="lg:col-span-3 space-y-8">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex-wrap h-auto">
+                <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex w-full overflow-x-auto custom-scrollbar h-auto justify-start gap-1">
                    <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geral</TabsTrigger>
                    <TabsTrigger value="requirements" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
                      Checklist
