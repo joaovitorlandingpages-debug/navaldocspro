@@ -50,6 +50,7 @@ function AssinaturasPage() {
         for (const p of procs ?? []) procMap[p.id] = p;
       }
       setRows(data.map((r: any) => ({ ...r, process: r.process_id ? procMap[r.process_id] : null })));
+      try { setMetrics(await loadSignatureMetrics(profile.company_id)); } catch {}
     } catch (e: any) {
       toast.error(e.message);
     } finally { setLoading(false); }
