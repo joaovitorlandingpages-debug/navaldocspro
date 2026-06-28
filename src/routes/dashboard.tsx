@@ -1148,7 +1148,7 @@ function AdminMenu({ role, expanded, onNavigate }: { role?: string | null; expan
   const isGlobal = role === 'admin_master_global';
   const isMaster = isGlobal || role === 'admin_master';
 
-  const items: Array<{ name: string; to: string; icon: React.ReactNode; show: boolean }> = [
+  const items: Array<{ name: string; to: string; icon: ReactNode; show: boolean }> = [
     { name: "Painel Admin",           to: "/admin",                  icon: <ShieldCheck className="h-4 w-4" />, show: true },
     { name: "Admin Master Global",    to: "/admin-master",           icon: <Award className="h-4 w-4" />,       show: isGlobal },
     { name: "Biblioteca Master",      to: "/admin/document-library", icon: <Library className="h-4 w-4" />,     show: isMaster },
