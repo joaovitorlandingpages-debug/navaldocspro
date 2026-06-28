@@ -42,7 +42,7 @@ export function TemplateCard(p: TemplateCardProps) {
         <div className="absolute inset-0 ring-1 ring-inset ring-black/5 z-10 pointer-events-none" />
         {p.cover ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.cover} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <img src={p.cover} alt={p.name} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : p.coverFallback ? (
           <div className="w-full h-full group-hover:scale-[1.02] transition-transform duration-500">{p.coverFallback}</div>
         ) : (
