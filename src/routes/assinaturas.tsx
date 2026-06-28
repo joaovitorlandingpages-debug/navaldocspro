@@ -73,24 +73,27 @@ function AssinaturasPage() {
   }, [rows]);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight">Central de Assinaturas</h1>
-          <p className="text-sm text-slate-500">Solicite, acompanhe e audite assinaturas online de documentos.</p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {profile?.role === "admin_master_global" && profile?.company_id && (
-            <SignatureTestRunner companyId={profile.company_id} userId={profile.id} onChanged={load} />
-          )}
-          <Button onClick={() => setOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" /> Nova Solicitação
-          </Button>
-        </div>
-      </div>
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+      <PageHeader
+        title="Central de Assinaturas"
+        description="Solicite, acompanhe e audite assinaturas online de documentos"
+        showBack={false}
+        actions={
+          <>
+            {profile?.role === "admin_master_global" && profile?.company_id && (
+              <SignatureTestRunner companyId={profile.company_id} userId={profile.id} onChanged={load} />
+            )}
+            <Button onClick={() => setOpen(true)} className="gap-2">
+              <Plus className="w-4 h-4" /> Nova Solicitação
+            </Button>
+          </>
+        }
+      />
 
-      {metrics && (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+      {loading && !metrics ? (
+        <CardGridSkeleton count={8} className="sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8" />
+      ) : metrics && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2">
           <MetricCard label="Total" value={metrics.total} />
           <MetricCard label="Pendentes" value={metrics.pending} color="text-blue-600" />
           <MetricCard label="Em andamento" value={metrics.in_progress} color="text-amber-600" />
@@ -102,7 +105,7 @@ function AssinaturasPage() {
         </div>
       )}
 
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
         {[
           ["all", "Todas"],
           ["sent", "Pendentes"],
@@ -114,7 +117,7 @@ function AssinaturasPage() {
           <button
             key={key}
             onClick={() => setFilter(key)}
-            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap transition ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap transition shrink-0 ${
               filter === key ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
@@ -124,13 +127,14 @@ function AssinaturasPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-20 text-slate-400">Carregando...</div>
+        <ListSkeleton items={5} />
       ) : filtered.length === 0 ? (
-        <Card className="p-12 text-center">
-          <FileSignature className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-          <p className="font-bold text-slate-700">Nenhuma solicitação</p>
-          <p className="text-sm text-slate-500 mt-1">Crie uma nova solicitação para enviar documentos para assinatura.</p>
-        </Card>
+        <EmptyState
+          icon={FileSignature}
+          title="Nenhuma solicitação"
+          description="Crie uma nova solicitação para enviar documentos para assinatura."
+          action={{ label: "Nova Solicitação", onClick: () => setOpen(true) }}
+        />
       ) : (
         <div className="grid gap-3">
           {filtered.map(r => <RequestRow key={r.id} row={r} onChanged={load} />)}
