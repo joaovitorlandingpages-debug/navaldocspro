@@ -1,7 +1,9 @@
+import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Download, Star, Heart, ShoppingCart, Check } from "lucide-react";
+
 
 export type TemplateCardProps = {
   name: string;
