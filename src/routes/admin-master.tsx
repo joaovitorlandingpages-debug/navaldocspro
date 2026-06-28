@@ -132,6 +132,7 @@ function AdminMasterPage() {
             <TabsTrigger value="plans">Planos</TabsTrigger>
             <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
             <TabsTrigger value="logs">Logs Master</TabsTrigger>
+            <TabsTrigger value="debug">Debug</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6"><OverviewTab /></TabsContent>
@@ -139,7 +140,9 @@ function AdminMasterPage() {
           <TabsContent value="plans" className="mt-6"><PlansTab /></TabsContent>
           <TabsContent value="marketplace" className="mt-6"><MarketplaceTab /></TabsContent>
           <TabsContent value="logs" className="mt-6"><LogsTab /></TabsContent>
+          <TabsContent value="debug" className="mt-6"><DebugTab /></TabsContent>
         </Tabs>
+
       </main>
     </div>
   );
