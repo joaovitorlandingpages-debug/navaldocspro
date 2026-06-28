@@ -177,7 +177,7 @@ function DashboardLayout() {
       { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
       { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
       { name: "Templates", icon: <LayoutTemplate className="h-5 w-5" />, path: "/templates" },
-      { name: "Assinaturas", icon: <FileSignature className="h-5 w-5" />, path: "/assinaturas" },
+      { name: "Assinaturas", icon: <Signature className="h-5 w-5" />, path: "/assinaturas" },
       { name: "Identidade Corporativa", icon: <Award className="h-5 w-5" />, path: "/identidade" },
       { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
     ]},
