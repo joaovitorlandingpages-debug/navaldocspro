@@ -101,8 +101,9 @@ function GratuitosPage() {
                 name={t.label}
                 category={CATEGORY_OF[t.id] ?? "geral"}
                 kind={owned.has(t.id) ? "owned" : "free"}
-                logoUrl={branding?.logo_url}
-                primaryColor={branding?.primary_color}
+                logoUrl={branding?.logo_primary_url}
+                primaryColor={branding?.brand_primary_color}
+
               />
             }
             onPreview={() => setPreview({ id: t.id, name: t.label })}
