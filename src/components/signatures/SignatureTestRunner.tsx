@@ -148,6 +148,64 @@ export function SignatureTestRunner({ companyId, userId, onChanged }: {
       } catch (e: any) {
         update("anchor", { status: "warn", detail: e.message });
       }
+      // T-C. Sequential ordering
+      update("sequential", { status: "running" });
+      try {
+        const seq = await signaturesService.create({
+          company_id: companyId,
+          title: `${TEST_TITLE_PREFIX} SEQ ${Date.now()}`,
+          signing_order: "sequential",
+          created_by: userId,
+          participants: [
+            { name: "Cliente Seq", email: "seq1@navaldocs.local", role: "cliente", signing_order: 1 },
+            { name: "Engenheiro Seq", email: "seq2@navaldocs.local", role: "engenheiro", signing_order: 2 },
+          ],
+        });
+        const second = seq.participants.find((p: any) => p.signing_order === 2);
+        let blocked = false;
+        try {
+          await signaturesService.signByToken(second!.access_token, {
+            signature_type: "typed", signature_data: "X", accepted_terms: true,
+          });
+        } catch (err: any) {
+          blocked = /aguardando/i.test(err.message || "");
+        }
+        update("sequential", { status: blocked ? "ok" : "warn", detail: blocked ? "bloqueio sequencial OK" : "não bloqueou" });
+        await supabase.from("signature_requests").delete().eq("id", seq.request.id);
+      } catch (e: any) {
+        update("sequential", { status: "warn", detail: e.message });
+      }
+
+      // T-C. Reusable signature
+      update("reusable", { status: "running" });
+      try {
+        const { data: cust } = await supabase.from("customers")
+          .insert({ company_id: companyId, name: `${TEST_TITLE_PREFIX} Cliente Reuso ${Date.now()}` })
+          .select("id").single();
+        const reuse = await signaturesService.create({
+          company_id: companyId,
+          title: `${TEST_TITLE_PREFIX} REUSE ${Date.now()}`,
+          signing_order: "free",
+          customer_id: cust!.id,
+          created_by: userId,
+          participants: [{ name: "Cliente Reuso", email: "reuse@navaldocs.local", role: "cliente", customer_id: cust!.id }],
+        });
+        const tok = reuse.participants[0].access_token;
+        await signaturesService.signByToken(tok, {
+          signature_type: "typed", signature_data: "Reuso", accepted_terms: true, reuse_authorized: true,
+        } as any);
+        const { data: stored } = await supabase.from("customer_signatures")
+          .select("id,reuse_authorized").eq("customer_id", cust!.id).maybeSingle();
+        update("reusable", {
+          status: stored?.reuse_authorized ? "ok" : "warn",
+          detail: stored ? "registrada" : "não persistida (verifique customer_signatures)",
+        });
+        update("customer", { status: cust ? "ok" : "fail", detail: cust ? `customer_id=${cust.id.slice(0, 8)}…` : "falha" });
+      } catch (e: any) {
+        update("reusable", { status: "warn", detail: e.message });
+        update("customer", { status: "warn", detail: e.message });
+      }
+
 
       // 17. Log
       update("log", { status: "running" });
