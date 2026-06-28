@@ -43,6 +43,7 @@ import { openStoredFile } from "@/utils/file-preview";
 import { ProcessDocumentsPanel } from "@/components/process/ProcessDocumentsPanel";
 import { ClientPortalPanel } from "@/components/process/ClientPortalPanel";
 import { ProcessSignaturesPanel } from "@/components/process/ProcessSignaturesPanel";
+import { SignaturesStatusCard } from "@/components/process/SignaturesStatusCard";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
