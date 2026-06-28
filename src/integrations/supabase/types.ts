@@ -975,6 +975,56 @@ export type Database = {
           },
         ]
       }
+      company_template_library: {
+        Row: {
+          acquired_at: string
+          base_template: string
+          company_id: string
+          created_at: string
+          document_type: string | null
+          id: string
+          is_default: boolean
+          is_favorite: boolean
+          source: string
+          template_slug: string
+          updated_at: string
+        }
+        Insert: {
+          acquired_at?: string
+          base_template: string
+          company_id: string
+          created_at?: string
+          document_type?: string | null
+          id?: string
+          is_default?: boolean
+          is_favorite?: boolean
+          source: string
+          template_slug: string
+          updated_at?: string
+        }
+        Update: {
+          acquired_at?: string
+          base_template?: string
+          company_id?: string
+          created_at?: string
+          document_type?: string | null
+          id?: string
+          is_default?: boolean
+          is_favorite?: boolean
+          source?: string
+          template_slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_template_library_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compliance_history: {
         Row: {
           created_at: string | null
@@ -2486,6 +2536,167 @@ export type Database = {
           required_action?: string
           rule_description?: string | null
           rule_name?: string
+        }
+        Relationships: []
+      }
+      marketplace_collections: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          price_cents: number
+          published: boolean
+          slug: string
+          template_slugs: string[]
+          updated_at: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          price_cents?: number
+          published?: boolean
+          slug: string
+          template_slugs?: string[]
+          updated_at?: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          price_cents?: number
+          published?: boolean
+          slug?: string
+          template_slugs?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_orders: {
+        Row: {
+          amount_cents: number
+          company_id: string
+          created_at: string
+          id: string
+          item_kind: string
+          item_slug: string
+          mp_payment_id: string | null
+          mp_preference_id: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          company_id: string
+          created_at?: string
+          id?: string
+          item_kind: string
+          item_slug: string
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          company_id?: string
+          created_at?: string
+          id?: string
+          item_kind?: string
+          item_slug?: string
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_templates: {
+        Row: {
+          author: string
+          base_template: string
+          category: string
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          downloads_count: number
+          gallery_urls: string[]
+          id: string
+          is_bestseller: boolean
+          is_exclusive: boolean
+          is_featured: boolean
+          is_new: boolean
+          is_promo: boolean
+          name: string
+          price_cents: number
+          published: boolean
+          rating: number
+          slug: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          author?: string
+          base_template: string
+          category: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          downloads_count?: number
+          gallery_urls?: string[]
+          id?: string
+          is_bestseller?: boolean
+          is_exclusive?: boolean
+          is_featured?: boolean
+          is_new?: boolean
+          is_promo?: boolean
+          name: string
+          price_cents?: number
+          published?: boolean
+          rating?: number
+          slug: string
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          author?: string
+          base_template?: string
+          category?: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          downloads_count?: number
+          gallery_urls?: string[]
+          id?: string
+          is_bestseller?: boolean
+          is_exclusive?: boolean
+          is_featured?: boolean
+          is_new?: boolean
+          is_promo?: boolean
+          name?: string
+          price_cents?: number
+          published?: boolean
+          rating?: number
+          slug?: string
+          updated_at?: string
+          version?: string
         }
         Relationships: []
       }
