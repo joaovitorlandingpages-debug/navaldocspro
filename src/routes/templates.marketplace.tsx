@@ -23,8 +23,9 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Search, Sparkles, Crown, Anchor, Scale, Package, ClipboardList, FileText,
-  ArrowRight, TrendingUp, Star, Filter,
+  ArrowRight, TrendingUp, Star, Filter, Users, Wand2, Award,
 } from "lucide-react";
+
 
 export const Route = createFileRoute("/templates/marketplace")({ component: MarketplacePage });
 
