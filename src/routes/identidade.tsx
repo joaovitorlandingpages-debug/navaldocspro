@@ -521,6 +521,16 @@ function IdentidadePage() {
         initialBaseTemplate={studioBase}
         onSaved={onTemplateSaved}
       />
+
+      <NewTemplateDialog
+        open={newDialogOpen}
+        onClose={() => setNewDialogOpen(false)}
+        defaultBase={data.pdf_template}
+        onPick={(base) => {
+          setNewDialogOpen(false);
+          openStudio(null, base);
+        }}
+      />
     </>
   );
 }
