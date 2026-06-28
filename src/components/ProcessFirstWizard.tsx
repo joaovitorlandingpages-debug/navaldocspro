@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import * as pdfjsLib from "pdfjs-dist";
-import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import {
   X,
   ChevronRight,
@@ -35,8 +33,6 @@ import {
   logLibraryEvent,
   type SuggestedTemplate,
 } from "@/services/documentLibrary";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 interface Props {
   isOpen: boolean;
