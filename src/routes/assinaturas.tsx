@@ -108,7 +108,7 @@ function AssinaturasPage() {
         </div>
       )}
 
-      <NewRequestDialog open={open} onOpenChange={setOpen} onCreated={load} />
+      <SignatureRequestDialog open={open} onOpenChange={setOpen} onCreated={load} />
     </div>
   );
 }
