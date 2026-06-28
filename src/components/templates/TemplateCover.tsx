@@ -29,8 +29,8 @@ const STYLE_BY_ID: Record<string, Style> = {
   gru:            { from: "#ffffff", to: "#f1f5f9", accent: "#1e3a8a", icon: Receipt,       pattern: "hex",       layout: "minimal" },
   requerimento:   { from: "#ffffff", to: "#e2e8f0", accent: "#0ea5e9", icon: FileSignature, pattern: "diagonal",  layout: "engineering" },
   contrato:       { from: "#0f172a", to: "#020617", accent: "#eab308", icon: FileSignature, pattern: "lines",     layout: "luxury" },
-  procuracao:     { from: "#3f1d38", to: "#1c0a18", accent: "#f0abfc", icon: Gavel,         pattern: "chevron",   layout: "luxury" },
-  memorial:       { from: "#1e3a8a", to: "#0c1a40", accent: "#bae6fd", icon: Wrench,        pattern: "blueprint", layout: "engineering" },
+  procuracao:     { from: "#3f1d38", to: "#1c0a18", accent: "#f0abfc", icon: Feather,         pattern: "chevron",   layout: "luxury" },
+  memorial:       { from: "#1e3a8a", to: "#0c1a40", accent: "#bae6fd", icon: Ruler,        pattern: "blueprint", layout: "engineering" },
   art:            { from: "#7f1d1d", to: "#450a0a", accent: "#fecaca", icon: BadgeCheck,    pattern: "diagonal",  layout: "report" },
   relatorio:      { from: "#155e75", to: "#083344", accent: "#67e8f9", icon: FileText,      pattern: "grid",      layout: "report" },
   certificado:    { from: "#713f12", to: "#451a03", accent: "#fde68a", icon: BadgeCheck,    pattern: "chevron",   layout: "luxury" },
@@ -38,7 +38,7 @@ const STYLE_BY_ID: Record<string, Style> = {
   dossie:         { from: "#312e81", to: "#0f0a2a", accent: "#c4b5fd", icon: Package,       pattern: "grid",      layout: "executive" },
 
   // Categories
-  engenharia:     { from: "#1e3a8a", to: "#0c1a40", accent: "#93c5fd", icon: Wrench,        pattern: "blueprint", layout: "engineering" },
+  engenharia:     { from: "#1e3a8a", to: "#0c1a40", accent: "#93c5fd", icon: Ruler,        pattern: "blueprint", layout: "engineering" },
   marinha:        { from: "#0c4a6e", to: "#082f49", accent: "#7dd3fc", icon: Anchor,        pattern: "waves",     layout: "naval" },
   financeiro:     { from: "#064e3b", to: "#022c22", accent: "#fde68a", icon: Coins,         pattern: "grid",      layout: "report" },
   juridico:       { from: "#1f1937", to: "#0c0a1f", accent: "#fbbf24", icon: Scale,         pattern: "lines",     layout: "luxury" },
@@ -50,7 +50,7 @@ const STYLE_BY_ID: Record<string, Style> = {
   laudos:         { from: "#064e3b", to: "#022c22", accent: "#34d399", icon: FlaskConical,  pattern: "grid",      layout: "report" },
   checklists:     { from: "#1d4ed8", to: "#1e1b4b", accent: "#a5b4fc", icon: ClipboardList, pattern: "lines",     layout: "checklist" },
   contratos:      { from: "#0f172a", to: "#020617", accent: "#eab308", icon: FileSignature, pattern: "lines",     layout: "luxury" },
-  memoriais:      { from: "#1e3a8a", to: "#0c1a40", accent: "#bae6fd", icon: Wrench,        pattern: "blueprint", layout: "engineering" },
+  memoriais:      { from: "#1e3a8a", to: "#0c1a40", accent: "#bae6fd", icon: Ruler,        pattern: "blueprint", layout: "engineering" },
   registro:       { from: "#0c4a6e", to: "#082f49", accent: "#7dd3fc", icon: Stamp,         pattern: "waves",     layout: "naval" },
   fiscalizacao:   { from: "#7f1d1d", to: "#450a0a", accent: "#fecaca", icon: ShieldCheck,   pattern: "diagonal",  layout: "report" },
   corporate:      { from: "#0f172a", to: "#1e293b", accent: "#c7d2fe", icon: Building2,     pattern: "grid",      layout: "executive" },
@@ -204,7 +204,7 @@ export function TemplateCover({
           <div className="flex items-center justify-between mb-2">
             {logoUrl ? <img src={logoUrl} alt="logo" className="h-5 max-w-[50%] object-contain" /> :
               <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: from }}>{companyName || "NavalDocs"}</div>}
-            <Wrench className="size-4" style={{ color: from }} />
+            <Ruler className="size-4" style={{ color: from }} />
           </div>
           <div className="border-2 border-dashed flex-1 rounded flex items-center justify-center" style={{ borderColor: from }}>
             <Icon className="size-10 opacity-60" style={{ color: from }} />
