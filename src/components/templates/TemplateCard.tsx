@@ -42,9 +42,12 @@ export function TemplateCard(p: TemplateCardProps) {
         {p.cover ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={p.cover} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        ) : p.coverFallback ? (
+          <div className="w-full h-full group-hover:scale-[1.02] transition-transform duration-500">{p.coverFallback}</div>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">Sem capa</div>
         )}
+
         {p.badges?.length ? (
           <div className="absolute top-2 left-2 flex flex-wrap gap-1">
             {p.badges.map((b) => (
