@@ -2530,9 +2530,20 @@ function TemplateMiniPreview({ id, primary }: { id: string; primary: string }) {
   const ink = "#0f172a";
   const navy = "#0d1f45";
   const navyDeep = "#062046";
-  // Simplified visual differentiator per template
   return (
     <div className="aspect-[3/4] rounded-md border border-slate-200 bg-white overflow-hidden relative text-[0px]">
+      {(id === "corporate-clean" || id === "engenharia-naval" || id === "laudo") && (
+        <div
+          className="absolute left-0 top-0 bottom-0 z-[1]"
+          style={{ width: id === "corporate-clean" ? 10 : 5, background: id === "corporate-clean" ? primary : ink }}
+        />
+      )}
+      {id === "naval-premium" && (
+        <div className="absolute right-0 top-0 bottom-0 z-[1]" style={{ width: 12, background: primary, opacity: 0.75 }} />
+      )}
+      {(id === "protocolo" || id === "oficial") && (
+        <div className="absolute right-2 top-8 z-[2] h-3 w-9 rounded-[2px] border" style={{ borderColor: id === "oficial" ? primary : "#64748b" }} />
+      )}
       {/* Header band */}
       {(() => {
         const h = id === "minimalista" || id === "protocolo" || id === "corporate-clean" ? 6
@@ -2575,7 +2586,7 @@ function TemplateMiniPreview({ id, primary }: { id: string; primary: string }) {
         );
       })()}
       {/* Body lines */}
-      <div className="px-1.5 pt-1.5 space-y-1">
+      <div className={`px-1.5 pt-1.5 space-y-1 ${id === "corporate-clean" ? "pl-4" : id === "laudo" || id === "engenharia-naval" ? "pl-3" : ""}`}>
         {id === "checklist" ? (
           <>
             {[0,1,2,3].map((i) => (
@@ -2584,6 +2595,41 @@ function TemplateMiniPreview({ id, primary }: { id: string; primary: string }) {
                 <div className="h-[2px] flex-1 bg-slate-200" />
               </div>
             ))}
+          </>
+        ) : id === "escritorio" || id === "corporate-clean" ? (
+          <>
+            <div className="h-[3px] w-1/2 rounded-sm" style={{ background: ink }} />
+            <div className="grid grid-cols-2 gap-1 pt-0.5">
+              <div className="space-y-1">
+                <div className="h-[2px] w-full bg-slate-200" />
+                <div className="h-[2px] w-5/6 bg-slate-100" />
+                <div className="h-[2px] w-3/4 bg-slate-100" />
+              </div>
+              <div className="space-y-1">
+                <div className="h-[2px] w-full bg-slate-200" />
+                <div className="h-[2px] w-4/5 bg-slate-100" />
+                <div className="h-[2px] w-2/3 bg-slate-100" />
+              </div>
+            </div>
+        </>
+        ) : id === "capa-executiva" ? (
+          <>
+            <div className="mt-3 mx-auto h-[4px] w-2/3 rounded-sm" style={{ background: ink }} />
+            <div className="mx-auto h-[1px] w-1/2" style={{ background: gold }} />
+            <div className="pt-2 space-y-1">
+              <div className="h-[2px] w-full bg-slate-100" />
+              <div className="h-[2px] w-5/6 bg-slate-100" />
+            </div>
+          </>
+        ) : id === "protocolo" ? (
+          <>
+            <div className="h-[3px] w-1/2 rounded-sm" style={{ background: ink }} />
+            <div className="h-[1px] w-8 bg-slate-400" />
+            <div className="pt-1 space-y-1">
+              <div className="h-[2px] w-full bg-slate-100" />
+              <div className="h-[2px] w-5/6 bg-slate-100" />
+              <div className="h-[2px] w-2/3 bg-slate-100" />
+            </div>
           </>
         ) : id === "engenharia-naval" || id === "relatorio-tecnico" || id === "laudo" ? (
           <>
@@ -2595,6 +2641,14 @@ function TemplateMiniPreview({ id, primary }: { id: string; primary: string }) {
             <div className="flex items-center gap-1">
               <div style={{ width: 6, height: 6, background: id === "relatorio-tecnico" ? primary : "#64748b" }} />
               <div className="h-[2px] w-1/2 bg-slate-200" />
+            </div>
+            <div className="grid grid-cols-[8px_1fr] gap-1 pt-0.5">
+              <div className="h-8 rounded-sm" style={{ background: primary, opacity: 0.25 }} />
+              <div className="space-y-1">
+                <div className="h-[2px] w-full bg-slate-100" />
+                <div className="h-[2px] w-5/6 bg-slate-100" />
+                <div className="h-[2px] w-3/4 bg-slate-100" />
+              </div>
             </div>
           </>
         ) : (
