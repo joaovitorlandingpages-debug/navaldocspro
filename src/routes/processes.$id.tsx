@@ -304,8 +304,8 @@ function ProcessDetail() {
       />
 
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm mb-8">
-         <div className="flex flex-wrap gap-8">
+      <div className="bg-white p-4 sm:p-6 rounded-[2rem] border border-slate-100 shadow-sm mb-8">
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="flex items-center gap-3">
                <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
                   <User className="h-5 w-5" />
