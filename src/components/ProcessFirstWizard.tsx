@@ -2565,7 +2565,8 @@ function PdfCanvasPreview({ bytes }: { bytes: Uint8Array }) {
           import("pdfjs-dist"),
         ]);
         pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
-        const loadingTask = pdfjsLib.getDocument({ data: bytes.slice() } as any);
+        const pdfData = bytes.slice();
+        const loadingTask = pdfjsLib.getDocument({ data: pdfData } as any);
         const pdf = await loadingTask.promise;
         const container = containerRef.current;
         if (!container || cancelled) return;
