@@ -10,6 +10,7 @@ import { Plus, Copy, MessageCircle, Mail, X, FileSignature, Clock, CheckCircle2,
 import { supabase } from "@/integrations/supabase/client";
 import { SignatureTestRunner } from "@/components/signatures/SignatureTestRunner";
 import { SignatureRequestDialog } from "@/components/signatures/SignatureRequestDialog";
+import { loadSignatureMetrics, type SignatureMetrics } from "@/services/signatureMetrics";
 
 export const Route = createFileRoute("/assinaturas")({
   component: AssinaturasPage,
