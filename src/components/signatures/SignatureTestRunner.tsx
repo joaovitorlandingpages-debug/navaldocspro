@@ -35,6 +35,9 @@ export function SignatureTestRunner({ companyId, userId, onChanged }: {
     { id: "verify", label: "13. Página /verificar-assinatura", status: "pending" },
     { id: "downloads", label: "14. Downloads disponíveis", status: "pending" },
     { id: "anchor", label: "16. Âncoras: lookup + fallback", status: "pending" },
+    { id: "sequential", label: "T-C. Ordem sequencial bloqueia próximo", status: "pending" },
+    { id: "reusable", label: "T-C. Assinatura reutilizável marcada", status: "pending" },
+    { id: "customer", label: "T-C. Vínculo com cliente persistido", status: "pending" },
     { id: "log", label: "17. Log signature_test_executed", status: "pending" },
   ];
 
