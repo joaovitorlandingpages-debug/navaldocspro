@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Plus, Copy, MessageCircle, Mail, X, FileSignature, Clock, CheckCircle2, AlertCircle, Download, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { SignatureTestRunner } from "@/components/signatures/SignatureTestRunner";
 
 export const Route = createFileRoute("/assinaturas")({
   component: AssinaturasPage,
