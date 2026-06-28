@@ -1142,10 +1142,10 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   };
 
   const content = (
-    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[95dvh] sm:max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between">
+        <div className="px-4 sm:px-8 py-4 sm:py-5 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-black text-navy">Novo Processo</h2>
             <p className="text-xs text-slate-500 font-medium">Comece pelo serviço — o resto é automático</p>
@@ -1156,7 +1156,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         </div>
 
         {/* Progress */}
-        <div className="px-8 py-4 border-b border-slate-100 flex items-center gap-2">
+        <div className="px-4 sm:px-8 py-3 sm:py-4 border-b border-slate-100 flex items-center gap-2 overflow-x-auto">
           {steps.map((label, i) => {
             const num = i + 1;
             const active = num === state.step;
@@ -1174,7 +1174,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-8 py-6">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-5 sm:py-6">
           {state.step === 1 && <Step1 onPick={(k) => { dispatch({ type: "SET_SERVICE", service: k }); dispatch({ type: "STEP", step: 2 }); }} />}
           {state.step === 2 && service && (
             <Step2Identity
@@ -1275,7 +1275,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
 
         {/* Footer */}
         {state.step < 8 && (
-          <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-between gap-3 bg-slate-50">
+          <div className="px-4 sm:px-8 py-4 sm:py-5 border-t border-slate-100 flex items-center justify-between gap-3 bg-slate-50 shrink-0">
             <button
               onClick={() => dispatch({ type: "STEP", step: Math.max(1, state.step - 1) })}
               disabled={state.step === 1}
