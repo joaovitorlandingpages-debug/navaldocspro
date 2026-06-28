@@ -23,8 +23,9 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Search, Sparkles, Crown, Anchor, Scale, Package, ClipboardList, FileText,
-  ArrowRight, TrendingUp, Star, Filter,
+  ArrowRight, TrendingUp, Star, Filter, Users, Wand2, Award,
 } from "lucide-react";
+
 
 export const Route = createFileRoute("/templates/marketplace")({ component: MarketplacePage });
 
@@ -357,6 +358,80 @@ function MarketplacePage() {
           </div>
         )}
       </section>
+
+      {/* AUTORES */}
+      <section>
+        <div className="flex items-center gap-2 mb-4 text-primary">
+          <Users className="size-5" />
+          <h2 className="text-xl font-bold text-slate-900">Autores em destaque</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {[
+            { name: "NavalDocs Studio", specialty: "Engenharia Naval", templates: 42, downloads: 12480, rating: 4.9, from: "#1e3a8a", to: "#0c1a40" },
+            { name: "Marítima Premium", specialty: "Documentação Marinha", templates: 28, downloads: 8210, rating: 4.8, from: "#0c4a6e", to: "#082f49" },
+            { name: "JurisNaval", specialty: "Jurídico & Contratos", templates: 19, downloads: 5360, rating: 4.7, from: "#1f1937", to: "#0c0a1f" },
+            { name: "Atelier Executivo", specialty: "Dossiês & Relatórios", templates: 24, downloads: 6940, rating: 4.9, from: "#312e81", to: "#0f0a2a" },
+          ].map((a) => (
+            <Card key={a.name} className="rounded-2xl overflow-hidden border-slate-200/60 shadow-lg hover:-translate-y-1 transition-all">
+              <div className="h-20 relative" style={{ background: `linear-gradient(135deg, ${a.from}, ${a.to})` }}>
+                <div className="absolute -bottom-8 left-5 size-16 rounded-2xl bg-white shadow-xl flex items-center justify-center text-slate-900 font-black text-lg ring-4 ring-white">
+                  {a.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
+                </div>
+                <Award className="absolute top-3 right-3 size-5 text-amber-300" />
+              </div>
+              <div className="pt-10 px-5 pb-5">
+                <div className="font-bold text-slate-900">{a.name}</div>
+                <div className="text-xs text-muted-foreground">{a.specialty}</div>
+                <div className="flex items-center gap-3 mt-3 text-xs text-slate-600">
+                  <span className="flex items-center gap-1"><Star className="size-3 fill-amber-400 text-amber-400" />{a.rating}</span>
+                  <span>· {a.templates} templates</span>
+                  <span>· {a.downloads.toLocaleString("pt-BR")} downloads</span>
+                </div>
+                <Button size="sm" variant="outline" className="w-full mt-4" onClick={() => toast.info("Página do autor em breve")}>
+                  Ver portfólio
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* TEMPLATES INTELIGENTES (IA) */}
+      <section>
+        <Card className="relative overflow-hidden rounded-3xl border-slate-200/60 bg-gradient-to-br from-violet-600 via-indigo-700 to-slate-900 text-white p-8 md:p-12 shadow-2xl">
+          <div className="absolute inset-0 opacity-30 pointer-events-none"
+            style={{ backgroundImage: "radial-gradient(circle at 80% 20%, rgba(167,139,250,0.5), transparent 50%), radial-gradient(circle at 10% 80%, rgba(56,189,248,0.4), transparent 50%)" }} />
+          <div className="relative grid md:grid-cols-[1fr_auto] gap-6 items-center">
+            <div className="max-w-2xl space-y-3">
+              <Badge variant="outline" className="border-violet-300/40 bg-violet-400/10 text-violet-200">
+                <Wand2 className="size-3 mr-1" /> NavalDocs AI · Em breve
+              </Badge>
+              <h2 className="text-2xl md:text-3xl font-black leading-tight">
+                Templates inteligentes gerados sob medida pela IA
+              </h2>
+              <p className="text-slate-200 text-sm md:text-base">
+                Descreva o documento que você precisa e a IA criará um template personalizado com a identidade da sua empresa aplicada automaticamente.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                <Input
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50 flex-1"
+                  placeholder="Ex.: laudo técnico de embarcação com vistoria estrutural..."
+                />
+                <Button className="bg-white text-slate-900 hover:bg-white/90" onClick={() => toast.info("Geração por IA será liberada em breve.")}>
+                  <Wand2 className="size-4 mr-1" /> Gerar template
+                </Button>
+              </div>
+            </div>
+            <div className="hidden md:block">
+              <div className="size-32 rounded-3xl bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center">
+                <Wand2 className="size-14 text-violet-200" />
+              </div>
+            </div>
+          </div>
+        </Card>
+      </section>
+
+
 
       <TemplatePreviewModal
         open={!!preview}
