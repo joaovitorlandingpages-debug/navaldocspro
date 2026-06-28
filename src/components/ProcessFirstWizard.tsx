@@ -2275,6 +2275,33 @@ function TemplateGalleryPanel({
   const [loadingFull, setLoadingFull] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null);
+  const [libraryItems, setLibraryItems] = useState<{ id: string; base: PdfTemplateId; label: string; favorite: boolean; isDefault: boolean; source: string }[]>([]);
+
+  useEffect(() => {
+    if (!companyId) { setLibraryItems([]); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { listCompanyLibrary } = await import("@/services/marketplaceTemplates");
+        const lib = await listCompanyLibrary(companyId);
+        if (cancelled) return;
+        const items = lib.map((l) => ({
+          id: l.id,
+          base: l.base_template,
+          label: PDF_TEMPLATES.find((t) => t.id === l.template_slug)?.label ?? l.template_slug,
+          favorite: l.is_favorite,
+          isDefault: l.is_default,
+          source: l.source,
+        }));
+        items.sort((a, b) => Number(b.favorite) - Number(a.favorite) || Number(b.isDefault) - Number(a.isDefault));
+        setLibraryItems(items);
+      } catch (e) {
+        console.warn("[WIZARD_LIBRARY_LOAD_FAILED]", e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [companyId]);
+
 
   const openFullPreview = (templateId: string = effectiveTemplate) => {
     const idx = PDF_TEMPLATES.findIndex((t) => t.id === templateId);
