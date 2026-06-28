@@ -10,6 +10,8 @@ export type TemplateCardProps = {
   description?: string | null;
   category: string;
   cover?: string | null;
+  coverFallback?: ReactNode;
+
   author?: string;
   version?: string;
   rating?: number;
