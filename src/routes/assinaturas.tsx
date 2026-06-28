@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Copy, MessageCircle, Mail, X, FileSignature, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, Copy, MessageCircle, Mail, X, FileSignature, Clock, CheckCircle2, AlertCircle, Download, Link2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/assinaturas")({
   component: AssinaturasPage,
@@ -127,6 +128,24 @@ function RequestRow({ row, onChanged }: { row: any; onChanged: () => void }) {
     onChanged();
   };
 
+  const downloadSigned = async (path: string) => {
+    const { data, error } = await supabase.storage.from("signed-documents").createSignedUrl(path, 120);
+    if (error) return toast.error(error.message);
+    window.open(data.signedUrl, "_blank");
+  };
+
+  const copyVerifyLink = async (requestId: string) => {
+    const { data } = await supabase
+      .from("signature_evidence_certificates")
+      .select("verification_code")
+      .eq("signature_request_id", requestId)
+      .maybeSingle();
+    if (!data?.verification_code) return toast.error("Certificado ainda não gerado");
+    const url = `${window.location.origin}/verificar-assinatura/${data.verification_code}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Link de verificação copiado");
+  };
+
   return (
     <Card className="p-4">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -140,11 +159,28 @@ function RequestRow({ row, onChanged }: { row: any; onChanged: () => void }) {
             {signed} de {parts.length} assinaram • Ordem: {row.signing_order === "sequential" ? "Sequencial" : "Livre"}
           </p>
         </div>
-        {row.status !== "completed" && row.status !== "cancelled" && (
-          <Button variant="outline" size="sm" onClick={cancel} className="gap-1">
-            <X className="w-3 h-3" /> Cancelar
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {row.final_signed_pdf_url && (
+            <Button variant="outline" size="sm" onClick={() => downloadSigned(row.final_signed_pdf_url)} className="gap-1">
+              <Download className="w-3 h-3" /> PDF Assinado
+            </Button>
+          )}
+          {row.evidence_certificate_url && (
+            <Button variant="outline" size="sm" onClick={() => downloadSigned(row.evidence_certificate_url)} className="gap-1">
+              <Download className="w-3 h-3" /> Certificado
+            </Button>
+          )}
+          {row.status === "completed" && (
+            <Button variant="outline" size="sm" onClick={() => copyVerifyLink(row.id)} className="gap-1">
+              <Link2 className="w-3 h-3" /> Link de verificação
+            </Button>
+          )}
+          {row.status !== "completed" && row.status !== "cancelled" && (
+            <Button variant="outline" size="sm" onClick={cancel} className="gap-1">
+              <X className="w-3 h-3" /> Cancelar
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="mt-3 grid gap-2">
