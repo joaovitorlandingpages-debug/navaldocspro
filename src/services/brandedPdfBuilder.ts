@@ -307,6 +307,14 @@ export async function buildBrandedDocumentPdf(opts: {
   const headingSize = template === "executivo" ? 13 : 11.5;
   const lineGap = 5;
   let sectionIndex = 0;
+  let twoColSlot: 0 | 1 = 0;
+
+  const flushTwoColumnRow = () => {
+    if (twoColSlot === 1) {
+      y -= 42;
+      twoColSlot = 0;
+    }
+  };
 
   const drawBoxedKeyValue = (label: string, value: string) => {
     const lh = 16;
@@ -327,6 +335,7 @@ export async function buildBrandedDocumentPdf(opts: {
   };
 
   const drawHeading = (text: string) => {
+    flushTwoColumnRow();
     sectionIndex += 1;
     ensureSpace(headingSize + 14);
     if (template === "laudo") {
@@ -358,6 +367,7 @@ export async function buildBrandedDocumentPdf(opts: {
   };
 
   const drawParagraph = (text: string) => {
+    flushTwoColumnRow();
     const lines = wrap(text, bodySize, CONTENT_W);
     for (const ln of lines) {
       ensureSpace(bodySize + lineGap);
@@ -367,6 +377,7 @@ export async function buildBrandedDocumentPdf(opts: {
   };
 
   const drawBullet = (text: string) => {
+    flushTwoColumnRow();
     const lines = wrap(text.replace(/^[-•*]\s*/, ""), bodySize, CONTENT_W - 16);
     lines.forEach((ln, i) => {
       ensureSpace(bodySize + lineGap);
@@ -389,11 +400,45 @@ export async function buildBrandedDocumentPdf(opts: {
     });
   };
 
+  const drawTwoColumnKeyValue = (label: string, value: string) => {
+    const gap = 12;
+    const colW = (CONTENT_W - gap) / 2;
+    if (twoColSlot === 0) ensureSpace(42);
+    const x = LEFT + twoColSlot * (colW + gap);
+    const rowTop = y;
+    page.drawRectangle({
+      x,
+      y: rowTop - 34,
+      width: colW,
+      height: 34,
+      color: lightBg,
+      borderColor: lightBorder,
+      borderWidth: 0.45,
+    });
+    page.drawRectangle({ x, y: rowTop - 34, width: 3, height: 34, color: primary, opacity: 0.85 });
+    page.drawText(sanitize(label).toUpperCase(), { x: x + 9, y: rowTop - 12, size: 6.8, font: bold, color: muted });
+    const valueText = wrap(value, 8.6, colW - 18).slice(0, 2);
+    valueText.forEach((line, idx) => {
+      page.drawText(line, { x: x + 9, y: rowTop - 24 - idx * 9, size: 8.6, font, color: ink });
+    });
+    if (twoColSlot === 0) {
+      twoColSlot = 1;
+    } else {
+      y -= 42;
+      twoColSlot = 0;
+    }
+  };
+
   const drawKeyValueLine = (label: string, value: string) => {
     if (template === "laudo" || template === "executivo") {
       drawBoxedKeyValue(label, value);
       return;
     }
+    if (template === "escritorio" || template === "corporate-clean") {
+      drawTwoColumnKeyValue(label, value);
+      return;
+    }
+    flushTwoColumnRow();
     ensureSpace(bodySize + lineGap);
     page.drawText(sanitize(label) + ":", { x: LEFT, y, size: bodySize, font: bold, color: ink });
     const lw = measure(label + ": ", bodySize, bold);
@@ -429,6 +474,7 @@ export async function buildBrandedDocumentPdf(opts: {
       drawParagraph(trimmed);
     }
   }
+  flushTwoColumnRow();
 
   // ---------- SIGNATURE BLOCK ----------
   if (signatureImg || b?.technical_responsible_name || stampImg) {
@@ -464,6 +510,13 @@ export async function buildBrandedDocumentPdf(opts: {
   // ---------- HEADER / FOOTER / WATERMARK PER PAGE ----------
   const total = pages.length;
   pages.forEach((p, idx) => {
+    if (template === "corporate-clean") {
+      p.drawRectangle({ x: 0, y: 0, width: 12, height: H, color: primary, opacity: 0.12 });
+    } else if (template === "engenharia-naval" || template === "laudo") {
+      p.drawRectangle({ x: 0, y: 0, width: 6, height: H, color: secondary, opacity: 0.16 });
+    } else if (template === "naval-premium") {
+      p.drawRectangle({ x: W - 16, y: 0, width: 16, height: H, color: primary, opacity: 0.10 });
+    }
     // Header
     if (template === "executivo") {
       // Gradient simulation: 3 stacked bands
