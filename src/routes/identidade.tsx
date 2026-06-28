@@ -74,6 +74,54 @@ function IdentidadePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingField, setUploadingField] = useState<string | null>(null);
+  const [myTemplates, setMyTemplates] = useState<CompanyPdfTemplate[]>([]);
+  const [studioOpen, setStudioOpen] = useState(false);
+  const [studioInitial, setStudioInitial] = useState<CompanyPdfTemplate | null>(null);
+  const [studioBase, setStudioBase] = useState<PdfTemplateId | undefined>(undefined);
+  const [brandingForStudio, setBrandingForStudio] = useState<CompanyBranding | null>(null);
+  const [docTypeMap, setDocTypeMap] = useState<Record<string, string>>({});
+
+  const loadMyTemplates = async () => {
+    if (!companyId) return;
+    try {
+      const list = await listCompanyTemplates(companyId);
+      setMyTemplates(list);
+    } catch (e: any) {
+      toast.error(e.message ?? "Falha ao carregar meus templates");
+    }
+  };
+  useEffect(() => { loadMyTemplates(); }, [companyId]);
+  useEffect(() => {
+    if (!companyId) return;
+    (async () => {
+      const b = await loadCompanyBranding(companyId);
+      setBrandingForStudio(b);
+      const { data: row } = await supabase
+        .from("companies").select("document_template_map").eq("id", companyId).maybeSingle();
+      setDocTypeMap(((row as any)?.document_template_map as Record<string, string>) || {});
+    })();
+  }, [companyId, data]);
+
+  const openStudio = (initial: CompanyPdfTemplate | null, base?: PdfTemplateId) => {
+    setStudioInitial(initial);
+    setStudioBase(base);
+    setStudioOpen(true);
+  };
+  const onTemplateSaved = (_t: CompanyPdfTemplate) => { loadMyTemplates(); };
+  const removeTemplate = async (id: string) => {
+    if (!confirm("Excluir este template?")) return;
+    try { await deleteCompanyTemplate(id); toast.success("Removido"); loadMyTemplates(); }
+    catch (e: any) { toast.error(e.message ?? "Falha"); }
+  };
+  const setDocTypeTemplate = async (docType: DocumentType, value: string) => {
+    if (!companyId) return;
+    const next = { ...docTypeMap, [docType]: value };
+    if (value === "__none__") delete next[docType];
+    setDocTypeMap(next);
+    const { error } = await supabase
+      .from("companies").update({ document_template_map: next } as any).eq("id", companyId);
+    if (error) toast.error(error.message);
+  };
 
   useEffect(() => {
     if (!companyId) {
