@@ -752,6 +752,7 @@ export type Database = {
           contact_whatsapp: string | null
           created_at: string
           created_by: string | null
+          document_template_map: Json
           email: string | null
           id: string
           is_active: boolean | null
@@ -796,6 +797,7 @@ export type Database = {
           contact_whatsapp?: string | null
           created_at?: string
           created_by?: string | null
+          document_template_map?: Json
           email?: string | null
           id?: string
           is_active?: boolean | null
@@ -840,6 +842,7 @@ export type Database = {
           contact_whatsapp?: string | null
           created_at?: string
           created_by?: string | null
+          document_template_map?: Json
           email?: string | null
           id?: string
           is_active?: boolean | null
@@ -915,6 +918,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "company_billing_history_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_pdf_templates: {
+        Row: {
+          base_template: string
+          category: string
+          company_id: string
+          config: Json
+          created_at: string
+          created_by: string | null
+          document_type: string | null
+          id: string
+          is_default: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          base_template?: string
+          category?: string
+          company_id: string
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          document_type?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          base_template?: string
+          category?: string
+          company_id?: string
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          document_type?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_pdf_templates_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"

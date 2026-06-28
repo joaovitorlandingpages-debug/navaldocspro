@@ -9,8 +9,17 @@ import { Card } from "@/components/ui/card";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageHeader } from "@/components/navigation/PageHeader";
 import { toast } from "sonner";
-import { Loader2, Upload, Image as ImageIcon, Palette, Building2, PenTool, Stamp, Droplet, LayoutTemplate, Check } from "lucide-react";
-import { PDF_TEMPLATES, type PdfTemplateId } from "@/services/companyBranding";
+import { Loader2, Upload, Image as ImageIcon, Palette, Building2, PenTool, Stamp, Droplet, LayoutTemplate, Check, Wand2, Plus, Trash2, Star, FileText } from "lucide-react";
+import { PDF_TEMPLATES, type PdfTemplateId, loadCompanyBranding, type CompanyBranding } from "@/services/companyBranding";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TemplateStudio } from "@/components/templates/TemplateStudio";
+import {
+  listCompanyTemplates,
+  deleteCompanyTemplate,
+  DOCUMENT_TYPES,
+  type CompanyPdfTemplate,
+  type DocumentType,
+} from "@/services/companyPdfTemplates";
 
 export const Route = createFileRoute("/identidade")({
   component: () => (
@@ -65,6 +74,54 @@ function IdentidadePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingField, setUploadingField] = useState<string | null>(null);
+  const [myTemplates, setMyTemplates] = useState<CompanyPdfTemplate[]>([]);
+  const [studioOpen, setStudioOpen] = useState(false);
+  const [studioInitial, setStudioInitial] = useState<CompanyPdfTemplate | null>(null);
+  const [studioBase, setStudioBase] = useState<PdfTemplateId | undefined>(undefined);
+  const [brandingForStudio, setBrandingForStudio] = useState<CompanyBranding | null>(null);
+  const [docTypeMap, setDocTypeMap] = useState<Record<string, string>>({});
+
+  const loadMyTemplates = async () => {
+    if (!companyId) return;
+    try {
+      const list = await listCompanyTemplates(companyId);
+      setMyTemplates(list);
+    } catch (e: any) {
+      toast.error(e.message ?? "Falha ao carregar meus templates");
+    }
+  };
+  useEffect(() => { loadMyTemplates(); }, [companyId]);
+  useEffect(() => {
+    if (!companyId) return;
+    (async () => {
+      const b = await loadCompanyBranding(companyId);
+      setBrandingForStudio(b);
+      const { data: row } = await supabase
+        .from("companies").select("document_template_map").eq("id", companyId).maybeSingle();
+      setDocTypeMap(((row as any)?.document_template_map as Record<string, string>) || {});
+    })();
+  }, [companyId, data]);
+
+  const openStudio = (initial: CompanyPdfTemplate | null, base?: PdfTemplateId) => {
+    setStudioInitial(initial);
+    setStudioBase(base);
+    setStudioOpen(true);
+  };
+  const onTemplateSaved = (_t: CompanyPdfTemplate) => { loadMyTemplates(); };
+  const removeTemplate = async (id: string) => {
+    if (!confirm("Excluir este template?")) return;
+    try { await deleteCompanyTemplate(id); toast.success("Removido"); loadMyTemplates(); }
+    catch (e: any) { toast.error(e.message ?? "Falha"); }
+  };
+  const setDocTypeTemplate = async (docType: DocumentType, value: string) => {
+    if (!companyId) return;
+    const next = { ...docTypeMap, [docType]: value };
+    if (value === "__none__") delete next[docType];
+    setDocTypeMap(next);
+    const { error } = await supabase
+      .from("companies").update({ document_template_map: next } as any).eq("id", companyId);
+    if (error) toast.error(error.message);
+  };
 
   useEffect(() => {
     if (!companyId) {
@@ -168,6 +225,7 @@ function IdentidadePage() {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 pb-32">
       <div className="max-w-5xl mx-auto space-y-8">
         <PageHeader
@@ -213,11 +271,10 @@ function IdentidadePage() {
             {PDF_TEMPLATES.map((tpl) => {
               const active = data.pdf_template === tpl.id;
               return (
-                <button
+                <div
                   key={tpl.id}
-                  type="button"
                   onClick={() => setData((d) => ({ ...d, pdf_template: tpl.id }))}
-                  className={`relative text-left rounded-xl border p-3 transition-all ${
+                  className={`group relative text-left rounded-xl border p-3 transition-all cursor-pointer ${
                     active
                       ? "border-primary bg-primary/5 shadow-md"
                       : "border-slate-200 bg-white hover:border-slate-300"
@@ -232,11 +289,87 @@ function IdentidadePage() {
                       <Check className="h-3 w-3" />
                     </div>
                   )}
-                </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); openStudio(null, tpl.id); }}
+                    className="mt-2 w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-white text-primary text-[10px] font-bold uppercase tracking-wider px-2 py-1.5 hover:bg-primary/5"
+                  >
+                    <Wand2 className="h-3 w-3" /> Personalizar
+                  </button>
+                </div>
               );
             })}
           </div>
         </Section>
+
+        <Section title="Meus Templates" icon={<Star className="h-5 w-5" />}>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-slate-500">
+              Modelos personalizados da sua empresa. Use o editor visual para criar quantos quiser.
+            </p>
+            <Button size="sm" onClick={() => openStudio(null, data.pdf_template)} className="gap-2">
+              <Plus className="h-3.5 w-3.5" /> Novo template
+            </Button>
+          </div>
+          {myTemplates.length === 0 ? (
+            <div className="text-center py-8 border border-dashed border-slate-200 rounded-xl text-xs text-slate-400">
+              Nenhum template personalizado ainda.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {myTemplates.map((t) => (
+                <div key={t.id} className="rounded-xl border border-slate-200 p-3 bg-white hover:border-primary/30 transition-all">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-navy truncate">{t.name}</div>
+                      <div className="text-[10px] text-slate-500 uppercase tracking-widest">
+                        Base: {PDF_TEMPLATES.find((p) => p.id === t.base_template)?.label ?? t.base_template}
+                        {t.document_type && ` · ${DOCUMENT_TYPES.find((d) => d.id === t.document_type)?.label}`}
+                        {t.is_default && " · Padrão"}
+                      </div>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => openStudio(t)}>
+                        <Wand2 className="h-3 w-3" /> Editar
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500" onClick={() => removeTemplate(t.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Section>
+
+        <Section title="Templates por tipo de documento" icon={<FileText className="h-5 w-5" />}>
+          <p className="text-xs text-slate-500 mb-4">
+            Defina um modelo específico para cada tipo. Quando vazio, é usado o modelo padrão da empresa.
+          </p>
+          <div className="grid md:grid-cols-2 gap-3">
+            {DOCUMENT_TYPES.map((d) => (
+              <div key={d.id} className="space-y-1.5">
+                <Label className="text-xs font-bold text-slate-600">{d.label}</Label>
+                <Select value={docTypeMap[d.id] ?? "__none__"} onValueChange={(v) => setDocTypeTemplate(d.id, v)}>
+                  <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    <SelectItem value="__none__">Usar padrão da empresa</SelectItem>
+                    <div className="px-2 pt-2 pb-1 text-[9px] uppercase tracking-widest text-slate-400">Modelos base</div>
+                    {PDF_TEMPLATES.map((t) => <SelectItem key={t.id} value={`base:${t.id}`}>{t.label}</SelectItem>)}
+                    {myTemplates.length > 0 && (
+                      <>
+                        <div className="px-2 pt-2 pb-1 text-[9px] uppercase tracking-widest text-slate-400">Meus templates</div>
+                        {myTemplates.map((t) => <SelectItem key={t.id} value={`mine:${t.id}`}>{t.name}</SelectItem>)}
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+        </Section>
+
 
 
         <Section title="Cores da marca" icon={<Palette className="h-5 w-5" />}>
@@ -321,9 +454,22 @@ function IdentidadePage() {
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Salvar identidade corporativa
           </Button>
+          </div>
         </div>
       </div>
-    </div>
+
+
+
+      <TemplateStudio
+        open={studioOpen}
+        onClose={() => setStudioOpen(false)}
+        companyId={companyId ?? ""}
+        branding={brandingForStudio}
+        initial={studioInitial}
+        initialBaseTemplate={studioBase}
+        onSaved={onTemplateSaved}
+      />
+    </>
   );
 }
 
