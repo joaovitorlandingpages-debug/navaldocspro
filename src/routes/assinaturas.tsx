@@ -32,6 +32,7 @@ function AssinaturasPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [open, setOpen] = useState(false);
+  const [metrics, setMetrics] = useState<SignatureMetrics | null>(null);
 
   const load = async () => {
     if (!profile?.company_id) return;
