@@ -2270,6 +2270,7 @@ function TemplateGalleryPanel({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loadingFull, setLoadingFull] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null);
 
   const openFullPreview = (templateId: string = effectiveTemplate) => {
     const idx = PDF_TEMPLATES.findIndex((t) => t.id === templateId);
@@ -2284,6 +2285,7 @@ function TemplateGalleryPanel({
     if (fullPreviewIdx === null) {
       setPreviewUrl(null);
       setPreviewError(null);
+      setPreviewBytes(null);
       return;
     }
     const tpl = PDF_TEMPLATES[fullPreviewIdx];
@@ -2308,12 +2310,14 @@ function TemplateGalleryPanel({
         const blob = new Blob([ab], { type: "application/pdf" });
         url = URL.createObjectURL(blob);
         setPreviewUrl(url);
+        setPreviewBytes(bytes);
         console.log("[TEMPLATE_PREVIEW_READY]", { template: tpl.id, docName });
       } catch (e) {
         console.error("[TEMPLATE_FULL_PREVIEW_FAILED]", e);
         const message = e instanceof Error ? e.message : "Erro desconhecido ao gerar prévia.";
         if (!cancelled) {
           setPreviewUrl(null);
+          setPreviewBytes(null);
           setPreviewError(message);
           toast.error(`Falha ao visualizar template: ${message}`);
         }
@@ -2371,9 +2375,7 @@ function TemplateGalleryPanel({
                 </div>
               )}
               {previewUrl ? (
-                <object data={`${previewUrl}#toolbar=0&navpanes=0`} type="application/pdf" className="w-full h-full">
-                  <iframe src={`${previewUrl}#toolbar=0&navpanes=0`} title="Prévia do template" className="w-full h-full border-0" />
-                </object>
+                <PdfPreviewFrame url={previewUrl} bytes={previewBytes} title="Prévia do template" />
               ) : (
                 !loadingFull && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-xs text-slate-500 px-6 text-center">
@@ -2524,6 +2526,80 @@ function TemplateGalleryPanel({
         </div>
       )}
       {fullPreviewModal}
+    </div>
+  );
+}
+
+function PdfPreviewFrame({ url, bytes, title }: { url: string; bytes: Uint8Array | null; title: string }) {
+  const [useCanvasPreview, setUseCanvasPreview] = useState(false);
+
+  useEffect(() => {
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+    const hasNativePdf = typeof navigator !== "undefined" && "pdfViewerEnabled" in navigator ? Boolean((navigator as any).pdfViewerEnabled) : !isMobile;
+    setUseCanvasPreview(isMobile || !hasNativePdf);
+  }, [url]);
+
+  if (useCanvasPreview && bytes) return <PdfCanvasPreview bytes={bytes} />;
+
+  return (
+    <object data={`${url}#toolbar=0&navpanes=0`} type="application/pdf" className="w-full h-full">
+      {bytes ? <PdfCanvasPreview bytes={bytes} /> : <iframe src={`${url}#toolbar=0&navpanes=0`} title={title} className="w-full h-full border-0" />}
+    </object>
+  );
+}
+
+function PdfCanvasPreview({ bytes }: { bytes: Uint8Array }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const loadingTask = pdfjsLib.getDocument({ data: bytes.slice() } as any);
+        const pdf = await loadingTask.promise;
+        const firstPage = await pdf.getPage(1);
+        const canvas = canvasRef.current;
+        if (!canvas || cancelled) return;
+        const containerWidth = Math.min(900, Math.max(320, canvas.parentElement?.clientWidth ?? 700));
+        const baseViewport = firstPage.getViewport({ scale: 1 });
+        const scale = Math.max(0.75, Math.min(1.8, (containerWidth - 24) / baseViewport.width));
+        const viewport = firstPage.getViewport({ scale });
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("Canvas indisponível no navegador.");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await firstPage.render({ canvasContext: ctx, viewport } as any).promise;
+      } catch (e) {
+        console.error("[PDF_CANVAS_PREVIEW_FAILED]", e);
+        if (!cancelled) setError(e instanceof Error ? e.message : "Falha ao renderizar PDF no navegador.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [bytes]);
+
+  return (
+    <div className="h-full w-full overflow-auto bg-slate-200 p-3 sm:p-6 flex justify-center">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-500">
+          <Loader2 className="h-5 w-5 animate-spin mr-2" /> Renderizando PDF no navegador...
+        </div>
+      )}
+      {error ? (
+        <div className="m-auto rounded-xl bg-white px-4 py-3 text-xs text-slate-600 shadow">
+          Não foi possível renderizar a prévia: {error}
+        </div>
+      ) : (
+        <canvas ref={canvasRef} className="h-auto max-w-full rounded-sm bg-white shadow-xl" />
+      )}
     </div>
   );
 }
