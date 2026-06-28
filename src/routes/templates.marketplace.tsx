@@ -150,6 +150,17 @@ function MarketplacePage() {
                 description={t.description}
                 category={t.category}
                 cover={t.cover_url}
+                coverFallback={
+                  <TemplateCover
+                    templateId={t.base_template}
+                    name={t.name}
+                    category={t.category}
+                    kind={owned.has(t.slug) ? "owned" : "premium"}
+                    logoUrl={branding?.logo_primary_url}
+                    primaryColor={branding?.brand_primary_color}
+                  />
+                }
+
                 author={t.author}
                 version={t.version}
                 rating={t.rating}
