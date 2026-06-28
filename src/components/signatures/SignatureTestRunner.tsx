@@ -131,7 +131,22 @@ export function SignatureTestRunner({ companyId, userId, onChanged }: {
         update("downloads", { status: "warn", detail: "sem arquivos para baixar" });
       }
 
-      // 15. Log
+      // 16. Anchor lookup
+      update("anchor", { status: "running" });
+      try {
+        const mod = await import("@/services/signatureAnchors");
+        const resolved = await mod.signatureAnchorsService.resolveForRoles("classico", companyId, ["cliente"]);
+        update("anchor", {
+          status: "ok",
+          detail: resolved.length > 0
+            ? `âncora encontrada (${resolved[0].role} p${resolved[0].page})`
+            : "nenhuma âncora — fallback usado no PDF (esperado)",
+        });
+      } catch (e: any) {
+        update("anchor", { status: "warn", detail: e.message });
+      }
+
+      // 17. Log
       update("log", { status: "running" });
       await supabase.from("activity_logs").insert({
         company_id: companyId,
