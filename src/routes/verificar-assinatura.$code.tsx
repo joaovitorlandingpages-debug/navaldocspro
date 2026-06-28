@@ -122,11 +122,11 @@ function VerifyPage() {
           <h2 className="font-black text-lg mb-4 flex items-center gap-2"><Clock className="w-4 h-4" /> Timeline</h2>
           <div className="space-y-2">
             {events.map((e, i) => (
-              <div key={i} className="flex gap-3 text-sm">
-                <span className="text-xs text-slate-400 font-mono w-32 shrink-0">{new Date(e.created_at).toLocaleString("pt-BR")}</span>
-                <div>
+              <div key={i} className="flex flex-col sm:flex-row sm:gap-3 text-sm border-l-2 border-slate-200 pl-3 sm:border-0 sm:pl-0">
+                <span className="text-xs text-slate-400 font-mono sm:w-40 shrink-0">{new Date(e.created_at).toLocaleString("pt-BR")}</span>
+                <div className="min-w-0">
                   <span className="font-semibold text-slate-700">{e.event_type}</span>
-                  {e.event_message && <p className="text-xs text-slate-500">{e.event_message}</p>}
+                  {e.event_message && <p className="text-xs text-slate-500 break-words">{e.event_message}</p>}
                 </div>
               </div>
             ))}

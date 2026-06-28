@@ -245,14 +245,14 @@ function PortalPage() {
                           </a>
                         )}
                         {s.final_signed_pdf_url && (
-                          <a href={s.final_signed_pdf_url} target="_blank" rel="noreferrer">
-                            <Button size="sm" variant="outline"><Download className="w-3 h-3 mr-1" />PDF</Button>
-                          </a>
+                          <Button size="sm" variant="outline" onClick={() => handleDownload("signed-documents", s.final_signed_pdf_url)}>
+                            <Download className="w-3 h-3 mr-1" />PDF
+                          </Button>
                         )}
                         {s.evidence_certificate_url && (
-                          <a href={s.evidence_certificate_url} target="_blank" rel="noreferrer">
-                            <Button size="sm" variant="outline">Certificado</Button>
-                          </a>
+                          <Button size="sm" variant="outline" onClick={() => handleDownload("signed-documents", s.evidence_certificate_url)}>
+                            Certificado
+                          </Button>
                         )}
                       </div>
                     </div>
