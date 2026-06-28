@@ -139,6 +139,20 @@ export const signaturesService = {
       throw new Error("Solicitação não está mais ativa");
     }
 
+    // Sequential ordering enforcement
+    if (request.signing_order === "sequential") {
+      const { data: prev } = await supabase
+        .from("signature_participants")
+        .select("id,name,status,signing_order")
+        .eq("signature_request_id", request.id)
+        .lt("signing_order", participant.signing_order ?? 0)
+        .order("signing_order", { ascending: true });
+      const blocker = (prev ?? []).find((p: any) => p.status !== "signed");
+      if (blocker) {
+        throw new Error(`Aguardando assinatura anterior: ${blocker.name}`);
+      }
+    }
+
     const hash = await sha256Hex(payload.signature_data + participant.id + Date.now());
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
 
