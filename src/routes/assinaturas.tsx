@@ -273,3 +273,12 @@ function RequestRow({ row, onChanged }: { row: any; onChanged: () => void }) {
   );
 }
 
+
+function MetricCard({ label, value, color }: { label: string; value: number | string; color?: string }) {
+  return (
+    <Card className="p-3">
+      <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">{label}</p>
+      <p className={`text-xl font-extrabold mt-1 ${color ?? "text-slate-900"}`}>{value}</p>
+    </Card>
+  );
+}
