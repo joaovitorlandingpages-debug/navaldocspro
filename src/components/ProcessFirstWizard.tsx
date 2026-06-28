@@ -25,7 +25,7 @@ import {
   type ServiceDef,
 } from "@/types/service-requirements";
 import { validateCriticalFields } from "@/services/documentNormalizer";
-import { PDF_TEMPLATES } from "@/services/companyBranding";
+import { PDF_TEMPLATES, type PdfTemplateId } from "@/services/companyBranding";
 import {
   fetchLibrary,
   suggestTemplatesForWizard,
@@ -1138,10 +1138,10 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   };
 
   const content = (
-    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[95dvh] sm:max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between">
+        <div className="px-4 sm:px-8 py-4 sm:py-5 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-black text-navy">Novo Processo</h2>
             <p className="text-xs text-slate-500 font-medium">Comece pelo serviço — o resto é automático</p>
@@ -1152,7 +1152,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         </div>
 
         {/* Progress */}
-        <div className="px-8 py-4 border-b border-slate-100 flex items-center gap-2">
+        <div className="px-4 sm:px-8 py-3 sm:py-4 border-b border-slate-100 flex items-center gap-2 overflow-x-auto">
           {steps.map((label, i) => {
             const num = i + 1;
             const active = num === state.step;
@@ -1170,7 +1170,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-8 py-6">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-5 sm:py-6">
           {state.step === 1 && <Step1 onPick={(k) => { dispatch({ type: "SET_SERVICE", service: k }); dispatch({ type: "STEP", step: 2 }); }} />}
           {state.step === 2 && service && (
             <Step2Identity
@@ -1271,7 +1271,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
 
         {/* Footer */}
         {state.step < 8 && (
-          <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-between gap-3 bg-slate-50">
+          <div className="px-4 sm:px-8 py-4 sm:py-5 border-t border-slate-100 flex items-center justify-between gap-3 bg-slate-50 shrink-0">
             <button
               onClick={() => dispatch({ type: "STEP", step: Math.max(1, state.step - 1) })}
               disabled={state.step === 1}
@@ -1967,6 +1967,7 @@ function Step7Approval({
   const [editText, setEditText] = useState("");
   const [editReason, setEditReason] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [companyBranding, setCompanyBranding] = useState<any | null>(null);
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
@@ -1976,9 +1977,31 @@ function Step7Approval({
 
   useEffect(() => {
     let cancelled = false;
+    if (!companyId) {
+      setCompanyBranding(null);
+      return;
+    }
+    (async () => {
+      try {
+        const { loadCompanyBranding } = await import("@/services/companyBranding");
+        const rawBranding = await loadCompanyBranding(companyId).catch(() => null);
+        if (!cancelled) setCompanyBranding(rawBranding);
+      } catch (e) {
+        console.error("[COMPANY_BRANDING_LOAD_FAILED]", e);
+        if (!cancelled) setCompanyBranding(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId]);
+
+  useEffect(() => {
+    let cancelled = false;
     let createdUrl: string | null = null;
     if (!previewDoc) {
       setPreviewUrl(null);
+      setPreviewBytes(null);
       return;
     }
     setPreviewLoading(true);
@@ -2003,9 +2026,12 @@ function Step7Approval({
         const blob = new Blob([ab], { type: "application/pdf" });
         createdUrl = URL.createObjectURL(blob);
         setPreviewUrl(createdUrl);
+        setPreviewBytes(bytes);
       } catch (e) {
         console.error("[PREVIEW_PDF_FAILED]", e);
+        toast.error("Não foi possível gerar a prévia do PDF. Tente outro template ou revise o documento.");
         if (!cancelled) setPreviewUrl(null);
+        if (!cancelled) setPreviewBytes(null);
       } finally {
         if (!cancelled) setPreviewLoading(false);
       }
@@ -2044,7 +2070,7 @@ function Step7Approval({
       <TemplateGalleryPanel
         effectiveTemplate={templateOverride ?? companyBranding?.pdf_template ?? "classico"}
         companyDefault={companyBranding?.pdf_template ?? null}
-        primary={companyBranding?.primary_color ?? "#0a2a5e"}
+        primary={companyBranding?.brand_primary_color ?? "#0a2a5e"}
         open={showTemplateGallery}
         onToggle={() => setShowTemplateGallery((v) => !v)}
         onSelect={(id) => onTemplateChange(id)}
@@ -2147,7 +2173,7 @@ function Step7Approval({
                   <Loader2 className="h-5 w-5 animate-spin mr-2" /> Renderizando PDF…
                 </div>
               ) : (
-                <iframe title={`Prévia ${previewDoc.name}`} src={previewUrl} className="w-full h-full border-0" />
+                <PdfPreviewFrame title={`Prévia ${previewDoc.name}`} url={previewUrl} bytes={previewBytes} />
               )}
             </div>
           </div>
@@ -2209,6 +2235,15 @@ function Step7Approval({
 }
 
 // ------------------- Template Gallery (Step 7) -------------------
+const TEMPLATE_CATEGORIES: { label: string; ids: PdfTemplateId[] }[] = [
+  { label: "Oficiais", ids: ["classico", "oficial", "protocolo", "timbrado"] },
+  { label: "Marinha", ids: ["naval-azul", "institucional", "azul-profundo", "naval-premium"] },
+  { label: "Corporativos", ids: ["executivo", "escritorio", "moderno", "minimalista", "corporate-clean"] },
+  { label: "Engenharia", ids: ["laudo", "engenharia-naval", "relatorio-tecnico"] },
+  { label: "Premium", ids: ["luxo", "premium-branco", "capa-executiva"] },
+  { label: "Checklists", ids: ["checklist"] },
+];
+
 function TemplateGalleryPanel({
   effectiveTemplate,
   companyDefault,
@@ -2234,17 +2269,29 @@ function TemplateGalleryPanel({
   const [fullPreviewIdx, setFullPreviewIdx] = useState<number | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loadingFull, setLoadingFull] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null);
+
+  const openFullPreview = (templateId: string = effectiveTemplate) => {
+    const idx = PDF_TEMPLATES.findIndex((t) => t.id === templateId);
+    console.log("[TEMPLATE_PREVIEW_OPEN_REQUESTED]", { templateId, idx });
+    setPreviewError(null);
+    setFullPreviewIdx(idx >= 0 ? idx : 0);
+  };
 
   useEffect(() => {
     let cancelled = false;
     let url: string | null = null;
     if (fullPreviewIdx === null) {
       setPreviewUrl(null);
+      setPreviewError(null);
+      setPreviewBytes(null);
       return;
     }
     const tpl = PDF_TEMPLATES[fullPreviewIdx];
     if (!tpl) return;
     setLoadingFull(true);
+    setPreviewError(null);
     (async () => {
       try {
         const { buildBrandedDocumentPdf } = await import("@/services/brandedPdfBuilder");
@@ -2263,9 +2310,17 @@ function TemplateGalleryPanel({
         const blob = new Blob([ab], { type: "application/pdf" });
         url = URL.createObjectURL(blob);
         setPreviewUrl(url);
+        setPreviewBytes(bytes);
+        console.log("[TEMPLATE_PREVIEW_READY]", { template: tpl.id, docName });
       } catch (e) {
         console.error("[TEMPLATE_FULL_PREVIEW_FAILED]", e);
-        if (!cancelled) setPreviewUrl(null);
+        const message = e instanceof Error ? e.message : "Erro desconhecido ao gerar prévia.";
+        if (!cancelled) {
+          setPreviewUrl(null);
+          setPreviewBytes(null);
+          setPreviewError(message);
+          toast.error(`Falha ao visualizar template: ${message}`);
+        }
       } finally {
         if (!cancelled) setLoadingFull(false);
       }
@@ -2277,6 +2332,91 @@ function TemplateGalleryPanel({
   }, [fullPreviewIdx, sampleDoc?.name, sampleDoc?.content, branding]);
 
   const fullTpl = fullPreviewIdx !== null ? PDF_TEMPLATES[fullPreviewIdx] : null;
+  const groupedTemplates = TEMPLATE_CATEGORIES.map((category) => ({
+    ...category,
+    templates: category.ids
+      .map((id) => PDF_TEMPLATES.find((template) => template.id === id))
+      .filter(Boolean) as typeof PDF_TEMPLATES,
+  })).filter((category) => category.templates.length > 0);
+
+  const fullPreviewModal = fullPreviewIdx !== null && fullTpl && typeof document !== "undefined"
+    ? createPortal(
+        <div
+          className="fixed inset-0 z-[180] bg-slate-950/85 flex items-center justify-center p-2 sm:p-4"
+          onClick={() => setFullPreviewIdx(null)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-7xl h-[95dvh] flex flex-col overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Prévia do template de PDF"
+          >
+            <div className="flex items-center justify-between gap-3 px-3 sm:px-5 py-3 border-b border-slate-200 shrink-0">
+              <div className="min-w-0">
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                  Modelo {fullPreviewIdx + 1} de {PDF_TEMPLATES.length} · Prévia A4 real
+                </div>
+                <div className="text-sm sm:text-base font-black text-navy truncate">{fullTpl.label}</div>
+                <div className="text-[11px] text-slate-500 truncate hidden sm:block">{fullTpl.description}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFullPreviewIdx(null)}
+                className="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-100 hover:bg-slate-200 shrink-0"
+              >
+                Fechar
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 bg-slate-200 relative overflow-hidden">
+              {loadingFull && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-100 text-xs font-bold text-slate-500">
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" /> Gerando prévia A4...
+                </div>
+              )}
+              {previewUrl ? (
+                <PdfPreviewFrame url={previewUrl} bytes={previewBytes} title="Prévia do template" />
+              ) : (
+                !loadingFull && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-xs text-slate-500 px-6 text-center">
+                    <AlertTriangle className="h-6 w-6 text-amber-500" />
+                    <span>{previewError ? `Não foi possível gerar a prévia: ${previewError}` : "Não foi possível gerar a prévia."}</span>
+                  </div>
+                )
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-2 px-3 sm:px-5 py-3 border-t border-slate-200 bg-white shrink-0 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setFullPreviewIdx((i) => (i === null ? 0 : (i - 1 + PDF_TEMPLATES.length) % PDF_TEMPLATES.length))}
+                className="px-3 py-2 text-xs font-bold rounded-lg bg-slate-100 hover:bg-slate-200"
+              >
+                ← Anterior
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onSelect(fullTpl.id);
+                  setFullPreviewIdx(null);
+                  toast.success(`Template aplicado: ${fullTpl.label}`);
+                }}
+                className="flex-1 min-w-[160px] px-3 py-2 text-xs font-black uppercase tracking-wider rounded-lg bg-primary text-white hover:opacity-90"
+              >
+                Usar este modelo
+              </button>
+              <button
+                type="button"
+                onClick={() => setFullPreviewIdx((i) => (i === null ? 0 : (i + 1) % PDF_TEMPLATES.length))}
+                className="px-3 py-2 text-xs font-bold rounded-lg bg-slate-100 hover:bg-slate-200"
+              >
+                Próximo →
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
 
   return (
     <div className="border border-slate-200 rounded-2xl bg-white">
@@ -2311,10 +2451,7 @@ function TemplateGalleryPanel({
             </div>
             <button
               type="button"
-              onClick={() => {
-                const idx = PDF_TEMPLATES.findIndex((t) => t.id === effectiveTemplate);
-                setFullPreviewIdx(idx >= 0 ? idx : 0);
-              }}
+              onClick={() => openFullPreview()}
               className="text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg bg-primary text-white hover:opacity-90 shrink-0"
             >
               Visualizar Template
@@ -2329,108 +2466,152 @@ function TemplateGalleryPanel({
               </button>
             )}
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[480px] overflow-y-auto pr-1">
-            {PDF_TEMPLATES.map((t, i) => {
-              const selected = t.id === effectiveTemplate;
-              return (
-                <div
-                  key={t.id}
-                  className={`text-left rounded-xl border-2 p-2 transition ${
-                    selected ? "border-primary ring-2 ring-primary/20 bg-primary/5" : "border-slate-200 hover:border-slate-300"
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => onSelect(t.id)}
-                    className="block w-full text-left"
-                  >
-                    <TemplateMiniPreview id={t.id} primary={primary} />
-                    <div className="mt-2 text-[11px] font-black text-navy truncate">{t.label}</div>
-                    <div className="text-[10px] text-slate-500 line-clamp-2">{t.description}</div>
-                    <div className="text-[9px] text-slate-400 mt-1 truncate">Ideal: {t.bestFor}</div>
-                    {selected && (
-                      <div className="mt-1 inline-block text-[9px] font-black uppercase tracking-wider text-primary">
-                        ✓ Selecionado
-                      </div>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFullPreviewIdx(i)}
-                    className="mt-2 w-full text-[10px] font-bold text-primary hover:underline"
-                  >
-                    Ver em tela cheia
-                  </button>
+          <div className="max-h-[min(58dvh,540px)] overflow-y-auto pr-1 space-y-5 pb-2">
+            {groupedTemplates.map((category) => (
+              <section key={category.label} className="space-y-2">
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                  {category.label}
                 </div>
-              );
-            })}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {category.templates.map((t) => {
+                    const selected = t.id === effectiveTemplate;
+                    return (
+                      <div
+                        key={t.id}
+                        className={`relative text-left rounded-xl border-2 p-2 transition bg-white ${
+                          selected ? "border-primary ring-2 ring-primary/25 bg-primary/5 shadow-md" : "border-slate-200 hover:border-primary/60 hover:shadow-sm"
+                        }`}
+                      >
+                        {selected && (
+                          <div className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-1 text-[9px] font-black uppercase tracking-wider text-white shadow-sm">
+                            <CheckCircle2 className="h-3 w-3" /> Selecionado
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => onSelect(t.id)}
+                          className="block w-full text-left"
+                        >
+                          <TemplateMiniPreview id={t.id} primary={primary} />
+                          <div className="mt-2 text-[11px] font-black text-navy truncate pr-2">{t.label}</div>
+                          <div className="text-[10px] text-slate-500 line-clamp-2 min-h-[2.5em]">{t.description}</div>
+                          <div className="text-[9px] text-slate-400 mt-1 truncate">Ideal: {t.bestFor}</div>
+                        </button>
+                        <div className="mt-2 grid grid-cols-1 gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => onSelect(t.id)}
+                            disabled={selected}
+                            className={`w-full rounded-lg px-2 py-1.5 text-[10px] font-black uppercase tracking-wider ${
+                              selected ? "bg-primary/10 text-primary cursor-default" : "bg-slate-100 text-navy hover:bg-slate-200"
+                            }`}
+                          >
+                            {selected ? "Usando este modelo" : "Usar modelo"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openFullPreview(t.id)}
+                            className="w-full text-[10px] font-bold text-primary hover:underline"
+                          >
+                            Abrir / visualizar
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
         </div>
       )}
+      {fullPreviewModal}
+    </div>
+  );
+}
 
-      {fullPreviewIdx !== null && fullTpl && (
-        <div className="fixed inset-0 z-[100] bg-slate-900/80 flex items-center justify-center p-2 sm:p-4">
-          <div className="bg-white rounded-2xl w-full max-w-5xl h-[95vh] sm:h-[92vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between gap-3 px-3 sm:px-5 py-3 border-b border-slate-200 shrink-0">
-              <div className="min-w-0">
-                <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                  Modelo {fullPreviewIdx + 1} de {PDF_TEMPLATES.length}
-                </div>
-                <div className="text-sm sm:text-base font-black text-navy truncate">{fullTpl.label}</div>
-                <div className="text-[11px] text-slate-500 truncate hidden sm:block">{fullTpl.description}</div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setFullPreviewIdx(null)}
-                className="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-100 hover:bg-slate-200 shrink-0"
-              >
-                Fechar
-              </button>
-            </div>
-            <div className="flex-1 min-h-0 bg-slate-100 relative">
-              {loadingFull && (
-                <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-500">
-                  Gerando prévia A4…
-                </div>
-              )}
-              {previewUrl ? (
-                <iframe src={previewUrl} title="Prévia do template" className="w-full h-full" />
-              ) : (
-                !loadingFull && (
-                  <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-500">
-                    Não foi possível gerar a prévia.
-                  </div>
-                )
-              )}
-            </div>
-            <div className="flex items-center justify-between gap-2 px-3 sm:px-5 py-3 border-t border-slate-200 bg-white shrink-0 flex-wrap">
-              <button
-                type="button"
-                onClick={() => setFullPreviewIdx((i) => (i === null ? 0 : (i - 1 + PDF_TEMPLATES.length) % PDF_TEMPLATES.length))}
-                className="px-3 py-2 text-xs font-bold rounded-lg bg-slate-100 hover:bg-slate-200"
-              >
-                ← Anterior
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onSelect(fullTpl.id);
-                  setFullPreviewIdx(null);
-                }}
-                className="flex-1 min-w-[160px] px-3 py-2 text-xs font-black uppercase tracking-wider rounded-lg bg-primary text-white hover:opacity-90"
-              >
-                Usar este modelo
-              </button>
-              <button
-                type="button"
-                onClick={() => setFullPreviewIdx((i) => (i === null ? 0 : (i + 1) % PDF_TEMPLATES.length))}
-                className="px-3 py-2 text-xs font-bold rounded-lg bg-slate-100 hover:bg-slate-200"
-              >
-                Próximo →
-              </button>
-            </div>
-          </div>
+function PdfPreviewFrame({ url, bytes, title }: { url: string; bytes: Uint8Array | null; title: string }) {
+  const [useCanvasPreview, setUseCanvasPreview] = useState(false);
+
+  useEffect(() => {
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+    const hasNativePdf = typeof navigator !== "undefined" && "pdfViewerEnabled" in navigator ? Boolean((navigator as any).pdfViewerEnabled) : !isMobile;
+    setUseCanvasPreview(isMobile || !hasNativePdf);
+  }, [url]);
+
+  if (useCanvasPreview && bytes) return <PdfCanvasPreview bytes={bytes} />;
+
+  return (
+    <object data={`${url}#toolbar=0&navpanes=0`} type="application/pdf" className="w-full h-full">
+      {bytes ? <PdfCanvasPreview bytes={bytes} /> : <iframe src={`${url}#toolbar=0&navpanes=0`} title={title} className="w-full h-full border-0" />}
+    </object>
+  );
+}
+
+function PdfCanvasPreview({ bytes }: { bytes: Uint8Array }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [{ default: pdfWorker }, pdfjsLib] = await Promise.all([
+          import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
+          import("pdfjs-dist"),
+        ]);
+        pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+        const pdfData = bytes.slice();
+        const loadingTask = pdfjsLib.getDocument({ data: pdfData } as any);
+        const pdf = await loadingTask.promise;
+        const container = containerRef.current;
+        if (!container || cancelled) return;
+        container.innerHTML = "";
+        const containerWidth = Math.min(920, Math.max(320, container.clientWidth || 700));
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum += 1) {
+          if (cancelled) return;
+          const pdfPage = await pdf.getPage(pageNum);
+          const baseViewport = pdfPage.getViewport({ scale: 1 });
+          const scale = Math.max(0.72, Math.min(1.75, (containerWidth - 24) / baseViewport.width));
+          const viewport = pdfPage.getViewport({ scale });
+          const canvas = document.createElement("canvas");
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          canvas.className = "h-auto max-w-full rounded-sm bg-white shadow-xl mb-4";
+          container.appendChild(canvas);
+          const ctx = canvas.getContext("2d");
+          if (!ctx) throw new Error("Canvas indisponível no navegador.");
+          await pdfPage.render({ canvasContext: ctx, viewport } as any).promise;
+        }
+      } catch (e) {
+        console.error("[PDF_CANVAS_PREVIEW_FAILED]", e);
+        if (!cancelled) setError(e instanceof Error ? e.message : "Falha ao renderizar PDF no navegador.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [bytes]);
+
+  return (
+    <div className="h-full w-full overflow-auto bg-slate-200 p-3 sm:p-6 flex justify-center">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-500">
+          <Loader2 className="h-5 w-5 animate-spin mr-2" /> Renderizando PDF no navegador...
         </div>
+      )}
+      {error ? (
+        <div className="m-auto rounded-xl bg-white px-4 py-3 text-xs text-slate-600 shadow">
+          Não foi possível renderizar a prévia: {error}
+        </div>
+      ) : (
+        <div ref={containerRef} className="w-full max-w-[920px] flex flex-col items-center" />
       )}
     </div>
   );
@@ -2442,9 +2623,20 @@ function TemplateMiniPreview({ id, primary }: { id: string; primary: string }) {
   const ink = "#0f172a";
   const navy = "#0d1f45";
   const navyDeep = "#062046";
-  // Simplified visual differentiator per template
   return (
     <div className="aspect-[3/4] rounded-md border border-slate-200 bg-white overflow-hidden relative text-[0px]">
+      {(id === "corporate-clean" || id === "engenharia-naval" || id === "laudo") && (
+        <div
+          className="absolute left-0 top-0 bottom-0 z-[1]"
+          style={{ width: id === "corporate-clean" ? 10 : 5, background: id === "corporate-clean" ? primary : ink }}
+        />
+      )}
+      {id === "naval-premium" && (
+        <div className="absolute right-0 top-0 bottom-0 z-[1]" style={{ width: 12, background: primary, opacity: 0.75 }} />
+      )}
+      {(id === "protocolo" || id === "oficial") && (
+        <div className="absolute right-2 top-8 z-[2] h-3 w-9 rounded-[2px] border" style={{ borderColor: id === "oficial" ? primary : "#64748b" }} />
+      )}
       {/* Header band */}
       {(() => {
         const h = id === "minimalista" || id === "protocolo" || id === "corporate-clean" ? 6
@@ -2487,7 +2679,7 @@ function TemplateMiniPreview({ id, primary }: { id: string; primary: string }) {
         );
       })()}
       {/* Body lines */}
-      <div className="px-1.5 pt-1.5 space-y-1">
+      <div className={`px-1.5 pt-1.5 space-y-1 ${id === "corporate-clean" ? "pl-4" : id === "laudo" || id === "engenharia-naval" ? "pl-3" : ""}`}>
         {id === "checklist" ? (
           <>
             {[0,1,2,3].map((i) => (
@@ -2496,6 +2688,41 @@ function TemplateMiniPreview({ id, primary }: { id: string; primary: string }) {
                 <div className="h-[2px] flex-1 bg-slate-200" />
               </div>
             ))}
+          </>
+        ) : id === "escritorio" || id === "corporate-clean" ? (
+          <>
+            <div className="h-[3px] w-1/2 rounded-sm" style={{ background: ink }} />
+            <div className="grid grid-cols-2 gap-1 pt-0.5">
+              <div className="space-y-1">
+                <div className="h-[2px] w-full bg-slate-200" />
+                <div className="h-[2px] w-5/6 bg-slate-100" />
+                <div className="h-[2px] w-3/4 bg-slate-100" />
+              </div>
+              <div className="space-y-1">
+                <div className="h-[2px] w-full bg-slate-200" />
+                <div className="h-[2px] w-4/5 bg-slate-100" />
+                <div className="h-[2px] w-2/3 bg-slate-100" />
+              </div>
+            </div>
+        </>
+        ) : id === "capa-executiva" ? (
+          <>
+            <div className="mt-3 mx-auto h-[4px] w-2/3 rounded-sm" style={{ background: ink }} />
+            <div className="mx-auto h-[1px] w-1/2" style={{ background: gold }} />
+            <div className="pt-2 space-y-1">
+              <div className="h-[2px] w-full bg-slate-100" />
+              <div className="h-[2px] w-5/6 bg-slate-100" />
+            </div>
+          </>
+        ) : id === "protocolo" ? (
+          <>
+            <div className="h-[3px] w-1/2 rounded-sm" style={{ background: ink }} />
+            <div className="h-[1px] w-8 bg-slate-400" />
+            <div className="pt-1 space-y-1">
+              <div className="h-[2px] w-full bg-slate-100" />
+              <div className="h-[2px] w-5/6 bg-slate-100" />
+              <div className="h-[2px] w-2/3 bg-slate-100" />
+            </div>
           </>
         ) : id === "engenharia-naval" || id === "relatorio-tecnico" || id === "laudo" ? (
           <>
@@ -2507,6 +2734,14 @@ function TemplateMiniPreview({ id, primary }: { id: string; primary: string }) {
             <div className="flex items-center gap-1">
               <div style={{ width: 6, height: 6, background: id === "relatorio-tecnico" ? primary : "#64748b" }} />
               <div className="h-[2px] w-1/2 bg-slate-200" />
+            </div>
+            <div className="grid grid-cols-[8px_1fr] gap-1 pt-0.5">
+              <div className="h-8 rounded-sm" style={{ background: primary, opacity: 0.25 }} />
+              <div className="space-y-1">
+                <div className="h-[2px] w-full bg-slate-100" />
+                <div className="h-[2px] w-5/6 bg-slate-100" />
+                <div className="h-[2px] w-3/4 bg-slate-100" />
+              </div>
             </div>
           </>
         ) : (
