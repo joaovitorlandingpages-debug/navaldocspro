@@ -61,7 +61,7 @@ export const customerSignaturesService = {
       .eq("company_id", companyId)
       .eq("customer_id", customerId);
     const ids = new Set<string>((byReq ?? []).map((r: any) => r.id));
-    const extraIds = (byPart ?? []).map((p: any) => p.signature_request_id).filter((id) => !ids.has(id));
+    const extraIds = (byPart ?? []).map((p: any) => p.signature_request_id).filter((id: string) => !ids.has(id));
     let extra: any[] = [];
     if (extraIds.length) {
       const { data } = await supabase
