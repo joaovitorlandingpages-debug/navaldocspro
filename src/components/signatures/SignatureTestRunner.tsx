@@ -58,7 +58,7 @@ export function SignatureTestRunner({ companyId, userId, onChanged }: {
         }],
       });
       requestId = created.request.id;
-      update("create", { status: "ok", detail: `request_id=${requestId.slice(0, 8)}…` });
+      update("create", { status: "ok", detail: `request_id=${requestId!.slice(0, 8)}…` });
 
       // 2. Participant
       update("participant", { status: "running" });
