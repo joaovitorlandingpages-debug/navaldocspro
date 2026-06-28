@@ -5103,6 +5103,90 @@ export type Database = {
           },
         ]
       }
+      template_downloads: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          id: string
+          template_id: string
+          user_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          template_id: string
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          template_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      template_reviews: {
+        Row: {
+          comment: string | null
+          company_id: string | null
+          created_at: string
+          id: string
+          rating: number
+          template_id: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          template_id: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          template_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      template_versions: {
+        Row: {
+          changelog: Json
+          created_at: string
+          id: string
+          notes: string | null
+          released_at: string
+          template_id: string
+          version: string
+        }
+        Insert: {
+          changelog?: Json
+          created_at?: string
+          id?: string
+          notes?: string | null
+          released_at?: string
+          template_id: string
+          version: string
+        }
+        Update: {
+          changelog?: Json
+          created_at?: string
+          id?: string
+          notes?: string | null
+          released_at?: string
+          template_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
       tickets: {
         Row: {
           company_id: string | null

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +29,7 @@ const CATEGORIES = [
 
 function GratuitosPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [branding, setBranding] = useState<CompanyBranding | null>(null);
   const [query, setQuery] = useState("");
@@ -106,7 +107,7 @@ function GratuitosPage() {
 
               />
             }
-            onPreview={() => setPreview({ id: t.id, name: t.label })}
+            onPreview={() => navigate({ to: "/templates/$id", params: { id: t.id } })}
             onPrimary={() => useTemplate(t.id)}
             primaryLabel="Usar"
           />
