@@ -7,8 +7,12 @@ import {
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
   Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft,
   Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight, Signature, Lock,
-  Globe, Award, Verified, LayoutTemplate
+  Globe, Award, Verified, LayoutTemplate, UserCircle
 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
+  DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 import { useState, useEffect, Suspense, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
@@ -248,12 +252,6 @@ function DashboardLayout() {
       <div className="p-6 border-t border-white/5 space-y-2 bg-white/[0.02]">
          {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
            <>
-             {profile?.role === 'admin_master_global' && (
-               <Link to="/admin-master" onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 transition-all text-amber-300 hover:text-amber-200 border border-amber-500/20">
-                <ShieldCheck className="h-5 w-5" />
-                {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Admin Master Global</span>}
-             </Link>
-             )}
              <Link to="/admin" onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
                 <ShieldCheck className="h-5 w-5" />
                 {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Painel Admin</span>}
@@ -379,19 +377,47 @@ function DashboardLayout() {
                          <span className="absolute top-2.5 right-2.5 h-2 w-2 bg-primary rounded-full ring-2 ring-white" />
                      </button>
                     <div className="h-8 md:h-10 w-px bg-slate-100" />
-                    <div className="flex items-center gap-2 md:gap-4">
-                        <div className="text-right hidden xl:block">
-                            <p className="text-[11px] font-black text-navy leading-none uppercase tracking-widest">{profile?.name || "Operador Master"}</p>
-                            <div className="flex items-center justify-end gap-1.5 mt-1.5">
-                               <Badge variant="outline" className="text-[8px] font-black border-primary/20 text-primary bg-primary/5 uppercase tracking-widest px-2">{subscription?.plan?.name || "Professional"}</Badge>
-                               <span className="h-1 w-1 bg-slate-300 rounded-full" />
-                               <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Ativo</p>
-                            </div>
-                        </div>
-                        <div className="h-9 w-9 md:h-11 md:w-11 rounded-xl md:rounded-2xl bg-gradient-to-br from-navy to-slate-800 flex items-center justify-center text-white font-black text-[10px] md:text-xs shadow-lg border-2 border-white shrink-0">
-                            {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
-                        </div>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="flex items-center gap-2 md:gap-4 rounded-2xl hover:bg-slate-50 px-2 py-1 transition-all" aria-label="Menu do usuário">
+                          <div className="text-right hidden xl:block">
+                              <p className="text-[11px] font-black text-navy leading-none uppercase tracking-widest">{profile?.name || "Operador Master"}</p>
+                              <div className="flex items-center justify-end gap-1.5 mt-1.5">
+                                 <Badge variant="outline" className="text-[8px] font-black border-primary/20 text-primary bg-primary/5 uppercase tracking-widest px-2">{subscription?.plan?.name || "Professional"}</Badge>
+                                 <span className="h-1 w-1 bg-slate-300 rounded-full" />
+                                 <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Ativo</p>
+                              </div>
+                          </div>
+                          <div className="h-9 w-9 md:h-11 md:w-11 rounded-xl md:rounded-2xl bg-gradient-to-br from-navy to-slate-800 flex items-center justify-center text-white font-black text-[10px] md:text-xs shadow-lg border-2 border-white shrink-0">
+                              {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
+                          </div>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-slate-500">{profile?.email || "Conta"}</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                          <Link to="/settings" className="cursor-pointer"><UserCircle className="h-4 w-4 mr-2" /> Minha Conta</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/settings" className="cursor-pointer"><Settings className="h-4 w-4 mr-2" /> Configurações</Link>
+                        </DropdownMenuItem>
+                        {profile?.role === 'admin_master_global' && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                              <Link to="/admin-master" className="cursor-pointer text-amber-700 focus:text-amber-800">
+                                <ShieldCheck className="h-4 w-4 mr-2" /> Admin Master Global
+                              </Link>
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 focus:text-red-700">
+                          <LogOut className="h-4 w-4 mr-2" /> Sair
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
               </div>
             </div>
