@@ -18,6 +18,8 @@ import {
 import { CATEGORY_OF } from "@/services/companyPdfTemplates";
 import { TemplateCard } from "@/components/templates/TemplateCard";
 import { TemplatePreviewModal } from "@/components/templates/TemplatePreviewModal";
+import { TemplateCover } from "@/components/templates/TemplateCover";
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
