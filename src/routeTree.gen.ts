@@ -61,6 +61,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as TemplatesMeusRouteImport } from './routes/templates.meus'
 import { Route as TemplatesMarketplaceRouteImport } from './routes/templates.marketplace'
 import { Route as TemplatesGratuitosRouteImport } from './routes/templates.gratuitos'
+import { Route as TemplatesIdRouteImport } from './routes/templates.$id'
 import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as DocumentosBibliotecaRouteImport } from './routes/documentos.biblioteca'
@@ -362,6 +363,11 @@ const TemplatesMarketplaceRoute = TemplatesMarketplaceRouteImport.update({
 const TemplatesGratuitosRoute = TemplatesGratuitosRouteImport.update({
   id: '/gratuitos',
   path: '/gratuitos',
+  getParentRoute: () => TemplatesRoute,
+} as any)
+const TemplatesIdRoute = TemplatesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
   getParentRoute: () => TemplatesRoute,
 } as any)
 const ProcessesIdRoute = ProcessesIdRouteImport.update({
@@ -668,6 +674,7 @@ export interface FileRoutesByFullPath {
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
+  '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
   '/templates/meus': typeof TemplatesMeusRoute
@@ -761,6 +768,7 @@ export interface FileRoutesByTo {
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
+  '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
   '/templates/meus': typeof TemplatesMeusRoute
@@ -858,6 +866,7 @@ export interface FileRoutesById {
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
+  '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
   '/templates/meus': typeof TemplatesMeusRoute
@@ -956,6 +965,7 @@ export interface FileRouteTypes {
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
+    | '/templates/$id'
     | '/templates/gratuitos'
     | '/templates/marketplace'
     | '/templates/meus'
@@ -1049,6 +1059,7 @@ export interface FileRouteTypes {
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
+    | '/templates/$id'
     | '/templates/gratuitos'
     | '/templates/marketplace'
     | '/templates/meus'
@@ -1145,6 +1156,7 @@ export interface FileRouteTypes {
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
+    | '/templates/$id'
     | '/templates/gratuitos'
     | '/templates/marketplace'
     | '/templates/meus'
@@ -1577,6 +1589,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TemplatesGratuitosRouteImport
       parentRoute: typeof TemplatesRoute
     }
+    '/templates/$id': {
+      id: '/templates/$id'
+      path: '/$id'
+      fullPath: '/templates/$id'
+      preLoaderRoute: typeof TemplatesIdRouteImport
+      parentRoute: typeof TemplatesRoute
+    }
     '/processes/$id': {
       id: '/processes/$id'
       path: '/$id'
@@ -1983,6 +2002,7 @@ const ProcessesRouteWithChildren = ProcessesRoute._addFileChildren(
 )
 
 interface TemplatesRouteChildren {
+  TemplatesIdRoute: typeof TemplatesIdRoute
   TemplatesGratuitosRoute: typeof TemplatesGratuitosRoute
   TemplatesMarketplaceRoute: typeof TemplatesMarketplaceRoute
   TemplatesMeusRoute: typeof TemplatesMeusRoute
@@ -1990,6 +2010,7 @@ interface TemplatesRouteChildren {
 }
 
 const TemplatesRouteChildren: TemplatesRouteChildren = {
+  TemplatesIdRoute: TemplatesIdRoute,
   TemplatesGratuitosRoute: TemplatesGratuitosRoute,
   TemplatesMarketplaceRoute: TemplatesMarketplaceRoute,
   TemplatesMeusRoute: TemplatesMeusRoute,
