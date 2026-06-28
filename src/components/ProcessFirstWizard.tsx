@@ -2256,6 +2256,7 @@ function TemplateGalleryPanel({
   onResetToCompany,
   sampleDoc,
   branding,
+  companyId,
 }: {
   effectiveTemplate: string;
   companyDefault: string | null;
@@ -2266,6 +2267,7 @@ function TemplateGalleryPanel({
   onResetToCompany: () => void;
   sampleDoc: { name: string; content: string } | null;
   branding: any;
+  companyId: string | null;
 }) {
   const current = PDF_TEMPLATES.find((t) => t.id === effectiveTemplate) ?? PDF_TEMPLATES[0];
   const [fullPreviewIdx, setFullPreviewIdx] = useState<number | null>(null);
