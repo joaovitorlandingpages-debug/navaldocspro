@@ -1156,6 +1156,7 @@ function AdminMenu({ role, expanded, onNavigate }: { role?: string | null; expan
     { name: "Marketplace Admin",      to: "/admin-master",           icon: <LayoutTemplate className="h-4 w-4" />, show: isGlobal },
     { name: "Logs do Sistema",        to: "/admin/logs",             icon: <History className="h-4 w-4" />,     show: isMaster },
     { name: "Limpeza de Testes",      to: "/admin-master",           icon: <FileWarning className="h-4 w-4" />, show: isGlobal },
+    { name: "Âncoras de Assinatura",  to: "/admin/signature-anchors", icon: <ShieldCheck className="h-4 w-4" />, show: isMaster },
     { name: "Relatórios",             to: "/admin/saas-metrics",     icon: <TrendingUp className="h-4 w-4" />,  show: isMaster },
     { name: "Usuários",               to: "/admin/users",            icon: <Users className="h-4 w-4" />,       show: true },
     { name: "Configurações avançadas",to: "/admin/settings",         icon: <Settings className="h-4 w-4" />,    show: isMaster },
