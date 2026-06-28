@@ -469,7 +469,7 @@ function IdentidadePage() {
         initialBaseTemplate={studioBase}
         onSaved={onTemplateSaved}
       />
-    </div>
+    </>
   );
 }
 
