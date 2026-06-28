@@ -5425,6 +5425,65 @@ export type Database = {
         }
         Relationships: []
       }
+      template_signature_anchors: {
+        Row: {
+          align: string
+          company_id: string | null
+          created_at: string
+          height: number
+          id: string
+          is_default: boolean
+          label: string | null
+          page: number
+          role: string
+          template_id: string
+          updated_at: string
+          width: number
+          x: number
+          y: number
+        }
+        Insert: {
+          align?: string
+          company_id?: string | null
+          created_at?: string
+          height?: number
+          id?: string
+          is_default?: boolean
+          label?: string | null
+          page?: number
+          role: string
+          template_id: string
+          updated_at?: string
+          width?: number
+          x?: number
+          y?: number
+        }
+        Update: {
+          align?: string
+          company_id?: string | null
+          created_at?: string
+          height?: number
+          id?: string
+          is_default?: boolean
+          label?: string | null
+          page?: number
+          role?: string
+          template_id?: string
+          updated_at?: string
+          width?: number
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_signature_anchors_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       template_versions: {
         Row: {
           changelog: Json
