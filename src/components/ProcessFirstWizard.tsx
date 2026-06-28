@@ -2560,6 +2560,11 @@ function PdfCanvasPreview({ bytes }: { bytes: Uint8Array }) {
       try {
         setLoading(true);
         setError(null);
+        const [{ default: pdfWorker }, pdfjsLib] = await Promise.all([
+          import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
+          import("pdfjs-dist"),
+        ]);
+        pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
         const loadingTask = pdfjsLib.getDocument({ data: bytes.slice() } as any);
         const pdf = await loadingTask.promise;
         const container = containerRef.current;
