@@ -1,7 +1,7 @@
 import {
   Anchor, FileText, ShieldCheck, Sparkles, Stamp, Crown, Package,
-  Scale, Leaf, Flame, Wrench, Building2, BadgeCheck, Receipt, FileSignature,
-  ClipboardList, FlaskConical, Globe, Compass, LifeBuoy, Truck, Coins, Gavel,
+  Scale, Leaf, Flame, Ruler, Building2, BadgeCheck, Receipt, FileSignature,
+  ClipboardList, FlaskConical, Globe, Compass, LifeBuoy, Truck, Coins, Feather,
 } from "lucide-react";
 
 export type TemplateCoverKind = "free" | "premium" | "owned" | "document";
