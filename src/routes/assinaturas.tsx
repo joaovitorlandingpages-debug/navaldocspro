@@ -11,6 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { SignatureTestRunner } from "@/components/signatures/SignatureTestRunner";
 import { SignatureRequestDialog } from "@/components/signatures/SignatureRequestDialog";
 import { loadSignatureMetrics, type SignatureMetrics } from "@/services/signatureMetrics";
+import { PageHeader } from "@/components/navigation/PageHeader";
+import { EmptyState } from "@/components/ui/empty-state";
+import { CardGridSkeleton, ListSkeleton } from "@/components/ui/skeletons";
 
 export const Route = createFileRoute("/assinaturas")({
   component: AssinaturasPage,
