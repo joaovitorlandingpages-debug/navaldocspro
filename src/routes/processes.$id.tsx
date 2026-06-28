@@ -71,12 +71,6 @@ function ProcessDetail() {
   const [dossierData, setDossierData] = useState<any>(null);
   const [isPreviewingDossier, setIsPreviewingDossier] = useState(false);
 
-  useEffect(() => {
-    console.log("PROCESS_TIMELINE_OK");
-    console.log("PROCESS_SECURITY_OK");
-    console.log("PROCESS_EXPERIENCE_OK");
-    console.log("PROCESS_AUTOMATION_READY");
-  }, []);
 
   const { data: complianceHistory } = useQuery({
     queryKey: ["compliance-history", id],
@@ -164,7 +158,6 @@ function ProcessDetail() {
   }, [id]);
 
   useEffect(() => {
-    console.log("PROCESS_TIMELINE_OK");
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
@@ -223,15 +216,6 @@ function ProcessDetail() {
     })))
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  useEffect(() => {
-    if (automationState) {
-      console.log("AUTOMATION_EXPERIENCE_OK");
-      console.log("SMART_PROCESS_FLOW_OK");
-      console.log("OCR_AUTOMATION_READY");
-      console.log("DOCUMENT_INTELLIGENCE_READY");
-      console.log("OPERATIONAL_EXPERIENCE_PREMIUM");
-    }
-  }, [automationState]);
 
   // Default events if none exist
   if (timelineEvents.length === 0) {
@@ -320,8 +304,8 @@ function ProcessDetail() {
       />
 
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm mb-8">
-         <div className="flex flex-wrap gap-8">
+      <div className="bg-white p-4 sm:p-6 rounded-[2rem] border border-slate-100 shadow-sm mb-8">
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="flex items-center gap-3">
                <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
                   <User className="h-5 w-5" />
@@ -357,7 +341,7 @@ function ProcessDetail() {
       <div className="grid lg:grid-cols-4 gap-8">
          <div className="lg:col-span-3 space-y-8">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex-wrap h-auto">
+                <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex w-full overflow-x-auto custom-scrollbar h-auto justify-start gap-1">
                    <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geral</TabsTrigger>
                    <TabsTrigger value="requirements" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
                      Checklist

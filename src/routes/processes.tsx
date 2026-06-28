@@ -76,12 +76,6 @@ function Processes() {
     return () => clearTimeout(debounceTimer);
   }, [page, searchTerm]);
 
-  useEffect(() => {
-    console.log("PROCESS_DEEP_AUDIT_STARTED");
-    console.log("PERFORMANCE_AUDIT_OK");
-    console.log("CACHE_SYSTEM_OK");
-    console.log("ENTERPRISE_SCALE_READY");
-  }, []);
 
   const columns = [
     { id: "pending", title: "Novo", color: "bg-red-500" },
@@ -160,7 +154,7 @@ function Processes() {
       )}
 
       {view === "kanban" ? (
-        <div className="flex gap-4 md:gap-8 overflow-x-auto pb-8 h-[calc(100vh-280px)] min-h-[650px] md:min-h-[700px] custom-scrollbar px-2">
+        <div className="flex gap-4 md:gap-8 overflow-x-auto pb-8 min-h-[600px] md:min-h-[700px] custom-scrollbar px-2">
           {columns.map((col) => {
             const columnProcesses = processes.filter(p => p.status === col.id);
             return (
