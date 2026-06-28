@@ -585,6 +585,22 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
 
   return (
     <div className="space-y-6">
+      {signaturesSummary.total > 0 && (
+        <div className={`rounded-2xl border p-4 flex flex-wrap items-center gap-3 ${signaturesSummary.completed === signaturesSummary.total ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+          <span className="text-xs font-black uppercase tracking-widest">Assinaturas</span>
+          <span className="text-sm">
+            {signaturesSummary.completed === signaturesSummary.total
+              ? `✔ Todos os documentos assinados (${signaturesSummary.completed}/${signaturesSummary.total})`
+              : `${signaturesSummary.completed}/${signaturesSummary.total} concluídas`}
+          </span>
+          {signaturesSummary.certificates > 0 && (
+            <span className="text-xs">✔ {signaturesSummary.certificates} certificado(s) disponível(eis)</span>
+          )}
+          {signaturesSummary.completed === signaturesSummary.total && signaturesSummary.total > 0 && (
+            <span className="text-xs font-bold text-emerald-700">✔ Processo pronto para dossiê</span>
+          )}
+        </div>
+      )}
       {/* Header */}
       <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
