@@ -531,23 +531,7 @@ function ProcessDetail() {
                </TabsContent>
 
                <TabsContent value="signatures" className="space-y-8 animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                    <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
-                      <Signature className="h-5 w-5 text-primary" /> Coleta de Assinaturas Digitais
-                    </h3>
-                    <div className="p-8 bg-slate-50 rounded-[1.5rem] border border-slate-100">
-                       <div className="flex justify-between items-center mb-6">
-                          <div>
-                             <p className="text-xs font-bold text-navy">Aguardando Assinatura do Proprietário</p>
-                             <p className="text-[10px] text-slate-400 font-medium">Documento: Requerimento DPC-2211</p>
-                          </div>
-                          <Badge className="bg-amber-100 text-amber-600 border-none text-[8px] font-black uppercase tracking-widest">Pendente</Badge>
-                       </div>
-                       <Button className="w-full bg-navy text-white rounded-xl h-11 font-bold text-[10px] uppercase tracking-widest gap-2">
-                          <Signature className="h-4 w-4" /> Enviar Link de Assinatura
-                       </Button>
-                    </div>
-                  </div>
+                  <ProcessSignaturesPanel processId={id} />
                </TabsContent>
 
                <TabsContent value="protocol" className="space-y-8 animate-in fade-in duration-300">
