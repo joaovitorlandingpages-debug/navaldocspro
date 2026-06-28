@@ -57,6 +57,7 @@ function DashboardLayoutWrapper() {
 
 function DashboardLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isCompact, setIsCompact] = useState(false);
   const [isNotificationsOpen, setNotificationsOpen] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const { profile, loading, signOut } = useAuth();
@@ -65,19 +66,21 @@ function DashboardLayout() {
   const [quotaWarnings, setQuotaWarnings] = useState<string[]>([]);
   const navigate = useNavigate();
 
+  // SSR-safe responsive detection (replaces window.innerWidth checks)
   useEffect(() => {
-    // Mobile-first: start with sidebar closed on mobile
-    // Mobile/Tablet-first: start with sidebar closed on mobile and tablet
-    if (window.innerWidth <= 1024) {
-      setSidebarOpen(false);
-    }
-    console.log("PRODUCTION_UI_MODE_ACTIVE");
-    console.log("USER_DASHBOARD_CLEANED");
-    console.log("INTERNAL_CHECKLIST_ADMIN_ONLY");
-    console.log("POST_LAUNCH_EVOLUTION_STARTED");
-    console.log("FINAL_STABILITY_OK");
-    console.log("FINAL_PRODUCTION_READINESS_OK");
+    const mql = window.matchMedia("(max-width: 1024px)");
+    const apply = () => {
+      setIsCompact(mql.matches);
+      if (mql.matches) setSidebarOpen(false);
+    };
+    apply();
+    mql.addEventListener("change", apply);
+    return () => mql.removeEventListener("change", apply);
   }, []);
+
+  const showLabels = isSidebarOpen || isCompact;
+
+
 
 
   useEffect(() => {
@@ -204,14 +207,15 @@ function DashboardLayout() {
           <div className="h-12 w-12 bg-primary rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.4)] group-hover:scale-110 transition-transform duration-500">
              <Anchor className="h-7 w-7 text-white" />
           </div>
-          {(isSidebarOpen || window.innerWidth <= 1024) && (
+          {showLabels && (
 
             <div className="animate-in fade-in slide-in-from-left-2 duration-500">
               <span className="font-black text-2xl tracking-tighter text-white uppercase italic">NavalDocs <span className="text-primary">Pro</span></span>
             </div>
           )}
         </div>
-        {(isSidebarOpen || window.innerWidth <= 1024) && (
+        {showLabels && (
+
           <div className="mt-8 px-4 py-4 bg-white/5 rounded-[2rem] border border-white/5 animate-in zoom-in-95 duration-500 relative group/company">
              {(profile?.companies?.name || "").toLowerCase().includes('demo') && (
                <Badge className="absolute -top-3 -right-2 bg-amber-500 text-white border-none font-black text-[8px] px-2 py-0.5 animate-pulse shadow-lg shadow-amber-500/20">DEMO MODE</Badge>
@@ -232,19 +236,20 @@ function DashboardLayout() {
       <nav className="flex-grow mt-6 px-4 space-y-8 overflow-y-auto custom-scrollbar pb-10">
         {navItems.map((group) => (
           <div key={group.group} className="space-y-1">
-            {(isSidebarOpen || window.innerWidth <= 1024) && <p className="px-5 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.35em]">{group.group}</p>}
+            {showLabels && <p className="px-5 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.35em]">{group.group}</p>}
             {group.items.map((item) => (
               <Link 
                 key={item.name}
                 to={item.path}
-                onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)}
+                onClick={() => isCompact && setSidebarOpen(false)}
 
                 activeProps={{ className: "bg-primary/10 text-primary border-primary/20 shadow-[0_0_20px_rgba(37,99,235,0.1)]" }}
                 className="flex items-center gap-4 px-5 py-4 rounded-[1.5rem] hover:bg-white/5 border border-transparent transition-all group/item text-white/60 hover:text-white"
               >
                 <div className="group-hover/item:scale-110 group-active/item:scale-95 transition-all duration-300">{item.icon}</div>
-                {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[11px] font-bold uppercase tracking-widest leading-none">{item.name}</span>}
+                {showLabels && <span className="text-[11px] font-bold uppercase tracking-widest leading-none">{item.name}</span>}
               </Link>
+
             ))}
           </div>
         ))}
@@ -254,8 +259,8 @@ function DashboardLayout() {
          {(profile?.role === 'admin' || profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
            <AdminMenu
              role={profile?.role}
-             expanded={isSidebarOpen || (typeof window !== 'undefined' && window.innerWidth <= 1024)}
-             onNavigate={() => typeof window !== 'undefined' && window.innerWidth <= 1024 && setSidebarOpen(false)}
+             expanded={showLabels}
+             onNavigate={() => isCompact && setSidebarOpen(false)}
            />
          )}
 
@@ -264,8 +269,9 @@ function DashboardLayout() {
            className="w-full flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-red-500/10 text-red-400 transition-all border border-transparent hover:border-red-500/20"
          >
             <LogOut className="h-5 w-5" />
-            {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Sair do Sistema</span>}
+            {showLabels && <span className="text-[10px] font-black uppercase tracking-widest">Sair do Sistema</span>}
          </button>
+
       </div>
     </div>
   );
@@ -274,7 +280,7 @@ function DashboardLayout() {
     <div className="flex h-full bg-slate-50 overflow-hidden">
       {/* Mobile Sidebar */}
       <div className="lg:hidden">
-        <Sheet open={isSidebarOpen && window.innerWidth <= 1024} onOpenChange={setSidebarOpen}>
+        <Sheet open={isSidebarOpen && isCompact} onOpenChange={setSidebarOpen}>
           <SheetContent side="left" className="p-0 border-none w-72 bg-[#000B18]">
             <SidebarContent />
           </SheetContent>
