@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Copy, MessageCircle, Mail, X, FileSignature, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, Copy, MessageCircle, Mail, X, FileSignature, Clock, CheckCircle2, AlertCircle, Download, Link2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/assinaturas")({
   component: AssinaturasPage,

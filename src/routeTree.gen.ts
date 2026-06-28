@@ -59,6 +59,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as VerificarAssinaturaCodeRouteImport } from './routes/verificar-assinatura.$code'
 import { Route as TemplatesMeusRouteImport } from './routes/templates.meus'
 import { Route as TemplatesMarketplaceRouteImport } from './routes/templates.marketplace'
 import { Route as TemplatesGratuitosRouteImport } from './routes/templates.gratuitos'
@@ -356,6 +357,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const VerificarAssinaturaCodeRoute = VerificarAssinaturaCodeRouteImport.update({
+  id: '/verificar-assinatura/$code',
+  path: '/verificar-assinatura/$code',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const TemplatesMeusRoute = TemplatesMeusRouteImport.update({
   id: '/meus',
@@ -692,6 +698,7 @@ export interface FileRoutesByFullPath {
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
   '/templates/meus': typeof TemplatesMeusRoute
+  '/verificar-assinatura/$code': typeof VerificarAssinaturaCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/templates/': typeof TemplatesIndexRoute
@@ -788,6 +795,7 @@ export interface FileRoutesByTo {
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
   '/templates/meus': typeof TemplatesMeusRoute
+  '/verificar-assinatura/$code': typeof VerificarAssinaturaCodeRoute
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/templates': typeof TemplatesIndexRoute
@@ -888,6 +896,7 @@ export interface FileRoutesById {
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
   '/templates/meus': typeof TemplatesMeusRoute
+  '/verificar-assinatura/$code': typeof VerificarAssinaturaCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/templates/': typeof TemplatesIndexRoute
@@ -989,6 +998,7 @@ export interface FileRouteTypes {
     | '/templates/gratuitos'
     | '/templates/marketplace'
     | '/templates/meus'
+    | '/verificar-assinatura/$code'
     | '/admin/'
     | '/dashboard/'
     | '/templates/'
@@ -1085,6 +1095,7 @@ export interface FileRouteTypes {
     | '/templates/gratuitos'
     | '/templates/marketplace'
     | '/templates/meus'
+    | '/verificar-assinatura/$code'
     | '/admin'
     | '/dashboard'
     | '/templates'
@@ -1184,6 +1195,7 @@ export interface FileRouteTypes {
     | '/templates/gratuitos'
     | '/templates/marketplace'
     | '/templates/meus'
+    | '/verificar-assinatura/$code'
     | '/admin/'
     | '/dashboard/'
     | '/templates/'
@@ -1247,6 +1259,7 @@ export interface RootRouteChildren {
   DebugSystemRoute: typeof DebugSystemRoute
   DocumentosBibliotecaRoute: typeof DocumentosBibliotecaRoute
   PortalTokenRoute: typeof PortalTokenRoute
+  VerificarAssinaturaCodeRoute: typeof VerificarAssinaturaCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1600,6 +1613,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/verificar-assinatura/$code': {
+      id: '/verificar-assinatura/$code'
+      path: '/verificar-assinatura/$code'
+      fullPath: '/verificar-assinatura/$code'
+      preLoaderRoute: typeof VerificarAssinaturaCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/templates/meus': {
       id: '/templates/meus'
@@ -2119,6 +2139,7 @@ const rootRouteChildren: RootRouteChildren = {
   DebugSystemRoute: DebugSystemRoute,
   DocumentosBibliotecaRoute: DocumentosBibliotecaRoute,
   PortalTokenRoute: PortalTokenRoute,
+  VerificarAssinaturaCodeRoute: VerificarAssinaturaCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
