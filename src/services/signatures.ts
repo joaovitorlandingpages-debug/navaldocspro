@@ -129,6 +129,7 @@ export const signaturesService = {
     signature_type: "drawn" | "typed" | "upload";
     signature_data: string;
     accepted_terms: boolean;
+    reuse_authorized?: boolean;
   }) {
     const found = await this.getByToken(token);
     if (!found) throw new Error("Token inválido");
