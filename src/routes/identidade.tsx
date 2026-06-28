@@ -453,8 +453,17 @@ function IdentidadePage() {
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Salvar identidade corporativa
           </Button>
-        </div>
       </div>
+
+      <TemplateStudio
+        open={studioOpen}
+        onClose={() => setStudioOpen(false)}
+        companyId={companyId ?? ""}
+        branding={brandingForStudio}
+        initial={studioInitial}
+        initialBaseTemplate={studioBase}
+        onSaved={onTemplateSaved}
+      />
     </div>
   );
 }
