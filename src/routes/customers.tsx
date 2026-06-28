@@ -1023,6 +1023,12 @@ function Customers() {
                   </div>
                 )}
               </TabsContent>
+
+              <TabsContent value="signatures">
+                {companyId && selectedCustomer?.id && (
+                  <CustomerSignaturesTab companyId={companyId} customerId={selectedCustomer.id} />
+                )}
+              </TabsContent>
             </Tabs>
           </div>
       </ModalLayout>
