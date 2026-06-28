@@ -4609,6 +4609,7 @@ export type Database = {
           generated_at: string
           id: string
           participants_snapshot: Json | null
+          pdf_url: string | null
           signature_request_id: string
           verification_code: string
         }
@@ -4620,6 +4621,7 @@ export type Database = {
           generated_at?: string
           id?: string
           participants_snapshot?: Json | null
+          pdf_url?: string | null
           signature_request_id: string
           verification_code: string
         }
@@ -4631,6 +4633,7 @@ export type Database = {
           generated_at?: string
           id?: string
           participants_snapshot?: Json | null
+          pdf_url?: string | null
           signature_request_id?: string
           verification_code?: string
         }
