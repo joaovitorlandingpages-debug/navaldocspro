@@ -13,8 +13,10 @@ import { Loader2, Upload, Image as ImageIcon, Palette, Building2, PenTool, Stamp
 import { PDF_TEMPLATES, type PdfTemplateId, loadCompanyBranding, type CompanyBranding } from "@/services/companyBranding";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TemplateStudio } from "@/components/templates/TemplateStudio";
+import { NewTemplateDialog } from "@/components/templates/NewTemplateDialog";
 import {
   listCompanyTemplates,
+  saveCompanyTemplate,
   deleteCompanyTemplate,
   DOCUMENT_TYPES,
   type CompanyPdfTemplate,
