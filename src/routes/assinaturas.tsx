@@ -141,11 +141,28 @@ function RequestRow({ row, onChanged }: { row: any; onChanged: () => void }) {
             {signed} de {parts.length} assinaram • Ordem: {row.signing_order === "sequential" ? "Sequencial" : "Livre"}
           </p>
         </div>
-        {row.status !== "completed" && row.status !== "cancelled" && (
-          <Button variant="outline" size="sm" onClick={cancel} className="gap-1">
-            <X className="w-3 h-3" /> Cancelar
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {row.final_signed_pdf_url && (
+            <Button variant="outline" size="sm" onClick={() => downloadSigned(row.final_signed_pdf_url)} className="gap-1">
+              <Download className="w-3 h-3" /> PDF Assinado
+            </Button>
+          )}
+          {row.evidence_certificate_url && (
+            <Button variant="outline" size="sm" onClick={() => downloadSigned(row.evidence_certificate_url)} className="gap-1">
+              <Download className="w-3 h-3" /> Certificado
+            </Button>
+          )}
+          {row.status === "completed" && (
+            <Button variant="outline" size="sm" onClick={() => copyVerifyLink(row.id)} className="gap-1">
+              <Link2 className="w-3 h-3" /> Link de verificação
+            </Button>
+          )}
+          {row.status !== "completed" && row.status !== "cancelled" && (
+            <Button variant="outline" size="sm" onClick={cancel} className="gap-1">
+              <X className="w-3 h-3" /> Cancelar
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="mt-3 grid gap-2">
