@@ -148,6 +148,61 @@ function AdminMasterPage() {
   );
 }
 
+/* ---------------- Debug ---------------- */
+function DebugTab() {
+  const { profile, user } = useAuth();
+  const { data: checks } = useQuery({
+    queryKey: ["master-debug", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const [hasRoleAdmin, isMaster] = await Promise.all([
+        supabase.rpc("has_role" as any, { _user_id: user!.id, _role: "admin_master_global" } as any),
+        supabase.rpc("is_admin_master" as any),
+      ]);
+      return {
+        has_role_admin_master_global: hasRoleAdmin.data ?? null,
+        has_role_error: hasRoleAdmin.error?.message ?? null,
+        is_admin_master: isMaster.data ?? null,
+        is_admin_master_error: isMaster.error?.message ?? null,
+      };
+    },
+  });
+
+  const rows: Array<[string, any]> = [
+    ["user.id", user?.id],
+    ["user.email", user?.email],
+    ["profile.role", profile?.role],
+    ["profile.company_id", profile?.company_id],
+    ["profile.name", profile?.name],
+    ["company.name", profile?.companies?.name],
+    ["is_admin_master() rpc", checks?.is_admin_master],
+    ["has_role(admin_master_global) rpc", checks?.has_role_admin_master_global],
+    ["acesso permitido", profile?.role === "admin_master_global"],
+  ];
+
+  return (
+    <Card className="p-6">
+      <h3 className="text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2">
+        <ShieldCheck className="h-4 w-4 text-amber-500" /> Diagnóstico de Permissão
+      </h3>
+      <div className="divide-y border rounded-lg overflow-hidden">
+        {rows.map(([k, v]) => (
+          <div key={k} className="grid grid-cols-2 gap-3 px-4 py-2 text-xs">
+            <span className="font-semibold text-slate-600">{k}</span>
+            <span className="font-mono text-slate-900 break-all">{String(v ?? "—")}</span>
+          </div>
+        ))}
+      </div>
+      {(checks?.has_role_error || checks?.is_admin_master_error) && (
+        <p className="text-[11px] text-red-600 mt-3 font-mono">
+          {checks?.has_role_error || checks?.is_admin_master_error}
+        </p>
+      )}
+    </Card>
+  );
+}
+
+
 /* ---------------- Overview ---------------- */
 function OverviewTab() {
   const { data, isLoading } = useQuery({
