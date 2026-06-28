@@ -336,84 +336,19 @@ function IdentidadePage() {
               );
             })}
           </div>
-        </Section>
-
-        <Section title="Meus Templates" icon={<Star className="h-5 w-5" />}>
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-slate-500">
-              Modelos personalizados da sua empresa. Use o editor visual para criar quantos quiser.
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs text-slate-600">
+              Quer mais opções? Explore gratuitos, marketplace e seus favoritos.
             </p>
-            <Button size="sm" onClick={() => setNewDialogOpen(true)} className="gap-2">
-              <Plus className="h-3.5 w-3.5" /> Novo template
-            </Button>
+            <Link
+              to="/templates"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-white hover:opacity-90"
+            >
+              Ver mais templates
+            </Link>
           </div>
-          {myTemplates.length === 0 ? (
-            <div className="text-center py-8 border border-dashed border-slate-200 rounded-xl text-xs text-slate-400">
-              Nenhum template personalizado ainda.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {myTemplates.map((t) => (
-                <div key={t.id} className="rounded-xl border border-slate-200 p-3 bg-white hover:border-primary/30 transition-all">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="text-sm font-bold text-navy truncate">{t.name}</div>
-                      <div className="text-[10px] text-slate-500 uppercase tracking-widest">
-                        Base: {PDF_TEMPLATES.find((p) => p.id === t.base_template)?.label ?? t.base_template}
-                        {t.document_type && ` · ${DOCUMENT_TYPES.find((d) => d.id === t.document_type)?.label}`}
-                        {t.is_default && " · Padrão"}
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-1 shrink-0">
-                      <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => openStudio(t)} title="Editar">
-                        <Wand2 className="h-3 w-3" /> Editar
-                      </Button>
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => duplicateTemplate(t)} title="Duplicar">
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => renameTemplate(t)} title="Renomear">
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                      <Button size="sm" variant="ghost" className={`h-8 w-8 p-0 ${t.is_default ? "text-amber-500" : ""}`} onClick={() => setAsDefault(t)} title={t.is_default ? "Remover padrão" : "Definir como padrão"}>
-                        <Star className={`h-3 w-3 ${t.is_default ? "fill-current" : ""}`} />
-                      </Button>
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500" onClick={() => removeTemplate(t.id)} title="Excluir">
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </Section>
 
-        <Section title="Templates por tipo de documento" icon={<FileText className="h-5 w-5" />}>
-          <p className="text-xs text-slate-500 mb-4">
-            Defina um modelo específico para cada tipo. Quando vazio, é usado o modelo padrão da empresa.
-          </p>
-          <div className="grid md:grid-cols-2 gap-3">
-            {DOCUMENT_TYPES.map((d) => (
-              <div key={d.id} className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-600">{d.label}</Label>
-                <Select value={docTypeMap[d.id] ?? "__none__"} onValueChange={(v) => setDocTypeTemplate(d.id, v)}>
-                  <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-                  <SelectContent className="max-h-72">
-                    <SelectItem value="__none__">Usar padrão da empresa</SelectItem>
-                    <div className="px-2 pt-2 pb-1 text-[9px] uppercase tracking-widest text-slate-400">Modelos base</div>
-                    {PDF_TEMPLATES.map((t) => <SelectItem key={t.id} value={`base:${t.id}`}>{t.label}</SelectItem>)}
-                    {myTemplates.length > 0 && (
-                      <>
-                        <div className="px-2 pt-2 pb-1 text-[9px] uppercase tracking-widest text-slate-400">Meus templates</div>
-                        {myTemplates.map((t) => <SelectItem key={t.id} value={`mine:${t.id}`}>{t.name}</SelectItem>)}
-                      </>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
-          </div>
-        </Section>
 
 
 
