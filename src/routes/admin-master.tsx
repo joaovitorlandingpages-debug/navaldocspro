@@ -155,17 +155,13 @@ function DebugTab() {
     queryKey: ["master-debug", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const [hasRoleAdmin, isMaster] = await Promise.all([
-        supabase.rpc("has_role" as any, { _user_id: user!.id, _role: "admin_master_global" } as any),
-        supabase.rpc("is_admin_master" as any),
-      ]);
+      const isMaster = await supabase.rpc("is_admin_master" as any);
       return {
-        has_role_admin_master_global: hasRoleAdmin.data ?? null,
-        has_role_error: hasRoleAdmin.error?.message ?? null,
         is_admin_master: isMaster.data ?? null,
         is_admin_master_error: isMaster.error?.message ?? null,
       };
     },
+
   });
 
   const rows: Array<[string, any]> = [
