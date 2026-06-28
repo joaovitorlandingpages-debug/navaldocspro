@@ -9,8 +9,17 @@ import { Card } from "@/components/ui/card";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageHeader } from "@/components/navigation/PageHeader";
 import { toast } from "sonner";
-import { Loader2, Upload, Image as ImageIcon, Palette, Building2, PenTool, Stamp, Droplet, LayoutTemplate, Check } from "lucide-react";
-import { PDF_TEMPLATES, type PdfTemplateId } from "@/services/companyBranding";
+import { Loader2, Upload, Image as ImageIcon, Palette, Building2, PenTool, Stamp, Droplet, LayoutTemplate, Check, Wand2, Plus, Trash2, Star, FileText } from "lucide-react";
+import { PDF_TEMPLATES, type PdfTemplateId, loadCompanyBranding, type CompanyBranding } from "@/services/companyBranding";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TemplateStudio } from "@/components/templates/TemplateStudio";
+import {
+  listCompanyTemplates,
+  deleteCompanyTemplate,
+  DOCUMENT_TYPES,
+  type CompanyPdfTemplate,
+  type DocumentType,
+} from "@/services/companyPdfTemplates";
 
 export const Route = createFileRoute("/identidade")({
   component: () => (
