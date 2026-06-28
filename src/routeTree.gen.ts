@@ -104,6 +104,7 @@ import { Route as AdminExecutiveOverviewRouteImport } from './routes/admin/execu
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 import { Route as AdminDocumentosRouteImport } from './routes/admin/documentos'
 import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
+import { Route as AdminDiagnosticoRouteImport } from './routes/admin.diagnostico'
 import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
 import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
 import { Route as AdminBillingRouteImport } from './routes/admin/billing'
@@ -588,6 +589,11 @@ const AdminDocumentLibraryRoute = AdminDocumentLibraryRouteImport.update({
   path: '/document-library',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDiagnosticoRoute = AdminDiagnosticoRouteImport.update({
+  id: '/diagnostico',
+  path: '/diagnostico',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCompaniesRoute = AdminCompaniesRouteImport.update({
   id: '/companies',
   path: '/companies',
@@ -661,6 +667,7 @@ export interface FileRoutesByFullPath {
   '/admin/billing': typeof AdminBillingRoute
   '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
+  '/admin/diagnostico': typeof AdminDiagnosticoRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documentos': typeof AdminDocumentosRoute
   '/admin/documents': typeof AdminDocumentsRoute
@@ -759,6 +766,7 @@ export interface FileRoutesByTo {
   '/admin/billing': typeof AdminBillingRoute
   '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
+  '/admin/diagnostico': typeof AdminDiagnosticoRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documentos': typeof AdminDocumentosRoute
   '/admin/documents': typeof AdminDocumentsRoute
@@ -861,6 +869,7 @@ export interface FileRoutesById {
   '/admin/billing': typeof AdminBillingRoute
   '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
+  '/admin/diagnostico': typeof AdminDiagnosticoRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documentos': typeof AdminDocumentosRoute
   '/admin/documents': typeof AdminDocumentsRoute
@@ -964,6 +973,7 @@ export interface FileRouteTypes {
     | '/admin/billing'
     | '/admin/commercial'
     | '/admin/companies'
+    | '/admin/diagnostico'
     | '/admin/document-library'
     | '/admin/documentos'
     | '/admin/documents'
@@ -1062,6 +1072,7 @@ export interface FileRouteTypes {
     | '/admin/billing'
     | '/admin/commercial'
     | '/admin/companies'
+    | '/admin/diagnostico'
     | '/admin/document-library'
     | '/admin/documentos'
     | '/admin/documents'
@@ -1163,6 +1174,7 @@ export interface FileRouteTypes {
     | '/admin/billing'
     | '/admin/commercial'
     | '/admin/companies'
+    | '/admin/diagnostico'
     | '/admin/document-library'
     | '/admin/documentos'
     | '/admin/documents'
@@ -1941,6 +1953,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocumentLibraryRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/diagnostico': {
+      id: '/admin/diagnostico'
+      path: '/diagnostico'
+      fullPath: '/admin/diagnostico'
+      preLoaderRoute: typeof AdminDiagnosticoRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/companies': {
       id: '/admin/companies'
       path: '/companies'
@@ -1977,6 +1996,7 @@ interface AdminRouteChildren {
   AdminBillingRoute: typeof AdminBillingRoute
   AdminCommercialRoute: typeof AdminCommercialRoute
   AdminCompaniesRoute: typeof AdminCompaniesRoute
+  AdminDiagnosticoRoute: typeof AdminDiagnosticoRoute
   AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
   AdminDocumentosRoute: typeof AdminDocumentosRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
@@ -2006,6 +2026,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBillingRoute: AdminBillingRoute,
   AdminCommercialRoute: AdminCommercialRoute,
   AdminCompaniesRoute: AdminCompaniesRoute,
+  AdminDiagnosticoRoute: AdminDiagnosticoRoute,
   AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
   AdminDocumentosRoute: AdminDocumentosRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
