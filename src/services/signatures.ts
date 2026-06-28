@@ -68,6 +68,7 @@ export const signaturesService = {
     const rows = await Promise.all(payload.participants.map(async (p, idx) => ({
       signature_request_id: req.id,
       company_id: payload.company_id,
+      customer_id: p.customer_id,
       name: p.name,
       email: p.email,
       phone: p.phone,
