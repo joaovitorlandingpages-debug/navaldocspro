@@ -37,7 +37,17 @@ function AssinaturasPage() {
     setLoading(true);
     try {
       const data = await signaturesService.list(profile.company_id);
-      setRows(data);
+      // Enrich with process / customer / vessel
+      const procIds = Array.from(new Set(data.map((r: any) => r.process_id).filter(Boolean)));
+      let procMap: Record<string, any> = {};
+      if (procIds.length) {
+        const { data: procs } = await supabase
+          .from("processes")
+          .select("id, process_type, customer:customers(id,name), vessel:vessels(id,name)")
+          .in("id", procIds);
+        for (const p of procs ?? []) procMap[p.id] = p;
+      }
+      setRows(data.map((r: any) => ({ ...r, process: r.process_id ? procMap[r.process_id] : null })));
     } catch (e: any) {
       toast.error(e.message);
     } finally { setLoading(false); }
