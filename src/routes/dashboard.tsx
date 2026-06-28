@@ -7,7 +7,7 @@ import {
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
   Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft,
   Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight, Signature, Lock,
-  Globe, Award, Verified
+  Globe, Award, Verified, LayoutTemplate
 } from "lucide-react";
 
 import { useState, useEffect, Suspense, useMemo } from "react";
@@ -172,6 +172,7 @@ function DashboardLayout() {
       { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
       { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
       { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
+      { name: "Templates", icon: <LayoutTemplate className="h-5 w-5" />, path: "/templates" },
       { name: "Identidade Corporativa", icon: <Award className="h-5 w-5" />, path: "/identidade" },
       { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
     ]},

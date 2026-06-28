@@ -2077,7 +2077,9 @@ function Step7Approval({
         onResetToCompany={() => onTemplateChange(null)}
         sampleDoc={docs[0] ? { name: docs[0].name, content: docs[0].content } : null}
         branding={companyBranding}
+        companyId={companyId}
       />
+
 
       {!allApproved && (
         <div className="px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
@@ -2254,6 +2256,7 @@ function TemplateGalleryPanel({
   onResetToCompany,
   sampleDoc,
   branding,
+  companyId,
 }: {
   effectiveTemplate: string;
   companyDefault: string | null;
@@ -2264,6 +2267,7 @@ function TemplateGalleryPanel({
   onResetToCompany: () => void;
   sampleDoc: { name: string; content: string } | null;
   branding: any;
+  companyId: string | null;
 }) {
   const current = PDF_TEMPLATES.find((t) => t.id === effectiveTemplate) ?? PDF_TEMPLATES[0];
   const [fullPreviewIdx, setFullPreviewIdx] = useState<number | null>(null);
@@ -2271,6 +2275,33 @@ function TemplateGalleryPanel({
   const [loadingFull, setLoadingFull] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null);
+  const [libraryItems, setLibraryItems] = useState<{ id: string; base: PdfTemplateId; label: string; favorite: boolean; isDefault: boolean; source: string }[]>([]);
+
+  useEffect(() => {
+    if (!companyId) { setLibraryItems([]); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { listCompanyLibrary } = await import("@/services/marketplaceTemplates");
+        const lib = await listCompanyLibrary(companyId);
+        if (cancelled) return;
+        const items = lib.map((l) => ({
+          id: l.id,
+          base: l.base_template,
+          label: PDF_TEMPLATES.find((t) => t.id === l.template_slug)?.label ?? l.template_slug,
+          favorite: l.is_favorite,
+          isDefault: l.is_default,
+          source: l.source,
+        }));
+        items.sort((a, b) => Number(b.favorite) - Number(a.favorite) || Number(b.isDefault) - Number(a.isDefault));
+        setLibraryItems(items);
+      } catch (e) {
+        console.warn("[WIZARD_LIBRARY_LOAD_FAILED]", e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [companyId]);
+
 
   const openFullPreview = (templateId: string = effectiveTemplate) => {
     const idx = PDF_TEMPLATES.findIndex((t) => t.id === templateId);
@@ -2467,6 +2498,45 @@ function TemplateGalleryPanel({
             )}
           </div>
           <div className="max-h-[min(58dvh,540px)] overflow-y-auto pr-1 space-y-5 pb-2">
+            {libraryItems.length > 0 && (
+              <section className="space-y-2">
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">
+                  Minha biblioteca · favoritos primeiro
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {libraryItems.map((it) => {
+                    const selected = it.base === effectiveTemplate;
+                    return (
+                      <div
+                        key={it.id}
+                        className={`relative text-left rounded-xl border-2 p-2 transition bg-white ${
+                          selected ? "border-primary ring-2 ring-primary/25 bg-primary/5 shadow-md" : "border-amber-200 hover:border-primary/60 hover:shadow-sm"
+                        }`}
+                      >
+                        <TemplateMiniPreview id={it.base} primary={primary} />
+                        <div className="mt-2 text-[11px] font-black text-navy truncate pr-2 flex items-center gap-1">
+                          {it.favorite && <span className="text-amber-500">★</span>}
+                          {it.label}
+                        </div>
+                        <div className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5">
+                          {it.source === "free" ? "Gratuito" : "Adquirido"}{it.isDefault ? " · Padrão" : ""}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onSelect(it.base)}
+                          disabled={selected}
+                          className={`mt-2 w-full rounded-lg px-2 py-1.5 text-[10px] font-black uppercase tracking-wider ${
+                            selected ? "bg-primary/10 text-primary cursor-default" : "bg-slate-100 text-navy hover:bg-slate-200"
+                          }`}
+                        >
+                          {selected ? "Usando este modelo" : "Usar modelo"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
             {groupedTemplates.map((category) => (
               <section key={category.label} className="space-y-2">
                 <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">

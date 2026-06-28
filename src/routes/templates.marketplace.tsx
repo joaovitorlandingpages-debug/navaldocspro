@@ -69,22 +69,11 @@ function MarketplacePage() {
     return r;
   }, [templates, query, cat, sort]);
 
-  const buy = async (t: MarketplaceTemplate) => {
+  const buy = async (_t: MarketplaceTemplate) => {
     if (!companyId) return toast.error("Empresa não carregada");
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ kind: "template", slug: t.slug, origin: window.location.origin }),
-      });
-      if (!res.ok) throw new Error("Checkout indisponível — Mercado Pago será ativado em breve.");
-      const data = await res.json();
-      if (data.init_point) window.location.href = data.init_point;
-    } catch (e: any) {
-      toast.info(e.message ?? "Checkout em preparação");
-    }
+    toast.info("Compras serão liberadas em breve com Mercado Pago.");
   };
+
 
   const badgesOf = (t: MarketplaceTemplate) => {
     const b: { label: string; tone?: "gold" | "blue" | "green" | "red" }[] = [];
@@ -168,7 +157,7 @@ function MarketplacePage() {
                 isOwned={owned.has(t.slug)}
                 onPreview={() => setPreview({ base: t.base_template, name: t.name })}
                 onPrimary={() => buy(t)}
-                primaryLabel="Comprar"
+                primaryLabel="Comprar em breve"
                 primaryIcon="buy"
               />
             ))}

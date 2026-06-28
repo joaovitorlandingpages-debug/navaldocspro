@@ -130,12 +130,14 @@ function AdminMasterPage() {
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="companies">Empresas</TabsTrigger>
             <TabsTrigger value="plans">Planos</TabsTrigger>
+            <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
             <TabsTrigger value="logs">Logs Master</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6"><OverviewTab /></TabsContent>
           <TabsContent value="companies" className="mt-6"><CompaniesTab /></TabsContent>
           <TabsContent value="plans" className="mt-6"><PlansTab /></TabsContent>
+          <TabsContent value="marketplace" className="mt-6"><MarketplaceTab /></TabsContent>
           <TabsContent value="logs" className="mt-6"><LogsTab /></TabsContent>
         </Tabs>
       </main>
@@ -674,6 +676,133 @@ function LogsTab() {
           ))}
         </tbody>
       </table>
+    </Card>
+  );
+}
+
+// ============================================================================
+// Marketplace Tab — manage published templates and collections
+// ============================================================================
+function MarketplaceTab() {
+  const [tab, setTab] = useState<"templates" | "collections">("templates");
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [collections, setCollections] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const reload = async () => {
+    setLoading(true);
+    const [t, c] = await Promise.all([
+      supabase.from("marketplace_templates" as any).select("*").order("updated_at", { ascending: false }),
+      supabase.from("marketplace_collections" as any).select("*").order("updated_at", { ascending: false }),
+    ]);
+    setTemplates((t.data as any[]) ?? []);
+    setCollections((c.data as any[]) ?? []);
+    setLoading(false);
+  };
+  useEffect(() => { reload(); }, []);
+
+  const update = async (table: string, id: string, patch: Record<string, unknown>) => {
+    const { error } = await supabase.from(table as any).update(patch).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Atualizado");
+    reload();
+  };
+
+  const setPrice = async (table: string, id: string, current: number) => {
+    const v = window.prompt("Novo preço em centavos (0 para gratuito):", String(current ?? 0));
+    if (v === null) return;
+    const cents = Math.max(0, parseInt(v.replace(/\D/g, ""), 10) || 0);
+    update(table, id, { price_cents: cents });
+  };
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-center gap-2 mb-4">
+        <Button size="sm" variant={tab === "templates" ? "default" : "outline"} onClick={() => setTab("templates")}>
+          Templates ({templates.length})
+        </Button>
+        <Button size="sm" variant={tab === "collections" ? "default" : "outline"} onClick={() => setTab("collections")}>
+          Coleções ({collections.length})
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="text-sm text-zinc-500">Carregando…</div>
+      ) : tab === "templates" ? (
+        <table className="w-full text-sm">
+          <thead className="bg-zinc-50 text-zinc-600">
+            <tr>
+              <th className="text-left px-3 py-2">Nome</th>
+              <th className="text-left px-3 py-2">Categoria</th>
+              <th className="text-left px-3 py-2">Preço</th>
+              <th className="text-left px-3 py-2">Status</th>
+              <th className="text-left px-3 py-2">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {templates.map((t) => (
+              <tr key={t.id} className="border-t">
+                <td className="px-3 py-2 font-medium">{t.name}</td>
+                <td className="px-3 py-2 text-xs">{t.category}</td>
+                <td className="px-3 py-2 text-xs">{t.price_cents ? `R$ ${(t.price_cents / 100).toFixed(2)}` : "Grátis"}</td>
+                <td className="px-3 py-2 text-xs flex gap-1">
+                  {t.published ? <Badge className="bg-emerald-100 text-emerald-800">Publicado</Badge> : <Badge variant="outline">Rascunho</Badge>}
+                  {t.is_featured && <Badge className="bg-amber-100 text-amber-800">Destaque</Badge>}
+                </td>
+                <td className="px-3 py-2 text-xs space-x-1">
+                  <Button size="sm" variant="outline" onClick={() => update("marketplace_templates", t.id, { published: !t.published })}>
+                    {t.published ? "Despublicar" : "Publicar"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => update("marketplace_templates", t.id, { is_featured: !t.is_featured })}>
+                    {t.is_featured ? "Tirar destaque" : "Destacar"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setPrice("marketplace_templates", t.id, t.price_cents)}>
+                    Preço
+                  </Button>
+                </td>
+              </tr>
+            ))}
+            {templates.length === 0 && (
+              <tr><td colSpan={5} className="px-3 py-6 text-center text-zinc-500">Nenhum template cadastrado.</td></tr>
+            )}
+          </tbody>
+        </table>
+      ) : (
+        <table className="w-full text-sm">
+          <thead className="bg-zinc-50 text-zinc-600">
+            <tr>
+              <th className="text-left px-3 py-2">Coleção</th>
+              <th className="text-left px-3 py-2">Itens</th>
+              <th className="text-left px-3 py-2">Preço</th>
+              <th className="text-left px-3 py-2">Status</th>
+              <th className="text-left px-3 py-2">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {collections.map((c) => (
+              <tr key={c.id} className="border-t">
+                <td className="px-3 py-2 font-medium">{c.name}</td>
+                <td className="px-3 py-2 text-xs">{(c.template_slugs ?? []).length}</td>
+                <td className="px-3 py-2 text-xs">{c.price_cents ? `R$ ${(c.price_cents / 100).toFixed(2)}` : "Grátis"}</td>
+                <td className="px-3 py-2 text-xs">
+                  {c.published ? <Badge className="bg-emerald-100 text-emerald-800">Publicada</Badge> : <Badge variant="outline">Rascunho</Badge>}
+                </td>
+                <td className="px-3 py-2 text-xs space-x-1">
+                  <Button size="sm" variant="outline" onClick={() => update("marketplace_collections", c.id, { published: !c.published })}>
+                    {c.published ? "Despublicar" : "Publicar"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setPrice("marketplace_collections", c.id, c.price_cents)}>
+                    Preço
+                  </Button>
+                </td>
+              </tr>
+            ))}
+            {collections.length === 0 && (
+              <tr><td colSpan={5} className="px-3 py-6 text-center text-zinc-500">Nenhuma coleção cadastrada.</td></tr>
+            )}
+          </tbody>
+        </table>
+      )}
     </Card>
   );
 }
