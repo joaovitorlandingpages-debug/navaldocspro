@@ -417,6 +417,14 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
         .limit(1)
         .maybeSingle();
       setDossier(data);
+      const { data: sigs } = await supabase
+        .from("signature_requests")
+        .select("status,evidence_certificate_url")
+        .eq("process_id", processId);
+      const total = sigs?.length ?? 0;
+      const completed = (sigs ?? []).filter((s: any) => s.status === "completed").length;
+      const certificates = (sigs ?? []).filter((s: any) => !!s.evidence_certificate_url).length;
+      setSignaturesSummary({ total, completed, certificates });
     } catch (e: any) {
       toast.error(e.message || "Falha ao carregar dossiê");
     } finally {
