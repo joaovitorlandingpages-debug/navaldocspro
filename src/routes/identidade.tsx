@@ -9,12 +9,14 @@ import { Card } from "@/components/ui/card";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageHeader } from "@/components/navigation/PageHeader";
 import { toast } from "sonner";
-import { Loader2, Upload, Image as ImageIcon, Palette, Building2, PenTool, Stamp, Droplet, LayoutTemplate, Check, Wand2, Plus, Trash2, Star, FileText } from "lucide-react";
+import { Loader2, Upload, Image as ImageIcon, Palette, Building2, PenTool, Stamp, Droplet, LayoutTemplate, Check, Wand2, Plus, Trash2, Star, FileText, Copy, Pencil } from "lucide-react";
 import { PDF_TEMPLATES, type PdfTemplateId, loadCompanyBranding, type CompanyBranding } from "@/services/companyBranding";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TemplateStudio } from "@/components/templates/TemplateStudio";
+import { NewTemplateDialog } from "@/components/templates/NewTemplateDialog";
 import {
   listCompanyTemplates,
+  saveCompanyTemplate,
   deleteCompanyTemplate,
   DOCUMENT_TYPES,
   type CompanyPdfTemplate,
@@ -80,6 +82,7 @@ function IdentidadePage() {
   const [studioBase, setStudioBase] = useState<PdfTemplateId | undefined>(undefined);
   const [brandingForStudio, setBrandingForStudio] = useState<CompanyBranding | null>(null);
   const [docTypeMap, setDocTypeMap] = useState<Record<string, string>>({});
+  const [newDialogOpen, setNewDialogOpen] = useState(false);
 
   const loadMyTemplates = async () => {
     if (!companyId) return;
@@ -112,6 +115,46 @@ function IdentidadePage() {
     if (!confirm("Excluir este template?")) return;
     try { await deleteCompanyTemplate(id); toast.success("Removido"); loadMyTemplates(); }
     catch (e: any) { toast.error(e.message ?? "Falha"); }
+  };
+  const duplicateTemplate = async (t: CompanyPdfTemplate) => {
+    if (!companyId) return;
+    try {
+      await saveCompanyTemplate({
+        company_id: companyId,
+        name: `${t.name} (cópia)`,
+        base_template: t.base_template,
+        category: t.category,
+        config: t.config,
+        is_default: false,
+        document_type: t.document_type,
+      });
+      toast.success("Template duplicado");
+      loadMyTemplates();
+    } catch (e: any) { toast.error(e.message ?? "Falha ao duplicar"); }
+  };
+  const renameTemplate = async (t: CompanyPdfTemplate) => {
+    const next = prompt("Novo nome:", t.name);
+    if (!next || !next.trim() || next.trim() === t.name) return;
+    try {
+      await saveCompanyTemplate({
+        id: t.id, company_id: t.company_id, name: next.trim(),
+        base_template: t.base_template, category: t.category, config: t.config,
+        is_default: t.is_default, document_type: t.document_type,
+      });
+      toast.success("Renomeado");
+      loadMyTemplates();
+    } catch (e: any) { toast.error(e.message ?? "Falha ao renomear"); }
+  };
+  const setAsDefault = async (t: CompanyPdfTemplate) => {
+    try {
+      await saveCompanyTemplate({
+        id: t.id, company_id: t.company_id, name: t.name,
+        base_template: t.base_template, category: t.category, config: t.config,
+        is_default: !t.is_default, document_type: t.document_type,
+      });
+      toast.success(t.is_default ? "Padrão removido" : "Definido como padrão");
+      loadMyTemplates();
+    } catch (e: any) { toast.error(e.message ?? "Falha"); }
   };
   const setDocTypeTemplate = async (docType: DocumentType, value: string) => {
     if (!companyId) return;
@@ -307,7 +350,7 @@ function IdentidadePage() {
             <p className="text-xs text-slate-500">
               Modelos personalizados da sua empresa. Use o editor visual para criar quantos quiser.
             </p>
-            <Button size="sm" onClick={() => openStudio(null, data.pdf_template)} className="gap-2">
+            <Button size="sm" onClick={() => setNewDialogOpen(true)} className="gap-2">
               <Plus className="h-3.5 w-3.5" /> Novo template
             </Button>
           </div>
@@ -328,11 +371,20 @@ function IdentidadePage() {
                         {t.is_default && " · Padrão"}
                       </div>
                     </div>
-                    <div className="flex gap-1 shrink-0">
-                      <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => openStudio(t)}>
+                    <div className="flex flex-wrap gap-1 shrink-0">
+                      <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => openStudio(t)} title="Editar">
                         <Wand2 className="h-3 w-3" /> Editar
                       </Button>
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500" onClick={() => removeTemplate(t.id)}>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => duplicateTemplate(t)} title="Duplicar">
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => renameTemplate(t)} title="Renomear">
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className={`h-8 w-8 p-0 ${t.is_default ? "text-amber-500" : ""}`} onClick={() => setAsDefault(t)} title={t.is_default ? "Remover padrão" : "Definir como padrão"}>
+                        <Star className={`h-3 w-3 ${t.is_default ? "fill-current" : ""}`} />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500" onClick={() => removeTemplate(t.id)} title="Excluir">
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
@@ -468,6 +520,16 @@ function IdentidadePage() {
         initial={studioInitial}
         initialBaseTemplate={studioBase}
         onSaved={onTemplateSaved}
+      />
+
+      <NewTemplateDialog
+        open={newDialogOpen}
+        onClose={() => setNewDialogOpen(false)}
+        defaultBase={data.pdf_template}
+        onPick={(base) => {
+          setNewDialogOpen(false);
+          openStudio(null, base);
+        }}
       />
     </>
   );
