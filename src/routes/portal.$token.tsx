@@ -79,7 +79,7 @@ function PortalPage() {
     );
   }
 
-  const { company, process, customer, vessel, documents, uploads, messages, timeline, released, access } = ctx;
+  const { company, process, customer, vessel, documents, uploads, messages, timeline, released, signatures = [], access } = ctx;
   const pendingDocs = (documents || []).filter((d: any) => d.status !== "approved" && d.status !== "aprovado");
   const phoneDigits = (company?.phone || "").replace(/\D/g, "");
 
