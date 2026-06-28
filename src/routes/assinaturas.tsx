@@ -86,6 +86,19 @@ function AssinaturasPage() {
         </div>
       </div>
 
+      {metrics && (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+          <MetricCard label="Total" value={metrics.total} />
+          <MetricCard label="Pendentes" value={metrics.pending} color="text-blue-600" />
+          <MetricCard label="Em andamento" value={metrics.in_progress} color="text-amber-600" />
+          <MetricCard label="Concluídas" value={metrics.completed} color="text-emerald-600" />
+          <MetricCard label="Hoje" value={metrics.today} />
+          <MetricCard label="Semana" value={metrics.this_week} />
+          <MetricCard label="Tempo médio" value={metrics.avg_completion_minutes != null ? `${metrics.avg_completion_minutes}min` : "—"} />
+          <MetricCard label="Taxa conclusão" value={`${metrics.completion_rate}%`} color="text-emerald-600" />
+        </div>
+      )}
+
       <div className="flex gap-2 overflow-x-auto pb-2">
         {[
           ["all", "Todas"],
