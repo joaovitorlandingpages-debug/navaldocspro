@@ -440,25 +440,6 @@ function IdentidadePage() {
 
 
 
-      <TemplateStudio
-        open={studioOpen}
-        onClose={() => setStudioOpen(false)}
-        companyId={companyId ?? ""}
-        branding={brandingForStudio}
-        initial={studioInitial}
-        initialBaseTemplate={studioBase}
-        onSaved={onTemplateSaved}
-      />
-
-      <NewTemplateDialog
-        open={newDialogOpen}
-        onClose={() => setNewDialogOpen(false)}
-        defaultBase={data.pdf_template}
-        onPick={(base) => {
-          setNewDialogOpen(false);
-          openStudio(null, base);
-        }}
-      />
     </>
   );
 }
