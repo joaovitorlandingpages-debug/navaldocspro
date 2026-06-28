@@ -42,9 +42,10 @@ export const signaturesService = {
     title: string;
     process_id?: string;
     document_id?: string;
+    customer_id?: string;
     signing_order: "free" | "sequential";
     expires_at?: string;
-    participants: SignatureParticipantInput[];
+    participants: (SignatureParticipantInput & { customer_id?: string })[];
     created_by?: string;
   }) {
     const { data: req, error } = await supabase
@@ -54,6 +55,7 @@ export const signaturesService = {
         title: payload.title,
         process_id: payload.process_id,
         document_id: payload.document_id,
+        customer_id: payload.customer_id,
         signing_order: payload.signing_order,
         expires_at: payload.expires_at,
         created_by: payload.created_by,
