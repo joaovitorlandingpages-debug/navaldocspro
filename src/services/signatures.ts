@@ -164,20 +164,28 @@ export const signaturesService = {
     });
 
     // Check completion
-    const { data: remaining } = await supabase
+    const { data: allParts } = await supabase
       .from("signature_participants")
-      .select("id,status")
+      .select("*")
       .eq("signature_request_id", request.id);
-    const allSigned = (remaining ?? []).every((p: any) => p.status === "signed");
+    const allSigned = (allParts ?? []).every((p: any) => p.status === "signed");
     if (allSigned) {
       await supabase.from("signature_requests").update({ status: "completed" }).eq("id", request.id);
       const code = (await sha256Hex(request.id + Date.now())).slice(0, 12).toUpperCase();
+
+      const { data: evs } = await supabase
+        .from("signature_events")
+        .select("event_type,event_message,created_at,participant_id")
+        .eq("signature_request_id", request.id)
+        .order("created_at", { ascending: true });
+
       await supabase.from("signature_evidence_certificates").insert({
         signature_request_id: request.id,
         company_id: participant.company_id,
         verification_code: code,
         document_hash: hash,
-        participants_snapshot: remaining,
+        participants_snapshot: allParts,
+        events_snapshot: evs,
       });
       await supabase.from("signature_events").insert({
         signature_request_id: request.id,
@@ -185,6 +193,45 @@ export const signaturesService = {
         event_type: "request_completed",
         event_message: "Todos os participantes assinaram",
       });
+
+      try {
+        await supabase.from("signature_events").insert({
+          signature_request_id: request.id,
+          company_id: participant.company_id,
+          event_type: "signed_pdf_generation_started",
+          event_message: "Iniciando geração do PDF assinado",
+        });
+        const mod = await import("./signedDocumentBuilder");
+        const built = await mod.buildSignedDocumentArtifacts({
+          companyId: participant.company_id,
+          requestId: request.id,
+          title: request.title,
+          verificationCode: code,
+          participants: allParts ?? [],
+          events: evs ?? [],
+        });
+        await supabase.from("signature_requests").update({
+          final_signed_pdf_url: built.signedPdfUrl,
+          evidence_certificate_url: built.certificatePdfUrl,
+        }).eq("id", request.id);
+        await supabase.from("signature_evidence_certificates").update({
+          pdf_url: built.certificatePdfUrl,
+          certificate_url: built.certificatePdfUrl,
+        }).eq("verification_code", code);
+        await supabase.from("signature_events").insert([
+          { signature_request_id: request.id, company_id: participant.company_id,
+            event_type: "signed_pdf_generated", event_message: "PDF assinado gerado" },
+          { signature_request_id: request.id, company_id: participant.company_id,
+            event_type: "evidence_certificate_generated", event_message: "Certificado de evidência gerado" },
+        ]);
+      } catch (genErr: any) {
+        await supabase.from("signature_events").insert({
+          signature_request_id: request.id,
+          company_id: participant.company_id,
+          event_type: "signed_pdf_generation_failed",
+          event_message: `Falha ao gerar PDF: ${genErr?.message ?? genErr}`,
+        });
+      }
     } else {
       await supabase.from("signature_requests").update({ status: "in_progress" }).eq("id", request.id);
     }
