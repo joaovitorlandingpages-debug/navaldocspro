@@ -402,6 +402,7 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
   const [busy, setBusy] = useState<null | "generate" | "deliver" | "cancel" | "pdf" | "zip">(null);
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [dossier, setDossier] = useState<any>(null);
+  const [signaturesSummary, setSignaturesSummary] = useState<{ total: number; completed: number; certificates: number }>({ total: 0, completed: 0, certificates: 0 });
 
   const reload = async () => {
     setLoading(true);
@@ -416,6 +417,14 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
         .limit(1)
         .maybeSingle();
       setDossier(data);
+      const { data: sigs } = await supabase
+        .from("signature_requests")
+        .select("status,evidence_certificate_url")
+        .eq("process_id", processId);
+      const total = sigs?.length ?? 0;
+      const completed = (sigs ?? []).filter((s: any) => s.status === "completed").length;
+      const certificates = (sigs ?? []).filter((s: any) => !!s.evidence_certificate_url).length;
+      setSignaturesSummary({ total, completed, certificates });
     } catch (e: any) {
       toast.error(e.message || "Falha ao carregar dossiê");
     } finally {
@@ -576,6 +585,22 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
 
   return (
     <div className="space-y-6">
+      {signaturesSummary.total > 0 && (
+        <div className={`rounded-2xl border p-4 flex flex-wrap items-center gap-3 ${signaturesSummary.completed === signaturesSummary.total ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+          <span className="text-xs font-black uppercase tracking-widest">Assinaturas</span>
+          <span className="text-sm">
+            {signaturesSummary.completed === signaturesSummary.total
+              ? `✔ Todos os documentos assinados (${signaturesSummary.completed}/${signaturesSummary.total})`
+              : `${signaturesSummary.completed}/${signaturesSummary.total} concluídas`}
+          </span>
+          {signaturesSummary.certificates > 0 && (
+            <span className="text-xs">✔ {signaturesSummary.certificates} certificado(s) disponível(eis)</span>
+          )}
+          {signaturesSummary.completed === signaturesSummary.total && signaturesSummary.total > 0 && (
+            <span className="text-xs font-bold text-emerald-700">✔ Processo pronto para dossiê</span>
+          )}
+        </div>
+      )}
       {/* Header */}
       <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

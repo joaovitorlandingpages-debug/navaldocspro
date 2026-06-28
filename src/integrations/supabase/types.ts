@@ -1127,6 +1127,76 @@ export type Database = {
           },
         ]
       }
+      customer_signatures: {
+        Row: {
+          authorized_at: string
+          company_id: string
+          created_at: string
+          customer_id: string
+          device_info: Json | null
+          id: string
+          ip_address: string | null
+          revoked_at: string | null
+          signature_hash: string | null
+          signature_image_url: string
+          signature_type: string
+          source_participant_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          authorized_at?: string
+          company_id: string
+          created_at?: string
+          customer_id: string
+          device_info?: Json | null
+          id?: string
+          ip_address?: string | null
+          revoked_at?: string | null
+          signature_hash?: string | null
+          signature_image_url: string
+          signature_type?: string
+          source_participant_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          authorized_at?: string
+          company_id?: string
+          created_at?: string
+          customer_id?: string
+          device_info?: Json | null
+          id?: string
+          ip_address?: string | null
+          revoked_at?: string | null
+          signature_hash?: string | null
+          signature_image_url?: string
+          signature_type?: string
+          source_participant_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_signatures_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_signatures_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_signatures_source_participant_id_fkey"
+            columns: ["source_participant_id"]
+            isOneToOne: false
+            referencedRelation: "signature_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null
@@ -4659,6 +4729,7 @@ export type Database = {
           access_token: string
           company_id: string
           created_at: string
+          customer_id: string | null
           device_info: Json | null
           email: string | null
           id: string
@@ -4666,6 +4737,7 @@ export type Database = {
           location_data: Json | null
           name: string
           phone: string | null
+          reuse_authorized: boolean
           role: string
           signature_hash: string | null
           signature_image_url: string | null
@@ -4681,6 +4753,7 @@ export type Database = {
           access_token: string
           company_id: string
           created_at?: string
+          customer_id?: string | null
           device_info?: Json | null
           email?: string | null
           id?: string
@@ -4688,6 +4761,7 @@ export type Database = {
           location_data?: Json | null
           name: string
           phone?: string | null
+          reuse_authorized?: boolean
           role?: string
           signature_hash?: string | null
           signature_image_url?: string | null
@@ -4703,6 +4777,7 @@ export type Database = {
           access_token?: string
           company_id?: string
           created_at?: string
+          customer_id?: string | null
           device_info?: Json | null
           email?: string | null
           id?: string
@@ -4710,6 +4785,7 @@ export type Database = {
           location_data?: Json | null
           name?: string
           phone?: string | null
+          reuse_authorized?: boolean
           role?: string
           signature_hash?: string | null
           signature_image_url?: string | null
@@ -4730,6 +4806,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "signature_participants_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "signature_participants_signature_request_id_fkey"
             columns: ["signature_request_id"]
             isOneToOne: false
@@ -4743,6 +4826,7 @@ export type Database = {
           company_id: string
           created_at: string
           created_by: string | null
+          customer_id: string | null
           document_hash: string | null
           document_id: string | null
           evidence_certificate_url: string | null
@@ -4760,6 +4844,7 @@ export type Database = {
           company_id: string
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           document_hash?: string | null
           document_id?: string | null
           evidence_certificate_url?: string | null
@@ -4777,6 +4862,7 @@ export type Database = {
           company_id?: string
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           document_hash?: string | null
           document_id?: string | null
           evidence_certificate_url?: string | null
@@ -4796,6 +4882,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {

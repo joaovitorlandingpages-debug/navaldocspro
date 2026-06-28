@@ -10,6 +10,7 @@ import { Plus, Copy, MessageCircle, Mail, X, FileSignature, Clock, CheckCircle2,
 import { supabase } from "@/integrations/supabase/client";
 import { SignatureTestRunner } from "@/components/signatures/SignatureTestRunner";
 import { SignatureRequestDialog } from "@/components/signatures/SignatureRequestDialog";
+import { loadSignatureMetrics, type SignatureMetrics } from "@/services/signatureMetrics";
 
 export const Route = createFileRoute("/assinaturas")({
   component: AssinaturasPage,
@@ -31,6 +32,7 @@ function AssinaturasPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [open, setOpen] = useState(false);
+  const [metrics, setMetrics] = useState<SignatureMetrics | null>(null);
 
   const load = async () => {
     if (!profile?.company_id) return;
@@ -48,6 +50,7 @@ function AssinaturasPage() {
         for (const p of procs ?? []) procMap[p.id] = p;
       }
       setRows(data.map((r: any) => ({ ...r, process: r.process_id ? procMap[r.process_id] : null })));
+      try { setMetrics(await loadSignatureMetrics(profile.company_id)); } catch {}
     } catch (e: any) {
       toast.error(e.message);
     } finally { setLoading(false); }
@@ -82,6 +85,19 @@ function AssinaturasPage() {
           </Button>
         </div>
       </div>
+
+      {metrics && (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+          <MetricCard label="Total" value={metrics.total} />
+          <MetricCard label="Pendentes" value={metrics.pending} color="text-blue-600" />
+          <MetricCard label="Em andamento" value={metrics.in_progress} color="text-amber-600" />
+          <MetricCard label="Concluídas" value={metrics.completed} color="text-emerald-600" />
+          <MetricCard label="Hoje" value={metrics.today} />
+          <MetricCard label="Semana" value={metrics.this_week} />
+          <MetricCard label="Tempo médio" value={metrics.avg_completion_minutes != null ? `${metrics.avg_completion_minutes}min` : "—"} />
+          <MetricCard label="Taxa conclusão" value={`${metrics.completion_rate}%`} color="text-emerald-600" />
+        </div>
+      )}
 
       <div className="flex gap-2 overflow-x-auto pb-2">
         {[
@@ -257,3 +273,12 @@ function RequestRow({ row, onChanged }: { row: any; onChanged: () => void }) {
   );
 }
 
+
+function MetricCard({ label, value, color }: { label: string; value: number | string; color?: string }) {
+  return (
+    <Card className="p-3">
+      <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">{label}</p>
+      <p className={`text-xl font-extrabold mt-1 ${color ?? "text-slate-900"}`}>{value}</p>
+    </Card>
+  );
+}

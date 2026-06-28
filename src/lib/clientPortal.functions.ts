@@ -218,13 +218,17 @@ export const getPortalContext = createServerFn({ method: "POST" })
       vesselRow = v;
     }
 
-    const [{ data: docs }, { data: uploads }, { data: messages }, { data: timeline }, { data: released }] =
+    const [{ data: docs }, { data: uploads }, { data: messages }, { data: timeline }, { data: released }, { data: signatures }] =
       await Promise.all([
         supa.from("process_documents").select("*").eq("process_id", access.process_id),
         supa.from("process_document_uploads").select("*").eq("process_id", access.process_id).order("created_at", { ascending: false }),
         supa.from("client_portal_messages").select("*").eq("process_id", access.process_id).order("created_at", { ascending: true }),
         supa.from("client_portal_activity_logs").select("event_type,message,created_at").eq("process_id", access.process_id).order("created_at", { ascending: false }).limit(30),
         supa.from("generated_documents").select("id,name,generated_file_url,signed_file_url,created_at,status").eq("process_id", access.process_id).in("status", ["aprovado", "assinado", "liberado", "concluido"]),
+        supa.from("signature_requests")
+          .select("id,title,status,created_at,updated_at,final_signed_pdf_url,evidence_certificate_url,signing_order,signature_participants(id,name,role,status,access_token,signed_at,signing_order)")
+          .eq("process_id", access.process_id)
+          .order("created_at", { ascending: false }),
       ]);
 
     await supa.from("client_portal_access").update({ last_access_at: new Date().toISOString() } as any).eq("id", access.id);
@@ -246,6 +250,7 @@ export const getPortalContext = createServerFn({ method: "POST" })
       messages: messages ?? [],
       timeline: timeline ?? [],
       released: released ?? [],
+      signatures: signatures ?? [],
     };
   });
 

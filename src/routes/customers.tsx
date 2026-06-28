@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CustomerSignaturesTab } from "@/components/customers/CustomerSignaturesTab";
 import { Button } from "@/components/ui/button";
 import { FileUploader } from "@/components/FileUploader";
 import { useFiles } from "@/hooks/useFiles";
@@ -803,6 +804,7 @@ function Customers() {
                 <TabsTrigger value="documents" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Documentos</TabsTrigger>
                 <TabsTrigger value="vessels" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Embarcações</TabsTrigger>
                 <TabsTrigger value="history" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Histórico</TabsTrigger>
+                <TabsTrigger value="signatures" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Assinaturas</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-6">
@@ -1020,6 +1022,12 @@ function Customers() {
                       </div>
                     ))}
                   </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="signatures">
+                {companyId && selectedCustomer?.id && (
+                  <CustomerSignaturesTab companyId={companyId} customerId={selectedCustomer.id} />
                 )}
               </TabsContent>
             </Tabs>

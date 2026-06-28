@@ -42,9 +42,10 @@ export const signaturesService = {
     title: string;
     process_id?: string;
     document_id?: string;
+    customer_id?: string;
     signing_order: "free" | "sequential";
     expires_at?: string;
-    participants: SignatureParticipantInput[];
+    participants: (SignatureParticipantInput & { customer_id?: string })[];
     created_by?: string;
   }) {
     const { data: req, error } = await supabase
@@ -54,6 +55,7 @@ export const signaturesService = {
         title: payload.title,
         process_id: payload.process_id,
         document_id: payload.document_id,
+        customer_id: payload.customer_id,
         signing_order: payload.signing_order,
         expires_at: payload.expires_at,
         created_by: payload.created_by,
@@ -66,6 +68,7 @@ export const signaturesService = {
     const rows = await Promise.all(payload.participants.map(async (p, idx) => ({
       signature_request_id: req.id,
       company_id: payload.company_id,
+      customer_id: p.customer_id,
       name: p.name,
       email: p.email,
       phone: p.phone,
@@ -126,6 +129,7 @@ export const signaturesService = {
     signature_type: "drawn" | "typed" | "upload";
     signature_data: string;
     accepted_terms: boolean;
+    reuse_authorized?: boolean;
   }) {
     const found = await this.getByToken(token);
     if (!found) throw new Error("Token inválido");
@@ -134,6 +138,20 @@ export const signaturesService = {
     if (participant.status === "signed") throw new Error("Já assinado");
     if (request.status === "cancelled" || request.status === "expired") {
       throw new Error("Solicitação não está mais ativa");
+    }
+
+    // Sequential ordering enforcement
+    if (request.signing_order === "sequential") {
+      const { data: prev } = await supabase
+        .from("signature_participants")
+        .select("id,name,status,signing_order")
+        .eq("signature_request_id", request.id)
+        .lt("signing_order", participant.signing_order ?? 0)
+        .order("signing_order", { ascending: true });
+      const blocker = (prev ?? []).find((p: any) => p.status !== "signed");
+      if (blocker) {
+        throw new Error(`Aguardando assinatura anterior: ${blocker.name}`);
+      }
     }
 
     const hash = await sha256Hex(payload.signature_data + participant.id + Date.now());
@@ -162,6 +180,26 @@ export const signaturesService = {
       user_agent: ua,
       metadata: { signature_type: payload.signature_type, hash },
     });
+
+    // Reusable signature (per customer)
+    if (payload.reuse_authorized && (participant as any).customer_id) {
+      try {
+        await supabase.from("customer_signatures").insert({
+          company_id: participant.company_id,
+          customer_id: (participant as any).customer_id,
+          signature_request_id: request.id,
+          participant_id: participant.id,
+          signature_type: payload.signature_type,
+          signature_image_url: payload.signature_data,
+          signature_hash: hash,
+          user_agent: ua,
+          device_info: { platform: typeof navigator !== "undefined" ? navigator.platform : "" },
+          reuse_authorized: true,
+        } as any);
+      } catch (e) {
+        console.warn("customer_signatures insert failed", e);
+      }
+    }
 
     // Check completion
     const { data: allParts } = await supabase

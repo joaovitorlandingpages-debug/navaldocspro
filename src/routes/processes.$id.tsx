@@ -43,6 +43,7 @@ import { openStoredFile } from "@/utils/file-preview";
 import { ProcessDocumentsPanel } from "@/components/process/ProcessDocumentsPanel";
 import { ClientPortalPanel } from "@/components/process/ClientPortalPanel";
 import { ProcessSignaturesPanel } from "@/components/process/ProcessSignaturesPanel";
+import { SignaturesStatusCard } from "@/components/process/SignaturesStatusCard";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
@@ -383,6 +384,7 @@ function ProcessDetail() {
                 </TabsList>
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
+                  <SignaturesStatusCard processId={id} onOpen={() => setActiveTab("signatures")} />
                   <div className="grid md:grid-cols-2 gap-6">
                      <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
                         <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
