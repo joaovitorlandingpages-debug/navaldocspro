@@ -87,6 +87,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
 import { Route as AdminSupportRouteImport } from './routes/admin/support'
 import { Route as AdminStorageRouteImport } from './routes/admin/storage'
+import { Route as AdminSignatureAnchorsRouteImport } from './routes/admin.signature-anchors'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSecurityRouteImport } from './routes/admin/security'
 import { Route as AdminSaasMetricsRouteImport } from './routes/admin/saas-metrics'
@@ -499,6 +500,11 @@ const AdminStorageRoute = AdminStorageRouteImport.update({
   path: '/storage',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSignatureAnchorsRoute = AdminSignatureAnchorsRouteImport.update({
+  id: '/signature-anchors',
+  path: '/signature-anchors',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -671,6 +677,7 @@ export interface FileRoutesByFullPath {
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/signature-anchors': typeof AdminSignatureAnchorsRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-report': typeof AdminSystemReportRoute
@@ -768,6 +775,7 @@ export interface FileRoutesByTo {
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/signature-anchors': typeof AdminSignatureAnchorsRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-report': typeof AdminSystemReportRoute
@@ -869,6 +877,7 @@ export interface FileRoutesById {
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/signature-anchors': typeof AdminSignatureAnchorsRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-report': typeof AdminSystemReportRoute
@@ -971,6 +980,7 @@ export interface FileRouteTypes {
     | '/admin/saas-metrics'
     | '/admin/security'
     | '/admin/settings'
+    | '/admin/signature-anchors'
     | '/admin/storage'
     | '/admin/support'
     | '/admin/system-report'
@@ -1068,6 +1078,7 @@ export interface FileRouteTypes {
     | '/admin/saas-metrics'
     | '/admin/security'
     | '/admin/settings'
+    | '/admin/signature-anchors'
     | '/admin/storage'
     | '/admin/support'
     | '/admin/system-report'
@@ -1168,6 +1179,7 @@ export interface FileRouteTypes {
     | '/admin/saas-metrics'
     | '/admin/security'
     | '/admin/settings'
+    | '/admin/signature-anchors'
     | '/admin/storage'
     | '/admin/support'
     | '/admin/system-report'
@@ -1810,6 +1822,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminStorageRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/signature-anchors': {
+      id: '/admin/signature-anchors'
+      path: '/signature-anchors'
+      fullPath: '/admin/signature-anchors'
+      preLoaderRoute: typeof AdminSignatureAnchorsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
@@ -1974,6 +1993,7 @@ interface AdminRouteChildren {
   AdminSaasMetricsRoute: typeof AdminSaasMetricsRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSignatureAnchorsRoute: typeof AdminSignatureAnchorsRoute
   AdminStorageRoute: typeof AdminStorageRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminSystemReportRoute: typeof AdminSystemReportRoute
@@ -2002,6 +2022,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSaasMetricsRoute: AdminSaasMetricsRoute,
   AdminSecurityRoute: AdminSecurityRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminSignatureAnchorsRoute: AdminSignatureAnchorsRoute,
   AdminStorageRoute: AdminStorageRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminSystemReportRoute: AdminSystemReportRoute,

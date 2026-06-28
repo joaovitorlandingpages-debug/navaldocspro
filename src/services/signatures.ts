@@ -201,14 +201,45 @@ export const signaturesService = {
           event_type: "signed_pdf_generation_started",
           event_message: "Iniciando geração do PDF assinado",
         });
+
+        // Enrich with template, process, company info
+        let templateId: string | null = null;
+        let processInfo: any = null;
+        if (request.document_id) {
+          const { data: doc } = await supabase
+            .from("generated_documents")
+            .select("template_id, metadata")
+            .eq("id", request.document_id).maybeSingle();
+          templateId = (doc as any)?.template_id ?? (doc as any)?.metadata?.template_id ?? null;
+        }
+        if (request.process_id) {
+          const { data: proc } = await supabase
+            .from("processes")
+            .select("id, process_type, customer:customers(name), vessel:vessels(name)")
+            .eq("id", request.process_id).maybeSingle();
+          if (proc) {
+            processInfo = {
+              id: (proc as any).id,
+              process_type: (proc as any).process_type,
+              customer_name: (proc as any).customer?.name,
+              vessel_name: (proc as any).vessel?.name,
+            };
+          }
+        }
+        const { data: company } = await supabase
+          .from("companies").select("name, logo_url").eq("id", participant.company_id).maybeSingle();
+
         const mod = await import("./signedDocumentBuilder");
         const built = await mod.buildSignedDocumentArtifacts({
           companyId: participant.company_id,
           requestId: request.id,
           title: request.title,
           verificationCode: code,
+          templateId,
           participants: allParts ?? [],
           events: evs ?? [],
+          process: processInfo,
+          company: company as any,
         });
         await supabase.from("signature_requests").update({
           final_signed_pdf_url: built.signedPdfUrl,
@@ -220,9 +251,10 @@ export const signaturesService = {
         }).eq("verification_code", code);
         await supabase.from("signature_events").insert([
           { signature_request_id: request.id, company_id: participant.company_id,
-            event_type: "signed_pdf_generated", event_message: "PDF assinado gerado" },
+            event_type: "signed_pdf_generated",
+            event_message: `PDF assinado gerado (${built.anchorsUsed} âncora(s)${built.fallbackUsed ? " + fallback" : ""})` },
           { signature_request_id: request.id, company_id: participant.company_id,
-            event_type: "evidence_certificate_generated", event_message: "Certificado de evidência gerado" },
+            event_type: "evidence_certificate_generated", event_message: "Certificado premium de evidência gerado" },
         ]);
       } catch (genErr: any) {
         await supabase.from("signature_events").insert({
