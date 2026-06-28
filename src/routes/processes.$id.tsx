@@ -216,15 +216,6 @@ function ProcessDetail() {
     })))
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  useEffect(() => {
-    if (automationState) {
-      console.log("AUTOMATION_EXPERIENCE_OK");
-      console.log("SMART_PROCESS_FLOW_OK");
-      console.log("OCR_AUTOMATION_READY");
-      console.log("DOCUMENT_INTELLIGENCE_READY");
-      console.log("OPERATIONAL_EXPERIENCE_PREMIUM");
-    }
-  }, [automationState]);
 
   // Default events if none exist
   if (timelineEvents.length === 0) {
