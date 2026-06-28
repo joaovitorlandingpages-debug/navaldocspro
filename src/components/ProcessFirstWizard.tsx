@@ -2550,7 +2550,7 @@ function PdfPreviewFrame({ url, bytes, title }: { url: string; bytes: Uint8Array
 }
 
 function PdfCanvasPreview({ bytes }: { bytes: Uint8Array }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -2562,18 +2562,25 @@ function PdfCanvasPreview({ bytes }: { bytes: Uint8Array }) {
         setError(null);
         const loadingTask = pdfjsLib.getDocument({ data: bytes.slice() } as any);
         const pdf = await loadingTask.promise;
-        const firstPage = await pdf.getPage(1);
-        const canvas = canvasRef.current;
-        if (!canvas || cancelled) return;
-        const containerWidth = Math.min(900, Math.max(320, canvas.parentElement?.clientWidth ?? 700));
-        const baseViewport = firstPage.getViewport({ scale: 1 });
-        const scale = Math.max(0.75, Math.min(1.8, (containerWidth - 24) / baseViewport.width));
-        const viewport = firstPage.getViewport({ scale });
-        const ctx = canvas.getContext("2d");
-        if (!ctx) throw new Error("Canvas indisponível no navegador.");
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        await firstPage.render({ canvasContext: ctx, viewport } as any).promise;
+        const container = containerRef.current;
+        if (!container || cancelled) return;
+        container.innerHTML = "";
+        const containerWidth = Math.min(920, Math.max(320, container.clientWidth || 700));
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum += 1) {
+          if (cancelled) return;
+          const pdfPage = await pdf.getPage(pageNum);
+          const baseViewport = pdfPage.getViewport({ scale: 1 });
+          const scale = Math.max(0.72, Math.min(1.75, (containerWidth - 24) / baseViewport.width));
+          const viewport = pdfPage.getViewport({ scale });
+          const canvas = document.createElement("canvas");
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          canvas.className = "h-auto max-w-full rounded-sm bg-white shadow-xl mb-4";
+          container.appendChild(canvas);
+          const ctx = canvas.getContext("2d");
+          if (!ctx) throw new Error("Canvas indisponível no navegador.");
+          await pdfPage.render({ canvasContext: ctx, viewport } as any).promise;
+        }
       } catch (e) {
         console.error("[PDF_CANVAS_PREVIEW_FAILED]", e);
         if (!cancelled) setError(e instanceof Error ? e.message : "Falha ao renderizar PDF no navegador.");
@@ -2598,7 +2605,7 @@ function PdfCanvasPreview({ bytes }: { bytes: Uint8Array }) {
           Não foi possível renderizar a prévia: {error}
         </div>
       ) : (
-        <canvas ref={canvasRef} className="h-auto max-w-full rounded-sm bg-white shadow-xl" />
+        <div ref={containerRef} className="w-full max-w-[920px] flex flex-col items-center" />
       )}
     </div>
   );
