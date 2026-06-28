@@ -50,6 +50,7 @@ import { Route as AutomationCenterRouteImport } from './routes/automation-center
 import { Route as AutomationRouteImport } from './routes/automation'
 import { Route as AuthDebugPublicRouteImport } from './routes/auth-debug-public'
 import { Route as AuthDebugRouteImport } from './routes/auth-debug'
+import { Route as AssinaturasRouteImport } from './routes/assinaturas'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AiCenterRouteImport } from './routes/ai-center'
 import { Route as AdminMasterRouteImport } from './routes/admin-master'
@@ -78,6 +79,7 @@ import { Route as BillingSubscriptionRouteImport } from './routes/billing.subscr
 import { Route as BillingFailureRouteImport } from './routes/billing.failure'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AssinarTokenRouteImport } from './routes/assinar.$token'
 import { Route as AnalyticsOperationsRouteImport } from './routes/analytics.operations'
 import { Route as AnalyticsOcrRouteImport } from './routes/analytics.ocr'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
@@ -310,6 +312,11 @@ const AuthDebugRoute = AuthDebugRouteImport.update({
   path: '/auth-debug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AssinaturasRoute = AssinaturasRouteImport.update({
+  id: '/assinaturas',
+  path: '/assinaturas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AnalyticsRoute = AnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -449,6 +456,11 @@ const AuthSignupRoute = AuthSignupRouteImport.update({
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
   path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssinarTokenRoute = AssinarTokenRouteImport.update({
+  id: '/assinar/$token',
+  path: '/assinar/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyticsOperationsRoute = AnalyticsOperationsRouteImport.update({
@@ -591,6 +603,7 @@ export interface FileRoutesByFullPath {
   '/admin-master': typeof AdminMasterRoute
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
+  '/assinaturas': typeof AssinaturasRoute
   '/auth-debug': typeof AuthDebugRoute
   '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
@@ -658,6 +671,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
+  '/assinar/$token': typeof AssinarTokenRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
   '/billing/failure': typeof BillingFailureRoute
@@ -687,6 +701,7 @@ export interface FileRoutesByTo {
   '/admin-master': typeof AdminMasterRoute
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
+  '/assinaturas': typeof AssinaturasRoute
   '/auth-debug': typeof AuthDebugRoute
   '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
@@ -752,6 +767,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
+  '/assinar/$token': typeof AssinarTokenRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
   '/billing/failure': typeof BillingFailureRoute
@@ -783,6 +799,7 @@ export interface FileRoutesById {
   '/admin-master': typeof AdminMasterRoute
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
+  '/assinaturas': typeof AssinaturasRoute
   '/auth-debug': typeof AuthDebugRoute
   '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
@@ -850,6 +867,7 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
+  '/assinar/$token': typeof AssinarTokenRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
   '/billing/failure': typeof BillingFailureRoute
@@ -882,6 +900,7 @@ export interface FileRouteTypes {
     | '/admin-master'
     | '/ai-center'
     | '/analytics'
+    | '/assinaturas'
     | '/auth-debug'
     | '/auth-debug-public'
     | '/automation'
@@ -949,6 +968,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/analytics/ocr'
     | '/analytics/operations'
+    | '/assinar/$token'
     | '/auth/login'
     | '/auth/signup'
     | '/billing/failure'
@@ -978,6 +998,7 @@ export interface FileRouteTypes {
     | '/admin-master'
     | '/ai-center'
     | '/analytics'
+    | '/assinaturas'
     | '/auth-debug'
     | '/auth-debug-public'
     | '/automation'
@@ -1043,6 +1064,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/analytics/ocr'
     | '/analytics/operations'
+    | '/assinar/$token'
     | '/auth/login'
     | '/auth/signup'
     | '/billing/failure'
@@ -1073,6 +1095,7 @@ export interface FileRouteTypes {
     | '/admin-master'
     | '/ai-center'
     | '/analytics'
+    | '/assinaturas'
     | '/auth-debug'
     | '/auth-debug-public'
     | '/automation'
@@ -1140,6 +1163,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/analytics/ocr'
     | '/analytics/operations'
+    | '/assinar/$token'
     | '/auth/login'
     | '/auth/signup'
     | '/billing/failure'
@@ -1171,6 +1195,7 @@ export interface RootRouteChildren {
   AdminMasterRoute: typeof AdminMasterRoute
   AiCenterRoute: typeof AiCenterRoute
   AnalyticsRoute: typeof AnalyticsRouteWithChildren
+  AssinaturasRoute: typeof AssinaturasRoute
   AuthDebugRoute: typeof AuthDebugRoute
   AuthDebugPublicRoute: typeof AuthDebugPublicRoute
   AutomationRoute: typeof AutomationRoute
@@ -1212,6 +1237,7 @@ export interface RootRouteChildren {
   SystemMonitorRoute: typeof SystemMonitorRoute
   TemplatesRoute: typeof TemplatesRouteWithChildren
   VesselsRoute: typeof VesselsRoute
+  AssinarTokenRoute: typeof AssinarTokenRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthSignupRoute: typeof AuthSignupRoute
   BillingFailureRoute: typeof BillingFailureRoute
@@ -1512,6 +1538,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDebugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/assinaturas': {
+      id: '/assinaturas'
+      path: '/assinaturas'
+      fullPath: '/assinaturas'
+      preLoaderRoute: typeof AssinaturasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/analytics': {
       id: '/analytics'
       path: '/analytics'
@@ -1706,6 +1739,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/login'
       fullPath: '/auth/login'
       preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assinar/$token': {
+      id: '/assinar/$token'
+      path: '/assinar/$token'
+      fullPath: '/assinar/$token'
+      preLoaderRoute: typeof AssinarTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/analytics/operations': {
@@ -2027,6 +2067,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminMasterRoute: AdminMasterRoute,
   AiCenterRoute: AiCenterRoute,
   AnalyticsRoute: AnalyticsRouteWithChildren,
+  AssinaturasRoute: AssinaturasRoute,
   AuthDebugRoute: AuthDebugRoute,
   AuthDebugPublicRoute: AuthDebugPublicRoute,
   AutomationRoute: AutomationRoute,
@@ -2068,6 +2109,7 @@ const rootRouteChildren: RootRouteChildren = {
   SystemMonitorRoute: SystemMonitorRoute,
   TemplatesRoute: TemplatesRouteWithChildren,
   VesselsRoute: VesselsRoute,
+  AssinarTokenRoute: AssinarTokenRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthSignupRoute: AuthSignupRoute,
   BillingFailureRoute: BillingFailureRoute,

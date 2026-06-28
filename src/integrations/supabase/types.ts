@@ -4539,6 +4539,271 @@ export type Database = {
           },
         ]
       }
+      signature_events: {
+        Row: {
+          company_id: string
+          created_at: string
+          event_message: string | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          participant_id: string | null
+          signature_request_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          event_message?: string | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          participant_id?: string | null
+          signature_request_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          event_message?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          participant_id?: string | null
+          signature_request_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_events_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "signature_participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_events_signature_request_id_fkey"
+            columns: ["signature_request_id"]
+            isOneToOne: false
+            referencedRelation: "signature_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signature_evidence_certificates: {
+        Row: {
+          certificate_url: string | null
+          company_id: string
+          document_hash: string | null
+          events_snapshot: Json | null
+          generated_at: string
+          id: string
+          participants_snapshot: Json | null
+          signature_request_id: string
+          verification_code: string
+        }
+        Insert: {
+          certificate_url?: string | null
+          company_id: string
+          document_hash?: string | null
+          events_snapshot?: Json | null
+          generated_at?: string
+          id?: string
+          participants_snapshot?: Json | null
+          signature_request_id: string
+          verification_code: string
+        }
+        Update: {
+          certificate_url?: string | null
+          company_id?: string
+          document_hash?: string | null
+          events_snapshot?: Json | null
+          generated_at?: string
+          id?: string
+          participants_snapshot?: Json | null
+          signature_request_id?: string
+          verification_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_evidence_certificates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_evidence_certificates_signature_request_id_fkey"
+            columns: ["signature_request_id"]
+            isOneToOne: false
+            referencedRelation: "signature_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signature_participants: {
+        Row: {
+          access_token: string
+          company_id: string
+          created_at: string
+          device_info: Json | null
+          email: string | null
+          id: string
+          ip_address: string | null
+          location_data: Json | null
+          name: string
+          phone: string | null
+          role: string
+          signature_hash: string | null
+          signature_image_url: string | null
+          signature_request_id: string
+          signature_type: string | null
+          signed_at: string | null
+          signing_order: number
+          status: string
+          token_expires_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          access_token: string
+          company_id: string
+          created_at?: string
+          device_info?: Json | null
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          location_data?: Json | null
+          name: string
+          phone?: string | null
+          role?: string
+          signature_hash?: string | null
+          signature_image_url?: string | null
+          signature_request_id: string
+          signature_type?: string | null
+          signed_at?: string | null
+          signing_order?: number
+          status?: string
+          token_expires_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          access_token?: string
+          company_id?: string
+          created_at?: string
+          device_info?: Json | null
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          location_data?: Json | null
+          name?: string
+          phone?: string | null
+          role?: string
+          signature_hash?: string | null
+          signature_image_url?: string | null
+          signature_request_id?: string
+          signature_type?: string | null
+          signed_at?: string | null
+          signing_order?: number
+          status?: string
+          token_expires_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_participants_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_participants_signature_request_id_fkey"
+            columns: ["signature_request_id"]
+            isOneToOne: false
+            referencedRelation: "signature_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signature_requests: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          document_hash: string | null
+          document_id: string | null
+          evidence_certificate_url: string | null
+          expires_at: string | null
+          final_signed_pdf_url: string | null
+          id: string
+          metadata: Json | null
+          process_id: string | null
+          signing_order: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          document_hash?: string | null
+          document_id?: string | null
+          evidence_certificate_url?: string | null
+          expires_at?: string | null
+          final_signed_pdf_url?: string | null
+          id?: string
+          metadata?: Json | null
+          process_id?: string | null
+          signing_order?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          document_hash?: string | null
+          document_id?: string | null
+          evidence_certificate_url?: string | null
+          expires_at?: string | null
+          final_signed_pdf_url?: string | null
+          id?: string
+          metadata?: Json | null
+          process_id?: string | null
+          signing_order?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_requests_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sla_configs: {
         Row: {
           created_at: string | null
