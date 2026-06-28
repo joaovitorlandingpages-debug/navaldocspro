@@ -402,6 +402,7 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
   const [busy, setBusy] = useState<null | "generate" | "deliver" | "cancel" | "pdf" | "zip">(null);
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [dossier, setDossier] = useState<any>(null);
+  const [signaturesSummary, setSignaturesSummary] = useState<{ total: number; completed: number; certificates: number }>({ total: 0, completed: 0, certificates: 0 });
 
   const reload = async () => {
     setLoading(true);
