@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Plus, Copy, MessageCircle, Mail, X, FileSignature, Clock, CheckCircle2, AlertCircle, Download, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { SignatureTestRunner } from "@/components/signatures/SignatureTestRunner";
 
 export const Route = createFileRoute("/assinaturas")({
   component: AssinaturasPage,
@@ -65,9 +66,14 @@ function AssinaturasPage() {
           <h1 className="text-2xl font-black tracking-tight">Central de Assinaturas</h1>
           <p className="text-sm text-slate-500">Solicite, acompanhe e audite assinaturas online de documentos.</p>
         </div>
-        <Button onClick={() => setOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" /> Nova Solicitação
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {profile?.role === "admin_master_global" && profile?.company_id && (
+            <SignatureTestRunner companyId={profile.company_id} userId={profile.id} onChanged={load} />
+          )}
+          <Button onClick={() => setOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" /> Nova Solicitação
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2">
