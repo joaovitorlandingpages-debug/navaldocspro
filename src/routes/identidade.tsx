@@ -80,6 +80,7 @@ function IdentidadePage() {
   const [studioBase, setStudioBase] = useState<PdfTemplateId | undefined>(undefined);
   const [brandingForStudio, setBrandingForStudio] = useState<CompanyBranding | null>(null);
   const [docTypeMap, setDocTypeMap] = useState<Record<string, string>>({});
+  const [newDialogOpen, setNewDialogOpen] = useState(false);
 
   const loadMyTemplates = async () => {
     if (!companyId) return;
@@ -112,6 +113,46 @@ function IdentidadePage() {
     if (!confirm("Excluir este template?")) return;
     try { await deleteCompanyTemplate(id); toast.success("Removido"); loadMyTemplates(); }
     catch (e: any) { toast.error(e.message ?? "Falha"); }
+  };
+  const duplicateTemplate = async (t: CompanyPdfTemplate) => {
+    if (!companyId) return;
+    try {
+      await saveCompanyTemplate({
+        company_id: companyId,
+        name: `${t.name} (cópia)`,
+        base_template: t.base_template,
+        category: t.category,
+        config: t.config,
+        is_default: false,
+        document_type: t.document_type,
+      });
+      toast.success("Template duplicado");
+      loadMyTemplates();
+    } catch (e: any) { toast.error(e.message ?? "Falha ao duplicar"); }
+  };
+  const renameTemplate = async (t: CompanyPdfTemplate) => {
+    const next = prompt("Novo nome:", t.name);
+    if (!next || !next.trim() || next.trim() === t.name) return;
+    try {
+      await saveCompanyTemplate({
+        id: t.id, company_id: t.company_id, name: next.trim(),
+        base_template: t.base_template, category: t.category, config: t.config,
+        is_default: t.is_default, document_type: t.document_type,
+      });
+      toast.success("Renomeado");
+      loadMyTemplates();
+    } catch (e: any) { toast.error(e.message ?? "Falha ao renomear"); }
+  };
+  const setAsDefault = async (t: CompanyPdfTemplate) => {
+    try {
+      await saveCompanyTemplate({
+        id: t.id, company_id: t.company_id, name: t.name,
+        base_template: t.base_template, category: t.category, config: t.config,
+        is_default: !t.is_default, document_type: t.document_type,
+      });
+      toast.success(t.is_default ? "Padrão removido" : "Definido como padrão");
+      loadMyTemplates();
+    } catch (e: any) { toast.error(e.message ?? "Falha"); }
   };
   const setDocTypeTemplate = async (docType: DocumentType, value: string) => {
     if (!companyId) return;
