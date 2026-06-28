@@ -130,12 +130,14 @@ function AdminMasterPage() {
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="companies">Empresas</TabsTrigger>
             <TabsTrigger value="plans">Planos</TabsTrigger>
+            <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
             <TabsTrigger value="logs">Logs Master</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6"><OverviewTab /></TabsContent>
           <TabsContent value="companies" className="mt-6"><CompaniesTab /></TabsContent>
           <TabsContent value="plans" className="mt-6"><PlansTab /></TabsContent>
+          <TabsContent value="marketplace" className="mt-6"><MarketplaceTab /></TabsContent>
           <TabsContent value="logs" className="mt-6"><LogsTab /></TabsContent>
         </Tabs>
       </main>
