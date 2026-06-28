@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VesselsRouteImport } from './routes/vessels'
+import { Route as TemplatesRouteImport } from './routes/templates'
 import { Route as SystemMonitorRouteImport } from './routes/system-monitor'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as StatusRouteImport } from './routes/status'
@@ -54,8 +55,12 @@ import { Route as AiCenterRouteImport } from './routes/ai-center'
 import { Route as AdminMasterRouteImport } from './routes/admin-master'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as TemplatesMeusRouteImport } from './routes/templates.meus'
+import { Route as TemplatesMarketplaceRouteImport } from './routes/templates.marketplace'
+import { Route as TemplatesGratuitosRouteImport } from './routes/templates.gratuitos'
 import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as DocumentosBibliotecaRouteImport } from './routes/documentos.biblioteca'
@@ -102,6 +107,11 @@ import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
   path: '/vessels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplatesRoute = TemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SystemMonitorRoute = SystemMonitorRouteImport.update({
@@ -324,6 +334,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TemplatesRoute,
+} as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -333,6 +348,21 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const TemplatesMeusRoute = TemplatesMeusRouteImport.update({
+  id: '/meus',
+  path: '/meus',
+  getParentRoute: () => TemplatesRoute,
+} as any)
+const TemplatesMarketplaceRoute = TemplatesMarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
+  getParentRoute: () => TemplatesRoute,
+} as any)
+const TemplatesGratuitosRoute = TemplatesGratuitosRouteImport.update({
+  id: '/gratuitos',
+  path: '/gratuitos',
+  getParentRoute: () => TemplatesRoute,
 } as any)
 const ProcessesIdRoute = ProcessesIdRouteImport.update({
   id: '/$id',
@@ -594,6 +624,7 @@ export interface FileRoutesByFullPath {
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
   '/system-monitor': typeof SystemMonitorRoute
+  '/templates': typeof TemplatesRouteWithChildren
   '/vessels': typeof VesselsRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
@@ -637,8 +668,12 @@ export interface FileRoutesByFullPath {
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
+  '/templates/gratuitos': typeof TemplatesGratuitosRoute
+  '/templates/marketplace': typeof TemplatesMarketplaceRoute
+  '/templates/meus': typeof TemplatesMeusRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/templates/': typeof TemplatesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -726,8 +761,12 @@ export interface FileRoutesByTo {
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
+  '/templates/gratuitos': typeof TemplatesGratuitosRoute
+  '/templates/marketplace': typeof TemplatesMarketplaceRoute
+  '/templates/meus': typeof TemplatesMeusRoute
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/templates': typeof TemplatesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -775,6 +814,7 @@ export interface FileRoutesById {
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
   '/system-monitor': typeof SystemMonitorRoute
+  '/templates': typeof TemplatesRouteWithChildren
   '/vessels': typeof VesselsRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
@@ -818,8 +858,12 @@ export interface FileRoutesById {
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
+  '/templates/gratuitos': typeof TemplatesGratuitosRoute
+  '/templates/marketplace': typeof TemplatesMarketplaceRoute
+  '/templates/meus': typeof TemplatesMeusRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/templates/': typeof TemplatesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -868,6 +912,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/support'
     | '/system-monitor'
+    | '/templates'
     | '/vessels'
     | '/admin/automation'
     | '/admin/billing'
@@ -911,8 +956,12 @@ export interface FileRouteTypes {
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
+    | '/templates/gratuitos'
+    | '/templates/marketplace'
+    | '/templates/meus'
     | '/admin/'
     | '/dashboard/'
+    | '/templates/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1000,8 +1049,12 @@ export interface FileRouteTypes {
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
+    | '/templates/gratuitos'
+    | '/templates/marketplace'
+    | '/templates/meus'
     | '/admin'
     | '/dashboard'
+    | '/templates'
   id:
     | '__root__'
     | '/'
@@ -1048,6 +1101,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/support'
     | '/system-monitor'
+    | '/templates'
     | '/vessels'
     | '/admin/automation'
     | '/admin/billing'
@@ -1091,8 +1145,12 @@ export interface FileRouteTypes {
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
+    | '/templates/gratuitos'
+    | '/templates/marketplace'
+    | '/templates/meus'
     | '/admin/'
     | '/dashboard/'
+    | '/templates/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1140,6 +1198,7 @@ export interface RootRouteChildren {
   StatusRoute: typeof StatusRoute
   SupportRoute: typeof SupportRoute
   SystemMonitorRoute: typeof SystemMonitorRoute
+  TemplatesRoute: typeof TemplatesRouteWithChildren
   VesselsRoute: typeof VesselsRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthSignupRoute: typeof AuthSignupRoute
@@ -1159,6 +1218,13 @@ declare module '@tanstack/react-router' {
       path: '/vessels'
       fullPath: '/vessels'
       preLoaderRoute: typeof VesselsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/templates': {
+      id: '/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof TemplatesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/system-monitor': {
@@ -1469,6 +1535,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/templates/': {
+      id: '/templates/'
+      path: '/'
+      fullPath: '/templates/'
+      preLoaderRoute: typeof TemplatesIndexRouteImport
+      parentRoute: typeof TemplatesRoute
+    }
     '/dashboard/': {
       id: '/dashboard/'
       path: '/'
@@ -1482,6 +1555,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/templates/meus': {
+      id: '/templates/meus'
+      path: '/meus'
+      fullPath: '/templates/meus'
+      preLoaderRoute: typeof TemplatesMeusRouteImport
+      parentRoute: typeof TemplatesRoute
+    }
+    '/templates/marketplace': {
+      id: '/templates/marketplace'
+      path: '/marketplace'
+      fullPath: '/templates/marketplace'
+      preLoaderRoute: typeof TemplatesMarketplaceRouteImport
+      parentRoute: typeof TemplatesRoute
+    }
+    '/templates/gratuitos': {
+      id: '/templates/gratuitos'
+      path: '/gratuitos'
+      fullPath: '/templates/gratuitos'
+      preLoaderRoute: typeof TemplatesGratuitosRouteImport
+      parentRoute: typeof TemplatesRoute
     }
     '/processes/$id': {
       id: '/processes/$id'
@@ -1888,6 +1982,24 @@ const ProcessesRouteWithChildren = ProcessesRoute._addFileChildren(
   ProcessesRouteChildren,
 )
 
+interface TemplatesRouteChildren {
+  TemplatesGratuitosRoute: typeof TemplatesGratuitosRoute
+  TemplatesMarketplaceRoute: typeof TemplatesMarketplaceRoute
+  TemplatesMeusRoute: typeof TemplatesMeusRoute
+  TemplatesIndexRoute: typeof TemplatesIndexRoute
+}
+
+const TemplatesRouteChildren: TemplatesRouteChildren = {
+  TemplatesGratuitosRoute: TemplatesGratuitosRoute,
+  TemplatesMarketplaceRoute: TemplatesMarketplaceRoute,
+  TemplatesMeusRoute: TemplatesMeusRoute,
+  TemplatesIndexRoute: TemplatesIndexRoute,
+}
+
+const TemplatesRouteWithChildren = TemplatesRoute._addFileChildren(
+  TemplatesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
@@ -1933,6 +2045,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatusRoute: StatusRoute,
   SupportRoute: SupportRoute,
   SystemMonitorRoute: SystemMonitorRoute,
+  TemplatesRoute: TemplatesRouteWithChildren,
   VesselsRoute: VesselsRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthSignupRoute: AuthSignupRoute,
