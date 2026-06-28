@@ -172,7 +172,7 @@ function DebugTab() {
     ["profile.name", profile?.name],
     ["company.name", profile?.companies?.name],
     ["is_admin_master() rpc", checks?.is_admin_master],
-    ["has_role(admin_master_global) rpc", checks?.has_role_admin_master_global],
+    ["has_role(admin_master_global)", profile?.role === "admin_master_global"],
     ["acesso permitido", profile?.role === "admin_master_global"],
   ];
 
