@@ -225,6 +225,7 @@ function IdentidadePage() {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 pb-32">
       <div className="max-w-5xl mx-auto space-y-8">
         <PageHeader
