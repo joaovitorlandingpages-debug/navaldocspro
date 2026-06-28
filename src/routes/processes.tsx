@@ -76,12 +76,6 @@ function Processes() {
     return () => clearTimeout(debounceTimer);
   }, [page, searchTerm]);
 
-  useEffect(() => {
-    console.log("PROCESS_DEEP_AUDIT_STARTED");
-    console.log("PERFORMANCE_AUDIT_OK");
-    console.log("CACHE_SYSTEM_OK");
-    console.log("ENTERPRISE_SCALE_READY");
-  }, []);
 
   const columns = [
     { id: "pending", title: "Novo", color: "bg-red-500" },
