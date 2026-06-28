@@ -864,3 +864,182 @@ function MarketplaceTab() {
     </Card>
   );
 }
+
+/* ---------------- Cleanup (admin_master_global only) ---------------- */
+type CleanupCounts = {
+  processes: number;
+  generated_documents: number;
+  process_document_uploads: number;
+  process_dossiers: number;
+  ocr_jobs: number;
+  activity_logs: number;
+};
+
+const CLEANUP_TABLES = [
+  "processes",
+  "generated_documents",
+  "process_document_uploads",
+  "process_dossiers",
+  "ocr_jobs",
+  "activity_logs",
+] as const;
+
+function CleanupTab() {
+  const { profile } = useAuth();
+  const qc = useQueryClient();
+  const [scope, setScope] = useState<"current" | "all">("current");
+  const [companyId, setCompanyId] = useState<string>("");
+  const [from, setFrom] = useState<string>("");
+  const [to, setTo] = useState<string>("");
+  const [customerId, setCustomerId] = useState<string>("");
+  const [processId, setProcessId] = useState<string>("");
+  const [confirm, setConfirm] = useState("");
+  const [running, setRunning] = useState(false);
+
+  useEffect(() => { if (profile?.company_id) setCompanyId(profile.company_id); }, [profile?.company_id]);
+
+  if (profile?.role !== "admin_master_global") {
+    return <Card className="p-6 text-sm text-rose-600">Acesso restrito ao admin_master_global.</Card>;
+  }
+
+  const targetCompanyId = scope === "current" ? companyId : "";
+
+  const applyFilters = (q: any, table: string) => {
+    if (targetCompanyId) q = q.eq("company_id", targetCompanyId);
+    if (from) q = q.gte("created_at", new Date(from).toISOString());
+    if (to) q = q.lte("created_at", new Date(to + "T23:59:59").toISOString());
+    if (processId && (table === "generated_documents" || table === "process_document_uploads" || table === "process_dossiers")) {
+      q = q.eq("process_id", processId);
+    }
+    if (processId && table === "processes") q = q.eq("id", processId);
+    if (customerId && table === "processes") q = q.eq("customer_id", customerId);
+    return q;
+  };
+
+  const preview = useQuery<CleanupCounts>({
+    queryKey: ["cleanup-preview", targetCompanyId, from, to, customerId, processId],
+    queryFn: async () => {
+      const out: any = {};
+      for (const t of CLEANUP_TABLES) {
+        let q: any = supabase.from(t as any).select("id", { count: "exact", head: true });
+        q = applyFilters(q, t);
+        const { count, error } = await q;
+        out[t] = error ? 0 : (count ?? 0);
+      }
+      return out as CleanupCounts;
+    },
+  });
+
+  const totalRows = preview.data ? Object.values(preview.data).reduce((a, b) => a + b, 0) : 0;
+  const canRun = confirm.trim() === "CONFIRMAR LIMPEZA" && totalRows > 0 && !running;
+
+  const runCleanup = async () => {
+    if (!canRun) return;
+    setRunning(true);
+    const summary: Record<string, number> = {};
+    try {
+      for (const t of CLEANUP_TABLES) {
+        let q: any = supabase.from(t as any).delete({ count: "exact" });
+        q = applyFilters(q, t);
+        // delete requires a filter — skip if none of the filters are active and scope = all
+        if (!targetCompanyId && !from && !to && !customerId && !processId) {
+          throw new Error("Nenhum filtro ativo. Limpeza global irrestrita é proibida.");
+        }
+        const { count, error } = await q;
+        if (error) throw new Error(`${t}: ${error.message}`);
+        summary[t] = count ?? 0;
+      }
+      await logMaster("master_cleanup_executed", targetCompanyId || null, "Limpeza de testes executada", {
+        scope, from, to, customerId, processId, summary,
+      });
+      toast.success(`Limpeza concluída. ${Object.values(summary).reduce((a,b)=>a+b,0)} registros removidos.`);
+      setConfirm("");
+      qc.invalidateQueries({ queryKey: ["cleanup-preview"] });
+      qc.invalidateQueries({ queryKey: ["master-overview"] });
+    } catch (e: any) {
+      toast.error(e.message ?? "Falha na limpeza");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-4 border-amber-200 bg-amber-50">
+        <div className="flex gap-3 items-start">
+          <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
+          <div className="text-xs text-amber-900 space-y-1">
+            <p className="font-bold">Ferramenta restrita ao admin_master_global.</p>
+            <p>Nunca apaga usuários, empresas, templates, marketplace, identidade corporativa ou configurações globais.</p>
+            <p>Tabelas afetadas: processes, generated_documents, process_document_uploads, process_dossiers, ocr_jobs, activity_logs.</p>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-4 grid sm:grid-cols-2 gap-3">
+        <div>
+          <Label className="text-xs">Escopo</Label>
+          <Select value={scope} onValueChange={(v) => setScope(v as any)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="current">Apenas minha empresa atual</SelectItem>
+              <SelectItem value="all">Empresa específica (informe ID)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs">Company ID alvo</Label>
+          <Input value={companyId} onChange={(e) => setCompanyId(e.target.value)} disabled={scope === "current"} placeholder="uuid" />
+        </div>
+        <div>
+          <Label className="text-xs">De</Label>
+          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+        </div>
+        <div>
+          <Label className="text-xs">Até</Label>
+          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+        </div>
+        <div>
+          <Label className="text-xs">Filtrar por Cliente (customer_id)</Label>
+          <Input value={customerId} onChange={(e) => setCustomerId(e.target.value)} placeholder="opcional" />
+        </div>
+        <div>
+          <Label className="text-xs">Filtrar por Processo (process_id)</Label>
+          <Input value={processId} onChange={(e) => setProcessId(e.target.value)} placeholder="opcional" />
+        </div>
+      </Card>
+
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-bold uppercase tracking-widest">Prévia</h4>
+          <Button size="sm" variant="outline" onClick={() => preview.refetch()} disabled={preview.isFetching}>
+            {preview.isFetching ? <Loader2 className="h-3 w-3 animate-spin" /> : "Recalcular"}
+          </Button>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-3">
+          {CLEANUP_TABLES.map((t) => (
+            <div key={t} className="border rounded-lg p-3 bg-slate-50">
+              <div className="text-[10px] uppercase tracking-widest text-slate-500">{t}</div>
+              <div className="text-xl font-black">{preview.data?.[t as keyof CleanupCounts] ?? "—"}</div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 text-xs text-slate-600">Total a remover: <b>{totalRows}</b> registros.</div>
+      </Card>
+
+      <Card className="p-4 border-rose-200">
+        <Label className="text-xs">Para confirmar, digite: <b>CONFIRMAR LIMPEZA</b></Label>
+        <Input value={confirm} onChange={(e) => setConfirm(e.target.value)} className="mt-1" />
+        <Button
+          className="mt-3 bg-rose-600 hover:bg-rose-700 text-white"
+          disabled={!canRun}
+          onClick={runCleanup}
+        >
+          {running ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <AlertTriangle className="h-4 w-4 mr-2" />}
+          Executar Limpeza
+        </Button>
+      </Card>
+    </div>
+  );
+}
+
