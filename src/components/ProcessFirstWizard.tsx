@@ -2498,6 +2498,45 @@ function TemplateGalleryPanel({
             )}
           </div>
           <div className="max-h-[min(58dvh,540px)] overflow-y-auto pr-1 space-y-5 pb-2">
+            {libraryItems.length > 0 && (
+              <section className="space-y-2">
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">
+                  Minha biblioteca · favoritos primeiro
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {libraryItems.map((it) => {
+                    const selected = it.base === effectiveTemplate;
+                    return (
+                      <div
+                        key={it.id}
+                        className={`relative text-left rounded-xl border-2 p-2 transition bg-white ${
+                          selected ? "border-primary ring-2 ring-primary/25 bg-primary/5 shadow-md" : "border-amber-200 hover:border-primary/60 hover:shadow-sm"
+                        }`}
+                      >
+                        <TemplateMiniPreview id={it.base} primary={primary} />
+                        <div className="mt-2 text-[11px] font-black text-navy truncate pr-2 flex items-center gap-1">
+                          {it.favorite && <span className="text-amber-500">★</span>}
+                          {it.label}
+                        </div>
+                        <div className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5">
+                          {it.source === "free" ? "Gratuito" : "Adquirido"}{it.isDefault ? " · Padrão" : ""}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onSelect(it.base)}
+                          disabled={selected}
+                          className={`mt-2 w-full rounded-lg px-2 py-1.5 text-[10px] font-black uppercase tracking-wider ${
+                            selected ? "bg-primary/10 text-primary cursor-default" : "bg-slate-100 text-navy hover:bg-slate-200"
+                          }`}
+                        >
+                          {selected ? "Usando este modelo" : "Usar modelo"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
             {groupedTemplates.map((category) => (
               <section key={category.label} className="space-y-2">
                 <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
