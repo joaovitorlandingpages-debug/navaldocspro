@@ -109,7 +109,7 @@ export function TemplateStudio({
         if (!ctx) return;
         canvas.width = viewport.width;
         canvas.height = viewport.height;
-        await page.render({ canvasContext: ctx, viewport }).promise;
+        await page.render({ canvas, canvasContext: ctx, viewport } as any).promise;
       } catch (e) {
         console.error("Studio preview error:", e);
       } finally {
