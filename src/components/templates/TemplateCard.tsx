@@ -37,8 +37,9 @@ const toneClass: Record<string, string> = {
 export function TemplateCard(p: TemplateCardProps) {
   const Icon = p.primaryIcon === "buy" ? ShoppingCart : p.primaryIcon === "download" ? Download : Check;
   return (
-    <Card className="group overflow-hidden flex flex-col">
+    <Card className="group overflow-hidden flex flex-col rounded-2xl border-slate-200/60 shadow-[0_8px_24px_-8px_rgba(15,23,42,0.18)] hover:shadow-[0_20px_50px_-12px_rgba(15,23,42,0.28)] hover:-translate-y-1 transition-all duration-300">
       <div className="relative aspect-[4/5] bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+        <div className="absolute inset-0 ring-1 ring-inset ring-black/5 z-10 pointer-events-none" />
         {p.cover ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={p.cover} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
