@@ -158,7 +158,6 @@ function ProcessDetail() {
   }, [id]);
 
   useEffect(() => {
-    console.log("PROCESS_TIMELINE_OK");
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
