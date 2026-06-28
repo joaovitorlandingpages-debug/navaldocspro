@@ -332,13 +332,6 @@ function IdentidadePage() {
                       <Check className="h-3 w-3" />
                     </div>
                   )}
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); openStudio(null, tpl.id); }}
-                    className="mt-2 w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-white text-primary text-[10px] font-bold uppercase tracking-wider px-2 py-1.5 hover:bg-primary/5"
-                  >
-                    <Wand2 className="h-3 w-3" /> Personalizar
-                  </button>
                 </div>
               );
             })}
