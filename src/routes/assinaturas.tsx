@@ -1,18 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { signaturesService, buildPublicSignUrl, type ParticipantRole } from "@/services/signatures";
+import { signaturesService, buildPublicSignUrl } from "@/services/signatures";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Copy, MessageCircle, Mail, X, FileSignature, Clock, CheckCircle2, AlertCircle, Download, Link2 } from "lucide-react";
+import { Plus, Copy, MessageCircle, Mail, X, FileSignature, Clock, CheckCircle2, AlertCircle, Download, Link2, Ship, User, FolderOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SignatureTestRunner } from "@/components/signatures/SignatureTestRunner";
+import { SignatureRequestDialog } from "@/components/signatures/SignatureRequestDialog";
 
 export const Route = createFileRoute("/assinaturas")({
   component: AssinaturasPage,
@@ -40,7 +37,17 @@ function AssinaturasPage() {
     setLoading(true);
     try {
       const data = await signaturesService.list(profile.company_id);
-      setRows(data);
+      // Enrich with process / customer / vessel
+      const procIds = Array.from(new Set(data.map((r: any) => r.process_id).filter(Boolean)));
+      let procMap: Record<string, any> = {};
+      if (procIds.length) {
+        const { data: procs } = await supabase
+          .from("processes")
+          .select("id, process_type, customer:customers(id,name), vessel:vessels(id,name)")
+          .in("id", procIds);
+        for (const p of procs ?? []) procMap[p.id] = p;
+      }
+      setRows(data.map((r: any) => ({ ...r, process: r.process_id ? procMap[r.process_id] : null })));
     } catch (e: any) {
       toast.error(e.message);
     } finally { setLoading(false); }
@@ -111,7 +118,7 @@ function AssinaturasPage() {
         </div>
       )}
 
-      <NewRequestDialog open={open} onOpenChange={setOpen} onCreated={load} />
+      <SignatureRequestDialog open={open} onOpenChange={setOpen} onCreated={load} />
     </div>
   );
 }
@@ -164,6 +171,23 @@ function RequestRow({ row, onChanged }: { row: any; onChanged: () => void }) {
           <p className="text-xs text-slate-500 mt-1">
             {signed} de {parts.length} assinaram • Ordem: {row.signing_order === "sequential" ? "Sequencial" : "Livre"}
           </p>
+          {row.process && (
+            <div className="flex flex-wrap gap-2 mt-2 text-[11px]">
+              <Link to="/processes/$id" params={{ id: row.process.id }} className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700">
+                <FolderOpen className="w-3 h-3" /> {row.process.process_type}
+              </Link>
+              {row.process.customer && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                  <User className="w-3 h-3" /> {row.process.customer.name}
+                </span>
+              )}
+              {row.process.vessel && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                  <Ship className="w-3 h-3" /> {row.process.vessel.name}
+                </span>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           {row.final_signed_pdf_url && (
@@ -233,112 +257,3 @@ function RequestRow({ row, onChanged }: { row: any; onChanged: () => void }) {
   );
 }
 
-function NewRequestDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (v: boolean) => void; onCreated: () => void }) {
-  const { profile, user } = useAuth();
-  const [title, setTitle] = useState("");
-  const [order, setOrder] = useState<"free" | "sequential">("free");
-  const [participants, setParticipants] = useState<any[]>([
-    { name: "", email: "", phone: "", role: "cliente" as ParticipantRole },
-  ]);
-  const [saving, setSaving] = useState(false);
-
-  const reset = () => {
-    setTitle("");
-    setOrder("free");
-    setParticipants([{ name: "", email: "", phone: "", role: "cliente" }]);
-  };
-
-  const save = async () => {
-    if (!profile?.company_id) return toast.error("Empresa não identificada");
-    if (!title.trim()) return toast.error("Informe o título");
-    const valid = participants.filter(p => p.name.trim());
-    if (valid.length === 0) return toast.error("Adicione pelo menos um participante");
-    setSaving(true);
-    try {
-      await signaturesService.create({
-        company_id: profile.company_id,
-        title,
-        signing_order: order,
-        participants: valid,
-        created_by: user?.id,
-      });
-      toast.success("Solicitação criada");
-      reset();
-      onOpenChange(false);
-      onCreated();
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally { setSaving(false); }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>Nova Solicitação de Assinatura</DialogTitle></DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label>Título do documento</Label>
-            <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Contrato de Serviço Naval" />
-          </div>
-          <div>
-            <Label>Ordem de assinatura</Label>
-            <Select value={order} onValueChange={(v: any) => setOrder(v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="free">Livre (qualquer ordem)</SelectItem>
-                <SelectItem value="sequential">Sequencial</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Participantes</Label>
-              <Button size="sm" variant="ghost" onClick={() => setParticipants([...participants, { name: "", email: "", phone: "", role: "outro" }])}>
-                <Plus className="w-3 h-3 mr-1" /> Adicionar
-              </Button>
-            </div>
-            {participants.map((p, i) => (
-              <Card key={i} className="p-3 space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="Nome" value={p.name} onChange={e => {
-                    const next = [...participants]; next[i].name = e.target.value; setParticipants(next);
-                  }} />
-                  <Select value={p.role} onValueChange={(v) => {
-                    const next = [...participants]; next[i].role = v; setParticipants(next);
-                  }}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cliente">Cliente</SelectItem>
-                      <SelectItem value="engenheiro">Engenheiro</SelectItem>
-                      <SelectItem value="despachante">Despachante</SelectItem>
-                      <SelectItem value="responsavel_tecnico">Responsável Técnico</SelectItem>
-                      <SelectItem value="testemunha">Testemunha</SelectItem>
-                      <SelectItem value="outro">Outro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="Email" value={p.email} onChange={e => {
-                    const next = [...participants]; next[i].email = e.target.value; setParticipants(next);
-                  }} />
-                  <Input placeholder="Telefone" value={p.phone} onChange={e => {
-                    const next = [...participants]; next[i].phone = e.target.value; setParticipants(next);
-                  }} />
-                </div>
-                {participants.length > 1 && (
-                  <Button size="sm" variant="ghost" className="text-rose-600 h-7" onClick={() => setParticipants(participants.filter((_, j) => j !== i))}>
-                    <X className="w-3 h-3 mr-1" /> Remover
-                  </Button>
-                )}
-              </Card>
-            ))}
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={save} disabled={saving}>{saving ? "Salvando..." : "Criar e gerar links"}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
