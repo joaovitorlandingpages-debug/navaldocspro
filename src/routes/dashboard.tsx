@@ -1142,3 +1142,58 @@ function DashboardSkeleton() {
 }
 
 export const RouteComponent = RouteContent;
+
+function AdminMenu({ role, expanded, onNavigate }: { role?: string | null; expanded: boolean; onNavigate: () => void }) {
+  const [open, setOpen] = useState(false);
+  const isGlobal = role === 'admin_master_global';
+  const isMaster = isGlobal || role === 'admin_master';
+
+  const items: Array<{ name: string; to: string; icon: JSX.Element; show: boolean }> = [
+    { name: "Painel Admin",           to: "/admin",                  icon: <ShieldCheck className="h-4 w-4" />, show: true },
+    { name: "Admin Master Global",    to: "/admin-master",           icon: <Award className="h-4 w-4" />,       show: isGlobal },
+    { name: "Biblioteca Master",      to: "/admin/document-library", icon: <Library className="h-4 w-4" />,     show: isMaster },
+    { name: "Marketplace Admin",      to: "/admin-master",           icon: <LayoutTemplate className="h-4 w-4" />, show: isGlobal },
+    { name: "Logs do Sistema",        to: "/admin/logs",             icon: <History className="h-4 w-4" />,     show: isMaster },
+    { name: "Limpeza de Testes",      to: "/admin-master",           icon: <FileWarning className="h-4 w-4" />, show: isGlobal },
+    { name: "Relatórios",             to: "/admin/saas-metrics",     icon: <TrendingUp className="h-4 w-4" />,  show: isMaster },
+    { name: "Usuários",               to: "/admin/users",            icon: <Users className="h-4 w-4" />,       show: true },
+    { name: "Configurações avançadas",to: "/admin/settings",         icon: <Settings className="h-4 w-4" />,    show: isMaster },
+  ];
+
+  const visible = items.filter(i => i.show);
+  if (visible.length === 0) return null;
+
+  return (
+    <div className="space-y-1">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-300 hover:text-white border border-transparent hover:border-white/10"
+        aria-expanded={open}
+      >
+        <ShieldCheck className="h-5 w-5 text-amber-400" />
+        {expanded && (
+          <>
+            <span className="text-[10px] font-black uppercase tracking-widest flex-1 text-left">Admin</span>
+            <ChevronRight className={`h-3 w-3 transition-transform ${open ? 'rotate-90' : ''}`} />
+          </>
+        )}
+      </button>
+      {open && expanded && (
+        <div className="ml-3 pl-3 border-l border-white/10 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
+          {visible.map(item => (
+            <Link
+              key={item.name}
+              to={item.to}
+              onClick={onNavigate}
+              className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white transition-all"
+            >
+              {item.icon}
+              <span className="text-[10px] font-bold uppercase tracking-wider">{item.name}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
