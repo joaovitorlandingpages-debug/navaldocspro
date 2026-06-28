@@ -249,18 +249,13 @@ function DashboardLayout() {
         ))}
       </nav>
 
-      <div className="p-6 border-t border-white/5 space-y-2 bg-white/[0.02]">
-         {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
-           <>
-             <Link to="/admin" onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
-                <ShieldCheck className="h-5 w-5" />
-                {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Painel Admin</span>}
-             </Link>
-             <Link to="/admin/document-library" onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
-                <Library className="h-5 w-5" />
-                {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Biblioteca Master</span>}
-             </Link>
-           </>
+      <div className="p-4 border-t border-white/5 space-y-2 bg-white/[0.02]">
+         {(profile?.role === 'admin' || profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
+           <AdminMenu
+             role={profile?.role}
+             expanded={isSidebarOpen || (typeof window !== 'undefined' && window.innerWidth <= 1024)}
+             onNavigate={() => typeof window !== 'undefined' && window.innerWidth <= 1024 && setSidebarOpen(false)}
+           />
          )}
 
          <button 
