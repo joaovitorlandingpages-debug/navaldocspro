@@ -6,6 +6,8 @@ import { PDF_TEMPLATES, loadCompanyBranding, type CompanyBranding, type PdfTempl
 import { CATEGORY_OF } from "@/services/companyPdfTemplates";
 import { TemplateCard } from "@/components/templates/TemplateCard";
 import { TemplatePreviewModal } from "@/components/templates/TemplatePreviewModal";
+import { TemplateCover } from "@/components/templates/TemplateCover";
+
 import { addFreeToLibrary, listCompanyLibrary } from "@/services/marketplaceTemplates";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -93,10 +95,22 @@ function GratuitosPage() {
             priceLabel="Gratuito"
             badges={[{ label: "Gratuito", tone: "green" }]}
             isOwned={owned.has(t.id)}
+            coverFallback={
+              <TemplateCover
+                templateId={t.id}
+                name={t.label}
+                category={CATEGORY_OF[t.id] ?? "geral"}
+                kind={owned.has(t.id) ? "owned" : "free"}
+                logoUrl={branding?.logo_primary_url}
+                primaryColor={branding?.brand_primary_color}
+
+              />
+            }
             onPreview={() => setPreview({ id: t.id, name: t.label })}
             onPrimary={() => useTemplate(t.id)}
             primaryLabel="Usar"
           />
+
         ))}
       </div>
 

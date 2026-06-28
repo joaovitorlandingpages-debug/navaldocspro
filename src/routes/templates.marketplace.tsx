@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { loadCompanyBranding, type CompanyBranding, type PdfTemplateId } from "@/services/companyBranding";
 import { TemplateCard } from "@/components/templates/TemplateCard";
 import { TemplatePreviewModal } from "@/components/templates/TemplatePreviewModal";
+import { TemplateCover } from "@/components/templates/TemplateCover";
+
 import {
   formatPrice,
   listCollections,
@@ -148,6 +150,17 @@ function MarketplacePage() {
                 description={t.description}
                 category={t.category}
                 cover={t.cover_url}
+                coverFallback={
+                  <TemplateCover
+                    templateId={t.base_template}
+                    name={t.name}
+                    category={t.category}
+                    kind={owned.has(t.slug) ? "owned" : "premium"}
+                    logoUrl={branding?.logo_primary_url}
+                    primaryColor={branding?.brand_primary_color}
+                  />
+                }
+
                 author={t.author}
                 version={t.version}
                 rating={t.rating}

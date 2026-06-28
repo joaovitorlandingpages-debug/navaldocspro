@@ -18,6 +18,8 @@ import {
 import { CATEGORY_OF } from "@/services/companyPdfTemplates";
 import { TemplateCard } from "@/components/templates/TemplateCard";
 import { TemplatePreviewModal } from "@/components/templates/TemplatePreviewModal";
+import { TemplateCover } from "@/components/templates/TemplateCover";
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -72,7 +74,18 @@ function MeusPage() {
                 category={CATEGORY_OF[it.template_slug as PdfTemplateId] ?? "geral"}
                 priceLabel={it.source === "free" ? "Gratuito" : "Adquirido"}
                 badges={badges}
+                coverFallback={
+                  <TemplateCover
+                    templateId={it.base_template}
+                    name={labelOf(it.template_slug)}
+                    category={CATEGORY_OF[it.template_slug as PdfTemplateId] ?? "geral"}
+                    kind={it.source === "free" ? "free" : "premium"}
+                    logoUrl={branding?.logo_primary_url}
+                    primaryColor={branding?.brand_primary_color}
+                  />
+                }
                 isFavorite={it.is_favorite}
+
                 onFavorite={async () => {
                   await toggleFavorite(it.id, !it.is_favorite);
                   if (companyId) reload(companyId);
