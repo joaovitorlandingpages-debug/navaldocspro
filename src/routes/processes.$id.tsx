@@ -42,6 +42,7 @@ import ProcessFinalDossierTab from "@/components/process/ProcessFinalDossierTab"
 import { openStoredFile } from "@/utils/file-preview";
 import { ProcessDocumentsPanel } from "@/components/process/ProcessDocumentsPanel";
 import { ClientPortalPanel } from "@/components/process/ClientPortalPanel";
+import { ProcessSignaturesPanel } from "@/components/process/ProcessSignaturesPanel";
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
