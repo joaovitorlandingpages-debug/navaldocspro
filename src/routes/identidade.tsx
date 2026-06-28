@@ -350,7 +350,7 @@ function IdentidadePage() {
             <p className="text-xs text-slate-500">
               Modelos personalizados da sua empresa. Use o editor visual para criar quantos quiser.
             </p>
-            <Button size="sm" onClick={() => openStudio(null, data.pdf_template)} className="gap-2">
+            <Button size="sm" onClick={() => setNewDialogOpen(true)} className="gap-2">
               <Plus className="h-3.5 w-3.5" /> Novo template
             </Button>
           </div>
