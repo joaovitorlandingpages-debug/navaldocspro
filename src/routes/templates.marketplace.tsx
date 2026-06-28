@@ -157,7 +157,7 @@ function MarketplacePage() {
                 isOwned={owned.has(t.slug)}
                 onPreview={() => setPreview({ base: t.base_template, name: t.name })}
                 onPrimary={() => buy(t)}
-                primaryLabel="Comprar"
+                primaryLabel="Comprar em breve"
                 primaryIcon="buy"
               />
             ))}
