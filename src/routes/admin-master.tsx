@@ -189,11 +189,12 @@ function DebugTab() {
           </div>
         ))}
       </div>
-      {(checks?.has_role_error || checks?.is_admin_master_error) && (
+      {checks?.is_admin_master_error && (
         <p className="text-[11px] text-red-600 mt-3 font-mono">
-          {checks?.has_role_error || checks?.is_admin_master_error}
+          {checks.is_admin_master_error}
         </p>
       )}
+
     </Card>
   );
 }
