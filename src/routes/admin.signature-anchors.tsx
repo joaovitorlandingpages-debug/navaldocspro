@@ -14,7 +14,7 @@ import {
 } from "@/services/signatureAnchors";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/_authenticated/admin/signature-anchors")({
+export const Route = createFileRoute("/admin/signature-anchors")({
   component: SignatureAnchorsEditor,
 });
 

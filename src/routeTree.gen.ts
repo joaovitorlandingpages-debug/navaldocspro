@@ -87,6 +87,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
 import { Route as AdminSupportRouteImport } from './routes/admin/support'
 import { Route as AdminStorageRouteImport } from './routes/admin/storage'
+import { Route as AdminSignatureAnchorsRouteImport } from './routes/admin.signature-anchors'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSecurityRouteImport } from './routes/admin/security'
 import { Route as AdminSaasMetricsRouteImport } from './routes/admin/saas-metrics'
@@ -107,7 +108,6 @@ import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
 import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
 import { Route as AdminBillingRouteImport } from './routes/admin/billing'
 import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
-import { Route as AuthenticatedAdminSignatureAnchorsRouteImport } from './routes/_authenticated/admin/signature-anchors'
 
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
@@ -500,6 +500,11 @@ const AdminStorageRoute = AdminStorageRouteImport.update({
   path: '/storage',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSignatureAnchorsRoute = AdminSignatureAnchorsRouteImport.update({
+  id: '/signature-anchors',
+  path: '/signature-anchors',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -603,12 +608,6 @@ const AdminAutomationRoute = AdminAutomationRouteImport.update({
   path: '/automation',
   getParentRoute: () => AdminRoute,
 } as any)
-const AuthenticatedAdminSignatureAnchorsRoute =
-  AuthenticatedAdminSignatureAnchorsRouteImport.update({
-    id: '/_authenticated/admin/signature-anchors',
-    path: '/admin/signature-anchors',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -678,6 +677,7 @@ export interface FileRoutesByFullPath {
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/signature-anchors': typeof AdminSignatureAnchorsRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-report': typeof AdminSystemReportRoute
@@ -709,7 +709,6 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/templates/': typeof TemplatesIndexRoute
-  '/admin/signature-anchors': typeof AuthenticatedAdminSignatureAnchorsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -776,6 +775,7 @@ export interface FileRoutesByTo {
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/signature-anchors': typeof AdminSignatureAnchorsRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-report': typeof AdminSystemReportRoute
@@ -807,7 +807,6 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/templates': typeof TemplatesIndexRoute
-  '/admin/signature-anchors': typeof AuthenticatedAdminSignatureAnchorsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -878,6 +877,7 @@ export interface FileRoutesById {
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/signature-anchors': typeof AdminSignatureAnchorsRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-report': typeof AdminSystemReportRoute
@@ -909,7 +909,6 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/templates/': typeof TemplatesIndexRoute
-  '/_authenticated/admin/signature-anchors': typeof AuthenticatedAdminSignatureAnchorsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -981,6 +980,7 @@ export interface FileRouteTypes {
     | '/admin/saas-metrics'
     | '/admin/security'
     | '/admin/settings'
+    | '/admin/signature-anchors'
     | '/admin/storage'
     | '/admin/support'
     | '/admin/system-report'
@@ -1012,7 +1012,6 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/dashboard/'
     | '/templates/'
-    | '/admin/signature-anchors'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1079,6 +1078,7 @@ export interface FileRouteTypes {
     | '/admin/saas-metrics'
     | '/admin/security'
     | '/admin/settings'
+    | '/admin/signature-anchors'
     | '/admin/storage'
     | '/admin/support'
     | '/admin/system-report'
@@ -1110,7 +1110,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/templates'
-    | '/admin/signature-anchors'
   id:
     | '__root__'
     | '/'
@@ -1180,6 +1179,7 @@ export interface FileRouteTypes {
     | '/admin/saas-metrics'
     | '/admin/security'
     | '/admin/settings'
+    | '/admin/signature-anchors'
     | '/admin/storage'
     | '/admin/support'
     | '/admin/system-report'
@@ -1211,7 +1211,6 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/dashboard/'
     | '/templates/'
-    | '/_authenticated/admin/signature-anchors'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1273,7 +1272,6 @@ export interface RootRouteChildren {
   DocumentosBibliotecaRoute: typeof DocumentosBibliotecaRoute
   PortalTokenRoute: typeof PortalTokenRoute
   VerificarAssinaturaCodeRoute: typeof VerificarAssinaturaCodeRoute
-  AuthenticatedAdminSignatureAnchorsRoute: typeof AuthenticatedAdminSignatureAnchorsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1824,6 +1822,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminStorageRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/signature-anchors': {
+      id: '/admin/signature-anchors'
+      path: '/signature-anchors'
+      fullPath: '/admin/signature-anchors'
+      preLoaderRoute: typeof AdminSignatureAnchorsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
@@ -1964,13 +1969,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/_authenticated/admin/signature-anchors': {
-      id: '/_authenticated/admin/signature-anchors'
-      path: '/admin/signature-anchors'
-      fullPath: '/admin/signature-anchors'
-      preLoaderRoute: typeof AuthenticatedAdminSignatureAnchorsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -1995,6 +1993,7 @@ interface AdminRouteChildren {
   AdminSaasMetricsRoute: typeof AdminSaasMetricsRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSignatureAnchorsRoute: typeof AdminSignatureAnchorsRoute
   AdminStorageRoute: typeof AdminStorageRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminSystemReportRoute: typeof AdminSystemReportRoute
@@ -2023,6 +2022,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSaasMetricsRoute: AdminSaasMetricsRoute,
   AdminSecurityRoute: AdminSecurityRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminSignatureAnchorsRoute: AdminSignatureAnchorsRoute,
   AdminStorageRoute: AdminStorageRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminSystemReportRoute: AdminSystemReportRoute,
@@ -2161,8 +2161,6 @@ const rootRouteChildren: RootRouteChildren = {
   DocumentosBibliotecaRoute: DocumentosBibliotecaRoute,
   PortalTokenRoute: PortalTokenRoute,
   VerificarAssinaturaCodeRoute: VerificarAssinaturaCodeRoute,
-  AuthenticatedAdminSignatureAnchorsRoute:
-    AuthenticatedAdminSignatureAnchorsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
