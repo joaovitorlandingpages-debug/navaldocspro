@@ -181,6 +181,26 @@ export const signaturesService = {
       metadata: { signature_type: payload.signature_type, hash },
     });
 
+    // Reusable signature (per customer)
+    if (payload.reuse_authorized && (participant as any).customer_id) {
+      try {
+        await supabase.from("customer_signatures").insert({
+          company_id: participant.company_id,
+          customer_id: (participant as any).customer_id,
+          signature_request_id: request.id,
+          participant_id: participant.id,
+          signature_type: payload.signature_type,
+          signature_image_url: payload.signature_data,
+          signature_hash: hash,
+          user_agent: ua,
+          device_info: { platform: typeof navigator !== "undefined" ? navigator.platform : "" },
+          reuse_authorized: true,
+        } as any);
+      } catch (e) {
+        console.warn("customer_signatures insert failed", e);
+      }
+    }
+
     // Check completion
     const { data: allParts } = await supabase
       .from("signature_participants")
