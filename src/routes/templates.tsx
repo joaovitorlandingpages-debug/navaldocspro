@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageHeader } from "@/components/navigation/PageHeader";
-import { Sparkles, Gift, Store, FolderHeart } from "lucide-react";
+import { Gift, Store, FolderHeart } from "lucide-react";
 
 export const Route = createFileRoute("/templates")({
   component: () => (
@@ -20,7 +20,7 @@ function TemplatesLayout() {
   ] as const;
   return (
     <div className="min-h-screen bg-slate-50">
-      <PageHeader title="Templates" subtitle="Catálogo premium de documentos navais" icon={Sparkles} />
+      <PageHeader title="Templates" description="Catálogo premium de documentos navais" />
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex gap-2 border-b border-slate-200 mb-6">
           {tabs.map((t) => {
