@@ -34,7 +34,8 @@ export function SignatureTestRunner({ companyId, userId, onChanged }: {
     { id: "code", label: "12. Código de verificação", status: "pending" },
     { id: "verify", label: "13. Página /verificar-assinatura", status: "pending" },
     { id: "downloads", label: "14. Downloads disponíveis", status: "pending" },
-    { id: "log", label: "15. Log signature_test_executed", status: "pending" },
+    { id: "anchor", label: "16. Âncoras: lookup + fallback", status: "pending" },
+    { id: "log", label: "17. Log signature_test_executed", status: "pending" },
   ];
 
   const run = async () => {
