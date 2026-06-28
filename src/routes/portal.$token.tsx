@@ -222,6 +222,54 @@ function PortalPage() {
           </Card>
         )}
 
+        {signatures.length > 0 && (
+          <Card className="p-5">
+            <h3 className="font-bold mb-3 flex items-center gap-2"><FileText className="w-4 h-4" />Assinaturas</h3>
+            <ul className="space-y-2">
+              {signatures.map((s: any) => {
+                const mine = (s.signature_participants || []).find((p: any) => (customer?.email && p.email === customer.email) || (customer?.name && p.name === customer.name));
+                const pendingMine = mine && mine.status !== "signed";
+                return (
+                  <li key={s.id} className="border rounded-xl p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="font-medium text-sm">{s.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {s.status === "completed" ? "Concluída" : s.status === "in_progress" ? "Em andamento" : "Aguardando"} · {new Date(s.created_at).toLocaleDateString("pt-BR")}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        {pendingMine && (
+                          <a href={`/assinar/${mine.access_token}`} target="_blank" rel="noreferrer">
+                            <Button size="sm">Assinar agora</Button>
+                          </a>
+                        )}
+                        {s.final_signed_pdf_url && (
+                          <a href={s.final_signed_pdf_url} target="_blank" rel="noreferrer">
+                            <Button size="sm" variant="outline"><Download className="w-3 h-3 mr-1" />PDF</Button>
+                          </a>
+                        )}
+                        {s.evidence_certificate_url && (
+                          <a href={s.evidence_certificate_url} target="_blank" rel="noreferrer">
+                            <Button size="sm" variant="outline">Certificado</Button>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1 text-[11px]">
+                      {(s.signature_participants || []).sort((a: any, b: any) => (a.signing_order ?? 0) - (b.signing_order ?? 0)).map((p: any) => (
+                        <span key={p.id} className={`px-2 py-0.5 rounded-full ${p.status === "signed" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+                          {p.name} · {p.role}{p.status === "signed" ? " ✓" : ""}
+                        </span>
+                      ))}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+        )}
+
         <Card className="p-5">
           <h3 className="font-bold mb-3 flex items-center gap-2"><MessageSquare className="w-4 h-4" />Mensagens</h3>
           <div className="space-y-2 max-h-72 overflow-y-auto mb-3">
