@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { loadCompanyBranding, type CompanyBranding, type PdfTemplateId } from "@/services/companyBranding";
 import { TemplateCard } from "@/components/templates/TemplateCard";
 import { TemplatePreviewModal } from "@/components/templates/TemplatePreviewModal";
+import { TemplateCover } from "@/components/templates/TemplateCover";
+
 import {
   formatPrice,
   listCollections,
