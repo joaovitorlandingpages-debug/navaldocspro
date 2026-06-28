@@ -1,5 +1,6 @@
 import { createFileRoute, Navigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+type CheckRow = { label: string; status: "ok" | "warn" | "down"; detail?: string };
 import { Activity, ArrowLeft, RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,7 +56,7 @@ function DiagnosticoPage() {
   const { data, isFetching, refetch } = useQuery({
     queryKey: ["system-diagnostico"],
     enabled: profile?.role === "admin_master_global",
-    queryFn: async (): Promise<Check[]> => {
+    queryFn: async (): Promise<CheckRow[]> => {
       const [db, storage, ocr, pdfs, signatures, portal, templates, marketplace] = await Promise.all([
         safeCount("profiles"),
         safeBucket("generated-documents"),
@@ -95,7 +96,6 @@ function DiagnosticoPage() {
       </Link>
 
       <PageHeader
-        icon={Activity}
         title="Diagnóstico do Sistema"
         description="Saúde dos módulos críticos do NavalDocs Pro (somente leitura)."
         actions={
@@ -104,9 +104,10 @@ function DiagnosticoPage() {
           </Button>
         }
       />
+      <div className="sr-only"><Activity /></div>
 
       <Card className="divide-y">
-        {(data ?? Array.from({ length: 11 }, () => ({ label: "Carregando...", status: "warn" as Status }))).map((c, i) => (
+        {(data ?? (Array.from({ length: 11 }, () => ({ label: "Carregando...", status: "warn" as Status })) as CheckRow[])).map((c, i) => (
           <div key={i} className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3 min-w-0">
               <span className={`h-3 w-3 rounded-full shrink-0 ${dot[c.status]}`} aria-label={badge[c.status]} />
