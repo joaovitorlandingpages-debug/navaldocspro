@@ -1971,6 +1971,7 @@ function Step7Approval({
   const [editText, setEditText] = useState("");
   const [editReason, setEditReason] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [companyBranding, setCompanyBranding] = useState<any | null>(null);
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
@@ -2004,6 +2005,7 @@ function Step7Approval({
     let createdUrl: string | null = null;
     if (!previewDoc) {
       setPreviewUrl(null);
+      setPreviewBytes(null);
       return;
     }
     setPreviewLoading(true);
@@ -2028,10 +2030,12 @@ function Step7Approval({
         const blob = new Blob([ab], { type: "application/pdf" });
         createdUrl = URL.createObjectURL(blob);
         setPreviewUrl(createdUrl);
+        setPreviewBytes(bytes);
       } catch (e) {
         console.error("[PREVIEW_PDF_FAILED]", e);
         toast.error("Não foi possível gerar a prévia do PDF. Tente outro template ou revise o documento.");
         if (!cancelled) setPreviewUrl(null);
+        if (!cancelled) setPreviewBytes(null);
       } finally {
         if (!cancelled) setPreviewLoading(false);
       }
@@ -2173,7 +2177,7 @@ function Step7Approval({
                   <Loader2 className="h-5 w-5 animate-spin mr-2" /> Renderizando PDF…
                 </div>
               ) : (
-                <iframe title={`Prévia ${previewDoc.name}`} src={previewUrl} className="w-full h-full border-0" />
+                <PdfPreviewFrame title={`Prévia ${previewDoc.name}`} url={previewUrl} bytes={previewBytes} />
               )}
             </div>
           </div>
