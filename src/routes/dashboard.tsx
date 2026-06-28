@@ -246,18 +246,25 @@ function DashboardLayout() {
       </nav>
 
       <div className="p-6 border-t border-white/5 space-y-2 bg-white/[0.02]">
-         {profile?.role === 'admin_master' && (
-           <Link to="/admin" onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
-              <ShieldCheck className="h-5 w-5" />
-              {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Painel Master</span>}
-           </Link>
+         {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
+           <>
+             {profile?.role === 'admin_master_global' && (
+               <Link to="/admin-master" onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 transition-all text-amber-300 hover:text-amber-200 border border-amber-500/20">
+                <ShieldCheck className="h-5 w-5" />
+                {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Admin Master Global</span>}
+             </Link>
+             )}
+             <Link to="/admin" onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+                <ShieldCheck className="h-5 w-5" />
+                {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Painel Admin</span>}
+             </Link>
+             <Link to="/admin/document-library" onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
+                <Library className="h-5 w-5" />
+                {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Biblioteca Master</span>}
+             </Link>
+           </>
          )}
-         {profile?.role === 'admin_master' && (
-           <Link to="/admin/document-library" onClick={() => window.innerWidth <= 1024 && setSidebarOpen(false)} className="flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-400 hover:text-white">
-              <Library className="h-5 w-5" />
-              {(isSidebarOpen || window.innerWidth <= 1024) && <span className="text-[10px] font-black uppercase tracking-widest">Biblioteca Master</span>}
-           </Link>
-         )}
+
          <button 
            onClick={handleLogout}
            className="w-full flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-red-500/10 text-red-400 transition-all border border-transparent hover:border-red-500/20"
