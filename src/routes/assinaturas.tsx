@@ -171,6 +171,23 @@ function RequestRow({ row, onChanged }: { row: any; onChanged: () => void }) {
           <p className="text-xs text-slate-500 mt-1">
             {signed} de {parts.length} assinaram • Ordem: {row.signing_order === "sequential" ? "Sequencial" : "Livre"}
           </p>
+          {row.process && (
+            <div className="flex flex-wrap gap-2 mt-2 text-[11px]">
+              <Link to="/processes/$id" params={{ id: row.process.id }} className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700">
+                <FolderOpen className="w-3 h-3" /> {row.process.process_type}
+              </Link>
+              {row.process.customer && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                  <User className="w-3 h-3" /> {row.process.customer.name}
+                </span>
+              )}
+              {row.process.vessel && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                  <Ship className="w-3 h-3" /> {row.process.vessel.name}
+                </span>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           {row.final_signed_pdf_url && (
