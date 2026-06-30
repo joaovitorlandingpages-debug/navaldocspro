@@ -300,7 +300,7 @@ function ProcessDetail() {
             toast.error("O processo não pode ser finalizado. Verifique as inconformidades no Checklist.");
           }
         }}
-        onEdit={() => setActiveTab("edit")}
+        onEdit={() => setEditSheetOpen(true)}
         onChanged={fetchProcess}
       />
 
