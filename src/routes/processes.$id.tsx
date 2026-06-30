@@ -75,7 +75,16 @@ function ProcessDetail() {
   const [newComment, setNewComment] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState("overview");
+  const search = Route.useSearch();
+  const activeTab = search.tab;
+  const setActiveTab = useCallback((tab: string) => {
+    navigate({
+      to: "/processes/$id",
+      params: { id },
+      search: { tab: (VALID_TABS as readonly string[]).includes(tab) ? (tab as ProcessTab) : ("overview" as ProcessTab) },
+      replace: true,
+    });
+  }, [id, navigate]);
   const [selectedTemplateForGen, setSelectedTemplateForGen] = useState<any | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
