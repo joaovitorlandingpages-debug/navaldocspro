@@ -96,6 +96,10 @@ export const signaturesService = {
       event_message: `Solicitação "${payload.title}" criada com ${parts.length} participante(s).`,
     });
 
+    try {
+      await limitsEngine.consume("signature_request", 1, { request_id: req.id, participants: rows.length }, req.id, payload.company_id);
+    } catch (e) { console.warn("[SIGNATURE_CONSUME_FAIL]", e); }
+
     return { request: req, participants: parts };
   },
 
