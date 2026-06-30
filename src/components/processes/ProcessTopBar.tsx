@@ -115,6 +115,9 @@ export function ProcessTopBar({ process, onChanged, automationReady, onFinalize,
               try { await copyShareLink(process.id); toast.success("Link copiado."); }
               catch (e: any) { toast.error(e.message); }
             }}
+          >
+            Compartilhar
+          </Button>
           {onEdit && (
             <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1.5" onClick={onEdit}>
               <Pencil className="h-4 w-4" /> Editar
@@ -131,8 +134,6 @@ export function ProcessTopBar({ process, onChanged, automationReady, onFinalize,
               Finalizar
             </Button>
           )}
-          Compartilhar
-          </Button>
           <ProcessActionsMenu
             process={process}
             onChanged={onChanged}
