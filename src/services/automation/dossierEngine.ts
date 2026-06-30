@@ -73,6 +73,10 @@ export const dossierEngine = {
 
   async generateDossier(processId: string, companyId: string) {
     try {
+      const { limitsEngine } = await import("@/services/limitsEngine");
+      const allowed = await limitsEngine.enforce("dossier_export", 1, companyId);
+      if (!allowed) throw new Error("Limite de dossiês atingido para o plano atual.");
+
       const { data: existingDossier } = await supabase
         .from('process_dossiers')
         .select('version')
