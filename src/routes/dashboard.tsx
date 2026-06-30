@@ -153,44 +153,32 @@ function DashboardLayout() {
   }, []);
 
   const navItems = [
-    { group: "Visão Geral", items: [
-      { name: "Painel de Controle", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
+    { group: "Painel", items: [
+      { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
       { name: "Primeiros Passos", icon: <Rocket className="h-5 w-5" />, path: "/getting-started" },
-      { name: "Ecossistema & Parceiros", icon: <Globe className="h-5 w-5" />, path: "/dashboard/ecosystem" },
-      { name: "Centro de Ops", icon: <Briefcase className="h-5 w-5" />, path: "/operations-center" },
-      { name: "Inteligência IA", icon: <Cpu className="h-5 w-5" />, path: "/ai-center" },
     ]},
-
-    { group: "Core Naval", items: [
+    { group: "Operação", items: [
       { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
       { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
       { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
     ]},
     { group: "Documentação", items: [
-      { name: "Central OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
-      { name: "Central Documental", icon: <Signature className="h-5 w-5" />, path: "/dashboard/document-center" },
-      { name: "Prazos e Vencimentos", icon: <Clock className="h-5 w-5" />, path: "/dashboard/deadlines" },
-      { name: "Base Técnica", icon: <Database className="h-5 w-5" />, path: "/dashboard/documents-base" },
-      { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
-    ]},
-    { group: "Gestão & Admin", items: [
-      { name: "Compliance Center", icon: <ShieldCheck className="h-5 w-5" />, path: "/dashboard/compliance-center" },
-      { name: "Segurança & Backups", icon: <Lock className="h-5 w-5" />, path: "/dashboard/security" },
-      { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
-      { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
-      { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
+      { name: "Biblioteca", icon: <Database className="h-5 w-5" />, path: "/dashboard/document-center" },
+      { name: "OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
       { name: "Templates", icon: <LayoutTemplate className="h-5 w-5" />, path: "/templates" },
       { name: "Assinaturas", icon: <Signature className="h-5 w-5" />, path: "/assinaturas" },
-      { name: "Identidade Corporativa", icon: <Award className="h-5 w-5" />, path: "/identidade" },
-      { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
     ]},
-    { group: "Comercial & Evolução", items: [
-      { name: "Ambiente Demo", icon: <Rocket className="h-5 w-5" />, path: "/demo" },
-      { name: "Auditoria QA Final", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/full-qa-report" },
-      { name: "Maturidade SaaS", icon: <Activity className="h-5 w-5" />, path: "/status" },
-      { name: "Changelog", icon: <History className="h-5 w-5" />, path: "/changelog" },
-    ]}
+    { group: "Empresa", items: [
+      { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
+      { name: "Identidade", icon: <Award className="h-5 w-5" />, path: "/identidade" },
+      { name: "Configurações", icon: <Settings className="h-5 w-5" />, path: "/settings" },
+    ]},
+    { group: "Inteligência", items: [
+      { name: "IA", icon: <Cpu className="h-5 w-5" />, path: "/ai-center" },
+      { name: "Parceiros", icon: <Globe className="h-5 w-5" />, path: "/parceria" },
+    ]},
   ];
+
 
   console.log("CONTROLLED_EVOLUTION_READY");
   console.log("FEATURE_FLAGS_READY");
