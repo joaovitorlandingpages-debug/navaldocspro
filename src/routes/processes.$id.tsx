@@ -286,73 +286,21 @@ function ProcessDetail() {
 
   return (
     <div className="animate-in fade-in duration-500 pb-20 max-w-7xl mx-auto px-4 md:px-8">
-      <PageHeader 
-        title={process?.process_type || "Carregando..."}
-        description={`ID: ${id.substring(0, 8)} • Status: ${status}`}
-        actions={
-          <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            <Button variant="outline" className="flex-1 md:flex-none h-11 rounded-xl gap-2 font-bold border-slate-200">
-               <Share2 className="h-4 w-4" /> WhatsApp
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setActiveTab("dossier")}
-              className="flex-1 md:flex-none h-11 rounded-xl gap-2 font-bold border-slate-200"
-            >
-               <Download className="h-4 w-4" /> Dossiê Completo
-            </Button>
-            <Button 
-              className="flex-1 md:flex-none bg-primary text-white h-11 rounded-xl gap-2 font-bold hover:opacity-90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={automationState?.is_ready_for_generation === false}
-              onClick={async () => {
-                if (automationState?.is_ready_for_generation) {
-                  toast.success("Processo finalizado com sucesso! Iniciando geração do dossiê...");
-                  await generateDossier();
-                  setActiveTab("dossier");
-                } else {
-                  toast.error("O processo não pode ser finalizado. Verifique as inconformidades no Checklist.");
-                }
-              }}
-            >
-               {automationState?.is_ready_for_generation ? <CheckCircle2 className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
-               Finalizar & Gerar Dossiê
-            </Button>
-          </div>
-        }
+      <ProcessTopBar
+        process={process}
+        automationReady={automationState?.is_ready_for_generation}
+        onFinalize={async () => {
+          if (automationState?.is_ready_for_generation) {
+            toast.success("Processo finalizado com sucesso! Iniciando geração do dossiê...");
+            await generateDossier();
+            setActiveTab("dossier_v2");
+          } else {
+            toast.error("O processo não pode ser finalizado. Verifique as inconformidades no Checklist.");
+          }
+        }}
+        onEdit={() => setActiveTab("edit")}
+        onChanged={fetchProcess}
       />
-
-
-      <div className="bg-white p-4 sm:p-6 rounded-[2rem] border border-slate-100 shadow-sm mb-8">
-         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <div className="flex items-center gap-3">
-               <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                  <User className="h-5 w-5" />
-               </div>
-               <div>
-                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Cliente</p>
-                  <p className="text-sm font-bold text-navy">{process?.customer?.name || "---"}</p>
-               </div>
-            </div>
-            <div className="flex items-center gap-3">
-               <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                  <Ship className="h-5 w-5" />
-               </div>
-               <div>
-                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Embarcação</p>
-                  <p className="text-sm font-bold text-navy">{process?.vessel?.name || "Não vinculada"}</p>
-               </div>
-            </div>
-            <div className="flex items-center gap-3">
-               <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                  <Calendar className="h-5 w-5" />
-               </div>
-               <div>
-                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Abertura</p>
-                  <p className="text-sm font-bold text-navy">{process?.created_at ? new Date(process.created_at).toLocaleDateString('pt-BR') : "---"}</p>
-               </div>
-            </div>
-         </div>
-      </div>
 
       <OperationalGuide />
 
