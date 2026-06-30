@@ -34,7 +34,7 @@ const PRIORITIES = [
   { v: "critical", l: "Crítica" },
 ];
 
-export function ProcessEditForm({ process, onSaved }: Props) {
+export function ProcessEditForm({ process, onSaved, onCancel }: Props) {
   const [form, setForm] = useState({
     title: process?.title ?? "",
     process_type: process?.process_type ?? "",
