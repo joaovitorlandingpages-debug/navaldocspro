@@ -597,7 +597,7 @@ function CrmGrid({
                 </button>
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); goToTab(p.id, "edit"); }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditing(p); }}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 hover:text-primary hover:bg-white border border-slate-200 bg-white transition-colors"
                 >
                   Editar
@@ -609,7 +609,7 @@ function CrmGrid({
                 >
                   Continuar <ArrowRight className="h-3 w-3" />
                 </button>
-                <ProcessActionsMenu process={p} onChanged={onChanged} />
+                <ProcessActionsMenu process={p} onChanged={onChanged} onEdit={() => setEditing(p)} />
               </div>
             </div>
           </div>
