@@ -20,6 +20,7 @@ import { Route as QaChecklistRouteImport } from './routes/qa-checklist'
 import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PredictionsRouteImport } from './routes/predictions'
 import { Route as PlansRouteImport } from './routes/plans'
+import { Route as PilotoRouteImport } from './routes/piloto'
 import { Route as PerformanceCenterRouteImport } from './routes/performance-center'
 import { Route as ParceriaRouteImport } from './routes/parceria'
 import { Route as OperationsCenterRouteImport } from './routes/operations-center'
@@ -167,6 +168,11 @@ const PredictionsRoute = PredictionsRouteImport.update({
 const PlansRoute = PlansRouteImport.update({
   id: '/plans',
   path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PilotoRoute = PilotoRouteImport.update({
+  id: '/piloto',
+  path: '/piloto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PerformanceCenterRoute = PerformanceCenterRouteImport.update({
@@ -678,6 +684,7 @@ export interface FileRoutesByFullPath {
   '/operations-center': typeof OperationsCenterRoute
   '/parceria': typeof ParceriaRoute
   '/performance-center': typeof PerformanceCenterRoute
+  '/piloto': typeof PilotoRoute
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
   '/processes': typeof ProcessesRouteWithChildren
@@ -782,6 +789,7 @@ export interface FileRoutesByTo {
   '/operations-center': typeof OperationsCenterRoute
   '/parceria': typeof ParceriaRoute
   '/performance-center': typeof PerformanceCenterRoute
+  '/piloto': typeof PilotoRoute
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
   '/processes': typeof ProcessesRouteWithChildren
@@ -888,6 +896,7 @@ export interface FileRoutesById {
   '/operations-center': typeof OperationsCenterRoute
   '/parceria': typeof ParceriaRoute
   '/performance-center': typeof PerformanceCenterRoute
+  '/piloto': typeof PilotoRoute
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
   '/processes': typeof ProcessesRouteWithChildren
@@ -996,6 +1005,7 @@ export interface FileRouteTypes {
     | '/operations-center'
     | '/parceria'
     | '/performance-center'
+    | '/piloto'
     | '/plans'
     | '/predictions'
     | '/processes'
@@ -1100,6 +1110,7 @@ export interface FileRouteTypes {
     | '/operations-center'
     | '/parceria'
     | '/performance-center'
+    | '/piloto'
     | '/plans'
     | '/predictions'
     | '/processes'
@@ -1205,6 +1216,7 @@ export interface FileRouteTypes {
     | '/operations-center'
     | '/parceria'
     | '/performance-center'
+    | '/piloto'
     | '/plans'
     | '/predictions'
     | '/processes'
@@ -1312,6 +1324,7 @@ export interface RootRouteChildren {
   OperationsCenterRoute: typeof OperationsCenterRoute
   ParceriaRoute: typeof ParceriaRoute
   PerformanceCenterRoute: typeof PerformanceCenterRoute
+  PilotoRoute: typeof PilotoRoute
   PlansRoute: typeof PlansRoute
   PredictionsRoute: typeof PredictionsRoute
   ProcessesRoute: typeof ProcessesRouteWithChildren
@@ -1413,6 +1426,13 @@ declare module '@tanstack/react-router' {
       path: '/plans'
       fullPath: '/plans'
       preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/piloto': {
+      id: '/piloto'
+      path: '/piloto'
+      fullPath: '/piloto'
+      preLoaderRoute: typeof PilotoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/performance-center': {
@@ -2244,6 +2264,7 @@ const rootRouteChildren: RootRouteChildren = {
   OperationsCenterRoute: OperationsCenterRoute,
   ParceriaRoute: ParceriaRoute,
   PerformanceCenterRoute: PerformanceCenterRoute,
+  PilotoRoute: PilotoRoute,
   PlansRoute: PlansRoute,
   PredictionsRoute: PredictionsRoute,
   ProcessesRoute: ProcessesRouteWithChildren,
