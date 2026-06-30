@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
 import { ProcessActionsMenu } from "@/components/processes/ProcessActionsMenu";
+import { ProcessEditSheet } from "@/components/processes/ProcessEditSheet";
 
 export const Route = createFileRoute("/processes")({
   component: Processes,
