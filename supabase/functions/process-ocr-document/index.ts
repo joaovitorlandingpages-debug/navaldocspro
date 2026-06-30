@@ -280,9 +280,10 @@ serve(async (req) => {
       has_data: foundCount > 0,
       raw_text_preview: rawText.slice(0, 200),
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-  } catch (error) {
+  } catch (error: any) {
+    if (error instanceof HttpError) return jsonResponse(error.body, error.status)
     console.error('[OCR_ERROR]', error)
-    if (jobId) {
+    if (jobId && supabase!) {
       await supabase.from('ocr_jobs').update({
         status: 'failed',
         error_message: String(error?.message || error),
