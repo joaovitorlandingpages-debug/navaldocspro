@@ -20,7 +20,8 @@ export const Route = createFileRoute("/processes")({
 });
 
 function Processes() {
-  const [view, setView] = useState<"list" | "kanban">("kanban");
+  const [view, setView] = useState<"crm" | "kanban" | "list">("crm");
+
   const [processes, setProcesses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -96,19 +97,26 @@ function Processes() {
         actions={
           <div className="flex flex-wrap gap-3 w-full sm:w-auto">
             <div className="bg-slate-100 p-1 rounded-2xl flex border border-slate-200">
-              <button 
+              <button
+                onClick={() => setView("crm")}
+                className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'crm' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
+              >
+                CRM
+              </button>
+              <button
                 onClick={() => setView("kanban")}
-                className={`px-5 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'kanban' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
+                className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'kanban' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
               >
                 Kanban
               </button>
-              <button 
+              <button
                 onClick={() => setView("list")}
-                className={`px-5 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'list' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
+                className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'list' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
               >
                 Lista
               </button>
             </div>
+
             <button 
               onClick={async () => {
                 const limit = await checkLimit('processes');
@@ -153,7 +161,15 @@ function Processes() {
         </div>
       )}
 
-      {view === "kanban" ? (
+      {view === "crm" ? (
+        <CrmGrid
+          processes={processes}
+          isLoading={isLoading}
+          columns={columns}
+          onNewProcess={() => setIsNewProcessOpen(true)}
+        />
+      ) : view === "kanban" ? (
+
         <div className="flex gap-4 md:gap-8 overflow-x-auto pb-8 min-h-[600px] md:min-h-[700px] custom-scrollbar px-2">
           {columns.map((col) => {
             const columnProcesses = processes.filter(p => p.status === col.id);
@@ -382,6 +398,166 @@ function Processes() {
         limit={upgradeModal.limit}
         current={upgradeModal.current}
       />
+    </div>
+  );
+}
+
+type Col = { id: string; title: string; color: string };
+
+function CrmGrid({
+  processes,
+  isLoading,
+  columns,
+  onNewProcess,
+}: {
+  processes: any[];
+  isLoading: boolean;
+  columns: Col[];
+  onNewProcess: () => void;
+}) {
+  if (isLoading) {
+    return (
+      <div className="py-20 grid place-items-center">
+        <Loader2 className="h-7 w-7 animate-spin text-primary" />
+      </div>
+    );
+  }
+  if (!processes.length) {
+    return (
+      <div className="py-12 text-center text-xs font-bold text-slate-400 uppercase tracking-widest">
+        Nenhum processo encontrado.
+      </div>
+    );
+  }
+
+  const statusMeta = (status: string) => {
+    const found = columns.find((c) => c.id === status);
+    return { title: found?.title || status, color: found?.color || "bg-slate-400" };
+  };
+
+  const fmtDate = (iso?: string | null) => {
+    if (!iso) return null;
+    try {
+      return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+    } catch {
+      return null;
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 pb-8">
+      {processes.map((p) => {
+        const s = statusMeta(p.status);
+        const progress = typeof p.completion_percentage === "number" ? p.completion_percentage : null;
+        const created = fmtDate(p.created_at);
+        const due = fmtDate(p.due_date);
+        const updated = fmtDate(p.updated_at);
+        return (
+          <div
+            key={p.id}
+            className="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all overflow-hidden group flex flex-col"
+          >
+            <div className="p-5 sm:p-6 flex-1 flex flex-col gap-4">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[9px] font-mono font-black text-primary bg-primary/10 px-2 py-0.5 rounded uppercase tracking-tighter">
+                      PROC-{p.id.substring(0, 6)}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                      <span className={`h-1.5 w-1.5 rounded-full ${s.color}`} />
+                      {s.title}
+                    </span>
+                  </div>
+                  <h3 className="font-black text-navy text-sm leading-tight truncate" title={p.process_type}>
+                    {p.process_type}
+                  </h3>
+                </div>
+                <button className="shrink-0 p-1.5 rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-50">
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-[11px] font-bold text-slate-600 border-y border-slate-50 py-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                  <span className="truncate" title={p.customers?.name || ""}>{p.customers?.name || "—"}</span>
+                </div>
+                <div className="flex items-center gap-2 min-w-0">
+                  <Ship className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                  <span className="truncate" title={p.vessels?.name || ""}>{p.vessels?.name || "Sem embarcação"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-500">
+                  <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                  <span>Abertura {created || "—"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-500">
+                  <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                  <span>Prazo {due || "s/ data"}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  <span>Progresso</span>
+                  <span className="text-navy">{progress != null ? `${Math.round(progress)}%` : "—"}</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary to-cyan-500"
+                    style={{ width: `${Math.max(0, Math.min(100, progress ?? 0))}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold text-slate-500">
+                {typeof p.pending_documents_count === "number" && (
+                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-slate-50 border-slate-100">
+                    {p.pending_documents_count} pendentes
+                  </Badge>
+                )}
+                {p.priority && (
+                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-amber-50 border-amber-100 text-amber-700">
+                    {p.priority}
+                  </Badge>
+                )}
+                {updated && (
+                  <span className="ml-auto text-[10px] text-slate-400">
+                    Atualizado {updated}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="px-5 sm:px-6 py-3 border-t border-slate-50 bg-slate-50/40 flex items-center justify-between gap-2">
+              <Link
+                to="/processes/$id"
+                params={{ id: p.id }}
+                className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary"
+              >
+                Abrir
+              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/processes/$id"
+                  params={{ id: p.id }}
+                  className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-primary hover:opacity-80"
+                >
+                  Continuar <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      <button
+        onClick={onNewProcess}
+        className="rounded-3xl border-2 border-dashed border-slate-200 hover:border-primary/40 hover:bg-primary/5 transition-all min-h-[260px] flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-primary"
+      >
+        <Plus className="h-6 w-6" />
+        <span className="text-[10px] font-black uppercase tracking-widest">Novo Processo</span>
+      </button>
     </div>
   );
 }

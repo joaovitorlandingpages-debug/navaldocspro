@@ -44,6 +44,9 @@ import { ProcessDocumentsPanel } from "@/components/process/ProcessDocumentsPane
 import { ClientPortalPanel } from "@/components/process/ClientPortalPanel";
 import { ProcessSignaturesPanel } from "@/components/process/ProcessSignaturesPanel";
 import { SignaturesStatusCard } from "@/components/process/SignaturesStatusCard";
+import { ProcessIdentityPanel } from "@/components/process/ProcessIdentityPanel";
+import { Palette } from "lucide-react";
+
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
@@ -365,7 +368,15 @@ function ProcessDetail() {
                    <TabsTrigger value="client_portal" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
                      <Link2 className="h-3 w-3" /> Portal Cliente
                    </TabsTrigger>
+                   <TabsTrigger value="identity" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                     <Palette className="h-3 w-3" /> Identidade
+                   </TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="identity" className="animate-in fade-in duration-300">
+                   <ProcessIdentityPanel processId={id} />
+                </TabsContent>
+
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
                   <SignaturesStatusCard processId={id} onOpen={() => setActiveTab("signatures")} />
