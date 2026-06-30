@@ -78,15 +78,14 @@ export const useFiles = (filters?: { customerId?: string; vesselId?: string; pro
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = `${profile.company_id}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file);
+      // Validate type & size before anything else
+      validateUpload(file);
 
-      if (uploadError) throw uploadError;
+      // Enforce Limits Engine (fail-closed on block, fail-open on infra error)
+      const allowed = await limitsEngine.enforce("upload_file", 1, profile.company_id);
+      if (!allowed) throw new Error("Limite de uploads atingido para o plano atual.");
 
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
+      await uploadToBucket(bucket, filePath, file);
 
       const { data, error } = await supabase
         .from("uploaded_files")
@@ -96,7 +95,8 @@ export const useFiles = (filters?: { customerId?: string; vesselId?: string; pro
           file_name: file.name,
           file_type: file.type,
           file_size: file.size,
-          file_url: publicUrl,
+          // Store storage-relative path (not a public URL). file-preview.ts handles both.
+          file_url: filePath,
           category,
           customer_id: customerId,
           vessel_id: vesselId,
@@ -107,6 +107,9 @@ export const useFiles = (filters?: { customerId?: string; vesselId?: string; pro
         .single();
 
       if (error) throw error;
+
+      // Record consumption (idempotent via request_id = uploaded_file id)
+      await limitsEngine.consume("upload_file", 1, { file_id: data.id, bucket }, data.id, profile.company_id);
 
       // Trigger automation engine if processId is present
       if (processId) {
