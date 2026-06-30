@@ -161,6 +161,8 @@ function DashboardLayout() {
       { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
       { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
       { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
+      { name: "Arquivados", icon: <Archive className="h-5 w-5" />, path: "/processes/archived" },
+      { name: "Lixeira", icon: <Trash2 className="h-5 w-5" />, path: "/processes/trash" },
     ]},
     { group: "Documentação", items: [
       { name: "Biblioteca", icon: <Database className="h-5 w-5" />, path: "/dashboard/document-center" },
