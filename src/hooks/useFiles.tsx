@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { DocumentAutomationEngine } from "@/services/automation/documentAutomationEngine";
+import { uploadToBucket, removeFromBucket, validateUpload } from "@/lib/storage";
+import { limitsEngine } from "@/services/limitsEngine";
 
 export interface UploadedFile {
   id: string;
