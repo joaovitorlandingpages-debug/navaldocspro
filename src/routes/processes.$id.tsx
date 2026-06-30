@@ -6,7 +6,7 @@ import {
   FileCheck, History, Info, Zap, Bot, Eye, Trash2,
   Image as ImageIcon, Send, Loader2, Target, Ban,
   FilePlus, RefreshCw, ChevronLeft, AlertTriangle,
-  Signature, FileSearch, Rocket, HelpCircle, Link2
+  Signature, FileSearch, Rocket, HelpCircle, Link2, Pencil
 } from "lucide-react";
 import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { PageHeader } from "@/components/navigation/PageHeader";
@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useFiles } from "@/hooks/useFiles";
 import { FileUploader } from "@/components/FileUploader";
@@ -45,10 +45,22 @@ import { ClientPortalPanel } from "@/components/process/ClientPortalPanel";
 import { ProcessSignaturesPanel } from "@/components/process/ProcessSignaturesPanel";
 import { SignaturesStatusCard } from "@/components/process/SignaturesStatusCard";
 import { ProcessIdentityPanel } from "@/components/process/ProcessIdentityPanel";
+import { ProcessTopBar } from "@/components/processes/ProcessTopBar";
+import { ProcessEditForm } from "@/components/processes/ProcessEditForm";
 import { Palette } from "lucide-react";
 
+const VALID_TABS = [
+  "overview","edit","requirements","documents","library_docs","ocr",
+  "generation","dossier_v2","history","signatures","protocol","client_portal","identity"
+] as const;
+type ProcessTab = typeof VALID_TABS[number];
 
 export const Route = createFileRoute("/processes/$id")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    tab: (typeof s.tab === "string" && (VALID_TABS as readonly string[]).includes(s.tab)
+      ? (s.tab as ProcessTab)
+      : ("overview" as ProcessTab)),
+  }),
   component: ProcessDetail,
 });
 
