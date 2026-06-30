@@ -2199,6 +2199,33 @@ export type Database = {
           },
         ]
       }
+      edge_rate_limits: {
+        Row: {
+          bucket: string
+          hits: number
+          id: string
+          subject: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          hits?: number
+          id?: string
+          subject: string
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          bucket?: string
+          hits?: number
+          id?: string
+          subject?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       enterprise_audit_logs: {
         Row: {
           action: string
@@ -6270,6 +6297,15 @@ export type Database = {
       process_trash: { Args: { p_id: string }; Returns: undefined }
       process_unarchive: { Args: { p_id: string }; Returns: undefined }
       purge_orphan_uploads: { Args: { p_older_than?: string }; Returns: Json }
+      rl_hit: {
+        Args: {
+          p_bucket: string
+          p_max: number
+          p_subject: string
+          p_window_seconds?: number
+        }
+        Returns: Json
+      }
       seed_demo_data: { Args: { p_company_id: string }; Returns: undefined }
       track_usage: {
         Args: {
