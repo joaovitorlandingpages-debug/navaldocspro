@@ -182,6 +182,32 @@ export function ProcessIdentityPanel({ processId }: Props) {
             </div>
           </div>
         )}
+        {mode === "customer" && (
+          <div className="mt-5 rounded-2xl border border-dashed border-slate-200 p-4 bg-slate-50/40">
+            <div className="flex items-center gap-4">
+              <div className="h-20 w-20 rounded-xl bg-white border border-slate-100 grid place-items-center overflow-hidden shrink-0">
+                {customerLogoUrl ? (
+                  <img src={customerLogoUrl} alt="Logo do cliente" className="max-h-full max-w-full object-contain" />
+                ) : (
+                  <ImageOff className="h-6 w-6 text-slate-300" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-navy">
+                  {customerName ? `Logo de ${customerName}` : "Logo do cliente"}
+                </p>
+                {customerLogoUrl ? (
+                  <p className="text-[11px] text-slate-500 mt-0.5">Será aplicado nos PDFs deste processo.</p>
+                ) : (
+                  <p className="text-[11px] text-amber-700 mt-0.5">
+                    Este cliente ainda não tem logo cadastrado. Cadastre em <strong>Clientes → Editar → Logo do Cliente</strong> ou os PDFs sairão sem logo.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {saving && (
           <div className="mt-4 text-[11px] text-slate-400 flex items-center gap-2">
