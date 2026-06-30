@@ -45,8 +45,7 @@ function Processes() {
     limit: null
   });
 
-  useEffect(() => {
-    const fetchProcesses = async () => {
+  const fetchProcesses = useCallback(async () => {
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setIsLoading(false); return; }
@@ -63,7 +62,9 @@ function Processes() {
         .from('processes')
         .select('*, customers(name), vessels(name)', { count: 'exact' })
         .eq('company_id', profile.company_id)
-        .is('deleted_at', null);
+        .is('deleted_at', null)
+        .is('archived_at', null)
+        .is('trashed_at', null);
 
       if (searchTerm) {
         const term = `%${searchTerm}%`;
@@ -91,11 +92,12 @@ function Processes() {
       if (count !== null) setTotalCount(count);
       if (error) console.error("Error fetching processes:", error);
       setIsLoading(false);
-    };
+  }, [page, searchTerm, statusFilter, priorityFilter, sort]);
 
+  useEffect(() => {
     const debounceTimer = setTimeout(fetchProcesses, 300);
     return () => clearTimeout(debounceTimer);
-  }, [page, searchTerm, statusFilter, priorityFilter, sort]);
+  }, [fetchProcesses]);
 
 
   const columns = [
