@@ -11,6 +11,7 @@ import { Loader2, Save } from "lucide-react";
 interface Props {
   process: any;
   onSaved?: () => void;
+  onCancel?: () => void;
 }
 
 const STATUSES = [
