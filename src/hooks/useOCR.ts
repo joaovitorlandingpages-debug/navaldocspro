@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DocumentAutomationEngine } from "@/services/automation/documentAutomationEngine";
+import { limitsEngine } from "@/services/limitsEngine";
 
 export interface OCRJob {
   id: string;
