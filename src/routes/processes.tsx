@@ -138,6 +138,19 @@ function Processes() {
               ))}
             </div>
 
+            <Link
+              to="/processes/archived"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-primary hover:border-primary/40"
+            >
+              <Archive className="h-3.5 w-3.5" /> Arquivados
+            </Link>
+            <Link
+              to="/processes/trash"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-red-600 hover:border-red-300"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Lixeira
+            </Link>
+
             <button
               onClick={async () => {
                 const limit = await checkLimit('processes');
