@@ -77,7 +77,7 @@ function ConsumoPage() {
                   <span className="text-muted-foreground">Hoje</span>
                   <span className="font-medium tabular-nums">{fmt(r.daily_used, r.daily_limit, r.unit)}</span>
                 </div>
-                <Progress value={dayPct} className={`h-2 [&>div]:${statusColor(r.percent_day)}`} />
+                <div className="h-2 w-full rounded-full bg-muted overflow-hidden"><div className={`h-full ${statusColor(r.percent_day)} transition-all`} style={{ width: `${dayPct}%` }} /></div>
               </div>
 
               <div className="space-y-2">
