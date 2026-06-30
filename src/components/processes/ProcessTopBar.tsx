@@ -40,7 +40,7 @@ function dueInfo(due?: string | null) {
   return { label: d.toLocaleDateString("pt-BR"), tone: "text-slate-500" };
 }
 
-export function ProcessTopBar({ process, onChanged }: Props) {
+export function ProcessTopBar({ process, onChanged, automationReady, onFinalize, onEdit }: Props) {
   if (!process) return null;
   const due = dueInfo(process.due_date);
   const progress = Math.max(0, Math.min(100, process.completion_percentage ?? 0));
