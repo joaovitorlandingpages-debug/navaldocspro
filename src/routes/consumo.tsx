@@ -85,7 +85,7 @@ function ConsumoPage() {
                   <span className="text-muted-foreground">Mês</span>
                   <span className="font-medium tabular-nums">{fmt(r.monthly_used, r.monthly_limit, r.unit)}</span>
                 </div>
-                <Progress value={monPct} className="h-2" indicatorClassName={statusColor(r.percent_month)} />
+                <div className="h-2 w-full rounded-full bg-muted overflow-hidden"><div className={`h-full ${statusColor(r.percent_month)} transition-all`} style={{ width: `${monPct}%` }} /></div>
               </div>
 
               <div className="pt-2 border-t flex items-center justify-between">
