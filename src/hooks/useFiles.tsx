@@ -138,13 +138,8 @@ export const useFiles = (filters?: { customerId?: string; vesselId?: string; pro
 
       if (!file) throw new Error("File not found");
 
-      // Extract bucket from file path or logic (simplified here)
-      // In a real app, you might want to store the bucket name in the table
       const bucket: FileBucket = file.category === 'cnh' || file.category === 'rg' ? 'customer-documents' : 'process-attachments';
-
-      const path = file.file_url.split('/').slice(-2).join('/'); // company_id/filename
-
-      await supabase.storage.from(bucket).remove([path]);
+      await removeFromBucket(bucket, file.file_url);
       
       const { error } = await supabase
         .from("uploaded_files")
