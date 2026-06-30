@@ -709,6 +709,13 @@ function ProcessDetail() {
             </div>
          </aside>
       </div>
+
+      <ProcessEditSheet
+        process={process}
+        open={editSheetOpen}
+        onOpenChange={setEditSheetOpen}
+        onSaved={fetchProcess}
+      />
     </div>
   );
 }
