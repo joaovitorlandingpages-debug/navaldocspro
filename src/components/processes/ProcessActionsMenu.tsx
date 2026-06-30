@@ -84,7 +84,7 @@ export function ProcessActionsMenu({ process, state, onChanged, trigger, align =
               <DropdownMenuItem onClick={() => goTab("generation")}>
                 <PlayCircle className="h-4 w-4 mr-2" /> Continuar
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => goTab("edit")}>
+              <DropdownMenuItem onClick={() => (onEdit ? onEdit() : goTab("edit"))}>
                 <Pencil className="h-4 w-4 mr-2" /> Editar
               </DropdownMenuItem>
 
