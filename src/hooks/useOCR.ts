@@ -66,8 +66,12 @@ export function useOCR(processId?: string) {
       docType: string;
     }) => {
       console.log("OCR_UPLOAD_OK", files.length);
+
+      // Enforce Limits Engine BEFORE creating jobs — fail-closed.
+      const allowed = await limitsEngine.enforce("ocr", files.length, companyId);
+      if (!allowed) throw new Error("Limite de OCR atingido para o plano atual.");
+
       const results = [];
-      
       for (const fileObj of files) {
         const { data, error } = await supabase
           .from("ocr_jobs")
@@ -81,14 +85,17 @@ export function useOCR(processId?: string) {
           .single();
 
         if (error) throw error;
-        
+
         console.log("OCR_PROCESSING_OK", data.id);
-        
+
+        // Consume 1 unit per accepted job (idempotent via request_id)
+        await limitsEngine.consume("ocr", 1, { job_id: data.id, doc_type: docType }, data.id, companyId);
+
         // Invoke edge function asynchronously
         supabase.functions.invoke('process-ocr-document', {
           body: { jobId: data.id }
         }).catch((err: any) => console.error("OCR Trigger Error:", err));
-        
+
         results.push(data);
       }
       return results;
