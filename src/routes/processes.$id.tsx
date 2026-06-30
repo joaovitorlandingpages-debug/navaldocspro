@@ -241,13 +241,7 @@ function ProcessDetail() {
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 
-  // Default events if none exist
-  if (timelineEvents.length === 0) {
-    timelineEvents.push(
-      { id: "1", type: "creation", user: "Ricardo Almeida", description: "Processo aberto no sistema.", date: process?.created_at || new Date().toISOString() },
-      { id: "2", type: "update", user: "Ricardo Almeida", description: "Cliente vinculado e embarcação selecionada.", date: process?.created_at || new Date().toISOString() }
-    );
-  }
+  // (Removido: eventos mock — a timeline reflete apenas eventos reais.)
 
   if (selectedTemplateForGen) {
     return (
