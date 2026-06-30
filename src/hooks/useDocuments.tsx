@@ -127,17 +127,9 @@ export const useDocuments = () => {
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${profile.company_id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from("generated-documents")
-          .upload(filePath, doc.file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from("generated-documents")
-          .getPublicUrl(filePath);
-        
-        fileUrl = publicUrl;
+        const { uploadToBucket } = await import("@/lib/storage");
+        await uploadToBucket("generated-documents", filePath, doc.file);
+        fileUrl = filePath; // store path; signed URL is generated on read
       }
 
       const { data, error } = await supabase
