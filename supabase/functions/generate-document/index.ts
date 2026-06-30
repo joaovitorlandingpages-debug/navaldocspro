@@ -429,8 +429,9 @@ serve(async (req) => {
     return new Response(JSON.stringify({ success: true, document: generatedDoc, url: generatedPath, verificationCode }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 })
 
   } catch (error) {
+    if (error instanceof HttpError) return jsonResponse(error.body, error.status)
     console.error("Function error:", error)
-    return new Response(JSON.stringify({ success: false, error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 })
+    return new Response(JSON.stringify({ success: false, error: (error as any)?.message || String(error) }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 })
   }
 })
 
