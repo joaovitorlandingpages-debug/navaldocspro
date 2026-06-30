@@ -88,18 +88,20 @@ function parseTieFields(rawText: string, current: Record<string, any>): Record<s
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-  )
-
   let jobId: string | undefined
   const startedAt = Date.now()
+  let supabase: ReturnType<typeof createClient>
 
   try {
+    // 1) Auth + rate limit
+    const ctx = await authContext(req)
+    supabase = ctx.admin
+    await rateLimit(ctx.admin, `user:${ctx.userId}`, 'process-ocr-document', 20, 60)
+    if (ctx.companyId) await rateLimit(ctx.admin, `company:${ctx.companyId}`, 'process-ocr-document', 60, 60)
+
     const body = await req.json()
     jobId = body.jobId
-    if (!jobId) throw new Error('jobId required')
+    if (!jobId) throw new HttpError(400, { error: 'jobId required' })
 
     console.log('[OCR_UPLOAD_STARTED]', jobId)
 
@@ -108,13 +110,22 @@ serve(async (req) => {
       .select('*, uploaded_files(*)')
       .eq('id', jobId)
       .single()
-    if (jobError || !job) throw new Error('Job not found: ' + jobError?.message)
+    if (jobError || !job) throw new HttpError(404, { error: 'job_not_found', detail: jobError?.message })
+
+    // 2) Cross-check tenant — never trust payload
+    ctx.requireCompany(job.company_id)
+
+    // 3) Enforce OCR limit before incurring cost (idempotent per jobId)
+    if (job.company_id) {
+      await consume(ctx.admin, job.company_id, 'ocr', 1, `ocr:${jobId}`, { jobId })
+    }
 
     await supabase.from('ocr_jobs').update({
       status: 'processing',
       provider_used: 'Lovable AI / google/gemini-2.5-flash',
       updated_at: new Date().toISOString(),
     }).eq('id', jobId)
+
 
     const file = job.uploaded_files
     if (!file) throw new Error('Uploaded file record missing')
