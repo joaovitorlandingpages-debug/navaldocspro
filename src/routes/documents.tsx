@@ -120,9 +120,9 @@ function Documents() {
   const allDocs = generatedDocuments || [];
 
   // Unique filter options
-  const customers = useMemo(() => Array.from(new Map(allDocs.filter((d: any) => d.customer?.name).map((d: any) => [d.customer_id, d.customer.name])).entries()), [allDocs]);
-  const vessels = useMemo(() => Array.from(new Map(allDocs.filter((d: any) => d.vessel?.name).map((d: any) => [d.vessel_id, d.vessel.name])).entries()), [allDocs]);
-  const templates = useMemo(() => Array.from(new Map(allDocs.filter((d: any) => d.template?.name).map((d: any) => [d.template_id, d.template.name])).entries()), [allDocs]);
+  const customers = useMemo<[string, string][]>(() => Array.from(new Map(allDocs.filter((d: any) => d.customer?.name).map((d: any) => [String(d.customer_id), String(d.customer.name)] as [string, string])).entries()), [allDocs]);
+  const vessels = useMemo<[string, string][]>(() => Array.from(new Map(allDocs.filter((d: any) => d.vessel?.name).map((d: any) => [String(d.vessel_id), String(d.vessel.name)] as [string, string])).entries()), [allDocs]);
+  const templates = useMemo<[string, string][]>(() => Array.from(new Map(allDocs.filter((d: any) => d.template?.name).map((d: any) => [String(d.template_id), String(d.template.name)] as [string, string])).entries()), [allDocs]);
   const categories = ["all", ...(officialCategories?.map((c: any) => c.name) || [])];
 
   const filtered = useMemo(() => {
