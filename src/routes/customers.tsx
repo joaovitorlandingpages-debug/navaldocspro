@@ -290,6 +290,64 @@ function Customers() {
     }
   };
 
+  const [logoUploading, setLogoUploading] = useState(false);
+  const handleCustomerLogoUpload = async (file: File) => {
+    if (!selectedCustomer || !companyId) return;
+    const okTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
+    if (!okTypes.includes(file.type)) {
+      toast.error("Use PNG, JPG, WEBP ou SVG.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Máximo 5MB.");
+      return;
+    }
+    setLogoUploading(true);
+    const loadingToast = toast.loading("Enviando logo...");
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const path = `${companyId}/customers/${selectedCustomer.id}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("company-logos")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("company-logos").getPublicUrl(path);
+      const publicUrl = pub.publicUrl;
+      const { error: updErr } = await supabase
+        .from("customers")
+        .update({ logo_url: publicUrl } as any)
+        .eq("id", selectedCustomer.id);
+      if (updErr) throw updErr;
+      setSelectedCustomer({ ...selectedCustomer, logo_url: publicUrl });
+      setCustomers((prev) => prev.map((c) => (c.id === selectedCustomer.id ? { ...c, logo_url: publicUrl } : c)));
+      toast.dismiss(loadingToast);
+      toast.success("Logo do cliente atualizado.");
+    } catch (err: any) {
+      toast.dismiss(loadingToast);
+      toast.error(err?.message || "Falha ao enviar logo.");
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  const handleCustomerLogoRemove = async () => {
+    if (!selectedCustomer) return;
+    if (!confirm("Remover o logo deste cliente?")) return;
+    try {
+      const { error } = await supabase
+        .from("customers")
+        .update({ logo_url: null } as any)
+        .eq("id", selectedCustomer.id);
+      if (error) throw error;
+      setSelectedCustomer({ ...selectedCustomer, logo_url: null });
+      setCustomers((prev) => prev.map((c) => (c.id === selectedCustomer.id ? { ...c, logo_url: null } : c)));
+      toast.success("Logo removido.");
+    } catch (err: any) {
+      toast.error(err?.message || "Falha ao remover logo.");
+    }
+  };
+
+
   const handleDeleteCustomer = async () => {
     if (!selectedCustomer) return;
     if (!confirm(`Tem certeza que deseja excluir o cliente "${selectedCustomer.name}"? Esta ação não pode ser desfeita.`)) return;
