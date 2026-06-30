@@ -28,16 +28,17 @@ Regras: use null quando ausente; nunca invente; "confidence" reflete a qualidade
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-  );
-
   let uploadId: string | undefined;
+  let supabase: ReturnType<typeof createClient>;
   try {
+    const ctx = await authContext(req);
+    supabase = ctx.admin;
+    await rateLimit(ctx.admin, `user:${ctx.userId}`, "process-document-ocr", 20, 60);
+    if (ctx.companyId) await rateLimit(ctx.admin, `company:${ctx.companyId}`, "process-document-ocr", 60, 60);
+
     const body = await req.json();
     uploadId = body.uploadId;
-    if (!uploadId) throw new Error("uploadId required");
+    if (!uploadId) throw new HttpError(400, { error: "uploadId required" });
 
     console.log("[process_document_ocr_started]", uploadId);
 
@@ -46,7 +47,14 @@ serve(async (req) => {
       .select("*")
       .eq("id", uploadId)
       .single();
-    if (upErr || !upload) throw new Error("upload not found: " + upErr?.message);
+    if (upErr || !upload) throw new HttpError(404, { error: "upload_not_found", detail: upErr?.message });
+
+    ctx.requireCompany(upload.company_id);
+
+    if (upload.company_id) {
+      await consume(ctx.admin, upload.company_id, "ocr", 1, `pdu:${uploadId}`, { uploadId });
+    }
+
 
     await supabase
       .from("process_document_uploads")
