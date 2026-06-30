@@ -4149,6 +4149,7 @@ export type Database = {
       }
       processes: {
         Row: {
+          archived_at: string | null
           automation_level: number | null
           automation_metadata: Json | null
           automation_status: string | null
@@ -4188,6 +4189,7 @@ export type Database = {
           protocol_number: string | null
           responsible_id: string | null
           seller_id: string | null
+          share_token: string | null
           sla_deadline: string | null
           sla_limit_at: string | null
           sla_status: string | null
@@ -4198,11 +4200,13 @@ export type Database = {
           target_completion_at: string | null
           technical_manager_id: string | null
           title: string | null
+          trashed_at: string | null
           updated_at: string
           validation_errors: Json | null
           vessel_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           automation_level?: number | null
           automation_metadata?: Json | null
           automation_status?: string | null
@@ -4242,6 +4246,7 @@ export type Database = {
           protocol_number?: string | null
           responsible_id?: string | null
           seller_id?: string | null
+          share_token?: string | null
           sla_deadline?: string | null
           sla_limit_at?: string | null
           sla_status?: string | null
@@ -4252,11 +4257,13 @@ export type Database = {
           target_completion_at?: string | null
           technical_manager_id?: string | null
           title?: string | null
+          trashed_at?: string | null
           updated_at?: string
           validation_errors?: Json | null
           vessel_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           automation_level?: number | null
           automation_metadata?: Json | null
           automation_status?: string | null
@@ -4296,6 +4303,7 @@ export type Database = {
           protocol_number?: string | null
           responsible_id?: string | null
           seller_id?: string | null
+          share_token?: string | null
           sla_deadline?: string | null
           sla_limit_at?: string | null
           sla_status?: string | null
@@ -4306,6 +4314,7 @@ export type Database = {
           target_completion_at?: string | null
           technical_manager_id?: string | null
           title?: string | null
+          trashed_at?: string | null
           updated_at?: string
           validation_errors?: Json | null
           vessel_id?: string | null
@@ -5998,6 +6007,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _assert_process_access: { Args: { p_id: string }; Returns: string }
+      active_processes_count: {
+        Args: { p_company_id: string }
+        Returns: number
+      }
       company_can_perform: {
         Args: { p_action: string; p_company_id: string }
         Returns: Json
@@ -6032,6 +6046,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      process_archive: { Args: { p_id: string }; Returns: undefined }
+      process_duplicate: { Args: { p_id: string }; Returns: string }
+      process_get_share_token: { Args: { p_id: string }; Returns: string }
+      process_hard_delete: {
+        Args: { p_confirmation: string; p_id: string }
+        Returns: undefined
+      }
+      process_restore: { Args: { p_id: string }; Returns: undefined }
+      process_toggle_favorite: { Args: { p_id: string }; Returns: boolean }
+      process_trash: { Args: { p_id: string }; Returns: undefined }
+      process_unarchive: { Args: { p_id: string }; Returns: undefined }
       seed_demo_data: { Args: { p_company_id: string }; Returns: undefined }
       track_usage: {
         Args: {
