@@ -589,6 +589,12 @@ function CrmGrid({
                   Abrir
                 </Link>
                 <Link
+                  to="/processes/$id" params={{ id: p.id }} search={{ tab: "edit" }}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 hover:text-primary hover:bg-white border border-slate-200 bg-white transition-colors"
+                >
+                  Editar
+                </Link>
+                <Link
                   to="/processes/$id" params={{ id: p.id }} search={{ tab: "generation" }}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white bg-primary hover:opacity-90 transition-opacity"
                 >
