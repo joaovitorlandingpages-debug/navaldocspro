@@ -20,7 +20,8 @@ export const Route = createFileRoute("/processes")({
 });
 
 function Processes() {
-  const [view, setView] = useState<"list" | "kanban">("kanban");
+  const [view, setView] = useState<"crm" | "kanban" | "list">("crm");
+
   const [processes, setProcesses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
