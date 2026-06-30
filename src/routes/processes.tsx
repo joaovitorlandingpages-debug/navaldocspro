@@ -623,6 +623,13 @@ function CrmGrid({
         <Plus className="h-6 w-6" />
         <span className="text-[10px] font-bold uppercase tracking-wider">Novo Processo</span>
       </button>
+
+      <ProcessEditSheet
+        process={editing ?? undefined}
+        open={!!editing}
+        onOpenChange={(o) => { if (!o) setEditing(null); }}
+        onSaved={() => onChanged?.()}
+      />
     </div>
   );
 }
