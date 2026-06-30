@@ -478,6 +478,7 @@ function CrmGrid({
   onChanged?: () => void;
 }) {
   const navigate = useNavigate();
+  const [editing, setEditing] = useState<any>(null);
   const goToTab = (pid: string, tab: string) =>
     navigate({ to: "/processes/$id", params: { id: pid }, search: { tab } as any });
 
