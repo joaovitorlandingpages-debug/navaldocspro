@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronLeft, User, Ship, Calendar, Star } from "lucide-react";
+import { ChevronLeft, User, Ship, Calendar, Star, Pencil, CheckCircle2, Ban } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ProcessActionsMenu } from "./ProcessActionsMenu";
@@ -9,6 +9,9 @@ import { toggleFavoriteProcess, copyShareLink } from "@/services/processLifecycl
 interface Props {
   process: any;
   onChanged?: () => void;
+  automationReady?: boolean;
+  onFinalize?: () => void;
+  onEdit?: () => void;
 }
 
 function statusLabel(status?: string | null) {
