@@ -111,6 +111,7 @@ serve(async (req) => {
     );
 
   } catch (error: any) {
+    if (error instanceof HttpError) return jsonResponse(error.body, error.status);
     console.error("Error creating checkout:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
