@@ -181,7 +181,17 @@ function wrapText(text: string, font: PDFFont, size: number, maxWidth: number) {
   return lines;
 }
 
-async function buildConsolidatedPdf(b: Bundle, dossierNumber: string, code: string) {
+async function fetchLogoBytes(url: string): Promise<{ bytes: Uint8Array; isPng: boolean } | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const buf = new Uint8Array(await res.arrayBuffer());
+    const isPng = buf[0] === 0x89 && buf[1] === 0x50;
+    return { bytes: buf, isPng };
+  } catch { return null; }
+}
+
+async function buildConsolidatedPdf(b: Bundle, dossierNumber: string, code: string, logoUrl?: string | null) {
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -225,30 +235,32 @@ async function buildConsolidatedPdf(b: Bundle, dossierNumber: string, code: stri
     y -= 12;
   };
 
-  // Cover
+  // Cover (with optional process-level logo)
   page.drawRectangle({ x: 0, y: 742, width: 595, height: 100, color: navy });
+  if (logoUrl) {
+    const fetched = await fetchLogoBytes(logoUrl);
+    if (fetched) {
+      try {
+        const img = fetched.isPng ? await pdf.embedPng(fetched.bytes) : await pdf.embedJpg(fetched.bytes);
+        const maxH = 60;
+        const ratio = img.width / img.height;
+        const h = maxH;
+        const w = h * ratio;
+        page.drawImage(img, { x: 595 - margin - w, y: 762, width: w, height: h });
+      } catch { /* ignore broken logo */ }
+    }
+  }
   page.drawText("DOSSIÊ FINAL DE PROCESSO", {
-    x: margin,
-    y: 800,
-    size: 18,
-    font: bold,
-    color: rgb(1, 1, 1),
+    x: margin, y: 800, size: 18, font: bold, color: rgb(1, 1, 1),
   });
   page.drawText(`Nº ${dossierNumber}`, {
-    x: margin,
-    y: 775,
-    size: 11,
-    font,
-    color: rgb(0.85, 0.88, 0.95),
+    x: margin, y: 775, size: 11, font, color: rgb(0.85, 0.88, 0.95),
   });
   page.drawText(`Verificação: ${code}`, {
-    x: margin,
-    y: 758,
-    size: 9,
-    font,
-    color: rgb(0.85, 0.88, 0.95),
+    x: margin, y: 758, size: 9, font, color: rgb(0.85, 0.88, 0.95),
   });
   y = 720;
+
 
   heading("Processo");
   line(`Tipo: ${b.process.process_type || "—"}`);
@@ -468,7 +480,10 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
 
       await logEvent("process_dossier_generation_started", processId, { dossierNumber });
 
-      const consolidated = await buildConsolidatedPdf(bundle, dossierNumber, code);
+      const { loadProcessBranding } = await import("@/services/companyBranding");
+      const branding = await loadProcessBranding(processId).catch(() => null);
+      const consolidated = await buildConsolidatedPdf(bundle, dossierNumber, code, branding?.logo_primary_url ?? null);
+
       const pdfPath = `${companyId}/${processId}/${dossierNumber}.pdf`;
       const up1 = await supabase.storage
         .from("process-dossiers")

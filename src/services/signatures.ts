@@ -267,6 +267,18 @@ export const signaturesService = {
         const { data: company } = await supabase
           .from("companies").select("name, logo_url").eq("id", participant.company_id).maybeSingle();
 
+        // Process-level branding overrides company logo when the signature belongs to a process.
+        let effectiveCompany: any = company;
+        if (request.process_id) {
+          try {
+            const { loadProcessBranding } = await import("./companyBranding");
+            const pb = await loadProcessBranding(request.process_id);
+            if (pb) {
+              effectiveCompany = { name: (company as any)?.name, logo_url: pb.logo_primary_url ?? null };
+            }
+          } catch { /* fallback to company */ }
+        }
+
         const mod = await import("./signedDocumentBuilder");
         const built = await mod.buildSignedDocumentArtifacts({
           companyId: participant.company_id,
@@ -277,8 +289,9 @@ export const signaturesService = {
           participants: allParts ?? [],
           events: evs ?? [],
           process: processInfo,
-          company: company as any,
+          company: effectiveCompany,
         });
+
         await supabase.from("signature_requests").update({
           final_signed_pdf_url: built.signedPdfUrl,
           evidence_certificate_url: built.certificatePdfUrl,
