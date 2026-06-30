@@ -47,6 +47,7 @@ import { SignaturesStatusCard } from "@/components/process/SignaturesStatusCard"
 import { ProcessIdentityPanel } from "@/components/process/ProcessIdentityPanel";
 import { ProcessTopBar } from "@/components/processes/ProcessTopBar";
 import { ProcessEditForm } from "@/components/processes/ProcessEditForm";
+import { ProcessEditSheet } from "@/components/processes/ProcessEditSheet";
 import { Palette } from "lucide-react";
 
 const VALID_TABS = [
