@@ -342,6 +342,9 @@ function ProcessDetail() {
                 <TabsContent value="identity" className="animate-in fade-in duration-300">
                    <ProcessIdentityPanel processId={id} />
                 </TabsContent>
+                <TabsContent value="edit" className="animate-in fade-in duration-300">
+                   <ProcessEditForm process={process} onSaved={fetchProcess} onCancel={() => setActiveTab("overview")} />
+                </TabsContent>
 
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
