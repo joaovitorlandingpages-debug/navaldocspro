@@ -45,7 +45,7 @@ function deriveState(p: Props["process"]): ProcessLifecycleState {
   return "active";
 }
 
-export function ProcessActionsMenu({ process, state, onChanged, trigger, align = "end" }: Props) {
+export function ProcessActionsMenu({ process, state, onChanged, trigger, align = "end", onEdit }: Props) {
   const navigate = useNavigate();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const s = state ?? deriveState(process);
