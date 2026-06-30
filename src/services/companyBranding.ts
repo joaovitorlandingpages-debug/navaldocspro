@@ -101,3 +101,45 @@ export async function loadCompanyBranding(companyId: string): Promise<CompanyBra
     pdf_template: (row.pdf_template as PdfTemplateId) || "classico",
   };
 }
+
+export type ProcessBrandingMode = "none" | "company" | "customer" | "custom";
+
+/**
+ * Loads the effective branding for a given process, respecting per-process
+ * identity overrides (none / company / customer / custom upload). The result
+ * is a CompanyBranding shape with the logo_primary_url overridden when the
+ * process specifies its own logo, so downstream PDF generators don't need
+ * to know about the process-level identity model.
+ */
+export async function loadProcessBranding(processId: string): Promise<CompanyBranding | null> {
+  const { data: proc, error } = await supabase
+    .from("processes")
+    .select("company_id, customer_id, branding_mode, branding_logo_url")
+    .eq("id", processId)
+    .maybeSingle();
+  if (error || !proc?.company_id) return null;
+
+  const base = await loadCompanyBranding(proc.company_id);
+  if (!base) return null;
+
+  const mode = (proc.branding_mode as ProcessBrandingMode | null) || "company";
+
+  if (mode === "none") {
+    return { ...base, logo_primary_url: null, logo_secondary_url: null };
+  }
+  if (mode === "custom" && proc.branding_logo_url) {
+    return { ...base, logo_primary_url: proc.branding_logo_url };
+  }
+  if (mode === "customer" && proc.customer_id) {
+    const { data: customer } = await supabase
+      .from("customers")
+      .select("logo_url")
+      .eq("id", proc.customer_id)
+      .maybeSingle();
+    const customerLogo = (customer as any)?.logo_url || null;
+    if (customerLogo) return { ...base, logo_primary_url: customerLogo };
+  }
+  // fallback: company branding as-is
+  return base;
+}
+
