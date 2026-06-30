@@ -3,11 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { PDFDocument, rgb, StandardFonts, degrees } from "https://esm.sh/pdf-lib"
 import docxtemplater from "https://esm.sh/docxtemplater"
 import PizZip from "https://esm.sh/pizzip"
+import { authContext, rateLimit, consume, jsonResponse, corsHeaders, HttpError, clientIp } from "../_shared/auth.ts"
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
 
 type Branding = {
   company_name: string
