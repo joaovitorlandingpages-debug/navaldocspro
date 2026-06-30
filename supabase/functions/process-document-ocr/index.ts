@@ -130,8 +130,9 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
+    if (e instanceof HttpError) return jsonResponse(e.body, e.status);
     console.error("[process_document_ocr_failed]", uploadId, e?.message);
-    if (uploadId) {
+    if (uploadId && supabase!) {
       await supabase
         .from("process_document_uploads")
         .update({
