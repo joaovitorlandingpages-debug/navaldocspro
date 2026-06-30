@@ -7,7 +7,7 @@ import {
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
   Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft,
   Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight, Signature, Lock,
-  Globe, Award, Verified, LayoutTemplate, UserCircle
+  Globe, Award, Verified, LayoutTemplate, UserCircle, Archive, Trash2
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
