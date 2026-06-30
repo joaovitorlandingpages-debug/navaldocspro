@@ -97,19 +97,26 @@ function Processes() {
         actions={
           <div className="flex flex-wrap gap-3 w-full sm:w-auto">
             <div className="bg-slate-100 p-1 rounded-2xl flex border border-slate-200">
-              <button 
+              <button
+                onClick={() => setView("crm")}
+                className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'crm' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
+              >
+                CRM
+              </button>
+              <button
                 onClick={() => setView("kanban")}
-                className={`px-5 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'kanban' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
+                className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'kanban' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
               >
                 Kanban
               </button>
-              <button 
+              <button
                 onClick={() => setView("list")}
-                className={`px-5 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'list' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
+                className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'list' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
               >
                 Lista
               </button>
             </div>
+
             <button 
               onClick={async () => {
                 const limit = await checkLimit('processes');
