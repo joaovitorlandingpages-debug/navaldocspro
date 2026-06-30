@@ -4149,6 +4149,8 @@ export type Database = {
           automation_level: number | null
           automation_metadata: Json | null
           automation_status: string | null
+          branding_logo_url: string | null
+          branding_mode: string | null
           buyer_id: string | null
           company_id: string
           completed_at: string | null
@@ -4201,6 +4203,8 @@ export type Database = {
           automation_level?: number | null
           automation_metadata?: Json | null
           automation_status?: string | null
+          branding_logo_url?: string | null
+          branding_mode?: string | null
           buyer_id?: string | null
           company_id: string
           completed_at?: string | null
@@ -4253,6 +4257,8 @@ export type Database = {
           automation_level?: number | null
           automation_metadata?: Json | null
           automation_status?: string | null
+          branding_logo_url?: string | null
+          branding_mode?: string | null
           buyer_id?: string | null
           company_id?: string
           completed_at?: string | null
