@@ -24,22 +24,34 @@ export function ProcessIdentityPanel({ processId }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [customerLogoUrl, setCustomerLogoUrl] = useState<string | null>(null);
+  const [customerName, setCustomerName] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
       const { data } = await supabase
         .from("processes")
-        .select("branding_mode, branding_logo_url")
+        .select("branding_mode, branding_logo_url, customer_id")
         .eq("id", processId)
         .maybeSingle();
       if (data) {
         setMode((data.branding_mode as ProcessBrandingMode) || "company");
         setLogoUrl(data.branding_logo_url || null);
+        if (data.customer_id) {
+          const { data: cust } = await supabase
+            .from("customers")
+            .select("name, logo_url")
+            .eq("id", data.customer_id)
+            .maybeSingle();
+          setCustomerName((cust as any)?.name || null);
+          setCustomerLogoUrl((cust as any)?.logo_url || null);
+        }
       }
       setLoading(false);
     })();
   }, [processId]);
+
 
   async function persist(nextMode: ProcessBrandingMode, nextLogo: string | null) {
     setSaving(true);
