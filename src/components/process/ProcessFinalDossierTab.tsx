@@ -480,7 +480,10 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
 
       await logEvent("process_dossier_generation_started", processId, { dossierNumber });
 
-      const consolidated = await buildConsolidatedPdf(bundle, dossierNumber, code);
+      const { loadProcessBranding } = await import("@/services/companyBranding");
+      const branding = await loadProcessBranding(processId).catch(() => null);
+      const consolidated = await buildConsolidatedPdf(bundle, dossierNumber, code, branding?.logo_primary_url ?? null);
+
       const pdfPath = `${companyId}/${processId}/${dossierNumber}.pdf`;
       const up1 = await supabase.storage
         .from("process-dossiers")
