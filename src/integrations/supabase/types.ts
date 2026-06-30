@@ -5859,6 +5859,7 @@ export type Database = {
           created_at: string
           customer_id: string | null
           deleted_at: string | null
+          discarded_at: string | null
           expiry_date: string | null
           extracted_data: Json | null
           file_name: string
@@ -5880,6 +5881,7 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           deleted_at?: string | null
+          discarded_at?: string | null
           expiry_date?: string | null
           extracted_data?: Json | null
           file_name: string
@@ -5901,6 +5903,7 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           deleted_at?: string | null
+          discarded_at?: string | null
           expiry_date?: string | null
           extracted_data?: Json | null
           file_name?: string
@@ -6266,6 +6269,7 @@ export type Database = {
       process_toggle_favorite: { Args: { p_id: string }; Returns: boolean }
       process_trash: { Args: { p_id: string }; Returns: undefined }
       process_unarchive: { Args: { p_id: string }; Returns: undefined }
+      purge_orphan_uploads: { Args: { p_older_than?: string }; Returns: Json }
       seed_demo_data: { Args: { p_company_id: string }; Returns: undefined }
       track_usage: {
         Args: {

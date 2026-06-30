@@ -48,6 +48,10 @@ export const signaturesService = {
     participants: (SignatureParticipantInput & { customer_id?: string })[];
     created_by?: string;
   }) {
+    const { limitsEngine } = await import("@/services/limitsEngine");
+    const allowed = await limitsEngine.enforce("signature_request", 1, payload.company_id);
+    if (!allowed) throw new Error("Limite de solicitações de assinatura atingido para o plano atual.");
+
     const { data: req, error } = await supabase
       .from("signature_requests")
       .insert({
@@ -91,6 +95,10 @@ export const signaturesService = {
       event_type: "request_created",
       event_message: `Solicitação "${payload.title}" criada com ${parts.length} participante(s).`,
     });
+
+    try {
+      await limitsEngine.consume("signature_request", 1, { request_id: req.id, participants: rows.length }, req.id, payload.company_id);
+    } catch (e) { console.warn("[SIGNATURE_CONSUME_FAIL]", e); }
 
     return { request: req, participants: parts };
   },

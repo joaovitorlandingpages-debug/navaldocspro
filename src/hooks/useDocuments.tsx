@@ -127,17 +127,9 @@ export const useDocuments = () => {
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${profile.company_id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from("generated-documents")
-          .upload(filePath, doc.file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from("generated-documents")
-          .getPublicUrl(filePath);
-        
-        fileUrl = publicUrl;
+        const { uploadToBucket } = await import("@/lib/storage");
+        await uploadToBucket("generated-documents", filePath, doc.file);
+        fileUrl = filePath; // store path; signed URL is generated on read
       }
 
       const { data, error } = await supabase
@@ -190,11 +182,16 @@ export const useDocuments = () => {
       processId?: string;
       fieldValues: Record<string, any>;
     }) => {
+      const { limitsEngine } = await import("@/services/limitsEngine");
+      const allowed = await limitsEngine.enforce("pdf_generation", 1, payload.companyId);
+      if (!allowed) throw new Error("Limite de geração de documentos atingido para o plano atual.");
+
       const { data, error } = await supabase.functions.invoke("generate-document", {
         body: payload,
       });
 
       if (error) throw error;
+      await limitsEngine.consume("pdf_generation", 1, { template_id: payload.templateId, process_id: payload.processId }, undefined, payload.companyId);
       return data;
     },
     onSuccess: () => {
@@ -225,17 +222,9 @@ export const useDocuments = () => {
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${profile.company_id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from("document-templates")
-          .upload(filePath, template.file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from("document-templates")
-          .getPublicUrl(filePath);
-        
-        fileUrl = publicUrl;
+        const { uploadToBucket } = await import("@/lib/storage");
+        await uploadToBucket("document-templates", filePath, template.file);
+        fileUrl = filePath;
       }
 
       const { data, error } = await supabase

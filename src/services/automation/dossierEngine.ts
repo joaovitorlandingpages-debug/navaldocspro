@@ -73,6 +73,10 @@ export const dossierEngine = {
 
   async generateDossier(processId: string, companyId: string) {
     try {
+      const { limitsEngine } = await import("@/services/limitsEngine");
+      const allowed = await limitsEngine.enforce("dossier_export", 1, companyId);
+      if (!allowed) throw new Error("Limite de dossiês atingido para o plano atual.");
+
       const { data: existingDossier } = await supabase
         .from('process_dossiers')
         .select('version')
@@ -121,6 +125,12 @@ export const dossierEngine = {
           }
         })
         .eq('id', dossier.id);
+
+      // Record successful consumption (idempotent by dossier id)
+      try {
+        const { limitsEngine } = await import("@/services/limitsEngine");
+        await limitsEngine.consume("dossier_export", 1, { process_id: processId, version: nextVersion }, dossier.id, companyId);
+      } catch (e) { console.warn("[DOSSIER_CONSUME_FAIL]", e); }
 
       // Mark technical checklist as done
       await supabase

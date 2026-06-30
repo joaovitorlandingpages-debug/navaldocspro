@@ -63,10 +63,11 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
       setEditedData(data.extracted_data);
 
       if (data.uploaded_files?.file_path) {
-        const { data: urlData } = await supabase.storage
-          .from('ocr-documents')
-          .getPublicUrl(data.uploaded_files.file_path);
-        setFileUrl(urlData.publicUrl);
+        const { signedUrl } = await import("@/lib/storage");
+        try {
+          const url = await signedUrl("ocr-documents", data.uploaded_files.file_path, 300);
+          setFileUrl(url);
+        } catch (e) { console.warn("[OCR_REVIEW_SIGNED_URL_FAIL]", e); }
       }
     } catch (error: any) {
       toast.error("Erro ao carregar detalhes: " + error.message);
