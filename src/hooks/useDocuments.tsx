@@ -182,11 +182,16 @@ export const useDocuments = () => {
       processId?: string;
       fieldValues: Record<string, any>;
     }) => {
+      const { limitsEngine } = await import("@/services/limitsEngine");
+      const allowed = await limitsEngine.enforce("pdf_generation", 1, payload.companyId);
+      if (!allowed) throw new Error("Limite de geração de documentos atingido para o plano atual.");
+
       const { data, error } = await supabase.functions.invoke("generate-document", {
         body: payload,
       });
 
       if (error) throw error;
+      await limitsEngine.consume("pdf_generation", 1, { template_id: payload.templateId, process_id: payload.processId }, undefined, payload.companyId);
       return data;
     },
     onSuccess: () => {
