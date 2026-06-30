@@ -126,6 +126,12 @@ export const dossierEngine = {
         })
         .eq('id', dossier.id);
 
+      // Record successful consumption (idempotent by dossier id)
+      try {
+        const { limitsEngine } = await import("@/services/limitsEngine");
+        await limitsEngine.consume("dossier_export", 1, { process_id: processId, version: nextVersion }, dossier.id, companyId);
+      } catch (e) { console.warn("[DOSSIER_CONSUME_FAIL]", e); }
+
       // Mark technical checklist as done
       await supabase
         .from('processes')
