@@ -526,13 +526,7 @@ function CrmGrid({
                     <p className="text-[10px] font-bold text-slate-400 mt-1 truncate">Protocolo {p.protocol_number}</p>
                   )}
                 </div>
-                <Link
-                  to="/processes/$id" params={{ id: p.id }}
-                  className="shrink-0 p-1.5 rounded-lg text-slate-300 hover:text-primary hover:bg-primary/5"
-                  title="Mais"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Link>
+                <ProcessActionsMenu process={p} onChanged={onChanged} />
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-[11px] font-bold text-slate-600 border-y border-slate-50 py-3">
