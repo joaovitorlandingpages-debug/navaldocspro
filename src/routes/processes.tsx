@@ -578,28 +578,35 @@ function CrmGrid({
 
             <div className="px-5 sm:px-6 py-3 border-t border-slate-50 bg-slate-50/40 flex items-center justify-between gap-2 flex-wrap">
               <Link
-                to="/processes/$id" params={{ id: p.id }}
+                to="/processes/$id" params={{ id: p.id }} search={{ tab: "overview" }}
                 className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-primary"
               >
                 Abrir <ArrowRight className="h-3 w-3" />
               </Link>
               <div className="flex items-center gap-1">
                 <Link
-                  to="/processes/$id" params={{ id: p.id }}
+                  to="/processes/$id" params={{ id: p.id }} search={{ tab: "signatures" }}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary hover:bg-white border border-transparent hover:border-slate-200"
                   title="Assinaturas"
                 >
                   <FileSignature className="h-3 w-3" /> Assinaturas
                 </Link>
                 <Link
-                  to="/processes/$id" params={{ id: p.id }}
+                  to="/processes/$id" params={{ id: p.id }} search={{ tab: "dossier_v2" }}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary hover:bg-white border border-transparent hover:border-slate-200"
                   title="Dossiê"
                 >
                   <FolderArchive className="h-3 w-3" /> Dossiê
                 </Link>
                 <Link
-                  to="/processes/$id" params={{ id: p.id }}
+                  to="/processes/$id" params={{ id: p.id }} search={{ tab: "history" }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary hover:bg-white border border-transparent hover:border-slate-200"
+                  title="Timeline"
+                >
+                  <Clock className="h-3 w-3" /> Timeline
+                </Link>
+                <Link
+                  to="/processes/$id" params={{ id: p.id }} search={{ tab: "generation" }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-white bg-primary hover:opacity-90"
                 >
                   Continuar
