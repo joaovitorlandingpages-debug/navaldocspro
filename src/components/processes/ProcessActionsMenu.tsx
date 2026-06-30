@@ -35,6 +35,8 @@ interface Props {
   onChanged?: () => void;
   trigger?: React.ReactNode;
   align?: "start" | "center" | "end";
+  /** Override default "Editar" behavior (which navigates to ?tab=edit). */
+  onEdit?: () => void;
 }
 
 function deriveState(p: Props["process"]): ProcessLifecycleState {
@@ -43,7 +45,7 @@ function deriveState(p: Props["process"]): ProcessLifecycleState {
   return "active";
 }
 
-export function ProcessActionsMenu({ process, state, onChanged, trigger, align = "end" }: Props) {
+export function ProcessActionsMenu({ process, state, onChanged, trigger, align = "end", onEdit }: Props) {
   const navigate = useNavigate();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const s = state ?? deriveState(process);
@@ -82,7 +84,7 @@ export function ProcessActionsMenu({ process, state, onChanged, trigger, align =
               <DropdownMenuItem onClick={() => goTab("generation")}>
                 <PlayCircle className="h-4 w-4 mr-2" /> Continuar
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => goTab("edit")}>
+              <DropdownMenuItem onClick={() => (onEdit ? onEdit() : goTab("edit"))}>
                 <Pencil className="h-4 w-4 mr-2" /> Editar
               </DropdownMenuItem>
 

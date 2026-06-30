@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
 import { ProcessActionsMenu } from "@/components/processes/ProcessActionsMenu";
+import { ProcessEditSheet } from "@/components/processes/ProcessEditSheet";
 
 export const Route = createFileRoute("/processes")({
   component: Processes,
@@ -477,6 +478,7 @@ function CrmGrid({
   onChanged?: () => void;
 }) {
   const navigate = useNavigate();
+  const [editing, setEditing] = useState<any>(null);
   const goToTab = (pid: string, tab: string) =>
     navigate({ to: "/processes/$id", params: { id: pid }, search: { tab } as any });
 
@@ -595,7 +597,7 @@ function CrmGrid({
                 </button>
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); goToTab(p.id, "edit"); }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditing(p); }}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 hover:text-primary hover:bg-white border border-slate-200 bg-white transition-colors"
                 >
                   Editar
@@ -607,7 +609,7 @@ function CrmGrid({
                 >
                   Continuar <ArrowRight className="h-3 w-3" />
                 </button>
-                <ProcessActionsMenu process={p} onChanged={onChanged} />
+                <ProcessActionsMenu process={p} onChanged={onChanged} onEdit={() => setEditing(p)} />
               </div>
             </div>
           </div>
@@ -621,6 +623,13 @@ function CrmGrid({
         <Plus className="h-6 w-6" />
         <span className="text-[10px] font-bold uppercase tracking-wider">Novo Processo</span>
       </button>
+
+      <ProcessEditSheet
+        process={editing ?? undefined}
+        open={!!editing}
+        onOpenChange={(o) => { if (!o) setEditing(null); }}
+        onSaved={() => onChanged?.()}
+      />
     </div>
   );
 }

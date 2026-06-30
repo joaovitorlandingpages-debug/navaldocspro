@@ -47,6 +47,7 @@ import { SignaturesStatusCard } from "@/components/process/SignaturesStatusCard"
 import { ProcessIdentityPanel } from "@/components/process/ProcessIdentityPanel";
 import { ProcessTopBar } from "@/components/processes/ProcessTopBar";
 import { ProcessEditForm } from "@/components/processes/ProcessEditForm";
+import { ProcessEditSheet } from "@/components/processes/ProcessEditSheet";
 import { Palette } from "lucide-react";
 
 const VALID_TABS = [
@@ -86,6 +87,7 @@ function ProcessDetail() {
     });
   }, [id, navigate]);
   const [selectedTemplateForGen, setSelectedTemplateForGen] = useState<any | null>(null);
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   
@@ -298,7 +300,7 @@ function ProcessDetail() {
             toast.error("O processo não pode ser finalizado. Verifique as inconformidades no Checklist.");
           }
         }}
-        onEdit={() => setActiveTab("edit")}
+        onEdit={() => setEditSheetOpen(true)}
         onChanged={fetchProcess}
       />
 
@@ -707,6 +709,13 @@ function ProcessDetail() {
             </div>
          </aside>
       </div>
+
+      <ProcessEditSheet
+        process={process}
+        open={editSheetOpen}
+        onOpenChange={setEditSheetOpen}
+        onSaved={fetchProcess}
+      />
     </div>
   );
 }
