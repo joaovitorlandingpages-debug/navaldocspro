@@ -476,6 +476,10 @@ function CrmGrid({
   onNewProcess: () => void;
   onChanged?: () => void;
 }) {
+  const navigate = useNavigate();
+  const goToTab = (pid: string, tab: string) =>
+    navigate({ to: "/processes/$id", params: { id: pid }, search: { tab } as any });
+
   if (isLoading) {
     return (
       <div className="py-20 grid place-items-center">
