@@ -115,8 +115,23 @@ export function ProcessTopBar({ process, onChanged, automationReady, onFinalize,
               try { await copyShareLink(process.id); toast.success("Link copiado."); }
               catch (e: any) { toast.error(e.message); }
             }}
-          >
-            Compartilhar
+          {onEdit && (
+            <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1.5" onClick={onEdit}>
+              <Pencil className="h-4 w-4" /> Editar
+            </Button>
+          )}
+          {onFinalize && (
+            <Button
+              size="sm"
+              className="h-9 rounded-xl gap-1.5 bg-primary text-white hover:opacity-90 disabled:opacity-50"
+              disabled={automationReady === false}
+              onClick={onFinalize}
+            >
+              {automationReady ? <CheckCircle2 className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
+              Finalizar
+            </Button>
+          )}
+          Compartilhar
           </Button>
           <ProcessActionsMenu
             process={process}
