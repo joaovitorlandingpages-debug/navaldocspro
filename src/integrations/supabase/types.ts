@@ -975,6 +975,60 @@ export type Database = {
           },
         ]
       }
+      company_resource_addons: {
+        Row: {
+          company_id: string
+          created_at: string
+          extra_daily: number
+          extra_monthly: number
+          id: string
+          metadata: Json
+          resource_key: string
+          source: string
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          extra_daily?: number
+          extra_monthly?: number
+          id?: string
+          metadata?: Json
+          resource_key: string
+          source?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          extra_daily?: number
+          extra_monthly?: number
+          id?: string
+          metadata?: Json
+          resource_key?: string
+          source?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_resource_addons_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_resource_addons_resource_key_fkey"
+            columns: ["resource_key"]
+            isOneToOne: false
+            referencedRelation: "resource_types"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       company_template_library: {
         Row: {
           acquired_at: string
@@ -3520,6 +3574,48 @@ export type Database = {
           },
         ]
       }
+      plan_resource_limits: {
+        Row: {
+          created_at: string
+          daily_limit: number | null
+          monthly_limit: number | null
+          plan_id: string
+          resource_key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          daily_limit?: number | null
+          monthly_limit?: number | null
+          plan_id: string
+          resource_key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          daily_limit?: number | null
+          monthly_limit?: number | null
+          plan_id?: string
+          resource_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_resource_limits_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_resource_limits_resource_key_fkey"
+            columns: ["resource_key"]
+            isOneToOne: false
+            referencedRelation: "resource_types"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       plans: {
         Row: {
           billing_cycle: string
@@ -4507,6 +4603,90 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      resource_consumption: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string
+          id: number
+          metadata: Json
+          period_day: string
+          period_month: string
+          request_id: string | null
+          resource_key: string
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number
+          company_id: string
+          created_at?: string
+          id?: number
+          metadata?: Json
+          period_day?: string
+          period_month?: string
+          request_id?: string | null
+          resource_key: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string
+          id?: number
+          metadata?: Json
+          period_day?: string
+          period_month?: string
+          request_id?: string | null
+          resource_key?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_consumption_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resource_consumption_resource_key_fkey"
+            columns: ["resource_key"]
+            isOneToOne: false
+            referencedRelation: "resource_types"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      resource_types: {
+        Row: {
+          created_at: string
+          default_daily: number | null
+          default_monthly: number | null
+          is_storage: boolean
+          key: string
+          label: string
+          unit: string
+        }
+        Insert: {
+          created_at?: string
+          default_daily?: number | null
+          default_monthly?: number | null
+          is_storage?: boolean
+          key: string
+          label: string
+          unit?: string
+        }
+        Update: {
+          created_at?: string
+          default_daily?: number | null
+          default_monthly?: number | null
+          is_storage?: boolean
+          key?: string
+          label?: string
+          unit?: string
+        }
+        Relationships: []
       }
       saas_commercial_metrics: {
         Row: {
@@ -6025,6 +6205,35 @@ export type Database = {
         Returns: undefined
       }
       is_admin_master: { Args: never; Returns: boolean }
+      limits_check: {
+        Args: { p_amount?: number; p_company: string; p_resource: string }
+        Returns: Json
+      }
+      limits_consume: {
+        Args: {
+          p_amount?: number
+          p_company: string
+          p_metadata?: Json
+          p_request_id?: string
+          p_resource: string
+        }
+        Returns: Json
+      }
+      limits_status: {
+        Args: { p_company: string }
+        Returns: {
+          daily_limit: number
+          daily_used: number
+          label: string
+          monthly_limit: number
+          monthly_used: number
+          percent_day: number
+          percent_month: number
+          renews_at: string
+          resource_key: string
+          unit: string
+        }[]
+      }
       log_security_event: {
         Args: {
           p_action: string
