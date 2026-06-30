@@ -496,121 +496,105 @@ function CrmGrid({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 pb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-8">
       {processes.map((p) => {
         const s = statusMeta(p.status);
-        const created = fmtDate(p.created_at);
         const updated = fmtDate(p.updated_at);
         const pendingDocs = typeof p.pending_documents_count === "number" ? p.pending_documents_count : 0;
         const missingSigs = typeof p.missing_signatures_count === "number" ? p.missing_signatures_count : 0;
+        const progress = Math.max(0, Math.min(100, p.completion_percentage ?? 0));
+
         return (
           <div
             key={p.id}
-            className="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all overflow-hidden group flex flex-col"
+            className="group bg-white rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-lg hover:border-primary/40 hover:-translate-y-0.5 transition-all overflow-hidden flex flex-col"
           >
-            <div className="p-5 sm:p-6 flex-1 flex flex-col gap-4">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                    <span className="text-[9px] font-mono font-black text-primary bg-primary/10 px-2 py-0.5 rounded uppercase tracking-tighter">
+            {/* Top accent bar */}
+            <div className={`h-1 w-full ${s.color}`} />
+
+            {/* Body */}
+            <Link
+              to="/processes/$id" params={{ id: p.id }} search={{ tab: "overview" }}
+              className="block p-5 flex-1"
+            >
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-tight">
                       PROC-{p.id.substring(0, 6)}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500">
-                      <span className={`h-1.5 w-1.5 rounded-full ${s.color}`} />
-                      {s.title}
-                    </span>
-                    {p.priority && <PriorityChip priority={p.priority} />}
                     {p.is_favorite && <Star className="h-3 w-3 text-amber-500 fill-amber-500" />}
                   </div>
-                  <h3 className="font-black text-navy text-sm leading-tight line-clamp-2" title={p.title || p.process_type}>
+                  <h3 className="font-bold text-navy text-[15px] leading-snug line-clamp-2 group-hover:text-primary transition-colors" title={p.title || p.process_type}>
                     {p.title || p.process_type}
                   </h3>
-                  {p.protocol_number && (
-                    <p className="text-[10px] font-bold text-slate-400 mt-1 truncate">Protocolo {p.protocol_number}</p>
+                </div>
+                <Badge variant="outline" className="shrink-0 text-[9px] font-bold uppercase tracking-wider bg-slate-50 border-slate-200 text-slate-600">
+                  <span className={`h-1.5 w-1.5 rounded-full ${s.color} mr-1.5`} />
+                  {s.title}
+                </Badge>
+              </div>
+
+              {/* Customer / Vessel */}
+              <div className="space-y-1.5 mb-4">
+                <div className="flex items-center gap-2 text-[12px] text-slate-600 min-w-0">
+                  <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                  <span className="truncate font-medium">{p.customers?.name || "Sem cliente"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-[12px] text-slate-500 min-w-0">
+                  <Ship className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                  <span className="truncate">{p.vessels?.name || "Sem embarcação"}</span>
+                </div>
+              </div>
+
+              {/* Progress + due */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
+                  <span className="text-slate-400">Progresso</span>
+                  <span className="text-navy">{progress}%</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-primary to-cyan-500 transition-all" style={{ width: `${progress}%` }} />
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <DueLabel dueDate={p.due_date} />
+                  {(pendingDocs > 0 || missingSigs > 0) && (
+                    <div className="flex items-center gap-1.5">
+                      {pendingDocs > 0 && (
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                          {pendingDocs} doc
+                        </span>
+                      )}
+                      {missingSigs > 0 && (
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-orange-700 bg-orange-50 px-1.5 py-0.5 rounded">
+                          {missingSigs} assin.
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
-                <ProcessActionsMenu process={p} onChanged={onChanged} />
               </div>
+            </Link>
 
-              <div className="grid grid-cols-2 gap-3 text-[11px] font-bold text-slate-600 border-y border-slate-50 py-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                  <span className="truncate" title={p.customers?.name || ""}>{p.customers?.name || "—"}</span>
-                </div>
-                <div className="flex items-center gap-2 min-w-0">
-                  <Ship className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                  <span className="truncate" title={p.vessels?.name || ""}>{p.vessels?.name || "Sem embarcação"}</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-500 min-w-0">
-                  <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                  <span className="truncate">Abertura {created || "—"}</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-500 min-w-0">
-                  <DueLabel dueDate={p.due_date} />
-                </div>
+            {/* Footer actions */}
+            <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/60 flex items-center justify-between gap-2">
+              <div className="text-[10px] font-medium text-slate-400 truncate">
+                {updated ? `Atualizado ${updated}` : "—"}
               </div>
-
-              <ProgressBar value={p.completion_percentage} />
-
-              <div className="flex flex-wrap items-center gap-2">
-                {pendingDocs > 0 && (
-                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-amber-50 border-amber-100 text-amber-700">
-                    {pendingDocs} doc pendente{pendingDocs > 1 ? 's' : ''}
-                  </Badge>
-                )}
-                {missingSigs > 0 && (
-                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-orange-50 border-orange-100 text-orange-700">
-                    {missingSigs} assinatura{missingSigs > 1 ? 's' : ''}
-                  </Badge>
-                )}
-                {p.sla_status === 'overdue' && (
-                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-red-50 border-red-100 text-red-700">
-                    SLA estourado
-                  </Badge>
-                )}
-                {updated && (
-                  <span className="ml-auto text-[10px] font-bold text-slate-400">
-                    Atualizado {updated}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="px-5 sm:px-6 py-3 border-t border-slate-50 bg-slate-50/40 flex items-center justify-between gap-2 flex-wrap">
-              <Link
-                to="/processes/$id" params={{ id: p.id }} search={{ tab: "overview" }}
-                className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-primary"
-              >
-                Abrir <ArrowRight className="h-3 w-3" />
-              </Link>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <Link
-                  to="/processes/$id" params={{ id: p.id }} search={{ tab: "signatures" }}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary hover:bg-white border border-transparent hover:border-slate-200"
-                  title="Assinaturas"
+                  to="/processes/$id" params={{ id: p.id }} search={{ tab: "overview" }}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 hover:text-primary hover:bg-white border border-slate-200 bg-white transition-colors"
                 >
-                  <FileSignature className="h-3 w-3" /> Assinaturas
-                </Link>
-                <Link
-                  to="/processes/$id" params={{ id: p.id }} search={{ tab: "dossier_v2" }}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary hover:bg-white border border-transparent hover:border-slate-200"
-                  title="Dossiê"
-                >
-                  <FolderArchive className="h-3 w-3" /> Dossiê
-                </Link>
-                <Link
-                  to="/processes/$id" params={{ id: p.id }} search={{ tab: "history" }}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary hover:bg-white border border-transparent hover:border-slate-200"
-                  title="Timeline"
-                >
-                  <Clock className="h-3 w-3" /> Timeline
+                  Abrir
                 </Link>
                 <Link
                   to="/processes/$id" params={{ id: p.id }} search={{ tab: "generation" }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-white bg-primary hover:opacity-90"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white bg-primary hover:opacity-90 transition-opacity"
                 >
-                  Continuar
+                  Continuar <ArrowRight className="h-3 w-3" />
                 </Link>
+                <ProcessActionsMenu process={p} onChanged={onChanged} />
               </div>
             </div>
           </div>
@@ -619,11 +603,12 @@ function CrmGrid({
 
       <button
         onClick={onNewProcess}
-        className="rounded-3xl border-2 border-dashed border-slate-200 hover:border-primary/40 hover:bg-primary/5 transition-all min-h-[260px] flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-primary"
+        className="rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary/40 hover:bg-primary/5 transition-all min-h-[240px] flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-primary"
       >
         <Plus className="h-6 w-6" />
-        <span className="text-[10px] font-black uppercase tracking-widest">Novo Processo</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider">Novo Processo</span>
       </button>
     </div>
   );
 }
+
