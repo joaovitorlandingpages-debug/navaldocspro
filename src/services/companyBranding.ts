@@ -131,19 +131,15 @@ export async function loadProcessBranding(processId: string): Promise<CompanyBra
     return { ...base, logo_primary_url: proc.branding_logo_url };
   }
   if (mode === "customer" && proc.customer_id) {
-    // Customer-level logo is optional and may not exist in schema; ignore failures.
-    try {
-      const { data: customer } = await (supabase
-        .from("customers")
-        .select("*")
-        .eq("id", proc.customer_id)
-        .maybeSingle() as any);
-      const customerLogo = (customer as any)?.logo_url || null;
-      if (customerLogo) return { ...base, logo_primary_url: customerLogo };
-    } catch {
-      /* no-op: customer has no logo column */
-    }
+    const { data: customer } = await supabase
+      .from("customers")
+      .select("logo_url")
+      .eq("id", proc.customer_id)
+      .maybeSingle();
+    const customerLogo = (customer as any)?.logo_url || null;
+    if (customerLogo) return { ...base, logo_primary_url: customerLogo };
   }
+
 
   // fallback: company branding as-is
   return base;
