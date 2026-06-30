@@ -153,44 +153,32 @@ function DashboardLayout() {
   }, []);
 
   const navItems = [
-    { group: "Visão Geral", items: [
-      { name: "Painel de Controle", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
+    { group: "Painel", items: [
+      { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
       { name: "Primeiros Passos", icon: <Rocket className="h-5 w-5" />, path: "/getting-started" },
-      { name: "Ecossistema & Parceiros", icon: <Globe className="h-5 w-5" />, path: "/dashboard/ecosystem" },
-      { name: "Centro de Ops", icon: <Briefcase className="h-5 w-5" />, path: "/operations-center" },
-      { name: "Inteligência IA", icon: <Cpu className="h-5 w-5" />, path: "/ai-center" },
     ]},
-
-    { group: "Core Naval", items: [
+    { group: "Operação", items: [
       { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
       { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
       { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
     ]},
     { group: "Documentação", items: [
-      { name: "Central OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
-      { name: "Central Documental", icon: <Signature className="h-5 w-5" />, path: "/dashboard/document-center" },
-      { name: "Prazos e Vencimentos", icon: <Clock className="h-5 w-5" />, path: "/dashboard/deadlines" },
-      { name: "Base Técnica", icon: <Database className="h-5 w-5" />, path: "/dashboard/documents-base" },
-      { name: "Gerador Pro", icon: <FilePlus className="h-5 w-5" />, path: "/document-generator" },
-    ]},
-    { group: "Gestão & Admin", items: [
-      { name: "Compliance Center", icon: <ShieldCheck className="h-5 w-5" />, path: "/dashboard/compliance-center" },
-      { name: "Segurança & Backups", icon: <Lock className="h-5 w-5" />, path: "/dashboard/security" },
-      { name: "Analytics", icon: <TrendingUp className="h-5 w-5" />, path: "/analytics" },
-      { name: "Monitoramento", icon: <Activity className="h-5 w-5" />, path: "/system-monitor" },
-      { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
+      { name: "Biblioteca", icon: <Database className="h-5 w-5" />, path: "/dashboard/document-center" },
+      { name: "OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
       { name: "Templates", icon: <LayoutTemplate className="h-5 w-5" />, path: "/templates" },
       { name: "Assinaturas", icon: <Signature className="h-5 w-5" />, path: "/assinaturas" },
-      { name: "Identidade Corporativa", icon: <Award className="h-5 w-5" />, path: "/identidade" },
-      { name: "Ajustes", icon: <Settings className="h-5 w-5" />, path: "/settings" },
     ]},
-    { group: "Comercial & Evolução", items: [
-      { name: "Ambiente Demo", icon: <Rocket className="h-5 w-5" />, path: "/demo" },
-      { name: "Auditoria QA Final", icon: <ShieldCheck className="h-5 w-5" />, path: "/admin/full-qa-report" },
-      { name: "Maturidade SaaS", icon: <Activity className="h-5 w-5" />, path: "/status" },
-      { name: "Changelog", icon: <History className="h-5 w-5" />, path: "/changelog" },
-    ]}
+    { group: "Empresa", items: [
+      { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
+      { name: "Identidade", icon: <Award className="h-5 w-5" />, path: "/identidade" },
+      { name: "Configurações", icon: <Settings className="h-5 w-5" />, path: "/settings" },
+    ]},
+    { group: "Inteligência", items: [
+      { name: "IA", icon: <Cpu className="h-5 w-5" />, path: "/ai-center" },
+      { name: "Parceiros", icon: <Globe className="h-5 w-5" />, path: "/parceria" },
+    ]},
   ];
+
 
   console.log("CONTROLLED_EVOLUTION_READY");
   console.log("FEATURE_FLAGS_READY");
@@ -1151,57 +1139,21 @@ function DashboardSkeleton() {
 export const RouteComponent = RouteContent;
 
 function AdminMenu({ role, expanded, onNavigate }: { role?: string | null; expanded: boolean; onNavigate: () => void }) {
-  const [open, setOpen] = useState(false);
-  const isGlobal = role === 'admin_master_global';
-  const isMaster = isGlobal || role === 'admin_master';
-
-  const items: Array<{ name: string; to: string; icon: ReactNode; show: boolean }> = [
-    { name: "Painel Admin",           to: "/admin",                  icon: <ShieldCheck className="h-4 w-4" />, show: true },
-    { name: "Admin Master Global",    to: "/admin-master",           icon: <Award className="h-4 w-4" />,       show: isGlobal },
-    { name: "Biblioteca Master",      to: "/admin/document-library", icon: <Library className="h-4 w-4" />,     show: isMaster },
-    { name: "Marketplace Admin",      to: "/admin-master",           icon: <LayoutTemplate className="h-4 w-4" />, show: isGlobal },
-    { name: "Logs do Sistema",        to: "/admin/logs",             icon: <History className="h-4 w-4" />,     show: isMaster },
-    { name: "Limpeza de Testes",      to: "/admin-master",           icon: <FileWarning className="h-4 w-4" />, show: isGlobal },
-    { name: "Âncoras de Assinatura",  to: "/admin/signature-anchors", icon: <ShieldCheck className="h-4 w-4" />, show: isMaster },
-    { name: "Relatórios",             to: "/admin/saas-metrics",     icon: <TrendingUp className="h-4 w-4" />,  show: isMaster },
-    { name: "Usuários",               to: "/admin/users",            icon: <Users className="h-4 w-4" />,       show: true },
-    { name: "Configurações avançadas",to: "/admin/settings",         icon: <Settings className="h-4 w-4" />,    show: isMaster },
-  ];
-
-  const visible = items.filter(i => i.show);
-  if (visible.length === 0) return null;
-
+  const isMaster = role === 'admin_master' || role === 'admin_master_global';
+  if (!isMaster && role !== 'admin') return null;
   return (
-    <div className="space-y-1">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all text-slate-300 hover:text-white border border-transparent hover:border-white/10"
-        aria-expanded={open}
-      >
-        <ShieldCheck className="h-5 w-5 text-amber-400" />
-        {expanded && (
-          <>
-            <span className="text-[10px] font-black uppercase tracking-widest flex-1 text-left">Admin</span>
-            <ChevronRight className={`h-3 w-3 transition-transform ${open ? 'rotate-90' : ''}`} />
-          </>
-        )}
-      </button>
-      {open && expanded && (
-        <div className="ml-3 pl-3 border-l border-white/10 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
-          {visible.map(item => (
-            <Link
-              key={item.name}
-              to={item.to}
-              onClick={onNavigate}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white transition-all"
-            >
-              {item.icon}
-              <span className="text-[10px] font-bold uppercase tracking-wider">{item.name}</span>
-            </Link>
-          ))}
-        </div>
+    <Link
+      to="/admin-hub"
+      onClick={onNavigate}
+      className="w-full flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-amber-500/10 transition-all text-amber-300 hover:text-amber-200 border border-transparent hover:border-amber-500/20"
+      activeProps={{ className: "bg-amber-500/15 text-amber-200 border-amber-500/30" }}
+    >
+      <ShieldCheck className="h-5 w-5 text-amber-400" />
+      {expanded && (
+        <span className="text-[10px] font-black uppercase tracking-widest flex-1 text-left">Admin</span>
       )}
-    </div>
+    </Link>
   );
 }
+
 
