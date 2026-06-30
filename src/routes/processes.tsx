@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  ClipboardList, Search, Plus, MoreHorizontal,
+  ClipboardList, Search, Plus,
   ArrowRight, Calendar, User, Ship, Loader2,
   Clock, Package, FileSignature, FolderArchive, Filter, ArrowUpDown,
-  AlertTriangle, Star
+  AlertTriangle, Star, Archive, Trash2
 } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/navigation/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
+import { ProcessActionsMenu } from "@/components/processes/ProcessActionsMenu";
 
 export const Route = createFileRoute("/processes")({
   component: Processes,
