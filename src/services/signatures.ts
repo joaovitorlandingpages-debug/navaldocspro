@@ -48,6 +48,10 @@ export const signaturesService = {
     participants: (SignatureParticipantInput & { customer_id?: string })[];
     created_by?: string;
   }) {
+    const { limitsEngine } = await import("@/services/limitsEngine");
+    const allowed = await limitsEngine.enforce("signature_request", 1, payload.company_id);
+    if (!allowed) throw new Error("Limite de solicitações de assinatura atingido para o plano atual.");
+
     const { data: req, error } = await supabase
       .from("signature_requests")
       .insert({
