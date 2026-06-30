@@ -3,11 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { PDFDocument, rgb, StandardFonts, degrees } from "https://esm.sh/pdf-lib"
 import docxtemplater from "https://esm.sh/docxtemplater"
 import PizZip from "https://esm.sh/pizzip"
+import { authContext, rateLimit, consume, jsonResponse, corsHeaders, HttpError, clientIp } from "../_shared/auth.ts"
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
 
 type Branding = {
   company_name: string
@@ -235,12 +232,19 @@ serve(async (req) => {
   }
 
   try {
-    const { templateId, companyId, customerId, vesselId, processId, fieldValues } = await req.json()
+    // 1) Auth
+    const ctx = await authContext(req)
 
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    // 2) Rate limit (user + company)
+    await rateLimit(ctx.admin, `user:${ctx.userId}`, 'generate-document', 30, 60)
+    if (ctx.companyId) await rateLimit(ctx.admin, `company:${ctx.companyId}`, 'generate-document', 120, 60)
+
+    const { templateId, customerId, vesselId, processId, fieldValues } = await req.json()
+    // companyId NEVER trusted from payload — derived from authenticated profile
+    const companyId = ctx.companyId
+    if (!companyId && !ctx.isAdminMaster) throw new HttpError(403, { error: 'no_company_bound' })
+
+    const supabaseAdmin = ctx.admin
 
     const { data: template, error: templateError } = await supabaseAdmin
       .from('document_templates')
@@ -248,7 +252,31 @@ serve(async (req) => {
       .eq('id', templateId)
       .single()
 
-    if (templateError || !template) throw new Error('Template not found')
+    if (templateError || !template) throw new HttpError(404, { error: 'template_not_found' })
+    // Template must be global (company_id null) OR belong to user's company
+    if (template.company_id) ctx.requireCompany(template.company_id)
+
+    // Optional cross-checks if related entities provided
+    if (processId) {
+      const { data: proc } = await supabaseAdmin.from('processes').select('company_id').eq('id', processId).maybeSingle()
+      if (proc) ctx.requireCompany(proc.company_id)
+    }
+    if (customerId) {
+      const { data: cust } = await supabaseAdmin.from('customers').select('company_id').eq('id', customerId).maybeSingle()
+      if (cust) ctx.requireCompany(cust.company_id)
+    }
+    if (vesselId) {
+      const { data: ves } = await supabaseAdmin.from('vessels').select('company_id').eq('id', vesselId).maybeSingle()
+      if (ves) ctx.requireCompany(ves.company_id)
+    }
+
+    // 3) Enforce limits BEFORE incurring cost (PDF generation)
+    const requestId = req.headers.get('x-request-id') || crypto.randomUUID()
+    if (companyId) {
+      await consume(supabaseAdmin, companyId, 'pdf_generation', 1, requestId, { templateId, processId })
+    }
+
+
 
     const branding = await loadBranding(supabaseAdmin, companyId)
     const verificationCode = crypto.randomUUID().slice(0, 8).toUpperCase()
@@ -401,8 +429,9 @@ serve(async (req) => {
     return new Response(JSON.stringify({ success: true, document: generatedDoc, url: generatedPath, verificationCode }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 })
 
   } catch (error) {
+    if (error instanceof HttpError) return jsonResponse(error.body, error.status)
     console.error("Function error:", error)
-    return new Response(JSON.stringify({ success: false, error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 })
+    return new Response(JSON.stringify({ success: false, error: (error as any)?.message || String(error) }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 })
   }
 })
 

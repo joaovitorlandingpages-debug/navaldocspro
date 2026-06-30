@@ -1,10 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.31.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { authContext, rateLimit, jsonResponse, corsHeaders, HttpError } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -12,28 +7,15 @@ serve(async (req) => {
   }
 
   try {
+    const ctx = await authContext(req);
+    await rateLimit(ctx.admin, `user:${ctx.userId}`, "create-checkout", 10, 60);
+
     const { planId, origin } = await req.json();
+    const supabase = ctx.admin;
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const companyId = ctx.companyId;
+    if (!companyId) throw new HttpError(403, { error: "no_company_bound" });
 
-    // Get the user from auth header
-    const authHeader = req.headers.get("Authorization");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader?.replace("Bearer ", ""));
-    
-    if (authError || !user) throw new Error("Não autorizado");
-
-    // Fetch profile to get company_id
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("company_id")
-      .eq("id", user.id)
-      .single();
-
-    const companyId = profile?.company_id;
-    if (!companyId) throw new Error("Empresa não vinculada ao usuário");
 
     // Get plan details
     const { data: plan, error: planError } = await supabase
@@ -129,6 +111,7 @@ serve(async (req) => {
     );
 
   } catch (error: any) {
+    if (error instanceof HttpError) return jsonResponse(error.body, error.status);
     console.error("Error creating checkout:", error);
     return new Response(
       JSON.stringify({ error: error.message }),

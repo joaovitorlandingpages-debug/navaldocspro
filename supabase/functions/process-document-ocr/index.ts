@@ -1,11 +1,8 @@
 // OCR for process_document_uploads — calls Lovable AI Gateway (Gemini 2.5 Flash vision)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { authContext, rateLimit, consume, jsonResponse, corsHeaders, HttpError } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
 
 const PROMPT = `Você é um OCR especialista em documentos brasileiros (CNH, RG, CPF, CNPJ, Título, CR, Procuração, Contrato Social, Comprovante de endereço, TIE/TIEM de embarcações, CSN, DPEM, GRU).
 
@@ -31,16 +28,17 @@ Regras: use null quando ausente; nunca invente; "confidence" reflete a qualidade
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-  );
-
   let uploadId: string | undefined;
+  let supabase: ReturnType<typeof createClient>;
   try {
+    const ctx = await authContext(req);
+    supabase = ctx.admin;
+    await rateLimit(ctx.admin, `user:${ctx.userId}`, "process-document-ocr", 20, 60);
+    if (ctx.companyId) await rateLimit(ctx.admin, `company:${ctx.companyId}`, "process-document-ocr", 60, 60);
+
     const body = await req.json();
     uploadId = body.uploadId;
-    if (!uploadId) throw new Error("uploadId required");
+    if (!uploadId) throw new HttpError(400, { error: "uploadId required" });
 
     console.log("[process_document_ocr_started]", uploadId);
 
@@ -49,7 +47,14 @@ serve(async (req) => {
       .select("*")
       .eq("id", uploadId)
       .single();
-    if (upErr || !upload) throw new Error("upload not found: " + upErr?.message);
+    if (upErr || !upload) throw new HttpError(404, { error: "upload_not_found", detail: upErr?.message });
+
+    ctx.requireCompany(upload.company_id);
+
+    if (upload.company_id) {
+      await consume(ctx.admin, upload.company_id, "ocr", 1, `pdu:${uploadId}`, { uploadId });
+    }
+
 
     await supabase
       .from("process_document_uploads")
@@ -125,8 +130,9 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
+    if (e instanceof HttpError) return jsonResponse(e.body, e.status);
     console.error("[process_document_ocr_failed]", uploadId, e?.message);
-    if (uploadId) {
+    if (uploadId && supabase!) {
       await supabase
         .from("process_document_uploads")
         .update({
