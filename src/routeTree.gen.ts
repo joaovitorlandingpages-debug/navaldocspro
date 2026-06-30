@@ -54,6 +54,7 @@ import { Route as AssinaturasRouteImport } from './routes/assinaturas'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AiCenterRouteImport } from './routes/ai-center'
 import { Route as AdminMasterRouteImport } from './routes/admin-master'
+import { Route as AdminHubRouteImport } from './routes/admin-hub'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
@@ -333,6 +334,11 @@ const AiCenterRoute = AiCenterRouteImport.update({
 const AdminMasterRoute = AdminMasterRouteImport.update({
   id: '/admin-master',
   path: '/admin-master',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminHubRoute = AdminHubRouteImport.update({
+  id: '/admin-hub',
+  path: '/admin-hub',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -618,6 +624,7 @@ const AdminAutomationRoute = AdminAutomationRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admin-hub': typeof AdminHubRoute
   '/admin-master': typeof AdminMasterRoute
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
@@ -719,6 +726,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin-hub': typeof AdminHubRoute
   '/admin-master': typeof AdminMasterRoute
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
@@ -820,6 +828,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admin-hub': typeof AdminHubRoute
   '/admin-master': typeof AdminMasterRoute
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
@@ -924,6 +933,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/admin-hub'
     | '/admin-master'
     | '/ai-center'
     | '/analytics'
@@ -1025,6 +1035,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin-hub'
     | '/admin-master'
     | '/ai-center'
     | '/analytics'
@@ -1125,6 +1136,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/admin-hub'
     | '/admin-master'
     | '/ai-center'
     | '/analytics'
@@ -1228,6 +1240,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AdminHubRoute: typeof AdminHubRoute
   AdminMasterRoute: typeof AdminMasterRoute
   AiCenterRoute: typeof AiCenterRoute
   AnalyticsRoute: typeof AnalyticsRouteWithChildren
@@ -1601,6 +1614,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-master'
       fullPath: '/admin-master'
       preLoaderRoute: typeof AdminMasterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-hub': {
+      id: '/admin-hub'
+      path: '/admin-hub'
+      fullPath: '/admin-hub'
+      preLoaderRoute: typeof AdminHubRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -2126,6 +2146,7 @@ const TemplatesRouteWithChildren = TemplatesRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  AdminHubRoute: AdminHubRoute,
   AdminMasterRoute: AdminMasterRoute,
   AiCenterRoute: AiCenterRoute,
   AnalyticsRoute: AnalyticsRouteWithChildren,
