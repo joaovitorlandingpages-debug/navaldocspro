@@ -869,6 +869,41 @@ function Customers() {
                 {isEditing ? (
                   <form id="edit-customer-form" onSubmit={handleUpdateCustomer} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
                     <div className="grid md:grid-cols-2 gap-6">
+                      <div className="md:col-span-2 p-4 rounded-2xl border border-slate-200 bg-slate-50/60 flex items-center gap-4">
+                        <div className="h-20 w-20 rounded-xl bg-white border border-slate-200 grid place-items-center overflow-hidden shrink-0">
+                          {selectedCustomer?.logo_url ? (
+                            <img src={selectedCustomer.logo_url} alt="Logo do cliente" className="max-h-full max-w-full object-contain" />
+                          ) : (
+                            <ImageIcon className="h-7 w-7 text-slate-300" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Logo do Cliente</p>
+                          <p className="text-xs text-slate-500 mt-1">PNG, JPG, WEBP ou SVG (até 5MB). Usado quando o processo escolher "Logo do cliente".</p>
+                          <div className="flex gap-2 mt-3">
+                            <label className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest cursor-pointer hover:opacity-90 ${logoUploading ? "opacity-60 pointer-events-none" : ""}`}>
+                              {logoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImageIcon className="h-3.5 w-3.5" />}
+                              {selectedCustomer?.logo_url ? "Substituir" : "Enviar logo"}
+                              <input
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                                className="hidden"
+                                onChange={(e) => e.target.files?.[0] && handleCustomerLogoUpload(e.target.files[0])}
+                              />
+                            </label>
+                            {selectedCustomer?.logo_url && (
+                              <button
+                                type="button"
+                                onClick={handleCustomerLogoRemove}
+                                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-navy text-[10px] font-black uppercase tracking-widest hover:bg-slate-50"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" /> Remover
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome / Razão Social</Label>
                         <Input 
