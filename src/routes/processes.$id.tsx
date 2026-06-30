@@ -44,6 +44,9 @@ import { ProcessDocumentsPanel } from "@/components/process/ProcessDocumentsPane
 import { ClientPortalPanel } from "@/components/process/ClientPortalPanel";
 import { ProcessSignaturesPanel } from "@/components/process/ProcessSignaturesPanel";
 import { SignaturesStatusCard } from "@/components/process/SignaturesStatusCard";
+import { ProcessIdentityPanel } from "@/components/process/ProcessIdentityPanel";
+import { Palette } from "lucide-react";
+
 
 export const Route = createFileRoute("/processes/$id")({
   component: ProcessDetail,
