@@ -1,15 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { 
-  ClipboardList, Search, Plus, MoreHorizontal, 
-  ArrowRight, Calendar, User, Ship, AlertCircle, Loader2, CheckCircle2,
-  Clock, Package
+import {
+  ClipboardList, Search, Plus, MoreHorizontal,
+  ArrowRight, Calendar, User, Ship, Loader2,
+  Clock, Package, FileSignature, FolderArchive, Filter, ArrowUpDown,
+  AlertTriangle, Star
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { supabase } from "@/integrations/supabase/client";
-import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { PageHeader } from "@/components/navigation/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,10 @@ export const Route = createFileRoute("/processes")({
   component: Processes,
 });
 
+type SortKey = "recent" | "updated" | "due" | "priority";
+type StatusFilter = "all" | "active" | "pending_signature" | "completed" | "late";
+type PriorityFilter = "all" | "high" | "medium" | "low";
+
 function Processes() {
   const [view, setView] = useState<"crm" | "kanban" | "list">("crm");
 
@@ -27,6 +31,9 @@ function Processes() {
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all");
+  const [sort, setSort] = useState<SortKey>("recent");
   const pageSize = 12;
 
   const { setIsNewProcessOpen } = useNewProcess();
@@ -41,7 +48,7 @@ function Processes() {
     const fetchProcesses = async () => {
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) { setIsLoading(false); return; }
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -49,33 +56,45 @@ function Processes() {
         .eq('id', user.id)
         .single();
 
-      if (profile?.company_id) {
-        let query = supabase
-          .from('processes')
-          .select('*, customers(name), vessels(name)', { count: 'exact' })
-          .eq('company_id', profile.company_id);
+      if (!profile?.company_id) { setIsLoading(false); return; }
 
-        if (searchTerm) {
-          query = query.or(`process_type.ilike.%${searchTerm}%`);
-        }
+      let query = supabase
+        .from('processes')
+        .select('*, customers(name), vessels(name)', { count: 'exact' })
+        .eq('company_id', profile.company_id)
+        .is('deleted_at', null);
 
-        const { data, count, error } = await query
-          .order('created_at', { ascending: false })
-          .range((page - 1) * pageSize, page * pageSize - 1);
-        
-        if (data) setProcesses(data);
-        if (count !== null) setTotalCount(count);
-        if (error) console.error("Error fetching processes:", error);
+      if (searchTerm) {
+        const term = `%${searchTerm}%`;
+        query = query.or(`process_type.ilike.${term},title.ilike.${term},protocol_number.ilike.${term}`);
       }
+
+      if (statusFilter === "completed") query = query.eq('status', 'completed');
+      else if (statusFilter === "pending_signature") query = query.eq('status', 'waiting_signature');
+      else if (statusFilter === "active") query = query.not('status', 'in', '(completed,cancelled)');
+      else if (statusFilter === "late") query = query.lt('due_date', new Date().toISOString().slice(0, 10)).not('status', 'in', '(completed,cancelled)');
+
+      if (priorityFilter !== "all") query = query.eq('priority', priorityFilter);
+
+      const orderColumn =
+        sort === "updated" ? 'updated_at' :
+        sort === "due" ? 'due_date' :
+        sort === "priority" ? 'priority_score' : 'created_at';
+      const orderAsc = sort === "due";
+
+      const { data, count, error } = await query
+        .order(orderColumn, { ascending: orderAsc, nullsFirst: false })
+        .range((page - 1) * pageSize, page * pageSize - 1);
+
+      if (data) setProcesses(data);
+      if (count !== null) setTotalCount(count);
+      if (error) console.error("Error fetching processes:", error);
       setIsLoading(false);
     };
 
-    const debounceTimer = setTimeout(() => {
-      fetchProcesses();
-    }, 300);
-
+    const debounceTimer = setTimeout(fetchProcesses, 300);
     return () => clearTimeout(debounceTimer);
-  }, [page, searchTerm]);
+  }, [page, searchTerm, statusFilter, priorityFilter, sort]);
 
 
   const columns = [
@@ -89,35 +108,34 @@ function Processes() {
     { id: "completed", title: "Finalizado", color: "bg-green-500" },
   ];
 
+  const statusTabs: { id: StatusFilter; label: string }[] = [
+    { id: "all", label: "Todos" },
+    { id: "active", label: "Ativos" },
+    { id: "pending_signature", label: "Aguardando assinatura" },
+    { id: "late", label: "Atrasados" },
+    { id: "completed", label: "Finalizados" },
+  ];
+
   return (
     <div className="animate-in fade-in duration-500 pb-20">
-      <PageHeader 
+      <PageHeader
         title="Fluxo de Processos"
         description="Acompanhamento operacional em tempo real."
         actions={
           <div className="flex flex-wrap gap-3 w-full sm:w-auto">
             <div className="bg-slate-100 p-1 rounded-2xl flex border border-slate-200">
-              <button
-                onClick={() => setView("crm")}
-                className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'crm' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
-              >
-                CRM
-              </button>
-              <button
-                onClick={() => setView("kanban")}
-                className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'kanban' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
-              >
-                Kanban
-              </button>
-              <button
-                onClick={() => setView("list")}
-                className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === 'list' ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
-              >
-                Lista
-              </button>
+              {(["crm", "kanban", "list"] as const).map(v => (
+                <button
+                  key={v}
+                  onClick={() => setView(v)}
+                  className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === v ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
+                >
+                  {v === "crm" ? "CRM" : v === "kanban" ? "Kanban" : "Lista"}
+                </button>
+              ))}
             </div>
 
-            <button 
+            <button
               onClick={async () => {
                 const limit = await checkLimit('processes');
                 if (limit.reached) {
@@ -133,29 +151,68 @@ function Processes() {
           </div>
         }
       />
-      
-      <div className="flex flex-col gap-6 mb-8">
-          <div className="relative group w-full sm:w-[400px]">
-             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-             <input 
-               placeholder="Buscar por tipo ou identificador..." 
-               value={searchTerm}
-               onChange={(e) => {
-                 setSearchTerm(e.target.value);
-                 setPage(1);
-               }}
-               className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
-             />
+
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto_auto] gap-3">
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+            <input
+              placeholder="Buscar por tipo, título ou protocolo..."
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
+            />
           </div>
+
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+            <select
+              value={priorityFilter}
+              onChange={(e) => { setPriorityFilter(e.target.value as PriorityFilter); setPage(1); }}
+              className="pl-9 pr-8 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm focus:ring-4 focus:ring-primary/10 appearance-none"
+            >
+              <option value="all">Prioridade: Todas</option>
+              <option value="high">Alta</option>
+              <option value="medium">Média</option>
+              <option value="low">Baixa</option>
+            </select>
+          </div>
+
+          <div className="relative">
+            <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+              className="pl-9 pr-8 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm focus:ring-4 focus:ring-primary/10 appearance-none"
+            >
+              <option value="recent">Mais recentes</option>
+              <option value="updated">Última atualização</option>
+              <option value="due">Prazo mais próximo</option>
+              <option value="priority">Maior prioridade</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {statusTabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => { setStatusFilter(t.id); setPage(1); }}
+              className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${statusFilter === t.id ? 'bg-navy text-white border-navy shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:border-primary/40 hover:text-primary'}`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {processes.length === 0 && !isLoading && (
         <div className="mb-8">
-          <EmptyState 
+          <EmptyState
             icon={ClipboardList}
-            title="Nenhum processo iniciado"
-            description="Para começar, clique no botão 'Novo Processo' acima. Lá você poderá escolher o tipo de serviço, vincular o cliente e a embarcação."
-            actionLabel="Iniciar Primeiro Processo"
+            title="Nenhum processo encontrado"
+            description="Ajuste os filtros ou clique em 'Novo Processo' para iniciar um atendimento."
+            actionLabel="Iniciar Novo Processo"
             onAction={() => setIsNewProcessOpen(true)}
           />
         </div>
@@ -185,7 +242,7 @@ function Processes() {
                   </div>
                   <button onClick={() => setIsNewProcessOpen(true)} className="p-1 hover:bg-slate-100 rounded-lg text-slate-300 transition-colors"><Plus className="h-4 w-4" /></button>
                 </div>
-                
+
                 <div className="flex-grow bg-slate-100/30 rounded-[2.5rem] p-5 space-y-5 border border-slate-100/50 overflow-y-auto custom-scrollbar backdrop-blur-sm">
                   {isLoading ? (
                     <div className="py-10 text-center">
@@ -193,70 +250,45 @@ function Processes() {
                     </div>
                   ) : columnProcesses.length > 0 ? (
                     columnProcesses.map((p) => (
-                      <Link 
-                        key={p.id} 
+                      <Link
+                        key={p.id}
                         to="/processes/$id" params={{ id: p.id }}
-                        className="block bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-primary/40 hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden"
+                        className="block bg-white p-5 rounded-[1.75rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-primary/40 hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden"
                       >
-                        <div className="absolute top-0 right-0 p-4">
-                          <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-50 rounded-lg text-slate-300 transition-all">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </button>
-                        </div>
-                        
-                        <div className="mb-4 flex items-center justify-between">
-                          <span className="text-[10px] font-mono font-black text-primary bg-primary/5 px-2 py-0.5 rounded uppercase tracking-tighter shadow-sm border border-primary/10">PROC-{p.id.substring(0, 6)}</span>
-                          <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest bg-slate-50 border-slate-100">{p.status === 'pending' ? 'Novo Lead' : 'Ativo'}</Badge>
+                        <div className="mb-3 flex items-center justify-between">
+                          <span className="text-[10px] font-mono font-black text-primary bg-primary/5 px-2 py-0.5 rounded uppercase tracking-tighter border border-primary/10">PROC-{p.id.substring(0, 6)}</span>
+                          {p.priority && <PriorityChip priority={p.priority} />}
                         </div>
 
-                        <h4 className="font-black text-navy text-[13px] mb-3 leading-tight group-hover:text-primary transition-colors min-h-[32px]">{p.process_type}</h4>
-                        
-                        <div className="space-y-3 pb-5 mb-5 border-b border-slate-50">
-                          <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
-                            <div className="h-6 w-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
-                              <User className="h-3.5 w-3.5" />
-                            </div>
-                            {p.customers?.name || "Cliente"}
+                        <h4 className="font-black text-navy text-[13px] mb-3 leading-tight group-hover:text-primary transition-colors line-clamp-2">{p.title || p.process_type}</h4>
+
+                        <div className="space-y-2 pb-3 mb-3 border-b border-slate-50">
+                          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 min-w-0">
+                            <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                            <span className="truncate">{p.customers?.name || "Cliente"}</span>
                           </div>
-                          <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
-                            <div className="h-6 w-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-cyan-100 group-hover:text-cyan-600 transition-all">
-                              <Ship className="h-3.5 w-3.5" />
-                            </div>
-                            {p.vessels?.name || "Embarcação"}
+                          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 min-w-0">
+                            <Ship className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                            <span className="truncate">{p.vessels?.name || "Sem embarcação"}</span>
                           </div>
                         </div>
 
-                        <div className="flex justify-between items-center mt-2 pt-4 border-t border-slate-50">
-                          <div className="flex flex-col gap-1">
-                             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                               <Clock className="h-3.5 w-3.5 text-amber-500" /> {p.due_date ? "Em 4 dias" : "S/ prazo"}
-                             </div>
-                             <div className="h-1 w-20 bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-emerald-500" style={{ width: '75%' }} />
-                             </div>
-                          </div>
-                          <div className="flex items-center gap-1 text-primary group-hover:translate-x-1 transition-transform">
-                            <span className="text-[10px] font-black uppercase">Abrir</span>
-                            <ArrowRight className="h-3 w-3" />
-                          </div>
+                        <ProgressBar value={p.completion_percentage} />
+
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
+                          <DueLabel dueDate={p.due_date} />
+                          <span className="text-[10px] font-black uppercase text-primary group-hover:translate-x-1 transition-transform">Abrir</span>
                         </div>
                       </Link>
                     ))
                   ) : (
-                    <div className="py-8 px-4 opacity-80 group/empty transition-all border-2 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center text-center">
+                    <div className="py-8 px-4 opacity-80 border-2 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center text-center">
                       <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                         <Package className="h-6 w-6 text-slate-300" />
                       </div>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Etapa sem processos</p>
                     </div>
                   )}
-
-                  <button 
-                    onClick={() => setIsNewProcessOpen(true)}
-                    className="w-full py-4 border-2 border-dashed border-slate-200 rounded-3xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 hover:border-primary/30 hover:text-primary transition-all hover:bg-white/50"
-                  >
-                    Novo Card em {col.title}
-                  </button>
                 </div>
               </div>
             );
@@ -272,47 +304,37 @@ function Processes() {
                   <th className="px-6 py-4">CLIENTE</th>
                   <th className="px-6 py-4">EMBARCAÇÃO</th>
                   <th className="px-6 py-4">STATUS</th>
+                  <th className="px-6 py-4">PROGRESSO</th>
+                  <th className="px-6 py-4">PRAZO</th>
                   <th className="px-6 py-4"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-10 text-center">
-                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
-                    </td>
-                  </tr>
+                  <tr><td colSpan={7} className="px-6 py-10 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></td></tr>
                 ) : processes.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-10 text-center">
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhum processo encontrado</p>
-                    </td>
-                  </tr>
+                  <tr><td colSpan={7} className="px-6 py-10 text-center"><p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhum processo encontrado</p></td></tr>
                 ) : processes.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4">
                       <Link to="/processes/$id" params={{ id: p.id }} className="block">
-                        <div className="font-bold text-navy text-sm">{p.process_type}</div>
+                        <div className="font-bold text-navy text-sm">{p.title || p.process_type}</div>
                         <div className="text-[10px] text-primary font-mono font-black uppercase tracking-tighter">PROC-{p.id.substring(0, 6)}</div>
                       </Link>
                     </td>
-                    <td className="px-6 py-4 text-xs font-bold text-slate-600">
-                      {p.customers?.name || "---"}
-                    </td>
-                    <td className="px-6 py-4 text-xs font-bold text-slate-600">
-                      {p.vessels?.name || "---"}
-                    </td>
+                    <td className="px-6 py-4 text-xs font-bold text-slate-600">{p.customers?.name || "---"}</td>
+                    <td className="px-6 py-4 text-xs font-bold text-slate-600">{p.vessels?.name || "---"}</td>
                     <td className="px-6 py-4">
                       <Badge className="text-[8px] font-black uppercase tracking-widest bg-slate-100 text-slate-600 border-none">
                         {columns.find(c => c.id === p.status)?.title || p.status}
                       </Badge>
                     </td>
+                    <td className="px-6 py-4 w-40"><ProgressBar value={p.completion_percentage} compact /></td>
+                    <td className="px-6 py-4 text-xs font-bold"><DueLabel dueDate={p.due_date} /></td>
                     <td className="px-6 py-4 text-right">
-                       <Link to="/processes/$id" params={{ id: p.id }}>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                             <ArrowRight className="h-4 w-4" />
-                          </Button>
-                       </Link>
+                      <Link to="/processes/$id" params={{ id: p.id }}>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><ArrowRight className="h-4 w-4" /></Button>
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -322,38 +344,25 @@ function Processes() {
 
           <div className="md:hidden divide-y divide-slate-100">
             {isLoading ? (
-              <div className="p-10 text-center">
-                <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
-              </div>
+              <div className="p-10 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
             ) : processes.length === 0 ? (
-              <div className="p-10 text-center">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Nenhum processo</p>
-              </div>
+              <div className="p-10 text-center"><p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Nenhum processo</p></div>
             ) : processes.map((p) => (
-              <Link 
-                key={p.id} 
-                to="/processes/$id" params={{ id: p.id }}
-                className="block p-4 active:bg-slate-50 transition-colors"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <div className="font-bold text-navy text-sm">{p.process_type}</div>
+              <Link key={p.id} to="/processes/$id" params={{ id: p.id }} className="block p-4 active:bg-slate-50 transition-colors">
+                <div className="flex justify-between items-start mb-2 gap-2">
+                  <div className="min-w-0">
+                    <div className="font-bold text-navy text-sm truncate">{p.title || p.process_type}</div>
                     <div className="text-[9px] text-primary font-mono font-black uppercase">PROC-{p.id.substring(0, 6)}</div>
                   </div>
-                  <Badge className="text-[7px] font-black uppercase tracking-widest bg-primary/10 text-primary border-none">
+                  <Badge className="shrink-0 text-[7px] font-black uppercase tracking-widest bg-primary/10 text-primary border-none">
                     {columns.find(c => c.id === p.status)?.title || p.status}
                   </Badge>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500">
-                  <div className="flex items-center gap-1.5 overflow-hidden">
-                    <User className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{p.customers?.name || "---"}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 overflow-hidden justify-end">
-                    <Ship className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{p.vessels?.name || "---"}</span>
-                  </div>
+                <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 mb-2">
+                  <div className="flex items-center gap-1.5 overflow-hidden"><User className="h-3 w-3 shrink-0" /><span className="truncate">{p.customers?.name || "---"}</span></div>
+                  <div className="flex items-center gap-1.5 overflow-hidden justify-end"><Ship className="h-3 w-3 shrink-0" /><span className="truncate">{p.vessels?.name || "---"}</span></div>
                 </div>
+                <ProgressBar value={p.completion_percentage} compact />
               </Link>
             ))}
           </div>
@@ -363,37 +372,19 @@ function Processes() {
       {!isLoading && totalCount > 0 && (
         <div className="p-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white rounded-b-[2rem]">
           <span>Mostrando {processes.length} de {totalCount} processos</span>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200 bg-white"
-              onClick={() => setPage(prev => Math.max(1, prev - 1))}
-              disabled={page === 1}
-            >
-              Anterior
-            </Button>
-            <div className="flex items-center gap-1">
-              <span className="px-3 h-8 flex items-center bg-primary text-white rounded-lg shadow-sm">{page}</span>
-              <span className="text-slate-300">/</span>
-              <span className="px-3 h-8 flex items-center text-navy font-bold">{Math.ceil(totalCount / pageSize) || 1}</span>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200 bg-white"
-              onClick={() => setPage(prev => prev + 1)}
-              disabled={page >= Math.ceil(totalCount / pageSize)}
-            >
-              Próximo
-            </Button>
+          <div className="flex gap-2 items-center">
+            <Button variant="outline" size="sm" className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200 bg-white" onClick={() => setPage(prev => Math.max(1, prev - 1))} disabled={page === 1}>Anterior</Button>
+            <span className="px-3 h-8 flex items-center bg-primary text-white rounded-lg shadow-sm">{page}</span>
+            <span className="text-slate-300">/</span>
+            <span className="px-3 h-8 flex items-center text-navy font-bold">{Math.ceil(totalCount / pageSize) || 1}</span>
+            <Button variant="outline" size="sm" className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200 bg-white" onClick={() => setPage(prev => prev + 1)} disabled={page >= Math.ceil(totalCount / pageSize)}>Próximo</Button>
           </div>
         </div>
       )}
 
-      <UpgradeModal 
-        isOpen={upgradeModal.isOpen} 
-        onClose={() => setUpgradeModal({ ...upgradeModal, isOpen: false })} 
+      <UpgradeModal
+        isOpen={upgradeModal.isOpen}
+        onClose={() => setUpgradeModal({ ...upgradeModal, isOpen: false })}
         resource="processes"
         limit={upgradeModal.limit}
         current={upgradeModal.current}
@@ -403,6 +394,57 @@ function Processes() {
 }
 
 type Col = { id: string; title: string; color: string };
+
+function PriorityChip({ priority }: { priority: string }) {
+  const map: Record<string, string> = {
+    high: "bg-red-50 text-red-700 border-red-100",
+    medium: "bg-amber-50 text-amber-700 border-amber-100",
+    low: "bg-emerald-50 text-emerald-700 border-emerald-100",
+  };
+  const cls = map[priority] || "bg-slate-50 text-slate-600 border-slate-100";
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${cls}`}>
+      <Star className="h-2.5 w-2.5" />{priority}
+    </span>
+  );
+}
+
+function ProgressBar({ value, compact = false }: { value: number | null | undefined; compact?: boolean }) {
+  const v = Math.max(0, Math.min(100, value ?? 0));
+  return (
+    <div className={compact ? "space-y-1" : "space-y-2"}>
+      {!compact && (
+        <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
+          <span>Progresso</span>
+          <span className="text-navy">{value != null ? `${Math.round(v)}%` : "—"}</span>
+        </div>
+      )}
+      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-full bg-gradient-to-r from-primary to-cyan-500 transition-all" style={{ width: `${v}%` }} />
+      </div>
+      {compact && <div className="text-[9px] font-black text-slate-400">{value != null ? `${Math.round(v)}%` : "—"}</div>}
+    </div>
+  );
+}
+
+function DueLabel({ dueDate }: { dueDate?: string | null }) {
+  const info = useMemo(() => {
+    if (!dueDate) return { label: "Sem prazo", tone: "text-slate-400", late: false };
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const due = new Date(dueDate);
+    const diff = Math.ceil((due.getTime() - today.getTime()) / 86400000);
+    if (diff < 0) return { label: `${Math.abs(diff)}d atrasado`, tone: "text-red-600", late: true };
+    if (diff === 0) return { label: "Vence hoje", tone: "text-amber-600", late: false };
+    if (diff <= 3) return { label: `Em ${diff}d`, tone: "text-amber-600", late: false };
+    return { label: `Em ${diff}d`, tone: "text-slate-500", late: false };
+  }, [dueDate]);
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest ${info.tone}`}>
+      {info.late ? <AlertTriangle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+      {info.label}
+    </span>
+  );
+}
 
 function CrmGrid({
   processes,
@@ -422,13 +464,7 @@ function CrmGrid({
       </div>
     );
   }
-  if (!processes.length) {
-    return (
-      <div className="py-12 text-center text-xs font-bold text-slate-400 uppercase tracking-widest">
-        Nenhum processo encontrado.
-      </div>
-    );
-  }
+  if (!processes.length) return null;
 
   const statusMeta = (status: string) => {
     const found = columns.find((c) => c.id === status);
@@ -437,21 +473,17 @@ function CrmGrid({
 
   const fmtDate = (iso?: string | null) => {
     if (!iso) return null;
-    try {
-      return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
-    } catch {
-      return null;
-    }
+    try { return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }); } catch { return null; }
   };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 pb-8">
       {processes.map((p) => {
         const s = statusMeta(p.status);
-        const progress = typeof p.completion_percentage === "number" ? p.completion_percentage : null;
         const created = fmtDate(p.created_at);
-        const due = fmtDate(p.due_date);
         const updated = fmtDate(p.updated_at);
+        const pendingDocs = typeof p.pending_documents_count === "number" ? p.pending_documents_count : 0;
+        const missingSigs = typeof p.missing_signatures_count === "number" ? p.missing_signatures_count : 0;
         return (
           <div
             key={p.id}
@@ -460,7 +492,7 @@ function CrmGrid({
             <div className="p-5 sm:p-6 flex-1 flex flex-col gap-4">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-1.5">
+                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
                     <span className="text-[9px] font-mono font-black text-primary bg-primary/10 px-2 py-0.5 rounded uppercase tracking-tighter">
                       PROC-{p.id.substring(0, 6)}
                     </span>
@@ -468,14 +500,23 @@ function CrmGrid({
                       <span className={`h-1.5 w-1.5 rounded-full ${s.color}`} />
                       {s.title}
                     </span>
+                    {p.priority && <PriorityChip priority={p.priority} />}
+                    {p.is_favorite && <Star className="h-3 w-3 text-amber-500 fill-amber-500" />}
                   </div>
-                  <h3 className="font-black text-navy text-sm leading-tight truncate" title={p.process_type}>
-                    {p.process_type}
+                  <h3 className="font-black text-navy text-sm leading-tight line-clamp-2" title={p.title || p.process_type}>
+                    {p.title || p.process_type}
                   </h3>
+                  {p.protocol_number && (
+                    <p className="text-[10px] font-bold text-slate-400 mt-1 truncate">Protocolo {p.protocol_number}</p>
+                  )}
                 </div>
-                <button className="shrink-0 p-1.5 rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-50">
+                <Link
+                  to="/processes/$id" params={{ id: p.id }}
+                  className="shrink-0 p-1.5 rounded-lg text-slate-300 hover:text-primary hover:bg-primary/5"
+                  title="Mais"
+                >
                   <MoreHorizontal className="h-4 w-4" />
-                </button>
+                </Link>
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-[11px] font-bold text-slate-600 border-y border-slate-50 py-3">
@@ -487,63 +528,68 @@ function CrmGrid({
                   <Ship className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                   <span className="truncate" title={p.vessels?.name || ""}>{p.vessels?.name || "Sem embarcação"}</span>
                 </div>
-                <div className="flex items-center gap-2 text-slate-500">
+                <div className="flex items-center gap-2 text-slate-500 min-w-0">
                   <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                  <span>Abertura {created || "—"}</span>
+                  <span className="truncate">Abertura {created || "—"}</span>
                 </div>
-                <div className="flex items-center gap-2 text-slate-500">
-                  <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                  <span>Prazo {due || "s/ data"}</span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  <span>Progresso</span>
-                  <span className="text-navy">{progress != null ? `${Math.round(progress)}%` : "—"}</span>
-                </div>
-                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-primary to-cyan-500"
-                    style={{ width: `${Math.max(0, Math.min(100, progress ?? 0))}%` }}
-                  />
+                <div className="flex items-center gap-2 text-slate-500 min-w-0">
+                  <DueLabel dueDate={p.due_date} />
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold text-slate-500">
-                {typeof p.pending_documents_count === "number" && (
-                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-slate-50 border-slate-100">
-                    {p.pending_documents_count} pendentes
+              <ProgressBar value={p.completion_percentage} />
+
+              <div className="flex flex-wrap items-center gap-2">
+                {pendingDocs > 0 && (
+                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-amber-50 border-amber-100 text-amber-700">
+                    {pendingDocs} doc pendente{pendingDocs > 1 ? 's' : ''}
                   </Badge>
                 )}
-                {p.priority && (
-                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-amber-50 border-amber-100 text-amber-700">
-                    {p.priority}
+                {missingSigs > 0 && (
+                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-orange-50 border-orange-100 text-orange-700">
+                    {missingSigs} assinatura{missingSigs > 1 ? 's' : ''}
+                  </Badge>
+                )}
+                {p.sla_status === 'overdue' && (
+                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-red-50 border-red-100 text-red-700">
+                    SLA estourado
                   </Badge>
                 )}
                 {updated && (
-                  <span className="ml-auto text-[10px] text-slate-400">
+                  <span className="ml-auto text-[10px] font-bold text-slate-400">
                     Atualizado {updated}
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="px-5 sm:px-6 py-3 border-t border-slate-50 bg-slate-50/40 flex items-center justify-between gap-2">
+            <div className="px-5 sm:px-6 py-3 border-t border-slate-50 bg-slate-50/40 flex items-center justify-between gap-2 flex-wrap">
               <Link
-                to="/processes/$id"
-                params={{ id: p.id }}
-                className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary"
+                to="/processes/$id" params={{ id: p.id }}
+                className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-primary"
               >
-                Abrir
+                Abrir <ArrowRight className="h-3 w-3" />
               </Link>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Link
-                  to="/processes/$id"
-                  params={{ id: p.id }}
-                  className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-primary hover:opacity-80"
+                  to="/processes/$id" params={{ id: p.id }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary hover:bg-white border border-transparent hover:border-slate-200"
+                  title="Assinaturas"
                 >
-                  Continuar <ArrowRight className="h-3 w-3" />
+                  <FileSignature className="h-3 w-3" /> Assinaturas
+                </Link>
+                <Link
+                  to="/processes/$id" params={{ id: p.id }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary hover:bg-white border border-transparent hover:border-slate-200"
+                  title="Dossiê"
+                >
+                  <FolderArchive className="h-3 w-3" /> Dossiê
+                </Link>
+                <Link
+                  to="/processes/$id" params={{ id: p.id }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-white bg-primary hover:opacity-90"
+                >
+                  Continuar
                 </Link>
               </div>
             </div>
