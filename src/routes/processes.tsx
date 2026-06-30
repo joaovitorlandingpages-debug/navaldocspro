@@ -468,11 +468,13 @@ function CrmGrid({
   isLoading,
   columns,
   onNewProcess,
+  onChanged,
 }: {
   processes: any[];
   isLoading: boolean;
   columns: Col[];
   onNewProcess: () => void;
+  onChanged?: () => void;
 }) {
   if (isLoading) {
     return (
