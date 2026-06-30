@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ClipboardList, Search, Plus,
   ArrowRight, Calendar, User, Ship, Loader2,
@@ -476,6 +476,10 @@ function CrmGrid({
   onNewProcess: () => void;
   onChanged?: () => void;
 }) {
+  const navigate = useNavigate();
+  const goToTab = (pid: string, tab: string) =>
+    navigate({ to: "/processes/$id", params: { id: pid }, search: { tab } as any });
+
   if (isLoading) {
     return (
       <div className="py-20 grid place-items-center">
@@ -581,25 +585,28 @@ function CrmGrid({
               <div className="text-[10px] font-medium text-slate-400 truncate">
                 {updated ? `Atualizado ${updated}` : "—"}
               </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <Link
-                  to="/processes/$id" params={{ id: p.id }} search={{ tab: "overview" }}
+              <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); goToTab(p.id, "overview"); }}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 hover:text-primary hover:bg-white border border-slate-200 bg-white transition-colors"
                 >
                   Abrir
-                </Link>
-                <Link
-                  to="/processes/$id" params={{ id: p.id }} search={{ tab: "edit" }}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); goToTab(p.id, "edit"); }}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 hover:text-primary hover:bg-white border border-slate-200 bg-white transition-colors"
                 >
                   Editar
-                </Link>
-                <Link
-                  to="/processes/$id" params={{ id: p.id }} search={{ tab: "generation" }}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); goToTab(p.id, "generation"); }}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white bg-primary hover:opacity-90 transition-opacity"
                 >
                   Continuar <ArrowRight className="h-3 w-3" />
-                </Link>
+                </button>
                 <ProcessActionsMenu process={p} onChanged={onChanged} />
               </div>
             </div>
