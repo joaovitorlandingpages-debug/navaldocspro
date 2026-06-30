@@ -240,6 +240,7 @@ function Processes() {
           isLoading={isLoading}
           columns={columns}
           onNewProcess={() => setIsNewProcessOpen(true)}
+          onChanged={fetchProcesses}
         />
       ) : view === "kanban" ? (
 
