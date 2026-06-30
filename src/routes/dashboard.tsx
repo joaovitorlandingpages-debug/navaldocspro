@@ -7,7 +7,7 @@ import {
   AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
   Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft,
   Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight, Signature, Lock,
-  Globe, Award, Verified, LayoutTemplate, UserCircle
+  Globe, Award, Verified, LayoutTemplate, UserCircle, Archive, Trash2
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
@@ -161,6 +161,8 @@ function DashboardLayout() {
       { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
       { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
       { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
+      { name: "Arquivados", icon: <Archive className="h-5 w-5" />, path: "/processes/archived" },
+      { name: "Lixeira", icon: <Trash2 className="h-5 w-5" />, path: "/processes/trash" },
     ]},
     { group: "Documentação", items: [
       { name: "Biblioteca", icon: <Database className="h-5 w-5" />, path: "/dashboard/document-center" },

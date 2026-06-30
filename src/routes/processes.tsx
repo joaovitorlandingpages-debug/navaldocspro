@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  ClipboardList, Search, Plus, MoreHorizontal,
+  ClipboardList, Search, Plus,
   ArrowRight, Calendar, User, Ship, Loader2,
   Clock, Package, FileSignature, FolderArchive, Filter, ArrowUpDown,
-  AlertTriangle, Star
+  AlertTriangle, Star, Archive, Trash2
 } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/navigation/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
+import { ProcessActionsMenu } from "@/components/processes/ProcessActionsMenu";
 
 export const Route = createFileRoute("/processes")({
   component: Processes,
@@ -44,8 +45,7 @@ function Processes() {
     limit: null
   });
 
-  useEffect(() => {
-    const fetchProcesses = async () => {
+  const fetchProcesses = useCallback(async () => {
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setIsLoading(false); return; }
@@ -62,7 +62,9 @@ function Processes() {
         .from('processes')
         .select('*, customers(name), vessels(name)', { count: 'exact' })
         .eq('company_id', profile.company_id)
-        .is('deleted_at', null);
+        .is('deleted_at', null)
+        .is('archived_at', null)
+        .is('trashed_at', null);
 
       if (searchTerm) {
         const term = `%${searchTerm}%`;
@@ -90,11 +92,12 @@ function Processes() {
       if (count !== null) setTotalCount(count);
       if (error) console.error("Error fetching processes:", error);
       setIsLoading(false);
-    };
+  }, [page, searchTerm, statusFilter, priorityFilter, sort]);
 
+  useEffect(() => {
     const debounceTimer = setTimeout(fetchProcesses, 300);
     return () => clearTimeout(debounceTimer);
-  }, [page, searchTerm, statusFilter, priorityFilter, sort]);
+  }, [fetchProcesses]);
 
 
   const columns = [
@@ -134,6 +137,19 @@ function Processes() {
                 </button>
               ))}
             </div>
+
+            <Link
+              to="/processes/archived"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-primary hover:border-primary/40"
+            >
+              <Archive className="h-3.5 w-3.5" /> Arquivados
+            </Link>
+            <Link
+              to="/processes/trash"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-red-600 hover:border-red-300"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Lixeira
+            </Link>
 
             <button
               onClick={async () => {
@@ -224,6 +240,7 @@ function Processes() {
           isLoading={isLoading}
           columns={columns}
           onNewProcess={() => setIsNewProcessOpen(true)}
+          onChanged={fetchProcesses}
         />
       ) : view === "kanban" ? (
 
@@ -451,11 +468,13 @@ function CrmGrid({
   isLoading,
   columns,
   onNewProcess,
+  onChanged,
 }: {
   processes: any[];
   isLoading: boolean;
   columns: Col[];
   onNewProcess: () => void;
+  onChanged?: () => void;
 }) {
   if (isLoading) {
     return (
@@ -510,13 +529,7 @@ function CrmGrid({
                     <p className="text-[10px] font-bold text-slate-400 mt-1 truncate">Protocolo {p.protocol_number}</p>
                   )}
                 </div>
-                <Link
-                  to="/processes/$id" params={{ id: p.id }}
-                  className="shrink-0 p-1.5 rounded-lg text-slate-300 hover:text-primary hover:bg-primary/5"
-                  title="Mais"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Link>
+                <ProcessActionsMenu process={p} onChanged={onChanged} />
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-[11px] font-bold text-slate-600 border-y border-slate-50 py-3">

@@ -65,6 +65,8 @@ import { Route as TemplatesMeusRouteImport } from './routes/templates.meus'
 import { Route as TemplatesMarketplaceRouteImport } from './routes/templates.marketplace'
 import { Route as TemplatesGratuitosRouteImport } from './routes/templates.gratuitos'
 import { Route as TemplatesIdRouteImport } from './routes/templates.$id'
+import { Route as ProcessesTrashRouteImport } from './routes/processes.trash'
+import { Route as ProcessesArchivedRouteImport } from './routes/processes.archived'
 import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as DocumentosBibliotecaRouteImport } from './routes/documentos.biblioteca'
@@ -391,6 +393,16 @@ const TemplatesIdRoute = TemplatesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => TemplatesRoute,
 } as any)
+const ProcessesTrashRoute = ProcessesTrashRouteImport.update({
+  id: '/trash',
+  path: '/trash',
+  getParentRoute: () => ProcessesRoute,
+} as any)
+const ProcessesArchivedRoute = ProcessesArchivedRouteImport.update({
+  id: '/archived',
+  path: '/archived',
+  getParentRoute: () => ProcessesRoute,
+} as any)
 const ProcessesIdRoute = ProcessesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -715,6 +727,8 @@ export interface FileRoutesByFullPath {
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
+  '/processes/archived': typeof ProcessesArchivedRoute
+  '/processes/trash': typeof ProcessesTrashRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
@@ -815,6 +829,8 @@ export interface FileRoutesByTo {
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
+  '/processes/archived': typeof ProcessesArchivedRoute
+  '/processes/trash': typeof ProcessesTrashRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
@@ -919,6 +935,8 @@ export interface FileRoutesById {
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
+  '/processes/archived': typeof ProcessesArchivedRoute
+  '/processes/trash': typeof ProcessesTrashRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
@@ -1024,6 +1042,8 @@ export interface FileRouteTypes {
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
+    | '/processes/archived'
+    | '/processes/trash'
     | '/templates/$id'
     | '/templates/gratuitos'
     | '/templates/marketplace'
@@ -1124,6 +1144,8 @@ export interface FileRouteTypes {
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
+    | '/processes/archived'
+    | '/processes/trash'
     | '/templates/$id'
     | '/templates/gratuitos'
     | '/templates/marketplace'
@@ -1227,6 +1249,8 @@ export interface FileRouteTypes {
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
+    | '/processes/archived'
+    | '/processes/trash'
     | '/templates/$id'
     | '/templates/gratuitos'
     | '/templates/marketplace'
@@ -1693,6 +1717,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TemplatesIdRouteImport
       parentRoute: typeof TemplatesRoute
     }
+    '/processes/trash': {
+      id: '/processes/trash'
+      path: '/trash'
+      fullPath: '/processes/trash'
+      preLoaderRoute: typeof ProcessesTrashRouteImport
+      parentRoute: typeof ProcessesRoute
+    }
+    '/processes/archived': {
+      id: '/processes/archived'
+      path: '/archived'
+      fullPath: '/processes/archived'
+      preLoaderRoute: typeof ProcessesArchivedRouteImport
+      parentRoute: typeof ProcessesRoute
+    }
     '/processes/$id': {
       id: '/processes/$id'
       path: '/$id'
@@ -2113,10 +2151,14 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 
 interface ProcessesRouteChildren {
   ProcessesIdRoute: typeof ProcessesIdRoute
+  ProcessesArchivedRoute: typeof ProcessesArchivedRoute
+  ProcessesTrashRoute: typeof ProcessesTrashRoute
 }
 
 const ProcessesRouteChildren: ProcessesRouteChildren = {
   ProcessesIdRoute: ProcessesIdRoute,
+  ProcessesArchivedRoute: ProcessesArchivedRoute,
+  ProcessesTrashRoute: ProcessesTrashRoute,
 }
 
 const ProcessesRouteWithChildren = ProcessesRoute._addFileChildren(

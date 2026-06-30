@@ -62,8 +62,8 @@ export function PlanLimitProvider({ children }: { children: React.ReactNode }) {
           const { count } = await supabase.from('vessels').select('*', { count: 'exact', head: true }).eq('company_id', subscription.company_id);
           current = count || 0;
         } else if (resource === 'processes') {
-          const { count } = await supabase.from('processes').select('*', { count: 'exact', head: true }).eq('company_id', subscription.company_id);
-          current = count || 0;
+          const { data: count } = await supabase.rpc('active_processes_count', { p_company_id: subscription.company_id });
+          current = typeof count === 'number' ? count : 0;
         }
       }
 
