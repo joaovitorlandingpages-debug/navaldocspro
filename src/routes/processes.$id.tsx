@@ -650,11 +650,19 @@ function ProcessDetail() {
                      {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FilePlus className="h-4 w-4" />} 
                      Gerar Requerimento
                   </Button>
-                  <Button variant="outline" className="w-full h-12 rounded-2xl font-bold gap-2 border-white/10 text-white hover:bg-white/5">
-                     <PlayCircle className="h-4 w-4" /> Iniciar Automação
+                  <Button
+                    variant="outline"
+                    className="w-full h-12 rounded-2xl font-bold gap-2 border-white/10 text-white hover:bg-white/5"
+                    onClick={() => setActiveTab("signatures")}
+                  >
+                     <Signature className="h-4 w-4" /> Enviar para Assinatura
                   </Button>
-                  <Button variant="outline" className="w-full h-12 rounded-2xl font-bold gap-2 border-white/10 text-white hover:bg-white/5">
-                     <MessageSquare className="h-4 w-4" /> Notificar Cliente
+                  <Button
+                    variant="outline"
+                    className="w-full h-12 rounded-2xl font-bold gap-2 border-white/10 text-white hover:bg-white/5"
+                    onClick={() => setActiveTab("client_portal")}
+                  >
+                     <Link2 className="h-4 w-4" /> Portal do Cliente
                   </Button>
                </div>
             </div>
