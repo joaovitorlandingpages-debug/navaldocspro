@@ -35,6 +35,8 @@ interface Props {
   onChanged?: () => void;
   trigger?: React.ReactNode;
   align?: "start" | "center" | "end";
+  /** Override default "Editar" behavior (which navigates to ?tab=edit). */
+  onEdit?: () => void;
 }
 
 function deriveState(p: Props["process"]): ProcessLifecycleState {
