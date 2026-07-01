@@ -48,6 +48,7 @@ import { ProcessIdentityPanel } from "@/components/process/ProcessIdentityPanel"
 import { ProcessTopBar } from "@/components/processes/ProcessTopBar";
 import { ProcessEditForm } from "@/components/processes/ProcessEditForm";
 import { ProcessEditSheet } from "@/components/processes/ProcessEditSheet";
+import { ProcessBlueprintWorkspace } from "@/components/processes/ProcessBlueprintWorkspace";
 import { Palette } from "lucide-react";
 
 const VALID_TABS = [
@@ -350,6 +351,7 @@ function ProcessDetail() {
 
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
+                  <ProcessBlueprintWorkspace process={process} onOpenTab={setActiveTab} onChanged={fetchProcess} />
                   <SignaturesStatusCard processId={id} onOpen={() => setActiveTab("signatures")} />
                   <div className="grid md:grid-cols-2 gap-6">
                      <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
