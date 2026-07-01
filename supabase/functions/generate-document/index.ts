@@ -517,7 +517,7 @@ serve(async (req) => {
         const { data: fields } = await supabaseAdmin.from('document_fields').select('*').eq('template_id', templateId)
         if (fields) {
           for (const field of fields) {
-            const value = fieldValues[field.field_name] || ''
+            const value = (mergedFieldValues as any)[field.field_name] || ''
             if (!value) continue
             const pageNum = (field.page_number || 1) - 1
             const page = pages[pageNum]
