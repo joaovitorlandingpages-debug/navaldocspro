@@ -86,7 +86,7 @@ function ProcessDetail() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const search = Route.useSearch();
-  const activeTab = search.tab;
+  const activeTab: ProcessTab = search.tab ?? "overview";
   const focusItemId = search.focus ?? null;
   const focusAction = search.action ?? null;
   const setActiveTab = useCallback((tab: string) => {
