@@ -388,7 +388,7 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
       </div>
 
       {/* Documentos do processo */}
-      <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+      <div id="blueprint-documentos" className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm scroll-mt-24">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" /> Documentos do processo
