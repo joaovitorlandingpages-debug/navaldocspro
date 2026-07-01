@@ -109,7 +109,12 @@ async function loadPackage(processType: string) {
  *   removidos apenas se ainda estiverem `pending` e sem documento anexado.
  * - Nunca apaga itens já preenchidos.
  */
-export async function materializeProcessBlueprint(processId: string): Promise<MaterializeResult> {
+export async function materializeProcessBlueprint(
+  processId: string,
+  options: MaterializeOptions = {},
+): Promise<MaterializeResult> {
+  const exclude = new Set((options.excludeTemplateIds ?? []).filter(Boolean));
+  const extras = (options.extraTemplateIds ?? []).filter(Boolean);
   const ctx = await loadContext(processId);
   if (!ctx || !ctx.process) {
     return { processId, packageId: null, added: 0, updated: 0, removed: 0, kept: 0, skippedByRule: 0 };
