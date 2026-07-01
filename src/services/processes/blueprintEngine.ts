@@ -200,6 +200,27 @@ export async function materializeProcessBlueprint(
     if (!insErr) added += 1;
   }
 
+  // Extras da biblioteca (opcionais adicionados manualmente pelo engenheiro).
+  if (extras.length > 0) {
+    const { data: extraTpls } = await supabase
+      .from("document_templates")
+      .select("id,name")
+      .in("id", extras);
+    for (const tpl of extraTpls ?? []) {
+      const already = existingByTemplate.get((tpl as any).id);
+      if (already) { kept += 1; validKeys.add(String((tpl as any).id)); continue; }
+      const { error: insErr } = await supabase.from("document_checklists").insert({
+        process_id: processId,
+        item_name: (tpl as any).name,
+        is_mandatory: false,
+        status: "pending",
+        template_id: (tpl as any).id,
+        is_conditional: false,
+      });
+      if (!insErr) { added += 1; validKeys.add(String((tpl as any).id)); }
+    }
+  }
+
   // Reconcile: remove somente itens ainda pendentes/sem documento que não pertencem mais
   let removed = 0;
   for (const row of existing ?? []) {
