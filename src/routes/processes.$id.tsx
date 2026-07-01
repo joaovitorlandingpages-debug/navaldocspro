@@ -49,6 +49,7 @@ import { ProcessTopBar } from "@/components/processes/ProcessTopBar";
 import { ProcessEditForm } from "@/components/processes/ProcessEditForm";
 import { ProcessEditSheet } from "@/components/processes/ProcessEditSheet";
 import { ProcessBlueprintWorkspace } from "@/components/processes/ProcessBlueprintWorkspace";
+import { ProcessItemFocusDialog } from "@/components/processes/ProcessItemFocusDialog";
 import { Palette } from "lucide-react";
 
 const VALID_TABS = [
