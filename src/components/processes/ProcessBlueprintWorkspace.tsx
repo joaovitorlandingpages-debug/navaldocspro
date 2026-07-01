@@ -8,8 +8,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { materializeProcessBlueprint } from "@/services/processes/blueprintEngine";
 import {
-  batchGenerate, batchRequestSignature, batchDownload, type BatchReport,
+  batchGenerate, batchDownload, type BatchReport, type BatchSignatureReport,
 } from "@/services/processes/batchChecklistActions";
+import { BatchSignatureDialog } from "./BatchSignatureDialog";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -65,11 +67,14 @@ function statusChip(status: string | null | undefined) {
 
 export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onChanged }: Props) {
   const processId: string = process?.id;
+  const { profile } = useAuth();
   const [reprocessing, setReprocessing] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [batchRunning, setBatchRunning] = useState<null | "generate" | "signature" | "download">(null);
   const [batchProgress, setBatchProgress] = useState<{ done: number; total: number; current: string } | null>(null);
   const [lastReport, setLastReport] = useState<BatchReport | null>(null);
+  const [lastSigReport, setLastSigReport] = useState<BatchSignatureReport | null>(null);
+  const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
 
   const { data: checklist = [], isLoading, refetch } = useQuery({
     queryKey: ["blueprint-checklist", processId],
@@ -205,20 +210,18 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     }
   }, [processId, selectedItems, refetch, onChanged]);
 
-  const runBatchSignature = useCallback(async () => {
+  const openBatchSignature = useCallback(() => {
     if (selectedItems.length === 0) return;
-    setBatchRunning("signature");
-    try {
-      const r = await batchRequestSignature(processId, selectedItems);
-      if (r.created > 0) toast.success(`${r.created} solicitação(ões) de assinatura criada(s).`);
-      await refetch();
-      onChanged?.();
-    } catch (e: any) {
-      toast.error("Falha ao solicitar assinaturas: " + (e?.message || e));
-    } finally {
-      setBatchRunning(null);
-    }
-  }, [processId, selectedItems, refetch, onChanged]);
+    setSignatureDialogOpen(true);
+  }, [selectedItems]);
+
+  const handleBatchSignatureDone = useCallback(async (report: BatchSignatureReport) => {
+    setLastSigReport(report);
+    const total = report.created.length + report.failed.length + report.missingPdf.length + report.alreadySigned.length;
+    toast.success(`Assinaturas: ${report.created.length}/${total} criadas.`);
+    await refetch();
+    onChanged?.();
+  }, [refetch, onChanged]);
 
   const runBatchDownload = useCallback(async () => {
     if (selectedItems.length === 0) return;
@@ -369,7 +372,7 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
               {batchRunning === "generate" ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
               Gerar selecionados
             </Button>
-            <Button size="sm" variant="outline" onClick={runBatchSignature} disabled={!!batchRunning} className="h-8 rounded-lg">
+            <Button size="sm" variant="outline" onClick={openBatchSignature} disabled={!!batchRunning} className="h-8 rounded-lg">
               <Signature className="h-3 w-3 mr-1" /> Solicitar assinatura
             </Button>
             <Button size="sm" variant="outline" onClick={runBatchDownload} disabled={!!batchRunning} className="h-8 rounded-lg">
@@ -404,6 +407,29 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
             )}
             {lastReport.missingData.length > 0 && (
               <p className="text-amber-700"><b>{lastReport.missingData.length}</b> sem template/dados: {lastReport.missingData.join(", ")}</p>
+            )}
+          </div>
+        )}
+
+        {lastSigReport && (
+          <div className="mb-4 p-3 rounded-xl border border-amber-100 bg-amber-50/50 text-xs space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="font-black uppercase tracking-widest text-amber-700">Relatório de assinaturas em lote</span>
+              <button className="text-slate-400 hover:text-slate-600" onClick={() => setLastSigReport(null)}>
+                <XCircle className="h-4 w-4" />
+              </button>
+            </div>
+            {lastSigReport.created.length > 0 && (
+              <p className="text-emerald-700"><b>{lastSigReport.created.length}</b> solicitação(ões) criada(s): {lastSigReport.created.join(", ")}</p>
+            )}
+            {lastSigReport.failed.length > 0 && (
+              <p className="text-red-700"><b>{lastSigReport.failed.length}</b> falha(s): {lastSigReport.failed.map(f => `${f.name} (${f.reason})`).join("; ")}</p>
+            )}
+            {lastSigReport.missingPdf.length > 0 && (
+              <p className="text-amber-700"><b>{lastSigReport.missingPdf.length}</b> sem PDF gerado: {lastSigReport.missingPdf.join(", ")}</p>
+            )}
+            {lastSigReport.alreadySigned.length > 0 && (
+              <p className="text-slate-600"><b>{lastSigReport.alreadySigned.length}</b> já assinado(s): {lastSigReport.alreadySigned.join(", ")}</p>
             )}
           </div>
         )}
@@ -490,6 +516,16 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
           </div>
         )}
       </div>
+
+      <BatchSignatureDialog
+        open={signatureDialogOpen}
+        onClose={() => setSignatureDialogOpen(false)}
+        processId={processId}
+        process={process}
+        items={selectedItems}
+        createdBy={profile?.id}
+        onDone={handleBatchSignatureDone}
+      />
     </div>
   );
 }
