@@ -375,7 +375,7 @@ function ProcessDetail() {
 
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
-                  <ProcessBlueprintWorkspace process={process} onOpenTab={setActiveTab} onChanged={fetchProcess} />
+                  <ProcessBlueprintWorkspace process={process} onOpenTab={setActiveTab} onFocusItem={openFocusItem} onChanged={fetchProcess} />
                   <SignaturesStatusCard processId={id} onOpen={() => setActiveTab("signatures")} />
                   <div className="grid md:grid-cols-2 gap-6">
                      <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
