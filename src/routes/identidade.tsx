@@ -402,6 +402,27 @@ function IdentidadePage() {
           </div>
         </Section>
 
+        <Section title="Dados do Procurador / Despachante padrão" icon={<PenTool className="h-5 w-5" />}>
+          <p className="text-sm text-muted-foreground mb-3">
+            Preenchimento automático de Procurações, Requerimentos e documentos que citam
+            outorgado/representante. Nome e CPF são obrigatórios para gerar Procuração final.
+          </p>
+          <div className="grid md:grid-cols-2 gap-4">
+            <TextField label="Nome completo *" value={data.procurador_nome} onChange={(v) => setData((d) => ({ ...d, procurador_nome: v }))} />
+            <TextField label="CPF *" value={data.procurador_cpf} onChange={(v) => setData((d) => ({ ...d, procurador_cpf: v }))} />
+            <TextField label="RG" value={data.procurador_rg} onChange={(v) => setData((d) => ({ ...d, procurador_rg: v }))} />
+            <TextField label="Órgão expedidor" value={data.procurador_orgao_expedidor} onChange={(v) => setData((d) => ({ ...d, procurador_orgao_expedidor: v }))} />
+            <TextField label="Nacionalidade" value={data.procurador_nacionalidade} onChange={(v) => setData((d) => ({ ...d, procurador_nacionalidade: v }))} />
+            <TextField label="CREA (se aplicável)" value={data.procurador_crea} onChange={(v) => setData((d) => ({ ...d, procurador_crea: v }))} />
+            <TextField label="Telefone" value={data.procurador_telefone} onChange={(v) => setData((d) => ({ ...d, procurador_telefone: v }))} />
+            <TextField label="E-mail" value={data.procurador_email} onChange={(v) => setData((d) => ({ ...d, procurador_email: v }))} />
+            <div className="md:col-span-2">
+              <TextField label="Endereço completo" value={data.procurador_endereco} onChange={(v) => setData((d) => ({ ...d, procurador_endereco: v }))} />
+            </div>
+          </div>
+        </Section>
+
+
         <Section title="Assinatura, carimbo e marca d'água" icon={<Stamp className="h-5 w-5" />}>
           <div className="grid md:grid-cols-3 gap-6">
             <UploadField
