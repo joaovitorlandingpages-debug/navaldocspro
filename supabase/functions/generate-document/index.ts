@@ -452,7 +452,7 @@ serve(async (req) => {
       const lineHeight = 14
 
       let processedContent = template.base_content
-      const flatValues = flattenValues(fieldValues)
+      const flatValues = flattenValues(mergedFieldValues)
 
       Object.entries(flatValues).forEach(([key, val]) => {
         const placeholder = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g')
