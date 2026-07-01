@@ -345,6 +345,7 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
     const { data, error } = await supabase.rpc("process_duplicate", { p_id: process.id });
     if (error) return toast.error(error.message);
     toast.success("Processo duplicado.");
+    onSaved?.();
     onClose?.();
     await navigate({ to: "/processes/$id", params: { id: data as string }, search: { tab: "overview" } as any });
   }
@@ -353,6 +354,7 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
     const { error } = await supabase.rpc("process_archive", { p_id: process.id });
     if (error) return toast.error(error.message);
     toast.success("Processo arquivado.");
+    onSaved?.();
     onClose?.();
   }
   async function trash() {
@@ -360,6 +362,7 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
     const { error } = await supabase.rpc("process_trash", { p_id: process.id });
     if (error) return toast.error(error.message);
     toast.success("Processo movido para a lixeira.");
+    onSaved?.();
     onClose?.();
   }
 
