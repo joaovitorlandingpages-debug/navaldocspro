@@ -11,16 +11,18 @@ import {
   batchGenerate, batchDownload, type BatchReport, type BatchSignatureReport,
 } from "@/services/processes/batchChecklistActions";
 import { BatchSignatureDialog } from "./BatchSignatureDialog";
+import { ProcessTimelineMacro, type TimelineStage } from "./ProcessTimelineMacro";
+import { SmartDocumentCard } from "./SmartDocumentCard";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import {
   RefreshCw, FileText, ShieldCheck, ShieldAlert, GitBranch, Signature,
   Zap, PackageOpen, CheckCircle2, AlertTriangle, Clock, ArrowRight,
-  User, Ship, Target, Loader2, Sparkles, Download, XCircle,
+  User, Ship, Target, Loader2, Sparkles, Download, XCircle, ChevronDown,
 } from "lucide-react";
 
 interface Props {
