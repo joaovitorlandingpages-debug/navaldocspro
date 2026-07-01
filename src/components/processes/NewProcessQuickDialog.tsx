@@ -504,7 +504,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
               ) : <div />}
               <div className="flex gap-2">
                 <Button variant="outline" type="button" onClick={onClose} disabled={submitting}>Cancelar</Button>
-                <Button type="button" onClick={goToStep2} disabled={!selectedTypeId}>
+                <Button type="button" onClick={goToStep2} disabled={!selectedTypeId || !customerId} title={!customerId ? "Selecione um cliente" : undefined}>
                   Continuar <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
