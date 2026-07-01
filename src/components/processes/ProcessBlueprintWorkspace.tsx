@@ -279,6 +279,17 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
 
   const runBatchGenerate = useCallback(async () => {
     if (selectedItems.length === 0) return;
+    const usaProcuradorSelecionado = checklist
+      .filter((r) => selected.has(r.id))
+      .some((r) => {
+        const n = (r.item_name || "").toLowerCase();
+        const role = (r.document_role || "").toLowerCase();
+        return n.includes("procura") || n.includes("requerimento") || role.includes("procura") || role.includes("requerimento");
+      });
+    if (usaProcuradorSelecionado && procuradorMissing) {
+      toast.error("Dados do procurador incompletos. Preencha nome e CPF em Identidade Corporativa antes de gerar Procuração/Requerimento.");
+      return;
+    }
     setBatchRunning("generate");
     setLastReport(null);
     setBatchProgress({ done: 0, total: selectedItems.length, current: "" });
