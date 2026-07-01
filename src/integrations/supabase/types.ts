@@ -1503,36 +1503,63 @@ export type Database = {
       document_checklists: {
         Row: {
           completed_at: string | null
+          conditional_rule: Json | null
           created_at: string | null
           document_id: string | null
+          document_role: string | null
+          has_expiration: boolean | null
           id: string
+          is_conditional: boolean | null
           is_mandatory: boolean | null
           item_name: string
           notes: string | null
           process_id: string | null
+          requires_ocr: boolean | null
+          requires_signature: boolean | null
+          sort_order: number | null
           status: string | null
+          template_id: string | null
+          updated_at: string | null
         }
         Insert: {
           completed_at?: string | null
+          conditional_rule?: Json | null
           created_at?: string | null
           document_id?: string | null
+          document_role?: string | null
+          has_expiration?: boolean | null
           id?: string
+          is_conditional?: boolean | null
           is_mandatory?: boolean | null
           item_name: string
           notes?: string | null
           process_id?: string | null
+          requires_ocr?: boolean | null
+          requires_signature?: boolean | null
+          sort_order?: number | null
           status?: string | null
+          template_id?: string | null
+          updated_at?: string | null
         }
         Update: {
           completed_at?: string | null
+          conditional_rule?: Json | null
           created_at?: string | null
           document_id?: string | null
+          document_role?: string | null
+          has_expiration?: boolean | null
           id?: string
+          is_conditional?: boolean | null
           is_mandatory?: boolean | null
           item_name?: string
           notes?: string | null
           process_id?: string | null
+          requires_ocr?: boolean | null
+          requires_signature?: boolean | null
+          sort_order?: number | null
           status?: string | null
+          template_id?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -1547,6 +1574,13 @@ export type Database = {
             columns: ["process_id"]
             isOneToOne: false
             referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_checklists_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -6291,6 +6325,10 @@ export type Database = {
       process_hard_delete: {
         Args: { p_confirmation: string; p_id: string }
         Returns: undefined
+      }
+      process_materialize_checklist: {
+        Args: { p_process_id: string }
+        Returns: Json
       }
       process_restore: { Args: { p_id: string }; Returns: undefined }
       process_toggle_favorite: { Args: { p_id: string }; Returns: boolean }
