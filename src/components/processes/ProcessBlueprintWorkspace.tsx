@@ -516,6 +516,16 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
           </div>
         )}
       </div>
+
+      <BatchSignatureDialog
+        open={signatureDialogOpen}
+        onClose={() => setSignatureDialogOpen(false)}
+        processId={processId}
+        process={process}
+        items={selectedItems}
+        createdBy={profile?.id}
+        onDone={handleBatchSignatureDone}
+      />
     </div>
   );
 }
