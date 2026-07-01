@@ -688,10 +688,10 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
                 <Button type="button" variant="outline" className="rounded-xl justify-start gap-2 h-11" onClick={() => goTo("signatures")}>
                   <FileSignature className="h-4 w-4" /> Abrir Assinaturas
                 </Button>
-                <Button type="button" variant="outline" className="rounded-xl justify-start gap-2 h-11" onClick={() => goTo("timeline")}>
+                <Button type="button" variant="outline" className="rounded-xl justify-start gap-2 h-11" onClick={() => goTo("history")}>
                   <ClipboardList className="h-4 w-4" /> Abrir Timeline
                 </Button>
-                <Button type="button" variant="outline" className="rounded-xl justify-start gap-2 h-11" onClick={() => goTo("dossier")}>
+                <Button type="button" variant="outline" className="rounded-xl justify-start gap-2 h-11" onClick={() => goTo("dossier_v2")}>
                   <FolderArchive className="h-4 w-4" /> Abrir Dossiê
                 </Button>
                 <Button type="button" variant="outline" className="rounded-xl justify-start gap-2 h-11" onClick={share}>
