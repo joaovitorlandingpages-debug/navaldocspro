@@ -342,13 +342,16 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
+        // Ignore when any nested Dialog / AlertDialog is open (customer, vessel, confirm)
+        if (newCustomerOpen || editCustomerOpen || newVesselOpen || editVesselOpen || confirmAction !== null) return;
         e.preventDefault();
         handleSave(e);
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [handleSave]);
+  }, [handleSave, newCustomerOpen, editCustomerOpen, newVesselOpen, editVesselOpen, confirmAction]);
+
 
   // -------- Quick Actions
   async function goTo(t: string) {
