@@ -120,8 +120,7 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     queryKey: ["company-procurador", profile?.company_id],
     queryFn: async () => {
       if (!profile?.company_id) return null;
-      const { data } = await supabase
-        .from("companies")
+      const { data } = await (supabase.from("companies") as any)
         .select("procurador_nome, procurador_cpf")
         .eq("id", profile.company_id)
         .maybeSingle();
