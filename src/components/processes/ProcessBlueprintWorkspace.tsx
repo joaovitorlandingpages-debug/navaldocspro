@@ -67,11 +67,14 @@ function statusChip(status: string | null | undefined) {
 
 export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onChanged }: Props) {
   const processId: string = process?.id;
+  const { profile } = useAuth();
   const [reprocessing, setReprocessing] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [batchRunning, setBatchRunning] = useState<null | "generate" | "signature" | "download">(null);
   const [batchProgress, setBatchProgress] = useState<{ done: number; total: number; current: string } | null>(null);
   const [lastReport, setLastReport] = useState<BatchReport | null>(null);
+  const [lastSigReport, setLastSigReport] = useState<BatchSignatureReport | null>(null);
+  const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
 
   const { data: checklist = [], isLoading, refetch } = useQuery({
     queryKey: ["blueprint-checklist", processId],
