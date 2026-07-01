@@ -41,6 +41,15 @@ type BrandingFields = {
   contact_address: string;
   technical_responsible_name: string;
   technical_responsible_registry: string;
+  procurador_nome: string;
+  procurador_cpf: string;
+  procurador_rg: string;
+  procurador_orgao_expedidor: string;
+  procurador_nacionalidade: string;
+  procurador_endereco: string;
+  procurador_telefone: string;
+  procurador_email: string;
+  procurador_crea: string;
   signature_url: string | null;
   stamp_url: string | null;
   watermark_url: string | null;
@@ -60,6 +69,15 @@ const EMPTY: BrandingFields = {
   contact_address: "",
   technical_responsible_name: "",
   technical_responsible_registry: "",
+  procurador_nome: "",
+  procurador_cpf: "",
+  procurador_rg: "",
+  procurador_orgao_expedidor: "",
+  procurador_nacionalidade: "Brasileira",
+  procurador_endereco: "",
+  procurador_telefone: "",
+  procurador_email: "",
+  procurador_crea: "",
   signature_url: null,
   stamp_url: null,
   watermark_url: null,
@@ -171,10 +189,9 @@ function IdentidadePage() {
     }
     (async () => {
       setLoading(true);
-      const { data: row, error } = await supabase
-        .from("companies")
+      const { data: row, error } = await (supabase.from("companies") as any)
         .select(
-          "logo_primary_url, logo_secondary_url, brand_primary_color, brand_secondary_color, contact_phone, contact_whatsapp, contact_email, contact_website, contact_address, technical_responsible_name, technical_responsible_registry, signature_url, stamp_url, watermark_url, pdf_footer_text, pdf_template"
+          "logo_primary_url, logo_secondary_url, brand_primary_color, brand_secondary_color, contact_phone, contact_whatsapp, contact_email, contact_website, contact_address, technical_responsible_name, technical_responsible_registry, procurador_nome, procurador_cpf, procurador_rg, procurador_orgao_expedidor, procurador_nacionalidade, procurador_endereco, procurador_telefone, procurador_email, procurador_crea, signature_url, stamp_url, watermark_url, pdf_footer_text, pdf_template"
         )
         .eq("id", companyId)
         .maybeSingle();
@@ -383,6 +400,27 @@ function IdentidadePage() {
             <TextField label="Registro / CREA" value={data.technical_responsible_registry} onChange={(v) => setData((d) => ({ ...d, technical_responsible_registry: v }))} />
           </div>
         </Section>
+
+        <Section title="Dados do Procurador / Despachante padrão" icon={<PenTool className="h-5 w-5" />}>
+          <p className="text-sm text-muted-foreground mb-3">
+            Preenchimento automático de Procurações, Requerimentos e documentos que citam
+            outorgado/representante. Nome e CPF são obrigatórios para gerar Procuração final.
+          </p>
+          <div className="grid md:grid-cols-2 gap-4">
+            <TextField label="Nome completo *" value={data.procurador_nome} onChange={(v) => setData((d) => ({ ...d, procurador_nome: v }))} />
+            <TextField label="CPF *" value={data.procurador_cpf} onChange={(v) => setData((d) => ({ ...d, procurador_cpf: v }))} />
+            <TextField label="RG" value={data.procurador_rg} onChange={(v) => setData((d) => ({ ...d, procurador_rg: v }))} />
+            <TextField label="Órgão expedidor" value={data.procurador_orgao_expedidor} onChange={(v) => setData((d) => ({ ...d, procurador_orgao_expedidor: v }))} />
+            <TextField label="Nacionalidade" value={data.procurador_nacionalidade} onChange={(v) => setData((d) => ({ ...d, procurador_nacionalidade: v }))} />
+            <TextField label="CREA (se aplicável)" value={data.procurador_crea} onChange={(v) => setData((d) => ({ ...d, procurador_crea: v }))} />
+            <TextField label="Telefone" value={data.procurador_telefone} onChange={(v) => setData((d) => ({ ...d, procurador_telefone: v }))} />
+            <TextField label="E-mail" value={data.procurador_email} onChange={(v) => setData((d) => ({ ...d, procurador_email: v }))} />
+            <div className="md:col-span-2">
+              <TextField label="Endereço completo" value={data.procurador_endereco} onChange={(v) => setData((d) => ({ ...d, procurador_endereco: v }))} />
+            </div>
+          </div>
+        </Section>
+
 
         <Section title="Assinatura, carimbo e marca d'água" icon={<Stamp className="h-5 w-5" />}>
           <div className="grid md:grid-cols-3 gap-6">

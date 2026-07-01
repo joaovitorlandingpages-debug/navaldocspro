@@ -116,6 +116,22 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     enabled: !!processId,
   });
 
+  const { data: procurador } = useQuery({
+    queryKey: ["company-procurador", profile?.company_id],
+    queryFn: async () => {
+      if (!profile?.company_id) return null;
+      const { data } = await (supabase.from("companies") as any)
+        .select("procurador_nome, procurador_cpf")
+        .eq("id", profile.company_id)
+        .maybeSingle();
+      return data as { procurador_nome?: string | null; procurador_cpf?: string | null } | null;
+    },
+    enabled: !!profile?.company_id,
+  });
+  const procuradorMissing = !procurador?.procurador_nome?.trim() || !procurador?.procurador_cpf?.trim();
+
+
+
   const stats = useMemo(() => {
     const done = (r: ChecklistRow) => !!r.document_id || ["completed", "done", "ok", "generated", "attached"].includes((r.status || "").toLowerCase());
     const mandatory = checklist.filter((r) => r.is_mandatory && !r.is_conditional);
@@ -153,9 +169,18 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     }
     if (!process?.customer_id) list.push("Cliente ainda não vinculado ao processo.");
     if (!process?.vessel_id) list.push("Embarcação ainda não vinculada ao processo.");
+    const usaProcurador = checklist.some((r) => {
+      const n = (r.item_name || "").toLowerCase();
+      const role = (r.document_role || "").toLowerCase();
+      return n.includes("procura") || n.includes("requerimento") || role.includes("procura") || role.includes("requerimento");
+    });
+    if (usaProcurador && procuradorMissing) {
+      list.push("Dados do procurador incompletos. Preencha em Identidade Corporativa.");
+    }
     if (list.length === 0) list.push("Processo pronto para gerar dossiê.");
     return list;
-  }, [stats, process]);
+  }, [stats, process, checklist, procuradorMissing]);
+
 
   const smartChecklist = useMemo(() => [
     { label: "Cliente completo", ok: !!process?.customer_id },
@@ -253,6 +278,17 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
 
   const runBatchGenerate = useCallback(async () => {
     if (selectedItems.length === 0) return;
+    const usaProcuradorSelecionado = checklist
+      .filter((r) => selected.has(r.id))
+      .some((r) => {
+        const n = (r.item_name || "").toLowerCase();
+        const role = (r.document_role || "").toLowerCase();
+        return n.includes("procura") || n.includes("requerimento") || role.includes("procura") || role.includes("requerimento");
+      });
+    if (usaProcuradorSelecionado && procuradorMissing) {
+      toast.error("Dados do procurador incompletos. Preencha nome e CPF em Identidade Corporativa antes de gerar Procuração/Requerimento.");
+      return;
+    }
     setBatchRunning("generate");
     setLastReport(null);
     setBatchProgress({ done: 0, total: selectedItems.length, current: "" });
@@ -268,7 +304,7 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
       setBatchRunning(null);
       setBatchProgress(null);
     }
-  }, [processId, selectedItems, refetch, onChanged]);
+  }, [processId, selectedItems, refetch, onChanged, checklist, selected, procuradorMissing]);
 
   const openBatchSignature = useCallback(() => {
     if (selectedItems.length === 0) return;
