@@ -407,6 +407,8 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
             )}
             {lastReport.missingData.length > 0 && (
               <p className="text-amber-700"><b>{lastReport.missingData.length}</b> sem template/dados: {lastReport.missingData.join(", ")}</p>
+            )}
+          </div>
         )}
 
         {lastSigReport && (
@@ -429,8 +431,6 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
             {lastSigReport.alreadySigned.length > 0 && (
               <p className="text-slate-600"><b>{lastSigReport.alreadySigned.length}</b> já assinado(s): {lastSigReport.alreadySigned.join(", ")}</p>
             )}
-          </div>
-        )}
           </div>
         )}
 
