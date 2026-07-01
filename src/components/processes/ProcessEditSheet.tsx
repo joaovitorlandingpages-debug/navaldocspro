@@ -58,20 +58,20 @@ export function ProcessEditSheet({ process, processId, open, onOpenChange, onSav
         className={
           isMobile
             ? "h-[100dvh] max-h-[100dvh] w-full p-0 flex flex-col"
-            : "w-full sm:max-w-2xl p-0 flex flex-col"
+            : "w-full sm:max-w-[min(1100px,95vw)] p-0 flex flex-col"
         }
       >
         <SheetHeader className="px-5 sm:px-8 py-4 border-b bg-slate-50/80">
           <SheetTitle className="text-lg sm:text-xl font-black text-navy uppercase tracking-tight">
-            Editar Processo
+            Centro de Controle do Processo
           </SheetTitle>
           <SheetDescription className="text-[11px] font-medium text-slate-500 truncate">
             {loaded?.title || loaded?.process_type || "Carregando..."}
-            {loaded?.id ? `  ·  PROC-${String(loaded.id).substring(0, 6).toUpperCase()}` : ""}
+            {loaded?.protocol_number ? `  ·  ${loaded.protocol_number}` : loaded?.id ? `  ·  PROC-${String(loaded.id).substring(0, 6).toUpperCase()}` : ""}
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-5 sm:px-8 py-6">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {loading || !loaded ? (
             <div className="py-20 grid place-items-center">
               <Loader2 className="h-7 w-7 animate-spin text-primary" />
@@ -79,8 +79,9 @@ export function ProcessEditSheet({ process, processId, open, onOpenChange, onSav
           ) : (
             <ProcessEditForm
               process={loaded}
-              onSaved={async () => { await refresh(); onOpenChange(false); }}
+              onSaved={async () => { await refresh(); }}
               onCancel={() => onOpenChange(false)}
+              onClose={() => onOpenChange(false)}
             />
           )}
         </div>
