@@ -228,6 +228,17 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       toast.error("Sua empresa ainda não foi vinculada. Recarregue e tente novamente.");
       return;
     }
+    if (!customerId) {
+      toast.error("Selecione ou crie um cliente para continuar.");
+      setStep(1);
+      return;
+    }
+    if (selectedCount === 0) {
+      const ok = window.confirm(
+        "Nenhum documento selecionado. Deseja criar o processo mesmo assim? Você poderá adicionar documentos depois no Blueprint."
+      );
+      if (!ok) return;
+    }
     setSubmitting(true);
     try {
       const { data, error } = await supabase
@@ -236,12 +247,11 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
           company_id: profile.company_id,
           process_type: selectedType.name,
           process_type_id: selectedType.id,
-          customer_id: customerId || null,
+          customer_id: customerId,
           vessel_id: vesselId || null,
           title: title.trim() || selectedType.name,
           priority,
           status: "pending",
-          is_draft: !customerId,
         })
         .select("id").single();
       if (error) throw error;
