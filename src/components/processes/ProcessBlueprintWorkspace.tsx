@@ -11,16 +11,18 @@ import {
   batchGenerate, batchDownload, type BatchReport, type BatchSignatureReport,
 } from "@/services/processes/batchChecklistActions";
 import { BatchSignatureDialog } from "./BatchSignatureDialog";
+import { ProcessTimelineMacro, type TimelineStage } from "./ProcessTimelineMacro";
+import { SmartDocumentCard } from "./SmartDocumentCard";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import {
   RefreshCw, FileText, ShieldCheck, ShieldAlert, GitBranch, Signature,
   Zap, PackageOpen, CheckCircle2, AlertTriangle, Clock, ArrowRight,
-  User, Ship, Target, Loader2, Sparkles, Download, XCircle,
+  User, Ship, Target, Loader2, Sparkles, Download, XCircle, ChevronDown,
 } from "lucide-react";
 
 interface Props {
@@ -165,6 +167,64 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     { label: "Pronto para dossiê", ok: stats.pendingMandatory.length === 0 && stats.pendingSignatures.length === 0 },
   ], [process, stats]);
 
+  // Timeline macro do processo — Cliente → … → Entrega
+  const timelineStages = useMemo<TimelineStage[]>(() => {
+    const has = (needle: string) =>
+      checklist.some((r) => {
+        const n = r.item_name?.toLowerCase() || "";
+        const done = !!r.document_id || ["completed", "done", "generated", "attached", "signed"].includes((r.status || "").toLowerCase());
+        return n.includes(needle) && done;
+      });
+    const stages: Array<{ key: string; label: string; done: boolean }> = [
+      { key: "cliente", label: "Cliente", done: !!process?.customer_id },
+      { key: "embarcacao", label: "Embarcação", done: !!process?.vessel_id },
+      { key: "procuracao", label: "Procuração", done: has("procura") },
+      { key: "requerimento", label: "Requerimento", done: has("requerimento") },
+      { key: "bsade", label: "BSADE", done: has("bsade") || has("boletim") },
+      { key: "documentos", label: "Documentos", done: stats.pendingMandatory.length === 0 && checklist.length > 0 },
+      { key: "ocr", label: "OCR", done: stats.pendingOcr.length === 0 && uploads.length > 0 },
+      { key: "assinaturas", label: "Assinaturas", done: signatures.length > 0 && stats.pendingSignatures.length === 0 },
+      { key: "dossie", label: "Dossiê", done: (process?.status || "").toLowerCase() === "dossier_ready" || (process?.status || "").toLowerCase() === "delivered" },
+      { key: "entrega", label: "Entrega", done: (process?.status || "").toLowerCase() === "delivered" },
+    ];
+    let currentSet = false;
+    return stages.map((s) => {
+      if (s.done) return { key: s.key, label: s.label, status: "done" as const };
+      if (!currentSet) { currentSet = true; return { key: s.key, label: s.label, status: "current" as const }; }
+      return { key: s.key, label: s.label, status: "pending" as const };
+    });
+  }, [checklist, process, stats, uploads, signatures]);
+
+  const handleWaive = useCallback(async (id: string) => {
+    const { error } = await supabase.from("document_checklists").update({ status: "waived" }).eq("id", id);
+    if (error) return toast.error("Falha ao marcar como não aplicável.");
+    toast.success("Item marcado como não aplicável.");
+    await refetch();
+    onChanged?.();
+  }, [refetch, onChanged]);
+
+  const handleMarkAttached = useCallback(async (id: string) => {
+    const { error } = await supabase.from("document_checklists").update({ status: "attached" }).eq("id", id);
+    if (error) return toast.error("Falha ao marcar como anexado.");
+    toast.success("Comprovante marcado como anexado.");
+    await refetch();
+    onChanged?.();
+  }, [refetch, onChanged]);
+
+  const handleEditVessel = useCallback(() => {
+    window.dispatchEvent(new CustomEvent("naval:edit-vessel", { detail: { processId, vesselId: process?.vessel_id } }));
+    onOpenTab("crm");
+  }, [processId, process, onOpenTab]);
+
+  const toggleSelected = useCallback((id: string) => {
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }, []);
+
+
   const handleReprocess = useCallback(async () => {
     setReprocessing(true);
     try {
@@ -236,6 +296,9 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
 
   return (
     <div className="space-y-6">
+      {/* Timeline macro do processo */}
+      <ProcessTimelineMacro stages={timelineStages} progress={stats.progress} />
+
       {/* Header operacional */}
       <div className="bg-gradient-to-br from-navy to-slate-900 text-white rounded-[2rem] p-6 md:p-8 shadow-xl shadow-navy/20">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:justify-between">
@@ -505,74 +568,19 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
             </Button>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-3">
-            {checklist.map((row) => {
-              const kind = classify(row);
-              const st = statusChip(row.status);
-              const kindLabel =
-                kind === "mandatory" ? "Obrigatório" : kind === "conditional" ? "Condicional" : "Opcional";
-              const kindCls =
-                kind === "mandatory" ? "bg-red-50 text-red-600 border-red-100"
-                : kind === "conditional" ? "bg-violet-50 text-violet-600 border-violet-100"
-                : "bg-slate-50 text-slate-500 border-slate-100";
-              const isSelected = selected.has(row.id);
-              return (
-                <div key={row.id} className={`p-4 rounded-2xl border transition-all ${
-                  isSelected ? "border-primary bg-primary/5" : "border-slate-100 bg-slate-50/30 hover:bg-white hover:border-primary/30"
-                }`}>
-                  <div className="flex items-start gap-2 mb-2">
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => setSelected((prev) => {
-                        const n = new Set(prev);
-                        if (n.has(row.id)) n.delete(row.id); else n.add(row.id);
-                        return n;
-                      })}
-                      className="mt-1"
-                    />
-                    <div className="flex-1 flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-navy truncate">{row.item_name}</p>
-                        {row.document_role && (
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{row.document_role}</p>
-                        )}
-                      </div>
-                      <Badge className={`text-[9px] font-black uppercase tracking-widest border ${kindCls}`}>{kindLabel}</Badge>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5 mb-3">
-                    <Badge className={`text-[9px] font-black uppercase tracking-widest ${st.cls}`}>{st.label}</Badge>
-                    {row.requires_signature && (
-                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest gap-1 border-amber-200 text-amber-600">
-                        <Signature className="h-2.5 w-2.5" /> assina
-                      </Badge>
-                    )}
-                    {row.requires_ocr && (
-                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest gap-1 border-sky-200 text-sky-600">
-                        <Zap className="h-2.5 w-2.5" /> OCR
-                      </Badge>
-                    )}
-                  </div>
-                  {row.is_conditional && row.conditional_rule && (
-                    <p className="text-[10px] text-violet-600 font-medium mb-2 line-clamp-2">
-                      Regra: {typeof row.conditional_rule === "string" ? row.conditional_rule : JSON.stringify(row.conditional_rule)}
-                    </p>
-                  )}
-                  <div className="flex flex-wrap gap-1.5">
-                    <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "gerar") : onOpenTab("generation")}>Gerar</Button>
-                    <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "editar") : onOpenTab("library_docs")}>Editar</Button>
-                    <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "anexar") : onOpenTab("documents")}>Anexar</Button>
-                    {row.requires_signature && (
-                      <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "assinar") : onOpenTab("signatures")}>Assinar</Button>
-                    )}
-                    <Button size="sm" variant="ghost" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "historico") : onOpenTab("history")}>Histórico</Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <SmartChecklistSections
+            checklist={checklist}
+            process={process}
+            selected={selected}
+            onToggleSelect={toggleSelected}
+            onFocus={(id, action) => onFocusItem ? onFocusItem(id, action) : onOpenTab("requirements")}
+            onEditVessel={handleEditVessel}
+            onWaive={handleWaive}
+            onMarkAttached={handleMarkAttached}
+          />
         )}
       </div>
+
 
       <BatchSignatureDialog
         open={signatureDialogOpen}
@@ -583,6 +591,81 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
         createdBy={profile?.id}
         onDone={handleBatchSignatureDone}
       />
+    </div>
+  );
+}
+
+
+type FocusAction = "gerar" | "editar" | "anexar" | "assinar" | "historico";
+
+function SmartChecklistSections({
+  checklist, process, selected, onToggleSelect, onFocus, onEditVessel, onWaive, onMarkAttached,
+}: {
+  checklist: ChecklistRow[];
+  process: any;
+  selected: Set<string>;
+  onToggleSelect: (id: string) => void;
+  onFocus: (id: string, action: FocusAction) => void;
+  onEditVessel: () => void;
+  onWaive: (id: string) => void;
+  onMarkAttached: (id: string) => void;
+}) {
+  const [showOptional, setShowOptional] = useState(true);
+  const mandatory = checklist.filter((r) => r.is_mandatory && !r.is_conditional);
+  const conditional = checklist.filter((r) => r.is_conditional);
+  const optional = checklist.filter((r) => !r.is_mandatory && !r.is_conditional);
+
+  const renderGroup = (rows: ChecklistRow[]) => (
+    <div className="grid lg:grid-cols-2 gap-4">
+      {rows.map((row) => (
+        <SmartDocumentCard
+          key={row.id}
+          row={row}
+          process={process}
+          isSelected={selected.has(row.id)}
+          onToggleSelect={() => onToggleSelect(row.id)}
+          onFocus={onFocus}
+          onEditVessel={onEditVessel}
+          onWaive={onWaive}
+          onMarkAttached={onMarkAttached}
+        />
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      {mandatory.length > 0 && (
+        <section>
+          <h4 className="text-[11px] font-black uppercase tracking-widest text-red-600 mb-3 flex items-center gap-1.5">
+            <ShieldCheck className="h-3.5 w-3.5" /> Documentos obrigatórios ({mandatory.length})
+          </h4>
+          {renderGroup(mandatory)}
+        </section>
+      )}
+
+      {conditional.length > 0 && (
+        <section>
+          <h4 className="text-[11px] font-black uppercase tracking-widest text-violet-600 mb-3 flex items-center gap-1.5">
+            <GitBranch className="h-3.5 w-3.5" /> Documentos condicionais ({conditional.length})
+          </h4>
+          {renderGroup(conditional)}
+        </section>
+      )}
+
+      {optional.length > 0 && (
+        <Collapsible open={showOptional} onOpenChange={setShowOptional}>
+          <CollapsibleTrigger asChild>
+            <button className="flex items-center justify-between w-full text-[11px] font-black uppercase tracking-widest text-slate-500 hover:text-navy mb-3">
+              <span className="flex items-center gap-1.5">
+                <PackageOpen className="h-3.5 w-3.5" /> Documentos opcionais ({optional.length})
+              </span>
+              <ChevronDown className={`h-3 w-3 transition-transform ${showOptional ? "rotate-180" : ""}`} />
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>{renderGroup(optional)}</CollapsibleContent>
+        </Collapsible>
+      )}
     </div>
   );
 }
@@ -614,3 +697,4 @@ function LiveCard({
 }
 
 export default ProcessBlueprintWorkspace;
+
