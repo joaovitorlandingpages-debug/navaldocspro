@@ -62,6 +62,74 @@ async function loadBranding(supabaseAdmin: any, companyId: string): Promise<Bran
   return { ...DEFAULT_BRANDING, ...data, company_name: data.name || "Empresa" }
 }
 
+/**
+ * Resolve os dados do procurador/despachante padrão a partir da hierarquia:
+ * 1) Campos `procurador_*` da empresa (Identidade Corporativa).
+ * 2) Responsável técnico configurado na empresa.
+ * 3) Perfil do usuário responsável pelo processo (ou criador do processo).
+ * 4) Contatos institucionais da empresa como último recurso.
+ */
+async function resolveProcurador(
+  supabaseAdmin: any,
+  companyId: string | null,
+  processId: string | null,
+): Promise<Record<string, string>> {
+  const out: Record<string, string> = {}
+  if (!companyId) return out
+  const { data: company } = await supabaseAdmin
+    .from('companies')
+    .select('name, cnpj, email, phone, contact_phone, contact_email, contact_address, responsible_name, technical_responsible_name, technical_responsible_registry, procurador_nome, procurador_cpf, procurador_rg, procurador_orgao_expedidor, procurador_nacionalidade, procurador_endereco, procurador_telefone, procurador_email, procurador_crea')
+    .eq('id', companyId).maybeSingle()
+
+  let responsibleProfile: any = null
+  if (processId) {
+    const { data: proc } = await supabaseAdmin
+      .from('processes').select('responsible_id, technical_manager_id, created_by')
+      .eq('id', processId).maybeSingle()
+    const uid = proc?.responsible_id || proc?.technical_manager_id || proc?.created_by
+    if (uid) {
+      const { data: prof } = await supabaseAdmin
+        .from('profiles').select('name, email, phone, cpf, rg, crea, address')
+        .eq('id', uid).maybeSingle()
+      responsibleProfile = prof
+    }
+  }
+
+  const pick = (...vals: (string | null | undefined)[]) => {
+    for (const v of vals) if (v && String(v).trim()) return String(v).trim()
+    return ''
+  }
+
+  out['procurador.nome'] = pick(
+    company?.procurador_nome, company?.technical_responsible_name,
+    responsibleProfile?.name, company?.responsible_name,
+  )
+  out['procurador.cpf'] = pick(company?.procurador_cpf, responsibleProfile?.cpf)
+  out['procurador.rg'] = pick(company?.procurador_rg, responsibleProfile?.rg)
+  out['procurador.orgao_expedidor'] = pick(company?.procurador_orgao_expedidor)
+  out['procurador.nacionalidade'] = pick(company?.procurador_nacionalidade, 'Brasileira')
+  out['procurador.endereco'] = pick(company?.procurador_endereco, responsibleProfile?.address, company?.contact_address)
+  out['procurador.telefone'] = pick(company?.procurador_telefone, responsibleProfile?.phone, company?.contact_phone, company?.phone)
+  out['procurador.email'] = pick(company?.procurador_email, responsibleProfile?.email, company?.contact_email, company?.email)
+  out['procurador.crea'] = pick(company?.procurador_crea, responsibleProfile?.crea, company?.technical_responsible_registry)
+
+  return out
+}
+
+/** Templates cujo conteúdo depende obrigatoriamente do procurador (bloqueia geração sem nome+CPF). */
+const PROCURADOR_REQUIRED_ROLES = new Set([
+  'procuracao', 'procuracao_particular', 'proc_part_naval',
+  'requerimento', 'req_inscr',
+])
+function templateRequiresProcurador(template: any): boolean {
+  const code = String(template?.code || template?.slug || '').toLowerCase()
+  const name = String(template?.name || '').toLowerCase()
+  if (PROCURADOR_REQUIRED_ROLES.has(code)) return true
+  if (name.includes('procura') || name.includes('requerimento')) return true
+  const content = String(template?.base_content || '')
+  return /\{\{\s*(procurador|outorgado)\./i.test(content)
+}
+
 async function tryFetchImage(pdfDoc: any, url: string | null): Promise<any | null> {
   if (!url) return null
   try {
