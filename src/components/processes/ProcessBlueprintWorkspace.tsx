@@ -336,12 +336,13 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
                     </p>
                   )}
                   <div className="flex flex-wrap gap-1.5">
-                    <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onOpenTab("generation")}>Gerar</Button>
-                    <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onOpenTab("library_docs")}>Editar</Button>
-                    <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onOpenTab("documents")}>Anexar</Button>
+                    <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "gerar") : onOpenTab("generation")}>Gerar</Button>
+                    <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "editar") : onOpenTab("library_docs")}>Editar</Button>
+                    <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "anexar") : onOpenTab("documents")}>Anexar</Button>
                     {row.requires_signature && (
-                      <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onOpenTab("signatures")}>Assinar</Button>
+                      <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "assinar") : onOpenTab("signatures")}>Assinar</Button>
                     )}
+                    <Button size="sm" variant="ghost" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "historico") : onOpenTab("history")}>Histórico</Button>
                   </div>
                 </div>
               );
