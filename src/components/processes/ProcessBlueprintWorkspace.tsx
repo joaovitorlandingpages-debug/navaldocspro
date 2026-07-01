@@ -296,6 +296,9 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
 
   return (
     <div className="space-y-6">
+      {/* Timeline macro do processo */}
+      <ProcessTimelineMacro stages={timelineStages} progress={stats.progress} />
+
       {/* Header operacional */}
       <div className="bg-gradient-to-br from-navy to-slate-900 text-white rounded-[2rem] p-6 md:p-8 shadow-xl shadow-navy/20">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:justify-between">
