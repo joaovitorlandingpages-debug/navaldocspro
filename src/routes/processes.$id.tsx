@@ -49,6 +49,7 @@ import { ProcessTopBar } from "@/components/processes/ProcessTopBar";
 import { ProcessEditForm } from "@/components/processes/ProcessEditForm";
 import { ProcessEditSheet } from "@/components/processes/ProcessEditSheet";
 import { ProcessBlueprintWorkspace } from "@/components/processes/ProcessBlueprintWorkspace";
+import { ProcessItemFocusDialog } from "@/components/processes/ProcessItemFocusDialog";
 import { Palette } from "lucide-react";
 
 const VALID_TABS = [
@@ -56,12 +57,17 @@ const VALID_TABS = [
   "generation","dossier_v2","history","signatures","protocol","client_portal","identity"
 ] as const;
 type ProcessTab = typeof VALID_TABS[number];
+const VALID_FOCUS_ACTIONS = ["gerar","editar","anexar","assinar","historico"] as const;
+type FocusAction = typeof VALID_FOCUS_ACTIONS[number];
 
 export const Route = createFileRoute("/processes/$id")({
   validateSearch: (s: Record<string, unknown>) => ({
     tab: (typeof s.tab === "string" && (VALID_TABS as readonly string[]).includes(s.tab)
       ? (s.tab as ProcessTab)
       : ("overview" as ProcessTab)),
+    focus: typeof s.focus === "string" ? s.focus : undefined,
+    action: typeof s.action === "string" && (VALID_FOCUS_ACTIONS as readonly string[]).includes(s.action)
+      ? (s.action as FocusAction) : undefined,
   }),
   component: ProcessDetail,
 });
@@ -79,11 +85,29 @@ function ProcessDetail() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const search = Route.useSearch();
   const activeTab = search.tab;
+  const focusItemId = search.focus ?? null;
+  const focusAction = search.action ?? null;
   const setActiveTab = useCallback((tab: string) => {
     navigate({
       to: "/processes/$id",
       params: { id },
-      search: { tab: (VALID_TABS as readonly string[]).includes(tab) ? (tab as ProcessTab) : ("overview" as ProcessTab) },
+      search: (prev: any) => ({ ...prev, tab: (VALID_TABS as readonly string[]).includes(tab) ? (tab as ProcessTab) : ("overview" as ProcessTab) }),
+      replace: true,
+    });
+  }, [id, navigate]);
+  const openFocusItem = useCallback((checklistId: string, action: FocusAction) => {
+    navigate({
+      to: "/processes/$id",
+      params: { id },
+      search: (prev: any) => ({ ...prev, focus: checklistId, action }),
+      replace: false,
+    });
+  }, [id, navigate]);
+  const closeFocusItem = useCallback(() => {
+    navigate({
+      to: "/processes/$id",
+      params: { id },
+      search: (prev: any) => ({ ...prev, focus: undefined, action: undefined }),
       replace: true,
     });
   }, [id, navigate]);
@@ -351,7 +375,7 @@ function ProcessDetail() {
 
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
-                  <ProcessBlueprintWorkspace process={process} onOpenTab={setActiveTab} onChanged={fetchProcess} />
+                  <ProcessBlueprintWorkspace process={process} onOpenTab={setActiveTab} onFocusItem={openFocusItem} onChanged={fetchProcess} />
                   <SignaturesStatusCard processId={id} onOpen={() => setActiveTab("signatures")} />
                   <div className="grid md:grid-cols-2 gap-6">
                      <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
@@ -717,6 +741,15 @@ function ProcessDetail() {
         open={editSheetOpen}
         onOpenChange={setEditSheetOpen}
         onSaved={fetchProcess}
+      />
+
+      <ProcessItemFocusDialog
+        processId={id}
+        process={process}
+        checklistId={focusItemId}
+        action={focusAction}
+        onClose={closeFocusItem}
+        onChanged={fetchProcess}
       />
     </div>
   );
