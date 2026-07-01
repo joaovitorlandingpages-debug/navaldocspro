@@ -595,31 +595,6 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
   );
 }
 
-function LiveCard({
-  icon: Icon, label, value, tone, onClick,
-}: {
-  icon: any; label: string; value: string; tone: "emerald" | "amber" | "sky" | "red" | "slate" | "violet" | "navy"; onClick?: () => void;
-}) {
-  const map: Record<string, string> = {
-    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    amber: "bg-amber-50 text-amber-600 border-amber-100",
-    sky: "bg-sky-50 text-sky-600 border-sky-100",
-    red: "bg-red-50 text-red-600 border-red-100",
-    slate: "bg-slate-50 text-slate-500 border-slate-100",
-    violet: "bg-violet-50 text-violet-600 border-violet-100",
-    navy: "bg-navy/5 text-navy border-navy/10",
-  };
-  return (
-    <button
-      onClick={onClick}
-      className={`text-left p-4 rounded-2xl border transition-all hover:shadow-md hover:-translate-y-0.5 ${map[tone]}`}
-    >
-      <Icon className="h-5 w-5 mb-2" />
-      <p className="text-[9px] font-black uppercase tracking-widest opacity-80">{label}</p>
-      <p className="text-lg font-black mt-1">{value}</p>
-    </button>
-  );
-}
 
 type FocusAction = "gerar" | "editar" | "anexar" | "assinar" | "historico";
 
