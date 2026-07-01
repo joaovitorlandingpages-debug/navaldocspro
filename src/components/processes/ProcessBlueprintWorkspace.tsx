@@ -407,7 +407,30 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
             )}
             {lastReport.missingData.length > 0 && (
               <p className="text-amber-700"><b>{lastReport.missingData.length}</b> sem template/dados: {lastReport.missingData.join(", ")}</p>
+        )}
+
+        {lastSigReport && (
+          <div className="mb-4 p-3 rounded-xl border border-amber-100 bg-amber-50/50 text-xs space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="font-black uppercase tracking-widest text-amber-700">Relatório de assinaturas em lote</span>
+              <button className="text-slate-400 hover:text-slate-600" onClick={() => setLastSigReport(null)}>
+                <XCircle className="h-4 w-4" />
+              </button>
+            </div>
+            {lastSigReport.created.length > 0 && (
+              <p className="text-emerald-700"><b>{lastSigReport.created.length}</b> solicitação(ões) criada(s): {lastSigReport.created.join(", ")}</p>
             )}
+            {lastSigReport.failed.length > 0 && (
+              <p className="text-red-700"><b>{lastSigReport.failed.length}</b> falha(s): {lastSigReport.failed.map(f => `${f.name} (${f.reason})`).join("; ")}</p>
+            )}
+            {lastSigReport.missingPdf.length > 0 && (
+              <p className="text-amber-700"><b>{lastSigReport.missingPdf.length}</b> sem PDF gerado: {lastSigReport.missingPdf.join(", ")}</p>
+            )}
+            {lastSigReport.alreadySigned.length > 0 && (
+              <p className="text-slate-600"><b>{lastSigReport.alreadySigned.length}</b> já assinado(s): {lastSigReport.alreadySigned.join(", ")}</p>
+            )}
+          </div>
+        )}
           </div>
         )}
 
