@@ -19,7 +19,7 @@ const Failure = () => {
         <div className="space-y-3">
           <Button 
             className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white font-semibold"
-            onClick={() => navigate({ to: '/billing/plans' })}
+            onClick={() => navigate({ to: '/plans' })}
           >
             Tentar Novamente
             <RefreshCw size={18} className="ml-2" />
