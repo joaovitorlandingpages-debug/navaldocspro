@@ -89,7 +89,7 @@ async function resolveProcurador(
     const uid = proc?.responsible_id || proc?.technical_manager_id || proc?.created_by
     if (uid) {
       const { data: prof } = await supabaseAdmin
-        .from('profiles').select('name, email, phone, cpf, rg, crea, address')
+        .from('profiles').select('name, email, phone')
         .eq('id', uid).maybeSingle()
       responsibleProfile = prof
     }
