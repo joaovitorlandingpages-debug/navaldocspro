@@ -84,6 +84,7 @@ function AdminLayout() {
     { name: "Storage Admin", icon: <Database className="h-5 w-5" />, path: "/admin/storage" },
     { name: "Biblioteca Master", icon: <FileText className="h-5 w-5" />, path: "/admin/document-library" },
     { name: "Motor de Documentos", icon: <FileText className="h-5 w-5" />, path: "/admin/documentos" },
+    { name: "Modelos de Processo", icon: <FileText className="h-5 w-5" />, path: "/admin/modelos-processo" },
     { name: "Biblioteca Nacional", icon: <FileText className="h-5 w-5" />, path: "/documentos/biblioteca" },
     { name: "Erros de Interface", icon: <Layout className="h-5 w-5" />, path: "/admin/frontend-errors" },
     { name: "Audit Logs", icon: <History className="h-5 w-5" />, path: "/admin/logs" },
