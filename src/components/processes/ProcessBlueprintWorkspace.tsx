@@ -19,6 +19,7 @@ import {
 interface Props {
   process: any;
   onOpenTab: (tab: string) => void;
+  onFocusItem?: (checklistId: string, action: "gerar" | "editar" | "anexar" | "assinar" | "historico") => void;
   onChanged?: () => void;
 }
 
