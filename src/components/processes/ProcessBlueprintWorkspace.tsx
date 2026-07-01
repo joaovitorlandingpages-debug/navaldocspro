@@ -621,4 +621,105 @@ function LiveCard({
   );
 }
 
+type FocusAction = "gerar" | "editar" | "anexar" | "assinar" | "historico";
+
+function SmartChecklistSections({
+  checklist, process, selected, onToggleSelect, onFocus, onEditVessel, onWaive, onMarkAttached,
+}: {
+  checklist: ChecklistRow[];
+  process: any;
+  selected: Set<string>;
+  onToggleSelect: (id: string) => void;
+  onFocus: (id: string, action: FocusAction) => void;
+  onEditVessel: () => void;
+  onWaive: (id: string) => void;
+  onMarkAttached: (id: string) => void;
+}) {
+  const [showOptional, setShowOptional] = useState(true);
+  const mandatory = checklist.filter((r) => r.is_mandatory && !r.is_conditional);
+  const conditional = checklist.filter((r) => r.is_conditional);
+  const optional = checklist.filter((r) => !r.is_mandatory && !r.is_conditional);
+
+  const renderGroup = (rows: ChecklistRow[]) => (
+    <div className="grid lg:grid-cols-2 gap-4">
+      {rows.map((row) => (
+        <SmartDocumentCard
+          key={row.id}
+          row={row}
+          process={process}
+          isSelected={selected.has(row.id)}
+          onToggleSelect={() => onToggleSelect(row.id)}
+          onFocus={onFocus}
+          onEditVessel={onEditVessel}
+          onWaive={onWaive}
+          onMarkAttached={onMarkAttached}
+        />
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      {mandatory.length > 0 && (
+        <section>
+          <h4 className="text-[11px] font-black uppercase tracking-widest text-red-600 mb-3 flex items-center gap-1.5">
+            <ShieldCheck className="h-3.5 w-3.5" /> Documentos obrigatórios ({mandatory.length})
+          </h4>
+          {renderGroup(mandatory)}
+        </section>
+      )}
+
+      {conditional.length > 0 && (
+        <section>
+          <h4 className="text-[11px] font-black uppercase tracking-widest text-violet-600 mb-3 flex items-center gap-1.5">
+            <GitBranch className="h-3.5 w-3.5" /> Documentos condicionais ({conditional.length})
+          </h4>
+          {renderGroup(conditional)}
+        </section>
+      )}
+
+      {optional.length > 0 && (
+        <Collapsible open={showOptional} onOpenChange={setShowOptional}>
+          <CollapsibleTrigger asChild>
+            <button className="flex items-center justify-between w-full text-[11px] font-black uppercase tracking-widest text-slate-500 hover:text-navy mb-3">
+              <span className="flex items-center gap-1.5">
+                <PackageOpen className="h-3.5 w-3.5" /> Documentos opcionais ({optional.length})
+              </span>
+              <ChevronDown className={`h-3 w-3 transition-transform ${showOptional ? "rotate-180" : ""}`} />
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>{renderGroup(optional)}</CollapsibleContent>
+        </Collapsible>
+      )}
+    </div>
+  );
+}
+
+function LiveCard({
+  icon: Icon, label, value, tone, onClick,
+}: {
+  icon: any; label: string; value: string; tone: "emerald" | "amber" | "sky" | "red" | "slate" | "violet" | "navy"; onClick?: () => void;
+}) {
+  const map: Record<string, string> = {
+    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    amber: "bg-amber-50 text-amber-600 border-amber-100",
+    sky: "bg-sky-50 text-sky-600 border-sky-100",
+    red: "bg-red-50 text-red-600 border-red-100",
+    slate: "bg-slate-50 text-slate-500 border-slate-100",
+    violet: "bg-violet-50 text-violet-600 border-violet-100",
+    navy: "bg-navy/5 text-navy border-navy/10",
+  };
+  return (
+    <button
+      onClick={onClick}
+      className={`text-left p-4 rounded-2xl border transition-all hover:shadow-md hover:-translate-y-0.5 ${map[tone]}`}
+    >
+      <Icon className="h-5 w-5 mb-2" />
+      <p className="text-[9px] font-black uppercase tracking-widest opacity-80">{label}</p>
+      <p className="text-lg font-black mt-1">{value}</p>
+    </button>
+  );
+}
+
 export default ProcessBlueprintWorkspace;
+
