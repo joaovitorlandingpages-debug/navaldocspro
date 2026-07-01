@@ -8,8 +8,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { materializeProcessBlueprint } from "@/services/processes/blueprintEngine";
 import {
-  batchGenerate, batchRequestSignature, batchDownload, type BatchReport,
+  batchGenerate, batchDownload, type BatchReport, type BatchSignatureReport,
 } from "@/services/processes/batchChecklistActions";
+import { BatchSignatureDialog } from "./BatchSignatureDialog";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
