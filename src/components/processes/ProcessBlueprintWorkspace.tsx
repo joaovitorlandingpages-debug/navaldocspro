@@ -305,7 +305,7 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
       setBatchRunning(null);
       setBatchProgress(null);
     }
-  }, [processId, selectedItems, refetch, onChanged]);
+  }, [processId, selectedItems, refetch, onChanged, checklist, selected, procuradorMissing]);
 
   const openBatchSignature = useCallback(() => {
     if (selectedItems.length === 0) return;
