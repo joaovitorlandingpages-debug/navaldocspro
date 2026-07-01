@@ -281,6 +281,61 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
         </div>
       </div>
 
+      {/* CTAs rápidos pós-criação */}
+      <div className="bg-white p-5 md:p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Próximos passos</p>
+            <h3 className="text-base md:text-lg font-black text-navy uppercase tracking-tight">
+              O que você quer fazer agora?
+            </h3>
+            <p className="text-xs text-slate-500 mt-1 font-medium">
+              Anexe documentos existentes, gere os obrigatórios pendentes ou solicite assinaturas.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              className="rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-black uppercase tracking-widest gap-2"
+              onClick={() => onOpenTab("documents")}
+            >
+              <PackageOpen className="h-3.5 w-3.5" /> Anexar documentos agora
+            </Button>
+            {stats.pendingMandatory.filter((r) => !!r.template_id).length > 0 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="rounded-xl text-[11px] font-black uppercase tracking-widest gap-2"
+                onClick={() => {
+                  const ids = stats.pendingMandatory.filter((r) => !!r.template_id).map((r) => r.id);
+                  setSelected(new Set(ids));
+                  toast.info(`${ids.length} documento(s) selecionado(s). Clique em "Gerar selecionados" abaixo.`);
+                  document.getElementById("blueprint-documentos")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              >
+                <Sparkles className="h-3.5 w-3.5" /> Gerar documentos pendentes ({stats.pendingMandatory.filter((r) => !!r.template_id).length})
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-xl text-[11px] font-black uppercase tracking-widest gap-2"
+              onClick={() => onOpenTab("signatures")}
+            >
+              <Signature className="h-3.5 w-3.5" /> Solicitar assinatura
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-xl text-[11px] font-black uppercase tracking-widest gap-2"
+              onClick={() => onOpenTab("dossier_v2")}
+            >
+              <FileText className="h-3.5 w-3.5" /> Gerar dossiê
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {/* Cards ao vivo */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         <LiveCard icon={ShieldCheck} label="Obrigatórios" value={`${stats.mandatoryDone.length}/${stats.mandatory.length}`} tone="emerald" onClick={() => onOpenTab("requirements")} />
