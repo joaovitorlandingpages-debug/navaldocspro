@@ -37,9 +37,6 @@ import { Route as ExecutiveRouteImport } from './routes/executive'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
 import { Route as DemoRouteImport } from './routes/demo'
-import { Route as DebugAuthPublicRouteImport } from './routes/debug-auth-public'
-import { Route as DashboardV2RouteImport } from './routes/dashboard-v2'
-import { Route as DashboardSafeRouteImport } from './routes/dashboard-safe'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as ConsumoRouteImport } from './routes/consumo'
@@ -50,8 +47,6 @@ import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as BenchmarkRouteImport } from './routes/benchmark'
 import { Route as AutomationCenterRouteImport } from './routes/automation-center'
 import { Route as AutomationRouteImport } from './routes/automation'
-import { Route as AuthDebugPublicRouteImport } from './routes/auth-debug-public'
-import { Route as AuthDebugRouteImport } from './routes/auth-debug'
 import { Route as AssinaturasRouteImport } from './routes/assinaturas'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AiCenterRouteImport } from './routes/ai-center'
@@ -72,8 +67,6 @@ import { Route as ProcessesArchivedRouteImport } from './routes/processes.archiv
 import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as DocumentosBibliotecaRouteImport } from './routes/documentos.biblioteca'
-import { Route as DebugSystemRouteImport } from './routes/debug.system'
-import { Route as DebugAuthRouteImport } from './routes/debug.auth'
 import { Route as DashboardSecurityRouteImport } from './routes/dashboard.security'
 import { Route as DashboardEcosystemRouteImport } from './routes/dashboard.ecosystem'
 import { Route as DashboardDocumentsBaseRouteImport } from './routes/dashboard/documents-base'
@@ -256,21 +249,6 @@ const DemoRoute = DemoRouteImport.update({
   path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DebugAuthPublicRoute = DebugAuthPublicRouteImport.update({
-  id: '/debug-auth-public',
-  path: '/debug-auth-public',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardV2Route = DashboardV2RouteImport.update({
-  id: '/dashboard-v2',
-  path: '/dashboard-v2',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardSafeRoute = DashboardSafeRouteImport.update({
-  id: '/dashboard-safe',
-  path: '/dashboard-safe',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -319,16 +297,6 @@ const AutomationCenterRoute = AutomationCenterRouteImport.update({
 const AutomationRoute = AutomationRouteImport.update({
   id: '/automation',
   path: '/automation',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthDebugPublicRoute = AuthDebugPublicRouteImport.update({
-  id: '/auth-debug-public',
-  path: '/auth-debug-public',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthDebugRoute = AuthDebugRouteImport.update({
-  id: '/auth-debug',
-  path: '/auth-debug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AssinaturasRoute = AssinaturasRouteImport.update({
@@ -429,16 +397,6 @@ const PortalTokenRoute = PortalTokenRouteImport.update({
 const DocumentosBibliotecaRoute = DocumentosBibliotecaRouteImport.update({
   id: '/documentos/biblioteca',
   path: '/documentos/biblioteca',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DebugSystemRoute = DebugSystemRouteImport.update({
-  id: '/debug/system',
-  path: '/debug/system',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DebugAuthRoute = DebugAuthRouteImport.update({
-  id: '/debug/auth',
-  path: '/debug/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardSecurityRoute = DashboardSecurityRouteImport.update({
@@ -659,8 +617,6 @@ export interface FileRoutesByFullPath {
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
   '/assinaturas': typeof AssinaturasRoute
-  '/auth-debug': typeof AuthDebugRoute
-  '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
   '/benchmark': typeof BenchmarkRoute
@@ -671,9 +627,6 @@ export interface FileRoutesByFullPath {
   '/consumo': typeof ConsumoRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
-  '/dashboard-safe': typeof DashboardSafeRoute
-  '/dashboard-v2': typeof DashboardV2Route
-  '/debug-auth-public': typeof DebugAuthPublicRoute
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
@@ -743,8 +696,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/dashboard/ecosystem': typeof DashboardEcosystemRoute
   '/dashboard/security': typeof DashboardSecurityRoute
-  '/debug/auth': typeof DebugAuthRoute
-  '/debug/system': typeof DebugSystemRoute
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
@@ -766,8 +717,6 @@ export interface FileRoutesByTo {
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
   '/assinaturas': typeof AssinaturasRoute
-  '/auth-debug': typeof AuthDebugRoute
-  '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
   '/benchmark': typeof BenchmarkRoute
@@ -777,9 +726,6 @@ export interface FileRoutesByTo {
   '/compliance-ai': typeof ComplianceAiRoute
   '/consumo': typeof ConsumoRoute
   '/customers': typeof CustomersRoute
-  '/dashboard-safe': typeof DashboardSafeRoute
-  '/dashboard-v2': typeof DashboardV2Route
-  '/debug-auth-public': typeof DebugAuthPublicRoute
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
@@ -848,8 +794,6 @@ export interface FileRoutesByTo {
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/dashboard/ecosystem': typeof DashboardEcosystemRoute
   '/dashboard/security': typeof DashboardSecurityRoute
-  '/debug/auth': typeof DebugAuthRoute
-  '/debug/system': typeof DebugSystemRoute
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
@@ -873,8 +817,6 @@ export interface FileRoutesById {
   '/ai-center': typeof AiCenterRoute
   '/analytics': typeof AnalyticsRouteWithChildren
   '/assinaturas': typeof AssinaturasRoute
-  '/auth-debug': typeof AuthDebugRoute
-  '/auth-debug-public': typeof AuthDebugPublicRoute
   '/automation': typeof AutomationRoute
   '/automation-center': typeof AutomationCenterRoute
   '/benchmark': typeof BenchmarkRoute
@@ -885,9 +827,6 @@ export interface FileRoutesById {
   '/consumo': typeof ConsumoRoute
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRouteWithChildren
-  '/dashboard-safe': typeof DashboardSafeRoute
-  '/dashboard-v2': typeof DashboardV2Route
-  '/debug-auth-public': typeof DebugAuthPublicRoute
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
@@ -957,8 +896,6 @@ export interface FileRoutesById {
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/dashboard/ecosystem': typeof DashboardEcosystemRoute
   '/dashboard/security': typeof DashboardSecurityRoute
-  '/debug/auth': typeof DebugAuthRoute
-  '/debug/system': typeof DebugSystemRoute
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
@@ -983,8 +920,6 @@ export interface FileRouteTypes {
     | '/ai-center'
     | '/analytics'
     | '/assinaturas'
-    | '/auth-debug'
-    | '/auth-debug-public'
     | '/automation'
     | '/automation-center'
     | '/benchmark'
@@ -995,9 +930,6 @@ export interface FileRouteTypes {
     | '/consumo'
     | '/customers'
     | '/dashboard'
-    | '/dashboard-safe'
-    | '/dashboard-v2'
-    | '/debug-auth-public'
     | '/demo'
     | '/document-generator'
     | '/documents'
@@ -1067,8 +999,6 @@ export interface FileRouteTypes {
     | '/dashboard/documents-base'
     | '/dashboard/ecosystem'
     | '/dashboard/security'
-    | '/debug/auth'
-    | '/debug/system'
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
@@ -1090,8 +1020,6 @@ export interface FileRouteTypes {
     | '/ai-center'
     | '/analytics'
     | '/assinaturas'
-    | '/auth-debug'
-    | '/auth-debug-public'
     | '/automation'
     | '/automation-center'
     | '/benchmark'
@@ -1101,9 +1029,6 @@ export interface FileRouteTypes {
     | '/compliance-ai'
     | '/consumo'
     | '/customers'
-    | '/dashboard-safe'
-    | '/dashboard-v2'
-    | '/debug-auth-public'
     | '/demo'
     | '/document-generator'
     | '/documents'
@@ -1172,8 +1097,6 @@ export interface FileRouteTypes {
     | '/dashboard/documents-base'
     | '/dashboard/ecosystem'
     | '/dashboard/security'
-    | '/debug/auth'
-    | '/debug/system'
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
@@ -1196,8 +1119,6 @@ export interface FileRouteTypes {
     | '/ai-center'
     | '/analytics'
     | '/assinaturas'
-    | '/auth-debug'
-    | '/auth-debug-public'
     | '/automation'
     | '/automation-center'
     | '/benchmark'
@@ -1208,9 +1129,6 @@ export interface FileRouteTypes {
     | '/consumo'
     | '/customers'
     | '/dashboard'
-    | '/dashboard-safe'
-    | '/dashboard-v2'
-    | '/debug-auth-public'
     | '/demo'
     | '/document-generator'
     | '/documents'
@@ -1280,8 +1198,6 @@ export interface FileRouteTypes {
     | '/dashboard/documents-base'
     | '/dashboard/ecosystem'
     | '/dashboard/security'
-    | '/debug/auth'
-    | '/debug/system'
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
@@ -1305,8 +1221,6 @@ export interface RootRouteChildren {
   AiCenterRoute: typeof AiCenterRoute
   AnalyticsRoute: typeof AnalyticsRouteWithChildren
   AssinaturasRoute: typeof AssinaturasRoute
-  AuthDebugRoute: typeof AuthDebugRoute
-  AuthDebugPublicRoute: typeof AuthDebugPublicRoute
   AutomationRoute: typeof AutomationRoute
   AutomationCenterRoute: typeof AutomationCenterRoute
   BenchmarkRoute: typeof BenchmarkRoute
@@ -1317,9 +1231,6 @@ export interface RootRouteChildren {
   ConsumoRoute: typeof ConsumoRoute
   CustomersRoute: typeof CustomersRoute
   DashboardRoute: typeof DashboardRouteWithChildren
-  DashboardSafeRoute: typeof DashboardSafeRoute
-  DashboardV2Route: typeof DashboardV2Route
-  DebugAuthPublicRoute: typeof DebugAuthPublicRoute
   DemoRoute: typeof DemoRoute
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
@@ -1354,8 +1265,6 @@ export interface RootRouteChildren {
   BillingFailureRoute: typeof BillingFailureRoute
   BillingSubscriptionRoute: typeof BillingSubscriptionRoute
   BillingSuccessRoute: typeof BillingSuccessRoute
-  DebugAuthRoute: typeof DebugAuthRoute
-  DebugSystemRoute: typeof DebugSystemRoute
   DocumentosBibliotecaRoute: typeof DocumentosBibliotecaRoute
   PortalTokenRoute: typeof PortalTokenRoute
   VerificarAssinaturaCodeRoute: typeof VerificarAssinaturaCodeRoute
@@ -1559,27 +1468,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/debug-auth-public': {
-      id: '/debug-auth-public'
-      path: '/debug-auth-public'
-      fullPath: '/debug-auth-public'
-      preLoaderRoute: typeof DebugAuthPublicRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard-v2': {
-      id: '/dashboard-v2'
-      path: '/dashboard-v2'
-      fullPath: '/dashboard-v2'
-      preLoaderRoute: typeof DashboardV2RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard-safe': {
-      id: '/dashboard-safe'
-      path: '/dashboard-safe'
-      fullPath: '/dashboard-safe'
-      preLoaderRoute: typeof DashboardSafeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -1648,20 +1536,6 @@ declare module '@tanstack/react-router' {
       path: '/automation'
       fullPath: '/automation'
       preLoaderRoute: typeof AutomationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth-debug-public': {
-      id: '/auth-debug-public'
-      path: '/auth-debug-public'
-      fullPath: '/auth-debug-public'
-      preLoaderRoute: typeof AuthDebugPublicRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth-debug': {
-      id: '/auth-debug'
-      path: '/auth-debug'
-      fullPath: '/auth-debug'
-      preLoaderRoute: typeof AuthDebugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/assinaturas': {
@@ -1802,20 +1676,6 @@ declare module '@tanstack/react-router' {
       path: '/documentos/biblioteca'
       fullPath: '/documentos/biblioteca'
       preLoaderRoute: typeof DocumentosBibliotecaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/debug/system': {
-      id: '/debug/system'
-      path: '/debug/system'
-      fullPath: '/debug/system'
-      preLoaderRoute: typeof DebugSystemRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/debug/auth': {
-      id: '/debug/auth'
-      path: '/debug/auth'
-      fullPath: '/debug/auth'
-      preLoaderRoute: typeof DebugAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/security': {
@@ -2254,8 +2114,6 @@ const rootRouteChildren: RootRouteChildren = {
   AiCenterRoute: AiCenterRoute,
   AnalyticsRoute: AnalyticsRouteWithChildren,
   AssinaturasRoute: AssinaturasRoute,
-  AuthDebugRoute: AuthDebugRoute,
-  AuthDebugPublicRoute: AuthDebugPublicRoute,
   AutomationRoute: AutomationRoute,
   AutomationCenterRoute: AutomationCenterRoute,
   BenchmarkRoute: BenchmarkRoute,
@@ -2266,9 +2124,6 @@ const rootRouteChildren: RootRouteChildren = {
   ConsumoRoute: ConsumoRoute,
   CustomersRoute: CustomersRoute,
   DashboardRoute: DashboardRouteWithChildren,
-  DashboardSafeRoute: DashboardSafeRoute,
-  DashboardV2Route: DashboardV2Route,
-  DebugAuthPublicRoute: DebugAuthPublicRoute,
   DemoRoute: DemoRoute,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
@@ -2303,8 +2158,6 @@ const rootRouteChildren: RootRouteChildren = {
   BillingFailureRoute: BillingFailureRoute,
   BillingSubscriptionRoute: BillingSubscriptionRoute,
   BillingSuccessRoute: BillingSuccessRoute,
-  DebugAuthRoute: DebugAuthRoute,
-  DebugSystemRoute: DebugSystemRoute,
   DocumentosBibliotecaRoute: DocumentosBibliotecaRoute,
   PortalTokenRoute: PortalTokenRoute,
   VerificarAssinaturaCodeRoute: VerificarAssinaturaCodeRoute,
@@ -2312,13 +2165,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
