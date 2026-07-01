@@ -282,14 +282,84 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
 
       {/* Documentos do processo */}
       <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" /> Documentos do processo
           </h3>
-          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest">
-            {checklist.length} itens
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest">
+              {checklist.length} itens
+            </Badge>
+            {checklist.length > 0 && (
+              <>
+                <Button size="sm" variant="ghost" className="text-[10px] font-bold h-7"
+                  onClick={() => setSelected(new Set(checklist.map((r) => r.id)))}>
+                  Selecionar todos
+                </Button>
+                <Button size="sm" variant="ghost" className="text-[10px] font-bold h-7"
+                  onClick={() => setSelected(new Set(checklist.filter((r) => !r.document_id).map((r) => r.id)))}>
+                  Só pendentes
+                </Button>
+                {selected.size > 0 && (
+                  <Button size="sm" variant="ghost" className="text-[10px] font-bold h-7 text-red-600"
+                    onClick={() => setSelected(new Set())}>
+                    Limpar
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
         </div>
+
+        {/* Barra de ações em lote */}
+        {selected.size > 0 && (
+          <div className="mb-4 p-3 rounded-2xl border border-primary/20 bg-primary/5 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-black uppercase tracking-widest text-primary">
+              {selected.size} selecionado{selected.size === 1 ? "" : "s"}
+            </span>
+            <div className="flex-1" />
+            <Button size="sm" onClick={runBatchGenerate} disabled={!!batchRunning} className="h-8 rounded-lg">
+              {batchRunning === "generate" ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
+              Gerar selecionados
+            </Button>
+            <Button size="sm" variant="outline" onClick={runBatchSignature} disabled={!!batchRunning} className="h-8 rounded-lg">
+              <Signature className="h-3 w-3 mr-1" /> Solicitar assinatura
+            </Button>
+            <Button size="sm" variant="outline" onClick={runBatchDownload} disabled={!!batchRunning} className="h-8 rounded-lg">
+              <Download className="h-3 w-3 mr-1" /> Baixar
+            </Button>
+          </div>
+        )}
+
+        {batchProgress && batchRunning === "generate" && (
+          <div className="mb-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
+            <div className="flex justify-between text-[11px] font-bold text-slate-600 mb-1">
+              <span className="truncate">Gerando: {batchProgress.current}</span>
+              <span>{batchProgress.done}/{batchProgress.total}</span>
+            </div>
+            <Progress value={(batchProgress.done / Math.max(1, batchProgress.total)) * 100} />
+          </div>
+        )}
+
+        {lastReport && (
+          <div className="mb-4 p-3 rounded-xl border border-slate-100 bg-slate-50/50 text-xs space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="font-black uppercase tracking-widest text-slate-600">Relatório da geração em lote</span>
+              <button className="text-slate-400 hover:text-slate-600" onClick={() => setLastReport(null)}>
+                <XCircle className="h-4 w-4" />
+              </button>
+            </div>
+            {lastReport.ok.length > 0 && (
+              <p className="text-emerald-700"><b>{lastReport.ok.length}</b> gerado(s): {lastReport.ok.join(", ")}</p>
+            )}
+            {lastReport.failed.length > 0 && (
+              <p className="text-red-700"><b>{lastReport.failed.length}</b> falha(s): {lastReport.failed.map(f => `${f.name} (${f.reason})`).join("; ")}</p>
+            )}
+            {lastReport.missingData.length > 0 && (
+              <p className="text-amber-700"><b>{lastReport.missingData.length}</b> sem template/dados: {lastReport.missingData.join(", ")}</p>
+            )}
+          </div>
+        )}
 
         {isLoading ? (
           <div className="py-12 flex items-center justify-center text-slate-400">
@@ -315,16 +385,30 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
                 kind === "mandatory" ? "bg-red-50 text-red-600 border-red-100"
                 : kind === "conditional" ? "bg-violet-50 text-violet-600 border-violet-100"
                 : "bg-slate-50 text-slate-500 border-slate-100";
+              const isSelected = selected.has(row.id);
               return (
-                <div key={row.id} className="p-4 rounded-2xl border border-slate-100 bg-slate-50/30 hover:bg-white hover:border-primary/30 transition-all">
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-navy truncate">{row.item_name}</p>
-                      {row.document_role && (
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{row.document_role}</p>
-                      )}
+                <div key={row.id} className={`p-4 rounded-2xl border transition-all ${
+                  isSelected ? "border-primary bg-primary/5" : "border-slate-100 bg-slate-50/30 hover:bg-white hover:border-primary/30"
+                }`}>
+                  <div className="flex items-start gap-2 mb-2">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => setSelected((prev) => {
+                        const n = new Set(prev);
+                        if (n.has(row.id)) n.delete(row.id); else n.add(row.id);
+                        return n;
+                      })}
+                      className="mt-1"
+                    />
+                    <div className="flex-1 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-navy truncate">{row.item_name}</p>
+                        {row.document_role && (
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{row.document_role}</p>
+                        )}
+                      </div>
+                      <Badge className={`text-[9px] font-black uppercase tracking-widest border ${kindCls}`}>{kindLabel}</Badge>
                     </div>
-                    <Badge className={`text-[9px] font-black uppercase tracking-widest border ${kindCls}`}>{kindLabel}</Badge>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5 mb-3">
                     <Badge className={`text-[9px] font-black uppercase tracking-widest ${st.cls}`}>{st.label}</Badge>
