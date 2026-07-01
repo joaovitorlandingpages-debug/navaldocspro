@@ -116,6 +116,23 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     enabled: !!processId,
   });
 
+  const { data: procurador } = useQuery({
+    queryKey: ["company-procurador", profile?.company_id],
+    queryFn: async () => {
+      if (!profile?.company_id) return null;
+      const { data } = await supabase
+        .from("companies")
+        .select("procurador_nome, procurador_cpf")
+        .eq("id", profile.company_id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!profile?.company_id,
+  });
+  const procuradorMissing = !procurador?.procurador_nome?.trim() || !procurador?.procurador_cpf?.trim();
+
+
+
   const stats = useMemo(() => {
     const done = (r: ChecklistRow) => !!r.document_id || ["completed", "done", "ok", "generated", "attached"].includes((r.status || "").toLowerCase());
     const mandatory = checklist.filter((r) => r.is_mandatory && !r.is_conditional);
