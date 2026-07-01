@@ -506,7 +506,7 @@ serve(async (req) => {
       if (template.file_type === 'docx') {
         const zip = new PizZip(arrayBuffer)
         const doc = new docxtemplater(zip, { paragraphLoop: true, linebreaks: true })
-        doc.render(fieldValues)
+        doc.render(mergedFieldValues)
         finalBuffer = doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" })
         contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         extension = 'docx'
