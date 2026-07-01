@@ -129,11 +129,15 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
   async function goToStep2() {
     if (!selectedType) { toast.error("Selecione o tipo de processo."); return; }
+    if (!customerId) { toast.error("Selecione ou crie um cliente para continuar."); return; }
     setStep(2);
     setLoadingPreview(true);
     try {
       const items = await previewProcessBlueprint(selectedType.name);
       setPreview(items);
+      if (items.length === 0) {
+        toast.warning("Este tipo ainda não possui modelo configurado. Você poderá adicionar documentos manualmente da Biblioteca.");
+      }
       // Por padrão: obrigatórios marcados, opcionais desmarcados, condicionais desmarcados.
       const initialExcluded = new Set<string>();
       items.forEach((i) => {
@@ -147,6 +151,35 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     } finally {
       setLoadingPreview(false);
     }
+  }
+
+  async function createCustomerInline() {
+    const name = window.prompt("Nome do cliente:")?.trim();
+    if (!name) return;
+    if (!profile?.company_id) { toast.error("Empresa não vinculada."); return; }
+    const { data, error } = await supabase
+      .from("customers")
+      .insert({ company_id: profile.company_id, name })
+      .select("id,name").single();
+    if (error) { toast.error("Erro ao criar cliente: " + error.message); return; }
+    setCustomers((prev) => [...prev, data as any].sort((a, b) => a.name.localeCompare(b.name)));
+    setCustomerId((data as any).id);
+    toast.success(`Cliente "${name}" criado.`);
+  }
+
+  async function createVesselInline() {
+    if (!customerId) { toast.error("Selecione o cliente antes."); return; }
+    const name = window.prompt("Nome da embarcação:")?.trim();
+    if (!name) return;
+    if (!profile?.company_id) { toast.error("Empresa não vinculada."); return; }
+    const { data, error } = await supabase
+      .from("vessels")
+      .insert({ company_id: profile.company_id, customer_id: customerId, name })
+      .select("id,name,customer_id").single();
+    if (error) { toast.error("Erro ao criar embarcação: " + error.message); return; }
+    setVessels((prev) => [...prev, data as any].sort((a, b) => a.name.localeCompare(b.name)));
+    setVesselId((data as any).id);
+    toast.success(`Embarcação "${name}" criada.`);
   }
 
   function toggleTemplate(tplId: string | null) {
