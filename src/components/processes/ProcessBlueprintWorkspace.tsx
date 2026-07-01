@@ -210,20 +210,18 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     }
   }, [processId, selectedItems, refetch, onChanged]);
 
-  const runBatchSignature = useCallback(async () => {
+  const openBatchSignature = useCallback(() => {
     if (selectedItems.length === 0) return;
-    setBatchRunning("signature");
-    try {
-      const r = await batchRequestSignature(processId, selectedItems);
-      if (r.created > 0) toast.success(`${r.created} solicitação(ões) de assinatura criada(s).`);
-      await refetch();
-      onChanged?.();
-    } catch (e: any) {
-      toast.error("Falha ao solicitar assinaturas: " + (e?.message || e));
-    } finally {
-      setBatchRunning(null);
-    }
-  }, [processId, selectedItems, refetch, onChanged]);
+    setSignatureDialogOpen(true);
+  }, [selectedItems]);
+
+  const handleBatchSignatureDone = useCallback(async (report: BatchSignatureReport) => {
+    setLastSigReport(report);
+    const total = report.created.length + report.failed.length + report.missingPdf.length + report.alreadySigned.length;
+    toast.success(`Assinaturas: ${report.created.length}/${total} criadas.`);
+    await refetch();
+    onChanged?.();
+  }, [refetch, onChanged]);
 
   const runBatchDownload = useCallback(async () => {
     if (selectedItems.length === 0) return;
