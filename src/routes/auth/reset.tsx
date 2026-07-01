@@ -28,7 +28,7 @@ function ResetPasswordPage() {
     if (hash.includes("type=recovery") || hash.includes("access_token")) {
       setMode("update");
     }
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event: string) => {
       if (event === "PASSWORD_RECOVERY") setMode("update");
     });
     return () => sub.subscription.unsubscribe();

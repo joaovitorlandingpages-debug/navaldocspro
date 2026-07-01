@@ -77,6 +77,7 @@ import { Route as BillingSuccessRouteImport } from './routes/billing.success'
 import { Route as BillingSubscriptionRouteImport } from './routes/billing.subscription'
 import { Route as BillingFailureRouteImport } from './routes/billing.failure'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
+import { Route as AuthResetRouteImport } from './routes/auth/reset'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AssinarTokenRouteImport } from './routes/assinar.$token'
 import { Route as AnalyticsOperationsRouteImport } from './routes/analytics.operations'
@@ -450,6 +451,11 @@ const AuthSignupRoute = AuthSignupRouteImport.update({
   path: '/auth/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthResetRoute = AuthResetRouteImport.update({
+  id: '/auth/reset',
+  path: '/auth/reset',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
   path: '/auth/login',
@@ -686,6 +692,7 @@ export interface FileRoutesByFullPath {
   '/analytics/operations': typeof AnalyticsOperationsRoute
   '/assinar/$token': typeof AssinarTokenRoute
   '/auth/login': typeof AuthLoginRoute
+  '/auth/reset': typeof AuthResetRoute
   '/auth/signup': typeof AuthSignupRoute
   '/billing/failure': typeof BillingFailureRoute
   '/billing/subscription': typeof BillingSubscriptionRoute
@@ -784,6 +791,7 @@ export interface FileRoutesByTo {
   '/analytics/operations': typeof AnalyticsOperationsRoute
   '/assinar/$token': typeof AssinarTokenRoute
   '/auth/login': typeof AuthLoginRoute
+  '/auth/reset': typeof AuthResetRoute
   '/auth/signup': typeof AuthSignupRoute
   '/billing/failure': typeof BillingFailureRoute
   '/billing/subscription': typeof BillingSubscriptionRoute
@@ -886,6 +894,7 @@ export interface FileRoutesById {
   '/analytics/operations': typeof AnalyticsOperationsRoute
   '/assinar/$token': typeof AssinarTokenRoute
   '/auth/login': typeof AuthLoginRoute
+  '/auth/reset': typeof AuthResetRoute
   '/auth/signup': typeof AuthSignupRoute
   '/billing/failure': typeof BillingFailureRoute
   '/billing/subscription': typeof BillingSubscriptionRoute
@@ -989,6 +998,7 @@ export interface FileRouteTypes {
     | '/analytics/operations'
     | '/assinar/$token'
     | '/auth/login'
+    | '/auth/reset'
     | '/auth/signup'
     | '/billing/failure'
     | '/billing/subscription'
@@ -1087,6 +1097,7 @@ export interface FileRouteTypes {
     | '/analytics/operations'
     | '/assinar/$token'
     | '/auth/login'
+    | '/auth/reset'
     | '/auth/signup'
     | '/billing/failure'
     | '/billing/subscription'
@@ -1188,6 +1199,7 @@ export interface FileRouteTypes {
     | '/analytics/operations'
     | '/assinar/$token'
     | '/auth/login'
+    | '/auth/reset'
     | '/auth/signup'
     | '/billing/failure'
     | '/billing/subscription'
@@ -1261,6 +1273,7 @@ export interface RootRouteChildren {
   VesselsRoute: typeof VesselsRoute
   AssinarTokenRoute: typeof AssinarTokenRoute
   AuthLoginRoute: typeof AuthLoginRoute
+  AuthResetRoute: typeof AuthResetRoute
   AuthSignupRoute: typeof AuthSignupRoute
   BillingFailureRoute: typeof BillingFailureRoute
   BillingSubscriptionRoute: typeof BillingSubscriptionRoute
@@ -1748,6 +1761,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/reset': {
+      id: '/auth/reset'
+      path: '/auth/reset'
+      fullPath: '/auth/reset'
+      preLoaderRoute: typeof AuthResetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/login': {
       id: '/auth/login'
       path: '/auth/login'
@@ -2154,6 +2174,7 @@ const rootRouteChildren: RootRouteChildren = {
   VesselsRoute: VesselsRoute,
   AssinarTokenRoute: AssinarTokenRoute,
   AuthLoginRoute: AuthLoginRoute,
+  AuthResetRoute: AuthResetRoute,
   AuthSignupRoute: AuthSignupRoute,
   BillingFailureRoute: BillingFailureRoute,
   BillingSubscriptionRoute: BillingSubscriptionRoute,
@@ -2165,13 +2186,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
