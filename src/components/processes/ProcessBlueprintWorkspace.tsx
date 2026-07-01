@@ -167,6 +167,64 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     { label: "Pronto para dossiê", ok: stats.pendingMandatory.length === 0 && stats.pendingSignatures.length === 0 },
   ], [process, stats]);
 
+  // Timeline macro do processo — Cliente → … → Entrega
+  const timelineStages = useMemo<TimelineStage[]>(() => {
+    const has = (needle: string) =>
+      checklist.some((r) => {
+        const n = r.item_name?.toLowerCase() || "";
+        const done = !!r.document_id || ["completed", "done", "generated", "attached", "signed"].includes((r.status || "").toLowerCase());
+        return n.includes(needle) && done;
+      });
+    const stages: Array<{ key: string; label: string; done: boolean }> = [
+      { key: "cliente", label: "Cliente", done: !!process?.customer_id },
+      { key: "embarcacao", label: "Embarcação", done: !!process?.vessel_id },
+      { key: "procuracao", label: "Procuração", done: has("procura") },
+      { key: "requerimento", label: "Requerimento", done: has("requerimento") },
+      { key: "bsade", label: "BSADE", done: has("bsade") || has("boletim") },
+      { key: "documentos", label: "Documentos", done: stats.pendingMandatory.length === 0 && checklist.length > 0 },
+      { key: "ocr", label: "OCR", done: stats.pendingOcr.length === 0 && uploads.length > 0 },
+      { key: "assinaturas", label: "Assinaturas", done: signatures.length > 0 && stats.pendingSignatures.length === 0 },
+      { key: "dossie", label: "Dossiê", done: (process?.status || "").toLowerCase() === "dossier_ready" || (process?.status || "").toLowerCase() === "delivered" },
+      { key: "entrega", label: "Entrega", done: (process?.status || "").toLowerCase() === "delivered" },
+    ];
+    let currentSet = false;
+    return stages.map((s) => {
+      if (s.done) return { key: s.key, label: s.label, status: "done" as const };
+      if (!currentSet) { currentSet = true; return { key: s.key, label: s.label, status: "current" as const }; }
+      return { key: s.key, label: s.label, status: "pending" as const };
+    });
+  }, [checklist, process, stats, uploads, signatures]);
+
+  const handleWaive = useCallback(async (id: string) => {
+    const { error } = await supabase.from("document_checklists").update({ status: "waived" }).eq("id", id);
+    if (error) return toast.error("Falha ao marcar como não aplicável.");
+    toast.success("Item marcado como não aplicável.");
+    await refetch();
+    onChanged?.();
+  }, [refetch, onChanged]);
+
+  const handleMarkAttached = useCallback(async (id: string) => {
+    const { error } = await supabase.from("document_checklists").update({ status: "attached" }).eq("id", id);
+    if (error) return toast.error("Falha ao marcar como anexado.");
+    toast.success("Comprovante marcado como anexado.");
+    await refetch();
+    onChanged?.();
+  }, [refetch, onChanged]);
+
+  const handleEditVessel = useCallback(() => {
+    window.dispatchEvent(new CustomEvent("naval:edit-vessel", { detail: { processId, vesselId: process?.vessel_id } }));
+    onOpenTab("crm");
+  }, [processId, process, onOpenTab]);
+
+  const toggleSelected = useCallback((id: string) => {
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }, []);
+
+
   const handleReprocess = useCallback(async () => {
     setReprocessing(true);
     try {
