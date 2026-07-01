@@ -340,7 +340,23 @@ export const signaturesService = {
       await supabase.from("signature_requests").update({ status: "in_progress" }).eq("id", request.id);
     }
 
-    return { ok: true };
+    // Return final state for the client (verification code + signed PDF, when available)
+    const { data: reqFinal } = await supabase
+      .from("signature_requests")
+      .select("status, final_signed_pdf_url")
+      .eq("id", request.id).maybeSingle();
+    const { data: cert } = await supabase
+      .from("signature_evidence_certificates")
+      .select("verification_code, certificate_url, pdf_url")
+      .eq("signature_request_id", request.id).maybeSingle();
+
+    return {
+      ok: true,
+      status: reqFinal?.status ?? "in_progress",
+      verification_code: (cert as any)?.verification_code ?? null,
+      signed_pdf_url: (reqFinal as any)?.final_signed_pdf_url ?? null,
+      certificate_url: (cert as any)?.certificate_url ?? (cert as any)?.pdf_url ?? null,
+    };
   },
 
   async logView(token: string) {
