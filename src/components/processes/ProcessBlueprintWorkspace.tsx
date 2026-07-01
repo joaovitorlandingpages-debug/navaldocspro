@@ -125,7 +125,7 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
         .select("procurador_nome, procurador_cpf")
         .eq("id", profile.company_id)
         .maybeSingle();
-      return data;
+      return data as { procurador_nome?: string | null; procurador_cpf?: string | null } | null;
     },
     enabled: !!profile?.company_id,
   });
