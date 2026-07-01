@@ -170,9 +170,18 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     }
     if (!process?.customer_id) list.push("Cliente ainda não vinculado ao processo.");
     if (!process?.vessel_id) list.push("Embarcação ainda não vinculada ao processo.");
+    const usaProcurador = checklist.some((r) => {
+      const n = (r.item_name || "").toLowerCase();
+      const role = (r.document_role || "").toLowerCase();
+      return n.includes("procura") || n.includes("requerimento") || role.includes("procura") || role.includes("requerimento");
+    });
+    if (usaProcurador && procuradorMissing) {
+      list.push("Dados do procurador incompletos. Preencha em Identidade Corporativa.");
+    }
     if (list.length === 0) list.push("Processo pronto para gerar dossiê.");
     return list;
-  }, [stats, process]);
+  }, [stats, process, checklist, procuradorMissing]);
+
 
   const smartChecklist = useMemo(() => [
     { label: "Cliente completo", ok: !!process?.customer_id },
