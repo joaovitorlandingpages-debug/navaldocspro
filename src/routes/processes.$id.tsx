@@ -60,11 +60,13 @@ type ProcessTab = typeof VALID_TABS[number];
 const VALID_FOCUS_ACTIONS = ["gerar","editar","anexar","assinar","historico"] as const;
 type FocusAction = typeof VALID_FOCUS_ACTIONS[number];
 
+type ProcessSearch = { tab?: ProcessTab; focus?: string; action?: FocusAction };
+
 export const Route = createFileRoute("/processes/$id")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    tab: (typeof s.tab === "string" && (VALID_TABS as readonly string[]).includes(s.tab)
+  validateSearch: (s: Record<string, unknown>): ProcessSearch => ({
+    tab: typeof s.tab === "string" && (VALID_TABS as readonly string[]).includes(s.tab)
       ? (s.tab as ProcessTab)
-      : ("overview" as ProcessTab)),
+      : undefined,
     focus: typeof s.focus === "string" ? s.focus : undefined,
     action: typeof s.action === "string" && (VALID_FOCUS_ACTIONS as readonly string[]).includes(s.action)
       ? (s.action as FocusAction) : undefined,
