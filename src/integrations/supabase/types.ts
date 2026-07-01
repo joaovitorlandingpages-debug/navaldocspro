@@ -1757,9 +1757,11 @@ export type Database = {
           has_expiration: boolean | null
           id: string
           is_required: boolean | null
+          item_label: string | null
           package_id: string | null
           requires_ocr: boolean | null
           requires_signature: boolean | null
+          responsible_role: string | null
           sort_order: number | null
           validation_rules: Json | null
         }
@@ -1771,9 +1773,11 @@ export type Database = {
           has_expiration?: boolean | null
           id?: string
           is_required?: boolean | null
+          item_label?: string | null
           package_id?: string | null
           requires_ocr?: boolean | null
           requires_signature?: boolean | null
+          responsible_role?: string | null
           sort_order?: number | null
           validation_rules?: Json | null
         }
@@ -1785,9 +1789,11 @@ export type Database = {
           has_expiration?: boolean | null
           id?: string
           is_required?: boolean | null
+          item_label?: string | null
           package_id?: string | null
           requires_ocr?: boolean | null
           requires_signature?: boolean | null
+          responsible_role?: string | null
           sort_order?: number | null
           validation_rules?: Json | null
         }
@@ -1810,30 +1816,42 @@ export type Database = {
       }
       document_process_packages: {
         Row: {
+          category: string | null
           created_at: string | null
+          default_deadline_days: number | null
+          default_priority: string | null
           description: string | null
           id: string
           is_active: boolean | null
           name: string
           process_type: string
+          sort_order: number | null
           updated_at: string | null
         }
         Insert: {
+          category?: string | null
           created_at?: string | null
+          default_deadline_days?: number | null
+          default_priority?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
           name: string
           process_type: string
+          sort_order?: number | null
           updated_at?: string | null
         }
         Update: {
+          category?: string | null
           created_at?: string | null
+          default_deadline_days?: number | null
+          default_priority?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
           name?: string
           process_type?: string
+          sort_order?: number | null
           updated_at?: string | null
         }
         Relationships: []
