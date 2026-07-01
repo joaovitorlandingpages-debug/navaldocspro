@@ -154,19 +154,164 @@ export async function batchRequestSignature(
   return report;
 }
 
-export async function batchDownload(items: ChecklistLite[]) {
-  const withDocs = items.filter((i) => i.document_id);
-  if (withDocs.length === 0) {
-    toast.info("Nenhum item selecionado tem documento gerado para baixar.");
-    return;
-  }
-  const { data, error } = await supabase
-    .from("generated_documents")
-    .select("id,generated_file_url,signed_file_url,name")
-    .in("id", withDocs.map((i) => i.document_id!));
-  if (error || !data) { toast.error("Falha ao localizar arquivos."); return; }
-  for (const doc of data) {
-    const url = (doc as any).signed_file_url || (doc as any).generated_file_url;
-    if (url) window.open(url, "_blank");
-  }
+export interface BatchDownloadReport {
+  added: string[];
+  failed: { name: string; reason: string }[];
+  missing: string[];
 }
+
+function sanitizeFilename(name: string): string {
+  return (name || "arquivo")
+    .replace(/[\\/:*?"<>|]+/g, "_")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+}
+
+async function fetchToBlob(url: string): Promise<Blob> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.blob();
+}
+
+function extForBlob(blob: Blob, fallbackName?: string): string {
+  const mime = blob.type || "";
+  if (mime.includes("pdf")) return "pdf";
+  if (mime.includes("png")) return "png";
+  if (mime.includes("jpeg") || mime.includes("jpg")) return "jpg";
+  if (mime.includes("zip")) return "zip";
+  const m = fallbackName?.match(/\.([a-z0-9]{2,5})(?:\?|$)/i);
+  return m ? m[1].toLowerCase() : "bin";
+}
+
+export async function batchDownload(
+  processId: string,
+  items: ChecklistLite[],
+  processCode?: string | null,
+): Promise<BatchDownloadReport> {
+  const report: BatchDownloadReport = { added: [], failed: [], missing: [] };
+  if (items.length === 0) {
+    toast.info("Nenhum item selecionado.");
+    return report;
+  }
+
+  const [{ default: JSZip }, storage] = await Promise.all([
+    import("jszip"),
+    import("@/lib/storage"),
+  ]);
+  const zip = new JSZip();
+  const folders = {
+    docs: zip.folder("Documentos")!,
+    signed: zip.folder("Assinados")!,
+    certs: zip.folder("Certificados")!,
+    attach: zip.folder("Anexos")!,
+  };
+
+  // ---- 1. generated_documents (docs / assinados / certificados) ----
+  const docIds = items.map((i) => i.document_id).filter(Boolean) as string[];
+  const byDocId = new Map<string, ChecklistLite>();
+  items.forEach((i) => { if (i.document_id) byDocId.set(i.document_id, i); });
+
+  if (docIds.length > 0) {
+    const { data, error } = await supabase
+      .from("generated_documents")
+      .select("id,name,generated_file_url,signed_file_url,evidence_certificate_url")
+      .in("id", docIds);
+    if (error) console.warn("[batchDownload] generated_documents:", error.message);
+
+    for (const doc of (data ?? []) as any[]) {
+      const item = byDocId.get(doc.id);
+      const baseName = sanitizeFilename(item?.item_name || doc.name || doc.id);
+
+      const parts: Array<{ folder: any; url: string | null; suffix: string }> = [
+        { folder: folders.docs,   url: doc.generated_file_url,        suffix: "" },
+        { folder: folders.signed, url: doc.signed_file_url,           suffix: "_assinado" },
+        { folder: folders.certs,  url: doc.evidence_certificate_url,  suffix: "_certificado" },
+      ];
+
+      let anyPart = false;
+      for (const p of parts) {
+        if (!p.url) continue;
+        anyPart = true;
+        try {
+          const bucket =
+            p.folder === folders.docs   ? "generated-documents" :
+            p.folder === folders.signed ? "signed-documents"    :
+                                          "signed-documents";
+          const signed = await storage.signedUrl(bucket as any, p.url, 120);
+          const blob = await fetchToBlob(signed);
+          const ext = extForBlob(blob, p.url);
+          p.folder.file(`${baseName}${p.suffix}.${ext}`, blob);
+          report.added.push(`${baseName}${p.suffix}`);
+        } catch (e: any) {
+          report.failed.push({ name: `${baseName}${p.suffix}`, reason: e?.message || "erro" });
+        }
+      }
+      if (!anyPart) report.missing.push(baseName);
+    }
+  }
+
+  // Itens selecionados sem document_id
+  items.filter((i) => !i.document_id).forEach((i) =>
+    report.missing.push(sanitizeFilename(i.item_name)),
+  );
+
+  // ---- 2. Anexos (process_document_uploads do processo) ----
+  try {
+    const { data: uploads } = await supabase
+      .from("process_document_uploads")
+      .select("id,file_url,file_name")
+      .eq("process_id", processId);
+    for (const up of (uploads ?? []) as any[]) {
+      try {
+        const signed = await storage.signedUrl("process-document-uploads" as any, up.file_url, 120);
+        const blob = await fetchToBlob(signed);
+        const ext = extForBlob(blob, up.file_name || up.file_url);
+        const base = sanitizeFilename(up.file_name || up.id);
+        const finalName = /\.[a-z0-9]{2,5}$/i.test(base) ? base : `${base}.${ext}`;
+        folders.attach.file(finalName, blob);
+        report.added.push(`anexo:${finalName}`);
+      } catch (e: any) {
+        report.failed.push({ name: up.file_name || up.id, reason: e?.message || "erro" });
+      }
+    }
+  } catch (e: any) {
+    console.warn("[batchDownload] anexos:", e?.message);
+  }
+
+  // ---- 3. Manifesto ----
+  const manifest = [
+    `Processo: ${processCode || processId}`,
+    `Gerado em: ${new Date().toISOString()}`,
+    `Adicionados: ${report.added.length}`,
+    `Falharam: ${report.failed.length}`,
+    `Sem arquivo: ${report.missing.length}`,
+    "",
+    "== Falhas ==",
+    ...report.failed.map((f) => `- ${f.name}: ${f.reason}`),
+    "",
+    "== Sem arquivo ==",
+    ...report.missing.map((m) => `- ${m}`),
+  ].join("\n");
+  zip.file("MANIFESTO.txt", manifest);
+
+  // ---- 4. Geração e download único ----
+  const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
+  const safeCode = sanitizeFilename(processCode || processId.slice(0, 8));
+  const filename = `Processo_${safeCode}_documentos.zip`;
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+  toast.success(
+    `ZIP gerado: ${report.added.length} arquivo(s). ${report.failed.length} falha(s), ${report.missing.length} sem arquivo.`,
+  );
+  return report;
+}
+
