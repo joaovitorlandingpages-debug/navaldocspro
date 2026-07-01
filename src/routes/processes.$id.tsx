@@ -742,6 +742,15 @@ function ProcessDetail() {
         onOpenChange={setEditSheetOpen}
         onSaved={fetchProcess}
       />
+
+      <ProcessItemFocusDialog
+        processId={id}
+        process={process}
+        checklistId={focusItemId}
+        action={focusAction}
+        onClose={closeFocusItem}
+        onChanged={fetchProcess}
+      />
     </div>
   );
 }
