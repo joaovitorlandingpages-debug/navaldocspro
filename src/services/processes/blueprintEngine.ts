@@ -76,7 +76,7 @@ export async function materializeProcessBlueprint(processId: string): Promise<Ma
 
   const existingByTemplate = new Map<string, any>();
   const existingByName = new Map<string, any>();
-  (existing ?? []).forEach((row) => {
+  (existing ?? []).forEach((row: any) => {
     if (row.template_id) existingByTemplate.set(row.template_id, row);
     if (row.item_name) existingByName.set(row.item_name.toLowerCase(), row);
   });
