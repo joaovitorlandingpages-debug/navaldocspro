@@ -41,6 +41,15 @@ type BrandingFields = {
   contact_address: string;
   technical_responsible_name: string;
   technical_responsible_registry: string;
+  procurador_nome: string;
+  procurador_cpf: string;
+  procurador_rg: string;
+  procurador_orgao_expedidor: string;
+  procurador_nacionalidade: string;
+  procurador_endereco: string;
+  procurador_telefone: string;
+  procurador_email: string;
+  procurador_crea: string;
   signature_url: string | null;
   stamp_url: string | null;
   watermark_url: string | null;
