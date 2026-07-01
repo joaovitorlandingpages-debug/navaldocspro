@@ -341,21 +341,33 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                    Cliente <span className="text-slate-400 normal-case font-medium">(opcional)</span>
-                  </Label>
-                  <Select value={customerId || "none"} onValueChange={(v) => { setCustomerId(v === "none" ? "" : v); setVesselId(""); }}>
-                    <SelectTrigger><SelectValue placeholder="Vincular depois" /></SelectTrigger>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                      Cliente <span className="text-red-500">*</span>
+                    </Label>
+                    <button type="button" onClick={createCustomerInline} className="text-[11px] font-bold text-primary hover:underline inline-flex items-center gap-1">
+                      <Plus className="h-3 w-3" /> Novo
+                    </button>
+                  </div>
+                  <Select value={customerId || ""} onValueChange={(v) => { setCustomerId(v); setVesselId(""); }}>
+                    <SelectTrigger className={!customerId ? "border-red-300" : ""}><SelectValue placeholder="Selecione um cliente" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">— Vincular depois —</SelectItem>
                       {customers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  {!customerId && (
+                    <p className="text-[11px] text-red-600">Selecione ou crie um cliente para continuar.</p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                    Embarcação <span className="text-slate-400 normal-case font-medium">(opcional)</span>
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                      Embarcação <span className="text-slate-400 normal-case font-medium">(opcional)</span>
+                    </Label>
+                    <button type="button" onClick={createVesselInline} disabled={!customerId} className="text-[11px] font-bold text-primary hover:underline inline-flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed">
+                      <Plus className="h-3 w-3" /> Nova
+                    </button>
+                  </div>
                   <Select value={vesselId || "none"} onValueChange={(v) => setVesselId(v === "none" ? "" : v)}>
                     <SelectTrigger><SelectValue placeholder="Vincular depois" /></SelectTrigger>
                     <SelectContent>
