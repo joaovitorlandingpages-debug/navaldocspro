@@ -104,14 +104,14 @@ async function resolveProcurador(
     company?.procurador_nome, company?.technical_responsible_name,
     responsibleProfile?.name, company?.responsible_name,
   )
-  out['procurador.cpf'] = pick(company?.procurador_cpf, responsibleProfile?.cpf)
-  out['procurador.rg'] = pick(company?.procurador_rg, responsibleProfile?.rg)
+  out['procurador.cpf'] = pick(company?.procurador_cpf)
+  out['procurador.rg'] = pick(company?.procurador_rg)
   out['procurador.orgao_expedidor'] = pick(company?.procurador_orgao_expedidor)
   out['procurador.nacionalidade'] = pick(company?.procurador_nacionalidade, 'Brasileira')
-  out['procurador.endereco'] = pick(company?.procurador_endereco, responsibleProfile?.address, company?.contact_address)
+  out['procurador.endereco'] = pick(company?.procurador_endereco, company?.contact_address)
   out['procurador.telefone'] = pick(company?.procurador_telefone, responsibleProfile?.phone, company?.contact_phone, company?.phone)
   out['procurador.email'] = pick(company?.procurador_email, responsibleProfile?.email, company?.contact_email, company?.email)
-  out['procurador.crea'] = pick(company?.procurador_crea, responsibleProfile?.crea, company?.technical_responsible_registry)
+  out['procurador.crea'] = pick(company?.procurador_crea, company?.technical_responsible_registry)
 
   return out
 }
