@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -7,14 +7,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
 import {
   Loader2, Save, Plus, X, AlertTriangle, User, Ship, FileText, Calendar,
   ClipboardList, Palette, CheckSquare, BarChart3, Zap, ExternalLink, Copy,
   Archive, Trash2, PenLine, FileSignature, FolderArchive, Share2, Upload,
+  ChevronDown, Check, Users,
 } from "lucide-react";
+import { BR_UFS, maskCpfCnpj, maskPhone, daysUntil } from "@/lib/br-format";
 
 interface Props {
   process: any;
@@ -24,19 +32,22 @@ interface Props {
 }
 
 const STATUSES = [
-  { v: "pending", l: "Novo" },
-  { v: "in_progress", l: "Em andamento" },
-  { v: "waiting_docs", l: "Aguardando documentos" },
-  { v: "review", l: "Em revisão" },
-  { v: "ready_to_generate", l: "Pronto para geração" },
-  { v: "waiting_signature", l: "Aguardando assinatura" },
-  { v: "protocolado", l: "Protocolado" },
-  { v: "completed", l: "Finalizado" },
-  { v: "cancelled", l: "Cancelado" },
+  { v: "pending", l: "Novo", tone: "bg-slate-100 text-slate-700" },
+  { v: "in_progress", l: "Em andamento", tone: "bg-blue-100 text-blue-700" },
+  { v: "waiting_docs", l: "Aguardando documentos", tone: "bg-amber-100 text-amber-800" },
+  { v: "review", l: "Em revisão", tone: "bg-violet-100 text-violet-700" },
+  { v: "ready_to_generate", l: "Pronto para geração", tone: "bg-cyan-100 text-cyan-700" },
+  { v: "waiting_signature", l: "Aguardando assinatura", tone: "bg-orange-100 text-orange-700" },
+  { v: "protocolado", l: "Protocolado", tone: "bg-emerald-100 text-emerald-800" },
+  { v: "completed", l: "Finalizado", tone: "bg-emerald-100 text-emerald-800" },
+  { v: "cancelled", l: "Cancelado", tone: "bg-slate-200 text-slate-600" },
 ];
 const PRIORITIES = [
-  { v: "low", l: "Baixa" }, { v: "medium", l: "Média" }, { v: "high", l: "Alta" },
-  { v: "urgent", l: "Urgente" }, { v: "critical", l: "Crítica" },
+  { v: "low", l: "Baixa", tone: "bg-slate-100 text-slate-700" },
+  { v: "medium", l: "Média", tone: "bg-blue-100 text-blue-700" },
+  { v: "high", l: "Alta", tone: "bg-amber-100 text-amber-800" },
+  { v: "urgent", l: "Urgente", tone: "bg-orange-100 text-orange-700" },
+  { v: "critical", l: "Crítica", tone: "bg-red-100 text-red-700" },
 ];
 const CATEGORIES = ["Registro", "Renovação", "Transferência", "Vistoria", "Cancelamento", "Alteração", "Outro"];
 const BRANDING_MODES = [
@@ -50,11 +61,11 @@ function Section({ icon: Icon, title, children, action }: any) {
   return (
     <section className="bg-white p-5 md:p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
       <header className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary/10 grid place-items-center text-primary">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="h-8 w-8 shrink-0 rounded-lg bg-primary/10 grid place-items-center text-primary">
             <Icon className="h-4 w-4" />
           </div>
-          <h3 className="text-sm font-black text-navy uppercase tracking-tight">{title}</h3>
+          <h3 className="text-sm font-black text-navy uppercase tracking-tight truncate">{title}</h3>
         </div>
         {action}
       </header>
@@ -72,6 +83,19 @@ function StatCard({ icon: Icon, label, value, hint }: any) {
       <div className="mt-1.5 text-2xl font-black text-navy">{value ?? "—"}</div>
       {hint && <div className="text-[11px] text-slate-400 mt-0.5">{hint}</div>}
     </div>
+  );
+}
+
+function Chip({ tone, children, onClick, title }: any) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide transition hover:brightness-95 ${tone}`}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -100,23 +124,26 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
     branding_logo_url: process?.branding_logo_url ?? "",
   }), [process, meta.process_number, meta.category, meta.engineer_id, meta.despachante_id]);
 
+  const [tab, setTab] = useState<string>("dados");
   const [form, setForm] = useState(initial);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [customers, setCustomers] = useState<any[]>([]);
   const [vessels, setVessels] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [processTypes, setProcessTypes] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({});
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [tagInput, setTagInput] = useState("");
-  const [customerFilter, setCustomerFilter] = useState("");
-  const [vesselFilter, setVesselFilter] = useState("");
   const [newCustomerOpen, setNewCustomerOpen] = useState(false);
   const [editCustomerOpen, setEditCustomerOpen] = useState(false);
   const [newVesselOpen, setNewVesselOpen] = useState(false);
   const [editVesselOpen, setEditVesselOpen] = useState(false);
   const [customerDraft, setCustomerDraft] = useState<any>({});
   const [vesselDraft, setVesselDraft] = useState<any>({});
+  const [customerPickerOpen, setCustomerPickerOpen] = useState(false);
+  const [vesselPickerOpen, setVesselPickerOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<null | "archive" | "trash">(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setForm(initial); }, [initial]);
@@ -127,14 +154,16 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
     const { data: profile } = await supabase.from("profiles").select("company_id").eq("id", user.id).single();
     if (!profile?.company_id) return;
     setCompanyId(profile.company_id);
-    const [c, v, p] = await Promise.all([
+    const [c, v, p, pt] = await Promise.all([
       supabase.from("customers").select("id,name,cpf_cnpj,email,phone,city,state").eq("company_id", profile.company_id).order("name"),
       supabase.from("vessels").select("id,name,customer_id,vessel_type,registration_number,engine,current_owner_name").eq("company_id", profile.company_id).order("name"),
       supabase.from("profiles").select("id,name,email").eq("company_id", profile.company_id).order("name"),
+      supabase.from("process_types").select("id,name,category").order("name"),
     ]);
     setCustomers(c.data || []);
     setVessels(v.data || []);
     setUsers(p.data || []);
+    setProcessTypes(pt.data || []);
   }
   useEffect(() => { reload(); }, []);
 
@@ -184,13 +213,6 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
   }
   function removeTag(t: string) { setForm({ ...form, tags: form.tags.filter((x) => x !== t) }); }
 
-  const filteredCustomers = customers.filter((c) =>
-    !customerFilter.trim() || `${c.name} ${c.cpf_cnpj ?? ""}`.toLowerCase().includes(customerFilter.toLowerCase())
-  );
-  const filteredVessels = vessels
-    .filter((v) => !form.customer_id || v.customer_id === form.customer_id || v.id === form.vessel_id)
-    .filter((v) => !vesselFilter.trim() || `${v.name} ${v.registration_number ?? ""}`.toLowerCase().includes(vesselFilter.toLowerCase()));
-
   // -------- Customer inline CRUD
   function openNewCustomer() { setCustomerDraft({ name: "", cpf_cnpj: "", email: "", phone: "", city: "", state: "" }); setNewCustomerOpen(true); }
   async function openEditCustomer() {
@@ -201,27 +223,23 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
   }
   async function saveCustomer(mode: "new" | "edit") {
     if (!customerDraft.name?.trim() || !companyId) return;
+    const payload = {
+      name: customerDraft.name.trim(),
+      cpf_cnpj: customerDraft.cpf_cnpj || null,
+      email: customerDraft.email || null,
+      phone: customerDraft.phone || null,
+      city: customerDraft.city || null,
+      state: customerDraft.state || null,
+    };
     if (mode === "new") {
-      const { data, error } = await supabase.from("customers").insert({
-        company_id: companyId,
-        name: customerDraft.name.trim(),
-        cpf_cnpj: customerDraft.cpf_cnpj || null,
-        email: customerDraft.email || null,
-        phone: customerDraft.phone || null,
-        city: customerDraft.city || null,
-        state: customerDraft.state || null,
-      }).select().single();
+      const { data, error } = await supabase.from("customers").insert({ company_id: companyId, ...payload }).select().single();
       if (error) return toast.error(error.message);
       toast.success("Cliente criado.");
       await reload();
       setForm((f) => ({ ...f, customer_id: data!.id }));
       setNewCustomerOpen(false);
     } else {
-      const { error } = await supabase.from("customers").update({
-        name: customerDraft.name, cpf_cnpj: customerDraft.cpf_cnpj || null,
-        email: customerDraft.email || null, phone: customerDraft.phone || null,
-        city: customerDraft.city || null, state: customerDraft.state || null,
-      }).eq("id", customerDraft.id);
+      const { error } = await supabase.from("customers").update(payload).eq("id", customerDraft.id);
       if (error) return toast.error(error.message);
       toast.success("Cliente atualizado.");
       await reload();
@@ -243,29 +261,22 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
   }
   async function saveVessel(mode: "new" | "edit") {
     if (!vesselDraft.name?.trim() || !companyId) return;
+    const payload = {
+      name: vesselDraft.name.trim(),
+      registration_number: vesselDraft.registration_number || null,
+      vessel_type: vesselDraft.vessel_type || null,
+      engine: vesselDraft.engine || null,
+      current_owner_name: vesselDraft.current_owner_name || null,
+    };
     if (mode === "new") {
-      const { data, error } = await supabase.from("vessels").insert({
-        company_id: companyId,
-        customer_id: form.customer_id,
-        name: vesselDraft.name.trim(),
-        registration_number: vesselDraft.registration_number || null,
-        vessel_type: vesselDraft.vessel_type || null,
-        engine: vesselDraft.engine || null,
-        current_owner_name: vesselDraft.current_owner_name || null,
-      }).select().single();
+      const { data, error } = await supabase.from("vessels").insert({ company_id: companyId, customer_id: form.customer_id, ...payload }).select().single();
       if (error) return toast.error(error.message);
       toast.success("Embarcação criada.");
       await reload();
       setForm((f) => ({ ...f, vessel_id: data!.id }));
       setNewVesselOpen(false);
     } else {
-      const { error } = await supabase.from("vessels").update({
-        name: vesselDraft.name,
-        registration_number: vesselDraft.registration_number || null,
-        vessel_type: vesselDraft.vessel_type || null,
-        engine: vesselDraft.engine || null,
-        current_owner_name: vesselDraft.current_owner_name || null,
-      }).eq("id", vesselDraft.id);
+      const { error } = await supabase.from("vessels").update(payload).eq("id", vesselDraft.id);
       if (error) return toast.error(error.message);
       toast.success("Embarcação atualizada.");
       await reload();
@@ -291,9 +302,9 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
   }
 
   // -------- Save
-  async function handleSave(e?: React.FormEvent) {
-    e?.preventDefault();
-    if (!isDirty) return toast.info("Nada para salvar.");
+  const handleSave = useCallback(async (e?: React.FormEvent | KeyboardEvent) => {
+    (e as any)?.preventDefault?.();
+    if (!isDirty) { toast.info("Nada para salvar."); return; }
     if (!form.process_type?.trim()) return toast.error("Tipo de processo é obrigatório.");
     if (!form.customer_id) return toast.error("Cliente é obrigatório.");
     setSaving(true);
@@ -313,7 +324,7 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
         if (columnMap[k]) {
           payload[columnMap[k]] = nullable.has(k) ? ((form as any)[k] || null) : (form as any)[k];
         } else {
-          extras[k === "process_number" ? "process_number" : k] = (form as any)[k] || null;
+          extras[k] = (form as any)[k] || null;
           extrasChanged = true;
         }
       });
@@ -325,12 +336,24 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
     } catch (err: any) {
       toast.error(err.message || "Falha ao salvar.");
     } finally { setSaving(false); }
-  }
+  }, [isDirty, form, dirtyFields, meta, process?.id, onSaved]);
+
+  // Ctrl/Cmd + S
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
+        e.preventDefault();
+        handleSave(e);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handleSave]);
 
   // -------- Quick Actions
-  async function goTo(tab: string) {
+  async function goTo(t: string) {
     onClose?.();
-    await navigate({ to: "/processes/$id", params: { id: process.id }, search: { tab } as any });
+    await navigate({ to: "/processes/$id", params: { id: process.id }, search: { tab: t } as any });
   }
   async function share() {
     try {
@@ -349,16 +372,14 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
     onClose?.();
     await navigate({ to: "/processes/$id", params: { id: data as string }, search: { tab: "overview" } as any });
   }
-  async function archive() {
-    if (!confirm("Arquivar este processo?")) return;
+  async function runArchive() {
     const { error } = await supabase.rpc("process_archive", { p_id: process.id });
     if (error) return toast.error(error.message);
     toast.success("Processo arquivado.");
     onSaved?.();
     onClose?.();
   }
-  async function trash() {
-    if (!confirm("Mover para a lixeira?")) return;
+  async function runTrash() {
     const { error } = await supabase.rpc("process_trash", { p_id: process.id });
     if (error) return toast.error(error.message);
     toast.success("Processo movido para a lixeira.");
@@ -379,9 +400,167 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
   ];
   const checklistPct = Math.round((checklist.filter((c) => c.done).length / checklist.length) * 100);
 
+  const statusMeta = STATUSES.find((s) => s.v === form.status) ?? STATUSES[0];
+  const priorityMeta = PRIORITIES.find((p) => p.v === form.priority) ?? PRIORITIES[1];
+  const dueDays = daysUntil(form.due_date);
+  const dueTone = dueDays === null
+    ? "bg-slate-100 text-slate-600"
+    : dueDays < 0 ? "bg-red-100 text-red-700"
+    : dueDays <= 3 ? "bg-orange-100 text-orange-700"
+    : dueDays <= 7 ? "bg-amber-100 text-amber-800"
+    : "bg-emerald-100 text-emerald-800";
+  const dueLabel = dueDays === null ? "Sem prazo"
+    : dueDays < 0 ? `${Math.abs(dueDays)}d atrasado`
+    : dueDays === 0 ? "Vence hoje"
+    : `${dueDays}d restantes`;
+
   return (
     <form onSubmit={handleSave} className="flex flex-col h-full">
-      <Tabs defaultValue="dados" className="flex-1 flex flex-col min-h-0">
+      {/* ============ RICH HEADER ============ */}
+      <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white px-5 sm:px-8 pt-4 pb-3 space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Customer combobox */}
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-widest font-black text-slate-500 mb-1">Cliente</div>
+            <Popover open={customerPickerOpen} onOpenChange={setCustomerPickerOpen}>
+              <PopoverTrigger asChild>
+                <button type="button" className="w-full flex items-center justify-between gap-2 px-3 h-11 rounded-xl border border-slate-200 bg-white hover:border-primary/40 transition text-left">
+                  <div className="min-w-0 flex items-center gap-2">
+                    <User className="h-4 w-4 text-primary shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-navy truncate">
+                        {currentCustomer?.name || <span className="text-slate-400 font-medium">Selecionar cliente…</span>}
+                      </div>
+                      {currentCustomer && (
+                        <div className="text-[10px] text-slate-500 truncate">
+                          {currentCustomer.cpf_cnpj || "sem CPF/CNPJ"}{currentCustomer.phone ? ` · ${currentCustomer.phone}` : ""}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command filter={(v, s) => (v.toLowerCase().includes(s.toLowerCase()) ? 1 : 0)}>
+                  <CommandInput placeholder="Nome, CPF/CNPJ, telefone…" />
+                  <CommandList>
+                    <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
+                    <CommandGroup>
+                      {customers.map((c) => (
+                        <CommandItem
+                          key={c.id}
+                          value={`${c.name} ${c.cpf_cnpj ?? ""} ${c.phone ?? ""} ${c.email ?? ""}`}
+                          onSelect={() => { setForm((f) => ({ ...f, customer_id: c.id, vessel_id: f.customer_id === c.id ? f.vessel_id : "" })); setCustomerPickerOpen(false); }}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-navy truncate">{c.name}</div>
+                            <div className="text-[11px] text-slate-500 truncate">{c.cpf_cnpj || "—"}{c.phone ? ` · ${c.phone}` : ""}</div>
+                          </div>
+                          {form.customer_id === c.id && <Check className="h-4 w-4 text-primary" />}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                    <div className="border-t p-1">
+                      <button type="button" onClick={() => { setCustomerPickerOpen(false); openNewCustomer(); }} className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-slate-50 text-sm text-primary font-semibold">
+                        <Plus className="h-4 w-4" /> Novo cliente
+                      </button>
+                    </div>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Vessel combobox */}
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-widest font-black text-slate-500 mb-1">Embarcação</div>
+            <Popover open={vesselPickerOpen} onOpenChange={setVesselPickerOpen}>
+              <PopoverTrigger asChild>
+                <button type="button" disabled={!form.customer_id} className="w-full flex items-center justify-between gap-2 px-3 h-11 rounded-xl border border-slate-200 bg-white hover:border-primary/40 disabled:opacity-50 disabled:cursor-not-allowed transition text-left">
+                  <div className="min-w-0 flex items-center gap-2">
+                    <Ship className="h-4 w-4 text-primary shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-navy truncate">
+                        {currentVessel?.name || <span className="text-slate-400 font-medium">{form.customer_id ? "Selecionar embarcação…" : "Selecione um cliente"}</span>}
+                      </div>
+                      {currentVessel && (
+                        <div className="text-[10px] text-slate-500 truncate">
+                          {currentVessel.vessel_type || "—"}{currentVessel.registration_number ? ` · ${currentVessel.registration_number}` : ""}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command filter={(v, s) => (v.toLowerCase().includes(s.toLowerCase()) ? 1 : 0)}>
+                  <CommandInput placeholder="Nome, registro/TIE, tipo…" />
+                  <CommandList>
+                    <CommandEmpty>Nenhuma embarcação.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem value="__none__" onSelect={() => { setForm((f) => ({ ...f, vessel_id: "" })); setVesselPickerOpen(false); }}>
+                        <span className="italic text-slate-500">Sem embarcação vinculada</span>
+                      </CommandItem>
+                      {vessels.filter((v) => v.customer_id === form.customer_id).map((v) => (
+                        <CommandItem
+                          key={v.id}
+                          value={`${v.name} ${v.registration_number ?? ""} ${v.vessel_type ?? ""}`}
+                          onSelect={() => { setForm((f) => ({ ...f, vessel_id: v.id })); setVesselPickerOpen(false); }}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-navy truncate">{v.name}</div>
+                            <div className="text-[11px] text-slate-500 truncate">{v.vessel_type || "—"}{v.registration_number ? ` · ${v.registration_number}` : ""}</div>
+                          </div>
+                          {form.vessel_id === v.id && <Check className="h-4 w-4 text-primary" />}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                    <div className="border-t p-1">
+                      <button type="button" disabled={!form.customer_id} onClick={() => { setVesselPickerOpen(false); openNewVessel(); }} className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-slate-50 text-sm text-primary font-semibold disabled:opacity-50">
+                        <Plus className="h-4 w-4" /> Nova embarcação
+                      </button>
+                    </div>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+
+        {/* Status + chips */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Chip tone={statusMeta.tone} onClick={() => setTab("dados")} title="Alterar status">
+            <span className="opacity-70">Status:</span> {statusMeta.l}
+          </Chip>
+          <Chip tone={priorityMeta.tone} onClick={() => setTab("dados")} title="Alterar prioridade">
+            <span className="opacity-70">Prio:</span> {priorityMeta.l}
+          </Chip>
+          <Chip tone={dueTone} onClick={() => setTab("dados")} title="Alterar prazo">
+            <Calendar className="h-3 w-3" /> {dueLabel}
+          </Chip>
+          <Chip tone="bg-primary/10 text-primary" onClick={() => setTab("checklist")} title="Ver checklist">
+            <CheckSquare className="h-3 w-3" /> Checklist {checklistPct}%
+          </Chip>
+          <Chip tone="bg-slate-100 text-slate-700" onClick={() => goTo("generation")} title="Ver documentos gerados">
+            <FileText className="h-3 w-3" /> {stats.documents ?? 0} docs
+          </Chip>
+          <Chip tone="bg-slate-100 text-slate-700" onClick={() => goTo("documents")} title="OCR do processo">
+            <Zap className="h-3 w-3" /> {stats.ocr ?? 0} OCR
+          </Chip>
+          <Chip tone="bg-slate-100 text-slate-700" onClick={() => goTo("signatures")} title="Assinaturas">
+            <FileSignature className="h-3 w-3" /> {stats.signatures ?? 0} assinaturas
+          </Chip>
+          {(stats.pending ?? 0) > 0 && (
+            <Chip tone="bg-red-100 text-red-700" onClick={() => goTo("documents")} title="Pendências">
+              <AlertTriangle className="h-3 w-3" /> {stats.pending} pendências
+            </Chip>
+          )}
+        </div>
+      </div>
+
+      <Tabs value={tab} onValueChange={setTab} className="flex-1 flex flex-col min-h-0">
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-slate-100 px-5 sm:px-8 py-2 overflow-x-auto">
           <TabsList className="bg-slate-100/70">
             <TabsTrigger value="dados"><FileText className="h-3.5 w-3.5 mr-1.5" />Dados</TabsTrigger>
@@ -394,7 +573,7 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
           </TabsList>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-6 space-y-5">
+        <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-6 space-y-5 pb-24">
           {(customerChanged || vesselChanged) && hasGenerated && (
             <div className="flex items-start gap-3 p-4 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900">
               <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" />
@@ -415,7 +594,16 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500">Tipo de Processo *</Label>
-                  <Input value={form.process_type} onChange={(e) => setForm({ ...form, process_type: e.target.value })} required />
+                  {processTypes.length > 0 ? (
+                    <Select value={form.process_type || undefined} onValueChange={(v) => setForm({ ...form, process_type: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecionar tipo" /></SelectTrigger>
+                      <SelectContent>
+                        {processTypes.map((t) => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input value={form.process_type} onChange={(e) => setForm({ ...form, process_type: e.target.value })} required />
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500">Número do Processo</Label>
@@ -478,7 +666,7 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
               </div>
             </Section>
 
-            <Section icon={User} title="Equipe & Responsáveis">
+            <Section icon={Users} title="Equipe">
               <div className="grid md:grid-cols-2 gap-4">
                 {[
                   { key: "responsible_id", label: "Responsável" },
@@ -520,37 +708,23 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
                 )}
               </div>
             }>
-              <div className="space-y-3">
-                <Input placeholder="Buscar cliente por nome ou CPF/CNPJ..." value={customerFilter} onChange={(e) => setCustomerFilter(e.target.value)} />
-                <div className="max-h-56 overflow-y-auto border rounded-xl divide-y">
-                  {filteredCustomers.length === 0 && <div className="p-4 text-xs text-slate-400 text-center">Nenhum cliente encontrado.</div>}
-                  {filteredCustomers.slice(0, 30).map((c) => (
-                    <button key={c.id} type="button" onClick={() => setForm({ ...form, customer_id: c.id, vessel_id: "" })}
-                      className={`w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center justify-between ${form.customer_id === c.id ? "bg-primary/5" : ""}`}>
-                      <div>
-                        <div className="text-sm font-bold text-navy">{c.name}</div>
-                        <div className="text-[11px] text-slate-500">{c.cpf_cnpj || "sem CPF/CNPJ"} {c.city ? `· ${c.city}${c.state ? "/" + c.state : ""}` : ""}</div>
-                      </div>
-                      {form.customer_id === c.id && <Badge className="bg-primary text-white">Selecionado</Badge>}
-                    </button>
-                  ))}
-                </div>
-                {currentCustomer && (
-                  <div className="grid md:grid-cols-2 gap-2 p-3 rounded-xl bg-slate-50 text-xs">
-                    <div><b>Nome:</b> {currentCustomer.name}</div>
-                    <div><b>CPF/CNPJ:</b> {currentCustomer.cpf_cnpj || "—"}</div>
-                    <div><b>Telefone:</b> {currentCustomer.phone || "—"}</div>
-                    <div><b>Email:</b> {currentCustomer.email || "—"}</div>
-                    <div><b>Cidade:</b> {currentCustomer.city || "—"}</div>
-                    <div><b>Estado:</b> {currentCustomer.state || "—"}</div>
-                    <div className="md:col-span-2 pt-1">
-                      <Button type="button" size="sm" variant="link" className="p-0 h-auto gap-1" onClick={() => { onClose?.(); navigate({ to: "/customers" }); }}>
-                        <ExternalLink className="h-3 w-3" /> Abrir cadastro completo
-                      </Button>
-                    </div>
+              {currentCustomer ? (
+                <div className="grid md:grid-cols-2 gap-2 p-3 rounded-xl bg-slate-50 text-xs">
+                  <div><b>Nome:</b> {currentCustomer.name}</div>
+                  <div><b>CPF/CNPJ:</b> {currentCustomer.cpf_cnpj || "—"}</div>
+                  <div><b>Telefone:</b> {currentCustomer.phone || "—"}</div>
+                  <div><b>Email:</b> {currentCustomer.email || "—"}</div>
+                  <div><b>Cidade:</b> {currentCustomer.city || "—"}</div>
+                  <div><b>Estado:</b> {currentCustomer.state || "—"}</div>
+                  <div className="md:col-span-2 pt-1">
+                    <Button type="button" size="sm" variant="link" className="p-0 h-auto gap-1" onClick={() => { onClose?.(); navigate({ to: "/customers" }); }}>
+                      <ExternalLink className="h-3 w-3" /> Abrir cadastro completo
+                    </Button>
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400">Nenhum cliente selecionado. Use o combobox no topo do painel.</p>
+              )}
             </Section>
           </TabsContent>
 
@@ -568,42 +742,21 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
                 )}
               </div>
             }>
-              {!form.customer_id ? (
-                <p className="text-xs text-slate-400">Selecione um cliente para escolher a embarcação.</p>
-              ) : (
-                <div className="space-y-3">
-                  <Input placeholder="Buscar embarcação..." value={vesselFilter} onChange={(e) => setVesselFilter(e.target.value)} />
-                  <div className="max-h-56 overflow-y-auto border rounded-xl divide-y">
-                    <button type="button" onClick={() => setForm({ ...form, vessel_id: "" })}
-                      className={`w-full text-left px-3 py-2 hover:bg-slate-50 text-xs italic ${!form.vessel_id ? "bg-primary/5" : ""}`}>
-                      Sem embarcação vinculada
-                    </button>
-                    {filteredVessels.map((v) => (
-                      <button key={v.id} type="button" onClick={() => setForm({ ...form, vessel_id: v.id })}
-                        className={`w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center justify-between ${form.vessel_id === v.id ? "bg-primary/5" : ""}`}>
-                        <div>
-                          <div className="text-sm font-bold text-navy">{v.name}</div>
-                          <div className="text-[11px] text-slate-500">{v.vessel_type || "—"} {v.registration_number ? `· ${v.registration_number}` : ""}</div>
-                        </div>
-                        {form.vessel_id === v.id && <Badge className="bg-primary text-white">Selecionada</Badge>}
-                      </button>
-                    ))}
+              {currentVessel ? (
+                <div className="grid md:grid-cols-2 gap-2 p-3 rounded-xl bg-slate-50 text-xs">
+                  <div><b>Nome:</b> {currentVessel.name}</div>
+                  <div><b>Tipo:</b> {currentVessel.vessel_type || "—"}</div>
+                  <div><b>Registro:</b> {currentVessel.registration_number || "—"}</div>
+                  <div><b>Motor:</b> {currentVessel.engine || "—"}</div>
+                  <div className="md:col-span-2"><b>Proprietário:</b> {currentVessel.current_owner_name || currentCustomer?.name || "—"}</div>
+                  <div className="md:col-span-2 pt-1">
+                    <Button type="button" size="sm" variant="link" className="p-0 h-auto gap-1" onClick={() => { onClose?.(); navigate({ to: "/vessels" }); }}>
+                      <ExternalLink className="h-3 w-3" /> Abrir cadastro completo
+                    </Button>
                   </div>
-                  {currentVessel && (
-                    <div className="grid md:grid-cols-2 gap-2 p-3 rounded-xl bg-slate-50 text-xs">
-                      <div><b>Nome:</b> {currentVessel.name}</div>
-                      <div><b>Tipo:</b> {currentVessel.vessel_type || "—"}</div>
-                      <div><b>Registro:</b> {currentVessel.registration_number || "—"}</div>
-                      <div><b>Motor:</b> {currentVessel.engine || "—"}</div>
-                      <div className="md:col-span-2"><b>Proprietário:</b> {currentVessel.current_owner_name || currentCustomer?.name || "—"}</div>
-                      <div className="md:col-span-2 pt-1">
-                        <Button type="button" size="sm" variant="link" className="p-0 h-auto gap-1" onClick={() => { onClose?.(); navigate({ to: "/vessels" }); }}>
-                          <ExternalLink className="h-3 w-3" /> Abrir cadastro completo
-                        </Button>
-                      </div>
-                    </div>
-                  )}
                 </div>
+              ) : (
+                <p className="text-xs text-slate-400">Nenhuma embarcação selecionada. Use o combobox no topo do painel.</p>
               )}
             </Section>
           </TabsContent>
@@ -700,10 +853,10 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
                 <Button type="button" variant="outline" className="rounded-xl justify-start gap-2 h-11" onClick={duplicate}>
                   <Copy className="h-4 w-4" /> Duplicar Processo
                 </Button>
-                <Button type="button" variant="outline" className="rounded-xl justify-start gap-2 h-11" onClick={archive}>
+                <Button type="button" variant="outline" className="rounded-xl justify-start gap-2 h-11" onClick={() => setConfirmAction("archive")}>
                   <Archive className="h-4 w-4" /> Arquivar
                 </Button>
-                <Button type="button" variant="outline" className="rounded-xl justify-start gap-2 h-11 text-red-600 hover:text-red-700 hover:border-red-300" onClick={trash}>
+                <Button type="button" variant="outline" className="rounded-xl justify-start gap-2 h-11 text-red-600 hover:text-red-700 hover:border-red-300" onClick={() => setConfirmAction("trash")}>
                   <Trash2 className="h-4 w-4" /> Mover para Lixeira
                 </Button>
               </div>
@@ -713,11 +866,13 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
       </Tabs>
 
       {/* Sticky save bar */}
-      <div className="border-t border-slate-100 bg-white/95 backdrop-blur px-5 sm:px-8 py-3 flex items-center justify-between gap-3">
-        <div className="text-[11px] text-slate-500 font-medium">
-          {isDirty ? <span className="text-amber-600 font-bold">Alterações não salvas</span> : "Nenhuma alteração"}
+      <div className="sticky bottom-0 border-t border-slate-100 bg-white/95 backdrop-blur px-5 sm:px-8 py-3 flex items-center justify-between gap-3">
+        <div className="text-[11px] text-slate-500 font-medium truncate">
+          {isDirty
+            ? <span className="text-amber-600 font-bold">Alterações não salvas · <kbd className="px-1.5 py-0.5 rounded border border-slate-200 bg-slate-50 text-[10px]">Ctrl</kbd>+<kbd className="px-1.5 py-0.5 rounded border border-slate-200 bg-slate-50 text-[10px]">S</kbd> para salvar</span>
+            : "Nenhuma alteração"}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 shrink-0">
           {onCancel && (
             <Button type="button" variant="outline" className="h-11 rounded-xl" onClick={onCancel} disabled={saving}>
               Cancelar
@@ -729,6 +884,35 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
           </Button>
         </div>
       </div>
+
+      {/* ============ Confirm AlertDialog ============ */}
+      <AlertDialog open={confirmAction !== null} onOpenChange={(o) => { if (!o) setConfirmAction(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction === "archive" ? "Arquivar processo?" : "Mover para a lixeira?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction === "archive"
+                ? "O processo sairá da grade ativa, mas continuará acessível em Arquivados. Você pode restaurar a qualquer momento."
+                : "O processo será movido para a lixeira e poderá ser restaurado por 30 dias antes da exclusão definitiva."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className={confirmAction === "trash" ? "bg-red-600 hover:bg-red-700 text-white" : ""}
+              onClick={async () => {
+                const a = confirmAction; setConfirmAction(null);
+                if (a === "archive") await runArchive();
+                if (a === "trash") await runTrash();
+              }}
+            >
+              {confirmAction === "archive" ? "Arquivar" : "Mover para Lixeira"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ============ Customer Dialogs ============ */}
       {[
@@ -743,17 +927,24 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
                 <Input value={customerDraft.name || ""} onChange={(e) => setCustomerDraft({ ...customerDraft, name: e.target.value })} /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5"><Label>CPF / CNPJ</Label>
-                  <Input value={customerDraft.cpf_cnpj || ""} onChange={(e) => setCustomerDraft({ ...customerDraft, cpf_cnpj: e.target.value })} /></div>
+                  <Input value={customerDraft.cpf_cnpj || ""} onChange={(e) => setCustomerDraft({ ...customerDraft, cpf_cnpj: maskCpfCnpj(e.target.value) })} placeholder="000.000.000-00" /></div>
                 <div className="space-y-1.5"><Label>Telefone</Label>
-                  <Input value={customerDraft.phone || ""} onChange={(e) => setCustomerDraft({ ...customerDraft, phone: e.target.value })} /></div>
+                  <Input value={customerDraft.phone || ""} onChange={(e) => setCustomerDraft({ ...customerDraft, phone: maskPhone(e.target.value) })} placeholder="(00) 00000-0000" /></div>
               </div>
               <div className="space-y-1.5"><Label>E-mail</Label>
                 <Input type="email" value={customerDraft.email || ""} onChange={(e) => setCustomerDraft({ ...customerDraft, email: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-[1fr_120px] gap-3">
                 <div className="space-y-1.5"><Label>Cidade</Label>
                   <Input value={customerDraft.city || ""} onChange={(e) => setCustomerDraft({ ...customerDraft, city: e.target.value })} /></div>
-                <div className="space-y-1.5"><Label>Estado</Label>
-                  <Input maxLength={2} value={customerDraft.state || ""} onChange={(e) => setCustomerDraft({ ...customerDraft, state: e.target.value.toUpperCase() })} /></div>
+                <div className="space-y-1.5"><Label>UF</Label>
+                  <Select value={customerDraft.state || "__none__"} onValueChange={(v) => setCustomerDraft({ ...customerDraft, state: v === "__none__" ? "" : v })}>
+                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">—</SelectItem>
+                      {BR_UFS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
             <DialogFooter>
