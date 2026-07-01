@@ -1,7 +1,7 @@
 /**
  * Ações em lote para itens do checklist do processo (Blueprint Workspace).
- * Não substitui a geração individual — invoca a mesma edge function em paralelo
- * com progresso e relatório final.
+ * Reaproveita a edge function `generate-document` e o modelo de signature_requests
+ * existentes — não altera esquema nem quebra fluxos individuais.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ export type ChecklistLite = {
 };
 
 export interface BatchReport {
-  ok: string[];        // item_name
+  ok: string[];
   failed: { name: string; reason: string }[];
   missingData: string[];
 }
@@ -34,15 +34,12 @@ export async function batchGenerate(
     if (!it.template_id) {
       report.missingData.push(it.item_name);
       done += 1;
+      onProgress?.(done, total, it.item_name);
       continue;
     }
     try {
       const { error } = await supabase.functions.invoke("generate-document", {
-        body: {
-          templateId: it.template_id,
-          processId,
-          checklistId: it.id,
-        },
+        body: { templateId: it.template_id, processId, checklistId: it.id },
       });
       if (error) throw error;
       report.ok.push(it.item_name);
@@ -52,7 +49,6 @@ export async function batchGenerate(
     done += 1;
     onProgress?.(done, total, it.item_name);
   }
-
   return report;
 }
 
@@ -62,17 +58,24 @@ export async function batchRequestSignature(processId: string, items: ChecklistL
     toast.info("Nenhum item selecionado exige assinatura.");
     return { created: 0 };
   }
+  const { data: proc } = await supabase
+    .from("processes").select("company_id, customer_id").eq("id", processId).maybeSingle();
+  if (!proc?.company_id) {
+    toast.error("Processo sem empresa vinculada.");
+    return { created: 0 };
+  }
   let created = 0;
   for (const it of eligible) {
-    try {
-      const { error } = await supabase.from("signature_requests").insert({
-        process_id: processId,
-        title: it.item_name,
-        status: "pending",
-        document_checklist_id: it.id,
-      } as any);
-      if (!error) created += 1;
-    } catch {}
+    const { error } = await supabase.from("signature_requests").insert({
+      company_id: proc.company_id,
+      customer_id: proc.customer_id ?? null,
+      process_id: processId,
+      title: it.item_name,
+      status: "pending",
+      document_id: it.document_id ?? null,
+      metadata: { document_checklist_id: it.id } as any,
+    });
+    if (!error) created += 1;
   }
   return { created };
 }
@@ -85,15 +88,11 @@ export async function batchDownload(items: ChecklistLite[]) {
   }
   const { data, error } = await supabase
     .from("generated_documents")
-    .select("id,file_url,file_name")
+    .select("id,generated_file_url,signed_file_url,name")
     .in("id", withDocs.map((i) => i.document_id!));
-  if (error || !data) {
-    toast.error("Falha ao localizar arquivos.");
-    return;
-  }
+  if (error || !data) { toast.error("Falha ao localizar arquivos."); return; }
   for (const doc of data) {
-    if ((doc as any).file_url) {
-      window.open((doc as any).file_url, "_blank");
-    }
+    const url = (doc as any).signed_file_url || (doc as any).generated_file_url;
+    if (url) window.open(url, "_blank");
   }
 }
