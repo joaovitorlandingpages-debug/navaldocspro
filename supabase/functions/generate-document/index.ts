@@ -350,11 +350,86 @@ serve(async (req) => {
     const verificationCode = crypto.randomUUID().slice(0, 8).toUpperCase()
 
     let processNumber: string | undefined
+    let resolvedCustomerId = customerId as string | undefined
+    let resolvedVesselId = vesselId as string | undefined
     if (processId) {
       const { data: proc } = await supabaseAdmin
-        .from('processes').select('process_number, protocol_number').eq('id', processId).maybeSingle()
+        .from('processes').select('process_number, protocol_number, customer_id, vessel_id')
+        .eq('id', processId).maybeSingle()
       processNumber = proc?.process_number || proc?.protocol_number || undefined
+      resolvedCustomerId = resolvedCustomerId || proc?.customer_id
+      resolvedVesselId = resolvedVesselId || proc?.vessel_id
     }
+
+    // Auto-carrega dados canônicos para preencher placeholders quando o
+    // caller (ex.: batchGenerate) não envia fieldValues detalhados.
+    const autoValues: Record<string, any> = {}
+    if (resolvedCustomerId) {
+      const { data: c } = await supabaseAdmin.from('customers')
+        .select('name, cpf_cnpj, rg, address, city, state, phone, email')
+        .eq('id', resolvedCustomerId).maybeSingle()
+      if (c) {
+        autoValues['cliente.nome'] = c.name
+        autoValues['cliente.cpf'] = c.cpf_cnpj
+        autoValues['cliente.rg'] = c.rg
+        autoValues['cliente.endereco'] = c.address
+        autoValues['cliente.cidade'] = c.city
+        autoValues['cliente.estado'] = c.state
+        autoValues['cliente.telefone'] = c.phone
+        autoValues['cliente.email'] = c.email
+      }
+    }
+    if (resolvedVesselId) {
+      const { data: v } = await supabaseAdmin.from('vessels')
+        .select('name, registration_number, vessel_type, hull_material, length, beam, depth, capacity, engine_brand, engine_model, engine_power, engine_serial')
+        .eq('id', resolvedVesselId).maybeSingle()
+      if (v) {
+        autoValues['embarcacao.nome'] = v.name
+        autoValues['embarcacao.inscricao'] = v.registration_number
+        autoValues['embarcacao.tipo'] = v.vessel_type
+        autoValues['embarcacao.material'] = v.hull_material
+        autoValues['embarcacao.comprimento'] = v.length
+        autoValues['embarcacao.boca'] = v.beam
+        autoValues['embarcacao.pontal'] = v.depth
+        autoValues['embarcacao.capacidade'] = v.capacity
+        autoValues['motor.fabricante'] = v.engine_brand
+        autoValues['motor.modelo'] = v.engine_model
+        autoValues['motor.potencia'] = v.engine_power
+        autoValues['motor.serie'] = v.engine_serial
+      }
+    }
+    if (companyId) {
+      const { data: co } = await supabaseAdmin.from('companies')
+        .select('name, cnpj').eq('id', companyId).maybeSingle()
+      if (co) {
+        autoValues['empresa.nome'] = co.name
+        autoValues['empresa.cnpj'] = co.cnpj
+      }
+    }
+    autoValues['processo.numero'] = processNumber
+    autoValues['sistema.data_atual'] = new Date().toLocaleDateString('pt-BR')
+    autoValues['sistema.local'] = branding.contact_address || 'Brasil'
+    autoValues['sistema.hash'] = verificationCode
+
+    // Procurador com fallback multinível.
+    const procuradorValues = await resolveProcurador(supabaseAdmin, companyId, processId)
+    Object.assign(autoValues, procuradorValues)
+
+    // Bloqueio: templates que exigem procurador não geram sem nome+CPF.
+    if (templateRequiresProcurador(template)) {
+      const nome = String((fieldValues?.procurador?.nome ?? fieldValues?.['procurador.nome'] ?? procuradorValues['procurador.nome'] ?? '')).trim()
+      const cpf = String((fieldValues?.procurador?.cpf ?? fieldValues?.['procurador.cpf'] ?? procuradorValues['procurador.cpf'] ?? '')).trim()
+      if (!nome || !cpf) {
+        throw new HttpError(422, {
+          error: 'procurador_incompleto',
+          message: 'Dados do procurador incompletos. Preencha nome e CPF em Identidade Corporativa antes de gerar Procuração/Requerimento.',
+          missing: [!nome && 'procurador.nome', !cpf && 'procurador.cpf'].filter(Boolean),
+        })
+      }
+    }
+
+    // Mescla auto + explicit (explicit tem prioridade).
+    const mergedFieldValues = { ...autoValues, ...(fieldValues || {}) }
 
     let finalBuffer: ArrayBuffer
     let contentType: string
