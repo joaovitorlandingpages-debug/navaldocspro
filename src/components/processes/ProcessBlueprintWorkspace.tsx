@@ -226,9 +226,11 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
   const runBatchDownload = useCallback(async () => {
     if (selectedItems.length === 0) return;
     setBatchRunning("download");
-    try { await batchDownload(selectedItems); }
-    finally { setBatchRunning(null); }
-  }, [selectedItems]);
+    try {
+      const code = process?.protocol_number || process?.code || process?.id?.slice(0, 8);
+      await batchDownload(processId, selectedItems, code);
+    } finally { setBatchRunning(null); }
+  }, [processId, selectedItems, process]);
 
   const readyForDossier = stats.pendingMandatory.length === 0 && stats.pendingSignatures.length === 0 && checklist.length > 0;
 
