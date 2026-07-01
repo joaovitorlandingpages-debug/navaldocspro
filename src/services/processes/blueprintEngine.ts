@@ -21,6 +21,55 @@ export interface MaterializeResult {
   skippedByRule: number;
 }
 
+export interface MaterializeOptions {
+  /** template_ids opcionais que o usuário desmarcou — não devem ser inseridos. */
+  excludeTemplateIds?: string[];
+  /** template_ids extras (da biblioteca) que o usuário adicionou manualmente. */
+  extraTemplateIds?: string[];
+}
+
+export interface BlueprintPreviewItem {
+  templateId: string | null;
+  name: string;
+  role: string | null;
+  kind: "mandatory" | "optional" | "conditional";
+  included: boolean;      // avaliação da regra condicional (default true)
+  requiresSignature: boolean;
+  requiresOcr: boolean;
+  ruleSummary: string | null;
+}
+
+/**
+ * Pré-visualiza os itens do pacote sem gravar nada. Usada pelo Quick Dialog
+ * para exibir a etapa "Documentos do Processo" antes de criar o processo.
+ * Se `processId` for informado, avalia regras condicionais no contexto real;
+ * caso contrário, todas as regras são consideradas atendidas.
+ */
+export async function previewProcessBlueprint(
+  processType: string,
+  processId?: string,
+): Promise<BlueprintPreviewItem[]> {
+  const { items } = await loadPackage(processType);
+  const ctx = processId ? await loadContext(processId) : null;
+  return items.map((item: any) => {
+    const rule = item.conditional_rule ?? null;
+    const included = ctx ? evaluateRule(rule, ctx) : true;
+    const kind: BlueprintPreviewItem["kind"] = rule
+      ? "conditional"
+      : item.is_required ? "mandatory" : "optional";
+    return {
+      templateId: item.document_template_id ?? null,
+      name: item.template?.name || item.document_role || "Documento",
+      role: item.document_role ?? null,
+      kind,
+      included,
+      requiresSignature: !!item.requires_signature,
+      requiresOcr: !!item.requires_ocr,
+      ruleSummary: rule ? (typeof rule === "string" ? rule : JSON.stringify(rule)) : null,
+    };
+  });
+}
+
 async function loadContext(processId: string): Promise<ProcessRuleContext | null> {
   const { data, error } = await supabase
     .from("processes")
