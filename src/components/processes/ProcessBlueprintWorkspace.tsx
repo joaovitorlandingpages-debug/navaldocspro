@@ -565,74 +565,19 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
             </Button>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-3">
-            {checklist.map((row) => {
-              const kind = classify(row);
-              const st = statusChip(row.status);
-              const kindLabel =
-                kind === "mandatory" ? "Obrigatório" : kind === "conditional" ? "Condicional" : "Opcional";
-              const kindCls =
-                kind === "mandatory" ? "bg-red-50 text-red-600 border-red-100"
-                : kind === "conditional" ? "bg-violet-50 text-violet-600 border-violet-100"
-                : "bg-slate-50 text-slate-500 border-slate-100";
-              const isSelected = selected.has(row.id);
-              return (
-                <div key={row.id} className={`p-4 rounded-2xl border transition-all ${
-                  isSelected ? "border-primary bg-primary/5" : "border-slate-100 bg-slate-50/30 hover:bg-white hover:border-primary/30"
-                }`}>
-                  <div className="flex items-start gap-2 mb-2">
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => setSelected((prev) => {
-                        const n = new Set(prev);
-                        if (n.has(row.id)) n.delete(row.id); else n.add(row.id);
-                        return n;
-                      })}
-                      className="mt-1"
-                    />
-                    <div className="flex-1 flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-navy truncate">{row.item_name}</p>
-                        {row.document_role && (
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{row.document_role}</p>
-                        )}
-                      </div>
-                      <Badge className={`text-[9px] font-black uppercase tracking-widest border ${kindCls}`}>{kindLabel}</Badge>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5 mb-3">
-                    <Badge className={`text-[9px] font-black uppercase tracking-widest ${st.cls}`}>{st.label}</Badge>
-                    {row.requires_signature && (
-                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest gap-1 border-amber-200 text-amber-600">
-                        <Signature className="h-2.5 w-2.5" /> assina
-                      </Badge>
-                    )}
-                    {row.requires_ocr && (
-                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest gap-1 border-sky-200 text-sky-600">
-                        <Zap className="h-2.5 w-2.5" /> OCR
-                      </Badge>
-                    )}
-                  </div>
-                  {row.is_conditional && row.conditional_rule && (
-                    <p className="text-[10px] text-violet-600 font-medium mb-2 line-clamp-2">
-                      Regra: {typeof row.conditional_rule === "string" ? row.conditional_rule : JSON.stringify(row.conditional_rule)}
-                    </p>
-                  )}
-                  <div className="flex flex-wrap gap-1.5">
-                    <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "gerar") : onOpenTab("generation")}>Gerar</Button>
-                    <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "editar") : onOpenTab("library_docs")}>Editar</Button>
-                    <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "anexar") : onOpenTab("documents")}>Anexar</Button>
-                    {row.requires_signature && (
-                      <Button size="sm" variant="outline" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "assinar") : onOpenTab("signatures")}>Assinar</Button>
-                    )}
-                    <Button size="sm" variant="ghost" className="h-7 rounded-lg text-[10px] font-bold" onClick={() => onFocusItem ? onFocusItem(row.id, "historico") : onOpenTab("history")}>Histórico</Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <SmartChecklistSections
+            checklist={checklist}
+            process={process}
+            selected={selected}
+            onToggleSelect={toggleSelected}
+            onFocus={(id, action) => onFocusItem ? onFocusItem(id, action) : onOpenTab("requirements")}
+            onEditVessel={handleEditVessel}
+            onWaive={handleWaive}
+            onMarkAttached={handleMarkAttached}
+          />
         )}
       </div>
+
 
       <BatchSignatureDialog
         open={signatureDialogOpen}
