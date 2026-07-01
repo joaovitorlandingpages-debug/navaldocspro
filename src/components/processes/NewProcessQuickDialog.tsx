@@ -129,11 +129,15 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
   async function goToStep2() {
     if (!selectedType) { toast.error("Selecione o tipo de processo."); return; }
+    if (!customerId) { toast.error("Selecione ou crie um cliente para continuar."); return; }
     setStep(2);
     setLoadingPreview(true);
     try {
       const items = await previewProcessBlueprint(selectedType.name);
       setPreview(items);
+      if (items.length === 0) {
+        toast.warning("Este tipo ainda não possui modelo configurado. Você poderá adicionar documentos manualmente da Biblioteca.");
+      }
       // Por padrão: obrigatórios marcados, opcionais desmarcados, condicionais desmarcados.
       const initialExcluded = new Set<string>();
       items.forEach((i) => {
@@ -147,6 +151,35 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     } finally {
       setLoadingPreview(false);
     }
+  }
+
+  async function createCustomerInline() {
+    const name = window.prompt("Nome do cliente:")?.trim();
+    if (!name) return;
+    if (!profile?.company_id) { toast.error("Empresa não vinculada."); return; }
+    const { data, error } = await supabase
+      .from("customers")
+      .insert({ company_id: profile.company_id, name })
+      .select("id,name").single();
+    if (error) { toast.error("Erro ao criar cliente: " + error.message); return; }
+    setCustomers((prev) => [...prev, data as any].sort((a, b) => a.name.localeCompare(b.name)));
+    setCustomerId((data as any).id);
+    toast.success(`Cliente "${name}" criado.`);
+  }
+
+  async function createVesselInline() {
+    if (!customerId) { toast.error("Selecione o cliente antes."); return; }
+    const name = window.prompt("Nome da embarcação:")?.trim();
+    if (!name) return;
+    if (!profile?.company_id) { toast.error("Empresa não vinculada."); return; }
+    const { data, error } = await supabase
+      .from("vessels")
+      .insert({ company_id: profile.company_id, customer_id: customerId, name })
+      .select("id,name,customer_id").single();
+    if (error) { toast.error("Erro ao criar embarcação: " + error.message); return; }
+    setVessels((prev) => [...prev, data as any].sort((a, b) => a.name.localeCompare(b.name)));
+    setVesselId((data as any).id);
+    toast.success(`Embarcação "${name}" criada.`);
   }
 
   function toggleTemplate(tplId: string | null) {
@@ -195,6 +228,17 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       toast.error("Sua empresa ainda não foi vinculada. Recarregue e tente novamente.");
       return;
     }
+    if (!customerId) {
+      toast.error("Selecione ou crie um cliente para continuar.");
+      setStep(1);
+      return;
+    }
+    if (selectedCount === 0) {
+      const ok = window.confirm(
+        "Nenhum documento selecionado. Deseja criar o processo mesmo assim? Você poderá adicionar documentos depois no Blueprint."
+      );
+      if (!ok) return;
+    }
     setSubmitting(true);
     try {
       const { data, error } = await supabase
@@ -203,12 +247,11 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
           company_id: profile.company_id,
           process_type: selectedType.name,
           process_type_id: selectedType.id,
-          customer_id: customerId || null,
+          customer_id: customerId,
           vessel_id: vesselId || null,
           title: title.trim() || selectedType.name,
           priority,
           status: "pending",
-          is_draft: !customerId,
         })
         .select("id").single();
       if (error) throw error;
@@ -298,21 +341,33 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                    Cliente <span className="text-slate-400 normal-case font-medium">(opcional)</span>
-                  </Label>
-                  <Select value={customerId || "none"} onValueChange={(v) => { setCustomerId(v === "none" ? "" : v); setVesselId(""); }}>
-                    <SelectTrigger><SelectValue placeholder="Vincular depois" /></SelectTrigger>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                      Cliente <span className="text-red-500">*</span>
+                    </Label>
+                    <button type="button" onClick={createCustomerInline} className="text-[11px] font-bold text-primary hover:underline inline-flex items-center gap-1">
+                      <Plus className="h-3 w-3" /> Novo
+                    </button>
+                  </div>
+                  <Select value={customerId || ""} onValueChange={(v) => { setCustomerId(v); setVesselId(""); }}>
+                    <SelectTrigger className={!customerId ? "border-red-300" : ""}><SelectValue placeholder="Selecione um cliente" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">— Vincular depois —</SelectItem>
                       {customers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  {!customerId && (
+                    <p className="text-[11px] text-red-600">Selecione ou crie um cliente para continuar.</p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                    Embarcação <span className="text-slate-400 normal-case font-medium">(opcional)</span>
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                      Embarcação <span className="text-slate-400 normal-case font-medium">(opcional)</span>
+                    </Label>
+                    <button type="button" onClick={createVesselInline} disabled={!customerId} className="text-[11px] font-bold text-primary hover:underline inline-flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed">
+                      <Plus className="h-3 w-3" /> Nova
+                    </button>
+                  </div>
                   <Select value={vesselId || "none"} onValueChange={(v) => setVesselId(v === "none" ? "" : v)}>
                     <SelectTrigger><SelectValue placeholder="Vincular depois" /></SelectTrigger>
                     <SelectContent>
@@ -449,7 +504,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
               ) : <div />}
               <div className="flex gap-2">
                 <Button variant="outline" type="button" onClick={onClose} disabled={submitting}>Cancelar</Button>
-                <Button type="button" onClick={goToStep2} disabled={!selectedTypeId}>
+                <Button type="button" onClick={goToStep2} disabled={!selectedTypeId || !customerId} title={!customerId ? "Selecione um cliente" : undefined}>
                   Continuar <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
