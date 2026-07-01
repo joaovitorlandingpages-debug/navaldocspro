@@ -192,7 +192,7 @@ function IdentidadePage() {
       const { data: row, error } = await supabase
         .from("companies")
         .select(
-          "logo_primary_url, logo_secondary_url, brand_primary_color, brand_secondary_color, contact_phone, contact_whatsapp, contact_email, contact_website, contact_address, technical_responsible_name, technical_responsible_registry, signature_url, stamp_url, watermark_url, pdf_footer_text, pdf_template"
+          "logo_primary_url, logo_secondary_url, brand_primary_color, brand_secondary_color, contact_phone, contact_whatsapp, contact_email, contact_website, contact_address, technical_responsible_name, technical_responsible_registry, procurador_nome, procurador_cpf, procurador_rg, procurador_orgao_expedidor, procurador_nacionalidade, procurador_endereco, procurador_telefone, procurador_email, procurador_crea, signature_url, stamp_url, watermark_url, pdf_footer_text, pdf_template"
         )
         .eq("id", companyId)
         .maybeSingle();
