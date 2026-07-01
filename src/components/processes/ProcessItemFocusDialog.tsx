@@ -256,7 +256,7 @@ export function ProcessItemFocusDialog({ processId, process, checklistId, action
                 processId={processId}
                 bucket="process-attachments"
                 category={item.item_name}
-                onUploadComplete={handleAttachmentComplete}
+                onSuccess={() => { void handleAttachmentComplete(); }}
               />
             </TabsContent>
 
