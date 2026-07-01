@@ -372,7 +372,7 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
               {batchRunning === "generate" ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
               Gerar selecionados
             </Button>
-            <Button size="sm" variant="outline" onClick={runBatchSignature} disabled={!!batchRunning} className="h-8 rounded-lg">
+            <Button size="sm" variant="outline" onClick={openBatchSignature} disabled={!!batchRunning} className="h-8 rounded-lg">
               <Signature className="h-3 w-3 mr-1" /> Solicitar assinatura
             </Button>
             <Button size="sm" variant="outline" onClick={runBatchDownload} disabled={!!batchRunning} className="h-8 rounded-lg">
