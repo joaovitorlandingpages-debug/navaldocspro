@@ -180,6 +180,53 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     }
   }, [processId, refetch, onChanged]);
 
+  const selectedItems = useMemo(() =>
+    checklist.filter((r) => selected.has(r.id)).map((r) => ({
+      id: r.id, item_name: r.item_name, template_id: r.template_id,
+      document_id: r.document_id, requires_signature: r.requires_signature,
+    })), [checklist, selected]);
+
+  const runBatchGenerate = useCallback(async () => {
+    if (selectedItems.length === 0) return;
+    setBatchRunning("generate");
+    setLastReport(null);
+    setBatchProgress({ done: 0, total: selectedItems.length, current: "" });
+    try {
+      const report = await batchGenerate(processId, selectedItems, (done, total, current) => {
+        setBatchProgress({ done, total, current });
+      });
+      setLastReport(report);
+      toast.success(`Geração concluída: ${report.ok.length} ok, ${report.failed.length} falhas, ${report.missingData.length} sem dados.`);
+      await refetch();
+      onChanged?.();
+    } finally {
+      setBatchRunning(null);
+      setBatchProgress(null);
+    }
+  }, [processId, selectedItems, refetch, onChanged]);
+
+  const runBatchSignature = useCallback(async () => {
+    if (selectedItems.length === 0) return;
+    setBatchRunning("signature");
+    try {
+      const r = await batchRequestSignature(processId, selectedItems);
+      if (r.created > 0) toast.success(`${r.created} solicitação(ões) de assinatura criada(s).`);
+      await refetch();
+      onChanged?.();
+    } catch (e: any) {
+      toast.error("Falha ao solicitar assinaturas: " + (e?.message || e));
+    } finally {
+      setBatchRunning(null);
+    }
+  }, [processId, selectedItems, refetch, onChanged]);
+
+  const runBatchDownload = useCallback(async () => {
+    if (selectedItems.length === 0) return;
+    setBatchRunning("download");
+    try { await batchDownload(selectedItems); }
+    finally { setBatchRunning(null); }
+  }, [selectedItems]);
+
   const readyForDossier = stats.pendingMandatory.length === 0 && stats.pendingSignatures.length === 0 && checklist.length > 0;
 
   return (
