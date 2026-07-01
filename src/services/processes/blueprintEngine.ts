@@ -21,6 +21,55 @@ export interface MaterializeResult {
   skippedByRule: number;
 }
 
+export interface MaterializeOptions {
+  /** template_ids opcionais que o usuário desmarcou — não devem ser inseridos. */
+  excludeTemplateIds?: string[];
+  /** template_ids extras (da biblioteca) que o usuário adicionou manualmente. */
+  extraTemplateIds?: string[];
+}
+
+export interface BlueprintPreviewItem {
+  templateId: string | null;
+  name: string;
+  role: string | null;
+  kind: "mandatory" | "optional" | "conditional";
+  included: boolean;      // avaliação da regra condicional (default true)
+  requiresSignature: boolean;
+  requiresOcr: boolean;
+  ruleSummary: string | null;
+}
+
+/**
+ * Pré-visualiza os itens do pacote sem gravar nada. Usada pelo Quick Dialog
+ * para exibir a etapa "Documentos do Processo" antes de criar o processo.
+ * Se `processId` for informado, avalia regras condicionais no contexto real;
+ * caso contrário, todas as regras são consideradas atendidas.
+ */
+export async function previewProcessBlueprint(
+  processType: string,
+  processId?: string,
+): Promise<BlueprintPreviewItem[]> {
+  const { items } = await loadPackage(processType);
+  const ctx = processId ? await loadContext(processId) : null;
+  return items.map((item: any) => {
+    const rule = item.conditional_rule ?? null;
+    const included = ctx ? evaluateRule(rule, ctx) : true;
+    const kind: BlueprintPreviewItem["kind"] = rule
+      ? "conditional"
+      : item.is_required ? "mandatory" : "optional";
+    return {
+      templateId: item.document_template_id ?? null,
+      name: item.template?.name || item.document_role || "Documento",
+      role: item.document_role ?? null,
+      kind,
+      included,
+      requiresSignature: !!item.requires_signature,
+      requiresOcr: !!item.requires_ocr,
+      ruleSummary: rule ? (typeof rule === "string" ? rule : JSON.stringify(rule)) : null,
+    };
+  });
+}
+
 async function loadContext(processId: string): Promise<ProcessRuleContext | null> {
   const { data, error } = await supabase
     .from("processes")
@@ -60,7 +109,12 @@ async function loadPackage(processType: string) {
  *   removidos apenas se ainda estiverem `pending` e sem documento anexado.
  * - Nunca apaga itens já preenchidos.
  */
-export async function materializeProcessBlueprint(processId: string): Promise<MaterializeResult> {
+export async function materializeProcessBlueprint(
+  processId: string,
+  options: MaterializeOptions = {},
+): Promise<MaterializeResult> {
+  const exclude = new Set((options.excludeTemplateIds ?? []).filter(Boolean));
+  const extras = (options.extraTemplateIds ?? []).filter(Boolean);
   const ctx = await loadContext(processId);
   if (!ctx || !ctx.process) {
     return { processId, packageId: null, added: 0, updated: 0, removed: 0, kept: 0, skippedByRule: 0 };
@@ -91,6 +145,12 @@ export async function materializeProcessBlueprint(processId: string): Promise<Ma
     const rule = (item as any).conditional_rule;
     const shouldInclude = evaluateRule(rule, ctx);
     if (!shouldInclude) {
+      skippedByRule += 1;
+      continue;
+    }
+    const tplId: string | null = (item as any).document_template_id ?? null;
+    // Usuário desmarcou este opcional/condicional na etapa "Documentos".
+    if (tplId && exclude.has(tplId)) {
       skippedByRule += 1;
       continue;
     }
@@ -138,6 +198,27 @@ export async function materializeProcessBlueprint(processId: string): Promise<Ma
       is_conditional: rule != null,
     });
     if (!insErr) added += 1;
+  }
+
+  // Extras da biblioteca (opcionais adicionados manualmente pelo engenheiro).
+  if (extras.length > 0) {
+    const { data: extraTpls } = await supabase
+      .from("document_templates")
+      .select("id,name")
+      .in("id", extras);
+    for (const tpl of extraTpls ?? []) {
+      const already = existingByTemplate.get((tpl as any).id);
+      if (already) { kept += 1; validKeys.add(String((tpl as any).id)); continue; }
+      const { error: insErr } = await supabase.from("document_checklists").insert({
+        process_id: processId,
+        item_name: (tpl as any).name,
+        is_mandatory: false,
+        status: "pending",
+        template_id: (tpl as any).id,
+        is_conditional: false,
+      });
+      if (!insErr) { added += 1; validKeys.add(String((tpl as any).id)); }
+    }
   }
 
   // Reconcile: remove somente itens ainda pendentes/sem documento que não pertencem mais

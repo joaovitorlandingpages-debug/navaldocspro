@@ -1,10 +1,14 @@
 /**
- * NewProcessQuickDialog — o novo entry point para criação de processos.
+ * NewProcessQuickDialog — entry point do Motor Inteligente.
  *
- * Fluxo mínimo: usuário escolhe apenas o TIPO. Cliente e Embarcação são
- * opcionais e podem ser vinculados agora ou depois pelo Workspace.
- * Ao criar, dispara o Blueprint Engine para materializar automaticamente
- * todo o checklist documental do processo.
+ * Fluxo em 2 etapas:
+ *  1. Tipo + Cliente/Embarcação/Prioridade.
+ *  2. Documentos do Processo (obrigatórios/opcionais/condicionais) com
+ *     seleção manual e adição de extras da Biblioteca Nacional.
+ *
+ * Ao concluir, cria o processo e chama o Blueprint Engine com os toggles
+ * escolhidos (exclusões e extras) — o checklist é materializado
+ * automaticamente, sem prender o usuário.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -13,12 +17,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, ArrowRight, Search } from "lucide-react";
+import {
+  Loader2, Sparkles, ArrowRight, ArrowLeft, Search, FileText, Plus, X,
+  ShieldCheck, GitBranch, PackageOpen, Signature, Zap,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { materializeProcessBlueprint } from "@/services/processes/blueprintEngine";
+import {
+  materializeProcessBlueprint,
+  previewProcessBlueprint,
+  type BlueprintPreviewItem,
+} from "@/services/processes/blueprintEngine";
 
 interface Props {
   isOpen: boolean;
@@ -29,10 +42,16 @@ interface Props {
 type ProcessTypeRow = { id: string; name: string; category: string | null };
 type CustomerRow = { id: string; name: string };
 type VesselRow = { id: string; name: string; customer_id: string | null };
+type TemplateRow = { id: string; name: string; category: string | null };
+
+type Step = 1 | 2;
 
 export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props) {
   const navigate = useNavigate();
   const { profile } = useAuth();
+
+  const [step, setStep] = useState<Step>(1);
+
   const [types, setTypes] = useState<ProcessTypeRow[]>([]);
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [vessels, setVessels] = useState<VesselRow[]>([]);
@@ -43,6 +62,15 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const [priority, setPriority] = useState<string>("normal");
   const [title, setTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Etapa 2 — documentos
+  const [preview, setPreview] = useState<BlueprintPreviewItem[]>([]);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [excluded, setExcluded] = useState<Set<string>>(new Set());   // template_ids desmarcados
+  const [extras, setExtras] = useState<TemplateRow[]>([]);            // adicionados da biblioteca
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const [libraryQuery, setLibraryQuery] = useState("");
+  const [libraryResults, setLibraryResults] = useState<TemplateRow[]>([]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -60,21 +88,26 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
   useEffect(() => {
     if (!isOpen) {
+      setStep(1);
       setSelectedTypeId("");
       setCustomerId("");
       setVesselId("");
       setPriority("normal");
       setTitle("");
       setTypeQuery("");
+      setPreview([]);
+      setExcluded(new Set());
+      setExtras([]);
+      setLibraryOpen(false);
+      setLibraryQuery("");
+      setLibraryResults([]);
     }
   }, [isOpen]);
 
   const filteredTypes = useMemo(() => {
     const q = typeQuery.trim().toLowerCase();
     if (!q) return types;
-    return types.filter(
-      (t) => t.name.toLowerCase().includes(q) || (t.category ?? "").toLowerCase().includes(q),
-    );
+    return types.filter((t) => t.name.toLowerCase().includes(q) || (t.category ?? "").toLowerCase().includes(q));
   }, [types, typeQuery]);
 
   const grouped = useMemo(() => {
@@ -94,11 +127,70 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
   const selectedType = types.find((t) => t.id === selectedTypeId) || null;
 
-  async function handleCreate() {
-    if (!selectedType) {
-      toast.error("Selecione o tipo de processo.");
+  async function goToStep2() {
+    if (!selectedType) { toast.error("Selecione o tipo de processo."); return; }
+    setStep(2);
+    setLoadingPreview(true);
+    try {
+      const items = await previewProcessBlueprint(selectedType.name);
+      setPreview(items);
+      // Por padrão: obrigatórios marcados, opcionais desmarcados, condicionais desmarcados.
+      const initialExcluded = new Set<string>();
+      items.forEach((i) => {
+        if ((i.kind === "optional" || i.kind === "conditional") && i.templateId) {
+          initialExcluded.add(i.templateId);
+        }
+      });
+      setExcluded(initialExcluded);
+    } catch (e: any) {
+      toast.error("Falha ao carregar documentos do modelo: " + (e?.message || e));
+    } finally {
+      setLoadingPreview(false);
+    }
+  }
+
+  function toggleTemplate(tplId: string | null) {
+    if (!tplId) return;
+    setExcluded((prev) => {
+      const next = new Set(prev);
+      if (next.has(tplId)) next.delete(tplId); else next.add(tplId);
+      return next;
+    });
+  }
+
+  async function searchLibrary(q: string) {
+    setLibraryQuery(q);
+    if (q.trim().length < 2) { setLibraryResults([]); return; }
+    const { data } = await supabase
+      .from("document_templates")
+      .select("id,name,category")
+      .ilike("name", `%${q}%`)
+      .limit(15);
+    setLibraryResults((data as any) ?? []);
+  }
+
+  function addExtra(t: TemplateRow) {
+    if (extras.some((e) => e.id === t.id)) return;
+    // Se já existir no pacote, apenas desexcluir.
+    const inPreview = preview.find((p) => p.templateId === t.id);
+    if (inPreview) {
+      setExcluded((prev) => { const n = new Set(prev); n.delete(t.id); return n; });
+      toast.success(`"${t.name}" marcado no pacote.`);
       return;
     }
+    setExtras((prev) => [...prev, t]);
+  }
+  function removeExtra(id: string) {
+    setExtras((prev) => prev.filter((e) => e.id !== id));
+  }
+
+  const selectedCount = useMemo(() => {
+    const base = preview.filter((p) => p.templateId && !excluded.has(p.templateId)).length;
+    return base + extras.length;
+  }, [preview, excluded, extras]);
+
+  async function handleCreate() {
+    if (!selectedType) return;
     if (!profile?.company_id) {
       toast.error("Sua empresa ainda não foi vinculada. Recarregue e tente novamente.");
       return;
@@ -118,20 +210,21 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
           status: "pending",
           is_draft: !customerId,
         })
-        .select("id")
-        .single();
+        .select("id").single();
       if (error) throw error;
       const processId = (data as any).id as string;
 
-      // Motor Inteligente: monta o checklist a partir do pacote do tipo
       try {
-        const result = await materializeProcessBlueprint(processId);
+        const result = await materializeProcessBlueprint(processId, {
+          excludeTemplateIds: Array.from(excluded),
+          extraTemplateIds: extras.map((e) => e.id),
+        });
         console.log("[BLUEPRINT_MATERIALIZED]", result);
       } catch (e) {
-        console.warn("Blueprint materialize failed (não bloqueia criação):", e);
+        console.warn("Blueprint materialize falhou (não bloqueia):", e);
       }
 
-      toast.success("Processo criado. O checklist foi montado automaticamente.");
+      toast.success(`Processo criado com ${selectedCount} documento(s) no checklist.`);
       onClose();
       navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "overview" } });
     } catch (e: any) {
@@ -143,134 +236,345 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
   return (
     <Dialog open={isOpen} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Sparkles className="h-5 w-5 text-primary" />
-            Novo Processo
+            {step === 1 ? "Novo Processo" : "Documentos do Processo"}
           </DialogTitle>
           <DialogDescription>
-            Escolha o tipo — o sistema monta automaticamente todos os documentos, anexos e assinaturas necessários.
+            {step === 1
+              ? "Escolha o tipo — o sistema sugere automaticamente todos os documentos, anexos e assinaturas."
+              : "Revise a lista sugerida. Você pode marcar opcionais, incluir condicionais e adicionar extras da Biblioteca."}
           </DialogDescription>
+          <div className="flex items-center gap-2 pt-2 text-[10px] font-black uppercase tracking-widest">
+            <StepPill n={1} label="Tipo" active={step === 1} done={step > 1} />
+            <div className="h-px flex-1 bg-slate-200" />
+            <StepPill n={2} label="Documentos" active={step === 2} done={false} />
+          </div>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
-              Tipo de processo <span className="text-red-500">*</span>
-            </Label>
-            <div className="relative">
-              <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
-              <Input
-                value={typeQuery}
-                onChange={(e) => setTypeQuery(e.target.value)}
-                placeholder="Buscar por nome ou categoria..."
-                className="pl-9"
-              />
-            </div>
-            <div className="max-h-[240px] overflow-y-auto rounded-lg border bg-slate-50/50">
-              {grouped.length === 0 ? (
-                <div className="text-xs text-slate-400 italic p-4 text-center">Nenhum tipo encontrado.</div>
-              ) : (
-                grouped.map(([cat, list]) => (
-                  <div key={cat}>
-                    <div className="sticky top-0 bg-slate-100 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                      {cat}
+        <div className="flex-1 overflow-y-auto pr-1">
+          {step === 1 ? (
+            <div className="space-y-5 py-2">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                  Tipo de processo <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative">
+                  <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
+                  <Input
+                    value={typeQuery}
+                    onChange={(e) => setTypeQuery(e.target.value)}
+                    placeholder="Buscar por nome ou categoria..."
+                    className="pl-9"
+                  />
+                </div>
+                <div className="max-h-[240px] overflow-y-auto rounded-lg border bg-slate-50/50">
+                  {grouped.length === 0 ? (
+                    <div className="text-xs text-slate-400 italic p-4 text-center">Nenhum tipo encontrado.</div>
+                  ) : grouped.map(([cat, list]) => (
+                    <div key={cat}>
+                      <div className="sticky top-0 bg-slate-100 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        {cat}
+                      </div>
+                      {list.map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => setSelectedTypeId(t.id)}
+                          className={`w-full flex items-center justify-between px-3 py-2.5 text-left text-sm border-b last:border-b-0 transition ${
+                            selectedTypeId === t.id ? "bg-primary/10 text-primary font-semibold" : "hover:bg-white"
+                          }`}
+                        >
+                          <span>{t.name}</span>
+                          {selectedTypeId === t.id && <ArrowRight className="h-4 w-4" />}
+                        </button>
+                      ))}
                     </div>
-                    {list.map((t) => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => setSelectedTypeId(t.id)}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 text-left text-sm border-b last:border-b-0 transition ${
-                          selectedTypeId === t.id ? "bg-primary/10 text-primary font-semibold" : "hover:bg-white"
-                        }`}
-                      >
-                        <span>{t.name}</span>
-                        {selectedTypeId === t.id && <ArrowRight className="h-4 w-4" />}
-                      </button>
-                    ))}
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                    Cliente <span className="text-slate-400 normal-case font-medium">(opcional)</span>
+                  </Label>
+                  <Select value={customerId || "none"} onValueChange={(v) => { setCustomerId(v === "none" ? "" : v); setVesselId(""); }}>
+                    <SelectTrigger><SelectValue placeholder="Vincular depois" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— Vincular depois —</SelectItem>
+                      {customers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                    Embarcação <span className="text-slate-400 normal-case font-medium">(opcional)</span>
+                  </Label>
+                  <Select value={vesselId || "none"} onValueChange={(v) => setVesselId(v === "none" ? "" : v)}>
+                    <SelectTrigger><SelectValue placeholder="Vincular depois" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— Vincular depois —</SelectItem>
+                      {vesselOptions.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Título interno (opcional)</Label>
+                  <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={selectedType?.name || "Ex.: Registro embarcação Phoenix"} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Prioridade</Label>
+                  <Select value={priority} onValueChange={setPriority}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Baixa</SelectItem>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="high">Alta</SelectItem>
+                      <SelectItem value="urgent">Urgente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 py-2">
+              {loadingPreview ? (
+                <div className="py-16 flex items-center justify-center text-slate-400">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" /> Carregando modelo…
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <MiniStat icon={ShieldCheck} label="Obrigatórios" value={preview.filter((p) => p.kind === "mandatory").length} tone="emerald" />
+                    <MiniStat icon={PackageOpen} label="Opcionais" value={preview.filter((p) => p.kind === "optional").length} tone="slate" />
+                    <MiniStat icon={GitBranch} label="Condicionais" value={preview.filter((p) => p.kind === "conditional").length} tone="violet" />
                   </div>
-                ))
+
+                  <DocSection
+                    title="Obrigatórios"
+                    icon={ShieldCheck}
+                    tone="emerald"
+                    items={preview.filter((p) => p.kind === "mandatory")}
+                    excluded={excluded}
+                    onToggle={toggleTemplate}
+                    lockChecked
+                  />
+                  <DocSection
+                    title="Opcionais"
+                    icon={PackageOpen}
+                    tone="slate"
+                    items={preview.filter((p) => p.kind === "optional")}
+                    excluded={excluded}
+                    onToggle={toggleTemplate}
+                    emptyLabel="Sem opcionais neste modelo."
+                  />
+                  <DocSection
+                    title="Condicionais"
+                    icon={GitBranch}
+                    tone="violet"
+                    items={preview.filter((p) => p.kind === "conditional")}
+                    excluded={excluded}
+                    onToggle={toggleTemplate}
+                    emptyLabel="Sem condicionais neste modelo."
+                  />
+
+                  {/* Extras da biblioteca */}
+                  <div className="rounded-2xl border border-slate-100 p-4 bg-slate-50/40">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-black uppercase tracking-widest text-navy">Extras da Biblioteca</span>
+                      </div>
+                      <Button type="button" size="sm" variant="outline" onClick={() => setLibraryOpen((v) => !v)}>
+                        <Plus className="h-4 w-4 mr-1" /> Adicionar
+                      </Button>
+                    </div>
+                    {libraryOpen && (
+                      <div className="mb-3">
+                        <div className="relative">
+                          <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
+                          <Input value={libraryQuery} onChange={(e) => searchLibrary(e.target.value)} placeholder="Buscar template por nome..." className="pl-9" />
+                        </div>
+                        {libraryResults.length > 0 && (
+                          <div className="mt-2 max-h-40 overflow-y-auto rounded-lg border bg-white">
+                            {libraryResults.map((t) => (
+                              <button
+                                key={t.id}
+                                type="button"
+                                onClick={() => addExtra(t)}
+                                className="w-full flex items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50 border-b last:border-b-0"
+                              >
+                                <span>{t.name}</span>
+                                <span className="text-[10px] text-slate-400 uppercase">{t.category || "geral"}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {extras.length === 0 ? (
+                      <p className="text-xs text-slate-400 italic">Nenhum extra adicionado.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {extras.map((e) => (
+                          <Badge key={e.id} variant="outline" className="gap-1.5 pl-2 pr-1 py-1">
+                            {e.name}
+                            <button type="button" onClick={() => removeExtra(e.id)} className="hover:bg-slate-100 rounded p-0.5">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
-            </div>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                Cliente <span className="text-slate-400 normal-case font-medium">(opcional)</span>
-              </Label>
-              <Select value={customerId || "none"} onValueChange={(v) => { setCustomerId(v === "none" ? "" : v); setVesselId(""); }}>
-                <SelectTrigger><SelectValue placeholder="Vincular depois" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">— Vincular depois —</SelectItem>
-                  {customers.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                Embarcação <span className="text-slate-400 normal-case font-medium">(opcional)</span>
-              </Label>
-              <Select value={vesselId || "none"} onValueChange={(v) => setVesselId(v === "none" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="Vincular depois" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">— Vincular depois —</SelectItem>
-                  {vesselOptions.map((v) => (
-                    <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Título interno (opcional)</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={selectedType?.name || "Ex.: Registro embarcação Phoenix"} />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Prioridade</Label>
-              <Select value={priority} onValueChange={setPriority}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Baixa</SelectItem>
-                  <SelectItem value="normal">Normal</SelectItem>
-                  <SelectItem value="high">Alta</SelectItem>
-                  <SelectItem value="urgent">Urgente</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {selectedType && (
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-primary/80 flex gap-2">
-              <Sparkles className="h-4 w-4 shrink-0 mt-0.5" />
-              <span>
-                O sistema vai criar automaticamente os documentos, anexos e assinaturas de <b>{selectedType.name}</b> assim que o processo for criado. Você resolve apenas as pendências no Workspace.
-              </span>
             </div>
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:justify-between">
-          {onOpenAdvanced ? (
-            <Button variant="ghost" type="button" onClick={() => { onClose(); onOpenAdvanced(); }} disabled={submitting}>
-              Modo avançado (com uploads)
-            </Button>
-          ) : <div />}
-          <div className="flex gap-2">
-            <Button variant="outline" type="button" onClick={onClose} disabled={submitting}>Cancelar</Button>
-            <Button type="button" onClick={handleCreate} disabled={submitting || !selectedTypeId}>
-              {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-              Criar Processo
-            </Button>
-          </div>
+        <DialogFooter className="gap-2 sm:justify-between border-t pt-3 mt-2">
+          {step === 1 ? (
+            <>
+              {onOpenAdvanced ? (
+                <Button variant="ghost" type="button" onClick={() => { onClose(); onOpenAdvanced(); }} disabled={submitting}>
+                  Modo avançado (com uploads)
+                </Button>
+              ) : <div />}
+              <div className="flex gap-2">
+                <Button variant="outline" type="button" onClick={onClose} disabled={submitting}>Cancelar</Button>
+                <Button type="button" onClick={goToStep2} disabled={!selectedTypeId}>
+                  Continuar <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" type="button" onClick={() => setStep(1)} disabled={submitting}>
+                <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+              </Button>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold text-slate-500">
+                  {selectedCount} documento{selectedCount === 1 ? "" : "s"} no checklist
+                </span>
+                <Button type="button" onClick={handleCreate} disabled={submitting}>
+                  {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                  Criar Processo
+                </Button>
+              </div>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function StepPill({ n, label, active, done }: { n: number; label: string; active: boolean; done: boolean }) {
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${
+      active ? "bg-primary text-primary-foreground border-primary" :
+      done ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+      "bg-slate-50 text-slate-400 border-slate-200"
+    }`}>
+      <span className="h-4 w-4 rounded-full bg-white/20 grid place-content-center text-[9px] font-black">{n}</span>
+      {label}
+    </span>
+  );
+}
+
+function MiniStat({ icon: Icon, label, value, tone }: { icon: any; label: string; value: number; tone: "emerald" | "slate" | "violet" }) {
+  const map: Record<string, string> = {
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    slate: "bg-slate-50 text-slate-600 border-slate-100",
+    violet: "bg-violet-50 text-violet-700 border-violet-100",
+  };
+  return (
+    <div className={`rounded-xl border p-3 ${map[tone]}`}>
+      <Icon className="h-4 w-4 mx-auto mb-1" />
+      <p className="text-lg font-black">{value}</p>
+      <p className="text-[9px] font-black uppercase tracking-widest opacity-80">{label}</p>
+    </div>
+  );
+}
+
+function DocSection({
+  title, icon: Icon, tone, items, excluded, onToggle, emptyLabel, lockChecked,
+}: {
+  title: string;
+  icon: any;
+  tone: "emerald" | "slate" | "violet";
+  items: BlueprintPreviewItem[];
+  excluded: Set<string>;
+  onToggle: (id: string | null) => void;
+  emptyLabel?: string;
+  lockChecked?: boolean;
+}) {
+  const border: Record<string, string> = {
+    emerald: "border-emerald-100", slate: "border-slate-100", violet: "border-violet-100",
+  };
+  return (
+    <div className={`rounded-2xl border ${border[tone]} bg-white p-4`}>
+      <div className="flex items-center gap-2 mb-3">
+        <Icon className={`h-4 w-4 ${tone === "emerald" ? "text-emerald-600" : tone === "violet" ? "text-violet-600" : "text-slate-500"}`} />
+        <span className="text-sm font-black uppercase tracking-widest text-navy">{title}</span>
+        <Badge variant="outline" className="text-[10px] font-black">{items.length}</Badge>
+      </div>
+      {items.length === 0 ? (
+        <p className="text-xs italic text-slate-400">{emptyLabel || "—"}</p>
+      ) : (
+        <div className="space-y-2">
+          {items.map((it, idx) => {
+            const checked = lockChecked ? true : !(it.templateId && excluded.has(it.templateId));
+            return (
+              <label
+                key={(it.templateId || it.name) + idx}
+                className={`flex items-start gap-3 p-2.5 rounded-xl border transition cursor-pointer ${
+                  checked ? "bg-slate-50 border-slate-100" : "bg-white border-slate-100 opacity-70"
+                } ${lockChecked ? "cursor-default" : "hover:border-primary/30"}`}
+              >
+                <Checkbox
+                  checked={checked}
+                  onCheckedChange={() => !lockChecked && onToggle(it.templateId)}
+                  disabled={lockChecked || !it.templateId}
+                  className="mt-0.5"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-navy">{it.name}</p>
+                  {it.ruleSummary && (
+                    <p className="text-[11px] text-violet-600 mt-0.5 line-clamp-2">
+                      Só é gerado se: {it.ruleSummary}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {it.requiresSignature && (
+                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest gap-1 border-amber-200 text-amber-600">
+                        <Signature className="h-2.5 w-2.5" /> assina
+                      </Badge>
+                    )}
+                    {it.requiresOcr && (
+                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest gap-1 border-sky-200 text-sky-600">
+                        <Zap className="h-2.5 w-2.5" /> OCR
+                      </Badge>
+                    )}
+                    {!it.templateId && (
+                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-slate-200 text-slate-500">
+                        sem template
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </label>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
