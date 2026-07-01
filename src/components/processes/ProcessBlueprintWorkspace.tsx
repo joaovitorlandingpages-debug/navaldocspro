@@ -7,13 +7,18 @@ import { useMemo, useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { materializeProcessBlueprint } from "@/services/processes/blueprintEngine";
+import {
+  batchGenerate, batchRequestSignature, batchDownload, type BatchReport,
+} from "@/services/processes/batchChecklistActions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import {
   RefreshCw, FileText, ShieldCheck, ShieldAlert, GitBranch, Signature,
   Zap, PackageOpen, CheckCircle2, AlertTriangle, Clock, ArrowRight,
-  User, Ship, Target, Loader2, Sparkles,
+  User, Ship, Target, Loader2, Sparkles, Download, XCircle,
 } from "lucide-react";
 
 interface Props {
