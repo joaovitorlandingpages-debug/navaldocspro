@@ -58,7 +58,7 @@ function statusChip(status: string | null | undefined) {
   return { label: "Pendente", cls: "bg-slate-100 text-slate-600" };
 }
 
-export function ProcessBlueprintWorkspace({ process, onOpenTab, onChanged }: Props) {
+export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onChanged }: Props) {
   const processId: string = process?.id;
   const [reprocessing, setReprocessing] = useState(false);
 
