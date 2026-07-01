@@ -771,6 +771,15 @@ export type Database = {
           pilot_feedback_score: number | null
           plan: string | null
           plan_id: string | null
+          procurador_cpf: string | null
+          procurador_crea: string | null
+          procurador_email: string | null
+          procurador_endereco: string | null
+          procurador_nacionalidade: string | null
+          procurador_nome: string | null
+          procurador_orgao_expedidor: string | null
+          procurador_rg: string | null
+          procurador_telefone: string | null
           responsible_name: string | null
           signature_url: string | null
           stamp_url: string | null
@@ -816,6 +825,15 @@ export type Database = {
           pilot_feedback_score?: number | null
           plan?: string | null
           plan_id?: string | null
+          procurador_cpf?: string | null
+          procurador_crea?: string | null
+          procurador_email?: string | null
+          procurador_endereco?: string | null
+          procurador_nacionalidade?: string | null
+          procurador_nome?: string | null
+          procurador_orgao_expedidor?: string | null
+          procurador_rg?: string | null
+          procurador_telefone?: string | null
           responsible_name?: string | null
           signature_url?: string | null
           stamp_url?: string | null
@@ -861,6 +879,15 @@ export type Database = {
           pilot_feedback_score?: number | null
           plan?: string | null
           plan_id?: string | null
+          procurador_cpf?: string | null
+          procurador_crea?: string | null
+          procurador_email?: string | null
+          procurador_endereco?: string | null
+          procurador_nacionalidade?: string | null
+          procurador_nome?: string | null
+          procurador_orgao_expedidor?: string | null
+          procurador_rg?: string | null
+          procurador_telefone?: string | null
           responsible_name?: string | null
           signature_url?: string | null
           stamp_url?: string | null
