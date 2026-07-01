@@ -138,6 +138,7 @@ export const signaturesService = {
     signature_data: string;
     accepted_terms: boolean;
     reuse_authorized?: boolean;
+    identification?: { document?: string; company?: string; name?: string; role?: string };
   }) {
     const found = await this.getByToken(token);
     if (!found) throw new Error("Token inválido");
@@ -146,6 +147,9 @@ export const signaturesService = {
     if (participant.status === "signed") throw new Error("Já assinado");
     if (request.status === "cancelled" || request.status === "expired") {
       throw new Error("Solicitação não está mais ativa");
+    }
+    if (request.expires_at && new Date(request.expires_at).getTime() < Date.now()) {
+      throw new Error("Link expirado");
     }
 
     // Sequential ordering enforcement
@@ -164,6 +168,10 @@ export const signaturesService = {
 
     const hash = await sha256Hex(payload.signature_data + participant.id + Date.now());
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const platform = typeof navigator !== "undefined" ? navigator.platform : "";
+    const language = typeof navigator !== "undefined" ? navigator.language : "";
+    const screenInfo = typeof window !== "undefined" && window.screen
+      ? `${window.screen.width}x${window.screen.height}` : "";
 
     const { error: uErr } = await supabase
       .from("signature_participants")
@@ -174,7 +182,12 @@ export const signaturesService = {
         signature_type: payload.signature_type,
         signature_hash: hash,
         user_agent: ua,
-        device_info: { platform: typeof navigator !== "undefined" ? navigator.platform : "", language: typeof navigator !== "undefined" ? navigator.language : "" },
+        device_info: {
+          platform, language, screen: screenInfo,
+          accepted_terms: payload.accepted_terms,
+          identification: payload.identification ?? {},
+          signed_at_client: new Date().toISOString(),
+        },
       })
       .eq("access_token", token);
     if (uErr) throw uErr;
