@@ -148,6 +148,12 @@ export async function materializeProcessBlueprint(
       skippedByRule += 1;
       continue;
     }
+    const tplId: string | null = (item as any).document_template_id ?? null;
+    // Usuário desmarcou este opcional/condicional na etapa "Documentos".
+    if (tplId && exclude.has(tplId)) {
+      skippedByRule += 1;
+      continue;
+    }
 
     const templateName: string | undefined = (item as any).template?.name;
     const displayName = templateName || (item as any).document_role || "Documento";
