@@ -1858,6 +1858,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           process_type: string
+          process_type_id: string | null
           sort_order: number | null
           updated_at: string | null
         }
@@ -1871,6 +1872,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           process_type: string
+          process_type_id?: string | null
           sort_order?: number | null
           updated_at?: string | null
         }
@@ -1884,10 +1886,19 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           process_type?: string
+          process_type_id?: string | null
           sort_order?: number | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "document_process_packages_process_type_id_fkey"
+            columns: ["process_type_id"]
+            isOneToOne: false
+            referencedRelation: "process_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       document_process_rules: {
         Row: {
