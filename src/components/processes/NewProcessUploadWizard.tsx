@@ -536,7 +536,7 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(v) => !v && !processing && !submitting && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-3xl w-[calc(100vw-1rem)] max-h-[92vh] sm:max-h-[90vh] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:rounded-none max-sm:w-screen overflow-hidden flex flex-col p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <UploadCloud className="h-5 w-5 text-primary" />
