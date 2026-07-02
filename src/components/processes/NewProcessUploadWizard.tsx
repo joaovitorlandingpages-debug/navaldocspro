@@ -473,6 +473,7 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
         console.warn("Auto-attach falhou:", e);
       }
 
+      try { window.dispatchEvent(new CustomEvent("processes:changed", { detail: { id: processId } })); } catch {}
       toast.success("Processo criado a partir dos uploads.");
       onClose();
       navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "overview" } });
