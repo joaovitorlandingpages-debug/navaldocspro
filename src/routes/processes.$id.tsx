@@ -358,14 +358,11 @@ function ProcessDetail() {
       <ProcessTopBar
         process={process}
         automationReady={automationState?.is_ready_for_generation}
+        pendingDossierItems={pendingDossierItems}
         onFinalize={async () => {
-          if (automationState?.is_ready_for_generation) {
-            toast.success("Processo finalizado com sucesso! Iniciando geração do dossiê...");
-            await generateDossier();
-            setActiveTab("dossier_v2");
-          } else {
-            toast.error("O processo não pode ser finalizado. Verifique as inconformidades no Checklist.");
-          }
+          toast.success("Processo finalizado! Iniciando geração do dossiê...");
+          await generateDossier();
+          setActiveTab("dossier_v2");
         }}
         onEdit={() => setEditSheetOpen(true)}
         onChanged={fetchProcess}
