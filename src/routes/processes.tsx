@@ -245,7 +245,32 @@ function Processes() {
         </div>
       </div>
 
-      {processes.length === 0 && !isLoading && (
+      {processes.length === 0 && !isLoading && totalCount === 0 && !searchTerm && statusFilter === "all" && priorityFilter === "all" ? (
+        <div className="mb-8 rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/5 via-white to-white p-6 md:p-10 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-12 w-12 rounded-2xl bg-primary text-white grid place-items-center shadow-lg shrink-0">
+              <Rocket className="h-6 w-6" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-lg md:text-xl font-black text-navy truncate">Bem-vindo ao NavalDocs Pro</h2>
+              <p className="text-xs md:text-sm text-slate-500 font-medium">Vamos criar seu primeiro processo — leva menos de 2 minutos.</p>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 gap-3 md:gap-4 mb-5">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-center gap-2 mb-1"><Sparkles className="h-4 w-4 text-primary" /><span className="text-[11px] font-black uppercase tracking-widest text-primary">Processo Guiado</span></div>
+              <p className="text-xs text-slate-500 font-medium">Perguntas simples passo a passo. Ideal se você está começando.</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-center gap-2 mb-1"><Upload className="h-4 w-4 text-primary" /><span className="text-[11px] font-black uppercase tracking-widest text-primary">Criar por Upload</span></div>
+              <p className="text-xs text-slate-500 font-medium">Envie PDFs já existentes e a IA extrai os dados por você.</p>
+            </div>
+          </div>
+          <Button onClick={() => setIsNewProcessOpen(true)} className="w-full sm:w-auto bg-navy hover:bg-slate-900 text-white text-[11px] font-black uppercase tracking-[0.2em] px-8 py-6 rounded-2xl shadow-lg">
+            <Plus className="h-4 w-4 mr-2" /> Criar meu primeiro processo
+          </Button>
+        </div>
+      ) : processes.length === 0 && !isLoading && (
         <div className="mb-8">
           <EmptyState
             icon={ClipboardList}
