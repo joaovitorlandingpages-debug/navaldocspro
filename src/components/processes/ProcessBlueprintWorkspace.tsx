@@ -470,6 +470,16 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
         </ul>
       </div>
 
+      {/* Painel de Geração em Lote (nova área dedicada) */}
+      <BatchGenerationPanel
+        processId={processId}
+        process={process}
+        createdBy={profile?.id}
+        onOpenTab={onOpenTab}
+        onFocusItem={onFocusItem}
+        onChanged={async () => { await refetch(); onChanged?.(); }}
+      />
+
       {/* Checklist inteligente */}
       <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
         <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-4 flex items-center gap-2">
