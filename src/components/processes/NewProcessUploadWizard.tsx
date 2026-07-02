@@ -223,73 +223,128 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
     setFiles((prev) => prev.filter((f) => f.localId !== id));
   }
 
+  const updateFile = useCallback((id: string, patch: Partial<FileItem>) => {
+    setFiles((prev) => prev.map((f) => f.localId === id ? { ...f, ...patch } : f));
+  }, []);
+
+  // Processa 1 arquivo. Nunca lança — sempre atualiza status.
+  const processOne = useCallback(async (item: FileItem) => {
+    if (!profile?.company_id) return;
+    try {
+      updateFile(item.localId, { status: "uploading", errorMsg: undefined, failReason: undefined });
+
+      // storage upload + rows (reaproveita quando já existir)
+      let uploadedFileId = item.uploadedFileId;
+      let ocrJobId = item.ocrJobId;
+
+      if (!uploadedFileId) {
+        const ext = item.file.name.split(".").pop() || "bin";
+        const storagePath = `${profile.company_id}/tmp-${sessionId.current}/${item.localId}.${ext}`;
+        try {
+          await uploadToBucket("ocr-documents", storagePath, item.file);
+        } catch (e: any) {
+          updateFile(item.localId, { status: "error", errorMsg: e?.message || "Falha no upload", failReason: "invalid_file", docType: "GENERIC" });
+          return;
+        }
+
+        const { data: uf, error: ufErr } = await supabase.from("uploaded_files").insert({
+          company_id: profile.company_id,
+          uploaded_by: profile.id,
+          file_name: item.file.name,
+          file_type: item.file.type,
+          file_size: item.file.size,
+          file_url: storagePath,
+          category: "ocr-upload",
+          status: "uploaded",
+        }).select("id").single();
+        if (ufErr || !uf) {
+          updateFile(item.localId, { status: "error", errorMsg: ufErr?.message || "Falha ao registrar arquivo", failReason: "edge_error", docType: "GENERIC" });
+          return;
+        }
+        uploadedFileId = (uf as any).id;
+        try { await limitsEngine.consume("upload_file", 1, { file_id: uploadedFileId }, uploadedFileId, profile.company_id); } catch {}
+
+        const { data: job, error: jobErr } = await supabase.from("ocr_jobs").insert({
+          company_id: profile.company_id,
+          uploaded_file_id: uploadedFileId,
+          document_type: "auto",
+          status: "pending",
+        }).select("id").single();
+        if (jobErr || !job) {
+          updateFile(item.localId, { status: "error", errorMsg: jobErr?.message || "Falha ao criar OCR job", failReason: "edge_error", docType: "GENERIC", uploadedFileId });
+          return;
+        }
+        ocrJobId = (job as any).id;
+        try { await limitsEngine.consume("ocr", 1, { job_id: ocrJobId }, ocrJobId, profile.company_id); } catch {}
+        updateFile(item.localId, { uploadedFileId, ocrJobId, storagePath });
+      }
+
+      updateFile(item.localId, { status: "ocr" });
+      supabase.functions.invoke("process-ocr-document", { body: { jobId: ocrJobId } })
+        .catch((err: any) => console.error("[OCR_INVOKE_ERR]", item.file.name, err));
+
+      const result = await pollOcrJob(ocrJobId!, PER_FILE_TIMEOUT_MS);
+      if (!result || result.error) {
+        const isTimeout = /tempo esgotado/i.test(result?.error || "");
+        console.warn("[OCR_FAIL]", item.file.name, result?.error);
+        updateFile(item.localId, {
+          status: isTimeout ? "timeout" : "error",
+          errorMsg: result?.error || "OCR falhou",
+          failReason: isTimeout ? "timeout" : "ocr_error",
+          docType: item.docType || "GENERIC",
+        });
+      } else {
+        updateFile(item.localId, {
+          status: "done",
+          docType: result.document_type || "GENERIC",
+          fields: result.fields || {},
+        });
+      }
+    } catch (e: any) {
+      console.error("[OCR_UNEXPECTED]", item.file.name, e);
+      updateFile(item.localId, {
+        status: "error",
+        errorMsg: e?.message || "Falha inesperada",
+        failReason: "unknown",
+        docType: item.docType || "GENERIC",
+      });
+    }
+  }, [profile?.company_id, profile?.id, updateFile]);
+
+  // Pool de concorrência — processa até MAX_PARALLEL simultâneos.
+  const runPool = useCallback(async (items: FileItem[]) => {
+    let idx = 0;
+    const workers: Promise<void>[] = [];
+    const next = async () => {
+      while (idx < items.length) {
+        const my = items[idx++];
+        await processOne(my);
+      }
+    };
+    for (let i = 0; i < Math.min(MAX_PARALLEL, items.length); i++) workers.push(next());
+    await Promise.all(workers);
+  }, [processOne]);
+
   async function processAllFiles() {
     if (!profile?.company_id) { toast.error("Empresa não vinculada."); return; }
     if (files.length === 0) { toast.error("Adicione pelo menos 1 arquivo."); return; }
     setProcessing(true);
     try {
-      // Limits gate — igual ao useFiles/useOCR.
       const okUp = await limitsEngine.enforce("upload_file", files.length, profile.company_id);
       if (!okUp) throw new Error("Limite de uploads atingido para o plano atual.");
       const okOcr = await limitsEngine.enforce("ocr", files.length, profile.company_id);
-      if (!okOcr) throw new Error("Limite de OCR atingido para o plano atual.");
-
-      // Processa serialmente para não estourar a gateway.
-      for (const item of files) {
-        if (item.status === "done") continue;
-        setFiles((prev) => prev.map((f) => f.localId === item.localId ? { ...f, status: "uploading" } : f));
-        try {
-          const ext = item.file.name.split(".").pop() || "bin";
-          const storagePath = `${profile.company_id}/tmp-${sessionId.current}/${item.localId}.${ext}`;
-          await uploadToBucket("ocr-documents", storagePath, item.file);
-
-          const { data: uf, error: ufErr } = await supabase.from("uploaded_files").insert({
-            company_id: profile.company_id,
-            uploaded_by: profile.id,
-            file_name: item.file.name,
-            file_type: item.file.type,
-            file_size: item.file.size,
-            file_url: storagePath,
-            category: "ocr-upload",
-            status: "uploaded",
-          }).select("id").single();
-          if (ufErr || !uf) throw new Error(ufErr?.message || "Falha ao registrar arquivo");
-          await limitsEngine.consume("upload_file", 1, { file_id: (uf as any).id }, (uf as any).id, profile.company_id);
-
-          const { data: job, error: jobErr } = await supabase.from("ocr_jobs").insert({
-            company_id: profile.company_id,
-            uploaded_file_id: (uf as any).id,
-            document_type: "auto",
-            status: "pending",
-          }).select("id").single();
-          if (jobErr || !job) throw new Error(jobErr?.message || "Falha ao criar OCR job");
-          await limitsEngine.consume("ocr", 1, { job_id: (job as any).id }, (job as any).id, profile.company_id);
-
-          setFiles((prev) => prev.map((f) => f.localId === item.localId
-            ? { ...f, status: "ocr", uploadedFileId: (uf as any).id, ocrJobId: (job as any).id, storagePath }
-            : f));
-
-          supabase.functions.invoke("process-ocr-document", { body: { jobId: (job as any).id } })
-            .catch((err: any) => console.error("OCR invoke err:", err));
-
-          const result = await pollOcrJob((job as any).id);
-          if (!result || result.error) {
-            setFiles((prev) => prev.map((f) => f.localId === item.localId
-              ? { ...f, status: "error", errorMsg: result?.error || "OCR falhou", docType: "GENERIC" }
-              : f));
-          } else {
-            setFiles((prev) => prev.map((f) => f.localId === item.localId
-              ? { ...f, status: "done", docType: result.document_type || "GENERIC", fields: result.fields || {} }
-              : f));
-          }
-        } catch (e: any) {
-          setFiles((prev) => prev.map((f) => f.localId === item.localId
-            ? { ...f, status: "error", errorMsg: e?.message || "Falha", docType: f.docType || "GENERIC" }
-            : f));
-        }
+      if (!okOcr) {
+        setFiles((prev) => prev.map((f) => f.status === "queued"
+          ? { ...f, status: "error", failReason: "usage_limit", errorMsg: "Limite de OCR atingido — classifique manualmente.", docType: f.docType || "GENERIC" }
+          : f));
+        toast.warning("Limite de OCR atingido. Você pode classificar os arquivos manualmente e continuar.");
+        return;
       }
 
-      // Deriva sugestões do primeiro arquivo com dados úteis.
+      const pending = files.filter((f) => f.status !== "done" && f.status !== "manual");
+      await runPool(pending);
+
+      // Sugestões (após todos os workers)
       setFiles((prev) => {
         const primary = prev.find((f) => f.fields && (f.fields.name || f.fields.cpf));
         if (primary?.fields) {
@@ -298,30 +353,34 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
             cpf: primary.fields.cpf || primary.fields.owner_document || undefined,
           });
         }
-        const vesselSrc = prev.find((f) => f.fields && (f.fields.vessel_name));
+        const vesselSrc = prev.find((f) => f.fields && f.fields.vessel_name);
         if (vesselSrc?.fields) {
           setSuggestedVessel({
             name: vesselSrc.fields.vessel_name || undefined,
             registration: vesselSrc.fields.registration_number || undefined,
           });
         }
-        return prev;
-      });
-
-      // Sugere tipo de processo.
-      setFiles((prev) => {
         const guess = suggestProcessType(prev, types);
         if (guess && !selectedTypeId) setSelectedTypeId(guess);
         return prev;
       });
-
-      setStep(3);
     } catch (e: any) {
       toast.error(e?.message || "Falha ao processar arquivos");
     } finally {
       setProcessing(false);
     }
   }
+
+  async function retryFile(id: string) {
+    const item = files.find((f) => f.localId === id);
+    if (!item) return;
+    await processOne({ ...item, status: "queued" });
+  }
+
+  function markManual(id: string) {
+    updateFile(id, { status: "manual", errorMsg: undefined, docType: files.find(f => f.localId === id)?.docType || "GENERIC" });
+  }
+
 
   async function createCustomerInline(payload: {
     name: string; cpf_cnpj?: string | null; phone?: string | null;
