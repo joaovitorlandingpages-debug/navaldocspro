@@ -379,6 +379,42 @@ serve(async (req) => {
         autoValues['cliente.email'] = c.email
       }
     }
+
+    // Participantes do processo (multi-parte). Roles: owner, buyer, seller,
+    // representative, attorney, engineer, technician, witness, applicant, grantor.
+    if (processId) {
+      const { data: participants } = await supabaseAdmin
+        .from('process_participants')
+        .select('role, customers:customer_id(name, cpf_cnpj, rg, address, city, state, phone, email)')
+        .eq('process_id', processId)
+      const roleAlias: Record<string, string[]> = {
+        owner: ['proprietario', 'cliente'],
+        buyer: ['comprador', 'cliente'],
+        seller: ['vendedor'],
+        representative: ['representante'],
+        attorney: ['procurador', 'outorgado'],
+        grantor: ['outorgante'],
+        engineer: ['engenheiro', 'responsavel_tecnico'],
+        technician: ['tecnico'],
+        witness: ['testemunha'],
+        applicant: ['requerente'],
+      }
+      for (const p of (participants ?? []) as any[]) {
+        const c = p.customers
+        if (!c) continue
+        const aliases = roleAlias[p.role] ?? [p.role]
+        for (const a of aliases) {
+          autoValues[`${a}.nome`] ??= c.name
+          autoValues[`${a}.cpf`] ??= c.cpf_cnpj
+          autoValues[`${a}.rg`] ??= c.rg
+          autoValues[`${a}.endereco`] ??= c.address
+          autoValues[`${a}.cidade`] ??= c.city
+          autoValues[`${a}.estado`] ??= c.state
+          autoValues[`${a}.telefone`] ??= c.phone
+          autoValues[`${a}.email`] ??= c.email
+        }
+      }
+    }
     if (resolvedVesselId) {
       const { data: v } = await supabaseAdmin.from('vessels')
         .select('name, registration_number, vessel_type, hull_material, length, beam, depth, capacity, engine_brand, engine_model, engine_power, engine_serial')
