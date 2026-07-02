@@ -556,30 +556,50 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
 
           {step === 2 && (
             <div className="space-y-2">
+              <div className="text-[11px] text-slate-500 pb-1">
+                Processando até {MAX_PARALLEL} em paralelo · timeout de {Math.round(PER_FILE_TIMEOUT_MS/1000)}s por arquivo.
+                Falhas não bloqueiam o fluxo — você pode tentar novamente ou classificar manualmente.
+              </div>
               {files.map((f) => (
                 <div key={f.localId} className="flex items-center gap-3 rounded-lg border bg-white p-3">
-                  <FileText className="h-4 w-4 text-slate-400" />
+                  <FileText className="h-4 w-4 text-slate-400 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm truncate">{f.file.name}</div>
-                    <div className="text-[10px] text-slate-500">
-                      {f.status === "queued" && "Na fila"}
-                      {f.status === "uploading" && "Enviando..."}
-                      {f.status === "ocr" && "Analisando com IA..."}
-                      {f.status === "done" && <span className="text-emerald-600 font-bold">Detectado: {f.docType}</span>}
-                      {f.status === "error" && <span className="text-red-600">Erro: {f.errorMsg}</span>}
+                    <div className="text-[11px] mt-0.5">
+                      {f.status === "queued" && <span className="text-slate-500">Aguardando…</span>}
+                      {f.status === "uploading" && <span className="text-slate-600">Enviando…</span>}
+                      {f.status === "ocr" && <span className="text-primary">Analisando com IA…</span>}
+                      {f.status === "done" && <span className="text-emerald-600 font-semibold">Concluído · {f.docType}</span>}
+                      {f.status === "timeout" && <span className="text-amber-600 font-semibold">Timeout — OCR demorou demais</span>}
+                      {f.status === "error" && <span className="text-red-600 font-semibold">Falhou — {f.errorMsg}</span>}
+                      {f.status === "manual" && <span className="text-slate-700 font-semibold">Marcado para classificação manual</span>}
                     </div>
                   </div>
-                  {f.status === "uploading" || f.status === "ocr" ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                  ) : f.status === "done" ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  ) : f.status === "error" ? (
-                    <AlertCircle className="h-4 w-4 text-red-500" />
-                  ) : null}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {(f.status === "uploading" || f.status === "ocr") && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+                    {f.status === "done" && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                    {f.status === "timeout" && <Clock className="h-4 w-4 text-amber-500" />}
+                    {f.status === "error" && <AlertCircle className="h-4 w-4 text-red-500" />}
+                    {(f.status === "error" || f.status === "timeout") && (
+                      <>
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => retryFile(f.localId)} disabled={processing}>
+                          <RotateCw className="h-3 w-3 mr-1" /> Tentar
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" onClick={() => markManual(f.localId)}>
+                          <Hand className="h-3 w-3 mr-1" /> Manual
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px] text-red-500" onClick={() => removeFile(f.localId)}>
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           )}
+
+
 
           {step === 3 && (
             <div className="space-y-5">
