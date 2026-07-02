@@ -4390,6 +4390,7 @@ export type Database = {
           protocol_at: string | null
           protocol_number: string | null
           responsible_id: string | null
+          secondary_customer_id: string | null
           seller_id: string | null
           share_token: string | null
           sla_deadline: string | null
@@ -4447,6 +4448,7 @@ export type Database = {
           protocol_at?: string | null
           protocol_number?: string | null
           responsible_id?: string | null
+          secondary_customer_id?: string | null
           seller_id?: string | null
           share_token?: string | null
           sla_deadline?: string | null
@@ -4504,6 +4506,7 @@ export type Database = {
           protocol_at?: string | null
           protocol_number?: string | null
           responsible_id?: string | null
+          secondary_customer_id?: string | null
           seller_id?: string | null
           share_token?: string | null
           sla_deadline?: string | null
@@ -4548,6 +4551,13 @@ export type Database = {
             columns: ["responsible_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processes_secondary_customer_id_fkey"
+            columns: ["secondary_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
@@ -6300,6 +6310,15 @@ export type Database = {
       active_processes_count: {
         Args: { p_company_id: string }
         Returns: number
+      }
+      check_process_duplicates: {
+        Args: {
+          p_cpf_cnpj?: string
+          p_hull_number?: string
+          p_tie?: string
+          p_vessel_name?: string
+        }
+        Returns: Json
       }
       company_can_perform: {
         Args: { p_action: string; p_company_id: string }
