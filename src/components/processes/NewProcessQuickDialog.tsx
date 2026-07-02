@@ -78,11 +78,12 @@ interface DocSlot {
   key: string;
   label: string;
   category: string;
-  required: boolean;
+  suggested?: boolean;   // pré-marcado ao entrar na etapa
   hint?: string;
   allowMissing?: boolean;      // libera checkbox "não possui"
   onMissingGenerate?: string;  // rótulo do documento gerado quando marcado
 }
+
 
 export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props) {
   const navigate = useNavigate();
