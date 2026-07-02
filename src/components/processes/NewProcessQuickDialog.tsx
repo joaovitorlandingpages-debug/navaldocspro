@@ -32,6 +32,8 @@ import {
   previewProcessBlueprint,
   type BlueprintPreviewItem,
 } from "@/services/processes/blueprintEngine";
+import { batchGenerate, type BatchReport, type ChecklistLite } from "@/services/processes/batchChecklistActions";
+import { Progress } from "@/components/ui/progress";
 
 interface Props {
   isOpen: boolean;
