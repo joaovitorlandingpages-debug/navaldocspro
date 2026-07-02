@@ -582,7 +582,7 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
                   <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
                     Cliente <span className="text-red-500">*</span>
                   </Label>
-                  <Button size="sm" variant="ghost" onClick={createCustomerFromSuggestion} className="h-7 text-[11px]">
+                  <Button size="sm" variant="ghost" onClick={() => setCustomerModalOpen(true)} className="h-7 text-[11px]">
                     <User className="h-3 w-3 mr-1" /> Criar cliente inline
                   </Button>
                 </div>
