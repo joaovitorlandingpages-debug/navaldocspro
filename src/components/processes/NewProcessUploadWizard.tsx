@@ -263,7 +263,7 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
             : f));
 
           supabase.functions.invoke("process-ocr-document", { body: { jobId: (job as any).id } })
-            .catch((err) => console.error("OCR invoke err:", err));
+            .catch((err: any) => console.error("OCR invoke err:", err));
 
           const result = await pollOcrJob((job as any).id);
           if (!result || result.error) {
