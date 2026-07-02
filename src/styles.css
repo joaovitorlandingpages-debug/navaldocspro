@@ -303,3 +303,78 @@ h1.uppercase, h2.uppercase, h3.uppercase {
 
 
 
+
+/* ============================================================
+   Naval Clarity — Etapa 6: Processos, Workspace & Novo Processo
+   Reduz ruído nos cards CRM, workspace 3.0, chooser/quick/upload
+   e batch panel. Mantém funcionalidade — só peso visual.
+   ============================================================ */
+
+/* font-black usado como "peso de eyebrow" em textos < 14px vira 600.
+   Headings maiores já foram normalizados na etapa 4. */
+.text-\[7px\].font-black,
+.text-\[8px\].font-black,
+.text-\[9px\].font-black,
+.text-\[10px\].font-black,
+.text-\[11px\].font-black,
+.text-\[13px\].font-black,
+.text-xs.font-black,
+.text-sm.font-black,
+.text-base.font-black {
+  font-weight: 600 !important;
+}
+
+/* Eyebrows minúsculos ficam com tracking discreto (não widest) */
+.text-\[7px\].tracking-widest,
+.text-\[8px\].tracking-widest,
+.text-\[9px\].tracking-widest,
+.text-\[10px\].tracking-widest,
+.text-\[11px\].tracking-widest,
+.text-xs.tracking-widest {
+  letter-spacing: 0.06em !important;
+}
+
+.tracking-\[0\.15em\],
+.tracking-\[0\.18em\] {
+  letter-spacing: 0.05em !important;
+}
+
+/* Radii legados residuais do módulo de processos */
+.rounded-\[1\.75rem\] { border-radius: 0.875rem !important; }
+.rounded-b-\[2rem\]   { border-radius: 0 0 0.875rem 0.875rem !important; }
+
+/* Cards CRM: hover mais discreto, sem levantar 4px */
+[class*="hover:-translate-y-1"]:hover,
+[class*="hover:-translate-y-2"]:hover {
+  transform: translateY(-1px) !important;
+}
+
+/* Progress bars gradientes → cor sólida primária */
+.bg-gradient-to-r.from-primary.to-cyan-500,
+.bg-gradient-to-r.from-primary.to-cyan-400,
+.bg-gradient-to-r.from-primary.to-primary {
+  background-image: none !important;
+  background-color: var(--primary) !important;
+}
+
+/* Header do Workspace 3.0 (navy sólido, já coberto acima) —
+   remove sombra colorida residual */
+[class*="shadow-navy/20"],
+[class*="shadow-navy/30"] {
+  box-shadow: 0 6px 20px -14px color-mix(in oklab, var(--navy) 28%, transparent) !important;
+}
+
+/* CTAs principais (Novo Processo / Montar) — remove halo primary */
+[class*="shadow-primary/20"],
+[class*="shadow-primary/30"],
+[class*="shadow-primary/40"] {
+  box-shadow: 0 4px 14px -10px color-mix(in oklab, var(--navy) 30%, transparent) !important;
+}
+
+/* Backdrop-blur em containers de coluna CRM é caro e enevoa a UI —
+   mantém fundo claro sem blur. */
+.bg-slate-100\/30.backdrop-blur-sm,
+.bg-slate-50\/50.backdrop-blur-sm {
+  backdrop-filter: none !important;
+  background-color: rgb(248 250 252 / 0.7) !important;
+}
