@@ -396,22 +396,43 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                      Cliente <span className="text-red-500">*</span>
+                      {isTransfer ? "Comprador" : "Cliente"} <span className="text-red-500">*</span>
                     </Label>
-                    <button type="button" onClick={createCustomerInline} className="text-[11px] font-bold text-primary hover:underline inline-flex items-center gap-1">
+                    <button type="button" onClick={() => createCustomerInline("primary")} className="text-[11px] font-bold text-primary hover:underline inline-flex items-center gap-1">
                       <Plus className="h-3 w-3" /> Novo
                     </button>
                   </div>
                   <Select value={customerId || ""} onValueChange={(v) => { setCustomerId(v); setVesselId(""); }}>
-                    <SelectTrigger className={!customerId ? "border-red-300" : ""}><SelectValue placeholder="Selecione um cliente" /></SelectTrigger>
+                    <SelectTrigger className={!customerId ? "border-red-300" : ""}><SelectValue placeholder={isTransfer ? "Selecione o comprador" : "Selecione um cliente"} /></SelectTrigger>
                     <SelectContent>
-                      {customers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      {customers.filter((c) => c.id !== secondaryCustomerId).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                   {!customerId && (
-                    <p className="text-[11px] text-red-600">Selecione ou crie um cliente para continuar.</p>
+                    <p className="text-[11px] text-red-600">Selecione ou crie {isTransfer ? "o comprador" : "um cliente"} para continuar.</p>
                   )}
                 </div>
+                {isTransfer && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                        Vendedor <span className="text-red-500">*</span>
+                      </Label>
+                      <button type="button" onClick={() => createCustomerInline("secondary")} className="text-[11px] font-bold text-primary hover:underline inline-flex items-center gap-1">
+                        <Plus className="h-3 w-3" /> Novo
+                      </button>
+                    </div>
+                    <Select value={secondaryCustomerId || ""} onValueChange={setSecondaryCustomerId}>
+                      <SelectTrigger className={!secondaryCustomerId ? "border-red-300" : ""}><SelectValue placeholder="Selecione o vendedor" /></SelectTrigger>
+                      <SelectContent>
+                        {customers.filter((c) => c.id !== customerId).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    {!secondaryCustomerId && (
+                      <p className="text-[11px] text-red-600">Vendedor obrigatório em transferência.</p>
+                    )}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
