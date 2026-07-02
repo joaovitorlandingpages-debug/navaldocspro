@@ -300,11 +300,12 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
           process_type: selectedType.name,
           process_type_id: selectedType.id,
           customer_id: customerId,
+          secondary_customer_id: isTransfer && secondaryCustomerId ? secondaryCustomerId : null,
           vessel_id: vesselId || null,
           title: title.trim() || selectedType.name,
           priority,
           status: "pending",
-        })
+        } as any)
         .select("id").single();
       if (error) throw error;
       const processId = (data as any).id as string;
