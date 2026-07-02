@@ -52,6 +52,8 @@ import { ProcessBlueprintWorkspace } from "@/components/processes/ProcessBluepri
 import { ProcessItemFocusDialog } from "@/components/processes/ProcessItemFocusDialog";
 import { NextActionCard } from "@/components/processes/NextActionCard";
 import { WhatsMissingCard } from "@/components/processes/WhatsMissingCard";
+import { SignatureRequestDialog } from "@/components/signatures/SignatureRequestDialog";
+import { BatchGenerationService } from "@/services/automation/batchGenerationService";
 import { Palette } from "lucide-react";
 
 const VALID_TABS = [
