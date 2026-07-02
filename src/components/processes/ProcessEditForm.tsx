@@ -127,6 +127,7 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose, initialTa
   }), [process, meta.process_number, meta.category, meta.engineer_id, meta.despachante_id]);
 
   const [tab, setTab] = useState<string>(initialTab ?? "dados");
+  useEffect(() => { if (initialTab) setTab(initialTab); }, [initialTab]);
   const [form, setForm] = useState(initial);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [customers, setCustomers] = useState<any[]>([]);
