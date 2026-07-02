@@ -101,7 +101,7 @@ function Chip({ tone, children, onClick, title }: any) {
   );
 }
 
-export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) {
+export function ProcessEditForm({ process, onSaved, onCancel, onClose, initialTab }: Props) {
   const navigate = useNavigate();
   const meta = (process?.draft_data && typeof process.draft_data === "object" ? process.draft_data : {}) as any;
 
