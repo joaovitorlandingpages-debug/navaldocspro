@@ -751,8 +751,9 @@ function ProcessDetail() {
       <ProcessEditSheet
         process={process}
         open={editSheetOpen}
-        onOpenChange={setEditSheetOpen}
+        onOpenChange={(o) => { setEditSheetOpen(o); if (!o) setEditInitialTab(undefined); }}
         onSaved={fetchProcess}
+        initialTab={editInitialTab}
       />
 
       <ProcessItemFocusDialog
