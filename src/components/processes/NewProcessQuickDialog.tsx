@@ -1,28 +1,35 @@
 /**
- * NewProcessQuickDialog — entry point do Motor Inteligente.
+ * NewProcessQuickDialog — Wizard Guiado Definitivo (7 etapas)
  *
- * Fluxo em 2 etapas:
- *  1. Tipo + Cliente/Embarcação/Prioridade.
- *  2. Documentos do Processo (obrigatórios/opcionais/condicionais) com
- *     seleção manual e adição de extras da Biblioteca Nacional.
+ *  1. Tipo de processo
+ *  2. Cliente(s) — comprador + vendedor em transferências
+ *  3. Documentos do cliente (CNH/RG, CPF/CNPJ, comprovante)
+ *  4. Embarcação + documentos (TIE/TIEM, NF, NF motor, fotos)
+ *  5. Identidade dos documentos (sem logo / empresa / cliente / exclusivo)
+ *  6. Documentos a gerar (Blueprint + biblioteca)
+ *  7. Resumo e criação
  *
- * Ao concluir, cria o processo e chama o Blueprint Engine com os toggles
- * escolhidos (exclusões e extras) — o checklist é materializado
- * automaticamente, sem prender o usuário.
+ * Preserva Blueprint, OCR, Batch Generation, Assinaturas, Dossiê e Workspace.
+ * O modo "Upload rápido" continua acessível pelo Chooser.
  */
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
   Loader2, Sparkles, ArrowRight, ArrowLeft, Search, FileText, Plus, X,
-  ShieldCheck, GitBranch, PackageOpen, Signature, Zap,
+  ShieldCheck, GitBranch, PackageOpen, Signature, Zap, User, Ship, ImageIcon,
+  CheckCircle2, Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,9 +40,14 @@ import {
   previewProcessBlueprint,
   type BlueprintPreviewItem,
 } from "@/services/processes/blueprintEngine";
-import { batchGenerate, type BatchReport, type ChecklistLite } from "@/services/processes/batchChecklistActions";
+import {
+  batchGenerate, type BatchReport, type ChecklistLite,
+} from "@/services/processes/batchChecklistActions";
 import { Progress } from "@/components/ui/progress";
-import { confirmProcessVisible, notifyProcessesChanged } from "@/services/processes/processCreation";
+import {
+  confirmProcessVisible, notifyProcessesChanged,
+} from "@/services/processes/processCreation";
+import { FileUploader } from "@/components/FileUploader";
 
 interface Props {
   isOpen: boolean;
@@ -48,7 +60,29 @@ type CustomerRow = { id: string; name: string };
 type VesselRow = { id: string; name: string; customer_id: string | null };
 type TemplateRow = { id: string; name: string; category: string | null };
 
-type Step = 1 | 2;
+type BrandingMode = "none" | "company" | "customer" | "exclusive";
+
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+const STEPS: { n: Step; label: string; icon: any }[] = [
+  { n: 1, label: "Tipo",       icon: Sparkles },
+  { n: 2, label: "Cliente",    icon: User },
+  { n: 3, label: "Docs Cliente", icon: FileText },
+  { n: 4, label: "Embarcação", icon: Ship },
+  { n: 5, label: "Identidade", icon: ImageIcon },
+  { n: 6, label: "Gerar",      icon: Zap },
+  { n: 7, label: "Resumo",     icon: CheckCircle2 },
+];
+
+/** Slots de upload — nome exibido + categoria usada no storage. */
+interface DocSlot {
+  key: string;
+  label: string;
+  category: string;
+  required: boolean;
+  hint?: string;
+  allowMissing?: boolean;      // libera checkbox "não possui"
+  onMissingGenerate?: string;  // rótulo do documento gerado quando marcado
+}
 
 export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props) {
   const navigate = useNavigate();
@@ -57,39 +91,89 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
   const [step, setStep] = useState<Step>(1);
 
+  // Dados carregados
   const [types, setTypes] = useState<ProcessTypeRow[]>([]);
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [vessels, setVessels] = useState<VesselRow[]>([]);
+
+  // Etapa 1
   const [typeQuery, setTypeQuery] = useState("");
   const [selectedTypeId, setSelectedTypeId] = useState<string>("");
-  const [customerId, setCustomerId] = useState<string>("");
-  const [secondaryCustomerId, setSecondaryCustomerId] = useState<string>("");
-  const [vesselId, setVesselId] = useState<string>("");
   const [priority, setPriority] = useState<string>("normal");
   const [title, setTitle] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [allowEmptyPackage, setAllowEmptyPackage] = useState(false);
 
-  // Etapa 2 — documentos
+  // Etapa 2 — clientes
+  const [customerId, setCustomerId] = useState<string>("");
+  const [secondaryCustomerId, setSecondaryCustomerId] = useState<string>("");
+
+  // Etapa 3 — controle dos slots do cliente
+  const [noResidenceProof, setNoResidenceProof] = useState(false);
+  const [uploadedSlots, setUploadedSlots] = useState<Record<string, number>>({});
+
+  // Etapa 4 — embarcação
+  const [vesselId, setVesselId] = useState<string>("");
+  const [hasMotor, setHasMotor] = useState(false);
+
+  // Etapa 5 — identidade
+  const [brandingMode, setBrandingMode] = useState<BrandingMode>("company");
+
+  // Etapa 6 — documentos gerados
   const [preview, setPreview] = useState<BlueprintPreviewItem[]>([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
-  const [excluded, setExcluded] = useState<Set<string>>(new Set());   // template_ids desmarcados
-  const [extras, setExtras] = useState<TemplateRow[]>([]);            // adicionados da biblioteca
+  const [excluded, setExcluded] = useState<Set<string>>(new Set());
+  const [extras, setExtras] = useState<TemplateRow[]>([]);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [libraryQuery, setLibraryQuery] = useState("");
   const [libraryResults, setLibraryResults] = useState<TemplateRow[]>([]);
+  const [allowEmptyPackage, setAllowEmptyPackage] = useState(false);
 
-  // Geração automática pós-criação
+  // Criação
+  const [submitting, setSubmitting] = useState(false);
   const [generateNow, setGenerateNow] = useState(false);
-  const [useCompanyLogo, setUseCompanyLogo] = useState(true);
   const [genProgress, setGenProgress] = useState<{ done: number; total: number; current: string } | null>(null);
   const [genReport, setGenReport] = useState<BatchReport | null>(null);
   const [createdProcessId, setCreatedProcessId] = useState<string | null>(null);
 
-  const isTransfer = selectedTypeId
-    ? types.find((t) => t.id === selectedTypeId)?.name === "Transferência de Propriedade"
-    : false;
+  const selectedType = types.find((t) => t.id === selectedTypeId) || null;
+  const typeName = selectedType?.name || "";
+  const isTransfer = /transfer/i.test(typeName);
+  const isRegistration = /registro/i.test(typeName);
+  const isMotorChange = /motor/i.test(typeName);
+  const needsVessel = !/segunda via|licença rádio|licenca radio/i.test(typeName);
 
+  // Slots dinâmicos
+  const clientSlots = useMemo<DocSlot[]>(() => {
+    const base: DocSlot[] = [
+      { key: "cnh_rg", label: "CNH ou RG", category: "cnh", required: true, hint: "Documento com foto." },
+      { key: "cpf_cnpj", label: "CPF ou CNPJ", category: "cpf", required: isRegistration || isTransfer, hint: "Se pessoa jurídica, envie o cartão CNPJ." },
+      {
+        key: "comprovante", label: "Comprovante de residência", category: "comprovante_residencia",
+        required: true, allowMissing: true,
+        onMissingGenerate: "Declaração de Residência",
+        hint: "Aceita conta de luz, água, telefone (até 90 dias).",
+      },
+    ];
+    return base;
+  }, [isRegistration, isTransfer]);
+
+  const vesselSlots = useMemo<DocSlot[]>(() => {
+    if (!needsVessel) return [];
+    const base: DocSlot[] = [
+      { key: "tie", label: "TIE / TIEM anterior", category: "tie", required: !isRegistration, hint: "Anexe se a embarcação já foi inscrita." },
+    ];
+    if (isRegistration || isTransfer) {
+      base.push({ key: "nf_embarcacao", label: "Nota fiscal da embarcação", category: "nota_fiscal", required: true });
+    }
+    if (hasMotor || isMotorChange) {
+      base.push({ key: "nf_motor", label: "Nota fiscal do motor", category: "nota_fiscal_motor", required: isMotorChange });
+    }
+    if (isRegistration) {
+      base.push({ key: "fotos", label: "Fotos da embarcação (proa, popa, casco)", category: "fotos", required: false, hint: "Fotos ajudam na vistoria." });
+    }
+    return base;
+  }, [needsVessel, isRegistration, isTransfer, hasMotor, isMotorChange]);
+
+  // ------------------------------------------------------------- carregamento
   useEffect(() => {
     if (!isOpen) return;
     (async () => {
@@ -107,28 +191,20 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   useEffect(() => {
     if (!isOpen) {
       setStep(1);
-      setSelectedTypeId("");
-      setCustomerId("");
-      setSecondaryCustomerId("");
-      setVesselId("");
-      setPriority("normal");
-      setTitle("");
-      setTypeQuery("");
-      setPreview([]);
-      setExcluded(new Set());
-      setExtras([]);
-      setLibraryOpen(false);
-      setLibraryQuery("");
-      setLibraryResults([]);
+      setSelectedTypeId(""); setTypeQuery(""); setTitle(""); setPriority("normal");
+      setCustomerId(""); setSecondaryCustomerId("");
+      setNoResidenceProof(false); setUploadedSlots({});
+      setVesselId(""); setHasMotor(false);
+      setBrandingMode("company");
+      setPreview([]); setExcluded(new Set()); setExtras([]);
+      setLibraryOpen(false); setLibraryQuery(""); setLibraryResults([]);
       setAllowEmptyPackage(false);
-      setGenerateNow(false);
-      setUseCompanyLogo(true);
-      setGenProgress(null);
-      setGenReport(null);
+      setGenerateNow(false); setGenProgress(null); setGenReport(null);
       setCreatedProcessId(null);
     }
   }, [isOpen]);
 
+  // ------------------------------------------------------------- helpers
   const filteredTypes = useMemo(() => {
     const q = typeQuery.trim().toLowerCase();
     if (!q) return types;
@@ -150,80 +226,16 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     return vessels.filter((v) => v.customer_id === customerId);
   }, [vessels, customerId]);
 
-  const selectedType = types.find((t) => t.id === selectedTypeId) || null;
+  const bumpSlot = (key: string) =>
+    setUploadedSlots((prev) => ({ ...prev, [key]: (prev[key] || 0) + 1 }));
 
-  async function goToStep2() {
-    if (!selectedType) { toast.error("Selecione o tipo de processo."); return; }
-    if (!customerId) { toast.error("Selecione ou crie um cliente para continuar."); return; }
-    if (isTransfer && !secondaryCustomerId) {
-      toast.error("Selecione ou crie o vendedor (cliente secundário) para transferência.");
-      return;
-    }
-    setLoadingPreview(true);
-    try {
-      const items = await previewProcessBlueprint(selectedType.name);
-      // Bloqueia continuar se package vazio e usuário ainda não confirmou "processo vazio manual".
-      if (items.length === 0 && !allowEmptyPackage) {
-        const ok = window.confirm(
-          `⚠ O tipo "${selectedType.name}" ainda não possui modelo de documentos configurado.\n\n` +
-          `Deseja criar um PROCESSO VAZIO MANUALMENTE?\n` +
-          `Você terá que anexar/gerar cada documento à mão — sem checklist automático.`
-        );
-        if (!ok) { setLoadingPreview(false); return; }
-        setAllowEmptyPackage(true);
-      }
-      setPreview(items);
-      const initialExcluded = new Set<string>();
-      items.forEach((i) => {
-        if ((i.kind === "optional" || i.kind === "conditional") && i.templateId) {
-          initialExcluded.add(i.templateId);
-        }
-      });
-      setExcluded(initialExcluded);
-      setStep(2);
-    } catch (e: any) {
-      toast.error("Falha ao carregar documentos do modelo: " + (e?.message || e));
-    } finally {
-      setLoadingPreview(false);
-    }
-  }
-
-  async function checkCustomerDuplicate(cpf?: string): Promise<boolean> {
-    if (!cpf) return true;
-    const { data } = await supabase.rpc("check_process_duplicates" as any, {
-      p_cpf_cnpj: cpf, p_hull_number: null, p_tie: null, p_vessel_name: null,
-    });
-    const dup = (data as any)?.customers ?? [];
-    if (dup.length > 0) {
-      const nomes = dup.map((c: any) => `• ${c.name} (${c.cpf_cnpj || "sem doc"})`).join("\n");
-      return window.confirm(
-        `⚠ CPF/CNPJ já cadastrado para:\n${nomes}\n\nDeseja mesmo assim criar um NOVO cadastro? (Recomenda-se usar o existente.)`
-      );
-    }
-    return true;
-  }
-
-  async function checkVesselDuplicate(name: string): Promise<boolean> {
-    const { data } = await supabase.rpc("check_process_duplicates" as any, {
-      p_cpf_cnpj: null, p_hull_number: null, p_tie: null, p_vessel_name: name,
-    });
-    const dup = (data as any)?.vessels ?? [];
-    if (dup.length > 0) {
-      const nomes = dup.map((v: any) => `• ${v.name} (${v.hull_number || v.tie || "—"})`).join("\n");
-      return window.confirm(
-        `⚠ Já existem embarcações parecidas:\n${nomes}\n\nCriar mesmo assim?`
-      );
-    }
-    return true;
-  }
-
+  // ------------------------------------------------------------- CRUD inline
   async function createCustomerInline(kind: "primary" | "secondary" = "primary") {
-    const label = kind === "secondary" ? "vendedor (cliente secundário)" : "cliente";
+    const label = kind === "secondary" ? "vendedor" : (isTransfer ? "comprador" : "cliente");
     const name = window.prompt(`Nome do ${label}:`)?.trim();
     if (!name) return;
     const cpf = window.prompt(`CPF/CNPJ do ${label} (opcional):`)?.trim() || null;
     if (!profile?.company_id) { toast.error("Empresa não vinculada."); return; }
-    if (cpf && !(await checkCustomerDuplicate(cpf))) return;
     const { data, error } = await supabase
       .from("customers")
       .insert({ company_id: profile.company_id, name, cpf_cnpj: cpf })
@@ -240,7 +252,6 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     const name = window.prompt("Nome da embarcação:")?.trim();
     if (!name) return;
     if (!profile?.company_id) { toast.error("Empresa não vinculada."); return; }
-    if (!(await checkVesselDuplicate(name))) return;
     const { data, error } = await supabase
       .from("vessels")
       .insert({ company_id: profile.company_id, customer_id: customerId, name })
@@ -251,6 +262,59 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     toast.success(`Embarcação "${name}" criada.`);
   }
 
+  // ------------------------------------------------------------- navegação entre steps
+  async function loadPreviewIfNeeded() {
+    if (preview.length > 0 || !selectedType) return;
+    setLoadingPreview(true);
+    try {
+      const items = await previewProcessBlueprint(selectedType.name);
+      if (items.length === 0 && !allowEmptyPackage) {
+        const ok = window.confirm(
+          `⚠ O tipo "${selectedType.name}" ainda não possui modelo de documentos configurado.\n\n` +
+          `Deseja criar um PROCESSO VAZIO MANUALMENTE?`
+        );
+        if (!ok) { setLoadingPreview(false); return; }
+        setAllowEmptyPackage(true);
+      }
+      setPreview(items);
+      const initialExcluded = new Set<string>();
+      items.forEach((i) => {
+        if ((i.kind === "optional" || i.kind === "conditional") && i.templateId) {
+          initialExcluded.add(i.templateId);
+        }
+      });
+      setExcluded(initialExcluded);
+    } catch (e: any) {
+      toast.error("Falha ao carregar modelo: " + (e?.message || e));
+    } finally {
+      setLoadingPreview(false);
+    }
+  }
+
+  function validateStep(target: Step): string | null {
+    if (step === 1 && !selectedTypeId) return "Selecione o tipo de processo.";
+    if (step === 2) {
+      if (!customerId) return isTransfer ? "Selecione o comprador." : "Selecione o cliente.";
+      if (isTransfer && !secondaryCustomerId) return "Selecione o vendedor.";
+    }
+    if (step === 4 && needsVessel && target > 4 && !vesselId) {
+      return "Selecione ou crie a embarcação (ou volte e marque o tipo como sem embarcação).";
+    }
+    return null;
+  }
+
+  async function goStep(target: Step) {
+    if (target > step) {
+      const err = validateStep(target);
+      if (err) { toast.error(err); return; }
+    }
+    if (target >= 6 && preview.length === 0) {
+      await loadPreviewIfNeeded();
+    }
+    setStep(target);
+  }
+
+  // ------------------------------------------------------------- documentos a gerar
   function toggleTemplate(tplId: string | null) {
     if (!tplId) return;
     setExcluded((prev) => {
@@ -270,54 +334,53 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       .limit(15);
     setLibraryResults((data as any) ?? []);
   }
-
   function addExtra(t: TemplateRow) {
     if (extras.some((e) => e.id === t.id)) return;
-    // Se já existir no pacote, apenas desexcluir.
     const inPreview = preview.find((p) => p.templateId === t.id);
     if (inPreview) {
       setExcluded((prev) => { const n = new Set(prev); n.delete(t.id); return n; });
-      toast.success(`"${t.name}" marcado no pacote.`);
+      toast.success(`"${t.name}" marcado.`);
       return;
     }
     setExtras((prev) => [...prev, t]);
   }
-  function removeExtra(id: string) {
-    setExtras((prev) => prev.filter((e) => e.id !== id));
-  }
+  function removeExtra(id: string) { setExtras((prev) => prev.filter((e) => e.id !== id)); }
 
   const selectedCount = useMemo(() => {
     const base = preview.filter((p) => p.templateId && !excluded.has(p.templateId)).length;
     return base + extras.length;
   }, [preview, excluded, extras]);
 
+  // Se não tem comprovante, injeta Declaração automaticamente na busca de extras.
+  useEffect(() => {
+    if (!noResidenceProof) return;
+    (async () => {
+      const { data } = await supabase
+        .from("document_templates")
+        .select("id,name,category")
+        .ilike("name", "%declara%residenc%")
+        .limit(1);
+      const t = (data as any)?.[0];
+      if (t && !extras.some((e) => e.id === t.id)) setExtras((prev) => [...prev, t]);
+    })();
+  }, [noResidenceProof]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ------------------------------------------------------------- criação
   async function handleCreate() {
     if (!selectedType) return;
-    if (!profile?.company_id) {
-      toast.error("Sua empresa ainda não foi vinculada. Recarregue e tente novamente.");
-      return;
-    }
-    if (!customerId) {
-      toast.error("Selecione ou crie um cliente para continuar.");
-      setStep(1);
-      return;
-    }
-    if (selectedCount === 0) {
-      const ok = window.confirm(
-        "Nenhum documento selecionado. Deseja criar o processo mesmo assim? Você poderá adicionar documentos depois no Blueprint."
-      );
-      if (!ok) return;
-    }
+    if (!profile?.company_id) { toast.error("Empresa não vinculada."); return; }
+    if (!customerId) { toast.error("Cliente obrigatório."); setStep(2); return; }
+    if (isTransfer && !secondaryCustomerId) { toast.error("Vendedor obrigatório em transferência."); setStep(2); return; }
+
     setSubmitting(true);
     try {
       const limit = await checkLimit("processes");
       if (limit.reached) {
         toast.error("Limite de processos ativos atingido.", {
-          description: `Ativos visíveis: ${limit.current}/${limit.limit ?? "ilimitado"}. Arquivados, lixeira e rascunhos não contam.`,
+          description: `Ativos: ${limit.current}/${limit.limit ?? "ilimitado"}.`,
         });
         return;
       }
-
       const { data, error } = await supabase
         .from("processes")
         .insert({
@@ -334,65 +397,47 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
           archived_at: null,
           trashed_at: null,
           deleted_at: null,
-          branding_mode: useCompanyLogo ? "company" : "none",
+          branding_mode: brandingMode,
         } as any)
         .select("id").single();
       if (error) throw error;
       const processId = (data as any).id as string;
 
-      let blueprintWarning = false;
       try {
-        const result = await materializeProcessBlueprint(processId, {
+        await materializeProcessBlueprint(processId, {
           excludeTemplateIds: Array.from(excluded),
           extraTemplateIds: extras.map((e) => e.id),
         });
-        console.log("[BLUEPRINT_MATERIALIZED]", result);
-      } catch (e) {
-        console.warn("Blueprint materialize falhou (não bloqueia):", e);
-        blueprintWarning = true;
-      }
+      } catch (e) { console.warn("blueprint falhou:", e); }
 
       const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
       notifyProcessesChanged(visibleProcess);
       setCreatedProcessId(processId);
+      toast.success(`Processo criado com ${selectedCount} documento(s) no checklist.`);
 
-      if (blueprintWarning) {
-        toast.warning("Processo criado, mas o checklist automático falhou. Você pode adicionar documentos manualmente no workspace.");
-      } else {
-        toast.success(`Processo criado e confirmado na lista com ${selectedCount} documento(s) no checklist.`);
-      }
-
-      // Gerar agora? Dispara batch com base no checklist recém-materializado.
       if (generateNow && selectedCount > 0) {
-        try {
-          const { data: rows } = await supabase
-            .from("document_checklists")
-            .select("id,item_name,template_id,document_id,requires_signature")
-            .eq("process_id", processId);
-          const items: ChecklistLite[] = ((rows ?? []) as any[])
-            .filter((r) => !!r.template_id)
-            .map((r) => ({
-              id: r.id, item_name: r.item_name, template_id: r.template_id,
-              document_id: r.document_id, requires_signature: r.requires_signature,
-            }));
-          if (items.length > 0) {
-            setGenProgress({ done: 0, total: items.length, current: "" });
-            const rep = await batchGenerate(processId, items, (done, total, current) => {
-              setGenProgress({ done, total, current });
-            });
-            setGenReport(rep);
-            setGenProgress(null);
-            return;
-          }
-        } catch (e) {
-          console.warn("Batch pós-criação falhou:", e);
+        const { data: rows } = await supabase
+          .from("document_checklists")
+          .select("id,item_name,template_id,document_id,requires_signature")
+          .eq("process_id", processId);
+        const items: ChecklistLite[] = ((rows ?? []) as any[])
+          .filter((r) => !!r.template_id)
+          .map((r) => ({
+            id: r.id, item_name: r.item_name, template_id: r.template_id,
+            document_id: r.document_id, requires_signature: r.requires_signature,
+          }));
+        if (items.length > 0) {
+          setGenProgress({ done: 0, total: items.length, current: "" });
+          const rep = await batchGenerate(processId, items, (done, total, current) => {
+            setGenProgress({ done, total, current });
+          });
+          setGenReport(rep); setGenProgress(null);
+          return;
         }
       }
 
-      notifyProcessesChanged(visibleProcess);
       onClose();
       navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "overview" } });
-
     } catch (e: any) {
       toast.error("Erro ao criar processo: " + (e?.message || e));
     } finally {
@@ -407,134 +452,58 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     navigate({ to: "/processes/$id", params: { id }, search: { tab: "overview" } });
   }
 
+  // ------------------------------------------------------------- render
+  const canAdvance = !validateStep((Math.min(7, step + 1)) as Step);
+
   return (
     <Dialog open={isOpen} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl w-[calc(100vw-1rem)] max-h-[92vh] sm:max-h-[90vh] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:rounded-none max-sm:w-screen overflow-hidden flex flex-col p-4 sm:p-6">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl w-[calc(100vw-1rem)] max-h-[92vh] sm:max-h-[90vh] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:rounded-none max-sm:w-screen overflow-hidden flex flex-col p-0">
+        <DialogHeader className="p-4 sm:p-6 pb-2">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Sparkles className="h-5 w-5 text-primary" />
-            {step === 1 ? "Novo Processo" : "Documentos do Processo"}
+            Novo Processo
           </DialogTitle>
           <DialogDescription>
-            {step === 1
-              ? "Escolha o tipo — o sistema sugere automaticamente todos os documentos, anexos e assinaturas."
-              : "Revise a lista sugerida. Você pode marcar opcionais, incluir condicionais e adicionar extras da Biblioteca."}
+            Passo a passo guiado. O sistema pede só o que este tipo de processo exige.
           </DialogDescription>
-          <div className="flex items-center gap-2 pt-2 text-[10px] font-black uppercase tracking-widest">
-            <StepPill n={1} label="Tipo" active={step === 1} done={step > 1} />
-            <div className="h-px flex-1 bg-slate-200" />
-            <StepPill n={2} label="Documentos" active={step === 2} done={false} />
-          </div>
+          <StepIndicator step={step} onJump={(n) => n < step && setStep(n)} />
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto pr-1">
-          {step === 1 ? (
-            <div className="space-y-5 py-2">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                  Tipo de processo <span className="text-red-500">*</span>
-                </Label>
-                <div className="relative">
-                  <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
-                  <Input
-                    value={typeQuery}
-                    onChange={(e) => setTypeQuery(e.target.value)}
-                    placeholder="Buscar por nome ou categoria..."
-                    className="pl-9"
-                  />
-                </div>
-                <div className="max-h-[240px] overflow-y-auto rounded-lg border bg-slate-50/50">
-                  {grouped.length === 0 ? (
-                    <div className="text-xs text-slate-400 italic p-4 text-center">Nenhum tipo encontrado.</div>
-                  ) : grouped.map(([cat, list]) => (
-                    <div key={cat}>
-                      <div className="sticky top-0 bg-slate-100 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                        {cat}
-                      </div>
-                      {list.map((t) => (
-                        <button
-                          key={t.id}
-                          type="button"
-                          onClick={() => setSelectedTypeId(t.id)}
-                          className={`w-full flex items-center justify-between px-3 py-2.5 text-left text-sm border-b last:border-b-0 transition ${
-                            selectedTypeId === t.id ? "bg-primary/10 text-primary font-semibold" : "hover:bg-white"
-                          }`}
-                        >
-                          <span>{t.name}</span>
-                          {selectedTypeId === t.id && <ArrowRight className="h-4 w-4" />}
-                        </button>
-                      ))}
-                    </div>
-                  ))}
-                </div>
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6">
+          {/* STEP 1 — Tipo */}
+          {step === 1 && (
+            <div className="space-y-4 py-3">
+              <div className="relative">
+                <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
+                <Input value={typeQuery} onChange={(e) => setTypeQuery(e.target.value)} placeholder="Buscar tipo de processo…" className="pl-9" />
               </div>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                      {isTransfer ? "Comprador" : "Cliente"} <span className="text-red-500">*</span>
-                    </Label>
-                    <button type="button" onClick={() => createCustomerInline("primary")} className="text-[11px] font-bold text-primary hover:underline inline-flex items-center gap-1">
-                      <Plus className="h-3 w-3" /> Novo
-                    </button>
-                  </div>
-                  <Select value={customerId || ""} onValueChange={(v) => { setCustomerId(v); setVesselId(""); }}>
-                    <SelectTrigger className={!customerId ? "border-red-300" : ""}><SelectValue placeholder={isTransfer ? "Selecione o comprador" : "Selecione um cliente"} /></SelectTrigger>
-                    <SelectContent>
-                      {customers.filter((c) => c.id !== secondaryCustomerId).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  {!customerId && (
-                    <p className="text-[11px] text-red-600">Selecione ou crie {isTransfer ? "o comprador" : "um cliente"} para continuar.</p>
-                  )}
-                </div>
-                {isTransfer && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                        Vendedor <span className="text-red-500">*</span>
-                      </Label>
-                      <button type="button" onClick={() => createCustomerInline("secondary")} className="text-[11px] font-bold text-primary hover:underline inline-flex items-center gap-1">
-                        <Plus className="h-3 w-3" /> Novo
+              <div className="max-h-[420px] overflow-y-auto rounded-lg border bg-slate-50/50">
+                {grouped.length === 0 ? (
+                  <div className="text-xs text-slate-400 italic p-4 text-center">Nenhum tipo encontrado.</div>
+                ) : grouped.map(([cat, list]) => (
+                  <div key={cat}>
+                    <div className="sticky top-0 bg-slate-100 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500">{cat}</div>
+                    {list.map((t) => (
+                      <button
+                        key={t.id} type="button"
+                        onClick={() => setSelectedTypeId(t.id)}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 text-left text-sm border-b last:border-b-0 transition ${
+                          selectedTypeId === t.id ? "bg-primary/10 text-primary font-semibold" : "hover:bg-white"
+                        }`}
+                      >
+                        <span>{t.name}</span>
+                        {selectedTypeId === t.id && <ArrowRight className="h-4 w-4" />}
                       </button>
-                    </div>
-                    <Select value={secondaryCustomerId || ""} onValueChange={setSecondaryCustomerId}>
-                      <SelectTrigger className={!secondaryCustomerId ? "border-red-300" : ""}><SelectValue placeholder="Selecione o vendedor" /></SelectTrigger>
-                      <SelectContent>
-                        {customers.filter((c) => c.id !== customerId).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    {!secondaryCustomerId && (
-                      <p className="text-[11px] text-red-600">Vendedor obrigatório em transferência.</p>
-                    )}
+                    ))}
                   </div>
-                )}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                      Embarcação <span className="text-slate-400 normal-case font-medium">(opcional)</span>
-                    </Label>
-                    <button type="button" onClick={createVesselInline} disabled={!customerId} className="text-[11px] font-bold text-primary hover:underline inline-flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed">
-                      <Plus className="h-3 w-3" /> Nova
-                    </button>
-                  </div>
-                  <Select value={vesselId || "none"} onValueChange={(v) => setVesselId(v === "none" ? "" : v)}>
-                    <SelectTrigger><SelectValue placeholder="Vincular depois" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">— Vincular depois —</SelectItem>
-                      {vesselOptions.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+                ))}
               </div>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Título interno (opcional)</Label>
-                  <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={selectedType?.name || "Ex.: Registro embarcação Phoenix"} />
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Título interno</Label>
+                  <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={selectedType?.name || "Opcional"} />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Prioridade</Label>
                   <Select value={priority} onValueChange={setPriority}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -547,14 +516,188 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                   </Select>
                 </div>
               </div>
-
-              <label className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-3 text-xs font-bold text-slate-600 cursor-pointer">
-                <Checkbox checked={useCompanyLogo} onCheckedChange={(v) => setUseCompanyLogo(!!v)} />
-                Usar logo/identidade da empresa nos documentos deste processo
-              </label>
             </div>
-          ) : (
-            <div className="space-y-4 py-2">
+          )}
+
+          {/* STEP 2 — Cliente */}
+          {step === 2 && (
+            <div className="space-y-4 py-3">
+              <CustomerPicker
+                label={isTransfer ? "Comprador" : "Cliente"}
+                value={customerId}
+                onChange={(v) => { setCustomerId(v); setVesselId(""); }}
+                onCreate={() => createCustomerInline("primary")}
+                options={customers.filter((c) => c.id !== secondaryCustomerId)}
+              />
+              {isTransfer && (
+                <CustomerPicker
+                  label="Vendedor"
+                  value={secondaryCustomerId}
+                  onChange={setSecondaryCustomerId}
+                  onCreate={() => createCustomerInline("secondary")}
+                  options={customers.filter((c) => c.id !== customerId)}
+                />
+              )}
+              <p className="text-xs text-slate-500 bg-slate-50 rounded-lg p-3 border border-slate-100">
+                💡 No próximo passo você anexa os documentos deste cliente (CNH, comprovante, etc.).
+              </p>
+            </div>
+          )}
+
+          {/* STEP 3 — Docs do cliente */}
+          {step === 3 && (
+            <div className="space-y-3 py-3">
+              {clientSlots.map((slot) => {
+                const isComprovante = slot.key === "comprovante";
+                const hidden = isComprovante && noResidenceProof;
+                return (
+                  <div key={slot.key} className="rounded-xl border border-slate-200 bg-white p-3">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <p className="text-sm font-bold text-navy flex items-center gap-2">
+                          {slot.label}
+                          {slot.required && !hidden && <Badge variant="outline" className="text-[9px] uppercase text-red-600 border-red-200">Obrigatório</Badge>}
+                          {uploadedSlots[slot.key] > 0 && <Badge className="text-[9px] uppercase bg-emerald-100 text-emerald-700 border-emerald-200">{uploadedSlots[slot.key]} enviado</Badge>}
+                        </p>
+                        {slot.hint && <p className="text-[11px] text-slate-500 mt-0.5">{slot.hint}</p>}
+                      </div>
+                      {slot.allowMissing && (
+                        <label className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 cursor-pointer whitespace-nowrap">
+                          <Checkbox checked={noResidenceProof} onCheckedChange={(v) => setNoResidenceProof(!!v)} />
+                          Não possui
+                        </label>
+                      )}
+                    </div>
+                    {hidden ? (
+                      <div className="text-[11px] text-violet-700 bg-violet-50 rounded-lg p-2 border border-violet-100">
+                        📝 O sistema vai gerar automaticamente: <b>{slot.onMissingGenerate}</b>.
+                      </div>
+                    ) : (
+                      <FileUploader
+                        bucket="customer-documents"
+                        category={slot.category}
+                        customerId={customerId}
+                        compact
+                        onSuccess={() => bumpSlot(slot.key)}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+              <p className="text-[11px] text-slate-400 italic">
+                Uploads aqui não travam o fluxo. Você pode enviar documentos depois pelo workspace.
+              </p>
+            </div>
+          )}
+
+          {/* STEP 4 — Embarcação */}
+          {step === 4 && (
+            <div className="space-y-4 py-3">
+              {!needsVessel ? (
+                <p className="text-sm text-slate-500 bg-slate-50 rounded-lg p-4 border border-slate-100">
+                  Este tipo de processo não exige embarcação. Você pode pular para a próxima etapa.
+                </p>
+              ) : (
+                <>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                        Embarcação <span className="text-red-500">*</span>
+                      </Label>
+                      <button type="button" onClick={createVesselInline} disabled={!customerId} className="text-[11px] font-bold text-primary hover:underline inline-flex items-center gap-1 disabled:opacity-40">
+                        <Plus className="h-3 w-3" /> Nova
+                      </button>
+                    </div>
+                    <Select value={vesselId || ""} onValueChange={setVesselId}>
+                      <SelectTrigger className={!vesselId ? "border-red-300" : ""}><SelectValue placeholder="Selecione a embarcação" /></SelectTrigger>
+                      <SelectContent>
+                        {vesselOptions.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer border border-slate-100 bg-slate-50/50 p-2.5 rounded-lg">
+                    <Checkbox checked={hasMotor} onCheckedChange={(v) => setHasMotor(!!v)} />
+                    Esta embarcação tem motor (pediremos a NF do motor)
+                  </label>
+                  {vesselId && vesselSlots.map((slot) => (
+                    <div key={slot.key} className="rounded-xl border border-slate-200 bg-white p-3">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div>
+                          <p className="text-sm font-bold text-navy flex items-center gap-2">
+                            {slot.label}
+                            {slot.required && <Badge variant="outline" className="text-[9px] uppercase text-red-600 border-red-200">Obrigatório</Badge>}
+                            {uploadedSlots[slot.key] > 0 && <Badge className="text-[9px] uppercase bg-emerald-100 text-emerald-700 border-emerald-200">{uploadedSlots[slot.key]} enviado</Badge>}
+                          </p>
+                          {slot.hint && <p className="text-[11px] text-slate-500 mt-0.5">{slot.hint}</p>}
+                        </div>
+                      </div>
+                      <FileUploader
+                        bucket="vessel-documents"
+                        category={slot.category}
+                        vesselId={vesselId}
+                        compact
+                        onSuccess={() => bumpSlot(slot.key)}
+                      />
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* STEP 5 — Identidade */}
+          {step === 5 && (
+            <div className="space-y-3 py-3">
+              <p className="text-sm text-slate-600">Escolha como os documentos gerados serão marcados:</p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { v: "none",      title: "Sem logo",         desc: "Documentos limpos, sem cabeçalho." },
+                  { v: "company",   title: "Logo da empresa",  desc: "Usa a identidade corporativa cadastrada." },
+                  { v: "customer",  title: "Logo do cliente",  desc: "Usa a marca do cliente (se disponível)." },
+                  { v: "exclusive", title: "Logo exclusivo",   desc: "Configure um logo só para este processo." },
+                ].map((opt) => (
+                  <button
+                    key={opt.v} type="button"
+                    onClick={() => setBrandingMode(opt.v as BrandingMode)}
+                    className={`text-left p-3 rounded-xl border transition ${
+                      brandingMode === opt.v ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-slate-200 hover:border-slate-300"
+                    }`}
+                  >
+                    <p className="text-sm font-bold text-navy">{opt.title}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Preview do cabeçalho</p>
+                <div className="bg-white border border-slate-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3 pb-2 border-b border-slate-200">
+                    {brandingMode === "none" ? (
+                      <div className="h-10 w-10 rounded bg-slate-100" />
+                    ) : (
+                      <div className="h-10 w-10 rounded bg-gradient-to-br from-primary/40 to-primary/10 grid place-content-center text-primary text-xs font-black">
+                        LOGO
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm font-bold">{title || selectedType?.name || "Documento"}</p>
+                      <p className="text-[10px] text-slate-500">
+                        {brandingMode === "company" && "Empresa"}
+                        {brandingMode === "customer" && "Cliente"}
+                        {brandingMode === "exclusive" && "Exclusivo deste processo"}
+                        {brandingMode === "none" && "Sem marca"}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-3">Conteúdo do documento aqui…</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 6 — Docs a gerar */}
+          {step === 6 && (
+            <div className="space-y-4 py-3">
               {loadingPreview ? (
                 <div className="py-16 flex items-center justify-center text-slate-400">
                   <Loader2 className="h-6 w-6 animate-spin mr-2" /> Carregando modelo…
@@ -566,36 +709,9 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                     <MiniStat icon={PackageOpen} label="Opcionais" value={preview.filter((p) => p.kind === "optional").length} tone="slate" />
                     <MiniStat icon={GitBranch} label="Condicionais" value={preview.filter((p) => p.kind === "conditional").length} tone="violet" />
                   </div>
-
-                  <DocSection
-                    title="Obrigatórios"
-                    icon={ShieldCheck}
-                    tone="emerald"
-                    items={preview.filter((p) => p.kind === "mandatory")}
-                    excluded={excluded}
-                    onToggle={toggleTemplate}
-                    lockChecked
-                  />
-                  <DocSection
-                    title="Opcionais"
-                    icon={PackageOpen}
-                    tone="slate"
-                    items={preview.filter((p) => p.kind === "optional")}
-                    excluded={excluded}
-                    onToggle={toggleTemplate}
-                    emptyLabel="Sem opcionais neste modelo."
-                  />
-                  <DocSection
-                    title="Condicionais"
-                    icon={GitBranch}
-                    tone="violet"
-                    items={preview.filter((p) => p.kind === "conditional")}
-                    excluded={excluded}
-                    onToggle={toggleTemplate}
-                    emptyLabel="Sem condicionais neste modelo."
-                  />
-
-                  {/* Extras da biblioteca */}
+                  <DocSection title="Obrigatórios" icon={ShieldCheck} tone="emerald" items={preview.filter((p) => p.kind === "mandatory")} excluded={excluded} onToggle={toggleTemplate} lockChecked />
+                  <DocSection title="Opcionais" icon={PackageOpen} tone="slate" items={preview.filter((p) => p.kind === "optional")} excluded={excluded} onToggle={toggleTemplate} emptyLabel="Sem opcionais." />
+                  <DocSection title="Condicionais" icon={GitBranch} tone="violet" items={preview.filter((p) => p.kind === "conditional")} excluded={excluded} onToggle={toggleTemplate} emptyLabel="Sem condicionais." />
                   <div className="rounded-2xl border border-slate-100 p-4 bg-slate-50/40">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
@@ -610,17 +726,13 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                       <div className="mb-3">
                         <div className="relative">
                           <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
-                          <Input value={libraryQuery} onChange={(e) => searchLibrary(e.target.value)} placeholder="Buscar template por nome..." className="pl-9" />
+                          <Input value={libraryQuery} onChange={(e) => searchLibrary(e.target.value)} placeholder="Buscar template…" className="pl-9" />
                         </div>
                         {libraryResults.length > 0 && (
                           <div className="mt-2 max-h-40 overflow-y-auto rounded-lg border bg-white">
                             {libraryResults.map((t) => (
-                              <button
-                                key={t.id}
-                                type="button"
-                                onClick={() => addExtra(t)}
-                                className="w-full flex items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50 border-b last:border-b-0"
-                              >
+                              <button key={t.id} type="button" onClick={() => addExtra(t)}
+                                className="w-full flex items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50 border-b last:border-b-0">
                                 <span>{t.name}</span>
                                 <span className="text-[10px] text-slate-400 uppercase">{t.category || "geral"}</span>
                               </button>
@@ -648,60 +760,76 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
               )}
             </div>
           )}
+
+          {/* STEP 7 — Resumo */}
+          {step === 7 && (
+            <div className="space-y-3 py-3">
+              <SummaryRow label="Tipo"       value={selectedType?.name || "—"} />
+              <SummaryRow label="Título"     value={title || selectedType?.name || "—"} />
+              <SummaryRow label="Prioridade" value={priority} />
+              <SummaryRow label={isTransfer ? "Comprador" : "Cliente"} value={customers.find((c) => c.id === customerId)?.name || "—"} />
+              {isTransfer && <SummaryRow label="Vendedor" value={customers.find((c) => c.id === secondaryCustomerId)?.name || "—"} />}
+              {needsVessel && <SummaryRow label="Embarcação" value={vessels.find((v) => v.id === vesselId)?.name || "—"} />}
+              <SummaryRow label="Identidade" value={
+                brandingMode === "none" ? "Sem logo" :
+                brandingMode === "company" ? "Logo da empresa" :
+                brandingMode === "customer" ? "Logo do cliente" : "Logo exclusivo"
+              } />
+              <SummaryRow label="Uploads" value={
+                Object.values(uploadedSlots).reduce((a, b) => a + b, 0) + " arquivo(s) anexado(s)"
+              } />
+              <SummaryRow label="Documentos a gerar" value={`${selectedCount} documento(s)`} />
+              {noResidenceProof && (
+                <p className="text-[11px] text-violet-700 bg-violet-50 rounded-lg p-2 border border-violet-100">
+                  📝 Declaração de residência será gerada automaticamente.
+                </p>
+              )}
+              <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer border border-slate-100 bg-slate-50/50 p-2.5 rounded-lg mt-4">
+                <Checkbox checked={generateNow} onCheckedChange={(v) => setGenerateNow(!!v)} disabled={submitting} />
+                Gerar todos os documentos automaticamente após criar
+              </label>
+            </div>
+          )}
         </div>
 
-        <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-between border-t pt-3 mt-2 shrink-0">
-          {step === 1 ? (
-            <>
-              {onOpenAdvanced ? (
-                <Button variant="ghost" type="button" onClick={() => { onClose(); onOpenAdvanced(); }} disabled={submitting}>
-                  Criar por Upload
-                </Button>
-              ) : <div />}
-              <div className="flex gap-2">
-                <Button variant="outline" type="button" onClick={onClose} disabled={submitting}>Cancelar</Button>
-                <Button type="button" onClick={goToStep2} disabled={!selectedTypeId || !customerId || (isTransfer && !secondaryCustomerId) || loadingPreview} title={!customerId ? "Selecione um cliente" : (isTransfer && !secondaryCustomerId ? "Selecione o vendedor" : undefined)}>
-                  {loadingPreview ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
-                  Continuar <ArrowRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <Button variant="ghost" type="button" onClick={() => setStep(1)} disabled={submitting}>
+        <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-between border-t p-4 sm:p-6 shrink-0">
+          <div className="flex gap-2">
+            {step > 1 ? (
+              <Button variant="ghost" type="button" onClick={() => setStep((step - 1) as Step)} disabled={submitting}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
               </Button>
-              <div className="flex items-center gap-3 flex-wrap justify-end">
-                <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
-                  <Checkbox
-                    checked={generateNow}
-                    onCheckedChange={(v) => setGenerateNow(!!v)}
-                    disabled={submitting}
-                  />
-                  Gerar documentos após criar processo
-                </label>
-                <span className="text-xs font-bold text-slate-500">
-                  {selectedCount} no checklist
-                </span>
-                <Button type="button" onClick={handleCreate} disabled={submitting}>
-                  {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                  {generateNow && selectedCount > 0 ? `Criar e gerar ${selectedCount}` : "Criar Processo"}
-                </Button>
-              </div>
-            </>
-          )}
+            ) : onOpenAdvanced ? (
+              <Button variant="ghost" type="button" onClick={() => { onClose(); onOpenAdvanced(); }} disabled={submitting}>
+                <Upload className="h-4 w-4 mr-1" /> Modo rápido (upload solto)
+              </Button>
+            ) : <div />}
+          </div>
+          <div className="flex gap-2 items-center">
+            <Button variant="outline" type="button" onClick={onClose} disabled={submitting}>Cancelar</Button>
+            {step < 7 ? (
+              <Button type="button" onClick={() => goStep((step + 1) as Step)} disabled={!canAdvance || loadingPreview}>
+                {loadingPreview ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                Continuar <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            ) : (
+              <Button type="button" onClick={handleCreate} disabled={submitting}>
+                {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                {generateNow && selectedCount > 0 ? `Criar e gerar ${selectedCount}` : "Criar Processo"}
+              </Button>
+            )}
+          </div>
         </DialogFooter>
       </DialogContent>
 
       {/* Progresso da geração pós-criação */}
-      <Dialog open={!!genProgress} onOpenChange={() => { /* travado durante geração */ }}>
+      <Dialog open={!!genProgress} onOpenChange={() => { /* trava */ }}>
         <DialogContent className="max-w-md" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              Gerando {genProgress?.total} documento{genProgress && genProgress.total === 1 ? "" : "s"}…
+              Gerando {genProgress?.total} documento(s)…
             </DialogTitle>
-            <DialogDescription>Aguarde. Falhas não interrompem os demais.</DialogDescription>
+            <DialogDescription>Falhas não interrompem os demais.</DialogDescription>
           </DialogHeader>
           {genProgress && (
             <div className="space-y-2 py-2">
@@ -715,8 +843,8 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
         </DialogContent>
       </Dialog>
 
-      {/* Relatório pós-geração */}
-      <Dialog open={!!genReport} onOpenChange={(v) => { if (!v) { setGenReport(null); } }}>
+      {/* Relatório */}
+      <Dialog open={!!genReport} onOpenChange={(v) => { if (!v) setGenReport(null); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -752,16 +880,68 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   );
 }
 
-function StepPill({ n, label, active, done }: { n: number; label: string; active: boolean; done: boolean }) {
+/* -------------------- subcomponentes -------------------- */
+
+function StepIndicator({ step, onJump }: { step: Step; onJump: (n: Step) => void }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${
-      active ? "bg-primary text-primary-foreground border-primary" :
-      done ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-      "bg-slate-50 text-slate-400 border-slate-200"
-    }`}>
-      <span className="h-4 w-4 rounded-full bg-white/20 grid place-content-center text-[9px] font-black">{n}</span>
-      {label}
-    </span>
+    <div className="flex items-center gap-1 pt-3 overflow-x-auto">
+      {STEPS.map((s, i) => {
+        const active = s.n === step, done = s.n < step;
+        const Icon = s.icon;
+        return (
+          <div key={s.n} className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={() => done && onJump(s.n)}
+              disabled={!done}
+              className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest transition ${
+                active ? "bg-primary text-primary-foreground border-primary" :
+                done ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 cursor-pointer" :
+                "bg-slate-50 text-slate-400 border-slate-200"
+              }`}
+            >
+              <Icon className="h-3 w-3" /> {s.n}. {s.label}
+            </button>
+            {i < STEPS.length - 1 && <div className={`h-px w-3 ${done ? "bg-emerald-300" : "bg-slate-200"}`} />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CustomerPicker({
+  label, value, onChange, onCreate, options,
+}: {
+  label: string; value: string; onChange: (v: string) => void; onCreate: () => void;
+  options: CustomerRow[];
+}) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
+          {label} <span className="text-red-500">*</span>
+        </Label>
+        <button type="button" onClick={onCreate} className="text-[11px] font-bold text-primary hover:underline inline-flex items-center gap-1">
+          <Plus className="h-3 w-3" /> Novo
+        </button>
+      </div>
+      <Select value={value || ""} onValueChange={onChange}>
+        <SelectTrigger className={!value ? "border-red-300" : ""}><SelectValue placeholder={`Selecione ${label.toLowerCase()}`} /></SelectTrigger>
+        <SelectContent>
+          {options.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between text-sm border-b border-slate-100 pb-2">
+      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</span>
+      <span className="font-bold text-navy text-right">{value}</span>
+    </div>
   );
 }
 
@@ -783,18 +963,12 @@ function MiniStat({ icon: Icon, label, value, tone }: { icon: any; label: string
 function DocSection({
   title, icon: Icon, tone, items, excluded, onToggle, emptyLabel, lockChecked,
 }: {
-  title: string;
-  icon: any;
-  tone: "emerald" | "slate" | "violet";
-  items: BlueprintPreviewItem[];
-  excluded: Set<string>;
+  title: string; icon: any; tone: "emerald" | "slate" | "violet";
+  items: BlueprintPreviewItem[]; excluded: Set<string>;
   onToggle: (id: string | null) => void;
-  emptyLabel?: string;
-  lockChecked?: boolean;
+  emptyLabel?: string; lockChecked?: boolean;
 }) {
-  const border: Record<string, string> = {
-    emerald: "border-emerald-100", slate: "border-slate-100", violet: "border-violet-100",
-  };
+  const border: Record<string, string> = { emerald: "border-emerald-100", slate: "border-slate-100", violet: "border-violet-100" };
   return (
     <div className={`rounded-2xl border ${border[tone]} bg-white p-4`}>
       <div className="flex items-center gap-2 mb-3">
@@ -809,41 +983,18 @@ function DocSection({
           {items.map((it, idx) => {
             const checked = lockChecked ? true : !(it.templateId && excluded.has(it.templateId));
             return (
-              <label
-                key={(it.templateId || it.name) + idx}
+              <label key={(it.templateId || it.name) + idx}
                 className={`flex items-start gap-3 p-2.5 rounded-xl border transition cursor-pointer ${
                   checked ? "bg-slate-50 border-slate-100" : "bg-white border-slate-100 opacity-70"
-                } ${lockChecked ? "cursor-default" : "hover:border-primary/30"}`}
-              >
-                <Checkbox
-                  checked={checked}
-                  onCheckedChange={() => !lockChecked && onToggle(it.templateId)}
-                  disabled={lockChecked || !it.templateId}
-                  className="mt-0.5"
-                />
+                } ${lockChecked ? "cursor-default" : "hover:border-primary/30"}`}>
+                <Checkbox checked={checked} onCheckedChange={() => !lockChecked && onToggle(it.templateId)} disabled={lockChecked || !it.templateId} className="mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-navy">{it.name}</p>
-                  {it.ruleSummary && (
-                    <p className="text-[11px] text-violet-600 mt-0.5 line-clamp-2">
-                      Só é gerado se: {it.ruleSummary}
-                    </p>
-                  )}
+                  {it.ruleSummary && <p className="text-[11px] text-violet-600 mt-0.5 line-clamp-2">Só é gerado se: {it.ruleSummary}</p>}
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    {it.requiresSignature && (
-                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest gap-1 border-amber-200 text-amber-600">
-                        <Signature className="h-2.5 w-2.5" /> assina
-                      </Badge>
-                    )}
-                    {it.requiresOcr && (
-                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest gap-1 border-sky-200 text-sky-600">
-                        <Zap className="h-2.5 w-2.5" /> OCR
-                      </Badge>
-                    )}
-                    {!it.templateId && (
-                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-slate-200 text-slate-500">
-                        sem template
-                      </Badge>
-                    )}
+                    {it.requiresSignature && <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest gap-1 border-amber-200 text-amber-600"><Signature className="h-2.5 w-2.5" /> assina</Badge>}
+                    {it.requiresOcr && <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest gap-1 border-sky-200 text-sky-600"><Zap className="h-2.5 w-2.5" /> OCR</Badge>}
+                    {!it.templateId && <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-slate-200 text-slate-500">sem template</Badge>}
                   </div>
                 </div>
               </label>
