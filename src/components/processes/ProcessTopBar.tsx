@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ProcessActionsMenu } from "./ProcessActionsMenu";
 import { toast } from "sonner";
 import { toggleFavoriteProcess, copyShareLink } from "@/services/processLifecycle";
+import { translateTerm } from "@/lib/naval-terms";
 
 interface Props {
   process: any;
@@ -26,7 +27,7 @@ function statusLabel(status?: string | null) {
     completed: "Finalizado",
     cancelled: "Cancelado",
   };
-  return map[status ?? ""] ?? status ?? "—";
+  return map[status ?? ""] ?? translateTerm(status);
 }
 
 function dueInfo(due?: string | null) {

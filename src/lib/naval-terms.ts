@@ -4,11 +4,17 @@
 const LABELS: Record<string, string> = {
   // Status de processo
   draft: "Rascunho",
+  new: "Novo",
+  pending: "Novo",
   in_progress: "Em andamento",
-  pending: "Aguardando",
+  waiting_docs: "Aguardando documentos",
+  waiting_signature: "Aguardando assinatura",
   awaiting_signature: "Aguardando assinatura",
   awaiting_client: "Aguardando cliente",
-  completed: "Concluído",
+  review: "Em revisão",
+  ready_to_generate: "Pronto para geração",
+  protocolado: "Protocolado",
+  completed: "Finalizado",
   archived: "Arquivado",
   cancelled: "Cancelado",
   // Status de documento
@@ -19,6 +25,10 @@ const LABELS: Record<string, string> = {
   approved: "Aprovado",
   rejected: "Recusado",
   missing: "Falta enviar",
+  // Prioridade
+  high: "Alta",
+  medium: "Média",
+  low: "Baixa",
   // Papéis técnicos
   company_admin: "Gestor da empresa",
   admin_master: "Administrador Master",
@@ -35,6 +45,7 @@ const LABELS: Record<string, string> = {
   compliance: "Conformidade regulatória",
   sla: "Prazo operacional",
   protocol: "Protocolo oficial",
+  materialize: "Aplicar roteiro",
 };
 
 const HINTS: Record<string, string> = {

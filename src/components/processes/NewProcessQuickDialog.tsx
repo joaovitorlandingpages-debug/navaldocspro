@@ -409,7 +409,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
   return (
     <Dialog open={isOpen} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-3xl w-[calc(100vw-1rem)] max-h-[92vh] sm:max-h-[90vh] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:rounded-none max-sm:w-screen overflow-hidden flex flex-col p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -650,7 +650,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:justify-between border-t pt-3 mt-2">
+        <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-between border-t pt-3 mt-2 shrink-0">
           {step === 1 ? (
             <>
               {onOpenAdvanced ? (
