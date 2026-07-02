@@ -58,10 +58,12 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const [typeQuery, setTypeQuery] = useState("");
   const [selectedTypeId, setSelectedTypeId] = useState<string>("");
   const [customerId, setCustomerId] = useState<string>("");
+  const [secondaryCustomerId, setSecondaryCustomerId] = useState<string>("");
   const [vesselId, setVesselId] = useState<string>("");
   const [priority, setPriority] = useState<string>("normal");
   const [title, setTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [allowEmptyPackage, setAllowEmptyPackage] = useState(false);
 
   // Etapa 2 — documentos
   const [preview, setPreview] = useState<BlueprintPreviewItem[]>([]);
@@ -71,6 +73,10 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [libraryQuery, setLibraryQuery] = useState("");
   const [libraryResults, setLibraryResults] = useState<TemplateRow[]>([]);
+
+  const isTransfer = selectedTypeId
+    ? types.find((t) => t.id === selectedTypeId)?.name === "Transferência de Propriedade"
+    : false;
 
   useEffect(() => {
     if (!isOpen) return;
