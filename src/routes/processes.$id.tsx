@@ -50,6 +50,8 @@ import { ProcessEditForm } from "@/components/processes/ProcessEditForm";
 import { ProcessEditSheet } from "@/components/processes/ProcessEditSheet";
 import { ProcessBlueprintWorkspace } from "@/components/processes/ProcessBlueprintWorkspace";
 import { ProcessItemFocusDialog } from "@/components/processes/ProcessItemFocusDialog";
+import { NextActionCard } from "@/components/processes/NextActionCard";
+import { WhatsMissingCard } from "@/components/processes/WhatsMissingCard";
 import { Palette } from "lucide-react";
 
 const VALID_TABS = [
@@ -387,6 +389,8 @@ function ProcessDetail() {
 
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
+                  <NextActionCard processId={id} processStatus={process?.status} onOpenTab={setActiveTab} />
+                  <WhatsMissingCard processId={id} onOpenTab={setActiveTab} />
                   <ProcessBlueprintWorkspace process={process} onOpenTab={setActiveTab} onFocusItem={openFocusItem} onChanged={fetchProcess} />
                   <SignaturesStatusCard processId={id} onOpen={() => setActiveTab("signatures")} />
                   <div className="grid md:grid-cols-2 gap-6">
