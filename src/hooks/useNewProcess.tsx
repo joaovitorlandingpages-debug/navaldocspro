@@ -3,32 +3,50 @@ import { NewProcessWizard } from "@/components/NewProcessWizard";
 import { AssembleProcessWizard } from "@/components/AssembleProcessWizard";
 import { ProcessFirstWizard } from "@/components/ProcessFirstWizard";
 import { NewProcessQuickDialog } from "@/components/processes/NewProcessQuickDialog";
+import { NewProcessChooserDialog } from "@/components/processes/NewProcessChooserDialog";
+import { NewProcessUploadWizard } from "@/components/processes/NewProcessUploadWizard";
 
-const NewProcessContext = createContext<{
+interface Ctx {
   setIsNewProcessOpen: (open: boolean) => void;
   setIsAssembleProcessOpen: (open: boolean) => void;
   setIsAdvancedProcessOpen: (open: boolean) => void;
-} | undefined>(undefined);
+  openGuidedProcess: () => void;
+  openUploadProcess: () => void;
+}
+const NewProcessContext = createContext<Ctx | undefined>(undefined);
 
 export function NewProcessProvider({ children }: { children: React.ReactNode }) {
-  // "isOpen" agora aponta para o novo QuickDialog (motor inteligente).
-  // O ProcessFirstWizard vira o modo "avançado" e continua disponível.
-  const [isOpen, setIsOpen] = useState(false);
+  // Novo: o botão "Novo Processo" abre um chooser (Guiado × Upload).
+  const [chooserOpen, setChooserOpen] = useState(false);
+  const [quickOpen, setQuickOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [isFirstOpen, setIsFirstOpen] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isAssembleOpen, setIsAssembleOpen] = useState(false);
 
   return (
     <NewProcessContext.Provider value={{
-      setIsNewProcessOpen: setIsOpen,
+      setIsNewProcessOpen: setChooserOpen,
       setIsAdvancedProcessOpen: setIsFirstOpen,
       setIsAssembleProcessOpen: setIsAssembleOpen,
+      openGuidedProcess: () => setQuickOpen(true),
+      openUploadProcess: () => setUploadOpen(true),
     }}>
       {children}
+      <NewProcessChooserDialog
+        isOpen={chooserOpen}
+        onClose={() => setChooserOpen(false)}
+        onPickGuided={() => { setChooserOpen(false); setQuickOpen(true); }}
+        onPickUpload={() => { setChooserOpen(false); setUploadOpen(true); }}
+      />
       <NewProcessQuickDialog
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        isOpen={quickOpen}
+        onClose={() => setQuickOpen(false)}
         onOpenAdvanced={() => setIsFirstOpen(true)}
+      />
+      <NewProcessUploadWizard
+        isOpen={uploadOpen}
+        onClose={() => setUploadOpen(false)}
       />
       <ProcessFirstWizard isOpen={isFirstOpen} onClose={() => setIsFirstOpen(false)} />
       <NewProcessWizard isOpen={isAdvancedOpen} onClose={() => setIsAdvancedOpen(false)} />
