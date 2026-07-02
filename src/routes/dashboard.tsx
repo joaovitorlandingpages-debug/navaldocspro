@@ -223,27 +223,27 @@ function DashboardLayout() {
         )}
       </div>
 
-      <nav className="flex-grow mt-6 px-4 space-y-8 overflow-y-auto custom-scrollbar pb-10">
+      <nav className="flex-grow mt-4 px-3 space-y-5 overflow-y-auto custom-scrollbar pb-10">
         {navItems.map((group) => (
-          <div key={group.group} className="space-y-1">
-            {showLabels && <p className="px-5 mb-4 text-[10px] font-black text-white/20 uppercase tracking-[0.35em]">{group.group}</p>}
+          <div key={group.group} className="space-y-0.5">
+            {showLabels && <p className="px-3 mb-2 text-[11px] font-medium text-white/40 tracking-normal">{group.group}</p>}
             {group.items.map((item) => (
               <Link 
                 key={item.name}
                 to={item.path}
                 onClick={() => isCompact && setSidebarOpen(false)}
-
-                activeProps={{ className: "bg-primary/10 text-primary border-primary/20 shadow-[0_0_20px_rgba(37,99,235,0.1)]" }}
-                className="flex items-center gap-4 px-5 py-4 rounded-[1.5rem] hover:bg-white/5 border border-transparent transition-all group/item text-white/60 hover:text-white"
+                activeProps={{ className: "bg-white/10 text-white before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-[3px] before:rounded-r-full before:bg-primary" }}
+                className="relative flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors group/item text-white/60 hover:text-white"
               >
-                <div className="group-hover/item:scale-110 group-active/item:scale-95 transition-all duration-300">{item.icon}</div>
-                {showLabels && <span className="text-[11px] font-bold uppercase tracking-widest leading-none">{item.name}</span>}
+                <div className="shrink-0">{item.icon}</div>
+                {showLabels && <span className="text-sm font-medium leading-none">{item.name}</span>}
               </Link>
 
             ))}
           </div>
         ))}
       </nav>
+
 
       <div className="p-4 border-t border-white/5 space-y-2 bg-white/[0.02]">
          {(profile?.role === 'admin' || profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
