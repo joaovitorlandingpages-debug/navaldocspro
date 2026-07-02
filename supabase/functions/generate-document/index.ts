@@ -390,7 +390,10 @@ serve(async (req) => {
       // Em Transferência o "owner" é o comprador (Quick Dialog salva o comprador
       // como customer_id). Aliases duplos garantem placeholders de ambos os fluxos.
       const roleAlias: Record<string, string[]> = {
-        owner: ['proprietario', 'comprador', 'cliente'],
+        // Em Procuração o proprietário costuma ser o outorgante; em Transferência
+        // ele é o comprador. Aliases duplos cobrem os dois fluxos sem exigir
+        // que o usuário replique o participante em vários papéis.
+        owner: ['proprietario', 'comprador', 'cliente', 'outorgante'],
         buyer: ['comprador', 'proprietario', 'cliente'],
         seller: ['vendedor'],
         representative: ['representante'],
@@ -401,6 +404,7 @@ serve(async (req) => {
         witness: ['testemunha'],
         applicant: ['requerente'],
       }
+
 
       for (const p of (participants ?? []) as any[]) {
         const c = p.customers
@@ -451,21 +455,28 @@ serve(async (req) => {
     autoValues['sistema.hash'] = verificationCode
 
     // Procurador com fallback multinível.
+    // Prioridade: participante attorney do processo > company/tech/user (resolveProcurador).
+    // Participantes já preencheram autoValues['procurador.*'] acima via roleAlias.
     const procuradorValues = await resolveProcurador(supabaseAdmin, companyId, processId)
-    Object.assign(autoValues, procuradorValues)
+    for (const [k, v] of Object.entries(procuradorValues)) {
+      if (autoValues[k] === undefined || autoValues[k] === null || autoValues[k] === '') {
+        autoValues[k] = v
+      }
+    }
 
     // Bloqueio: templates que exigem procurador não geram sem nome+CPF.
     if (templateRequiresProcurador(template)) {
-      const nome = String((fieldValues?.procurador?.nome ?? fieldValues?.['procurador.nome'] ?? procuradorValues['procurador.nome'] ?? '')).trim()
-      const cpf = String((fieldValues?.procurador?.cpf ?? fieldValues?.['procurador.cpf'] ?? procuradorValues['procurador.cpf'] ?? '')).trim()
+      const nome = String((fieldValues?.procurador?.nome ?? fieldValues?.['procurador.nome'] ?? autoValues['procurador.nome'] ?? '')).trim()
+      const cpf = String((fieldValues?.procurador?.cpf ?? fieldValues?.['procurador.cpf'] ?? autoValues['procurador.cpf'] ?? '')).trim()
       if (!nome || !cpf) {
         throw new HttpError(422, {
           error: 'procurador_incompleto',
-          message: 'Dados do procurador incompletos. Preencha nome e CPF em Identidade Corporativa antes de gerar Procuração/Requerimento.',
+          message: 'Dados do procurador incompletos. Adicione um participante com papel "Procurador" ou preencha em Identidade Corporativa.',
           missing: [!nome && 'procurador.nome', !cpf && 'procurador.cpf'].filter(Boolean),
         })
       }
     }
+
 
     // Mescla auto + explicit (explicit tem prioridade).
     const mergedFieldValues = { ...autoValues, ...(fieldValues || {}) }
