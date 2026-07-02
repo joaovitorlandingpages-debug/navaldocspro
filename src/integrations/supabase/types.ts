@@ -744,6 +744,7 @@ export type Database = {
           billing_status: string
           brand_primary_color: string | null
           brand_secondary_color: string | null
+          city: string | null
           cnpj: string | null
           contact_address: string | null
           contact_email: string | null
@@ -783,6 +784,7 @@ export type Database = {
           responsible_name: string | null
           signature_url: string | null
           stamp_url: string | null
+          state: string | null
           suspended_at: string | null
           suspended_reason: string | null
           technical_responsible_name: string | null
@@ -798,6 +800,7 @@ export type Database = {
           billing_status?: string
           brand_primary_color?: string | null
           brand_secondary_color?: string | null
+          city?: string | null
           cnpj?: string | null
           contact_address?: string | null
           contact_email?: string | null
@@ -837,6 +840,7 @@ export type Database = {
           responsible_name?: string | null
           signature_url?: string | null
           stamp_url?: string | null
+          state?: string | null
           suspended_at?: string | null
           suspended_reason?: string | null
           technical_responsible_name?: string | null
@@ -852,6 +856,7 @@ export type Database = {
           billing_status?: string
           brand_primary_color?: string | null
           brand_secondary_color?: string | null
+          city?: string | null
           cnpj?: string | null
           contact_address?: string | null
           contact_email?: string | null
@@ -891,6 +896,7 @@ export type Database = {
           responsible_name?: string | null
           signature_url?: string | null
           stamp_url?: string | null
+          state?: string | null
           suspended_at?: string | null
           suspended_reason?: string | null
           technical_responsible_name?: string | null
@@ -4426,6 +4432,8 @@ export type Database = {
           kanban_stage: string | null
           last_accessed_at: string | null
           last_automation_run: string | null
+          location_city: string | null
+          location_state: string | null
           missing_signatures_count: number | null
           new_owner_cpf_cnpj: string | null
           new_owner_name: string | null
@@ -4484,6 +4492,8 @@ export type Database = {
           kanban_stage?: string | null
           last_accessed_at?: string | null
           last_automation_run?: string | null
+          location_city?: string | null
+          location_state?: string | null
           missing_signatures_count?: number | null
           new_owner_cpf_cnpj?: string | null
           new_owner_name?: string | null
@@ -4542,6 +4552,8 @@ export type Database = {
           kanban_stage?: string | null
           last_accessed_at?: string | null
           last_automation_run?: string | null
+          location_city?: string | null
+          location_state?: string | null
           missing_signatures_count?: number | null
           new_owner_cpf_cnpj?: string | null
           new_owner_name?: string | null
@@ -6267,66 +6279,93 @@ export type Database = {
       }
       vessels: {
         Row: {
+          activity: string | null
           boca: string | null
           capacity: string | null
           category: string | null
           company_id: string
+          construction_year: number | null
+          contorno: number | null
           created_at: string
+          crew_count: number | null
           current_owner_cpf_cnpj: string | null
           current_owner_name: string | null
           customer_id: string | null
           engine: string | null
           engine_power: string | null
           engine_serial_number: string | null
+          gross_tonnage: number | null
+          hull_color: string | null
+          hull_number: string | null
           id: string
           length: string | null
           material: string | null
           name: string
+          net_tonnage: number | null
           notes: string | null
+          passenger_capacity: number | null
           pontal: string | null
           registration_number: string | null
           updated_at: string
           vessel_type: string | null
         }
         Insert: {
+          activity?: string | null
           boca?: string | null
           capacity?: string | null
           category?: string | null
           company_id: string
+          construction_year?: number | null
+          contorno?: number | null
           created_at?: string
+          crew_count?: number | null
           current_owner_cpf_cnpj?: string | null
           current_owner_name?: string | null
           customer_id?: string | null
           engine?: string | null
           engine_power?: string | null
           engine_serial_number?: string | null
+          gross_tonnage?: number | null
+          hull_color?: string | null
+          hull_number?: string | null
           id?: string
           length?: string | null
           material?: string | null
           name: string
+          net_tonnage?: number | null
           notes?: string | null
+          passenger_capacity?: number | null
           pontal?: string | null
           registration_number?: string | null
           updated_at?: string
           vessel_type?: string | null
         }
         Update: {
+          activity?: string | null
           boca?: string | null
           capacity?: string | null
           category?: string | null
           company_id?: string
+          construction_year?: number | null
+          contorno?: number | null
           created_at?: string
+          crew_count?: number | null
           current_owner_cpf_cnpj?: string | null
           current_owner_name?: string | null
           customer_id?: string | null
           engine?: string | null
           engine_power?: string | null
           engine_serial_number?: string | null
+          gross_tonnage?: number | null
+          hull_color?: string | null
+          hull_number?: string | null
           id?: string
           length?: string | null
           material?: string | null
           name?: string
+          net_tonnage?: number | null
           notes?: string | null
+          passenger_capacity?: number | null
           pontal?: string | null
           registration_number?: string | null
           updated_at?: string
