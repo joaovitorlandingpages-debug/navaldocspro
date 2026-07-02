@@ -205,9 +205,18 @@ function ProcessDetail() {
     };
     window.addEventListener('generate-document', handleGenEvent);
 
+    const handleOpenTab = (e: any) => {
+      const detail = e?.detail ?? {};
+      if (detail.processId && detail.processId !== id) return;
+      setEditInitialTab(detail.tab || 'participantes');
+      setEditSheetOpen(true);
+    };
+    window.addEventListener('open-process-tab', handleOpenTab);
+
     return () => {
       supabase.removeChannel(channel);
       window.removeEventListener('generate-document', handleGenEvent);
+      window.removeEventListener('open-process-tab', handleOpenTab);
     };
   }, [id]);
 
