@@ -52,6 +52,8 @@ import { ProcessBlueprintWorkspace } from "@/components/processes/ProcessBluepri
 import { ProcessItemFocusDialog } from "@/components/processes/ProcessItemFocusDialog";
 import { NextActionCard } from "@/components/processes/NextActionCard";
 import { WhatsMissingCard } from "@/components/processes/WhatsMissingCard";
+import { SignatureRequestDialog } from "@/components/signatures/SignatureRequestDialog";
+import { BatchGenerationService } from "@/services/automation/batchGenerationService";
 import { Palette } from "lucide-react";
 
 const VALID_TABS = [
@@ -126,6 +128,32 @@ function ProcessDetail() {
   const { dossier, generate: generateDossier, isLoading: loadingDossier } = useDossier(id, profile?.company_id);
   const [dossierData, setDossierData] = useState<any>(null);
   const [isPreviewingDossier, setIsPreviewingDossier] = useState(false);
+  const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
+
+  const { data: pendencyChecklist = [] } = useQuery({
+    queryKey: ["process-pendencies", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("document_checklists")
+        .select("item_name,status,is_mandatory,requires_signature,document_id")
+        .eq("process_id", id);
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+  const pendingDossierItems = pendencyChecklist
+    .filter((c: any) => c.is_mandatory && !["signed","completed","attached","done"].includes((c.status ?? "").toLowerCase()))
+    .map((c: any) => c.item_name as string);
+
+  const handleGenerateAll = useCallback(async () => {
+    try {
+      await BatchGenerationService.generateAllMissing(id);
+    } catch (err: any) {
+      toast.error("Erro ao gerar documentos: " + (err?.message ?? ""));
+    }
+  }, [id]);
+
+
 
 
   const { data: complianceHistory } = useQuery({
@@ -330,14 +358,11 @@ function ProcessDetail() {
       <ProcessTopBar
         process={process}
         automationReady={automationState?.is_ready_for_generation}
+        pendingDossierItems={pendingDossierItems}
         onFinalize={async () => {
-          if (automationState?.is_ready_for_generation) {
-            toast.success("Processo finalizado com sucesso! Iniciando geração do dossiê...");
-            await generateDossier();
-            setActiveTab("dossier_v2");
-          } else {
-            toast.error("O processo não pode ser finalizado. Verifique as inconformidades no Checklist.");
-          }
+          toast.success("Processo finalizado! Iniciando geração do dossiê...");
+          await generateDossier();
+          setActiveTab("dossier_v2");
         }}
         onEdit={() => setEditSheetOpen(true)}
         onChanged={fetchProcess}
@@ -389,7 +414,14 @@ function ProcessDetail() {
 
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
-                  <NextActionCard processId={id} processStatus={process?.status} onOpenTab={setActiveTab} />
+                  <NextActionCard
+                    processId={id}
+                    processStatus={process?.status}
+                    onOpenTab={setActiveTab}
+                    onGenerateAll={handleGenerateAll}
+                    onOpenSignatureDialog={() => setSignatureDialogOpen(true)}
+                    onGenerateDossier={async () => { await generateDossier(); setActiveTab("dossier_v2"); }}
+                  />
                   <WhatsMissingCard processId={id} onOpenTab={setActiveTab} />
                   <ProcessBlueprintWorkspace process={process} onOpenTab={setActiveTab} onFocusItem={openFocusItem} onChanged={fetchProcess} />
                   <SignaturesStatusCard processId={id} onOpen={() => setActiveTab("signatures")} />
@@ -767,6 +799,17 @@ function ProcessDetail() {
         action={focusAction}
         onClose={closeFocusItem}
         onChanged={fetchProcess}
+      />
+      <SignatureRequestDialog
+        open={signatureDialogOpen}
+        onOpenChange={setSignatureDialogOpen}
+        processId={id}
+        defaultCustomerId={process?.customer_id ?? undefined}
+        defaultTitle={process?.title ? `Assinatura — ${process.title}` : undefined}
+        onCreated={() => {
+          toast.success("Solicitação de assinatura enviada.");
+          fetchProcess();
+        }}
       />
     </div>
   );

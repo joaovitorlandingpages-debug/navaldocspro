@@ -13,6 +13,7 @@ interface Props {
   automationReady?: boolean;
   onFinalize?: () => void;
   onEdit?: () => void;
+  pendingDossierItems?: string[];
 }
 
 function statusLabel(status?: string | null) {
@@ -41,7 +42,7 @@ function dueInfo(due?: string | null) {
   return { label: d.toLocaleDateString("pt-BR"), tone: "text-slate-500" };
 }
 
-export function ProcessTopBar({ process, onChanged, automationReady, onFinalize, onEdit }: Props) {
+export function ProcessTopBar({ process, onChanged, automationReady, onFinalize, onEdit, pendingDossierItems }: Props) {
   if (!process) return null;
   const due = dueInfo(process.due_date);
   const progress = Math.max(0, Math.min(100, process.completion_percentage ?? 0));
@@ -124,16 +125,27 @@ export function ProcessTopBar({ process, onChanged, automationReady, onFinalize,
               <Pencil className="h-4 w-4" /> Editar
             </Button>
           )}
-          {onFinalize && (
+          {onFinalize && automationReady && (pendingDossierItems?.length ?? 0) === 0 && (
             <Button
               size="sm"
-              className="h-9 rounded-xl gap-1.5 bg-primary text-white hover:opacity-90 disabled:opacity-50"
-              disabled={automationReady === false}
+              className="h-9 rounded-xl gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
               onClick={onFinalize}
             >
-              {automationReady ? <CheckCircle2 className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
-              Finalizar
+              <CheckCircle2 className="h-4 w-4" />
+              Concluir processo
             </Button>
+          )}
+          {onFinalize && (!automationReady || (pendingDossierItems?.length ?? 0) > 0) && (
+            <div
+              className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-xl bg-slate-100 text-slate-500 text-[11px] font-semibold max-w-[320px] truncate"
+              title={`Para gerar o dossiê falta: ${(pendingDossierItems ?? []).join(", ") || "concluir todos os documentos obrigatórios"}`}
+            >
+              <Ban className="h-4 w-4 shrink-0" />
+              <span className="truncate">
+                Falta: {(pendingDossierItems ?? []).slice(0, 2).join(", ") || "documentos pendentes"}
+                {(pendingDossierItems?.length ?? 0) > 2 ? ` +${(pendingDossierItems!.length - 2)}` : ""}
+              </span>
+            </div>
           )}
           <ProcessActionsMenu
             process={process}
