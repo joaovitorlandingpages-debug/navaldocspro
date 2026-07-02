@@ -27,7 +27,7 @@ function statusLabel(status?: string | null) {
     completed: "Finalizado",
     cancelled: "Cancelado",
   };
-  return map[status ?? ""] ?? status ?? "—";
+  return map[status ?? ""] ?? translateTerm(status);
 }
 
 function dueInfo(due?: string | null) {
