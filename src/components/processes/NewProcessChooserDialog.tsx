@@ -64,15 +64,16 @@ export function NewProcessChooserDialog({ isOpen, onClose, onPickGuided, onPickU
               </div>
               <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-primary transition-colors" />
             </div>
-            <div className="text-base font-black text-slate-900">Criar por Upload</div>
+            <div className="text-base font-black text-slate-900">Modo Rápido <span className="text-[10px] text-slate-400 uppercase ml-1">upload solto</span></div>
             <div className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Envie os documentos do cliente. A IA identifica o tipo, extrai os
-              dados e monta o processo com base no que foi enviado.
+              Já tem todos os PDFs em mãos? Jogue tudo aqui e a IA tenta
+              classificar. Use quando quiser velocidade e não precisar de
+              passo a passo.
             </div>
             <ul className="text-[11px] text-slate-500 mt-3 space-y-1 list-disc pl-4">
               <li>Até 20 arquivos por lote</li>
-              <li><ScanText className="inline h-3 w-3 -mt-0.5" /> Classificação automática (com override)</li>
-              <li>Cria cliente/embarcação inline</li>
+              <li><ScanText className="inline h-3 w-3 -mt-0.5" /> Classificação automática</li>
+              <li>Sem checklist condicional</li>
             </ul>
           </button>
         </div>
