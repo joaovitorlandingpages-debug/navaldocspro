@@ -100,6 +100,13 @@ function Processes() {
     return () => clearTimeout(debounceTimer);
   }, [fetchProcesses]);
 
+  // Refetch imediato quando um processo é criado/alterado em qualquer lugar do app.
+  useEffect(() => {
+    const handler = () => { fetchProcesses(); };
+    window.addEventListener("processes:changed", handler);
+    return () => window.removeEventListener("processes:changed", handler);
+  }, [fetchProcesses]);
+
 
   const columns = [
     { id: "pending", title: "Novo", color: "bg-red-500" },
