@@ -23,6 +23,7 @@ import {
   ChevronDown, Check, Users,
 } from "lucide-react";
 import { BR_UFS, maskCpfCnpj, maskPhone, daysUntil } from "@/lib/br-format";
+import { ProcessParticipantsTab } from "./ProcessParticipantsTab";
 
 interface Props {
   process: any;
