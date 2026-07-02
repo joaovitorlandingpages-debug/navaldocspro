@@ -115,6 +115,7 @@ function ProcessDetail() {
   }, [id, navigate]);
   const [selectedTemplateForGen, setSelectedTemplateForGen] = useState<any | null>(null);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
+  const [editInitialTab, setEditInitialTab] = useState<string | undefined>(undefined);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   
