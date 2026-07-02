@@ -30,9 +30,11 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { uploadToBucket, validateUpload } from "@/lib/storage";
 import { materializeProcessBlueprint } from "@/services/processes/blueprintEngine";
 import { limitsEngine } from "@/services/limitsEngine";
+import { confirmProcessVisible, notifyProcessesChanged } from "@/services/processes/processCreation";
 
 interface Props {
   isOpen: boolean;
@@ -141,6 +143,7 @@ async function pollOcrJob(jobId: string, timeoutMs = 45000): Promise<{ document_
 export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const { checkLimit } = usePlanLimits();
 
   const [step, setStep] = useState<Step>(1);
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -158,6 +161,7 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
   const [customerId, setCustomerId] = useState<string>("");
   const [vesselId, setVesselId] = useState<string>("");
   const [title, setTitle] = useState("");
+  const [useCompanyLogo, setUseCompanyLogo] = useState(true);
 
   // Sugestões extraídas do OCR (para criar inline).
   const [suggestedCustomer, setSuggestedCustomer] = useState<{ name?: string; cpf?: string } | null>(null);
@@ -173,6 +177,7 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
       setCustomerId("");
       setVesselId("");
       setTitle("");
+      setUseCompanyLogo(true);
       setSuggestedCustomer(null);
       setSuggestedVessel(null);
       sessionId.current = crypto.randomUUID();
@@ -262,8 +267,6 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
           return;
         }
         uploadedFileId = (uf as any).id;
-        try { await limitsEngine.consume("upload_file", 1, { file_id: uploadedFileId }, uploadedFileId, profile.company_id); } catch {}
-
         const { data: job, error: jobErr } = await supabase.from("ocr_jobs").insert({
           company_id: profile.company_id,
           uploaded_file_id: uploadedFileId,
@@ -275,7 +278,6 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
           return;
         }
         ocrJobId = (job as any).id;
-        try { await limitsEngine.consume("ocr", 1, { job_id: ocrJobId }, ocrJobId, profile.company_id); } catch {}
         updateFile(item.localId, { uploadedFileId, ocrJobId, storagePath });
       }
 
@@ -330,14 +332,12 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
     if (files.length === 0) { toast.error("Adicione pelo menos 1 arquivo."); return; }
     setProcessing(true);
     try {
-      const okUp = await limitsEngine.enforce("upload_file", files.length, profile.company_id);
-      if (!okUp) throw new Error("Limite de uploads atingido para o plano atual.");
-      const okOcr = await limitsEngine.enforce("ocr", files.length, profile.company_id);
-      if (!okOcr) {
+      const ocrLimit = await limitsEngine.check("ocr", files.length, profile.company_id);
+      if (!ocrLimit.allowed) {
         setFiles((prev) => prev.map((f) => f.status === "queued"
           ? { ...f, status: "error", failReason: "usage_limit", errorMsg: "Limite de OCR atingido — classifique manualmente.", docType: f.docType || "GENERIC" }
           : f));
-        toast.warning("Limite de OCR atingido. Você pode classificar os arquivos manualmente e continuar.");
+        toast.warning("Limite de OCR atingido. Você pode criar o processo sem OCR e classificar os arquivos manualmente.");
         return;
       }
 
@@ -381,6 +381,13 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
     updateFile(id, { status: "manual", errorMsg: undefined, docType: files.find(f => f.localId === id)?.docType || "GENERIC" });
   }
 
+  function skipOcrAndReview() {
+    if (files.length === 0) { toast.error("Adicione pelo menos 1 arquivo."); return; }
+    setFiles((prev) => prev.map((f) => ({ ...f, status: "manual", errorMsg: undefined, failReason: undefined, docType: f.docType || "GENERIC" })));
+    setProcessing(false);
+    setStep(3);
+  }
+
 
   async function createCustomerInline(payload: {
     name: string; cpf_cnpj?: string | null; phone?: string | null;
@@ -420,6 +427,14 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
 
     setSubmitting(true);
     try {
+      const limit = await checkLimit("processes");
+      if (limit.reached) {
+        toast.error("Limite de processos ativos atingido.", {
+          description: `Ativos visíveis: ${limit.current}/${limit.limit ?? "ilimitado"}. Arquivados, lixeira e rascunhos não contam.`,
+        });
+        return;
+      }
+
       const { data: pdata, error: pErr } = await supabase.from("processes").insert({
         company_id: profile.company_id,
         process_type: type.name,
@@ -429,9 +444,20 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
         title: title.trim() || type.name,
         priority: "normal",
         status: "pending",
+        is_draft: false,
+        archived_at: null,
+        trashed_at: null,
+        deleted_at: null,
+        branding_mode: useCompanyLogo ? "company" : "none",
       } as any).select("id").single();
       if (pErr || !pdata) throw new Error(pErr?.message || "Erro ao criar processo");
       const processId = (pdata as any).id as string;
+
+      const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
+      notifyProcessesChanged(visibleProcess);
+      onClose();
+      navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "overview" } });
+      toast.success("Processo criado e confirmado na lista.");
 
       // Materializa blueprint.
       try {
@@ -440,8 +466,34 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
         console.warn("Blueprint falhou (não bloqueia):", e);
       }
 
-      // Vincula uploads ao processo.
+      // Vincula uploads ao processo. Arquivos sem OCR são enviados somente depois
+      // do processo estar confirmado como visível, para não prender a criação.
       const uploadedIds = files.map((f) => f.uploadedFileId).filter(Boolean) as string[];
+      const notUploaded = files.filter((f) => !f.uploadedFileId);
+      for (const item of notUploaded) {
+        try {
+          const ext = item.file.name.split(".").pop() || "bin";
+          const storagePath = `${profile.company_id}/${processId}/${item.localId}.${ext}`;
+          await uploadToBucket("process-document-uploads", storagePath, item.file);
+          const { data: uf, error: ufErr } = await supabase.from("uploaded_files").insert({
+            company_id: profile.company_id,
+            process_id: processId,
+            customer_id: customerId,
+            vessel_id: vesselId || null,
+            uploaded_by: profile.id,
+            file_name: item.file.name,
+            file_type: item.file.type,
+            file_size: item.file.size,
+            file_url: storagePath,
+            category: "process-upload",
+            status: "uploaded",
+          }).select("id").single();
+          if (ufErr || !uf) throw new Error(ufErr?.message || "Falha ao registrar arquivo");
+          uploadedIds.push((uf as any).id);
+        } catch (e) {
+          console.warn("Upload pós-criação falhou (não bloqueia processo):", item.file.name, e);
+        }
+      }
       if (uploadedIds.length > 0) {
         await supabase.from("uploaded_files")
           .update({ process_id: processId, customer_id: customerId, vessel_id: vesselId || null })
@@ -473,10 +525,6 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
         console.warn("Auto-attach falhou:", e);
       }
 
-      try { window.dispatchEvent(new CustomEvent("processes:changed", { detail: { id: processId } })); } catch {}
-      toast.success("Processo criado a partir dos uploads.");
-      onClose();
-      navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "overview" } });
     } catch (e: any) {
       toast.error(e?.message || "Erro ao criar processo");
     } finally {
@@ -728,6 +776,16 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
                 <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Título (opcional)</Label>
                 <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex.: Renovação TIE — Barco Vênus" />
               </div>
+
+                <label className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-3 text-xs font-bold text-slate-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useCompanyLogo}
+                    onChange={(e) => setUseCompanyLogo(e.target.checked)}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  Usar logo/identidade da empresa nos documentos deste processo
+                </label>
             </div>
           )}
         </div>
@@ -756,6 +814,13 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
                 >
                   <ScanText className="h-4 w-4 mr-1" /> Analisar com IA
                   <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={skipOcrAndReview}
+                  disabled={files.length === 0 || processing}
+                >
+                  Criar processo sem OCR
                 </Button>
               </>
             )}

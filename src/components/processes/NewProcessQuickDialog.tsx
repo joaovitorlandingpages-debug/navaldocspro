@@ -27,6 +27,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 import {
   materializeProcessBlueprint,
   previewProcessBlueprint,
@@ -34,6 +35,7 @@ import {
 } from "@/services/processes/blueprintEngine";
 import { batchGenerate, type BatchReport, type ChecklistLite } from "@/services/processes/batchChecklistActions";
 import { Progress } from "@/components/ui/progress";
+import { confirmProcessVisible, notifyProcessesChanged } from "@/services/processes/processCreation";
 
 interface Props {
   isOpen: boolean;
@@ -51,6 +53,7 @@ type Step = 1 | 2;
 export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props) {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const { checkLimit } = usePlanLimits();
 
   const [step, setStep] = useState<Step>(1);
 
@@ -77,7 +80,8 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const [libraryResults, setLibraryResults] = useState<TemplateRow[]>([]);
 
   // Geração automática pós-criação
-  const [generateNow, setGenerateNow] = useState(true);
+  const [generateNow, setGenerateNow] = useState(false);
+  const [useCompanyLogo, setUseCompanyLogo] = useState(true);
   const [genProgress, setGenProgress] = useState<{ done: number; total: number; current: string } | null>(null);
   const [genReport, setGenReport] = useState<BatchReport | null>(null);
   const [createdProcessId, setCreatedProcessId] = useState<string | null>(null);
@@ -117,7 +121,8 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setLibraryQuery("");
       setLibraryResults([]);
       setAllowEmptyPackage(false);
-      setGenerateNow(true);
+      setGenerateNow(false);
+      setUseCompanyLogo(true);
       setGenProgress(null);
       setGenReport(null);
       setCreatedProcessId(null);
@@ -305,6 +310,14 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     }
     setSubmitting(true);
     try {
+      const limit = await checkLimit("processes");
+      if (limit.reached) {
+        toast.error("Limite de processos ativos atingido.", {
+          description: `Ativos visíveis: ${limit.current}/${limit.limit ?? "ilimitado"}. Arquivados, lixeira e rascunhos não contam.`,
+        });
+        return;
+      }
+
       const { data, error } = await supabase
         .from("processes")
         .insert({
@@ -317,10 +330,21 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
           title: title.trim() || selectedType.name,
           priority,
           status: "pending",
+          is_draft: false,
+          archived_at: null,
+          trashed_at: null,
+          deleted_at: null,
+          branding_mode: useCompanyLogo ? "company" : "none",
         } as any)
         .select("id").single();
       if (error) throw error;
       const processId = (data as any).id as string;
+      const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
+
+      notifyProcessesChanged(visibleProcess);
+      setCreatedProcessId(processId);
+      onClose();
+      navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "overview" } });
 
       let blueprintWarning = false;
       try {
@@ -334,16 +358,11 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
         blueprintWarning = true;
       }
 
-      // Notifica listas abertas (/processes, dashboards) para refetch imediato.
-      try { window.dispatchEvent(new CustomEvent("processes:changed", { detail: { id: processId } })); } catch {}
-
       if (blueprintWarning) {
         toast.warning("Processo criado, mas o checklist automático falhou. Você pode adicionar documentos manualmente no workspace.");
       } else {
-        toast.success(`Processo criado com ${selectedCount} documento(s) no checklist.`);
+        toast.success(`Processo criado e confirmado na lista com ${selectedCount} documento(s) no checklist.`);
       }
-      setCreatedProcessId(processId);
-
 
       // Gerar agora? Dispara batch com base no checklist recém-materializado.
       if (generateNow && selectedCount > 0) {
@@ -365,7 +384,6 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
             });
             setGenReport(rep);
             setGenProgress(null);
-            // Não fecha — usuário decide "abrir workspace" no relatório
             return;
           }
         } catch (e) {
@@ -373,8 +391,6 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
         }
       }
 
-      onClose();
-      navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "overview" } });
     } catch (e: any) {
       toast.error("Erro ao criar processo: " + (e?.message || e));
     } finally {
@@ -529,6 +545,11 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                   </Select>
                 </div>
               </div>
+
+              <label className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-3 text-xs font-bold text-slate-600 cursor-pointer">
+                <Checkbox checked={useCompanyLogo} onCheckedChange={(v) => setUseCompanyLogo(!!v)} />
+                Usar logo/identidade da empresa nos documentos deste processo
+              </label>
             </div>
           ) : (
             <div className="space-y-4 py-2">

@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
 import { ProcessActionsMenu } from "@/components/processes/ProcessActionsMenu";
 import { ProcessEditSheet } from "@/components/processes/ProcessEditSheet";
+import type { VisibleProcessRow } from "@/services/processes/processCreation";
 
 export const Route = createFileRoute("/processes")({
   component: Processes,
@@ -65,7 +66,8 @@ function Processes() {
         .eq('company_id', profile.company_id)
         .is('deleted_at', null)
         .is('archived_at', null)
-        .is('trashed_at', null);
+        .is('trashed_at', null)
+        .or('is_draft.is.null,is_draft.eq.false');
 
       if (searchTerm) {
         const term = `%${searchTerm}%`;
@@ -102,7 +104,18 @@ function Processes() {
 
   // Refetch imediato quando um processo é criado/alterado em qualquer lugar do app.
   useEffect(() => {
-    const handler = () => { fetchProcesses(); };
+    const handler = (event: Event) => {
+      const process = (event as CustomEvent<{ process?: VisibleProcessRow }>).detail?.process;
+      if (process?.id) {
+        setProcesses((prev) => {
+          const existed = prev.some((p) => p.id === process.id);
+          const next = [process, ...prev.filter((p) => p.id !== process.id)];
+          if (!existed) setTotalCount((count) => Math.max(count + 1, next.length));
+          return next.slice(0, pageSize);
+        });
+      }
+      fetchProcesses();
+    };
     window.addEventListener("processes:changed", handler);
     return () => window.removeEventListener("processes:changed", handler);
   }, [fetchProcesses]);
