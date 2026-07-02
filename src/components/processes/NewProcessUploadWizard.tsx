@@ -497,7 +497,7 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
             {step === 1
               ? `Arraste ou selecione até ${MAX_FILES} arquivos (PDF ou imagem). A IA classifica cada um e extrai os dados.`
               : step === 2
-                ? "Aguarde enquanto os arquivos são enviados e analisados pela IA."
+                ? "Estamos analisando os arquivos. Você pode continuar manualmente se algum OCR falhar."
                 : "Confirme o tipo detectado de cada documento, o tipo do processo, o cliente e a embarcação."}
           </DialogDescription>
           <div className="flex items-center gap-2 pt-2 text-[10px] font-black uppercase tracking-widest">
