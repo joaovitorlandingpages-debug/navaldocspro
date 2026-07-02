@@ -352,18 +352,23 @@ serve(async (req) => {
     let processNumber: string | undefined
     let resolvedCustomerId = customerId as string | undefined
     let resolvedVesselId = vesselId as string | undefined
+    let processLocation: { city?: string | null; state?: string | null } = {}
     if (processId) {
       const { data: proc } = await supabaseAdmin
-        .from('processes').select('process_number, protocol_number, customer_id, vessel_id')
+        .from('processes')
+        .select('process_number, protocol_number, customer_id, vessel_id, location_city, location_state')
         .eq('id', processId).maybeSingle()
       processNumber = proc?.process_number || proc?.protocol_number || undefined
       resolvedCustomerId = resolvedCustomerId || proc?.customer_id
       resolvedVesselId = resolvedVesselId || proc?.vessel_id
+      processLocation = { city: proc?.location_city, state: proc?.location_state }
     }
 
     // Auto-carrega dados canônicos para preencher placeholders quando o
     // caller (ex.: batchGenerate) não envia fieldValues detalhados.
     const autoValues: Record<string, any> = {}
+    let ownerCity: string | undefined
+    let ownerState: string | undefined
     if (resolvedCustomerId) {
       const { data: c } = await supabaseAdmin.from('customers')
         .select('name, cpf_cnpj, rg, address, city, state, phone, email')
@@ -377,18 +382,20 @@ serve(async (req) => {
         autoValues['cliente.estado'] = c.state
         autoValues['cliente.telefone'] = c.phone
         autoValues['cliente.email'] = c.email
+        ownerCity = c.city ?? undefined
+        ownerState = c.state ?? undefined
       }
     }
 
     // Participantes do processo (multi-parte). Roles: owner, buyer, seller,
     // representative, attorney, engineer, technician, witness, applicant, grantor.
+    const witnesses: any[] = []
     if (processId) {
       const { data: participants } = await supabaseAdmin
         .from('process_participants')
-        .select('role, customers:customer_id(name, cpf_cnpj, rg, address, city, state, phone, email)')
+        .select('role, created_at, customers:customer_id(name, cpf_cnpj, rg, address, city, state, phone, email)')
         .eq('process_id', processId)
-      // Em Transferência o "owner" é o comprador (Quick Dialog salva o comprador
-      // como customer_id). Aliases duplos garantem placeholders de ambos os fluxos.
+        .order('created_at', { ascending: true })
       const roleAlias: Record<string, string[]> = {
         // Em Procuração o proprietário costuma ser o outorgante; em Transferência
         // ele é o comprador. Aliases duplos cobrem os dois fluxos sem exigir
@@ -405,10 +412,14 @@ serve(async (req) => {
         applicant: ['requerente'],
       }
 
-
       for (const p of (participants ?? []) as any[]) {
         const c = p.customers
         if (!c) continue
+        if (p.role === 'witness') witnesses.push(c)
+        if (p.role === 'owner' || p.role === 'buyer') {
+          ownerCity = ownerCity || c.city
+          ownerState = ownerState || c.state
+        }
         const aliases = roleAlias[p.role] ?? [p.role]
         for (const a of aliases) {
           autoValues[`${a}.nome`] ??= c.name
@@ -421,38 +432,72 @@ serve(async (req) => {
           autoValues[`${a}.email`] ??= c.email
         }
       }
+
+      // Testemunhas numeradas (testemunha_1.*, testemunha_2.*, testemunha_3.*).
+      witnesses.slice(0, 3).forEach((w, i) => {
+        const k = `testemunha_${i + 1}`
+        autoValues[`${k}.nome`] = w.name
+        autoValues[`${k}.cpf`] = w.cpf_cnpj
+        autoValues[`${k}.rg`] = w.rg
+        autoValues[`${k}.endereco`] = w.address
+        autoValues[`${k}.cidade`] = w.city
+        autoValues[`${k}.estado`] = w.state
+      })
     }
     if (resolvedVesselId) {
       const { data: v } = await supabaseAdmin.from('vessels')
-        .select('name, registration_number, vessel_type, hull_material, length, beam, depth, capacity, engine_brand, engine_model, engine_power, engine_serial')
+        .select('name, registration_number, vessel_type, material, length, boca, pontal, contorno, capacity, passenger_capacity, crew_count, activity, hull_color, hull_number, construction_year, gross_tonnage, net_tonnage, engine, engine_power, engine_serial_number')
         .eq('id', resolvedVesselId).maybeSingle()
       if (v) {
         autoValues['embarcacao.nome'] = v.name
         autoValues['embarcacao.inscricao'] = v.registration_number
         autoValues['embarcacao.tipo'] = v.vessel_type
-        autoValues['embarcacao.material'] = v.hull_material
+        autoValues['embarcacao.material'] = v.material
         autoValues['embarcacao.comprimento'] = v.length
-        autoValues['embarcacao.boca'] = v.beam
-        autoValues['embarcacao.pontal'] = v.depth
+        autoValues['embarcacao.boca'] = v.boca
+        autoValues['embarcacao.pontal'] = v.pontal
+        autoValues['embarcacao.contorno'] = v.contorno
         autoValues['embarcacao.capacidade'] = v.capacity
-        autoValues['motor.fabricante'] = v.engine_brand
-        autoValues['motor.modelo'] = v.engine_model
+        autoValues['embarcacao.capacidade_passageiros'] = v.passenger_capacity
+        autoValues['embarcacao.tripulantes'] = v.crew_count
+        autoValues['embarcacao.atividade'] = v.activity
+        autoValues['embarcacao.cor_casco'] = v.hull_color
+        autoValues['embarcacao.numero_casco'] = v.hull_number
+        autoValues['embarcacao.ano_construcao'] = v.construction_year
+        autoValues['embarcacao.arqueacao_bruta'] = v.gross_tonnage
+        autoValues['embarcacao.arqueacao_liquida'] = v.net_tonnage
+        autoValues['motor.fabricante'] = v.engine
         autoValues['motor.potencia'] = v.engine_power
-        autoValues['motor.serie'] = v.engine_serial
+        autoValues['motor.serie'] = v.engine_serial_number
       }
     }
+    let companyCity: string | undefined
+    let companyState: string | undefined
     if (companyId) {
       const { data: co } = await supabaseAdmin.from('companies')
-        .select('name, cnpj').eq('id', companyId).maybeSingle()
+        .select('name, cnpj, city, state, contact_address')
+        .eq('id', companyId).maybeSingle()
       if (co) {
         autoValues['empresa.nome'] = co.name
         autoValues['empresa.cnpj'] = co.cnpj
+        companyCity = co.city ?? undefined
+        companyState = co.state ?? undefined
       }
     }
     autoValues['processo.numero'] = processNumber
     autoValues['sistema.data_atual'] = new Date().toLocaleDateString('pt-BR')
-    autoValues['sistema.local'] = branding.contact_address || 'Brasil'
+
+    // sistema.local: cidade/UF do processo > empresa > cliente > fallback.
+    const formatLoc = (city?: string | null, state?: string | null) =>
+      [city, state].filter(Boolean).join('/') || undefined
+    autoValues['sistema.local'] =
+      formatLoc(processLocation.city, processLocation.state) ||
+      formatLoc(companyCity, companyState) ||
+      formatLoc(ownerCity, ownerState) ||
+      branding.contact_address ||
+      '[LOCAL PENDENTE]'
     autoValues['sistema.hash'] = verificationCode
+
 
     // Procurador com fallback multinível.
     // Prioridade: participante attorney do processo > company/tech/user (resolveProcurador).
@@ -480,6 +525,42 @@ serve(async (req) => {
 
     // Mescla auto + explicit (explicit tem prioridade).
     const mergedFieldValues = { ...autoValues, ...(fieldValues || {}) }
+
+    // Validação: bloqueia geração se placeholders CRÍTICOS ficarem vazios.
+    // Critérios: só bloqueia placeholders que EXISTEM no template e estão na
+    // lista de campos essenciais (identidade dos protagonistas + embarcação).
+    if (template.base_content) {
+      const CRITICAL: Record<string, { label: string; where: string; tab: string }> = {
+        'proprietario.nome': { label: 'Nome do proprietário', where: 'Aba Participantes → adicionar Proprietário', tab: 'participants' },
+        'comprador.nome':    { label: 'Nome do comprador',    where: 'Aba Participantes → adicionar Comprador',    tab: 'participants' },
+        'vendedor.nome':     { label: 'Nome do vendedor',     where: 'Aba Participantes → adicionar Vendedor',     tab: 'participants' },
+        'cliente.nome':      { label: 'Nome do cliente',      where: 'Aba Participantes → adicionar Proprietário', tab: 'participants' },
+        'outorgante.nome':   { label: 'Nome do outorgante',   where: 'Aba Participantes → adicionar Outorgante ou Proprietário', tab: 'participants' },
+        'embarcacao.nome':   { label: 'Nome da embarcação',   where: 'Aba Geral → selecionar embarcação',          tab: 'general' },
+        'embarcacao.inscricao': { label: 'Inscrição da embarcação', where: 'Cadastro da embarcação → registration_number', tab: 'general' },
+      }
+      const referenced = new Set<string>()
+      const re = /\{\{\s*([a-z0-9_.]+)\s*\}\}/gi
+      let m: RegExpExecArray | null
+      while ((m = re.exec(template.base_content)) !== null) referenced.add(m[1].toLowerCase())
+      const missing: Array<{ key: string; label: string; where: string; tab: string }> = []
+      for (const key of referenced) {
+        if (!CRITICAL[key]) continue
+        const v = mergedFieldValues[key]
+        if (v === undefined || v === null || String(v).trim() === '') {
+          missing.push({ key, ...CRITICAL[key] })
+        }
+      }
+      if (missing.length > 0) {
+        throw new HttpError(422, {
+          error: 'placeholder_incompleto',
+          message: `Não é possível gerar: ${missing.length} campo(s) crítico(s) pendente(s).`,
+          missing,
+        })
+      }
+    }
+
+
 
     let finalBuffer: ArrayBuffer
     let contentType: string
