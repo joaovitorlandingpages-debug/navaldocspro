@@ -420,7 +420,7 @@ function Processes() {
                     <div className="text-[9px] text-primary font-mono font-black uppercase">PROC-{p.id.substring(0, 6)}</div>
                   </div>
                   <Badge className="shrink-0 text-[7px] font-black uppercase tracking-widest bg-primary/10 text-primary border-none">
-                    {columns.find(c => c.id === p.status)?.title || p.status}
+                    {columns.find(c => c.id === p.status)?.title || translateTerm(p.status)}
                   </Badge>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 mb-2">
