@@ -414,7 +414,14 @@ function ProcessDetail() {
 
 
                <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
-                  <NextActionCard processId={id} processStatus={process?.status} onOpenTab={setActiveTab} />
+                  <NextActionCard
+                    processId={id}
+                    processStatus={process?.status}
+                    onOpenTab={setActiveTab}
+                    onGenerateAll={handleGenerateAll}
+                    onOpenSignatureDialog={() => setSignatureDialogOpen(true)}
+                    onGenerateDossier={async () => { await generateDossier(); setActiveTab("dossier_v2"); }}
+                  />
                   <WhatsMissingCard processId={id} onOpenTab={setActiveTab} />
                   <ProcessBlueprintWorkspace process={process} onOpenTab={setActiveTab} onFocusItem={openFocusItem} onChanged={fetchProcess} />
                   <SignaturesStatusCard processId={id} onOpen={() => setActiveTab("signatures")} />
