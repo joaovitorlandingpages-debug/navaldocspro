@@ -5,14 +5,16 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Radius escala 8pt */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
-  
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -32,76 +34,85 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  
+
   --color-navy: var(--navy);
   --color-ocean: var(--ocean);
   --color-anchor: var(--anchor);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
 }
 
 :root {
-  --radius: 0.5rem;
-  
-  /* Palette Naval Premium Enterprise - Refined */
-  --background: oklch(0.99 0.005 240);
-  --foreground: oklch(0.20 0.04 250);
-  
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.25 0.04 250);
-  
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0.04 250);
-  
-  /* Navy Blue Primary */
-  --primary: oklch(0.28 0.05 256);
-  --primary-foreground: oklch(0.98 0.01 240);
-  
-  --secondary: oklch(0.94 0.02 240);
-  --secondary-foreground: oklch(0.28 0.05 256);
-  
-  --muted: oklch(0.94 0.02 240);
-  --muted-foreground: oklch(0.45 0.04 250);
-  
-  --accent: oklch(0.94 0.02 240);
-  --accent-foreground: oklch(0.28 0.05 256);
-  
-  --destructive: oklch(0.6 0.18 25);
-  --destructive-foreground: oklch(0.98 0.01 240);
-  
-  --border: oklch(0.9 0.02 240);
-  --input: oklch(0.9 0.02 240);
-  --ring: oklch(0.28 0.05 256);
+  /* Naval Clarity — radius base 10px (rounded-lg) */
+  --radius: 0.625rem;
 
-  /* Custom Naval Colors */
-  --navy: oklch(0.2 0.04 255);
-  --ocean: oklch(0.45 0.12 230);
-  --anchor: oklch(0.6 0.05 240);
+  /* Surfaces */
+  --background: oklch(0.985 0.004 240);
+  --foreground: oklch(0.22 0.04 255);
+
+  --surface: oklch(1 0 0);
+  --surface-muted: oklch(0.965 0.006 240);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.04 255);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.04 255);
+
+  /* Navy Primary */
+  --primary: oklch(0.28 0.06 256);
+  --primary-foreground: oklch(0.985 0.004 240);
+
+  --secondary: oklch(0.955 0.01 240);
+  --secondary-foreground: oklch(0.28 0.06 256);
+
+  --muted: oklch(0.955 0.01 240);
+  --muted-foreground: oklch(0.5 0.03 250);
+
+  --accent: oklch(0.94 0.03 230);
+  --accent-foreground: oklch(0.28 0.06 256);
+
+  --destructive: oklch(0.6 0.19 27);
+  --destructive-foreground: oklch(0.985 0.004 240);
+
+  --border: oklch(0.92 0.01 240);
+  --input: oklch(0.92 0.01 240);
+  --ring: oklch(0.45 0.12 230);
+
+  /* Naval tokens */
+  --navy: oklch(0.22 0.05 256);
+  --ocean: oklch(0.5 0.13 230);
+  --anchor: oklch(0.58 0.04 245);
 }
 
 .dark {
-  --background: oklch(0.18 0.03 260);
-  --foreground: oklch(0.95 0.01 240);
-  
-  --card: oklch(0.22 0.03 260);
-  --card-foreground: oklch(0.95 0.01 240);
-  
-  --popover: oklch(0.22 0.03 260);
-  --popover-foreground: oklch(0.95 0.01 240);
-  
-  --primary: oklch(0.95 0.01 240);
-  --primary-foreground: oklch(0.18 0.03 260);
-  
-  --secondary: oklch(0.28 0.04 260);
-  --secondary-foreground: oklch(0.95 0.01 240);
-  
-  --muted: oklch(0.28 0.04 260);
+  --background: oklch(0.17 0.03 260);
+  --foreground: oklch(0.96 0.008 240);
+
+  --surface: oklch(0.21 0.03 260);
+  --surface-muted: oklch(0.24 0.03 260);
+
+  --card: oklch(0.21 0.03 260);
+  --card-foreground: oklch(0.96 0.008 240);
+
+  --popover: oklch(0.21 0.03 260);
+  --popover-foreground: oklch(0.96 0.008 240);
+
+  --primary: oklch(0.96 0.008 240);
+  --primary-foreground: oklch(0.17 0.03 260);
+
+  --secondary: oklch(0.27 0.03 260);
+  --secondary-foreground: oklch(0.96 0.008 240);
+
+  --muted: oklch(0.27 0.03 260);
   --muted-foreground: oklch(0.7 0.02 240);
-  
-  --accent: oklch(0.28 0.04 260);
-  --accent-foreground: oklch(0.95 0.01 240);
-  
+
+  --accent: oklch(0.27 0.03 260);
+  --accent-foreground: oklch(0.96 0.008 240);
+
   --border: oklch(0.3 0.03 260);
   --input: oklch(0.3 0.03 260);
-  --ring: oklch(0.95 0.01 240);
+  --ring: oklch(0.6 0.12 230);
 }
 
 @layer base {
@@ -113,15 +124,22 @@
     margin: 0;
     padding: 0;
     width: 100%;
-    /* Removido position: fixed e overflow: hidden para permitir scroll natural do navegador em dispositivos móveis */
   }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;
     overflow-x: hidden;
+    letter-spacing: -0.005em;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+    font-weight: 600;
   }
 }
 
@@ -135,98 +153,60 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* Enterprise Polish Classes */
+/* Compat: utilitários legados mantidos, mas simplificados para não brigar com o novo baseline */
 .enterprise-glass {
-  @apply backdrop-blur-md bg-white/70 border border-white/20 shadow-xl shadow-navy/5;
+  @apply bg-card border border-border shadow-sm;
 }
-
 .enterprise-hover {
-  @apply transition-all duration-500 hover:scale-[1.01] hover:shadow-2xl hover:shadow-primary/10;
+  @apply transition-all duration-200 hover:shadow-md;
 }
-
 .premium-gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-navy via-primary to-ocean;
+  @apply text-navy;
 }
-
 .nav-item-active {
-  @apply bg-primary/10 text-primary border-primary/20 shadow-[0_0_20px_rgba(37,99,235,0.1)];
+  @apply bg-primary/10 text-primary;
 }
-
 .premium-card {
-  @apply rounded-[2.5rem] border border-slate-100 bg-white shadow-sm hover:shadow-2xl hover:shadow-navy/5 transition-all duration-500;
+  @apply rounded-xl border border-border bg-card shadow-sm;
 }
-
 .mobile-footer-action {
-  @apply fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-xl border-t border-slate-100 flex gap-3 z-50 lg:hidden;
+  @apply fixed bottom-0 left-0 right-0 p-3 bg-background/95 backdrop-blur border-t border-border flex gap-2 z-50 lg:hidden;
 }
 
 .safe-area-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 20px);
+  padding-bottom: env(safe-area-inset-bottom, 16px);
 }
-
-
 
 @keyframes scan {
   0% { top: 0; }
   50% { top: 100%; }
   100% { top: 0; }
 }
-
 .animate-scan {
   animation: scan 3s ease-in-out infinite;
   position: absolute;
 }
 
-/* Custom Scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
+/* Scrollbar sutil */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: color-mix(in oklab, var(--color-border) 80%, transparent);
   border-radius: 10px;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary);
-}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-anchor); }
 
-/* Mobile Premium Optimizations */
-@media (max-width: 640px) {
-  .card-premium {
-    @apply rounded-[1.5rem] p-4;
-  }
-  .text-hero {
-    @apply text-3xl leading-tight;
-  }
-  .nav-blur {
-    @apply backdrop-blur-xl bg-white/90;
-  }
-}
+.animate-spin-slow { animation: spin 8s linear infinite; }
 
-.animate-spin-slow {
-  animation: spin 8s linear infinite;
-}
-
-/* === Sprint 1.0 — Polimento Premium === */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.96); }
+  from { opacity: 0; transform: scale(0.98); }
   to { opacity: 1; transform: scale(1); }
 }
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out both;
-}
-.animate-scale-in {
-  animation: scale-in 0.2s ease-out both;
-}
-.hover-scale {
-  transition: transform 200ms ease-out;
-}
-.hover-scale:hover {
-  transform: scale(1.02);
-}
+.animate-fade-in { animation: fade-in 0.2s ease-out both; }
+.animate-scale-in { animation: scale-in 0.15s ease-out both; }
+.hover-scale { transition: transform 200ms ease-out; }
+.hover-scale:hover { transform: scale(1.01); }
