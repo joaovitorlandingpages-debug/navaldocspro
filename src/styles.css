@@ -378,3 +378,68 @@ h1.uppercase, h2.uppercase, h3.uppercase {
   backdrop-filter: none !important;
   background-color: rgb(248 250 252 / 0.7) !important;
 }
+
+/* ============================================================
+   Naval Clarity — Etapa 7: Documentos, Assinaturas, Portal, Admin
+   Padroniza cards/tabelas/empty-states/filtros nas telas
+   secundárias. Só ajuste visual — nenhuma alteração em lógica,
+   OCR, assinatura, PDF ou banco.
+   ============================================================ */
+
+/* Radii residuais em ocr-center, ocr-review-center, portal, etc. */
+.rounded-\[1\.9rem\] { border-radius: 0.9rem !important; }
+.rounded-\[2\.25rem\] { border-radius: 1rem !important; }
+
+/* Cabeçalhos hero navy dessas rotas: sem halo */
+.bg-navy.shadow-2xl,
+.bg-gradient-to-br.from-navy.shadow-2xl,
+[class*="shadow-navy/"] {
+  box-shadow: 0 6px 20px -14px color-mix(in oklab, var(--navy) 28%, transparent) !important;
+}
+
+/* Tabelas: linhas do thead mais discretas nessas telas */
+thead tr.bg-slate-50\/50,
+thead tr.bg-slate-100\/60,
+thead tr.bg-navy\/5 {
+  background-color: rgb(248 250 252) !important;
+}
+
+/* Empty states com bordas dashed grossas → 1px slate-200 */
+[class*="border-2"][class*="border-dashed"] {
+  border-width: 1px !important;
+  border-color: rgb(226 232 240) !important;
+}
+
+/* Tiles gradientes muito saturados do Admin Hub → tom mais sóbrio
+   (mantém a identidade colorida, reduz brilho). */
+.bg-gradient-to-br.from-blue-500,
+.bg-gradient-to-br.from-emerald-500,
+.bg-gradient-to-br.from-violet-500,
+.bg-gradient-to-br.from-amber-500,
+.bg-gradient-to-br.from-cyan-500,
+.bg-gradient-to-br.from-rose-500,
+.bg-gradient-to-br.from-slate-500 {
+  filter: saturate(0.85);
+}
+
+/* Badges "premium" com gradiente amber/gold em templates/marketplace → sólido */
+.bg-gradient-to-r.from-amber-400.to-yellow-500,
+.bg-gradient-to-r.from-amber-500.to-orange-500,
+.bg-gradient-to-r.from-yellow-400.to-amber-500 {
+  background-image: none !important;
+  background-color: rgb(217 119 6) !important; /* amber-600 */
+}
+
+/* Portal público (portal.$token, assinar.$token, verificar-assinatura):
+   fundo mais neutro, sem gradientes escuros pesados */
+.bg-gradient-to-br.from-slate-900.to-navy,
+.bg-gradient-to-br.from-navy.to-slate-900 {
+  background-image: none !important;
+  background-color: var(--navy) !important;
+}
+
+/* Filtros/chips redondos com font-black minúsculo → 600 (já coberto),
+   mas garante bordas 1px consistentes */
+.rounded-full.border-2 {
+  border-width: 1px !important;
+}
