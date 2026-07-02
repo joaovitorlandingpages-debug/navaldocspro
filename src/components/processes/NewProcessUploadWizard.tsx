@@ -734,7 +734,11 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
         <div className="border-t pt-3 flex items-center justify-between gap-2">
           <div className="text-[11px] text-slate-500">
             {step === 1 && `${files.length} / ${MAX_FILES} arquivos`}
-            {step === 2 && "Processando com IA..."}
+            {step === 2 && (
+              processing
+                ? `Processando… ${files.filter(f => f.status === "done").length}/${files.length} concluídos`
+                : `Finalizado · ${files.filter(f => f.status === "done").length} OK · ${files.filter(f => f.status === "error" || f.status === "timeout").length} com falha`
+            )}
             {step === 3 && (
               <Badge variant="outline" className="text-[10px]">
                 {okCount}/{files.length} classificados
@@ -755,9 +759,21 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
               </>
             )}
             {step === 2 && (
-              <Button disabled className="opacity-70">
-                <Loader2 className="h-4 w-4 animate-spin mr-1" /> Analisando...
-              </Button>
+              <>
+                <Button variant="ghost" onClick={() => setStep(1)} disabled={processing}>
+                  <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+                </Button>
+                <Button
+                  onClick={() => setStep(3)}
+                  disabled={processing || files.length === 0}
+                >
+                  {processing ? (
+                    <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Analisando…</>
+                  ) : (
+                    <>Continuar para revisão <ArrowRight className="h-4 w-4 ml-1" /></>
+                  )}
+                </Button>
+              </>
             )}
             {step === 3 && (
               <>
