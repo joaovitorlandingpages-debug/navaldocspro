@@ -23,7 +23,7 @@ function Index() {
         navigate({ to: "/client-portal" });
       } else {
         console.log("HOME_REDIRECT_DASHBOARD_V2");
-        navigate({ to: "/dashboard-v2" });
+        navigate({ to: "/dashboard" });
       }
     }
   }, [session, loading, navigate]);
