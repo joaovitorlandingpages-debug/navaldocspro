@@ -76,6 +76,12 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const [libraryQuery, setLibraryQuery] = useState("");
   const [libraryResults, setLibraryResults] = useState<TemplateRow[]>([]);
 
+  // Geração automática pós-criação
+  const [generateNow, setGenerateNow] = useState(true);
+  const [genProgress, setGenProgress] = useState<{ done: number; total: number; current: string } | null>(null);
+  const [genReport, setGenReport] = useState<BatchReport | null>(null);
+  const [createdProcessId, setCreatedProcessId] = useState<string | null>(null);
+
   const isTransfer = selectedTypeId
     ? types.find((t) => t.id === selectedTypeId)?.name === "Transferência de Propriedade"
     : false;
