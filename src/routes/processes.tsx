@@ -391,7 +391,7 @@ function Processes() {
                     <td className="px-6 py-4 text-xs font-bold text-slate-600">{p.vessels?.name || "---"}</td>
                     <td className="px-6 py-4">
                       <Badge className="text-[8px] font-black uppercase tracking-widest bg-slate-100 text-slate-600 border-none">
-                        {columns.find(c => c.id === p.status)?.title || p.status}
+                        {columns.find(c => c.id === p.status)?.title || translateTerm(p.status)}
                       </Badge>
                     </td>
                     <td className="px-6 py-4 w-40"><ProgressBar value={p.completion_percentage} compact /></td>
