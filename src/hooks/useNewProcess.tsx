@@ -1,14 +1,20 @@
 import { createContext, useContext, useState } from "react";
-import { NewProcessWizard } from "@/components/NewProcessWizard";
-import { AssembleProcessWizard } from "@/components/AssembleProcessWizard";
-import { ProcessFirstWizard } from "@/components/ProcessFirstWizard";
 import { NewProcessQuickDialog } from "@/components/processes/NewProcessQuickDialog";
 import { NewProcessChooserDialog } from "@/components/processes/NewProcessChooserDialog";
 import { NewProcessUploadWizard } from "@/components/processes/NewProcessUploadWizard";
 
 interface Ctx {
+  /** Abre o Chooser oficial (Guiado × Upload). */
   setIsNewProcessOpen: (open: boolean) => void;
+  /**
+   * @deprecated Fluxo antigo "Montagem Automática" foi removido.
+   * Mantido apenas por compatibilidade — abre o novo Upload Wizard.
+   */
   setIsAssembleProcessOpen: (open: boolean) => void;
+  /**
+   * @deprecated Fluxo antigo "Modo avançado" foi removido.
+   * Mantido apenas por compatibilidade — abre o novo Upload Wizard.
+   */
   setIsAdvancedProcessOpen: (open: boolean) => void;
   openGuidedProcess: () => void;
   openUploadProcess: () => void;
@@ -16,19 +22,18 @@ interface Ctx {
 const NewProcessContext = createContext<Ctx | undefined>(undefined);
 
 export function NewProcessProvider({ children }: { children: React.ReactNode }) {
-  // Novo: o botão "Novo Processo" abre um chooser (Guiado × Upload).
   const [chooserOpen, setChooserOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [isFirstOpen, setIsFirstOpen] = useState(false);
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const [isAssembleOpen, setIsAssembleOpen] = useState(false);
+
+  const openUpload = (open: boolean) => setUploadOpen(open);
 
   return (
     <NewProcessContext.Provider value={{
       setIsNewProcessOpen: setChooserOpen,
-      setIsAdvancedProcessOpen: setIsFirstOpen,
-      setIsAssembleProcessOpen: setIsAssembleOpen,
+      // Compat: qualquer chamada antiga cai no fluxo oficial de Upload.
+      setIsAdvancedProcessOpen: openUpload,
+      setIsAssembleProcessOpen: openUpload,
       openGuidedProcess: () => setQuickOpen(true),
       openUploadProcess: () => setUploadOpen(true),
     }}>
@@ -42,15 +47,12 @@ export function NewProcessProvider({ children }: { children: React.ReactNode }) 
       <NewProcessQuickDialog
         isOpen={quickOpen}
         onClose={() => setQuickOpen(false)}
-        onOpenAdvanced={() => setIsFirstOpen(true)}
+        onOpenAdvanced={() => setUploadOpen(true)}
       />
       <NewProcessUploadWizard
         isOpen={uploadOpen}
         onClose={() => setUploadOpen(false)}
       />
-      <ProcessFirstWizard isOpen={isFirstOpen} onClose={() => setIsFirstOpen(false)} />
-      <NewProcessWizard isOpen={isAdvancedOpen} onClose={() => setIsAdvancedOpen(false)} />
-      <AssembleProcessWizard isOpen={isAssembleOpen} onClose={() => setIsAssembleOpen(false)} />
     </NewProcessContext.Provider>
   );
 }
