@@ -316,32 +316,33 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
     }
   }
 
-  async function createCustomerFromSuggestion() {
-    if (!profile?.company_id) return;
-    const name = window.prompt("Nome do cliente:", suggestedCustomer?.name || "")?.trim();
-    if (!name) return;
-    const cpf = window.prompt("CPF/CNPJ (opcional):", suggestedCustomer?.cpf || "")?.trim() || null;
+  async function createCustomerInline(payload: {
+    name: string; cpf_cnpj?: string | null; phone?: string | null;
+    email?: string | null; city?: string | null; state?: string | null;
+  }) {
+    if (!profile?.company_id) throw new Error("Empresa não vinculada.");
     const { data, error } = await supabase.from("customers")
-      .insert({ company_id: profile.company_id, name, cpf_cnpj: cpf })
+      .insert({ company_id: profile.company_id, ...payload } as any)
       .select("id,name,cpf_cnpj").single();
-    if (error) { toast.error("Erro: " + error.message); return; }
+    if (error) throw new Error(error.message);
     setCustomers((prev) => [...prev, data as any].sort((a, b) => a.name.localeCompare(b.name)));
     setCustomerId((data as any).id);
-    toast.success(`Cliente "${name}" criado.`);
+    toast.success(`Cliente "${payload.name}" criado.`);
   }
 
-  async function createVesselFromSuggestion() {
-    if (!profile?.company_id) return;
-    if (!customerId) { toast.error("Selecione o cliente antes."); return; }
-    const name = window.prompt("Nome da embarcação:", suggestedVessel?.name || "")?.trim();
-    if (!name) return;
+  async function createVesselInline(payload: {
+    name: string; vessel_type?: string | null; registration_number?: string | null;
+    hull_number?: string | null; engine?: string | null; construction_year?: number | null;
+  }) {
+    if (!profile?.company_id) throw new Error("Empresa não vinculada.");
+    if (!customerId) throw new Error("Selecione o cliente antes.");
     const { data, error } = await supabase.from("vessels")
-      .insert({ company_id: profile.company_id, customer_id: customerId, name })
+      .insert({ company_id: profile.company_id, customer_id: customerId, ...payload } as any)
       .select("id,name,customer_id").single();
-    if (error) { toast.error("Erro: " + error.message); return; }
+    if (error) throw new Error(error.message);
     setVessels((prev) => [...prev, data as any].sort((a, b) => a.name.localeCompare(b.name)));
     setVesselId((data as any).id);
-    toast.success(`Embarcação "${name}" criada.`);
+    toast.success(`Embarcação "${payload.name}" criada.`);
   }
 
   async function handleCreate() {
