@@ -526,6 +526,42 @@ serve(async (req) => {
     // Mescla auto + explicit (explicit tem prioridade).
     const mergedFieldValues = { ...autoValues, ...(fieldValues || {}) }
 
+    // Validação: bloqueia geração se placeholders CRÍTICOS ficarem vazios.
+    // Critérios: só bloqueia placeholders que EXISTEM no template e estão na
+    // lista de campos essenciais (identidade dos protagonistas + embarcação).
+    if (template.base_content) {
+      const CRITICAL: Record<string, { label: string; where: string; tab: string }> = {
+        'proprietario.nome': { label: 'Nome do proprietário', where: 'Aba Participantes → adicionar Proprietário', tab: 'participants' },
+        'comprador.nome':    { label: 'Nome do comprador',    where: 'Aba Participantes → adicionar Comprador',    tab: 'participants' },
+        'vendedor.nome':     { label: 'Nome do vendedor',     where: 'Aba Participantes → adicionar Vendedor',     tab: 'participants' },
+        'cliente.nome':      { label: 'Nome do cliente',      where: 'Aba Participantes → adicionar Proprietário', tab: 'participants' },
+        'outorgante.nome':   { label: 'Nome do outorgante',   where: 'Aba Participantes → adicionar Outorgante ou Proprietário', tab: 'participants' },
+        'embarcacao.nome':   { label: 'Nome da embarcação',   where: 'Aba Geral → selecionar embarcação',          tab: 'general' },
+        'embarcacao.inscricao': { label: 'Inscrição da embarcação', where: 'Cadastro da embarcação → registration_number', tab: 'general' },
+      }
+      const referenced = new Set<string>()
+      const re = /\{\{\s*([a-z0-9_.]+)\s*\}\}/gi
+      let m: RegExpExecArray | null
+      while ((m = re.exec(template.base_content)) !== null) referenced.add(m[1].toLowerCase())
+      const missing: Array<{ key: string; label: string; where: string; tab: string }> = []
+      for (const key of referenced) {
+        if (!CRITICAL[key]) continue
+        const v = mergedFieldValues[key]
+        if (v === undefined || v === null || String(v).trim() === '') {
+          missing.push({ key, ...CRITICAL[key] })
+        }
+      }
+      if (missing.length > 0) {
+        throw new HttpError(422, {
+          error: 'placeholder_incompleto',
+          message: `Não é possível gerar: ${missing.length} campo(s) crítico(s) pendente(s).`,
+          missing,
+        })
+      }
+    }
+
+
+
     let finalBuffer: ArrayBuffer
     let contentType: string
     let extension: string
