@@ -97,6 +97,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setStep(1);
       setSelectedTypeId("");
       setCustomerId("");
+      setSecondaryCustomerId("");
       setVesselId("");
       setPriority("normal");
       setTitle("");
@@ -107,6 +108,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setLibraryOpen(false);
       setLibraryQuery("");
       setLibraryResults([]);
+      setAllowEmptyPackage(false);
     }
   }, [isOpen]);
 
