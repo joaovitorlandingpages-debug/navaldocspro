@@ -638,13 +638,21 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
               <Button variant="ghost" type="button" onClick={() => setStep(1)} disabled={submitting}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
               </Button>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap justify-end">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
+                  <Checkbox
+                    checked={generateNow}
+                    onCheckedChange={(v) => setGenerateNow(!!v)}
+                    disabled={submitting}
+                  />
+                  Gerar documentos após criar processo
+                </label>
                 <span className="text-xs font-bold text-slate-500">
-                  {selectedCount} documento{selectedCount === 1 ? "" : "s"} no checklist
+                  {selectedCount} no checklist
                 </span>
                 <Button type="button" onClick={handleCreate} disabled={submitting}>
                   {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                  Criar Processo
+                  {generateNow && selectedCount > 0 ? `Criar e gerar ${selectedCount}` : "Criar Processo"}
                 </Button>
               </div>
             </>
