@@ -720,3 +720,212 @@ function StepPill({ n, label, active, done }: { n: number; label: string; active
     </div>
   );
 }
+
+// ============= Modais profissionais (cliente / embarcação) =============
+
+interface CustomerPayload {
+  name: string;
+  cpf_cnpj?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  city?: string | null;
+  state?: string | null;
+}
+
+function InlineCustomerModal({
+  isOpen, onClose, suggestion, onSubmit,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  suggestion: { name?: string; cpf?: string } | null;
+  onSubmit: (p: CustomerPayload) => Promise<void>;
+}) {
+  const [name, setName] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [city, setCity] = useState("");
+  const [uf, setUf] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(suggestion?.name || "");
+      setCpf(suggestion?.cpf || "");
+      setPhone(""); setEmail(""); setCity(""); setUf("");
+    }
+  }, [isOpen, suggestion]);
+
+  async function handleSave() {
+    if (!name.trim()) { toast.error("Informe o nome."); return; }
+    setSaving(true);
+    try {
+      await onSubmit({
+        name: name.trim(),
+        cpf_cnpj: cpf.trim() || null,
+        phone: phone.trim() || null,
+        email: email.trim() || null,
+        city: city.trim() || null,
+        state: uf.trim().toUpperCase() || null,
+      });
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao criar cliente.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(o) => !o && !saving && onClose()}>
+      <DialogContent className="sm:max-w-lg max-sm:h-[100dvh] max-sm:max-h-[100dvh] flex flex-col p-0">
+        <DialogHeader className="p-5 border-b">
+          <DialogTitle className="flex items-center gap-2">
+            <User className="h-5 w-5 text-primary" /> Novo cliente
+          </DialogTitle>
+          <DialogDescription>Preencha os dados básicos do cliente.</DialogDescription>
+        </DialogHeader>
+        <div className="p-5 space-y-4 overflow-y-auto flex-1">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Nome / Razão social *</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: João da Silva" autoFocus />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">CPF / CNPJ</Label>
+            <Input value={cpf} onChange={(e) => setCpf(e.target.value)} placeholder="000.000.000-00" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Telefone</Label>
+              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 90000-0000" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">E-mail</Label>
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cliente@email.com" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2 space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Cidade</Label>
+              <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="São Paulo" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">UF</Label>
+              <Input value={uf} onChange={(e) => setUf(e.target.value.toUpperCase())} placeholder="SP" maxLength={2} />
+            </div>
+          </div>
+        </div>
+        <div className="p-4 border-t bg-slate-50 flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancelar</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
+            Criar cliente
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface VesselPayload {
+  name: string;
+  vessel_type?: string | null;
+  registration_number?: string | null;
+  hull_number?: string | null;
+  engine?: string | null;
+  construction_year?: number | null;
+}
+
+function InlineVesselModal({
+  isOpen, onClose, suggestion, onSubmit,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  suggestion: { name?: string; registration?: string } | null;
+  onSubmit: (p: VesselPayload) => Promise<void>;
+}) {
+  const [name, setName] = useState("");
+  const [vtype, setVtype] = useState("");
+  const [reg, setReg] = useState("");
+  const [hull, setHull] = useState("");
+  const [engine, setEngine] = useState("");
+  const [year, setYear] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(suggestion?.name || "");
+      setReg(suggestion?.registration || "");
+      setVtype(""); setHull(""); setEngine(""); setYear("");
+    }
+  }, [isOpen, suggestion]);
+
+  async function handleSave() {
+    if (!name.trim()) { toast.error("Informe o nome da embarcação."); return; }
+    setSaving(true);
+    try {
+      const yr = year.trim() ? Number(year.trim()) : null;
+      await onSubmit({
+        name: name.trim(),
+        vessel_type: vtype.trim() || null,
+        registration_number: reg.trim() || null,
+        hull_number: hull.trim() || null,
+        engine: engine.trim() || null,
+        construction_year: yr && !Number.isNaN(yr) ? yr : null,
+      });
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao criar embarcação.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(o) => !o && !saving && onClose()}>
+      <DialogContent className="sm:max-w-lg max-sm:h-[100dvh] max-sm:max-h-[100dvh] flex flex-col p-0">
+        <DialogHeader className="p-5 border-b">
+          <DialogTitle className="flex items-center gap-2">
+            <Ship className="h-5 w-5 text-primary" /> Nova embarcação
+          </DialogTitle>
+          <DialogDescription>Cadastre a embarcação vinculada ao cliente.</DialogDescription>
+        </DialogHeader>
+        <div className="p-5 space-y-4 overflow-y-auto flex-1">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Nome da embarcação *</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Barco Vênus" autoFocus />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Tipo</Label>
+              <Input value={vtype} onChange={(e) => setVtype(e.target.value)} placeholder="Lancha, veleiro..." />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Inscrição / TIE</Label>
+              <Input value={reg} onChange={(e) => setReg(e.target.value)} placeholder="123456789" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Número do casco</Label>
+              <Input value={hull} onChange={(e) => setHull(e.target.value)} placeholder="ABC-0001" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Ano de construção</Label>
+              <Input value={year} onChange={(e) => setYear(e.target.value.replace(/\D/g, ""))} placeholder="2020" maxLength={4} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Motor</Label>
+            <Input value={engine} onChange={(e) => setEngine(e.target.value)} placeholder="Yamaha 250HP" />
+          </div>
+        </div>
+        <div className="p-4 border-t bg-slate-50 flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancelar</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
+            Criar embarcação
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
