@@ -689,6 +689,25 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
           </div>
         </div>
       </DialogContent>
+
+      <InlineCustomerModal
+        isOpen={customerModalOpen}
+        onClose={() => setCustomerModalOpen(false)}
+        suggestion={suggestedCustomer}
+        onSubmit={async (payload) => {
+          await createCustomerInline(payload);
+          setCustomerModalOpen(false);
+        }}
+      />
+      <InlineVesselModal
+        isOpen={vesselModalOpen}
+        onClose={() => setVesselModalOpen(false)}
+        suggestion={suggestedVessel}
+        onSubmit={async (payload) => {
+          await createVesselInline(payload);
+          setVesselModalOpen(false);
+        }}
+      />
     </Dialog>
   );
 }
