@@ -622,7 +622,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
             <>
               {onOpenAdvanced ? (
                 <Button variant="ghost" type="button" onClick={() => { onClose(); onOpenAdvanced(); }} disabled={submitting}>
-                  Modo avançado (com uploads)
+                  Criar por Upload
                 </Button>
               ) : <div />}
               <div className="flex gap-2">
