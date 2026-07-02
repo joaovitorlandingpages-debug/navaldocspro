@@ -280,3 +280,27 @@ h1.uppercase, h2.uppercase, h3.uppercase {
   text-transform: none !important;
 }
 
+/* ============================================================
+   Naval Clarity — Etapa 5: Sidebar, Dashboard e Navegação
+   Reduz poluição visual: tracking exagerado, sombras coloridas
+   e halos em botões/badges do topbar e cards de KPI.
+   ============================================================ */
+
+/* Remove tracking exagerado em eyebrows do topbar/badges */
+.tracking-\[0\.2em\],
+.tracking-\[0\.25em\],
+.tracking-\[0\.35em\] {
+  letter-spacing: 0.02em !important;
+}
+
+/* Halos coloridos em botões/cards → sombras neutras discretas */
+[class*="shadow-primary/"],
+[class*="shadow-emerald-"],
+[class*="shadow-navy/"],
+[class*="shadow-amber-"] {
+  --tw-shadow-color: color-mix(in oklab, var(--navy) 18%, transparent) !important;
+}
+
+  text-transform: none !important;
+}
+
