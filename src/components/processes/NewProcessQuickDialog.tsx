@@ -195,6 +195,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setSelectedTypeId(""); setTypeQuery(""); setTitle(""); setPriority("normal");
       setCustomerId(""); setSecondaryCustomerId("");
       setNoResidenceProof(false); setUploadedSlots({});
+      setClientDocPicks(new Set()); setVesselDocPicks(new Set());
       setVesselId(""); setHasMotor(false);
       setBrandingMode("company");
       setPreview([]); setExcluded(new Set()); setExtras([]);
@@ -204,6 +205,21 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setCreatedProcessId(null);
     }
   }, [isOpen]);
+
+  // Pré-seleção da checklist de docs assim que o tipo é escolhido
+  useEffect(() => {
+    if (!selectedTypeId) return;
+    setClientDocPicks(new Set(clientSlots.filter(s => s.suggested).map(s => s.key)));
+    setVesselDocPicks(new Set(vesselSlots.filter(s => s.suggested).map(s => s.key)));
+  }, [selectedTypeId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggleClientPick = (key: string) => setClientDocPicks(prev => {
+    const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n;
+  });
+  const toggleVesselPick = (key: string) => setVesselDocPicks(prev => {
+    const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n;
+  });
+
 
   // ------------------------------------------------------------- helpers
   const filteredTypes = useMemo(() => {
