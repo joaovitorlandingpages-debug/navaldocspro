@@ -56,19 +56,24 @@ const DOC_TYPES = [
   { value: "TECHNICAL_REPORT", label: "Laudo técnico" },
 ];
 
-type FileStatus = "queued" | "uploading" | "ocr" | "done" | "error";
+type FileStatus = "queued" | "uploading" | "ocr" | "done" | "error" | "timeout" | "manual";
+type FailReason = "timeout" | "edge_error" | "ocr_error" | "usage_limit" | "invalid_file" | "unknown";
 
 interface FileItem {
   localId: string;
   file: File;
   status: FileStatus;
   errorMsg?: string;
+  failReason?: FailReason;
   uploadedFileId?: string;
   ocrJobId?: string;
   docType?: string;
   fields?: Record<string, any> | null;
   storagePath?: string;
 }
+
+const PER_FILE_TIMEOUT_MS = 45000;
+const MAX_PARALLEL = 2;
 
 type Step = 1 | 2 | 3;
 
