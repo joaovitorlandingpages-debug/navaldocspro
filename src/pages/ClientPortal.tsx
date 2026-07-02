@@ -233,25 +233,53 @@ export default function ClientPortal() {
                  <TabsContent value="overview" className="p-8 md:p-10 animate-in fade-in slide-in-from-left-4">
                     <div className="grid md:grid-cols-2 gap-10">
                        <div className="space-y-6">
-                          <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Próximos Passos Sugeridos</h5>
+                          <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">O que falta você fazer</h5>
                           <div className="space-y-3">
-                             {[
-                               { title: "Enviar Comprovante de Residência", desc: "A IA detectou que este documento falta para o protocolo.", icon: Upload, color: "primary" },
-                               { title: "Assinar Requerimento DPC", desc: "O documento já foi gerado e aguarda seu aceite.", icon: Signature, color: "amber-500" }
-                             ].map((step, i) => (
-                               <div key={i} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-4 hover:bg-white hover:shadow-lg transition-all cursor-pointer group">
-                                  <div className={`h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-${step.color}`}>
-                                     <step.icon className="h-5 w-5" />
-                                  </div>
-                                  <div>
-                                     <p className="text-xs font-bold text-navy group-hover:text-primary transition-colors">{step.title}</p>
-                                     <p className="text-[9px] text-slate-400 font-medium">{step.desc}</p>
-                                  </div>
-                                  <ArrowRight className="h-3 w-3 text-slate-300 ml-auto group-hover:translate-x-1 transition-transform" />
-                               </div>
-                             ))}
+                             {(() => {
+                               const pendingUploads = (documents ?? []).filter((d: any) => (d.status ?? "").toLowerCase() === "waiting_upload" || d.document_role === "solicitado");
+                               const pendingSigns = (documents ?? []).filter((d: any) => (d.status ?? "").toLowerCase() === "pending_signature");
+                               const items: Array<{ title: string; desc: string; icon: any; color: string; onClick?: () => void }> = [];
+                               pendingUploads.slice(0, 3).forEach((d: any) => items.push({
+                                 title: `Enviar: ${d.name || d.document_name || "Documento"}`,
+                                 desc: "Faça o upload da foto ou PDF do documento solicitado.",
+                                 icon: Upload,
+                                 color: "primary",
+                                 onClick: () => setActiveTab("documents"),
+                               }));
+                               pendingSigns.slice(0, 3).forEach((d: any) => items.push({
+                                 title: `Assinar: ${d.name || d.document_name || "Documento"}`,
+                                 desc: "Documento pronto — basta seu aceite digital.",
+                                 icon: Signature,
+                                 color: "amber-500",
+                                 onClick: () => handleSignRequest(d.id),
+                               }));
+                               if (items.length === 0) {
+                                 return (
+                                   <div className="p-6 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-4">
+                                     <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                                     <div>
+                                       <p className="text-sm font-bold text-navy">Nenhuma pendência!</p>
+                                       <p className="text-xs text-slate-500">Seu processo está em dia. Aguarde novidades do seu engenheiro.</p>
+                                     </div>
+                                   </div>
+                                 );
+                               }
+                               return items.map((step, i) => (
+                                 <button key={i} type="button" onClick={step.onClick} className="w-full text-left p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-4 hover:bg-white hover:shadow-lg transition-all cursor-pointer group">
+                                    <div className={`h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-${step.color}`}>
+                                       <step.icon className="h-5 w-5" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                       <p className="text-xs font-bold text-navy group-hover:text-primary transition-colors truncate">{step.title}</p>
+                                       <p className="text-[9px] text-slate-400 font-medium">{step.desc}</p>
+                                    </div>
+                                    <ArrowRight className="h-3 w-3 text-slate-300 ml-auto group-hover:translate-x-1 transition-transform" />
+                                 </button>
+                               ));
+                             })()}
                           </div>
                        </div>
+                       
                        
                        <div className="p-8 bg-navy text-white rounded-2xl shadow-xl relative overflow-hidden">
                           <div className="absolute -right-4 -bottom-4 opacity-10">
