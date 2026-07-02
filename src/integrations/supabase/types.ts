@@ -4240,6 +4240,54 @@ export type Database = {
           },
         ]
       }
+      process_participants: {
+        Row: {
+          company_id: string
+          created_at: string
+          customer_id: string
+          id: string
+          metadata: Json
+          process_id: string
+          role: Database["public"]["Enums"]["process_participant_role"]
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          metadata?: Json
+          process_id: string
+          role: Database["public"]["Enums"]["process_participant_role"]
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          metadata?: Json
+          process_id?: string
+          role?: Database["public"]["Enums"]["process_participant_role"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_participants_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_participants_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_sla_history: {
         Row: {
           created_at: string | null
@@ -6385,6 +6433,20 @@ export type Database = {
       }
       process_archive: { Args: { p_id: string }; Returns: undefined }
       process_duplicate: { Args: { p_id: string }; Returns: string }
+      process_get_participants: {
+        Args: { p_process_id: string }
+        Returns: {
+          address: string
+          cpf_cnpj: string
+          customer_id: string
+          email: string
+          id: string
+          metadata: Json
+          name: string
+          phone: string
+          role: Database["public"]["Enums"]["process_participant_role"]
+        }[]
+      }
       process_get_share_token: { Args: { p_id: string }; Returns: string }
       process_hard_delete: {
         Args: { p_confirmation: string; p_id: string }
@@ -6428,6 +6490,17 @@ export type Database = {
         | "estaleiro"
         | "oficina"
         | "outro"
+      process_participant_role:
+        | "owner"
+        | "buyer"
+        | "seller"
+        | "representative"
+        | "attorney"
+        | "engineer"
+        | "technician"
+        | "witness"
+        | "applicant"
+        | "grantor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -6563,6 +6636,18 @@ export const Constants = {
         "estaleiro",
         "oficina",
         "outro",
+      ],
+      process_participant_role: [
+        "owner",
+        "buyer",
+        "seller",
+        "representative",
+        "attorney",
+        "engineer",
+        "technician",
+        "witness",
+        "applicant",
+        "grantor",
       ],
     },
   },
