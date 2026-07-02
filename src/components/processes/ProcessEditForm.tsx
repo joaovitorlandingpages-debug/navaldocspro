@@ -30,6 +30,7 @@ interface Props {
   onSaved?: () => void;
   onCancel?: () => void;
   onClose?: () => void;
+  initialTab?: string;
 }
 
 const STATUSES = [
