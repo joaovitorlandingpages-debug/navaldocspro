@@ -78,11 +78,12 @@ interface DocSlot {
   key: string;
   label: string;
   category: string;
-  required: boolean;
+  suggested?: boolean;   // pré-marcado ao entrar na etapa
   hint?: string;
   allowMissing?: boolean;      // libera checkbox "não possui"
   onMissingGenerate?: string;  // rótulo do documento gerado quando marcado
 }
+
 
 export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props) {
   const navigate = useNavigate();
@@ -106,13 +107,16 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const [customerId, setCustomerId] = useState<string>("");
   const [secondaryCustomerId, setSecondaryCustomerId] = useState<string>("");
 
-  // Etapa 3 — controle dos slots do cliente
+  // Etapa 3 — checklist de docs do cliente + controle
   const [noResidenceProof, setNoResidenceProof] = useState(false);
   const [uploadedSlots, setUploadedSlots] = useState<Record<string, number>>({});
+  const [clientDocPicks, setClientDocPicks] = useState<Set<string>>(new Set());
 
-  // Etapa 4 — embarcação
+  // Etapa 4 — embarcação + checklist de docs
   const [vesselId, setVesselId] = useState<string>("");
   const [hasMotor, setHasMotor] = useState(false);
+  const [vesselDocPicks, setVesselDocPicks] = useState<Set<string>>(new Set());
+
 
   // Etapa 5 — identidade
   const [brandingMode, setBrandingMode] = useState<BrandingMode>("company");
@@ -141,37 +145,34 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const isMotorChange = /motor/i.test(typeName);
   const needsVessel = !/segunda via|licença rádio|licenca radio/i.test(typeName);
 
-  // Slots dinâmicos
-  const clientSlots = useMemo<DocSlot[]>(() => {
-    const base: DocSlot[] = [
-      { key: "cnh_rg", label: "CNH ou RG", category: "cnh", required: true, hint: "Documento com foto." },
-      { key: "cpf_cnpj", label: "CPF ou CNPJ", category: "cpf", required: isRegistration || isTransfer, hint: "Se pessoa jurídica, envie o cartão CNPJ." },
-      {
-        key: "comprovante", label: "Comprovante de residência", category: "comprovante_residencia",
-        required: true, allowMissing: true,
-        onMissingGenerate: "Declaração de Residência",
-        hint: "Aceita conta de luz, água, telefone (até 90 dias).",
-      },
-    ];
-    return base;
-  }, [isRegistration, isTransfer]);
+  // Etapa 3 — checklist completa (engenheiro marca só o que possui)
+  const clientSlots = useMemo<DocSlot[]>(() => [
+    { key: "rg",          label: "RG",                           category: "rg",                     suggested: true },
+    { key: "cnh",         label: "CNH",                          category: "cnh",                    suggested: true, hint: "Habilitação com foto." },
+    { key: "cpf",         label: "CPF",                          category: "cpf",                    suggested: !isRegistration && !isTransfer },
+    { key: "cnpj",        label: "CNPJ",                         category: "cnpj",                   hint: "Cartão CNPJ, se pessoa jurídica." },
+    {
+      key: "comprovante", label: "Comprovante de residência",    category: "comprovante_residencia",
+      suggested: true, allowMissing: true,
+      onMissingGenerate: "Declaração de Residência",
+      hint: "Conta de luz, água ou telefone (últimos 90 dias).",
+    },
+    { key: "declaracao",  label: "Declaração de residência",     category: "declaracao_residencia",  hint: "Só se já possuir a declaração pronta." },
+  ], [isRegistration, isTransfer]);
 
+  // Etapa 4 — checklist de docs da embarcação
   const vesselSlots = useMemo<DocSlot[]>(() => {
     if (!needsVessel) return [];
-    const base: DocSlot[] = [
-      { key: "tie", label: "TIE / TIEM anterior", category: "tie", required: !isRegistration, hint: "Anexe se a embarcação já foi inscrita." },
+    return [
+      { key: "tie",           label: "TIE / TIEM",                       category: "tie",              suggested: !isRegistration, hint: "Título anterior, se já registrada." },
+      { key: "nf_embarcacao", label: "Nota fiscal da embarcação",        category: "nota_fiscal",      suggested: isRegistration || isTransfer },
+      { key: "nf_motor",      label: "Nota fiscal do motor",             category: "nota_fiscal_motor", suggested: hasMotor || isMotorChange },
+      { key: "memorial",      label: "Memorial descritivo",              category: "memorial",         suggested: isRegistration, hint: "Especificações técnicas do casco." },
+      { key: "fotos",         label: "Fotos (proa, popa, casco, motor)", category: "fotos",            suggested: isRegistration },
+      { key: "outros",        label: "Outros documentos",                category: "outros" },
     ];
-    if (isRegistration || isTransfer) {
-      base.push({ key: "nf_embarcacao", label: "Nota fiscal da embarcação", category: "nota_fiscal", required: true });
-    }
-    if (hasMotor || isMotorChange) {
-      base.push({ key: "nf_motor", label: "Nota fiscal do motor", category: "nota_fiscal_motor", required: isMotorChange });
-    }
-    if (isRegistration) {
-      base.push({ key: "fotos", label: "Fotos da embarcação (proa, popa, casco)", category: "fotos", required: false, hint: "Fotos ajudam na vistoria." });
-    }
-    return base;
   }, [needsVessel, isRegistration, isTransfer, hasMotor, isMotorChange]);
+
 
   // ------------------------------------------------------------- carregamento
   useEffect(() => {
@@ -194,6 +195,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setSelectedTypeId(""); setTypeQuery(""); setTitle(""); setPriority("normal");
       setCustomerId(""); setSecondaryCustomerId("");
       setNoResidenceProof(false); setUploadedSlots({});
+      setClientDocPicks(new Set()); setVesselDocPicks(new Set());
       setVesselId(""); setHasMotor(false);
       setBrandingMode("company");
       setPreview([]); setExcluded(new Set()); setExtras([]);
@@ -203,6 +205,21 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setCreatedProcessId(null);
     }
   }, [isOpen]);
+
+  // Pré-seleção da checklist de docs assim que o tipo é escolhido
+  useEffect(() => {
+    if (!selectedTypeId) return;
+    setClientDocPicks(new Set(clientSlots.filter(s => s.suggested).map(s => s.key)));
+    setVesselDocPicks(new Set(vesselSlots.filter(s => s.suggested).map(s => s.key)));
+  }, [selectedTypeId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggleClientPick = (key: string) => setClientDocPicks(prev => {
+    const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n;
+  });
+  const toggleVesselPick = (key: string) => setVesselDocPicks(prev => {
+    const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n;
+  });
+
 
   // ------------------------------------------------------------- helpers
   const filteredTypes = useMemo(() => {
@@ -544,35 +561,56 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
             </div>
           )}
 
-          {/* STEP 3 — Docs do cliente */}
+          {/* STEP 3 — Docs do cliente (checklist + upload dos marcados) */}
           {step === 3 && (
-            <div className="space-y-3 py-3">
-              {clientSlots.map((slot) => {
-                const isComprovante = slot.key === "comprovante";
-                const hidden = isComprovante && noResidenceProof;
-                return (
-                  <div key={slot.key} className="rounded-xl border border-slate-200 bg-white p-3">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div>
-                        <p className="text-sm font-bold text-navy flex items-center gap-2">
-                          {slot.label}
-                          {slot.required && !hidden && <Badge variant="outline" className="text-[9px] uppercase text-red-600 border-red-200">Obrigatório</Badge>}
-                          {uploadedSlots[slot.key] > 0 && <Badge className="text-[9px] uppercase bg-emerald-100 text-emerald-700 border-emerald-200">{uploadedSlots[slot.key]} enviado</Badge>}
-                        </p>
-                        {slot.hint && <p className="text-[11px] text-slate-500 mt-0.5">{slot.hint}</p>}
+            <div className="space-y-4 py-3">
+              <div className="rounded-xl border border-sky-100 bg-sky-50/50 p-3">
+                <p className="text-[11px] font-black uppercase tracking-widest text-sky-700 mb-2">
+                  1. Marque tudo que você possui deste cliente
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  {clientSlots.map((slot) => {
+                    const isComprovante = slot.key === "comprovante";
+                    const disabled = isComprovante && noResidenceProof;
+                    const checked = clientDocPicks.has(slot.key) && !disabled;
+                    return (
+                      <label key={slot.key}
+                        className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-bold cursor-pointer border transition ${
+                          checked ? "bg-white border-sky-300 text-navy" : "bg-white/60 border-transparent text-slate-500 hover:border-slate-200"
+                        } ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}>
+                        <Checkbox checked={checked} disabled={disabled} onCheckedChange={() => toggleClientPick(slot.key)} />
+                        {slot.label}
+                      </label>
+                    );
+                  })}
+                </div>
+                <label className="flex items-center gap-2 mt-2 text-[11px] font-bold text-violet-700 cursor-pointer">
+                  <Checkbox checked={noResidenceProof} onCheckedChange={(v) => {
+                    setNoResidenceProof(!!v);
+                    if (v) toggleClientPick("comprovante") /* ensure removed */;
+                  }} />
+                  Cliente não possui comprovante — gerar Declaração de Residência automaticamente
+                </label>
+              </div>
+
+              {clientDocPicks.size === 0 && !noResidenceProof ? (
+                <p className="text-xs text-slate-400 italic text-center py-6">Selecione ao menos um documento acima para anexar agora, ou avance para enviar depois.</p>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-500">
+                    2. Envie os documentos marcados
+                  </p>
+                  {clientSlots.filter((s) => clientDocPicks.has(s.key) && !(s.key === "comprovante" && noResidenceProof)).map((slot) => (
+                    <div key={slot.key} className="rounded-xl border border-slate-200 bg-white p-3">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div>
+                          <p className="text-sm font-bold text-navy flex items-center gap-2">
+                            {slot.label}
+                            {uploadedSlots[slot.key] > 0 && <Badge className="text-[9px] uppercase bg-emerald-100 text-emerald-700 border-emerald-200">{uploadedSlots[slot.key]} enviado</Badge>}
+                          </p>
+                          {slot.hint && <p className="text-[11px] text-slate-500 mt-0.5">{slot.hint}</p>}
+                        </div>
                       </div>
-                      {slot.allowMissing && (
-                        <label className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 cursor-pointer whitespace-nowrap">
-                          <Checkbox checked={noResidenceProof} onCheckedChange={(v) => setNoResidenceProof(!!v)} />
-                          Não possui
-                        </label>
-                      )}
-                    </div>
-                    {hidden ? (
-                      <div className="text-[11px] text-violet-700 bg-violet-50 rounded-lg p-2 border border-violet-100">
-                        📝 O sistema vai gerar automaticamente: <b>{slot.onMissingGenerate}</b>.
-                      </div>
-                    ) : (
                       <FileUploader
                         bucket="customer-documents"
                         category={slot.category}
@@ -580,17 +618,17 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                         compact
                         onSuccess={() => bumpSlot(slot.key)}
                       />
-                    )}
-                  </div>
-                );
-              })}
+                    </div>
+                  ))}
+                </div>
+              )}
               <p className="text-[11px] text-slate-400 italic">
-                Uploads aqui não travam o fluxo. Você pode enviar documentos depois pelo workspace.
+                💡 O OCR lê cada arquivo e preenche automaticamente os dados do cliente. Você pode enviar mais depois pelo workspace.
               </p>
             </div>
           )}
 
-          {/* STEP 4 — Embarcação */}
+          {/* STEP 4 — Embarcação (checklist + upload dos marcados) */}
           {step === 4 && (
             <div className="space-y-4 py-3">
               {!needsVessel ? (
@@ -619,31 +657,69 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                     <Checkbox checked={hasMotor} onCheckedChange={(v) => setHasMotor(!!v)} />
                     Esta embarcação tem motor (pediremos a NF do motor)
                   </label>
-                  {vesselId && vesselSlots.map((slot) => (
-                    <div key={slot.key} className="rounded-xl border border-slate-200 bg-white p-3">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div>
-                          <p className="text-sm font-bold text-navy flex items-center gap-2">
-                            {slot.label}
-                            {slot.required && <Badge variant="outline" className="text-[9px] uppercase text-red-600 border-red-200">Obrigatório</Badge>}
-                            {uploadedSlots[slot.key] > 0 && <Badge className="text-[9px] uppercase bg-emerald-100 text-emerald-700 border-emerald-200">{uploadedSlots[slot.key]} enviado</Badge>}
-                          </p>
-                          {slot.hint && <p className="text-[11px] text-slate-500 mt-0.5">{slot.hint}</p>}
+
+                  {vesselId && (
+                    <>
+                      <div className="rounded-xl border border-sky-100 bg-sky-50/50 p-3">
+                        <p className="text-[11px] font-black uppercase tracking-widest text-sky-700 mb-2">
+                          1. Marque tudo que você possui desta embarcação
+                        </p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                          {vesselSlots.map((slot) => {
+                            const checked = vesselDocPicks.has(slot.key);
+                            return (
+                              <label key={slot.key}
+                                className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-bold cursor-pointer border transition ${
+                                  checked ? "bg-white border-sky-300 text-navy" : "bg-white/60 border-transparent text-slate-500 hover:border-slate-200"
+                                }`}>
+                                <Checkbox checked={checked} onCheckedChange={() => toggleVesselPick(slot.key)} />
+                                {slot.label}
+                              </label>
+                            );
+                          })}
                         </div>
                       </div>
-                      <FileUploader
-                        bucket="vessel-documents"
-                        category={slot.category}
-                        vesselId={vesselId}
-                        compact
-                        onSuccess={() => bumpSlot(slot.key)}
-                      />
-                    </div>
-                  ))}
+
+                      {vesselDocPicks.size === 0 ? (
+                        <p className="text-xs text-slate-400 italic text-center py-4">Selecione ao menos um documento acima, ou avance para enviar depois.</p>
+                      ) : (
+                        <div className="space-y-3">
+                          <p className="text-[11px] font-black uppercase tracking-widest text-slate-500">
+                            2. Envie os documentos marcados
+                          </p>
+                          {vesselSlots.filter((s) => vesselDocPicks.has(s.key)).map((slot) => (
+                            <div key={slot.key} className="rounded-xl border border-slate-200 bg-white p-3">
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <div>
+                                  <p className="text-sm font-bold text-navy flex items-center gap-2">
+                                    {slot.label}
+                                    {uploadedSlots[slot.key] > 0 && <Badge className="text-[9px] uppercase bg-emerald-100 text-emerald-700 border-emerald-200">{uploadedSlots[slot.key]} enviado</Badge>}
+                                  </p>
+                                  {slot.hint && <p className="text-[11px] text-slate-500 mt-0.5">{slot.hint}</p>}
+                                </div>
+                              </div>
+                              <FileUploader
+                                bucket="vessel-documents"
+                                category={slot.category}
+                                vesselId={vesselId}
+                                compact
+                                onSuccess={() => bumpSlot(slot.key)}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-[11px] text-slate-400 italic">
+                        💡 O OCR identifica casco, inscrição e motor e vincula automaticamente à embarcação.
+                      </p>
+                    </>
+                  )}
                 </>
               )}
             </div>
           )}
+
+
 
           {/* STEP 5 — Identidade */}
           {step === 5 && (
