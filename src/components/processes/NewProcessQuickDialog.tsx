@@ -107,13 +107,16 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const [customerId, setCustomerId] = useState<string>("");
   const [secondaryCustomerId, setSecondaryCustomerId] = useState<string>("");
 
-  // Etapa 3 — controle dos slots do cliente
+  // Etapa 3 — checklist de docs do cliente + controle
   const [noResidenceProof, setNoResidenceProof] = useState(false);
   const [uploadedSlots, setUploadedSlots] = useState<Record<string, number>>({});
+  const [clientDocPicks, setClientDocPicks] = useState<Set<string>>(new Set());
 
-  // Etapa 4 — embarcação
+  // Etapa 4 — embarcação + checklist de docs
   const [vesselId, setVesselId] = useState<string>("");
   const [hasMotor, setHasMotor] = useState(false);
+  const [vesselDocPicks, setVesselDocPicks] = useState<Set<string>>(new Set());
+
 
   // Etapa 5 — identidade
   const [brandingMode, setBrandingMode] = useState<BrandingMode>("company");
