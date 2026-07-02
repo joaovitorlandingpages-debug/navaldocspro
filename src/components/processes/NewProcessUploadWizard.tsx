@@ -613,7 +613,7 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
                   <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
                     Embarcação (opcional)
                   </Label>
-                  <Button size="sm" variant="ghost" onClick={createVesselFromSuggestion} className="h-7 text-[11px]" disabled={!customerId}>
+                  <Button size="sm" variant="ghost" onClick={() => setVesselModalOpen(true)} className="h-7 text-[11px]" disabled={!customerId}>
                     <Ship className="h-3 w-3 mr-1" /> Criar embarcação inline
                   </Button>
                 </div>
