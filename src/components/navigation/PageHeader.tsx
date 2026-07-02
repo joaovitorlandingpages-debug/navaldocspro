@@ -40,15 +40,16 @@ export function PageHeader({
             </div>
             
             <div className="mt-1 sm:mt-2">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-navy tracking-tight uppercase leading-none break-words">
+              <h1 className="text-xl sm:text-2xl font-semibold text-navy tracking-tight leading-tight break-words">
                 {title}
               </h1>
               {description && (
-                <p className="text-slate-500 font-bold text-[10px] sm:text-xs md:text-sm uppercase tracking-widest mt-2 italic max-w-2xl">
+                <p className="text-muted-foreground text-sm mt-1.5 max-w-2xl leading-relaxed">
                   {description}
                 </p>
               )}
             </div>
+
           </div>
         </div>
         

@@ -243,3 +243,40 @@
   background-color: var(--navy) !important;
 }
 
+/* ============================================================
+   Naval Clarity — Etapa 4: Tipografia & Hierarquia
+   Normaliza headings: remove font-black/extrabold, uppercase
+   agressivo e tracking-widest em títulos. Uppercase fica só
+   como eyebrow (.text-xs / .text-[10px] / .text-[11px]).
+   ============================================================ */
+
+h1, h2, h3, h4 {
+  text-transform: none !important;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+}
+
+h1.font-black, h1.font-extrabold,
+h2.font-black, h2.font-extrabold,
+h3.font-black, h3.font-extrabold,
+h4.font-black, h4.font-extrabold {
+  font-weight: 600 !important;
+}
+
+/* tracking-widest só faz sentido em eyebrow minúsculo.
+   Em textos >= 16px vira ruído — neutraliza. */
+.text-base.tracking-widest,
+.text-lg.tracking-widest,
+.text-xl.tracking-widest,
+.text-2xl.tracking-widest,
+.text-3xl.tracking-widest,
+.text-4xl.tracking-widest {
+  letter-spacing: -0.015em !important;
+  text-transform: none !important;
+}
+
+/* Uppercase agressivo em títulos grandes → case natural */
+h1.uppercase, h2.uppercase, h3.uppercase {
+  text-transform: none !important;
+}
+
