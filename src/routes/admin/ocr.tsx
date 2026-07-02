@@ -93,7 +93,7 @@ function AdminOCR() {
 
       <div className="grid lg:grid-cols-3 gap-8">
          <div className="lg:col-span-2">
-            <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden">
+            <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
                <CardHeader className="bg-slate-50/50 border-b p-8">
                   <CardTitle className="text-xs font-black uppercase tracking-widest text-navy">Fila de Processamento Global</CardTitle>
                </CardHeader>
@@ -124,7 +124,7 @@ function AdminOCR() {
             </Card>
          </div>
 
-         <Card className="rounded-[2.5rem] border-slate-100 shadow-sm p-8">
+         <Card className="rounded-3xl border-slate-100 shadow-sm p-8">
             <h4 className="font-black text-navy uppercase text-[10px] tracking-widest mb-6">Top Consumidores (Mês)</h4>
             <div className="space-y-6">
                {(ocrStats?.topUsers || [1,2,3,4]).map((item: any, i: number) => (

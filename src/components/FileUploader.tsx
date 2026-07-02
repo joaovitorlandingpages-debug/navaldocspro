@@ -122,7 +122,7 @@ export function FileUploader({
         <div 
           {...getRootProps()} 
           className={`
-            border-2 border-dashed rounded-[2rem] transition-all cursor-pointer group relative overflow-hidden
+            border-2 border-dashed rounded-2xl transition-all cursor-pointer group relative overflow-hidden
             ${compact ? "p-4" : "p-10 text-center bg-white shadow-sm hover:shadow-xl hover:scale-[1.01]"} 
             ${isDragActive ? "border-primary bg-primary/5 ring-4 ring-primary/10" : "border-slate-100 hover:border-primary/40 hover:bg-slate-50"}
           `}
@@ -167,7 +167,7 @@ export function FileUploader({
         </div>
 
       ) : (
-        <div className="border-2 border-primary/20 rounded-[2rem] p-10 bg-white shadow-2xl animate-in zoom-in-95 duration-300 relative overflow-hidden">
+        <div className="border-2 border-primary/20 rounded-2xl p-10 bg-white shadow-2xl animate-in zoom-in-95 duration-300 relative overflow-hidden">
            <div className="absolute top-0 left-0 w-full h-[2px] bg-primary shadow-[0_0_15px_rgba(var(--primary),0.8)] animate-scan z-20"></div>
            
            <div className="flex flex-col items-center text-center space-y-6 relative z-10">

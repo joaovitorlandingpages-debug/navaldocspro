@@ -102,7 +102,7 @@ export default function FieldValidationReport() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Bottlenecks */}
-        <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm">
+        <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm">
           <div className="flex items-center gap-2 mb-6">
             <BarChart3 className="h-5 w-5 text-navy" />
             <h3 className="text-lg font-black uppercase tracking-tight text-navy">Gargalos Operacionais</h3>
@@ -130,7 +130,7 @@ export default function FieldValidationReport() {
         </div>
 
         {/* Real Errors Tracking */}
-        <div className="bg-navy rounded-[2.5rem] p-8 text-white shadow-xl">
+        <div className="bg-navy rounded-3xl p-8 text-white shadow-xl">
           <div className="flex items-center gap-2 mb-6 text-white/90">
             <MousePointer2 className="h-5 w-5" />
             <h3 className="text-lg font-black uppercase tracking-tight">Cliques sem Resposta / Dúvidas</h3>

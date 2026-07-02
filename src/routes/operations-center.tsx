@@ -99,7 +99,7 @@ function OperationsCenterPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, idx) => (
-          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group relative overflow-hidden rounded-[2rem] bg-white">
+          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group relative overflow-hidden rounded-2xl bg-white">
              <div className="flex justify-between items-start mb-4">
                 <div className="p-2.5 bg-slate-50 rounded-xl group-hover:bg-primary/5 transition-colors">
                    {stat.icon}
@@ -137,7 +137,7 @@ function OperationsCenterPage() {
                Array(3).fill(0).map((_, i) => <Card key={i} className="h-24 bg-slate-50 animate-pulse rounded-3xl" />)
              ) : (
                processes?.map((process: any) => (
-                 <Card key={process.id} className="p-5 border-slate-100 hover:shadow-lg transition-all rounded-[2rem] bg-white group border-l-4 border-l-primary/10">
+                 <Card key={process.id} className="p-5 border-slate-100 hover:shadow-lg transition-all rounded-2xl bg-white group border-l-4 border-l-primary/10">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                        <div className="flex items-center gap-4">
                           <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-primary/5 transition-colors shrink-0">

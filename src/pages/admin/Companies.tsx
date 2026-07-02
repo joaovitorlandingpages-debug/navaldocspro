@@ -102,7 +102,7 @@ export default function AdminCompanies() {
               <CardContent className="p-0">
                 <div className="flex flex-col lg:flex-row items-center p-6 gap-8">
                   <div className="flex items-center gap-6 flex-1 w-full">
-                    <div className="h-16 w-16 rounded-[1.5rem] bg-slate-50 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-inner">
+                    <div className="h-16 w-16 rounded-2xl bg-slate-50 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-inner">
                       <Building className="h-8 w-8" />
                     </div>
                     <div className="min-w-0 flex-1">

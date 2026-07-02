@@ -193,7 +193,7 @@ export default function ClientPortal() {
               )}
            </div>
 
-           <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.03)] bg-white rounded-[2.5rem] overflow-hidden">
+           <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.03)] bg-white rounded-3xl overflow-hidden">
               <div className="p-8 md:p-10 border-b border-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-slate-50/30">
                  <div className="flex items-center gap-6">
                     <div className="h-14 w-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-primary">
@@ -253,7 +253,7 @@ export default function ClientPortal() {
                           </div>
                        </div>
                        
-                       <div className="p-8 bg-navy text-white rounded-[2rem] shadow-xl relative overflow-hidden">
+                       <div className="p-8 bg-navy text-white rounded-2xl shadow-xl relative overflow-hidden">
                           <div className="absolute -right-4 -bottom-4 opacity-10">
                              <Info className="h-32 w-32" />
                           </div>
@@ -283,7 +283,7 @@ export default function ClientPortal() {
                              </div>
                           </div>
                           
-                          <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-10 text-center hover:bg-primary/[0.02] hover:border-primary/40 transition-all cursor-pointer relative">
+                          <div className="border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center hover:bg-primary/[0.02] hover:border-primary/40 transition-all cursor-pointer relative">
                              <FileUploader 
                                processId={selectedProcess?.id || ""} 
                                bucket="process-attachments" 

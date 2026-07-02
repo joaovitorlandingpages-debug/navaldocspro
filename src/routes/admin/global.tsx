@@ -96,7 +96,7 @@ function AdminGlobalAICenter() {
       {/* Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map((stat, idx) => (
-          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group relative overflow-hidden rounded-[2.5rem] bg-white">
+          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group relative overflow-hidden rounded-3xl bg-white">
              <div className="flex justify-between items-start mb-4">
                 <div className="p-2.5 bg-slate-50 rounded-xl group-hover:bg-primary/5 transition-colors">
                    {stat.icon}
@@ -122,17 +122,17 @@ function AdminGlobalAICenter() {
         <TabsContent value="overview" className="space-y-8">
            <div className="grid lg:grid-cols-12 gap-8">
               <div className="lg:col-span-8 space-y-8">
-                 <Card className="p-8 border-none shadow-sm rounded-[3rem] bg-white">
+                 <Card className="p-8 border-none shadow-sm rounded-3xl bg-white">
                     <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2 mb-6">
                        <Activity className="h-4 w-4 text-primary" /> Performance da Engine de IA
                     </h3>
-                    <div className="h-[300px] flex items-center justify-center bg-slate-50 rounded-[2rem] border border-dashed border-slate-200">
+                    <div className="h-[300px] flex items-center justify-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Gráfico de Latência em Tempo Real</p>
                     </div>
                  </Card>
 
                  <div className="grid md:grid-cols-2 gap-8">
-                    <Card className="p-8 border-none shadow-sm rounded-[2.5rem] bg-[#020D1D] text-white">
+                    <Card className="p-8 border-none shadow-sm rounded-3xl bg-[#020D1D] text-white">
                        <h4 className="text-[10px] font-black uppercase text-primary tracking-widest mb-4">Health Check Modelos</h4>
                        <div className="space-y-4">
                           {[
@@ -151,7 +151,7 @@ function AdminGlobalAICenter() {
                        </div>
                     </Card>
 
-                    <Card className="p-8 border-none shadow-sm rounded-[2.5rem] bg-white">
+                    <Card className="p-8 border-none shadow-sm rounded-3xl bg-white">
                        <h4 className="text-[10px] font-black uppercase text-navy tracking-widest mb-4">Consumo Top Tenants</h4>
                        <div className="space-y-4">
                           {[1, 2, 3].map(i => (
@@ -169,7 +169,7 @@ function AdminGlobalAICenter() {
               </div>
 
               <div className="lg:col-span-4 space-y-8">
-                 <Card className="p-8 border-none shadow-sm rounded-[2.5rem] bg-slate-50">
+                 <Card className="p-8 border-none shadow-sm rounded-3xl bg-slate-50">
                     <h4 className="text-[10px] font-black uppercase text-navy tracking-widest mb-6 flex items-center gap-2">
                        <History className="h-4 w-4 text-primary" /> Eventos do Kernel IA
                     </h4>
@@ -193,7 +193,7 @@ function AdminGlobalAICenter() {
                     </div>
                  </Card>
 
-                 <div className="bg-primary p-8 rounded-[2.5rem] text-white shadow-xl shadow-primary/20 group">
+                 <div className="bg-primary p-8 rounded-3xl text-white shadow-xl shadow-primary/20 group">
                     <ShieldCheck className="h-10 w-10 mb-6 group-hover:scale-110 transition-transform" />
                     <h4 className="text-xl font-black uppercase tracking-tight mb-2 italic">AI Safety Isolation</h4>
                     <p className="text-sm opacity-80 leading-relaxed font-medium">Arquitetura modular garantindo isolamento total por company_id. Dados nunca são cruzados para treinamento.</p>
@@ -203,7 +203,7 @@ function AdminGlobalAICenter() {
         </TabsContent>
 
         <TabsContent value="models">
-           <Card className="p-8 border-none shadow-sm rounded-[3rem] bg-white">
+           <Card className="p-8 border-none shadow-sm rounded-3xl bg-white">
               <div className="flex justify-between items-center mb-8">
                  <div>
                     <h3 className="text-sm font-black text-navy uppercase tracking-widest">Gerenciamento de Modelos</h3>

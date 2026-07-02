@@ -33,7 +33,7 @@ function AnalyticsOCR() {
           { label: "Taxa de Sucesso", value: "99.1%", trend: "+0.5%", icon: <Zap /> },
           { label: "Custo Estimado", value: "R$ 142,00", trend: "-5%", icon: <BarChart3 /> },
         ].map((stat, i) => (
-          <Card key={i} className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm">
+          <Card key={i} className="p-8 rounded-3xl border-slate-100 shadow-sm">
              <div className="flex items-center gap-4 mb-4">
                 <div className="p-3 bg-slate-50 rounded-xl text-primary">{stat.icon}</div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
@@ -47,7 +47,7 @@ function AnalyticsOCR() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 p-10 rounded-[3rem] border-slate-100 shadow-sm">
+        <Card className="lg:col-span-2 p-10 rounded-3xl border-slate-100 shadow-sm">
             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-navy mb-8">Volume Diário de Processamento</h4>
             <div className="h-64 flex items-end gap-2">
                 {[45, 60, 55, 80, 70, 90, 85, 100, 95, 110, 105, 120].map((v, i) => (
@@ -57,7 +57,7 @@ function AnalyticsOCR() {
                 ))}
             </div>
         </Card>
-        <Card className="p-10 rounded-[3rem] border-slate-100 shadow-sm">
+        <Card className="p-10 rounded-3xl border-slate-100 shadow-sm">
             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-navy mb-8">Falhas por Tipo</h4>
             <div className="space-y-6">
                 {[

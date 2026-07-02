@@ -332,7 +332,7 @@ export default function DocumentLibraryAdmin() {
 
       {/* Import Modal */}
       <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
-        <DialogContent className="max-w-2xl rounded-[2rem]">
+        <DialogContent className="max-w-2xl rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
               <Upload className="h-5 w-5 text-primary" /> Importação em Massa

@@ -350,7 +350,7 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
               </CardContent>
            </Card>
 
-           <div className="p-6 rounded-[2rem] bg-navy text-white shadow-xl relative overflow-hidden group">
+           <div className="p-6 rounded-2xl bg-navy text-white shadow-xl relative overflow-hidden group">
               <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
                  <FileText className="h-32 w-32" />
               </div>

@@ -302,7 +302,7 @@ function ProcessDetail() {
 
   if (!process && !id) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[2rem] border border-slate-100 shadow-sm animate-in fade-in">
+      <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-100 shadow-sm animate-in fade-in">
         <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
           <FileSearch className="h-10 w-10 text-slate-300" />
         </div>
@@ -390,7 +390,7 @@ function ProcessDetail() {
                   <ProcessBlueprintWorkspace process={process} onOpenTab={setActiveTab} onFocusItem={openFocusItem} onChanged={fetchProcess} />
                   <SignaturesStatusCard processId={id} onOpen={() => setActiveTab("signatures")} />
                   <div className="grid md:grid-cols-2 gap-6">
-                     <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                     <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
                         <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
                            <Info className="h-5 w-5 text-primary" /> Informações
                         </h3>
@@ -425,7 +425,7 @@ function ProcessDetail() {
                         </div>
                      </div>
 
-                     <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between">
+                     <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
                         <div>
                            <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
                               <Target className="h-5 w-5 text-primary" /> Progresso do SLA
@@ -468,7 +468,7 @@ function ProcessDetail() {
                </TabsContent>
 
                <TabsContent value="ocr" className="space-y-8 animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                  <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
                     <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
                       <Zap className="h-5 w-5 text-primary" /> Central de Extração OCR
                     </h3>
@@ -480,7 +480,7 @@ function ProcessDetail() {
                       <div className="space-y-4">
                         <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Jobs de OCR neste Processo</p>
                         {ocrJobs?.length === 0 ? (
-                          <div className="p-12 border-2 border-dashed border-slate-100 rounded-[2rem] text-center">
+                          <div className="p-12 border-2 border-dashed border-slate-100 rounded-2xl text-center">
                             <Bot className="h-10 w-10 text-slate-200 mx-auto mb-4" />
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nenhum job processado ainda.</p>
                           </div>
@@ -506,7 +506,7 @@ function ProcessDetail() {
                </TabsContent>
 
                <TabsContent value="generation" className="space-y-8 animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                  <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
                     <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
                       <FilePlus className="h-5 w-5 text-primary" /> Geração de Documentos Reais
                     </h3>
@@ -541,7 +541,7 @@ function ProcessDetail() {
                </TabsContent>
 
                <TabsContent value="protocol" className="space-y-8 animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                  <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
                     <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-6 flex items-center gap-2">
                       <Send className="h-5 w-5 text-primary" /> Protocolo e Envio Final
                     </h3>
@@ -586,7 +586,7 @@ function ProcessDetail() {
                 </TabsContent>
 
                <TabsContent value="documents" className="animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                  <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 pb-6 border-b border-slate-50">
                       <div>
                         <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
@@ -645,7 +645,7 @@ function ProcessDetail() {
                </TabsContent>
 
                <TabsContent value="library_docs" className="animate-in fade-in duration-300">
-                  <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                  <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm">
                     <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-1 flex items-center gap-2">
                       <FileCheck className="h-5 w-5 text-primary" /> Documentos do processo
                     </h3>
@@ -657,7 +657,7 @@ function ProcessDetail() {
                </TabsContent>
 
                <TabsContent value="history" className="animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+                  <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                     <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-10 flex items-center gap-2">
                        <History className="h-5 w-5 text-primary" /> Histórico Inteligente
                     </h3>
@@ -675,7 +675,7 @@ function ProcessDetail() {
          <aside className="space-y-8">
             <IntelligencePanel />
             
-            <div className="bg-navy p-8 rounded-[2.5rem] text-white shadow-xl shadow-navy/20">
+            <div className="bg-navy p-8 rounded-3xl text-white shadow-xl shadow-navy/20">
                <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6">Ações Rápidas</h3>
                <div className="space-y-3">
                   <Button 
@@ -707,7 +707,7 @@ function ProcessDetail() {
                </div>
             </div>
 
-            <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col h-[500px] overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col h-[500px] overflow-hidden">
                <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
                   <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
                      <MessageSquare className="h-4 w-4 text-primary" /> Chat Interno

@@ -161,7 +161,7 @@ function CompanyTeamPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center gap-4 px-6 py-4 rounded-[1.5rem] text-sm font-bold transition-all border ${
+              className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-bold transition-all border ${
                 activeTab === tab.id
                   ? "bg-navy text-white shadow-xl shadow-navy/20 border-navy"
                   : "text-slate-500 hover:bg-slate-100 border-transparent"
@@ -174,7 +174,7 @@ function CompanyTeamPage() {
             </button>
           ))}
 
-          <div className="mt-8 p-6 bg-primary/5 rounded-[2rem] border border-primary/10">
+          <div className="mt-8 p-6 bg-primary/5 rounded-2xl border border-primary/10">
              <div className="flex items-center gap-2 mb-4">
                 <Shield className="h-4 w-4 text-primary" />
                 <span className="text-[10px] font-black uppercase tracking-widest text-primary">Status do Plano</span>
@@ -189,9 +189,9 @@ function CompanyTeamPage() {
 
         <div className="flex-grow">
            {activeTab === "empresa" && (
-             <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 md:p-10 shadow-sm space-y-10 animate-in slide-in-from-right-4 duration-500">
+             <div className="bg-white rounded-3xl border border-slate-100 p-8 md:p-10 shadow-sm space-y-10 animate-in slide-in-from-right-4 duration-500">
                 <div className="flex flex-col md:flex-row gap-10 items-start md:items-center pb-10 border-b border-slate-100">
-                   <div className={`relative h-32 w-32 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 p-4 text-center group hover:border-primary/50 transition-all overflow-hidden ${isLogoUploading ? "opacity-70" : "cursor-pointer"}`}>
+                   <div className={`relative h-32 w-32 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 p-4 text-center group hover:border-primary/50 transition-all overflow-hidden ${isLogoUploading ? "opacity-70" : "cursor-pointer"}`}>
                        {company?.logo_primary_url ? (
                          <img src={company.logo_primary_url} alt="Logo da empresa" className="max-h-20 max-w-full object-contain mb-2 pointer-events-none" />
                        ) : isLogoUploading ? (
@@ -281,7 +281,7 @@ function CompanyTeamPage() {
            )}
 
            {activeTab === "equipe" && (
-             <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden animate-in slide-in-from-right-4 duration-500">
+             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden animate-in slide-in-from-right-4 duration-500">
                 <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                    <div className="relative flex-grow max-w-md">
                       <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
@@ -344,7 +344,7 @@ function CompanyTeamPage() {
            )}
 
            {activeTab === "permissoes" && (
-             <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 md:p-10 shadow-sm animate-in slide-in-from-right-4 duration-500">
+             <div className="bg-white rounded-3xl border border-slate-100 p-8 md:p-10 shadow-sm animate-in slide-in-from-right-4 duration-500">
                 <div className="flex justify-between items-center mb-10">
                    <h3 className="text-xl font-black text-navy uppercase tracking-tight">Cargos e Níveis de Acesso</h3>
                    <button className="text-xs font-black uppercase tracking-widest text-primary hover:underline">+ Criar Cargo Customizado</button>
@@ -352,7 +352,7 @@ function CompanyTeamPage() {
 
                 <div className="space-y-6">
                    {roles.map((role, i) => (
-                     <div key={i} className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md hover:bg-white transition-all group">
+                     <div key={i} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md hover:bg-white transition-all group">
                         <div>
                            <div className="flex items-center gap-3 mb-1">
                               <p className="font-black text-navy uppercase tracking-tight text-sm">{role.name}</p>
@@ -365,7 +365,7 @@ function CompanyTeamPage() {
                    ))}
                 </div>
 
-                <div className="mt-12 p-8 bg-amber-50 rounded-[2rem] border border-amber-100 border-dashed">
+                <div className="mt-12 p-8 bg-amber-50 rounded-2xl border border-amber-100 border-dashed">
                    <div className="flex items-center gap-3 mb-4">
                       <ShieldAlert className="h-5 w-5 text-amber-600" />
                       <p className="font-black text-amber-900 uppercase tracking-tight text-xs">Proteção de Dados Corporativos</p>
@@ -379,10 +379,10 @@ function CompanyTeamPage() {
            )}
 
            {activeTab === "assinatura" && (
-             <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 md:p-10 shadow-sm animate-in slide-in-from-right-4 duration-500">
+             <div className="bg-white rounded-3xl border border-slate-100 p-8 md:p-10 shadow-sm animate-in slide-in-from-right-4 duration-500">
                 <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-8">Plano e Faturamento</h3>
                 <div className="grid md:grid-cols-2 gap-8">
-                   <div className="p-8 bg-navy text-white rounded-[2rem] shadow-xl relative overflow-hidden">
+                   <div className="p-8 bg-navy text-white rounded-2xl shadow-xl relative overflow-hidden">
                       <CreditCard className="absolute -right-4 -bottom-4 h-32 w-32 text-white/5" />
                       <p className="text-[10px] font-black uppercase text-primary mb-2">Plano Atual</p>
                       <h4 className="text-3xl font-black mb-4">Enterprise Pro</h4>
@@ -424,7 +424,7 @@ function CompanyTeamPage() {
            )}
 
            {activeTab === "seguranca" && (
-             <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 md:p-10 shadow-sm animate-in slide-in-from-right-4 duration-500">
+             <div className="bg-white rounded-3xl border border-slate-100 p-8 md:p-10 shadow-sm animate-in slide-in-from-right-4 duration-500">
                 <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-8">Segurança e Auditoria</h3>
                 <div className="space-y-8">
                    <div className="p-6 bg-rose-50 border border-rose-100 rounded-2xl flex items-center justify-between">
@@ -464,7 +464,7 @@ function CompanyTeamPage() {
            )}
 
            {activeTab !== "empresa" && activeTab !== "equipe" && activeTab !== "permissoes" && activeTab !== "assinatura" && activeTab !== "seguranca" && (
-              <div className="bg-white rounded-[2.5rem] border border-slate-100 p-20 shadow-sm text-center flex flex-col items-center animate-in slide-in-from-right-4 duration-500">
+              <div className="bg-white rounded-3xl border border-slate-100 p-20 shadow-sm text-center flex flex-col items-center animate-in slide-in-from-right-4 duration-500">
                  <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6">
                     <Globe className="h-10 w-10 opacity-30" />
                  </div>

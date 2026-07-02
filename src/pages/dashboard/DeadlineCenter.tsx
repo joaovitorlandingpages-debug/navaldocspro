@@ -180,7 +180,7 @@ export default function DeadlineCenter() {
                 ))}
                 
                 {expiredDocs.length === 0 && expiringSoonDocs.length === 0 && delayedProcesses.length === 0 && (
-                  <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-[3rem]">
+                  <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-3xl">
                     <CheckCircle2 className="h-12 w-12 text-emerald-100 mx-auto mb-4" />
                     <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhuma pendência de prazo detectada</p>
                   </div>
@@ -196,7 +196,7 @@ export default function DeadlineCenter() {
               <DeadlineCard key={doc.id} item={doc} type="expired" onAction={() => navigate({ to: `/processes/${doc.process_id}` })} />
             ))}
             {expiredDocs.length === 0 && (
-              <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-[3rem]">
+              <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-3xl">
                 <CheckCircle2 className="h-12 w-12 text-emerald-100 mx-auto mb-4" />
                 <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhum documento vencido</p>
               </div>
@@ -210,7 +210,7 @@ export default function DeadlineCenter() {
               <DeadlineCard key={doc.id} item={doc} type="warning" onAction={() => navigate({ to: `/processes/${doc.process_id}` })} />
             ))}
             {expiringSoonDocs.length === 0 && (
-              <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-[3rem]">
+              <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-3xl">
                 <CheckCircle2 className="h-12 w-12 text-emerald-100 mx-auto mb-4" />
                 <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhum vencimento próximo</p>
               </div>
@@ -224,7 +224,7 @@ export default function DeadlineCenter() {
               <DeadlineCard key={proc.id} item={proc} type="delayed" onAction={() => navigate({ to: `/processes/${proc.id}` })} />
             ))}
             {delayedProcesses.length === 0 && (
-              <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-[3rem]">
+              <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-3xl">
                 <CheckCircle2 className="h-12 w-12 text-emerald-100 mx-auto mb-4" />
                 <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhum processo atrasado</p>
               </div>

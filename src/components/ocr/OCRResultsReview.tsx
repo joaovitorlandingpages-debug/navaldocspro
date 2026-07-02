@@ -93,7 +93,7 @@ export function OCRResultsReview({ job }: OCRResultsReviewProps) {
   };
 
   return (
-    <Card className="overflow-hidden border-none shadow-2xl rounded-[2.5rem] bg-white">
+    <Card className="overflow-hidden border-none shadow-2xl rounded-3xl bg-white">
       {/* Header com Status */}
       <div className="bg-navy p-8 text-white relative">
         <div className="absolute top-0 right-0 p-8 opacity-10">

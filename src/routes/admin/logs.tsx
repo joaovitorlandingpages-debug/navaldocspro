@@ -74,7 +74,7 @@ function AdminLogs() {
 
        <div className="grid lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8 space-y-6">
-             <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white">
+             <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white">
                 <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/30">
                    <div className="flex items-center gap-2">
                       <Zap className="h-4 w-4 text-primary" />
@@ -111,7 +111,7 @@ function AdminLogs() {
                 </div>
              </Card>
 
-             <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white">
+             <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white">
                 <div className="p-6 border-b border-slate-50 bg-navy text-white flex items-center justify-between">
                    <div className="flex items-center gap-3">
                       <Lock className="h-5 w-5 text-primary" />
@@ -147,7 +147,7 @@ function AdminLogs() {
           </div>
 
           <div className="lg:col-span-4 space-y-6">
-             <Card className="p-8 border-slate-100 bg-white rounded-[2.5rem] shadow-sm relative overflow-hidden group">
+             <Card className="p-8 border-slate-100 bg-white rounded-3xl shadow-sm relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
                    <Activity className="h-24 w-24 text-navy" />
                 </div>

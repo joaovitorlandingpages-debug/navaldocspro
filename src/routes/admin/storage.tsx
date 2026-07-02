@@ -74,7 +74,7 @@ function AdminStorage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-         <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm space-y-6">
+         <Card className="p-8 rounded-3xl border-slate-100 shadow-sm space-y-6">
             <div className="flex justify-between items-start">
                <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
                   <HardDrive className="h-6 w-6" />
@@ -89,7 +89,7 @@ function AdminStorage() {
             </div>
          </Card>
 
-         <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm space-y-6">
+         <Card className="p-8 rounded-3xl border-slate-100 shadow-sm space-y-6">
             <div className="h-12 w-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
                <Server className="h-6 w-6" />
             </div>
@@ -109,7 +109,7 @@ function AdminStorage() {
             </div>
          </Card>
 
-         <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm bg-[#020D1D] text-white space-y-6 overflow-hidden relative">
+         <Card className="p-8 rounded-3xl border-slate-100 shadow-sm bg-[#020D1D] text-white space-y-6 overflow-hidden relative">
             <ShieldAlert className="absolute -right-4 -bottom-4 h-32 w-32 opacity-5" />
             <h4 className="text-[10px] font-black text-primary uppercase tracking-widest">Segurança de Ativos</h4>
             <div className="space-y-4">
@@ -129,7 +129,7 @@ function AdminStorage() {
          </Card>
       </div>
 
-      <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden">
+      <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
          <CardHeader className="bg-slate-50/50 border-b p-8 flex flex-row items-center justify-between">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-navy">Arquivos Pesados & Órfãos Detectados</CardTitle>
          </CardHeader>

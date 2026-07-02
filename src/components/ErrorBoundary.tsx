@@ -74,7 +74,7 @@ class ErrorBoundary extends React.Component<
         <div className="min-h-screen flex items-center justify-center bg-[#000B18] p-4 md:p-6 text-center font-sans overflow-y-auto">
           <div className="max-w-2xl w-full space-y-6 md:space-y-8 my-8">
             <div className="relative">
-              <div className="h-24 w-24 bg-red-500/10 text-red-500 rounded-[2rem] flex items-center justify-center mx-auto shadow-2xl shadow-red-500/10 border border-red-500/20 animate-pulse">
+              <div className="h-24 w-24 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mx-auto shadow-2xl shadow-red-500/10 border border-red-500/20 animate-pulse">
                 <ShieldAlert className="h-12 w-12" />
               </div>
               <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-widest">Fail-Safe Active</div>

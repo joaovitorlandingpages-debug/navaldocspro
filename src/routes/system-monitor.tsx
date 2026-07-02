@@ -76,7 +76,7 @@ function SystemMonitor() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-navy text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden h-full">
+        <div className="bg-navy text-white p-10 rounded-3xl shadow-2xl relative overflow-hidden h-full">
            <div className="absolute top-0 right-0 p-10 opacity-5">
               <Server className="h-64 w-64" />
            </div>
@@ -121,7 +121,7 @@ function SystemMonitor() {
               </div>
            </Card>
 
-           <div className="bg-white border border-slate-100 p-8 rounded-[2rem] shadow-sm">
+           <div className="bg-white border border-slate-100 p-8 rounded-2xl shadow-sm">
               <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2 text-navy">
                  <Activity className="h-4 w-4 text-primary" /> Logs de Sistema (Live)
               </h4>

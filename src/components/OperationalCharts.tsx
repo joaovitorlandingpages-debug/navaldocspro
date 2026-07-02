@@ -34,7 +34,7 @@ export function OperationalCharts() {
   return (
     <div className="grid md:grid-cols-2 gap-6">
       {/* Produtividade Temporal */}
-      <Card className="p-6 border-none shadow-sm rounded-[2.5rem] bg-white">
+      <Card className="p-6 border-none shadow-sm rounded-3xl bg-white">
         <div className="mb-6">
           <h4 className="text-xs font-black uppercase tracking-widest text-navy">Fluxo de Produtividade</h4>
           <p className="text-[10px] text-slate-400 font-bold uppercase">Processos vs Automações</p>
@@ -75,7 +75,7 @@ export function OperationalCharts() {
       </Card>
 
       {/* Distribuição de Status */}
-      <Card className="p-6 border-none shadow-sm rounded-[2.5rem] bg-white">
+      <Card className="p-6 border-none shadow-sm rounded-3xl bg-white">
         <div className="mb-6">
           <h4 className="text-xs font-black uppercase tracking-widest text-navy">Distribuição Operacional</h4>
           <p className="text-[10px] text-slate-400 font-bold uppercase">Status por Processo</p>

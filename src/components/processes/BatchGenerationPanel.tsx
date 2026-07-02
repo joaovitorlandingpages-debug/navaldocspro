@@ -193,7 +193,7 @@ export function BatchGenerationPanel({
   );
 
   return (
-    <div id="batch-generation-panel" className="bg-white rounded-[2rem] border border-slate-100 shadow-sm scroll-mt-24">
+    <div id="batch-generation-panel" className="bg-white rounded-2xl border border-slate-100 shadow-sm scroll-mt-24">
       {/* HEADER */}
       <div className="p-6 md:p-8 border-b border-slate-100">
         <div className="flex items-start justify-between gap-4 flex-wrap">

@@ -261,7 +261,7 @@ function Processes() {
                   <button onClick={() => setIsNewProcessOpen(true)} className="p-1 hover:bg-slate-100 rounded-lg text-slate-300 transition-colors"><Plus className="h-4 w-4" /></button>
                 </div>
 
-                <div className="flex-grow bg-slate-100/30 rounded-[2.5rem] p-5 space-y-5 border border-slate-100/50 overflow-y-auto custom-scrollbar backdrop-blur-sm">
+                <div className="flex-grow bg-slate-100/30 rounded-3xl p-5 space-y-5 border border-slate-100/50 overflow-y-auto custom-scrollbar backdrop-blur-sm">
                   {isLoading ? (
                     <div className="py-10 text-center">
                       <Loader2 className="h-6 w-6 animate-spin text-slate-300 mx-auto" />
@@ -271,7 +271,7 @@ function Processes() {
                       <Link
                         key={p.id}
                         to="/processes/$id" params={{ id: p.id }}
-                        className="block bg-white p-5 rounded-[1.75rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-primary/40 hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden"
+                        className="block bg-white p-5 rounded-2xl shadow-sm border border-slate-100 hover:shadow-2xl hover:border-primary/40 hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden"
                       >
                         <div className="mb-3 flex items-center justify-between">
                           <span className="text-[10px] font-mono font-black text-primary bg-primary/5 px-2 py-0.5 rounded uppercase tracking-tighter border border-primary/10">PROC-{p.id.substring(0, 6)}</span>
@@ -300,7 +300,7 @@ function Processes() {
                       </Link>
                     ))
                   ) : (
-                    <div className="py-8 px-4 opacity-80 border-2 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center text-center">
+                    <div className="py-8 px-4 opacity-80 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center">
                       <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                         <Package className="h-6 w-6 text-slate-300" />
                       </div>
@@ -313,7 +313,7 @@ function Processes() {
           })}
         </div>
       ) : (
-        <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left">
               <thead>

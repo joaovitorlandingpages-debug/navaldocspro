@@ -67,7 +67,7 @@ function GettingStartedPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <Card className="md:col-span-2 p-8 rounded-[2.5rem] border-slate-100 shadow-xl shadow-slate-200/50 bg-white">
+        <Card className="md:col-span-2 p-8 rounded-3xl border-slate-100 shadow-xl shadow-slate-200/50 bg-white">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-sm font-black uppercase tracking-widest text-navy">Progresso de Implantação</h3>
             <span className="text-2xl font-black text-primary">{onboardingStats?.percent || 0}%</span>
@@ -103,7 +103,7 @@ function GettingStartedPage() {
         </Card>
 
         <div className="space-y-6">
-          <Card className="p-8 bg-navy text-white rounded-[2.5rem] relative overflow-hidden shadow-2xl border-none group">
+          <Card className="p-8 bg-navy text-white rounded-3xl relative overflow-hidden shadow-2xl border-none group">
             <PlayCircle className="absolute -right-4 -bottom-4 h-24 w-24 text-white/5 group-hover:scale-110 transition-transform duration-500" />
             <h4 className="text-xs font-black uppercase tracking-widest text-primary mb-4">Tutorial em Vídeo</h4>
             <p className="text-sm font-bold leading-relaxed mb-6">Aprenda a criar seu primeiro processo em menos de 2 minutos.</p>
@@ -112,7 +112,7 @@ function GettingStartedPage() {
             </Button>
           </Card>
 
-          <Card className="p-8 border-slate-100 rounded-[2.5rem] bg-white shadow-lg">
+          <Card className="p-8 border-slate-100 rounded-3xl bg-white shadow-lg">
             <h4 className="text-xs font-black uppercase tracking-widest text-navy mb-6 flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-primary" /> Base de Conhecimento
             </h4>
@@ -126,8 +126,8 @@ function GettingStartedPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-gradient-to-br from-white to-slate-50 p-10 rounded-[3rem] border border-slate-100 shadow-xl flex flex-col items-center text-center space-y-6">
-          <div className="h-16 w-16 bg-primary/10 rounded-[2rem] flex items-center justify-center">
+        <div className="bg-gradient-to-br from-white to-slate-50 p-10 rounded-3xl border border-slate-100 shadow-xl flex flex-col items-center text-center space-y-6">
+          <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center">
             <FileText className="h-8 w-8 text-primary" />
           </div>
           <h3 className="text-xl font-black text-navy uppercase tracking-tight">Criar Primeiro Processo</h3>
@@ -141,8 +141,8 @@ function GettingStartedPage() {
           </Link>
         </div>
 
-        <div className="bg-gradient-to-br from-white to-slate-50 p-10 rounded-[3rem] border border-slate-100 shadow-xl flex flex-col items-center text-center space-y-6">
-          <div className="h-16 w-16 bg-cyan-50 rounded-[2rem] flex items-center justify-center">
+        <div className="bg-gradient-to-br from-white to-slate-50 p-10 rounded-3xl border border-slate-100 shadow-xl flex flex-col items-center text-center space-y-6">
+          <div className="h-16 w-16 bg-cyan-50 rounded-2xl flex items-center justify-center">
             <Zap className="h-8 w-8 text-cyan-500" />
           </div>
           <h3 className="text-xl font-black text-navy uppercase tracking-tight">Testar Central OCR</h3>

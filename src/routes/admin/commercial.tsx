@@ -106,7 +106,7 @@ function CommercialDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
-          <Card key={i} className="border-slate-100 shadow-sm hover:shadow-xl transition-all group rounded-[2rem] overflow-hidden">
+          <Card key={i} className="border-slate-100 shadow-sm hover:shadow-xl transition-all group rounded-2xl overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className={`p-3 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 group-hover:scale-110 transition-transform`}>
@@ -125,7 +125,7 @@ function CommercialDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         <Card className="lg:col-span-2 border-slate-100 shadow-sm rounded-[2.5rem] overflow-hidden">
+         <Card className="lg:col-span-2 border-slate-100 shadow-sm rounded-3xl overflow-hidden">
             <CardHeader className="p-8 border-b border-slate-50 flex flex-row items-center justify-between bg-white">
                <CardTitle className="text-navy text-xs font-black uppercase tracking-widest flex items-center gap-3 italic">
                   <BarChart3 className="h-5 w-5 text-primary" /> Histórico de Receita SaaS
@@ -160,7 +160,7 @@ function CommercialDashboard() {
          </Card>
 
          <div className="space-y-6">
-            <Card className="border-slate-100 shadow-sm rounded-[2.5rem] overflow-hidden bg-navy text-white h-full">
+            <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-navy text-white h-full">
                <CardHeader className="p-8 pb-4">
                   <CardTitle className="text-primary text-[10px] font-black uppercase tracking-[0.3em]">Operação Enterprise</CardTitle>
                </CardHeader>
@@ -197,7 +197,7 @@ function CommercialDashboard() {
          </div>
       </div>
 
-      <section className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+      <section className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group">
          <div className="absolute top-0 right-0 p-8">
             <Rocket className="h-24 w-24 text-slate-50 group-hover:text-primary/10 transition-colors duration-1000 rotate-12" />
          </div>

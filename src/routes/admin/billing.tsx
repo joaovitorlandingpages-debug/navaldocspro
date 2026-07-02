@@ -111,7 +111,7 @@ function AdminBilling() {
         ))}
       </div>
 
-      <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden">
+      <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
         <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/30">
            <h3 className="text-sm font-black text-navy uppercase tracking-widest">Pagamentos Recentes</h3>
            <div className="relative w-full md:max-w-xs">
@@ -173,7 +173,7 @@ function AdminBilling() {
          </h3>
          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {plans?.map((plan: any) => (
-               <Card key={plan.id} className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm hover:shadow-xl transition-all group border-t-8 border-t-primary">
+               <Card key={plan.id} className="p-8 rounded-3xl border-slate-100 shadow-sm hover:shadow-xl transition-all group border-t-8 border-t-primary">
                   <div className="flex justify-between items-start mb-6">
                      <div>
                         <h4 className="text-xl font-black text-navy uppercase tracking-tighter">{plan.name}</h4>
@@ -201,7 +201,7 @@ function AdminBilling() {
          </div>
       </div>
 
-      <div className="bg-navy text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden group mt-12">
+      <div className="bg-navy text-white p-10 rounded-3xl shadow-2xl relative overflow-hidden group mt-12">
          <div className="absolute top-0 right-0 p-10 opacity-5">
             <TrendingUp className="h-64 w-64" />
          </div>

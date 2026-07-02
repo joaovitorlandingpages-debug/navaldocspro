@@ -237,7 +237,7 @@ function FullQAReportPage() {
          ))}
       </div>
 
-      <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white">
+      <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white">
         <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
            <h3 className="text-sm font-black uppercase tracking-widest text-navy">Checklist de Auditoria Operacional</h3>
            <Badge className="bg-emerald-500 text-white border-none text-[9px] font-black uppercase px-4 py-1">CERTIFICADO PARA PRODUÇÃO</Badge>
@@ -272,7 +272,7 @@ function FullQAReportPage() {
         </div>
       </Card>
 
-      <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white">
+      <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white">
         <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
            <h3 className="text-sm font-black uppercase tracking-widest text-navy">Deep Audit: Gerador Documental (Qualidade A4)</h3>
            <Badge className="bg-primary text-white border-none text-[9px] font-black uppercase px-4 py-1">VALIDAÇÃO PROFISSIONAL</Badge>
@@ -303,7 +303,7 @@ function FullQAReportPage() {
         </div>
       </Card>
 
-      <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white">
+      <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white">
         <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
            <h3 className="text-sm font-black uppercase tracking-widest text-navy">Deep Audit: Inteligência Artificial (OCR)</h3>
            <Badge className="bg-emerald-500 text-white border-none text-[9px] font-black uppercase px-4 py-1">CERTIFICADO IA-MAX</Badge>
@@ -334,7 +334,7 @@ function FullQAReportPage() {
         </div>
       </Card>
 
-      <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white mt-8">
+      <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white mt-8">
         <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
            <h3 className="text-sm font-black uppercase tracking-widest text-navy">Deep Audit: Dossiê Naval (Consolidação Final)</h3>
            <Badge className="bg-primary text-white border-none text-[9px] font-black uppercase px-4 py-1">APROVAÇÃO OPERACIONAL</Badge>
@@ -371,7 +371,7 @@ function FullQAReportPage() {
         </div>
       </Card>
  
-      <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white">
+      <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white">
         <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
            <h3 className="text-sm font-black uppercase tracking-widest text-navy">Deep Audit: Fluxo de Assinaturas (Legal Compliance)</h3>
            <Badge className="bg-primary text-white border-none text-[9px] font-black uppercase px-4 py-1">CERTIFICADO JURÍDICO</Badge>
@@ -408,7 +408,7 @@ function FullQAReportPage() {
         </div>
       </Card>
 
-      <div className="bg-navy rounded-[3rem] p-12 text-white relative overflow-hidden group">
+      <div className="bg-navy rounded-3xl p-12 text-white relative overflow-hidden group">
          <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:scale-110 transition-transform duration-1000">
             <Lock className="h-48 w-48 text-primary" />
          </div>

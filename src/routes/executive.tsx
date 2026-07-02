@@ -93,7 +93,7 @@ function ExecutiveDashboard() {
         ))}
       </div>
 
-      <Card className="p-8 bg-[#000B18] text-white border-none rounded-[2.5rem] relative overflow-hidden">
+      <Card className="p-8 bg-[#000B18] text-white border-none rounded-3xl relative overflow-hidden">
         <div className="absolute -right-20 -bottom-20 opacity-5">
           <Award className="h-72 w-72" />
         </div>

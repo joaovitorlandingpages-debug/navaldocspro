@@ -65,7 +65,7 @@ function AIOperationsCenterPage() {
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map((stat, idx) => (
-          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group relative overflow-hidden rounded-[2.5rem] bg-white">
+          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group relative overflow-hidden rounded-3xl bg-white">
              <div className="flex justify-between items-start mb-4">
                 <div className="p-2.5 bg-slate-50 rounded-xl group-hover:bg-primary/5 transition-colors">
                    {stat.icon}
@@ -90,7 +90,7 @@ function AIOperationsCenterPage() {
         <div className="lg:col-span-8 space-y-8">
           <OperationalCharts />
 
-          <Card className="p-8 border-none shadow-sm rounded-[3rem] bg-white overflow-hidden">
+          <Card className="p-8 border-none shadow-sm rounded-3xl bg-white overflow-hidden">
              <div className="flex items-center justify-between mb-8">
                 <div>
                    <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">

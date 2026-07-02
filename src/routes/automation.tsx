@@ -43,7 +43,7 @@ function AutomationPage() {
            </div>
            <AutomationFlow />
            
-           <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+           <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
               <h3 className="font-bold text-navy mb-4 uppercase text-xs tracking-widest">Regras Recentes</h3>
               <div className="space-y-3">
                  {[
@@ -69,7 +69,7 @@ function AutomationPage() {
            </div>
            <SmartOCR />
 
-           <div className="bg-navy text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden">
+           <div className="bg-navy text-white p-8 rounded-3xl shadow-xl relative overflow-hidden">
               <div className="relative z-10">
                  <h4 className="text-lg font-bold mb-4 uppercase tracking-tighter text-primary">Logs de Automação</h4>
                  <div className="space-y-4 font-mono text-[10px]">

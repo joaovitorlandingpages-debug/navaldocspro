@@ -275,14 +275,14 @@ export default function DocumentCenter() {
           ))}
 
           {filteredDocs?.length === 0 && (
-            <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-[3rem]">
+            <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-3xl">
               <Database className="h-12 w-12 text-slate-100 mx-auto mb-4" />
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhum documento encontrado</p>
         </div>
       )}
 
       {!isLoading && totalCount > pageSize && (
-        <div className="mt-8 p-6 bg-white border border-slate-100 rounded-[2rem] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+        <div className="mt-8 p-6 bg-white border border-slate-100 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
           <span>Mostrando {documents?.length} de {totalCount} documentos</span>
           <div className="flex gap-2">
             <Button 

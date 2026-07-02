@@ -81,7 +81,7 @@ export default function SubscriptionUsage() {
         </div>
         
         {subscription?.plan && (
-            <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl flex items-center gap-6">
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xl flex items-center gap-6">
                 <div className="h-12 w-12 bg-navy rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-lg">
                     {subscription.plan.name.charAt(0)}
                 </div>
@@ -105,7 +105,7 @@ export default function SubscriptionUsage() {
           const isCritical = percentage >= 100;
 
           return (
-            <Card key={key} className="p-6 border-slate-100 shadow-sm hover:shadow-md transition-all group rounded-[2rem]">
+            <Card key={key} className="p-6 border-slate-100 shadow-sm hover:shadow-md transition-all group rounded-2xl">
               <div className="flex justify-between items-start mb-6">
                 <div className={`p-3 rounded-2xl bg-slate-50 ${meta.color} group-hover:scale-110 transition-transform shadow-inner`}>
                   {meta.icon}
@@ -139,7 +139,7 @@ export default function SubscriptionUsage() {
 
       <div className="grid lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8">
-           <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white">
+           <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white">
               <div className="p-8 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
                  <div>
                     <h3 className="text-xs font-black uppercase tracking-widest text-navy">Histórico de Faturamento</h3>
@@ -184,7 +184,7 @@ export default function SubscriptionUsage() {
         </div>
 
         <div className="lg:col-span-4 space-y-8">
-           <Card className="p-8 border-slate-100 shadow-sm space-y-6 bg-[#020D1D] text-white rounded-[2.5rem] relative overflow-hidden group">
+           <Card className="p-8 border-slate-100 shadow-sm space-y-6 bg-[#020D1D] text-white rounded-3xl relative overflow-hidden group">
               <div className="absolute -right-10 -bottom-10 opacity-5 group-hover:scale-110 transition-transform duration-700">
                  <Zap className="h-64 w-64 text-primary" />
               </div>
@@ -208,7 +208,7 @@ export default function SubscriptionUsage() {
               </div>
            </Card>
 
-           <Card className="p-8 border-slate-100 shadow-sm space-y-6 rounded-[2.5rem] bg-slate-50">
+           <Card className="p-8 border-slate-100 shadow-sm space-y-6 rounded-3xl bg-slate-50">
               <h3 className="font-black text-navy uppercase tracking-widest text-xs flex items-center gap-2">
                 <Clock className="h-4 w-4 text-primary" /> Detalhes da Assinatura
               </h3>
@@ -240,7 +240,7 @@ export default function SubscriptionUsage() {
         </div>
       </div>
 
-      <div className="p-10 bg-gradient-to-r from-navy to-slate-900 rounded-[3rem] text-white flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl relative overflow-hidden">
+      <div className="p-10 bg-gradient-to-r from-navy to-slate-900 rounded-3xl text-white flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl relative overflow-hidden">
          <div className="absolute top-0 right-0 p-10 opacity-5">
             <DollarSign className="h-32 w-32" />
          </div>

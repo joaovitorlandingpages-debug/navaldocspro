@@ -294,7 +294,7 @@ function DocumentGenerator() {
 
       <div className="grid lg:grid-cols-12 gap-8">
         <div className="lg:col-span-5 space-y-8">
-          <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm space-y-8 bg-white relative">
+          <Card className="p-8 rounded-3xl border-slate-100 shadow-sm space-y-8 bg-white relative">
             <div className="space-y-6 relative z-10">
               <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
                 <Settings2 className="h-4 w-4 text-red-500" /> Configuração Master
@@ -498,7 +498,7 @@ function DocumentGenerator() {
                />
             </div>
           ) : (
-            <Card className="h-full min-h-[600px] border-slate-100 border-dashed bg-slate-50/30 flex flex-col items-center justify-center p-12 text-center rounded-[2.5rem]">
+            <Card className="h-full min-h-[600px] border-slate-100 border-dashed bg-slate-50/30 flex flex-col items-center justify-center p-12 text-center rounded-3xl">
               <div className="bg-white p-8 rounded-full shadow-xl shadow-slate-200/50 mb-8 animate-bounce">
                 <LayoutTemplate className="h-16 w-16 text-slate-200" />
               </div>

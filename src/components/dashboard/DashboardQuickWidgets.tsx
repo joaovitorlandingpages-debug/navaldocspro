@@ -27,7 +27,7 @@ export function DashboardQuickWidgets({ recentDocs, loading }: { recentDocs?: an
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden transition-all hover:shadow-md">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all hover:shadow-md">
         <div className="p-6 border-b bg-slate-50/30">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-[10px] font-black uppercase tracking-[0.15em] text-navy flex items-center gap-2">
@@ -108,7 +108,7 @@ export function DashboardQuickWidgets({ recentDocs, loading }: { recentDocs?: an
         </div>
       </div>
 
-      <Card className="p-6 bg-gradient-to-br from-navy to-slate-900 text-white rounded-[2.5rem] relative overflow-hidden shadow-xl border-none">
+      <Card className="p-6 bg-gradient-to-br from-navy to-slate-900 text-white rounded-3xl relative overflow-hidden shadow-xl border-none">
         <div className="absolute -right-6 -top-6 p-8 opacity-10">
           <Zap className="h-24 w-24 text-primary" />
         </div>

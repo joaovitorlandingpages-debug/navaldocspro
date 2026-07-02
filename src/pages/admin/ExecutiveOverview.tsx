@@ -67,7 +67,7 @@ export default function ExecutiveOverview() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-         <Card className="border-slate-100 shadow-sm rounded-[2.5rem] overflow-hidden">
+         <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden">
             <CardHeader className="bg-navy p-8">
                <CardTitle className="text-white text-xs font-black uppercase tracking-[0.2em] flex items-center gap-3 italic">
                   <Target className="h-5 w-5 text-primary" /> Roadmap de Expansão Nacional
@@ -93,7 +93,7 @@ export default function ExecutiveOverview() {
             </CardContent>
          </Card>
 
-         <Card className="bg-[#020D1D] text-white border-none p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+         <Card className="bg-[#020D1D] text-white border-none p-8 rounded-3xl shadow-2xl relative overflow-hidden group">
             <Globe className="absolute -right-10 -bottom-10 h-64 w-64 text-primary opacity-5 group-hover:rotate-12 transition-transform duration-1000" />
             <div className="relative z-10">
                <h3 className="text-xl font-black uppercase tracking-tighter italic mb-4">Marketplace <span className="text-primary">Ecosystem</span></h3>

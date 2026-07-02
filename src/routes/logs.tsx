@@ -51,7 +51,7 @@ function LogsPage() {
 
        <div className="grid lg:grid-cols-12 gap-8">
           <div className="lg:col-span-12">
-             <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white">
+             <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white">
                 <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/30">
                    <div className="flex items-center gap-2">
                       <Zap className="h-4 w-4 text-primary" />

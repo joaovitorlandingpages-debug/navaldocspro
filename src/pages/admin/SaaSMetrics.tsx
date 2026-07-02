@@ -76,7 +76,7 @@ export default function AdminSaaSMetrics() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="border-slate-100 shadow-sm rounded-[2.5rem] overflow-hidden">
+        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden">
           <CardHeader className="bg-navy p-8">
             <CardTitle className="text-white text-sm font-black uppercase tracking-widest flex items-center gap-3">
               <TrendingUp className="h-5 w-5 text-primary" /> Distribuição de Receita
@@ -107,7 +107,7 @@ export default function AdminSaaSMetrics() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-100 shadow-sm rounded-[2.5rem] overflow-hidden">
+        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden">
           <CardHeader className="bg-slate-50 p-8 border-b border-slate-100">
             <CardTitle className="text-navy text-sm font-black uppercase tracking-widest flex items-center gap-3">
               <Activity className="h-5 w-5 text-primary" /> Uso da Infraestrutura

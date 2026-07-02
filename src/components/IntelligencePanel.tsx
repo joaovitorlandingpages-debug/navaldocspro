@@ -56,7 +56,7 @@ export function IntelligencePanel() {
 
   return (
     <div className="space-y-6">
-      <div className="p-6 bg-gradient-to-br from-primary to-blue-700 text-white rounded-[2rem] shadow-xl relative overflow-hidden group mb-4">
+      <div className="p-6 bg-gradient-to-br from-primary to-blue-700 text-white rounded-2xl shadow-xl relative overflow-hidden group mb-4">
          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform">
             <Sparkles className="h-16 w-16" />
          </div>
@@ -79,7 +79,7 @@ export function IntelligencePanel() {
 
       <div className="grid gap-4">
         {insights?.map((insight: any) => (
-          <Card key={insight.id} className="p-5 border-none shadow-sm bg-white hover:shadow-md transition-all group overflow-hidden relative rounded-[2rem]">
+          <Card key={insight.id} className="p-5 border-none shadow-sm bg-white hover:shadow-md transition-all group overflow-hidden relative rounded-2xl">
             <div className={`absolute top-0 left-0 w-1.5 h-full ${
               insight.type === 'critical' ? 'bg-red-500' : 
               insight.type === 'automation' ? 'bg-emerald-500' : 'bg-primary'
@@ -109,7 +109,7 @@ export function IntelligencePanel() {
         ))}
       </div>
 
-      <Card className="p-6 bg-navy text-white rounded-[2.5rem] relative overflow-hidden shadow-2xl">
+      <Card className="p-6 bg-navy text-white rounded-3xl relative overflow-hidden shadow-2xl">
          <div className="absolute top-0 right-0 p-6 opacity-10">
             <Bot className="h-20 w-20 text-primary" />
          </div>

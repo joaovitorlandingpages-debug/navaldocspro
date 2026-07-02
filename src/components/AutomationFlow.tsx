@@ -33,7 +33,7 @@ export function AutomationFlow() {
   ];
 
   return (
-    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden">
+    <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
       <div className="absolute top-0 right-0 p-8">
         <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center">
           <Zap className="h-6 w-6 text-primary" />

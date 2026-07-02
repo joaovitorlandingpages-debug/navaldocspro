@@ -107,8 +107,8 @@ function Index() {
 
               <div className="pt-20">
                 <div className="relative mx-auto max-w-5xl group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-primary to-blue-600 rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                  <div className="relative rounded-[2rem] bg-[#020D1D] border border-white/10 overflow-hidden shadow-2xl">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary to-blue-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                  <div className="relative rounded-2xl bg-[#020D1D] border border-white/10 overflow-hidden shadow-2xl">
                     <div className="h-12 bg-white/5 border-b border-white/10 flex items-center px-6 gap-2">
                       <div className="flex gap-2">
                         <div className="h-3 w-3 rounded-full bg-rose-500/50" />
@@ -224,24 +224,24 @@ function Index() {
               </div>
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-6 mt-12">
-                   <div className="p-8 bg-white rounded-[2rem] shadow-xl border border-slate-100">
+                   <div className="p-8 bg-white rounded-2xl shadow-xl border border-slate-100">
                       <BarChart3 className="h-10 w-10 text-blue-500 mb-4" />
                       <p className="text-3xl font-black text-navy tracking-tighter">70%</p>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Mais produtividade</p>
                    </div>
-                   <div className="p-8 bg-navy text-white rounded-[2rem] shadow-xl">
+                   <div className="p-8 bg-navy text-white rounded-2xl shadow-xl">
                       <Cpu className="h-10 w-10 text-primary mb-4" />
                       <p className="text-3xl font-black tracking-tighter">0.5s</p>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tempo de OCR</p>
                    </div>
                 </div>
                 <div className="space-y-6">
-                   <div className="p-8 bg-primary text-white rounded-[2rem] shadow-xl">
+                   <div className="p-8 bg-primary text-white rounded-2xl shadow-xl">
                       <Users className="h-10 w-10 text-white mb-4" />
                       <p className="text-3xl font-black tracking-tighter">+500</p>
                       <p className="text-xs font-bold text-white/60 uppercase tracking-widest">Empresas Ativas</p>
                    </div>
-                   <div className="p-8 bg-white rounded-[2rem] shadow-xl border border-slate-100">
+                   <div className="p-8 bg-white rounded-2xl shadow-xl border border-slate-100">
                       <Shield className="h-10 w-10 text-emerald-500 mb-4" />
                       <p className="text-3xl font-black text-navy tracking-tighter">100%</p>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Conformidade Marinha</p>
@@ -282,7 +282,7 @@ function Index() {
                   features: ["White Label Parcial", "API de Integração", "Manager Dedicado", "Usuários Ilimitados", "Treinamento VIP"] 
                 }
               ].map((plan, idx) => (
-                <div key={idx} className={`relative p-10 rounded-[2.5rem] border-2 transition-all hover:scale-105 duration-500 ${plan.popular ? 'border-primary shadow-2xl bg-white scale-105 z-10' : 'bg-slate-50 border-transparent shadow-sm'}`}>
+                <div key={idx} className={`relative p-10 rounded-3xl border-2 transition-all hover:scale-105 duration-500 ${plan.popular ? 'border-primary shadow-2xl bg-white scale-105 z-10' : 'bg-slate-50 border-transparent shadow-sm'}`}>
                   {plan.popular && <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-lg">Mais Vendido</span>}
                   
                   <div className="mb-10">
@@ -316,7 +316,7 @@ function Index() {
         <section className="py-24 bg-navy relative overflow-hidden">
           <div className="absolute inset-0 bg-primary opacity-5 pointer-events-none" />
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="bg-[#000B18] rounded-[3rem] p-16 lg:p-24 text-center border border-white/10 shadow-3xl">
+            <div className="bg-[#000B18] rounded-3xl p-16 lg:p-24 text-center border border-white/10 shadow-3xl">
               <h2 className="text-5xl lg:text-7xl font-black text-white mb-8 tracking-tighter uppercase leading-none">
                 DOMINE O MERCADO <span className="text-primary italic">NAVAL</span>
               </h2>

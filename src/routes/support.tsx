@@ -83,7 +83,7 @@ function SupportPage() {
 
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-8">
-          <section className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+          <section className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
             <h2 className="text-xl font-bold text-navy mb-6 flex items-center gap-2">
               <MessageCircle className="h-6 w-6 text-primary" /> Enviar Mensagem
             </h2>
@@ -191,7 +191,7 @@ function SupportPage() {
         </div>
 
         <div className="space-y-8">
-           <div className="bg-gradient-to-br from-navy to-slate-800 p-8 rounded-[2rem] text-white shadow-xl group overflow-hidden relative">
+           <div className="bg-gradient-to-br from-navy to-slate-800 p-8 rounded-2xl text-white shadow-xl group overflow-hidden relative">
               <BookOpen className="absolute -right-8 -bottom-8 h-40 w-40 text-white/5 group-hover:scale-110 transition-transform duration-500" />
               <div className="relative z-10">
                 <h3 className="text-xl font-bold mb-4">Central de Conhecimento</h3>
@@ -202,7 +202,7 @@ function SupportPage() {
               </div>
            </div>
 
-           <div className="bg-slate-100 p-8 rounded-[2.5rem] border border-slate-200/50">
+           <div className="bg-slate-100 p-8 rounded-3xl border border-slate-200/50">
               <h3 className="text-navy font-bold mb-6 flex items-center gap-2">
                  <LifeBuoy className="h-5 w-5 text-primary" /> Atendimento Humano
               </h3>

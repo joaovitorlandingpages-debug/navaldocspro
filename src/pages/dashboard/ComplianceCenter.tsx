@@ -160,7 +160,7 @@ export default function ComplianceCenter() {
             <CardContent>
               <div className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="p-6 rounded-[2rem] bg-slate-50 border border-slate-100">
+                  <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
                     <h4 className="text-xs font-black uppercase tracking-widest text-navy mb-4">Políticas de Bloqueio</h4>
                     <div className="space-y-3">
                       {[
@@ -179,7 +179,7 @@ export default function ComplianceCenter() {
                     </div>
                   </div>
                   
-                  <div className="p-6 rounded-[2rem] bg-amber-50/50 border border-amber-100">
+                  <div className="p-6 rounded-2xl bg-amber-50/50 border border-amber-100">
                     <h4 className="text-xs font-black uppercase tracking-widest text-amber-800 mb-4">Critérios de Rigor Operacional</h4>
                     <div className="space-y-4">
                        <p className="text-[10px] text-amber-700 font-medium leading-relaxed italic">

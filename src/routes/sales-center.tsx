@@ -54,7 +54,7 @@ function SalesCenterPage() {
       {/* Metrics section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {metrics.map((stat, i) => (
-          <Card key={i} className="border-slate-100 shadow-xl shadow-slate-200/50 hover:scale-105 transition-all duration-300 rounded-[2rem] overflow-hidden group">
+          <Card key={i} className="border-slate-100 shadow-xl shadow-slate-200/50 hover:scale-105 transition-all duration-300 rounded-2xl overflow-hidden group">
             <CardContent className="p-8">
                <div className={`p-4 rounded-2xl bg-slate-50 mb-6 w-fit group-hover:scale-110 transition-transform ${stat.color}`}>
                   <stat.icon className="h-6 w-6" />
@@ -69,7 +69,7 @@ function SalesCenterPage() {
 
       {/* Comparison section */}
       <div className="grid md:grid-cols-2 gap-8">
-         <Card className="border-slate-100 shadow-sm rounded-[2.5rem] bg-slate-50 overflow-hidden border-2 border-dashed">
+         <Card className="border-slate-100 shadow-sm rounded-3xl bg-slate-50 overflow-hidden border-2 border-dashed">
             <CardHeader className="p-8">
                <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-400">Antes: Operação Manual</CardTitle>
             </CardHeader>
@@ -89,7 +89,7 @@ function SalesCenterPage() {
             </CardContent>
          </Card>
 
-         <Card className="border-primary/20 shadow-2xl shadow-primary/10 rounded-[2.5rem] bg-white overflow-hidden relative border-2 ring-4 ring-primary/5">
+         <Card className="border-primary/20 shadow-2xl shadow-primary/10 rounded-3xl bg-white overflow-hidden relative border-2 ring-4 ring-primary/5">
             <div className="absolute top-0 right-0 p-4">
                <Badge className="bg-primary text-white font-black text-[9px] uppercase tracking-widest">Evolução</Badge>
             </div>
@@ -122,7 +122,7 @@ function SalesCenterPage() {
          
          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {features.map((f, i) => (
-               <div key={i} className="p-8 bg-white border border-slate-100 rounded-[2rem] hover:shadow-xl transition-all group">
+               <div key={i} className="p-8 bg-white border border-slate-100 rounded-2xl hover:shadow-xl transition-all group">
                   <div className="h-12 w-12 bg-primary/5 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-all">
                      <f.icon className="h-6 w-6" />
                   </div>
@@ -134,7 +134,7 @@ function SalesCenterPage() {
       </div>
 
       {/* CTA section */}
-      <div className="p-12 bg-navy rounded-[3rem] text-center text-white relative overflow-hidden group">
+      <div className="p-12 bg-navy rounded-3xl text-center text-white relative overflow-hidden group">
          <div className="absolute top-0 left-0 w-full h-full bg-primary/10 blur-[100px] -ml-40 group-hover:bg-primary/20 transition-all duration-1000" />
          <div className="relative z-10 space-y-6">
             <h2 className="text-4xl font-black uppercase tracking-tighter italic italic">Pronto para <span className="text-primary">Escalar</span> seu Negócio?</h2>

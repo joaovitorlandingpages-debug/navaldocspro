@@ -80,13 +80,13 @@ function DemoPage() {
              <Button 
                onClick={handleStartDemo}
                disabled={isSeeding}
-               className="bg-primary hover:bg-blue-600 text-white px-12 py-10 rounded-[2.5rem] text-[14px] font-black uppercase tracking-[0.3em] shadow-[0_30px_60px_rgba(37,99,235,0.3)] hover:scale-105 transition-all border border-white/10"
+               className="bg-primary hover:bg-blue-600 text-white px-12 py-10 rounded-3xl text-[14px] font-black uppercase tracking-[0.3em] shadow-[0_30px_60px_rgba(37,99,235,0.3)] hover:scale-105 transition-all border border-white/10"
              >
                 {isSeeding ? "Configurando..." : "Iniciar Demonstração Premium"} 
                 <Rocket className="ml-4 h-6 w-6" />
              </Button>
              
-             <button className="flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/10 px-10 py-5 rounded-[2.5rem] transition-all group">
+             <button className="flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/10 px-10 py-5 rounded-3xl transition-all group">
                 <div className="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-primary transition-all">
                    <PlayCircle className="h-6 w-6 text-white" />
                 </div>

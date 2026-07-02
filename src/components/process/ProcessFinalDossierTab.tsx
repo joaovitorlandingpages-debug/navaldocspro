@@ -588,7 +588,7 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
 
   if (loading) {
     return (
-      <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-3">
+      <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm space-y-3">
         <Skeleton className="h-6 w-64" />
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-32 w-full" />
@@ -617,7 +617,7 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
         </div>
       )}
       {/* Header */}
-      <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+      <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -717,7 +717,7 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
 
       <div className="grid md:grid-cols-3 gap-4">
         {/* Summary */}
-        <div className="md:col-span-2 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm space-y-4">
+        <div className="md:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
           <h4 className="font-black uppercase tracking-widest text-xs text-slate-500">Resumo</h4>
           <div className="grid sm:grid-cols-2 gap-4">
             <Item icon={<FileText className="h-4 w-4" />} label="Processo" value={bundle.process.process_type} />
@@ -758,7 +758,7 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
         </div>
 
         {/* Checklist */}
-        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
           <h4 className="font-black uppercase tracking-widest text-xs text-slate-500 mb-3">Checklist final</h4>
           <ul className="space-y-2">
             {checklist.map((c) => (

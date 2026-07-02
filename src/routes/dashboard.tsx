@@ -206,7 +206,7 @@ function DashboardLayout() {
         </div>
         {showLabels && (
 
-          <div className="mt-8 px-4 py-4 bg-white/5 rounded-[2rem] border border-white/5 animate-in zoom-in-95 duration-500 relative group/company">
+          <div className="mt-8 px-4 py-4 bg-white/5 rounded-2xl border border-white/5 animate-in zoom-in-95 duration-500 relative group/company">
              {(profile?.companies?.name || "").toLowerCase().includes('demo') && (
                <Badge className="absolute -top-3 -right-2 bg-amber-500 text-white border-none font-black text-[8px] px-2 py-0.5 animate-pulse shadow-lg shadow-amber-500/20">DEMO MODE</Badge>
              )}
@@ -541,10 +541,10 @@ export function RouteContent() {
     return (
     <div className="space-y-6 md:space-y-12 animate-in fade-in duration-1000 pb-12 max-w-[1800px] mx-auto">
       {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
-        <Card className="p-6 md:p-14 bg-[#000B18] text-white border-white/5 rounded-[2rem] md:rounded-[4rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12 mb-8 md:mb-16 shadow-[0_50px_100px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+        <Card className="p-6 md:p-14 bg-[#000B18] text-white border-white/5 rounded-2xl md:rounded-[4rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12 mb-8 md:mb-16 shadow-[0_50px_100px_rgba(0,0,0,0.3)] relative overflow-hidden group">
            <div className="absolute top-0 right-0 w-2/3 h-full bg-primary/20 blur-[120px] -mr-40 group-hover:bg-primary/30 transition-all duration-1000" />
            <div className="flex flex-col md:flex-row items-center gap-10 relative z-10 text-center md:text-left">
-              <div className="h-24 w-24 bg-primary rounded-[2.5rem] flex items-center justify-center shadow-[0_0_50px_rgba(37,99,235,0.5)] group-hover:scale-110 group-hover:rotate-12 transition-all duration-700">
+              <div className="h-24 w-24 bg-primary rounded-3xl flex items-center justify-center shadow-[0_0_50px_rgba(37,99,235,0.5)] group-hover:scale-110 group-hover:rotate-12 transition-all duration-700">
                  <Rocket className="h-12 w-12 text-white" />
               </div>
               <div className="space-y-3">
@@ -554,7 +554,7 @@ export function RouteContent() {
               </div>
            </div>
            <Link to="/getting-started" className="relative z-10 w-full md:w-auto">
-              <Button className="w-full md:w-auto bg-primary hover:bg-blue-600 text-white text-[12px] font-black uppercase tracking-[0.25em] px-12 py-8 rounded-[2rem] shadow-2xl transition-all hover:scale-105 active:scale-95 border border-white/10">
+              <Button className="w-full md:w-auto bg-primary hover:bg-blue-600 text-white text-[12px] font-black uppercase tracking-[0.25em] px-12 py-8 rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 border border-white/10">
                  Iniciar Implantação <ArrowRight className="ml-4 h-6 w-6" />
               </Button>
            </Link>
@@ -600,7 +600,7 @@ export function RouteContent() {
       {/* Critical Operational Center */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
          <div className="lg:col-span-3 space-y-12">
-           <div className="bg-white p-6 md:p-12 rounded-[1.5rem] md:rounded-[3.5rem] border border-slate-100 shadow-[0_40px_80px_rgba(0,0,0,0.03)] relative overflow-hidden group">
+           <div className="bg-white p-6 md:p-12 rounded-2xl md:rounded-[3.5rem] border border-slate-100 shadow-[0_40px_80px_rgba(0,0,0,0.03)] relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:scale-110 transition-transform duration-1000">
                  <AlertCircle className="h-48 w-48 text-red-500" />
               </div>
@@ -623,7 +623,7 @@ export function RouteContent() {
                       { title: "Assinaturas", desc: "2 memoriais prontos para assinatura do engenheiro.", color: "blue-600", icon: Signature },
                       { title: "Protocolo", desc: "1 processo aguarda envio final para a Marinha.", color: "emerald-500", icon: CheckCircle2 }
                     ].map((item, i) => (
-                      <div key={i} className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:bg-white hover:shadow-xl transition-all cursor-pointer">
+                      <div key={i} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-xl transition-all cursor-pointer">
                          <div className={`h-10 w-10 rounded-xl bg-${item.color}/10 text-${item.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                             <item.icon className="h-5 w-5" />
                          </div>
@@ -657,7 +657,7 @@ export function RouteContent() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              {(!recentProcesses || recentProcesses.length === 0) ? (
                <>
-                 <div className="bg-navy text-white p-6 rounded-[2rem] border border-white/5 shadow-xl relative overflow-hidden group opacity-40 grayscale pointer-events-none">
+                 <div className="bg-navy text-white p-6 rounded-2xl border border-white/5 shadow-xl relative overflow-hidden group opacity-40 grayscale pointer-events-none">
                     <div className="absolute -right-10 -bottom-10 opacity-5">
                        <Target className="h-40 w-40" />
                     </div>
@@ -671,7 +671,7 @@ export function RouteContent() {
                     </div>
                  </div>
 
-                 <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group opacity-40 grayscale pointer-events-none">
+                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group opacity-40 grayscale pointer-events-none">
                     <div className="absolute -right-10 -bottom-10 opacity-5 text-amber-500">
                        <AlertTriangle className="h-40 w-40" />
                     </div>
@@ -687,7 +687,7 @@ export function RouteContent() {
                </>
              ) : (
                 <>
-                  <div className="bg-navy text-white p-6 rounded-[2rem] border border-white/5 shadow-xl relative overflow-hidden group">
+                  <div className="bg-navy text-white p-6 rounded-2xl border border-white/5 shadow-xl relative overflow-hidden group">
                      <div className="absolute -right-10 -bottom-10 opacity-5 group-hover:scale-110 transition-transform duration-700">
                         <Target className="h-40 w-40" />
                      </div>
@@ -704,7 +704,7 @@ export function RouteContent() {
                      </div>
                   </div>
 
-                  <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                  <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
                      <div className="absolute -right-10 -bottom-10 opacity-5 group-hover:scale-110 transition-transform duration-700 text-amber-500">
                         <AlertTriangle className="h-40 w-40" />
                      </div>
@@ -724,7 +724,7 @@ export function RouteContent() {
       </div>
 
       <div className="lg:col-span-1 space-y-6">
-          <div className="bg-navy p-6 rounded-[2rem] text-white shadow-xl relative overflow-hidden group">
+          <div className="bg-navy p-6 rounded-2xl text-white shadow-xl relative overflow-hidden group">
              <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
                 <Database className="h-40 w-40" />
              </div>
@@ -839,7 +839,7 @@ export function RouteContent() {
       {/* Intelligence Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <ExpirationMonitor />
-        <Link to="/ocr-center" className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-[2rem] text-white shadow-xl hover:scale-[1.02] transition-all group">
+        <Link to="/ocr-center" className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-2xl text-white shadow-xl hover:scale-[1.02] transition-all group">
            <div className="flex justify-between items-start mb-4">
               <div className="p-3 bg-white/20 rounded-2xl">
                  <Cpu className="h-6 w-6" />
@@ -853,7 +853,7 @@ export function RouteContent() {
            </div>
         </Link>
 
-        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-[2rem] text-white shadow-xl">
+        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl text-white shadow-xl">
            <div className="flex justify-between items-start mb-4">
               <div className="p-3 bg-white/20 rounded-2xl">
                  <Rocket className="h-6 w-6" />
@@ -867,7 +867,7 @@ export function RouteContent() {
            </div>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-500 to-pink-600 p-6 rounded-[2rem] text-white shadow-xl">
+        <div className="bg-gradient-to-br from-orange-500 to-pink-600 p-6 rounded-2xl text-white shadow-xl">
            <div className="flex justify-between items-start mb-4">
               <div className="p-3 bg-white/20 rounded-2xl">
                  <Target className="h-6 w-6" />
@@ -985,7 +985,7 @@ export function RouteContent() {
             <DashboardQuickWidgets recentDocs={recentDocs} loading={!recentDocs} />
 
             {/* Team Productivity Widget */}
-            <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+            <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
                <div className="flex justify-between items-center mb-6">
                   <h3 className="font-black text-navy uppercase text-[10px] tracking-widest flex items-center gap-2">
                      <Users className="h-4 w-4 text-primary" /> Produtividade da Equipe
@@ -1031,7 +1031,7 @@ export function RouteContent() {
                <Link to="/settings" className="mt-6 block text-center text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Gerenciar Equipe</Link>
             </div>
 
-            <div className="bg-navy text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden group">
+            <div className="bg-navy text-white p-8 rounded-2xl shadow-xl relative overflow-hidden group">
                <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
                   <TrendingUp className="h-48 w-48" />
                </div>
@@ -1066,7 +1066,7 @@ export function RouteContent() {
                </div>
             </div>
 
-            <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden">
+            <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
                <h3 className="font-bold text-navy mb-6 flex items-center gap-2 uppercase text-xs tracking-widest">
                   <Bell className="h-5 w-5 text-amber-500 animate-bounce" /> Alertas Críticos
                </h3>

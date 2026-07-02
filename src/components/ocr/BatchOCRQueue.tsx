@@ -21,7 +21,7 @@ export function BatchOCRQueue({ jobs, isLoading }: BatchOCRQueueProps) {
   }
 
   return (
-    <Card className="p-6 border-none shadow-xl bg-white rounded-[2rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+    <Card className="p-6 border-none shadow-xl bg-white rounded-2xl space-y-6 animate-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">

@@ -49,7 +49,7 @@ export function ExpirationMonitor() {
   if (isLoading) return <div className="p-8 text-center animate-pulse">Carregando monitor...</div>;
 
   return (
-    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
+    <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
       <div className="flex justify-between items-center">
         <div>
            <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">

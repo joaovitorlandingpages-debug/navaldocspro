@@ -59,7 +59,7 @@ export function ModalLayout({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className={cn(
-          "flex flex-col p-0 overflow-hidden bg-white border-none rounded-none sm:rounded-[2rem] shadow-2xl",
+          "flex flex-col p-0 overflow-hidden bg-white border-none rounded-none sm:rounded-2xl shadow-2xl",
           "h-[100dvh] max-h-[100dvh] sm:h-auto sm:max-h-[90vh]",
           "animate-in zoom-in-95 fade-in duration-300",
           maxWidthClass,

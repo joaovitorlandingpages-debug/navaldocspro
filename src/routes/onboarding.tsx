@@ -379,7 +379,7 @@ function OnboardingFlow() {
               <p className="text-slate-500">Você está pronto para revolucionar sua gestão documental naval.</p>
             </div>
             
-            <div className="bg-navy text-white p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+            <div className="bg-navy text-white p-8 rounded-3xl shadow-2xl relative overflow-hidden group">
                <div className="relative z-10 text-center">
                   <h4 className="text-xl font-bold mb-4">Bem-vindo a Bordo</h4>
                   <p className="text-white/70 mb-8">Sua empresa agora tem acesso a todas as ferramentas profissionais do NavalDocs Pro.</p>
@@ -406,12 +406,12 @@ function OnboardingFlow() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex flex-col items-center gap-3">
+               <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center gap-3">
                   <Zap className="h-6 w-6 text-primary" />
                   <p className="text-[10px] font-black uppercase text-slate-400">OCR & IA</p>
                   <p className="text-lg font-bold text-navy uppercase">Ativado</p>
                </div>
-               <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex flex-col items-center gap-3">
+               <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center gap-3">
                   <Lock className="h-6 w-6 text-primary" />
                   <p className="text-[10px] font-black uppercase text-slate-400">Hardening</p>
                   <p className="text-lg font-bold text-navy uppercase">Certificado</p>
@@ -471,7 +471,7 @@ function OnboardingFlow() {
       </header>
 
       <main className="flex-grow flex items-center justify-center p-6">
-        <div className="max-w-xl w-full bg-white p-8 md:p-12 rounded-[3rem] shadow-2xl border border-slate-100">
+        <div className="max-w-xl w-full bg-white p-8 md:p-12 rounded-3xl shadow-2xl border border-slate-100">
            {renderStep()}
         </div>
       </main>

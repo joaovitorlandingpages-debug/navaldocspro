@@ -248,9 +248,9 @@ export default function ProductionReadiness() {
         </CardContent>
       </Card>
 
-      <div className="p-8 bg-emerald-50 border border-emerald-100 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="p-8 bg-emerald-50 border border-emerald-100 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-6">
-          <div className="h-16 w-16 bg-emerald-500 rounded-[1.5rem] flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <div className="h-16 w-16 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
             <Award className="h-8 w-8 text-white" />
           </div>
           <div>
@@ -317,7 +317,7 @@ export default function ProductionReadiness() {
               </div>
             </div>
 
-            <div className="bg-navy text-white p-8 rounded-[2rem] relative overflow-hidden group">
+            <div className="bg-navy text-white p-8 rounded-2xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-125 transition-transform duration-700">
                 <Target className="h-20 w-20 text-primary" />
               </div>

@@ -69,7 +69,7 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClo
                    >
 
                      <div className="flex gap-5">
-                        <div className={`h-14 w-14 rounded-[1.25rem] flex items-center justify-center flex-shrink-0 transition-all shadow-sm group-hover:scale-110 group-hover:shadow-lg ${
+                        <div className={`h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0 transition-all shadow-sm group-hover:scale-110 group-hover:shadow-lg ${
                           n.type === 'success' ? 'bg-green-50 text-green-600' : 
                           n.type === 'error' || n.priority === 'urgent' ? 'bg-red-50 text-red-600' :
                           n.type === 'warning' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'

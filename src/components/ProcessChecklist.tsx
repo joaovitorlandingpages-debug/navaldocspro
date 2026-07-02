@@ -84,7 +84,7 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
 
   if (loadingReqs || isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[2rem] border border-slate-100">
+      <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-100">
         <Loader2 className="h-8 w-8 text-primary animate-spin mb-4" />
         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Carregando checklist inteligente...</p>
       </div>
@@ -101,7 +101,7 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
     <div className="space-y-6">
        {/* Automation Suggestions & Productivity Banner */}
        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-[2rem] flex flex-col gap-4 shadow-sm relative overflow-hidden group">
+          <div className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl flex flex-col gap-4 shadow-sm relative overflow-hidden group">
              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform">
                 <Zap className="h-16 w-16 text-primary" />
              </div>
@@ -127,7 +127,7 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
              </Button>
           </div>
 
-          <div className="p-6 bg-navy text-white rounded-[2rem] flex flex-col justify-between shadow-xl relative overflow-hidden group">
+          <div className="p-6 bg-navy text-white rounded-2xl flex flex-col justify-between shadow-xl relative overflow-hidden group">
              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform">
                 <TrendingUp className="h-16 w-16 text-primary" />
              </div>
@@ -165,7 +165,7 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
              </Badge>
           )}
        </div>
-      <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between">
+      <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-green-500" /> Conformidade Operacional
@@ -210,7 +210,7 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
         </div>
       </div>
 
-      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
           <h3 className="text-xs font-black text-navy uppercase tracking-widest">Checklist Inteligente</h3>
           <div className="flex gap-2">
@@ -320,7 +320,7 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
           
           {requirements.length === 0 && (
             <div className="p-10 space-y-6">
-              <div className="p-8 border-2 border-dashed border-slate-100 rounded-[2rem] text-center bg-slate-50/50">
+              <div className="p-8 border-2 border-dashed border-slate-100 rounded-2xl text-center bg-slate-50/50">
                 <AlertTriangle className="h-10 w-10 text-slate-200 mx-auto mb-4" />
                 <h4 className="text-sm font-bold text-navy uppercase mb-2">Nenhum requisito configurado</h4>
                 <p className="text-xs text-slate-400 max-w-xs mx-auto font-medium">Este tipo de processo ainda não possui um pacote documental padrão. Adicione documentos manualmente na aba "Uploads".</p>

@@ -490,7 +490,7 @@ export default function SecurityCenter() {
                ) : (
                  <div className="p-12 text-center">
                    <div className="max-w-md mx-auto">
-                     <div className="h-20 w-20 rounded-[2.5rem] bg-slate-50 flex items-center justify-center mx-auto mb-6 border-2 border-dashed border-slate-200">
+                     <div className="h-20 w-20 rounded-3xl bg-slate-50 flex items-center justify-center mx-auto mb-6 border-2 border-dashed border-slate-200">
                         <Trash2 className="h-10 w-10 text-slate-200" />
                      </div>
                      <h4 className="font-black text-navy uppercase text-sm tracking-widest mb-2">Lixeira Vazia</h4>
@@ -532,7 +532,7 @@ export default function SecurityCenter() {
         </TabsContent>
       </Tabs>
 
-      <div className="mt-12 bg-navy rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl">
+      <div className="mt-12 bg-navy rounded-3xl p-8 md:p-12 text-white relative overflow-hidden shadow-2xl">
          <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
             <ShieldCheck className="h-64 w-64" />
          </div>
@@ -561,7 +561,7 @@ export default function SecurityCenter() {
                   </div>
                </div>
             </div>
-            <div className="bg-white/5 rounded-[2rem] p-6 border border-white/10 backdrop-blur-sm">
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
                <div className="flex items-center gap-4 mb-6">
                   <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
                      <Lock className="h-6 w-6 text-white" />

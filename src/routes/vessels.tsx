@@ -239,7 +239,7 @@ function Vessels() {
           <div 
             key={i} 
             onClick={() => handleOpenDetails(v)}
-            className="bg-white p-5 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden cursor-pointer"
+            className="bg-white p-5 md:p-8 rounded-2xl md:rounded-2xl border border-slate-100 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden cursor-pointer"
 
           >
             <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-500 group-hover:scale-110">
@@ -638,7 +638,7 @@ function Vessels() {
 
                  <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-6">
-                       <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                       <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
                           <div className="flex justify-between items-center mb-4">
                              <h5 className="text-xs font-black text-navy uppercase">Novo Anexo</h5>
                              <div className="flex gap-2">
@@ -686,7 +686,7 @@ function Vessels() {
                        ))}
                        
                        {(!files || files.length === 0) && (
-                         <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-[2rem]">
+                         <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-2xl">
                             <Ship className="h-12 w-12 text-slate-100 mx-auto mb-2" />
                             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhum documento</p>
                          </div>

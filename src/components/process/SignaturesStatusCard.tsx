@@ -40,7 +40,7 @@ export function SignaturesStatusCard({ processId, onOpen }: { processId: string;
   return (
     <button
       onClick={onOpen}
-      className={`w-full text-left bg-gradient-to-br ${tone} border rounded-[2rem] p-6 hover:shadow-md transition group`}
+      className={`w-full text-left bg-gradient-to-br ${tone} border rounded-2xl p-6 hover:shadow-md transition group`}
     >
       <div className="flex items-center gap-4">
         <div className="h-14 w-14 rounded-2xl bg-white/70 grid place-items-center shadow-sm">

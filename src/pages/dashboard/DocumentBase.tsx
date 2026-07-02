@@ -311,7 +311,7 @@ export default function DocumentBase() {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredTemplates?.length === 0 && !isLoadingTemplates ? (
                   <div className="col-span-full space-y-8">
-                    <div className="p-20 text-center bg-white border border-dashed border-slate-200 rounded-[3rem] shadow-sm">
+                    <div className="p-20 text-center bg-white border border-dashed border-slate-200 rounded-3xl shadow-sm">
                       <FolderOpen className="h-16 w-16 text-slate-100 mx-auto mb-6" />
                       <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-2">Nenhum template encontrado</h3>
                       <p className="text-sm text-slate-400 max-w-sm mx-auto font-medium mb-8">Nossa base nacional de templates marítimos está sempre crescendo. Tente buscar por outros termos.</p>
@@ -409,7 +409,7 @@ export default function DocumentBase() {
                 ))}
 
                 {filteredTemplates?.length === 0 && (
-                  <div className="col-span-full py-20 flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200">
+                  <div className="col-span-full py-20 flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
                     <FileText className="h-16 w-16 mb-4 opacity-20" />
                     <h3 className="text-lg font-bold text-navy">Nenhum template encontrado</h3>
                     <p className="text-xs max-w-xs text-center mt-1 font-medium">Não encontramos templates com os critérios de busca aplicados.</p>

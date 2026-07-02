@@ -180,7 +180,7 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
 
   return (
     <div className="space-y-8 pb-20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
         <div>
           <h2 className="text-xl font-black text-navy uppercase tracking-tight">Geração de Dossiê</h2>
           <p className="text-xs font-bold text-slate-400 mt-1 italic uppercase tracking-widest">Consolidação operacional e exportação multi-formato</p>
@@ -199,7 +199,7 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
       </div>
 
       {!latestDossier && !generating ? (
-        <Card className="p-12 border-dashed border-2 flex flex-col items-center text-center gap-6 rounded-[3rem] bg-slate-50/50">
+        <Card className="p-12 border-dashed border-2 flex flex-col items-center text-center gap-6 rounded-3xl bg-slate-50/50">
           <div className="h-20 w-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300">
             <Archive className="h-10 w-10" />
           </div>
@@ -228,7 +228,7 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
           </div>
 
           <div className="space-y-6">
-            <Card className="p-6 rounded-[2rem] border-slate-100 shadow-sm">
+            <Card className="p-6 rounded-2xl border-slate-100 shadow-sm">
               <h3 className="text-[10px] font-black uppercase text-navy tracking-[0.2em] mb-4 flex items-center gap-2">
                 <History className="h-3 w-3" /> Histórico de Versões
               </h3>
@@ -253,7 +253,7 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
               </div>
             </Card>
 
-            <Card className="p-6 rounded-[2rem] border-slate-100 bg-navy text-white shadow-xl shadow-navy/20 overflow-hidden relative">
+            <Card className="p-6 rounded-2xl border-slate-100 bg-navy text-white shadow-xl shadow-navy/20 overflow-hidden relative">
               <Shield className="absolute -right-4 -bottom-4 h-24 w-24 text-white/5 rotate-12" />
               <div className="relative z-10">
                 <h3 className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-4">Segurança Enterprise</h3>

@@ -481,7 +481,7 @@ function Customers() {
         }
       />
 
-      <div className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="p-4 md:p-6 border-b bg-slate-50/50 flex flex-col md:flex-row gap-4 items-center justify-between">
 
           <div className="relative w-full md:max-w-md">
@@ -1023,7 +1023,7 @@ function Customers() {
 
                  <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-6">
-                       <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                       <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
                           <h5 className="text-xs font-black text-navy uppercase mb-4">Enviar Novo Arquivo</h5>
                           <FileUploader 
                             bucket="customer-documents" 
@@ -1053,7 +1053,7 @@ function Customers() {
                        ))}
                        
                        {(!files || files.length === 0) && (
-                         <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-[2rem]">
+                         <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-2xl">
                             <FileText className="h-12 w-12 text-slate-100 mx-auto mb-2" />
                             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhum documento</p>
                          </div>
@@ -1068,7 +1068,7 @@ function Customers() {
                   <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-widest">{customerVessels.length}</Badge>
                 </div>
                 {customerVessels.length === 0 ? (
-                  <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-[2rem]">
+                  <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-2xl">
                     <Ship className="h-12 w-12 text-slate-200 mx-auto mb-2" />
                     <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhuma embarcação vinculada a este cliente.</p>
                   </div>
@@ -1099,7 +1099,7 @@ function Customers() {
               <TabsContent value="history" className="space-y-3">
                 <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Histórico de processos</h4>
                 {customerProcesses.length === 0 ? (
-                  <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-[2rem]">
+                  <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-2xl">
                     <FileText className="h-12 w-12 text-slate-200 mx-auto mb-2" />
                     <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Sem histórico de processos</p>
                   </div>

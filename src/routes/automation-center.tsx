@@ -79,7 +79,7 @@ function AutomationCenter() {
           { label: "Horas Economizadas", value: `${stats?.timeSavedHours}h` || "0h", icon: <Clock />, color: "indigo" },
           { label: "Workflows Ativos", value: stats?.activeWorkflows || "0", icon: <Zap />, color: "amber" },
         ].map((stat, i) => (
-          <Card key={i} className="p-8 border-none shadow-sm hover:shadow-md transition-all group rounded-[2.5rem]">
+          <Card key={i} className="p-8 border-none shadow-sm hover:shadow-md transition-all group rounded-3xl">
              <div className={`p-4 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 w-fit mb-6 group-hover:scale-110 transition-transform`}>
                 {stat.icon}
              </div>
@@ -90,7 +90,7 @@ function AutomationCenter() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         <Card className="lg:col-span-2 p-10 rounded-[3rem] border-none shadow-sm overflow-hidden relative">
+         <Card className="lg:col-span-2 p-10 rounded-3xl border-none shadow-sm overflow-hidden relative">
             <div className="flex justify-between items-center mb-10">
                <div>
                   <h4 className="font-black text-navy uppercase tracking-widest text-xs mb-1">Performance de Execução</h4>
@@ -114,7 +114,7 @@ function AutomationCenter() {
                ))}
             </div>
 
-            <div className="mt-12 p-8 bg-slate-50 rounded-[2rem] border border-slate-100/50 flex items-center justify-between">
+            <div className="mt-12 p-8 bg-slate-50 rounded-2xl border border-slate-100/50 flex items-center justify-between">
                <div className="flex items-center gap-4">
                   <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
                      <TrendingUp className="h-6 w-6 text-emerald-500" />
@@ -128,7 +128,7 @@ function AutomationCenter() {
             </div>
          </Card>
 
-         <Card className="p-10 rounded-[3rem] border-none shadow-sm bg-navy text-white relative overflow-hidden group">
+         <Card className="p-10 rounded-3xl border-none shadow-sm bg-navy text-white relative overflow-hidden group">
             <Zap className="absolute -right-8 -bottom-8 h-48 w-48 text-white/5 group-hover:scale-110 transition-transform duration-700" />
             <h4 className="font-black text-primary uppercase tracking-widest text-[10px] mb-8">Execuções Recentes</h4>
             <div className="space-y-6 relative z-10">
@@ -153,7 +153,7 @@ function AutomationCenter() {
          </Card>
       </div>
 
-      <section className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
+      <section className="bg-white p-10 rounded-3xl border border-slate-100 shadow-sm">
          <div className="flex items-center justify-between mb-10">
             <div>
                <h4 className="font-black text-navy uppercase tracking-widest text-xs mb-1">Detecção de Anomalias (Anti-Error Engine)</h4>
@@ -168,7 +168,7 @@ function AutomationCenter() {
                { title: "Fraude Documental", desc: "0 tentativas de upload de PDFs inválidos detectadas.", icon: <ShieldCheck className="text-emerald-500" /> },
                { title: "Assinaturas Pendentes", desc: "8 alertas automáticos enviados para engenheiros.", icon: <Clock className="text-indigo-500" /> },
             ].map((box, i) => (
-               <div key={i} className="p-8 bg-slate-50 rounded-[2.5rem] hover:bg-white hover:shadow-xl transition-all duration-500 group border border-transparent hover:border-slate-100">
+               <div key={i} className="p-8 bg-slate-50 rounded-3xl hover:bg-white hover:shadow-xl transition-all duration-500 group border border-transparent hover:border-slate-100">
                   <div className="mb-6 group-hover:scale-110 transition-transform">{box.icon}</div>
                   <h5 className="font-bold text-navy mb-2">{box.title}</h5>
                   <p className="text-xs text-slate-500 font-medium leading-relaxed">{box.desc}</p>

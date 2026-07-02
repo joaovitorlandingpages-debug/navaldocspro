@@ -20,7 +20,7 @@ function AdminSettings() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
-        <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm space-y-6">
+        <Card className="p-8 rounded-3xl border-slate-100 shadow-sm space-y-6">
            <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-2">
               <ShieldAlert className="h-6 w-6" />
            </div>
@@ -29,7 +29,7 @@ function AdminSettings() {
            <Button className="w-full bg-navy text-white rounded-xl">Gerenciar Chaves</Button>
         </Card>
 
-        <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm space-y-6">
+        <Card className="p-8 rounded-3xl border-slate-100 shadow-sm space-y-6">
            <div className="h-12 w-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mb-2">
               <CreditCard className="h-6 w-6" />
            </div>
@@ -38,7 +38,7 @@ function AdminSettings() {
            <Button className="w-full bg-navy text-white rounded-xl">Configurar Webhooks</Button>
         </Card>
 
-        <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm space-y-6">
+        <Card className="p-8 rounded-3xl border-slate-100 shadow-sm space-y-6">
            <div className="h-12 w-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 mb-2">
               <LayoutGrid className="h-6 w-6" />
            </div>
@@ -48,7 +48,7 @@ function AdminSettings() {
         </Card>
       </div>
 
-      <div className="bg-white rounded-[3rem] border border-slate-100 p-10 shadow-sm">
+      <div className="bg-white rounded-3xl border border-slate-100 p-10 shadow-sm">
          <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-8">Central de Ajuda & Documentação</h3>
          <div className="grid md:grid-cols-2 gap-10">
             <div className="space-y-6">
@@ -67,7 +67,7 @@ function AdminSettings() {
                   </div>
                </div>
             </div>
-            <div className="bg-navy p-8 rounded-[2rem] text-white space-y-6">
+            <div className="bg-navy p-8 rounded-2xl text-white space-y-6">
                <h4 className="text-lg font-bold">Precisa de suporte técnico?</h4>
                <p className="text-sm opacity-60">Nossa equipe de engenharia DevOps está disponível para resolver problemas de infraestrutura.</p>
                <div className="flex gap-4">

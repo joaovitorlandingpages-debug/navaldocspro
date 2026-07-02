@@ -93,7 +93,7 @@ export function SmartOCR() {
                 <p className="text-sm font-bold text-slate-400 max-w-xs">Selecione um job ao lado ou envie um novo arquivo para ver a prévia da extração.</p>
              </Card>
            ) : (
-             <Card className={`p-8 rounded-[2.5rem] border-slate-100 shadow-xl space-y-8 animate-in fade-in zoom-in-95 duration-300 relative overflow-hidden ${isMock ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
+             <Card className={`p-8 rounded-3xl border-slate-100 shadow-xl space-y-8 animate-in fade-in zoom-in-95 duration-300 relative overflow-hidden ${isMock ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
                 <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-[80px] -mr-6 -mt-6"></div>
                 
                 <div className="flex justify-between items-start relative z-10">
@@ -156,7 +156,7 @@ export function SmartOCR() {
                            )}
                         </div>
 
-                        <div className="p-5 bg-blue-50 border border-blue-100 rounded-[1.5rem] flex items-center gap-4 shadow-sm">
+                        <div className="p-5 bg-blue-50 border border-blue-100 rounded-2xl flex items-center gap-4 shadow-sm">
                            <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center shrink-0 border border-blue-100">
                               <ShieldCheck className="h-5 w-5 text-blue-500" />
                            </div>

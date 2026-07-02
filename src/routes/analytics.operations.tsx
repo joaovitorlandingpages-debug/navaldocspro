@@ -40,7 +40,7 @@ function AnalyticsOperations() {
           { label: "Produtividade Equipe", value: "94%", trend: "+2%", positive: true, icon: <Users /> },
           { label: "GRU Automatizadas", value: "320", trend: "+45", positive: true, icon: <DollarSign /> },
         ].map((stat, i) => (
-          <Card key={i} className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm hover:shadow-md transition-all group">
+          <Card key={i} className="p-8 rounded-3xl border-slate-100 shadow-sm hover:shadow-md transition-all group">
              <div className="flex items-center gap-4 mb-4">
                 <div className="p-3 bg-slate-50 rounded-xl text-primary group-hover:scale-110 transition-transform">{stat.icon}</div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
@@ -54,7 +54,7 @@ function AnalyticsOperations() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 p-10 rounded-[3rem] border-slate-100 shadow-sm">
+        <Card className="lg:col-span-2 p-10 rounded-3xl border-slate-100 shadow-sm">
             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-navy mb-8">Produtividade por Categoria</h4>
             <div className="h-80 flex items-end gap-6 px-4">
                 {[40, 70, 50, 90, 60, 80].map((h, i) => (
@@ -64,7 +64,7 @@ function AnalyticsOperations() {
                 ))}
             </div>
         </Card>
-        <Card className="p-10 rounded-[3rem] border-slate-100 shadow-sm">
+        <Card className="p-10 rounded-3xl border-slate-100 shadow-sm">
             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-navy mb-8">Gargalos Recorrentes</h4>
             <div className="space-y-6">
                 {[
