@@ -210,3 +210,36 @@
 .animate-scale-in { animation: scale-in 0.15s ease-out both; }
 .hover-scale { transition: transform 200ms ease-out; }
 .hover-scale:hover { transform: scale(1.01); }
+
+/* ============================================================
+   Naval Clarity — Etapa 3: Layout & Sombras (overrides globais)
+   Neutraliza sombras pesadas e radii excessivos legados sem
+   precisar reescrever cada componente. Tailwind gera essas
+   classes; nossos overrides vêm depois e vencem por ordem.
+   ============================================================ */
+
+/* Sombras: substitui pesadas por elevação sutil coerente com bordas 1px */
+.shadow-2xl { box-shadow: 0 8px 24px -12px color-mix(in oklab, var(--navy) 18%, transparent) !important; }
+.shadow-xl  { box-shadow: 0 6px 18px -12px color-mix(in oklab, var(--navy) 15%, transparent) !important; }
+.shadow-lg  { box-shadow: 0 4px 12px -8px  color-mix(in oklab, var(--navy) 12%, transparent) !important; }
+
+/* Radii legados (rounded-[2rem], rounded-[2.5rem], rounded-[1.5rem]) → 12–16px */
+.rounded-\[2rem\]    { border-radius: 0.875rem !important; }
+.rounded-\[2\.5rem\] { border-radius: 1rem !important; }
+.rounded-\[1\.5rem\] { border-radius: 0.75rem !important; }
+.rounded-\[3rem\]    { border-radius: 1rem !important; }
+
+/* Hover em cards: sutil, sem levantar demais */
+[class*="hover:shadow-2xl"]:hover,
+[class*="hover:shadow-xl"]:hover {
+  box-shadow: 0 6px 20px -14px color-mix(in oklab, var(--navy) 22%, transparent) !important;
+}
+
+/* Reduz gradientes "pretos brilhantes" muito comuns em cards escuros:
+   mantém navy sólido em vez de degradê agressivo. */
+.bg-gradient-to-br.from-navy.to-slate-900,
+.bg-gradient-to-r.from-navy.to-slate-900 {
+  background-image: none !important;
+  background-color: var(--navy) !important;
+}
+
