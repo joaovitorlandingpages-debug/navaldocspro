@@ -30,6 +30,7 @@ interface Props {
   onSaved?: () => void;
   onCancel?: () => void;
   onClose?: () => void;
+  initialTab?: string;
 }
 
 const STATUSES = [
@@ -100,7 +101,7 @@ function Chip({ tone, children, onClick, title }: any) {
   );
 }
 
-export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) {
+export function ProcessEditForm({ process, onSaved, onCancel, onClose, initialTab }: Props) {
   const navigate = useNavigate();
   const meta = (process?.draft_data && typeof process.draft_data === "object" ? process.draft_data : {}) as any;
 
@@ -125,7 +126,8 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
     branding_logo_url: process?.branding_logo_url ?? "",
   }), [process, meta.process_number, meta.category, meta.engineer_id, meta.despachante_id]);
 
-  const [tab, setTab] = useState<string>("dados");
+  const [tab, setTab] = useState<string>(initialTab ?? "dados");
+  useEffect(() => { if (initialTab) setTab(initialTab); }, [initialTab]);
   const [form, setForm] = useState(initial);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [customers, setCustomers] = useState<any[]>([]);

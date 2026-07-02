@@ -44,6 +44,8 @@ export async function batchGenerate(
       if (error) throw error;
       report.ok.push(it.item_name);
     } catch (e: any) {
+      const { handleGenerationError } = await import("@/services/documents/generationErrorHandler");
+      await handleGenerationError(e, { processId });
       report.failed.push({ name: it.item_name, reason: e?.message || "erro desconhecido" });
     }
     done += 1;

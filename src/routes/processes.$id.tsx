@@ -115,6 +115,7 @@ function ProcessDetail() {
   }, [id, navigate]);
   const [selectedTemplateForGen, setSelectedTemplateForGen] = useState<any | null>(null);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
+  const [editInitialTab, setEditInitialTab] = useState<string | undefined>(undefined);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   
@@ -204,9 +205,18 @@ function ProcessDetail() {
     };
     window.addEventListener('generate-document', handleGenEvent);
 
+    const handleOpenTab = (e: any) => {
+      const detail = e?.detail ?? {};
+      if (detail.processId && detail.processId !== id) return;
+      setEditInitialTab(detail.tab || 'participantes');
+      setEditSheetOpen(true);
+    };
+    window.addEventListener('open-process-tab', handleOpenTab);
+
     return () => {
       supabase.removeChannel(channel);
       window.removeEventListener('generate-document', handleGenEvent);
+      window.removeEventListener('open-process-tab', handleOpenTab);
     };
   }, [id]);
 
@@ -741,8 +751,9 @@ function ProcessDetail() {
       <ProcessEditSheet
         process={process}
         open={editSheetOpen}
-        onOpenChange={setEditSheetOpen}
+        onOpenChange={(o) => { setEditSheetOpen(o); if (!o) setEditInitialTab(undefined); }}
         onSaved={fetchProcess}
+        initialTab={editInitialTab}
       />
 
       <ProcessItemFocusDialog

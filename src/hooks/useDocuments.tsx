@@ -198,8 +198,10 @@ export const useDocuments = () => {
       queryClient.invalidateQueries({ queryKey: ["generated-documents"] });
       toast.success("Documento oficial gerado com sucesso!");
     },
-    onError: (error: any) => {
-      toast.error(`Erro na geração: ${error.message}`);
+    onError: async (error: any, variables: any) => {
+      const { handleGenerationError } = await import("@/services/documents/generationErrorHandler");
+      const handled = await handleGenerationError(error, { processId: variables?.processId });
+      if (!handled) toast.error(`Erro na geração: ${error?.message ?? "falha desconhecida"}`);
     },
   });
 
