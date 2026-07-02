@@ -578,7 +578,8 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
               ) : <div />}
               <div className="flex gap-2">
                 <Button variant="outline" type="button" onClick={onClose} disabled={submitting}>Cancelar</Button>
-                <Button type="button" onClick={goToStep2} disabled={!selectedTypeId || !customerId} title={!customerId ? "Selecione um cliente" : undefined}>
+                <Button type="button" onClick={goToStep2} disabled={!selectedTypeId || !customerId || (isTransfer && !secondaryCustomerId) || loadingPreview} title={!customerId ? "Selecione um cliente" : (isTransfer && !secondaryCustomerId ? "Selecione o vendedor" : undefined)}>
+                  {loadingPreview ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
                   Continuar <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
