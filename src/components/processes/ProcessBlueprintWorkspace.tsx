@@ -11,6 +11,7 @@ import {
   batchGenerate, batchDownload, type BatchReport, type BatchSignatureReport,
 } from "@/services/processes/batchChecklistActions";
 import { BatchSignatureDialog } from "./BatchSignatureDialog";
+import { BatchGenerationPanel } from "./BatchGenerationPanel";
 import { ProcessTimelineMacro, type TimelineStage } from "./ProcessTimelineMacro";
 import { SmartDocumentCard } from "./SmartDocumentCard";
 import { useAuth } from "@/hooks/useAuth";
