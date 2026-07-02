@@ -48,7 +48,7 @@ function AIOperationsCenterPage() {
               <Bot className="h-7 w-7 text-primary animate-pulse" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-navy tracking-tight uppercase">Inteligência Operacional</h1>
+              <h1 className="text-3xl font-semibold text-navy">Inteligência Operacional</h1>
               <p className="text-[10px] font-black uppercase text-primary tracking-widest">Enterprise Neural Engine Active</p>
             </div>
           </div>
@@ -72,7 +72,7 @@ function AIOperationsCenterPage() {
                 </div>
              </div>
              <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">{stat.label}</p>
-             <h3 className="text-2xl font-black text-navy mt-1">{stat.value}</h3>
+             <h3 className="text-2xl font-semibold text-navy mt-1">{stat.value}</h3>
              <p className="text-[9px] font-bold text-slate-400 mt-2 flex items-center gap-1">
                {stat.trend}
              </p>
@@ -93,7 +93,7 @@ function AIOperationsCenterPage() {
           <Card className="p-8 border-none shadow-sm rounded-3xl bg-white overflow-hidden">
              <div className="flex items-center justify-between mb-8">
                 <div>
-                   <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
+                   <h3 className="text-sm font-semibold text-navy flex items-center gap-2">
                       <History className="h-4 w-4 text-primary" /> Log de Decisões IA
                    </h3>
                    <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Rastreabilidade completa de automações</p>

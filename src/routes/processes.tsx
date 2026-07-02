@@ -253,7 +253,7 @@ function Processes() {
                 <div className="flex items-center justify-between px-2">
                   <div className="flex items-center gap-3">
                     <div className={`h-2.5 w-2.5 rounded-full ${col.color} shadow-[0_0_10px_rgba(0,0,0,0.1)]`} />
-                    <h3 className="font-black text-navy text-[10px] uppercase tracking-[0.15em]">{col.title}</h3>
+                    <h3 className="font-semibold text-navy text-[10px] tracking-[0.15em]">{col.title}</h3>
                     <span className="bg-slate-200/50 text-navy/40 text-[9px] font-black px-2 py-0.5 rounded-full">
                       {columnProcesses.length}
                     </span>
@@ -278,7 +278,7 @@ function Processes() {
                           {p.priority && <PriorityChip priority={p.priority} />}
                         </div>
 
-                        <h4 className="font-black text-navy text-[13px] mb-3 leading-tight group-hover:text-primary transition-colors line-clamp-2">{p.title || p.process_type}</h4>
+                        <h4 className="font-semibold text-navy text-[13px] mb-3 leading-tight group-hover:text-primary transition-colors line-clamp-2">{p.title || p.process_type}</h4>
 
                         <div className="space-y-2 pb-3 mb-3 border-b border-slate-50">
                           <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 min-w-0">

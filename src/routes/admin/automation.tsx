@@ -54,7 +54,7 @@ function AdminAutomationPage() {
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-black text-navy uppercase tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl font-semibold text-navy flex items-center gap-3">
             <Zap className="h-8 w-8 text-primary" /> Configuração de Automação
           </h1>
           <p className="text-slate-500 font-medium">Gerencie as regras inteligentes do motor de automação documental.</p>
@@ -78,7 +78,7 @@ function AdminAutomationPage() {
             <CardContent className="pt-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                  <h4 className="text-xs font-semibold text-slate-400 flex items-center gap-2">
                     <Settings2 className="h-4 w-4" /> Regras Ativas
                   </h4>
                   <Button variant="ghost" size="sm" className="text-primary font-bold h-8">

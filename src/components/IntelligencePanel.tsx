@@ -71,7 +71,7 @@ export function IntelligencePanel() {
       </div>
 
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-black text-navy uppercase tracking-widest flex items-center gap-2">
+        <h3 className="text-xs font-semibold text-navy flex items-center gap-2">
           <Workflow className="h-4 w-4 text-primary" /> Automação Inteligente
         </h3>
         <Badge className="bg-emerald-500 text-white font-black text-[8px] uppercase tracking-tighter border-none animate-pulse">Live</Badge>
@@ -113,7 +113,7 @@ export function IntelligencePanel() {
          <div className="absolute top-0 right-0 p-6 opacity-10">
             <Bot className="h-20 w-20 text-primary" />
          </div>
-         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 text-primary">Status do Assistente</h4>
+         <h4 className="text-[10px] font-semibold tracking-[0.2em] mb-4 text-primary">Status do Assistente</h4>
          <div className="flex items-center gap-6">
             <div className="space-y-1">
                <p className="text-xl font-black">0.8s</p>

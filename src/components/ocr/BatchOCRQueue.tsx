@@ -28,7 +28,7 @@ export function BatchOCRQueue({ jobs, isLoading }: BatchOCRQueueProps) {
             <Zap className="h-5 w-5 text-primary animate-pulse" />
           </div>
           <div>
-            <h3 className="text-sm font-black text-navy uppercase tracking-widest">Fila de Processamento</h3>
+            <h3 className="text-sm font-semibold text-navy">Fila de Processamento</h3>
             <p className="text-[10px] text-slate-400 font-bold uppercase">Monitorando redes neurais</p>
           </div>
         </div>

@@ -81,7 +81,7 @@ class ErrorBoundary extends React.Component<
             </div>
 
             <div className="space-y-3">
-              <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">Sistema Estabilizado</h1>
+              <h1 className="text-3xl md:text-4xl font-semibold text-white">Sistema Estabilizado</h1>
               <p className="text-white/50 text-xs md:text-sm leading-relaxed max-w-md mx-auto font-medium">
                 Detectamos uma instabilidade estrutural na interface. 
                 O motor de redundância do NavalDocs Pro isolou o erro para garantir a integridade operacional dos seus dados.

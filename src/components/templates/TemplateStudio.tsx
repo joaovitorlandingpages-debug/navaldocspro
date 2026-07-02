@@ -173,7 +173,7 @@ export function TemplateStudio({
               <Palette className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-sm font-black text-white uppercase tracking-tighter">
+              <h2 className="text-sm font-semibold text-white">
                 Editor Visual de Template
               </h2>
               <p className="text-[10px] text-slate-500 font-mono">

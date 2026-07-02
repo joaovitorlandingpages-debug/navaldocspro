@@ -60,7 +60,7 @@ function AdminUsers() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
        <div className="flex justify-between items-end">
           <div>
-            <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Gestão de Usuários</h1>
+            <h1 className="text-3xl font-semibold text-navy">Gestão de Usuários</h1>
             <p className="text-slate-500 font-medium italic mt-1">Controle global de credenciais e permissões na plataforma.</p>
           </div>
           <button className="bg-primary text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:opacity-90 transition-all shadow-xl shadow-primary/20">

@@ -60,7 +60,7 @@ export default function AdminCompanies() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Gestão de Empresas</h1>
+          <h1 className="text-3xl font-semibold text-navy">Gestão de Empresas</h1>
           <p className="text-muted-foreground font-medium">Controle de tenants, planos e infraestrutura multiempresa.</p>
         </div>
         
@@ -107,7 +107,7 @@ export default function AdminCompanies() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-3 mb-1">
-                        <h4 className="text-lg font-black text-navy truncate uppercase tracking-tight">{company.name}</h4>
+                        <h4 className="text-lg font-semibold text-navy truncate">{company.name}</h4>
                         <Badge className={`uppercase text-[9px] font-black tracking-widest ${
                           company.plan_name === 'Enterprise' ? 'bg-purple-100 text-purple-700' :
                           company.plan_name === 'Professional' ? 'bg-blue-100 text-blue-700' :

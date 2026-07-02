@@ -75,7 +75,7 @@ export function FeedbackButton() {
               >
                 <X className="h-6 w-6" />
               </button>
-              <h3 className="text-2xl font-black uppercase tracking-tight mb-2">Feedback</h3>
+              <h3 className="text-2xl font-semibold mb-2">Feedback</h3>
               <p className="text-white/60 text-xs font-medium">Ajude-nos a evoluir o NavalDocs Pro para seu dia a dia.</p>
             </div>
 

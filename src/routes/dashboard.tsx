@@ -548,7 +548,7 @@ export function RouteContent() {
                  <Rocket className="h-12 w-12 text-white" />
               </div>
               <div className="space-y-3">
-                 <h3 className="text-4xl font-black tracking-tighter uppercase italic leading-none">NavalDocs <span className="text-primary">Genesis</span></h3>
+                 <h3 className="text-4xl font-semibold italic leading-none">NavalDocs <span className="text-primary">Genesis</span></h3>
                  <p className="text-white/40 font-bold text-xl uppercase tracking-widest">Sua jornada para a automação total começa agora.</p>
                  <p className="text-white/60 font-medium text-lg max-w-2xl leading-relaxed">Bem-vindo, {profile?.name}. O sistema está pronto para ser configurado. Siga o roteiro de implantação premium para liberar todo o potencial da IA.</p>
               </div>
@@ -576,7 +576,7 @@ export function RouteContent() {
       )}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-3xl sm:text-5xl font-black text-navy tracking-tighter uppercase italic leading-none">
+          <h1 className="text-3xl sm:text-5xl font-semibold text-navy italic leading-none">
             Centro de Operações {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && <span className="text-primary">Master</span>}
           </h1>
           <p className="text-slate-500 font-bold text-xs sm:text-base uppercase tracking-[0.2em] mt-3 italic opacity-60">Gestão inteligente de frota e conformidade operacional.</p>
@@ -607,7 +607,7 @@ export function RouteContent() {
               <div className="relative z-10 space-y-8">
                  <div className="flex justify-between items-center">
                     <div>
-                       <h2 className="text-2xl font-black text-navy uppercase tracking-tighter italic">
+                       <h2 className="text-2xl font-semibold text-navy italic">
                          Ações Críticas {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && <span className="text-primary">Master</span>}
                        </h2>
                        <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Intervenções manuais e validações urgentes</p>
@@ -627,7 +627,7 @@ export function RouteContent() {
                          <div className={`h-10 w-10 rounded-xl bg-${item.color}/10 text-${item.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                             <item.icon className="h-5 w-5" />
                          </div>
-                         <h4 className="font-black text-navy text-[11px] uppercase tracking-widest mb-1">{item.title}</h4>
+                         <h4 className="font-semibold text-navy text-[11px] mb-1">{item.title}</h4>
                          <p className="text-xs text-slate-500 font-medium leading-relaxed">{item.desc}</p>
                       </div>
                     ))}
@@ -637,7 +637,7 @@ export function RouteContent() {
 
            <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
+            <h2 className="text-sm font-semibold tracking-[0.2em] text-navy flex items-center gap-2">
               <Zap className="h-4 w-4 text-primary" /> Inteligência Operacional
             </h2>
             {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
@@ -741,7 +741,7 @@ export function RouteContent() {
           </div>
 
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
+            <h2 className="text-sm font-semibold tracking-[0.2em] text-navy flex items-center gap-2">
               <Activity className="h-4 w-4 text-primary" /> Fila Operacional
             </h2>
           </div>
@@ -784,7 +784,7 @@ export function RouteContent() {
               <Badge className="bg-red-100 text-red-700 border-none text-[9px]">Urgente</Badge>
            </div>
             <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Inconformidades</p>
-            <h3 className="text-3xl font-black text-navy mt-1">12</h3>
+            <h3 className="text-3xl font-semibold text-navy mt-1">12</h3>
          </Link>
 
         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
@@ -794,7 +794,7 @@ export function RouteContent() {
               </div>
            </div>
            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Docs Faltando</p>
-           <h3 className="text-3xl font-black text-navy mt-1">{statsData?.missingDocuments || 0}</h3>
+           <h3 className="text-3xl font-semibold text-navy mt-1">{statsData?.missingDocuments || 0}</h3>
         </div>
 
         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
@@ -804,7 +804,7 @@ export function RouteContent() {
               </div>
            </div>
            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Expirando (30 dias)</p>
-           <h3 className="text-3xl font-black text-navy mt-1">{statsData?.expiringDocuments || 0}</h3>
+           <h3 className="text-3xl font-semibold text-navy mt-1">{statsData?.expiringDocuments || 0}</h3>
         </div>
 
         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
@@ -814,7 +814,7 @@ export function RouteContent() {
               </div>
            </div>
            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Documentos Gerados</p>
-           <h3 className="text-3xl font-black text-navy mt-1">{statsData?.generatedDocuments || 0}</h3>
+           <h3 className="text-3xl font-semibold text-navy mt-1">{statsData?.generatedDocuments || 0}</h3>
         </div>
       </div>
 
@@ -822,7 +822,7 @@ export function RouteContent() {
       {/* Consumption & Plan Limits */}
       <section className="space-y-6">
         <div className="flex items-center justify-between">
-           <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
+           <h2 className="text-sm font-semibold tracking-[0.2em] text-navy flex items-center gap-2">
               <Activity className="h-4 w-4 text-primary" /> Consumo & Limites do Plano
            </h2>
            <Link to="/billing/subscription">
@@ -890,7 +890,7 @@ export function RouteContent() {
             {/* Gráfico Fictício */}
             <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-100 shadow-sm">
                <div className="flex justify-between items-center mb-8">
-                  <h3 className="font-bold text-navy flex items-center gap-2 uppercase text-xs tracking-widest">
+                  <h3 className="font-bold text-navy flex items-center gap-2 text-xs">
                     <Activity className="h-5 w-5 text-primary" /> Atividade de Processos
                   </h3>
                   <select className="bg-slate-50 border-none text-[10px] font-bold uppercase rounded-lg px-3 py-1.5 outline-none">
@@ -925,7 +925,7 @@ export function RouteContent() {
             {/* Recent Processes */}
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                <div className="p-6 border-b flex justify-between items-center bg-slate-50/30">
-                  <h3 className="font-bold text-navy flex items-center gap-2 uppercase text-xs tracking-widest">
+                  <h3 className="font-bold text-navy flex items-center gap-2 text-xs">
                     <Clock className="h-5 w-5 text-primary" /> Últimos Processos
                   </h3>
                   <Link to="/processes" className="text-xs text-primary font-black uppercase tracking-widest hover:underline">Ver todos</Link>
@@ -987,7 +987,7 @@ export function RouteContent() {
             {/* Team Productivity Widget */}
             <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
                <div className="flex justify-between items-center mb-6">
-                  <h3 className="font-black text-navy uppercase text-[10px] tracking-widest flex items-center gap-2">
+                  <h3 className="font-semibold text-navy text-[10px] flex items-center gap-2">
                      <Users className="h-4 w-4 text-primary" /> Produtividade da Equipe
                   </h3>
                </div>
@@ -1036,7 +1036,7 @@ export function RouteContent() {
                   <TrendingUp className="h-48 w-48" />
                </div>
                <div className="relative z-10">
-                  <h4 className="text-xl font-bold mb-2 flex items-center gap-2 uppercase tracking-tight">
+                  <h4 className="text-xl font-bold mb-2 flex items-center gap-2">
                     <ShieldCheck className="h-5 w-5 text-primary" /> Desempenho
                   </h4>
                   <p className="text-slate-400 text-xs mb-8 font-medium">Sua eficiência subiu 15% este mês.</p>
@@ -1067,7 +1067,7 @@ export function RouteContent() {
             </div>
 
             <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
-               <h3 className="font-bold text-navy mb-6 flex items-center gap-2 uppercase text-xs tracking-widest">
+               <h3 className="font-bold text-navy mb-6 flex items-center gap-2 text-xs">
                   <Bell className="h-5 w-5 text-amber-500 animate-bounce" /> Alertas Críticos
                </h3>
                <div className="space-y-4">

@@ -57,7 +57,7 @@ function AutomationCenter() {
              <div className="h-2 w-2 bg-primary rounded-full animate-ping" />
              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Engine de Automação Ativo</span>
           </div>
-          <h1 className="text-4xl font-black text-navy uppercase tracking-tight flex items-center gap-4">
+          <h1 className="text-4xl font-semibold text-navy flex items-center gap-4">
             <Cpu className="h-10 w-10 text-primary" /> Automation Center
           </h1>
           <p className="text-slate-500 font-medium max-w-2xl">Monitore a eficiência, precisão do OCR e economia de tempo gerada pela inteligência NavalDocs Pro.</p>
@@ -84,7 +84,7 @@ function AutomationCenter() {
                 {stat.icon}
              </div>
              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-             <h3 className="text-4xl font-black text-navy">{stat.value}</h3>
+             <h3 className="text-4xl font-semibold text-navy">{stat.value}</h3>
           </Card>
         ))}
       </div>
@@ -93,7 +93,7 @@ function AutomationCenter() {
          <Card className="lg:col-span-2 p-10 rounded-3xl border-none shadow-sm overflow-hidden relative">
             <div className="flex justify-between items-center mb-10">
                <div>
-                  <h4 className="font-black text-navy uppercase tracking-widest text-xs mb-1">Performance de Execução</h4>
+                  <h4 className="font-semibold text-navy text-xs mb-1">Performance de Execução</h4>
                   <p className="text-xs text-slate-400 font-medium">Tempo médio de resposta por módulo (ms)</p>
                </div>
                <Badge className="bg-emerald-100 text-emerald-700 font-black uppercase text-[9px] tracking-widest">Tempo Real</Badge>
@@ -130,7 +130,7 @@ function AutomationCenter() {
 
          <Card className="p-10 rounded-3xl border-none shadow-sm bg-navy text-white relative overflow-hidden group">
             <Zap className="absolute -right-8 -bottom-8 h-48 w-48 text-white/5 group-hover:scale-110 transition-transform duration-700" />
-            <h4 className="font-black text-primary uppercase tracking-widest text-[10px] mb-8">Execuções Recentes</h4>
+            <h4 className="font-semibold text-primary text-[10px] mb-8">Execuções Recentes</h4>
             <div className="space-y-6 relative z-10">
                {stats?.recentAutomations.map((item) => (
                  <div key={item.id} className="flex items-center justify-between group/item">
@@ -156,7 +156,7 @@ function AutomationCenter() {
       <section className="bg-white p-10 rounded-3xl border border-slate-100 shadow-sm">
          <div className="flex items-center justify-between mb-10">
             <div>
-               <h4 className="font-black text-navy uppercase tracking-widest text-xs mb-1">Detecção de Anomalias (Anti-Error Engine)</h4>
+               <h4 className="font-semibold text-navy text-xs mb-1">Detecção de Anomalias (Anti-Error Engine)</h4>
                <p className="text-xs text-slate-400 font-medium">Prevenção automática de inconsistências críticas.</p>
             </div>
             <ShieldCheck className="h-8 w-8 text-primary" />

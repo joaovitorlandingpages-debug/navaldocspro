@@ -182,7 +182,7 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
         <div>
-          <h2 className="text-xl font-black text-navy uppercase tracking-tight">Geração de Dossiê</h2>
+          <h2 className="text-xl font-semibold text-navy">Geração de Dossiê</h2>
           <p className="text-xs font-bold text-slate-400 mt-1 italic uppercase tracking-widest">Consolidação operacional e exportação multi-formato</p>
         </div>
         
@@ -204,7 +204,7 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
             <Archive className="h-10 w-10" />
           </div>
           <div className="max-w-md">
-            <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-2">Nenhum Dossiê Gerado Ainda</h3>
+            <h3 className="text-lg font-semibold text-navy mb-2">Nenhum Dossiê Gerado Ainda</h3>
             <p className="text-sm text-slate-500 font-medium">
               Gere o dossiê completo do processo para exportar todos os documentos, 
               dados técnicos e timeline em um único pacote profissional.
@@ -229,7 +229,7 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
 
           <div className="space-y-6">
             <Card className="p-6 rounded-2xl border-slate-100 shadow-sm">
-              <h3 className="text-[10px] font-black uppercase text-navy tracking-[0.2em] mb-4 flex items-center gap-2">
+              <h3 className="text-[10px] font-semibold text-navy tracking-[0.2em] mb-4 flex items-center gap-2">
                 <History className="h-3 w-3" /> Histórico de Versões
               </h3>
               <div className="space-y-3">
@@ -256,7 +256,7 @@ export function ProcessDossierTab({ processId }: ProcessDossierTabProps) {
             <Card className="p-6 rounded-2xl border-slate-100 bg-navy text-white shadow-xl shadow-navy/20 overflow-hidden relative">
               <Shield className="absolute -right-4 -bottom-4 h-24 w-24 text-white/5 rotate-12" />
               <div className="relative z-10">
-                <h3 className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-4">Segurança Enterprise</h3>
+                <h3 className="text-[10px] font-semibold text-primary tracking-[0.2em] mb-4">Segurança Enterprise</h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 bg-white/10 rounded-xl flex items-center justify-center">

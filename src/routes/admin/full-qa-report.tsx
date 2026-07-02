@@ -206,7 +206,7 @@ function FullQAReportPage() {
               <div className="h-10 w-10 bg-navy rounded-xl flex items-center justify-center shadow-lg border border-white/10">
                  <ShieldCheck className="h-6 w-6 text-primary" />
               </div>
-              <h1 className="text-3xl font-black tracking-tight text-navy uppercase">Relatório de Auditoria QA Final</h1>
+              <h1 className="text-3xl font-semibold text-navy">Relatório de Auditoria QA Final</h1>
            </div>
            <p className="text-slate-500 font-medium text-sm">Auditoria operacional ponta a ponta - NavalDocs Pro v15.0 Gold.</p>
         </div>
@@ -239,7 +239,7 @@ function FullQAReportPage() {
 
       <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white">
         <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
-           <h3 className="text-sm font-black uppercase tracking-widest text-navy">Checklist de Auditoria Operacional</h3>
+           <h3 className="text-sm font-semibold text-navy">Checklist de Auditoria Operacional</h3>
            <Badge className="bg-emerald-500 text-white border-none text-[9px] font-black uppercase px-4 py-1">CERTIFICADO PARA PRODUÇÃO</Badge>
         </div>
         <div className="overflow-x-auto">
@@ -274,7 +274,7 @@ function FullQAReportPage() {
 
       <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white">
         <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
-           <h3 className="text-sm font-black uppercase tracking-widest text-navy">Deep Audit: Gerador Documental (Qualidade A4)</h3>
+           <h3 className="text-sm font-semibold text-navy">Deep Audit: Gerador Documental (Qualidade A4)</h3>
            <Badge className="bg-primary text-white border-none text-[9px] font-black uppercase px-4 py-1">VALIDAÇÃO PROFISSIONAL</Badge>
         </div>
         <div className="overflow-x-auto">
@@ -305,7 +305,7 @@ function FullQAReportPage() {
 
       <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white">
         <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
-           <h3 className="text-sm font-black uppercase tracking-widest text-navy">Deep Audit: Inteligência Artificial (OCR)</h3>
+           <h3 className="text-sm font-semibold text-navy">Deep Audit: Inteligência Artificial (OCR)</h3>
            <Badge className="bg-emerald-500 text-white border-none text-[9px] font-black uppercase px-4 py-1">CERTIFICADO IA-MAX</Badge>
         </div>
         <div className="overflow-x-auto">
@@ -336,7 +336,7 @@ function FullQAReportPage() {
 
       <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white mt-8">
         <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
-           <h3 className="text-sm font-black uppercase tracking-widest text-navy">Deep Audit: Dossiê Naval (Consolidação Final)</h3>
+           <h3 className="text-sm font-semibold text-navy">Deep Audit: Dossiê Naval (Consolidação Final)</h3>
            <Badge className="bg-primary text-white border-none text-[9px] font-black uppercase px-4 py-1">APROVAÇÃO OPERACIONAL</Badge>
         </div>
         <div className="overflow-x-auto">
@@ -373,7 +373,7 @@ function FullQAReportPage() {
  
       <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white">
         <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
-           <h3 className="text-sm font-black uppercase tracking-widest text-navy">Deep Audit: Fluxo de Assinaturas (Legal Compliance)</h3>
+           <h3 className="text-sm font-semibold text-navy">Deep Audit: Fluxo de Assinaturas (Legal Compliance)</h3>
            <Badge className="bg-primary text-white border-none text-[9px] font-black uppercase px-4 py-1">CERTIFICADO JURÍDICO</Badge>
         </div>
         <div className="overflow-x-auto">
@@ -413,7 +413,7 @@ function FullQAReportPage() {
             <Lock className="h-48 w-48 text-primary" />
          </div>
          <div className="relative z-10 max-w-3xl">
-            <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-6">Conclusão da Auditoria Gold</h3>
+            <h3 className="text-2xl font-semibold italic mb-6">Conclusão da Auditoria Gold</h3>
             <p className="text-slate-400 font-medium leading-relaxed mb-8">
                O sistema NavalDocs Pro v15.0 passou por todos os testes de stress operacional, responsividade e integridade de dados. 
                A arquitetura multi-tenant está isolada e os fluxos críticos de embarcação (incluindo transferências e separação de proprietário) 

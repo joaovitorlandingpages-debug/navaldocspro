@@ -82,7 +82,7 @@ function PredictionsPage() {
             <div className="h-10 w-10 bg-primary rounded-2xl flex items-center justify-center">
               <Brain className="h-5 w-5 text-white" />
             </div>
-            <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Predição de Vencimentos</h1>
+            <h1 className="text-3xl font-semibold text-navy">Predição de Vencimentos</h1>
           </div>
           <p className="text-slate-500 font-medium">IA classifica e prioriza documentos a vencer.</p>
         </div>
@@ -108,7 +108,7 @@ function PredictionsPage() {
 
       <Card className="border-slate-100 shadow-sm overflow-hidden rounded-3xl">
         <div className="px-6 py-4 border-b bg-slate-50/50">
-          <h3 className="text-xs font-black uppercase tracking-widest text-navy">Documentos & Ações Sugeridas</h3>
+          <h3 className="text-xs font-semibold text-navy">Documentos & Ações Sugeridas</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">

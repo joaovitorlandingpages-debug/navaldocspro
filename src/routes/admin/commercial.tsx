@@ -85,7 +85,7 @@ function CommercialDashboard() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
-          <h1 className="text-3xl font-black text-navy uppercase tracking-tight italic">Comercial <span className="text-primary">&</span> Readiness</h1>
+          <h1 className="text-3xl font-semibold text-navy italic">Comercial <span className="text-primary">&</span> Readiness</h1>
           <p className="text-slate-500 font-medium">Gestão master de monetização, escala e prontidão operacional.</p>
         </div>
         <div className="flex gap-3">
@@ -99,7 +99,7 @@ function CommercialDashboard() {
       <section className="space-y-4">
         <div className="flex items-center gap-2 mb-2">
           <Target className="h-5 w-5 text-primary" />
-          <h2 className="text-xs font-black text-navy uppercase tracking-widest">Enterprise Readiness Score</h2>
+          <h2 className="text-xs font-semibold text-navy">Enterprise Readiness Score</h2>
         </div>
         <ReadinessBanner />
       </section>
@@ -118,7 +118,7 @@ function CommercialDashboard() {
                 </div>
               </div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-              <h3 className="text-3xl font-black text-navy mt-1 tracking-tighter">{stat.value}</h3>
+              <h3 className="text-3xl font-semibold text-navy mt-1">{stat.value}</h3>
             </CardContent>
           </Card>
         ))}
@@ -176,7 +176,7 @@ function CommercialDashboard() {
                   </div>
 
                   <div className="pt-8 border-t border-white/5 space-y-6">
-                     <h4 className="text-[10px] font-black uppercase tracking-widest text-primary italic">Ativação Comercial</h4>
+                     <h4 className="text-[10px] font-semibold text-primary italic">Ativação Comercial</h4>
                      <div className="space-y-4">
                         <div className="flex items-center gap-3">
                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -202,7 +202,7 @@ function CommercialDashboard() {
             <Rocket className="h-24 w-24 text-slate-50 group-hover:text-primary/10 transition-colors duration-1000 rotate-12" />
          </div>
          <div className="relative z-10">
-            <h4 className="font-black text-navy uppercase tracking-widest text-xs mb-8 flex items-center gap-3">
+            <h4 className="font-semibold text-navy text-xs mb-8 flex items-center gap-3">
                <ShieldCheck className="h-5 w-5 text-emerald-500" /> Checklist Final Readiness Comercial
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

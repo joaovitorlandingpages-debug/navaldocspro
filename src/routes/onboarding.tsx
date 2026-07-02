@@ -125,7 +125,7 @@ function OnboardingFlow() {
               <div className="p-4 bg-primary/10 rounded-full text-primary mb-2">
                 <Building className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-black text-navy uppercase">Dados da Empresa</h2>
+              <h2 className="text-2xl font-semibold text-navy">Dados da Empresa</h2>
               <p className="text-slate-500">Vamos começar configurando o perfil da sua empresa.</p>
             </div>
             
@@ -210,7 +210,7 @@ function OnboardingFlow() {
               <div className="p-4 bg-emerald-100 rounded-full text-emerald-600 mb-2">
                 <CreditCard className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-black text-navy uppercase">Escolha seu Plano</h2>
+              <h2 className="text-2xl font-semibold text-navy">Escolha seu Plano</h2>
               <p className="text-slate-500">Selecione o plano que melhor atende suas necessidades.</p>
             </div>
 
@@ -249,7 +249,7 @@ function OnboardingFlow() {
               <div className="p-4 bg-indigo-100 rounded-full text-indigo-600 mb-2">
                 <Users className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-black text-navy uppercase">Perfil de Administrador</h2>
+              <h2 className="text-2xl font-semibold text-navy">Perfil de Administrador</h2>
               <p className="text-slate-500">Confirmamos que você será o administrador master da conta.</p>
             </div>
             
@@ -281,7 +281,7 @@ function OnboardingFlow() {
               <div className="p-4 bg-blue-100 rounded-full text-blue-600 mb-2">
                 <Users className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-black text-navy uppercase">Primeiro Cliente</h2>
+              <h2 className="text-2xl font-semibold text-navy">Primeiro Cliente</h2>
               <p className="text-slate-500">Cadastre o primeiro cliente da sua empresa.</p>
             </div>
             
@@ -309,7 +309,7 @@ function OnboardingFlow() {
               <div className="p-4 bg-cyan-100 rounded-full text-cyan-600 mb-2">
                 <Ship className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-black text-navy uppercase">Primeira Embarcação</h2>
+              <h2 className="text-2xl font-semibold text-navy">Primeira Embarcação</h2>
               <p className="text-slate-500">Vincule a primeira embarcação ao seu cliente.</p>
             </div>
             
@@ -343,7 +343,7 @@ function OnboardingFlow() {
               <div className="p-4 bg-amber-100 rounded-full text-amber-600 mb-2">
                 <ClipboardList className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-black text-navy uppercase">Novo Processo</h2>
+              <h2 className="text-2xl font-semibold text-navy">Novo Processo</h2>
               <p className="text-slate-500">Inicie seu primeiro processo de automação.</p>
             </div>
             
@@ -375,7 +375,7 @@ function OnboardingFlow() {
               <div className="p-4 bg-green-100 rounded-full text-green-600 mb-2">
                 <CheckCircle2 className="h-10 w-10" />
               </div>
-              <h2 className="text-3xl font-black text-navy uppercase">Tudo Configurado!</h2>
+              <h2 className="text-3xl font-semibold text-navy">Tudo Configurado!</h2>
               <p className="text-slate-500">Você está pronto para revolucionar sua gestão documental naval.</p>
             </div>
             
@@ -401,7 +401,7 @@ function OnboardingFlow() {
               <div className="p-5 bg-emerald-100 rounded-full text-emerald-600 mb-2 shadow-lg shadow-emerald-500/20">
                 <ShieldCheck className="h-12 w-12" />
               </div>
-              <h2 className="text-3xl font-black text-navy uppercase italic tracking-tighter">Gold Certification</h2>
+              <h2 className="text-3xl font-semibold text-navy italic">Gold Certification</h2>
               <p className="text-slate-500 font-medium">Sua instância NavalDocs Pro está 100% validada e certificada.</p>
             </div>
             

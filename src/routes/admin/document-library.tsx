@@ -57,7 +57,7 @@ function DocumentLibraryPage() {
             <div className="h-10 w-10 bg-blue-600/10 rounded-xl flex items-center justify-center">
               <Library className="h-6 w-6 text-blue-600" />
             </div>
-            <h1 className="text-3xl font-black text-navy tracking-tight uppercase">Biblioteca Documental</h1>
+            <h1 className="text-3xl font-semibold text-navy">Biblioteca Documental</h1>
           </div>
           <p className="text-slate-500 font-medium max-w-lg">
             Gestão master de templates, formulários oficiais e repositório de engenharia.
@@ -136,7 +136,7 @@ function DocumentLibraryPage() {
                 </CardHeader>
                 <CardContent className="p-8 pt-0 space-y-6">
                   <div>
-                    <h4 className="font-black text-navy text-sm mb-1 uppercase tracking-tight group-hover:text-blue-600 transition-colors line-clamp-1" title={template.name}>
+                    <h4 className="font-semibold text-navy text-sm mb-1 group-hover:text-blue-600 transition-colors line-clamp-1" title={template.name}>
                       {template.name}
                     </h4>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">
@@ -186,7 +186,7 @@ function DocumentLibraryPage() {
                   <BadgeHelp className="h-8 w-8 text-blue-400" />
                </div>
                <div>
-                  <h4 className="text-xl font-black uppercase tracking-tight">Dúvidas sobre o Field Mapping?</h4>
+                  <h4 className="text-xl font-semibold">Dúvidas sobre o Field Mapping?</h4>
                   <p className="text-sm text-white/60 font-medium max-w-lg mt-1 italic">
                     Nossos templates utilizam sintaxe {"{{campo}}"} para preenchimento automático. 
                     Consulte a documentação técnica para mapear variáveis do cliente, barco ou processo.

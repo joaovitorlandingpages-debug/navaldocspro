@@ -87,7 +87,7 @@ function Index() {
                 Plataforma Enterprise de Gestão Naval
               </div>
               
-              <h1 className="text-6xl lg:text-[100px] font-black text-white leading-[0.9] tracking-tighter">
+              <h1 className="text-6xl lg:text-[100px] font-semibold text-white leading-[0.9]">
                 AUTOMAÇÃO <span className="text-primary">TOTAL</span><br />
                 PARA ENGENHARIA NAVAL.
               </h1>
@@ -135,7 +135,7 @@ function Index() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-24 space-y-4">
               <span className="text-primary font-black uppercase tracking-[0.3em] text-xs">A Jornada Digital</span>
-              <h2 className="text-5xl font-black text-navy tracking-tighter uppercase">Fluxo Operacional 360°</h2>
+              <h2 className="text-5xl font-semibold text-navy">Fluxo Operacional 360°</h2>
               <p className="text-slate-500 text-lg max-w-2xl mx-auto">Sua operação em uma linha contínua de produtividade, do cliente ao protocolo final.</p>
             </div>
 
@@ -157,7 +157,7 @@ function Index() {
                     <div className="h-12 w-12 bg-white border-2 border-slate-50 rounded-xl flex items-center justify-center text-primary shadow-lg group-hover:scale-110 group-hover:border-primary/20 transition-all mb-4">
                       <step.icon className="h-6 w-6" />
                     </div>
-                    <h3 className="text-[10px] font-black text-navy uppercase tracking-widest">{step.title}</h3>
+                    <h3 className="text-[10px] font-semibold text-navy">{step.title}</h3>
                   </div>
                 ))}
               </div>
@@ -169,7 +169,7 @@ function Index() {
         <section className="py-32 bg-navy text-white overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-24">
-               <h2 className="text-4xl font-black tracking-tighter uppercase mb-4">Interface de Alta Performance</h2>
+               <h2 className="text-4xl font-semibold mb-4">Interface de Alta Performance</h2>
                <p className="text-slate-400">Desenvolvido por engenheiros, para engenheiros.</p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -185,7 +185,7 @@ function Index() {
                     <div className="aspect-video bg-white/5 rounded-2xl overflow-hidden border border-white/10 mb-4 group-hover:border-primary/50 transition-all">
                        <img src={item.img} alt={item.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all scale-105 group-hover:scale-100" />
                     </div>
-                    <h4 className="text-sm font-black uppercase tracking-widest text-white/80 group-hover:text-primary transition-all">{item.title}</h4>
+                    <h4 className="text-sm font-semibold text-white/80 group-hover:text-primary transition-all">{item.title}</h4>
                  </div>
                ))}
             </div>
@@ -200,7 +200,7 @@ function Index() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
                   Por que somos líderes
                 </div>
-                <h2 className="text-5xl font-black text-navy leading-[1.1] tracking-tighter uppercase">
+                <h2 className="text-5xl font-semibold text-navy leading-[1.1]">
                   Tecnologia que <span className="text-primary italic">substitui</span> o trabalho manual.
                 </h2>
                 <div className="space-y-6">
@@ -215,7 +215,7 @@ function Index() {
                         <CheckSquare className="h-4 w-4 text-primary" />
                       </div>
                       <div>
-                        <h4 className="font-black text-navy uppercase tracking-tight">{item.title}</h4>
+                        <h4 className="font-semibold text-navy">{item.title}</h4>
                         <p className="text-slate-500 text-sm">{item.desc}</p>
                       </div>
                     </div>
@@ -256,7 +256,7 @@ function Index() {
         <section id="planos" className="py-32 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-24">
-              <h2 className="text-5xl font-black text-navy tracking-tighter uppercase">Investimento Estratégico</h2>
+              <h2 className="text-5xl font-semibold text-navy">Investimento Estratégico</h2>
               <p className="text-slate-500 mt-4 text-lg">Planos desenhados para todos os tamanhos de operação naval.</p>
             </div>
             
@@ -286,7 +286,7 @@ function Index() {
                   {plan.popular && <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-lg">Mais Vendido</span>}
                   
                   <div className="mb-10">
-                    <h3 className="text-2xl font-black text-navy uppercase tracking-tight mb-2">{plan.name}</h3>
+                    <h3 className="text-2xl font-semibold text-navy mb-2">{plan.name}</h3>
                     <p className="text-sm text-slate-500 leading-relaxed">{plan.desc}</p>
                   </div>
                   
@@ -317,7 +317,7 @@ function Index() {
           <div className="absolute inset-0 bg-primary opacity-5 pointer-events-none" />
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="bg-[#000B18] rounded-3xl p-16 lg:p-24 text-center border border-white/10 shadow-3xl">
-              <h2 className="text-5xl lg:text-7xl font-black text-white mb-8 tracking-tighter uppercase leading-none">
+              <h2 className="text-5xl lg:text-7xl font-semibold text-white mb-8 leading-none">
                 DOMINE O MERCADO <span className="text-primary italic">NAVAL</span>
               </h2>
               <p className="text-xl text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">

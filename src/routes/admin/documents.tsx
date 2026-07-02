@@ -14,7 +14,7 @@ function AdminDocuments() {
     <div className="p-8 space-y-8">
       <div className="flex justify-between items-end">
         <div>
-          <h2 className="text-2xl font-black tracking-tight text-navy">Biblioteca Master</h2>
+          <h2 className="text-2xl font-semibold text-navy">Biblioteca Master</h2>
           <p className="text-slate-500 text-xs italic">Gestão de templates globais e modelos normativos.</p>
         </div>
         <button className="bg-red-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">

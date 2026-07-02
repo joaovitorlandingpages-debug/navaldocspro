@@ -27,7 +27,7 @@ export function EnterpriseAuditFeed() {
   return (
     <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden animate-in fade-in duration-700">
       <div className="p-6 border-b flex justify-between items-center bg-slate-50/30">
-        <h3 className="font-bold text-navy flex items-center gap-2 uppercase text-xs tracking-widest">
+        <h3 className="font-bold text-navy flex items-center gap-2 text-xs">
           <History className="h-5 w-5 text-primary" /> Auditoria Live
         </h3>
         <button className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1">

@@ -151,7 +151,7 @@ export function ProcessParticipantsTab({
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-black uppercase tracking-widest text-navy">Participantes do Processo</h3>
+          <h3 className="text-sm font-semibold text-navy">Participantes do Processo</h3>
           <Badge variant="secondary" className="text-[10px]">{participants.length}</Badge>
         </div>
         <div className="flex gap-2">

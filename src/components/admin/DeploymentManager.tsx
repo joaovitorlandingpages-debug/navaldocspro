@@ -21,7 +21,7 @@ export function DeploymentManager() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-black text-navy uppercase">Gestão de Deploys</h2>
+        <h2 className="text-xl font-semibold text-navy">Gestão de Deploys</h2>
         <div className="flex gap-2">
             <Badge className="bg-blue-50 text-blue-600 border-none font-black text-[10px] uppercase">v1.1.2 Production</Badge>
             <Badge className="bg-purple-50 text-purple-600 border-none font-black text-[10px] uppercase">v1.2.0 Staging</Badge>

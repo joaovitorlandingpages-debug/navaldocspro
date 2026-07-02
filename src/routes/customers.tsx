@@ -835,7 +835,7 @@ function Customers() {
               {selectedCustomer?.name?.charAt(0)}
             </div>
             <div>
-              <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedCustomer?.name}</h3>
+              <h3 className="text-2xl font-semibold text-navy">{selectedCustomer?.name}</h3>
               <div className="flex flex-wrap gap-4 mt-1 text-slate-500 text-xs font-bold">
                 <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> {selectedCustomer?.email || "Sem e-mail"}</span>
                 <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedCustomer?.cpf_cnpj}</span>
@@ -985,7 +985,7 @@ function Customers() {
                 ) : (
                   <div className="grid grid-cols-2 gap-8 animate-in fade-in duration-300">
                     <div className="space-y-4">
-                       <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Informações de Contato</h4>
+                       <h4 className="text-[10px] font-semibold text-slate-400">Informações de Contato</h4>
                        <div className="space-y-3">
                           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                              <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Endereço</p>
@@ -1005,7 +1005,7 @@ function Customers() {
                        </div>
                     </div>
                     <div className="space-y-4">
-                       <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Observações</h4>
+                       <h4 className="text-[10px] font-semibold text-slate-400">Observações</h4>
                        <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl min-h-[120px]">
                           <p className="text-sm text-amber-900 font-medium leading-relaxed">{selectedCustomer?.notes || "Sem observações adicionais."}</p>
                        </div>
@@ -1017,7 +1017,7 @@ function Customers() {
 
               <TabsContent value="documents" className="space-y-8">
                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Documentação do Cliente</h4>
+                    <h4 className="text-[10px] font-semibold text-slate-400">Documentação do Cliente</h4>
                     <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-widest">{files?.length || 0} Arquivos</Badge>
                  </div>
 
@@ -1064,7 +1064,7 @@ function Customers() {
 
               <TabsContent value="vessels" className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Embarcações vinculadas</h4>
+                  <h4 className="text-[10px] font-semibold text-slate-400">Embarcações vinculadas</h4>
                   <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-widest">{customerVessels.length}</Badge>
                 </div>
                 {customerVessels.length === 0 ? (
@@ -1097,7 +1097,7 @@ function Customers() {
               </TabsContent>
 
               <TabsContent value="history" className="space-y-3">
-                <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Histórico de processos</h4>
+                <h4 className="text-[10px] font-semibold text-slate-400 mb-2">Histórico de processos</h4>
                 {customerProcesses.length === 0 ? (
                   <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-2xl">
                     <FileText className="h-12 w-12 text-slate-200 mx-auto mb-2" />

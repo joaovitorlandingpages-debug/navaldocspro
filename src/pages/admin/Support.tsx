@@ -42,7 +42,7 @@ export default function AdminSupport() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
-          <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Suporte & Tickets</h1>
+          <h1 className="text-3xl font-semibold text-navy">Suporte & Tickets</h1>
           <p className="text-slate-500 font-medium">Gestão de chamados, bugs e solicitações de usuários.</p>
         </div>
         <div className="flex gap-4 w-full md:w-auto">
@@ -75,7 +75,7 @@ export default function AdminSupport() {
                   
                   <div className="flex-grow min-w-0">
                     <div className="flex items-center gap-3 mb-1">
-                      <h4 className="text-lg font-black text-navy uppercase tracking-tight truncate">{ticket.title}</h4>
+                      <h4 className="text-lg font-semibold text-navy truncate">{ticket.title}</h4>
                       <Badge className={`uppercase text-[9px] font-black tracking-widest ${
                         ticket.priority === 'high' ? 'bg-red-50 text-red-600' :
                         ticket.priority === 'medium' ? 'bg-amber-50 text-amber-600' :

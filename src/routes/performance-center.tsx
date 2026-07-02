@@ -29,7 +29,7 @@ function PerformanceCenter() {
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-4xl font-black text-navy tracking-tight uppercase flex items-center gap-4">
+          <h1 className="text-4xl font-semibold text-navy flex items-center gap-4">
              <Gauge className="text-primary h-10 w-10" /> Centro de Performance
           </h1>
           <p className="text-slate-500 font-medium italic">Monitoramento de latência e eficiência da infraestrutura.</p>
@@ -47,7 +47,7 @@ function PerformanceCenter() {
                     {metric.status === 'good' ? 'Nominal' : 'Otimizar'}
                 </Badge>
              </div>
-             <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">{metric.label}</h3>
+             <h3 className="text-sm font-semibold text-slate-400">{metric.label}</h3>
              <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-3xl font-black text-navy">{metric.value}</span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase">{metric.unit}</span>
@@ -62,7 +62,7 @@ function PerformanceCenter() {
                <Server className="h-48 w-48" />
             </div>
             <div className="relative z-10">
-               <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-8 text-primary">Análise de Latência (ms)</h4>
+               <h4 className="text-xs font-semibold tracking-[0.2em] mb-8 text-primary">Análise de Latência (ms)</h4>
                <div className="h-64 flex items-end gap-3 px-4">
                   {[45, 120, 85, 210, 56, 145, 32, 78, 92, 44, 65, 50].map((h, i) => (
                     <div key={i} className="flex-grow bg-white/10 rounded-t-lg relative group">
@@ -79,7 +79,7 @@ function PerformanceCenter() {
         </Card>
 
         <Card className="p-10 rounded-3xl border-slate-100 shadow-sm">
-           <h4 className="text-xs font-black uppercase tracking-[0.2em] text-navy mb-8 flex items-center gap-2">
+           <h4 className="text-xs font-semibold tracking-[0.2em] text-navy mb-8 flex items-center gap-2">
               <Layers className="h-4 w-4 text-primary" /> Recursos Mais Pesados
            </h4>
            <div className="space-y-6">

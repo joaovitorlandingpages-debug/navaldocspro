@@ -622,7 +622,7 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <FileCheck className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-black text-navy uppercase tracking-tight">Dossiê Final</h3>
+              <h3 className="text-lg font-semibold text-navy">Dossiê Final</h3>
               <Badge
                 variant="outline"
                 className={
@@ -718,7 +718,7 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
       <div className="grid md:grid-cols-3 gap-4">
         {/* Summary */}
         <div className="md:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-          <h4 className="font-black uppercase tracking-widest text-xs text-slate-500">Resumo</h4>
+          <h4 className="font-semibold text-xs text-slate-500">Resumo</h4>
           <div className="grid sm:grid-cols-2 gap-4">
             <Item icon={<FileText className="h-4 w-4" />} label="Processo" value={bundle.process.process_type} />
             <Item icon={<UserIcon className="h-4 w-4" />} label="Cliente" value={bundle.customer?.name || "—"} />
@@ -759,7 +759,7 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
 
         {/* Checklist */}
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-          <h4 className="font-black uppercase tracking-widest text-xs text-slate-500 mb-3">Checklist final</h4>
+          <h4 className="font-semibold text-xs text-slate-500 mb-3">Checklist final</h4>
           <ul className="space-y-2">
             {checklist.map((c) => (
               <li key={c.key} className="flex items-start gap-2 text-sm">

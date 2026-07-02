@@ -98,7 +98,7 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
                 <div className="absolute -top-1 -right-1 h-3 w-3 bg-emerald-500 border-2 border-navy rounded-full" />
              </div>
              <div>
-                <h3 className="font-black uppercase tracking-widest text-[10px] text-primary">NavalDocs Assistant</h3>
+                <h3 className="font-semibold text-[10px] text-primary">NavalDocs Assistant</h3>
                 <h2 className="text-lg font-bold leading-none">Inteligência Operacional</h2>
              </div>
           </div>

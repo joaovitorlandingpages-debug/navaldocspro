@@ -142,7 +142,7 @@ function MarketplacePage() {
             <Badge variant="outline" className="border-amber-300/40 bg-amber-400/10 text-amber-200">
               <Crown className="size-3 mr-1" /> Marketplace Premium NavalDocs
             </Badge>
-            <h1 className="text-3xl md:text-5xl font-black leading-tight">
+            <h1 className="text-3xl md:text-5xl font-semibold leading-tight">
               Templates premium feitos por especialistas em documentação naval.
             </h1>
             <p className="text-slate-300 text-base md:text-lg">
@@ -406,7 +406,7 @@ function MarketplacePage() {
               <Badge variant="outline" className="border-violet-300/40 bg-violet-400/10 text-violet-200">
                 <Wand2 className="size-3 mr-1" /> NavalDocs AI · Em breve
               </Badge>
-              <h2 className="text-2xl md:text-3xl font-black leading-tight">
+              <h2 className="text-2xl md:text-3xl font-semibold leading-tight">
                 Templates inteligentes gerados sob medida pela IA
               </h2>
               <p className="text-slate-200 text-sm md:text-base">

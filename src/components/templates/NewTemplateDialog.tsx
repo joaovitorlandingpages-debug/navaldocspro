@@ -41,7 +41,7 @@ export function NewTemplateDialog({ open, onClose, onPick, defaultBase = "classi
                 <ArrowLeft className="h-4 w-4" />
               </button>
             )}
-            <h2 className="text-sm font-black uppercase tracking-tighter text-navy">
+            <h2 className="text-sm font-semibold text-navy">
               {step === "mode" ? "Novo Template" : "Escolha o template base"}
             </h2>
           </div>
@@ -60,7 +60,7 @@ export function NewTemplateDialog({ open, onClose, onPick, defaultBase = "classi
               <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary grid place-items-center mb-4 group-hover:scale-110 transition-transform">
                 <Plus className="h-6 w-6" />
               </div>
-              <h3 className="text-base font-black text-navy mb-1">Criar do Zero</h3>
+              <h3 className="text-base font-semibold text-navy mb-1">Criar do Zero</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
                 Começa com um modelo neutro e você personaliza tudo: cores, rodapé,
                 marca d'água, assinatura e carimbo.
@@ -75,7 +75,7 @@ export function NewTemplateDialog({ open, onClose, onPick, defaultBase = "classi
               <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary grid place-items-center mb-4 group-hover:scale-110 transition-transform">
                 <Copy className="h-6 w-6" />
               </div>
-              <h3 className="text-base font-black text-navy mb-1">Duplicar Template Existente</h3>
+              <h3 className="text-base font-semibold text-navy mb-1">Duplicar Template Existente</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
                 Escolha um dos 20 modelos oficiais e crie uma cópia editável.
                 Os originais permanecem intactos.

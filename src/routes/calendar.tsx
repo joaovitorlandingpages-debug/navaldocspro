@@ -10,7 +10,7 @@ function CalendarPage() {
     <div className="space-y-6 animate-in fade-in duration-500 h-full">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Agenda Operacional</h1>
+          <h1 className="text-3xl font-bold text-navy">Agenda Operacional</h1>
         </div>
         <div className="flex gap-2 bg-white p-1 rounded-xl border">
           <button className="p-2 hover:bg-slate-100 rounded-lg"><ChevronLeft className="h-5 w-5" /></button>

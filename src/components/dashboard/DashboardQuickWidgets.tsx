@@ -30,7 +30,7 @@ export function DashboardQuickWidgets({ recentDocs, loading }: { recentDocs?: an
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all hover:shadow-md">
         <div className="p-6 border-b bg-slate-50/30">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.15em] text-navy flex items-center gap-2">
+            <h3 className="text-[10px] font-semibold tracking-[0.15em] text-navy flex items-center gap-2">
               <FileText className="h-4 w-4 text-primary" /> Ativos Inteligentes
             </h3>
             <div className="flex gap-1">

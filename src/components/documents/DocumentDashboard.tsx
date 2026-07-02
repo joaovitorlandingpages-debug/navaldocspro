@@ -66,7 +66,7 @@ export function DocumentDashboard() {
           <CardContent>
             <div className="flex items-end justify-between">
               <div>
-                <h3 className="text-3xl font-black text-red-900">{expired.length}</h3>
+                <h3 className="text-3xl font-semibold text-red-900">{expired.length}</h3>
                 <p className="text-[10px] font-bold text-red-700 uppercase mt-1">Ação imediata necessária</p>
               </div>
               <Button size="sm" variant="ghost" className="text-red-700 hover:bg-red-100 gap-1 font-bold text-[10px] uppercase">
@@ -88,7 +88,7 @@ export function DocumentDashboard() {
           <CardContent>
             <div className="flex items-end justify-between">
               <div>
-                <h3 className="text-3xl font-black text-amber-900">{expiringSoon.length}</h3>
+                <h3 className="text-3xl font-semibold text-amber-900">{expiringSoon.length}</h3>
                 <p className="text-[10px] font-bold text-amber-700 uppercase mt-1">Planejar renovações</p>
               </div>
               <Button size="sm" variant="ghost" className="text-amber-700 hover:bg-amber-100 gap-1 font-bold text-[10px] uppercase">
@@ -110,7 +110,7 @@ export function DocumentDashboard() {
           <CardContent>
             <div className="flex items-end justify-between">
               <div>
-                <h3 className="text-3xl font-black text-blue-900">{criticalCertificates.length}</h3>
+                <h3 className="text-3xl font-semibold text-blue-900">{criticalCertificates.length}</h3>
                 <p className="text-[10px] font-bold text-blue-700 uppercase mt-1">Segurança e Conformidade</p>
               </div>
               <Button size="sm" variant="ghost" className="text-blue-700 hover:bg-blue-100 gap-1 font-bold text-[10px] uppercase">

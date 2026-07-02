@@ -36,7 +36,7 @@ function SalesCenterPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 font-black text-[10px] uppercase tracking-widest px-4 py-1">Apresentação NavalDocs Pro</Badge>
-          <h1 className="text-5xl font-black text-navy uppercase tracking-tighter italic">Transforme sua <span className="text-primary">Operação Naval</span></h1>
+          <h1 className="text-5xl font-semibold text-navy italic">Transforme sua <span className="text-primary">Operação Naval</span></h1>
           <p className="text-slate-500 font-medium text-lg mt-2">A plataforma definitiva para engenharia, compliance e gestão documental.</p>
         </div>
         <div className="flex gap-4">
@@ -59,7 +59,7 @@ function SalesCenterPage() {
                <div className={`p-4 rounded-2xl bg-slate-50 mb-6 w-fit group-hover:scale-110 transition-transform ${stat.color}`}>
                   <stat.icon className="h-6 w-6" />
                </div>
-               <h3 className="text-4xl font-black text-navy mb-1">{stat.val}</h3>
+               <h3 className="text-4xl font-semibold text-navy mb-1">{stat.val}</h3>
                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">{stat.label}</p>
                <p className="text-xs text-slate-500 font-medium">{stat.desc}</p>
             </CardContent>
@@ -116,7 +116,7 @@ function SalesCenterPage() {
       {/* Features Grid */}
       <div className="space-y-8">
          <div className="text-center">
-            <h2 className="text-3xl font-black text-navy uppercase tracking-tighter italic">Recursos Enterprise</h2>
+            <h2 className="text-3xl font-semibold text-navy italic">Recursos Enterprise</h2>
             <p className="text-slate-500 font-medium">Tecnologia de ponta para o setor naval.</p>
          </div>
          
@@ -126,7 +126,7 @@ function SalesCenterPage() {
                   <div className="h-12 w-12 bg-primary/5 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-all">
                      <f.icon className="h-6 w-6" />
                   </div>
-                  <h4 className="text-[13px] font-black uppercase tracking-tight text-navy mb-2">{f.title}</h4>
+                  <h4 className="text-[13px] font-semibold text-navy mb-2">{f.title}</h4>
                   <p className="text-xs text-slate-500 font-medium leading-relaxed">{f.desc}</p>
                </div>
             ))}
@@ -137,7 +137,7 @@ function SalesCenterPage() {
       <div className="p-12 bg-navy rounded-3xl text-center text-white relative overflow-hidden group">
          <div className="absolute top-0 left-0 w-full h-full bg-primary/10 blur-[100px] -ml-40 group-hover:bg-primary/20 transition-all duration-1000" />
          <div className="relative z-10 space-y-6">
-            <h2 className="text-4xl font-black uppercase tracking-tighter italic italic">Pronto para <span className="text-primary">Escalar</span> seu Negócio?</h2>
+            <h2 className="text-4xl font-semibold italic italic">Pronto para <span className="text-primary">Escalar</span> seu Negócio?</h2>
             <p className="text-white/60 max-w-2xl mx-auto font-medium">Junte-se às empresas que já economizam milhares de horas com a automação documental naval.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                <Link to="/demo">

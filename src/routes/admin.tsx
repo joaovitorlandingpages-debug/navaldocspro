@@ -208,7 +208,7 @@ export function AdminDashboardView() {
                <TrendingUp className="h-3 w-3 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-            <h3 className="text-2xl font-black text-navy mt-1">{stat.value}</h3>
+            <h3 className="text-2xl font-semibold text-navy mt-1">{stat.value}</h3>
           </Card>
         ))}
       </div>
@@ -216,7 +216,7 @@ export function AdminDashboardView() {
          <div className="lg:col-span-2 space-y-8">
             <Card className="border-slate-100 shadow-sm overflow-hidden">
                <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-                  <h4 className="font-black text-navy uppercase text-[10px] tracking-widest flex items-center gap-2"><Building className="h-4 w-4 text-primary" /> Atividade das Empresas</h4>
+                  <h4 className="font-semibold text-navy text-[10px] flex items-center gap-2"><Building className="h-4 w-4 text-primary" /> Atividade das Empresas</h4>
                   <Button variant="ghost" size="sm" className="text-[9px] font-black uppercase tracking-widest" asChild><Link to="/admin/companies">Ver Todas</Link></Button>
                </div>
                <div className="divide-y divide-slate-50">
@@ -234,7 +234,7 @@ export function AdminDashboardView() {
          </div>
          <div className="space-y-8">
             <Card className="border-slate-100 shadow-sm p-8 bg-slate-50/50">
-               <h4 className="font-black text-navy uppercase text-[10px] tracking-widest mb-6 flex items-center gap-2"><History className="h-4 w-4 text-primary" /> Logs Administrativos</h4>
+               <h4 className="font-semibold text-navy text-[10px] mb-6 flex items-center gap-2"><History className="h-4 w-4 text-primary" /> Logs Administrativos</h4>
                <div className="space-y-6">
                   {[{ msg: "Novo plano Professional assinado", time: "10m atrás" }, { msg: "Empresa XPTO atualizou limites", time: "1h atrás" }].map((log, i) => (
                     <div key={i} className="flex gap-4"><div className="h-2 w-2 rounded-full bg-primary mt-1" /><div><p className="text-xs font-bold text-navy leading-tight">{log.msg}</p><p className="text-[9px] text-slate-400 font-bold uppercase mt-1">{log.time}</p></div></div>

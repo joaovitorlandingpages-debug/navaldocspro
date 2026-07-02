@@ -156,7 +156,7 @@ export function ProcessSignaturesPanel({ processId }: Props) {
               overallStatus.tone === "amber" ? "text-amber-600" : "text-slate-500"
             }`} />
             <div>
-              <h2 className="text-lg font-black tracking-tight">{overallStatus.title}</h2>
+              <h2 className="text-lg font-semibold">{overallStatus.title}</h2>
               <p className="text-sm text-slate-600 mt-1">{overallStatus.detail}</p>
             </div>
           </div>
@@ -169,7 +169,7 @@ export function ProcessSignaturesPanel({ processId }: Props) {
       {/* Documents → solicitar assinatura */}
       {documents.length > 0 && (
         <Card className="p-5">
-          <h3 className="font-bold text-sm uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-2">
+          <h3 className="font-bold text-sm tracking-wider text-slate-700 mb-3 flex items-center gap-2">
             <FileText className="w-4 h-4" /> Documentos gerados ({documents.length})
           </h3>
           <div className="grid gap-2">
@@ -197,7 +197,7 @@ export function ProcessSignaturesPanel({ processId }: Props) {
 
       {/* Requests */}
       <Card className="p-5">
-        <h3 className="font-bold text-sm uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-2">
+        <h3 className="font-bold text-sm tracking-wider text-slate-700 mb-3 flex items-center gap-2">
           <Signature className="w-4 h-4" /> Solicitações de assinatura
         </h3>
         {loading ? (
@@ -309,7 +309,7 @@ export function ProcessSignaturesPanel({ processId }: Props) {
       {/* Timeline */}
       {events.length > 0 && (
         <Card className="p-5">
-          <h3 className="font-bold text-sm uppercase tracking-wider text-slate-700 mb-4 flex items-center gap-2">
+          <h3 className="font-bold text-sm tracking-wider text-slate-700 mb-4 flex items-center gap-2">
             <Clock className="w-4 h-4" /> Linha do tempo
           </h3>
           <ol className="relative border-l-2 border-slate-200 ml-3 space-y-3">

@@ -51,7 +51,7 @@ function AdminLogs() {
               <div className="h-10 w-10 bg-navy rounded-xl flex items-center justify-center shadow-lg border border-white/10">
                  <Terminal className="h-6 w-6 text-primary" />
               </div>
-              <h2 className="text-3xl font-black tracking-tight text-navy uppercase">Audit Console Global</h2>
+              <h2 className="text-3xl font-semibold text-navy">Audit Console Global</h2>
             </div>
             <p className="text-slate-500 font-medium text-sm">Monitoramento de integridade, acessos e ações administrativas em tempo real.</p>
           </div>
@@ -78,7 +78,7 @@ function AdminLogs() {
                 <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/30">
                    <div className="flex items-center gap-2">
                       <Zap className="h-4 w-4 text-primary" />
-                      <h3 className="text-xs font-black uppercase tracking-widest text-navy">Fluxo de Eventos Recentes</h3>
+                      <h3 className="text-xs font-semibold text-navy">Fluxo de Eventos Recentes</h3>
                    </div>
                    <div className="relative w-full md:max-w-xs">
                       <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
@@ -115,7 +115,7 @@ function AdminLogs() {
                 <div className="p-6 border-b border-slate-50 bg-navy text-white flex items-center justify-between">
                    <div className="flex items-center gap-3">
                       <Lock className="h-5 w-5 text-primary" />
-                      <h3 className="text-xs font-black uppercase tracking-widest">Ações Administrativas Master</h3>
+                      <h3 className="text-xs font-semibold">Ações Administrativas Master</h3>
                    </div>
                    <Badge className="bg-primary text-white border-none text-[8px] font-black">AUDIT PROTECTED</Badge>
                 </div>
@@ -151,7 +151,7 @@ function AdminLogs() {
                 <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
                    <Activity className="h-24 w-24 text-navy" />
                 </div>
-                <h3 className="text-xs font-black text-navy mb-6 uppercase tracking-widest flex items-center gap-2">
+                <h3 className="text-xs font-semibold text-navy mb-6 flex items-center gap-2">
                    <Globe className="h-4 w-4 text-primary" /> Infra Telemetry
                 </h3>
                 <div className="space-y-6">

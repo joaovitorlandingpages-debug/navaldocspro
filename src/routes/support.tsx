@@ -70,7 +70,7 @@ function SupportPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in duration-500">
       <header className="text-center space-y-4">
-        <h1 className="text-4xl font-black text-navy uppercase tracking-tight">Central de Suporte</h1>
+        <h1 className="text-4xl font-semibold text-navy">Central de Suporte</h1>
         <p className="text-slate-500 max-w-2xl mx-auto">Estamos aqui para ajudar você a automatizar sua engenharia naval com eficiência máxima.</p>
         <div className="relative max-w-xl mx-auto mt-8">
            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
@@ -180,7 +180,7 @@ function SupportPage() {
                 {faqs.map((f, i) => (
                   <div key={i} className="bg-white p-6 rounded-2xl border border-slate-100 group cursor-pointer hover:border-primary/40 hover:shadow-lg transition-all">
                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-black text-navy uppercase text-xs tracking-tight">{f.q}</h4>
+                        <h4 className="font-semibold text-navy text-xs">{f.q}</h4>
                         <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-primary transition-all" />
                      </div>
                      <p className="text-sm text-slate-500 font-medium">{f.a}</p>

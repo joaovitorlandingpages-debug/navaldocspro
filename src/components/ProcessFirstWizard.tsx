@@ -1146,7 +1146,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
         {/* Header */}
         <div className="px-4 sm:px-8 py-4 sm:py-5 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-black text-navy">Novo Processo</h2>
+            <h2 className="text-2xl font-semibold text-navy">Novo Processo</h2>
             <p className="text-xs text-slate-500 font-medium">Comece pelo serviço — o resto é automático</p>
           </div>
           <button onClick={close} className="p-2 hover:bg-slate-100 rounded-xl" data-testid="pf-close">
@@ -1326,7 +1326,7 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
 function Step1({ onPick }: { onPick: (k: ServiceKind) => void }) {
   return (
     <div>
-      <h3 className="text-lg font-black text-navy mb-1">Qual serviço você precisa fazer?</h3>
+      <h3 className="text-lg font-semibold text-navy mb-1">Qual serviço você precisa fazer?</h3>
       <p className="text-sm text-slate-500 mb-6">Escolha o tipo. O sistema cuida do resto.</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {SERVICES.map((s) => (
@@ -1481,7 +1481,7 @@ function Step2Identity({ service, docs, customer, onUpload, onChange, fileInputR
   console.log("[OCR_IDENTITY_STEP_CREATED]");
   return (
     <div>
-      <h3 className="text-lg font-black text-navy mb-1">Documento de identificação</h3>
+      <h3 className="text-lg font-semibold text-navy mb-1">Documento de identificação</h3>
       <p className="text-sm text-slate-500 mb-4">Envie a <strong>CNH</strong> ou o <strong>RG</strong>. O OCR extrai nome, CPF, RG e data de nascimento.</p>
       <button
         onClick={() => fileInputRef.current?.click()}
@@ -1527,7 +1527,7 @@ function Step3Address({ service, docs, customer, onUpload, onChange, fileInputRe
   console.log("[OCR_ADDRESS_STEP_CREATED]");
   return (
     <div>
-      <h3 className="text-lg font-black text-navy mb-1">Comprovante de residência</h3>
+      <h3 className="text-lg font-semibold text-navy mb-1">Comprovante de residência</h3>
       <p className="text-sm text-slate-500 mb-4">Envie uma conta de <strong>água</strong>, <strong>luz</strong>, <strong>internet</strong> ou <strong>telefone</strong>. O OCR extrai o endereço.</p>
       <button
         onClick={() => fileInputRef.current?.click()}
@@ -1571,7 +1571,7 @@ function Step3({ service, docs, vessel, onUpload, onChange, fileInputRef }: {
   console.log("[OCR_VESSEL_STEP_CREATED]");
   return (
     <div>
-      <h3 className="text-lg font-black text-navy mb-1">Documentos da embarcação</h3>
+      <h3 className="text-lg font-semibold text-navy mb-1">Documentos da embarcação</h3>
       <p className="text-sm text-slate-500 mb-4">Envie {service.vesselDocs.join(", ")}.</p>
       <button
         onClick={() => fileInputRef.current?.click()}
@@ -1626,7 +1626,7 @@ function Step4({
   const optional = suggestedTemplates.filter((t) => !t.is_required);
   return (
     <div>
-      <h3 className="text-lg font-black text-navy mb-1">Montagem inteligente</h3>
+      <h3 className="text-lg font-semibold text-navy mb-1">Montagem inteligente</h3>
       <p className="text-sm text-slate-500 mb-4">Para <strong>{service.name}</strong>, vamos precisar de:</p>
       <div className="space-y-2 mb-6">
         {service.needsPersonal && <Check label="Documento de identificação enviado" ok={identityOk} />}
@@ -1640,7 +1640,7 @@ function Step4({
       {/* ---- Bloco 5: Documentos sugeridos da Biblioteca Nacional ---- */}
       <div className="mt-6 border-t border-slate-100 pt-5">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-black uppercase tracking-wider text-navy">
+          <h4 className="text-sm font-semibold tracking-wider text-navy">
             Documentos sugeridos para este processo
           </h4>
           {loadingSuggested && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
@@ -1761,7 +1761,7 @@ function Step5Review({ service, state, onPatchCustomer, onPatchVessel, onJumpSte
   const c = state.customer; const v = state.vessel;
   return (
     <div>
-      <h3 className="text-lg font-black text-navy mb-1">Revisão e correção</h3>
+      <h3 className="text-lg font-semibold text-navy mb-1">Revisão e correção</h3>
       <p className="text-sm text-slate-500 mb-4">Confira e edite. Os dados aqui são usados na geração final.</p>
 
       <div className="flex flex-wrap gap-2 mb-4">
@@ -1885,7 +1885,7 @@ function Step6({ log, processId, service, state, onOpenProcess, onOpenDocuments,
         <div className={`h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-3 ${isSuccess ? "bg-green-100" : "bg-amber-100"}`}>
           {isSuccess ? <CheckCircle2 className="h-8 w-8 text-green-600" /> : <AlertTriangle className="h-8 w-8 text-amber-600" />}
         </div>
-        <h3 className="text-xl font-black text-navy">{result?.title || "Processo gerado"}</h3>
+        <h3 className="text-xl font-semibold text-navy">{result?.title || "Processo gerado"}</h3>
         <p className="text-sm text-slate-500 mt-1">{result?.message || `${service.name} — ${processId?.slice(0, 8)}`}</p>
       </div>
 
@@ -2064,7 +2064,7 @@ function Step7Approval({
     <div className="space-y-4">
       <div>
         <div className="text-xs font-black uppercase tracking-wider text-slate-500 mb-1">Revisão e aprovação</div>
-        <h3 className="text-2xl font-black text-navy">Revise cada documento antes de gerar o PDF final</h3>
+        <h3 className="text-2xl font-semibold text-navy">Revise cada documento antes de gerar o PDF final</h3>
         <p className="text-sm text-slate-600 mt-1">
           Visualize, edite e aprove. O PDF final só será gerado a partir do texto aprovado.
         </p>

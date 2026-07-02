@@ -173,7 +173,7 @@ function AdminDocumentos() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h2 className="text-2xl font-black tracking-tight text-navy">
+            <h2 className="text-2xl font-semibold text-navy">
               Motor de Documentos
             </h2>
             <p className="text-xs text-slate-500 italic">
@@ -647,7 +647,7 @@ function Modal({
         <div className="px-6 py-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
-            <h3 className="font-black text-navy">{title}</h3>
+            <h3 className="font-semibold text-navy">{title}</h3>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl">
             <X className="h-5 w-5" />

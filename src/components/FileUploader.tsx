@@ -142,7 +142,7 @@ export function FileUploader({
             </div>
             
             <div className={compact ? "text-left" : "relative z-10"}>
-              <h4 className={`${compact ? "text-xs" : "text-lg"} font-black text-navy uppercase tracking-tight`}>
+              <h4 className={`${compact ? "text-xs" : "text-lg"} font-semibold text-navy`}>
                 {isDragActive ? "Solte para Iniciar" : compact ? "Anexar Arquivo" : "Scanner Naval IA"}
               </h4>
               {!compact && (

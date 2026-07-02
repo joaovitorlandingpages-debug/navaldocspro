@@ -20,7 +20,7 @@ export function ImprovementsPanel() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-black text-navy uppercase">Ciclo de Melhorias</h2>
+        <h2 className="text-xl font-semibold text-navy">Ciclo de Melhorias</h2>
         <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase">Evolução Enterprise</Badge>
       </div>
 

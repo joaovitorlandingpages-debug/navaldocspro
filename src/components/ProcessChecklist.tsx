@@ -167,7 +167,7 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
        </div>
       <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-navy flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-green-500" /> Conformidade Operacional
           </h3>
           <div className="text-right">
@@ -212,7 +212,7 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
-          <h3 className="text-xs font-black text-navy uppercase tracking-widest">Checklist Inteligente</h3>
+          <h3 className="text-xs font-semibold text-navy">Checklist Inteligente</h3>
           <div className="flex gap-2">
             <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-100 bg-emerald-50">
               <Zap className="h-3 w-3 mr-1" /> Auto-Validação Ativa
@@ -322,7 +322,7 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
             <div className="p-10 space-y-6">
               <div className="p-8 border-2 border-dashed border-slate-100 rounded-2xl text-center bg-slate-50/50">
                 <AlertTriangle className="h-10 w-10 text-slate-200 mx-auto mb-4" />
-                <h4 className="text-sm font-bold text-navy uppercase mb-2">Nenhum requisito configurado</h4>
+                <h4 className="text-sm font-bold text-navy mb-2">Nenhum requisito configurado</h4>
                 <p className="text-xs text-slate-400 max-w-xs mx-auto font-medium">Este tipo de processo ainda não possui um pacote documental padrão. Adicione documentos manualmente na aba "Uploads".</p>
               </div>
               

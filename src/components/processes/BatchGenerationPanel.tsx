@@ -201,7 +201,7 @@ export function BatchGenerationPanel({
             <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-widest mb-2">
               <Layers className="h-3 w-3 mr-1" /> Geração em Lote
             </Badge>
-            <h3 className="text-lg md:text-xl font-black text-navy uppercase tracking-tight">
+            <h3 className="text-lg md:text-xl font-semibold text-navy">
               Gerar documentos em lote
             </h3>
             <p className="text-xs text-slate-500 mt-1 font-medium max-w-xl">

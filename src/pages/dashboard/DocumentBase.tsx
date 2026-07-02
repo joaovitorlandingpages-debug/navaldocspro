@@ -144,7 +144,7 @@ export default function DocumentBase() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-navy flex items-center gap-3">
             <Database className="h-8 w-8 text-primary" /> Base Documental
           </h1>
           <p className="text-muted-foreground font-medium">Repositório oficial de templates e documentos marítimos.</p>
@@ -313,7 +313,7 @@ export default function DocumentBase() {
                   <div className="col-span-full space-y-8">
                     <div className="p-20 text-center bg-white border border-dashed border-slate-200 rounded-3xl shadow-sm">
                       <FolderOpen className="h-16 w-16 text-slate-100 mx-auto mb-6" />
-                      <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-2">Nenhum template encontrado</h3>
+                      <h3 className="text-xl font-semibold text-navy mb-2">Nenhum template encontrado</h3>
                       <p className="text-sm text-slate-400 max-w-sm mx-auto font-medium mb-8">Nossa base nacional de templates marítimos está sempre crescendo. Tente buscar por outros termos.</p>
                       <Button className="bg-primary text-white rounded-xl gap-2 font-black uppercase text-[10px] tracking-widest px-8">
                          <Plus className="h-4 w-4" /> Solicitar Template Oficial
@@ -328,7 +328,7 @@ export default function DocumentBase() {
                       ].map((mock, i) => (
                         <Card key={i} className="p-6 rounded-3xl border-slate-100">
                           <Badge variant="outline" className="text-[8px] font-black uppercase mb-4">{mock.cat} • EXEMPLO</Badge>
-                          <h4 className="text-sm font-black text-navy mb-2">{mock.name}</h4>
+                          <h4 className="text-sm font-semibold text-navy mb-2">{mock.name}</h4>
                           <p className="text-xs text-slate-500 line-clamp-2">{mock.desc}</p>
                           <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
                              <div className="flex gap-1">

@@ -74,7 +74,7 @@ export default function SubscriptionUsage() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20 p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
-          <h1 className="text-3xl font-black text-navy uppercase tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl font-semibold text-navy flex items-center gap-3">
             <CreditCard className="h-8 w-8 text-primary" /> Billing & Assinatura
           </h1>
           <p className="text-slate-500 font-medium italic">Gestão de plano, faturamento e limites operacionais.</p>
@@ -121,7 +121,7 @@ export default function SubscriptionUsage() {
 
               <div className="space-y-3">
                 <div className="flex justify-between items-end">
-                    <h3 className="text-[10px] font-black text-navy uppercase tracking-widest">{meta.label}</h3>
+                    <h3 className="text-[10px] font-semibold text-navy">{meta.label}</h3>
                     <p className="text-xl font-black text-navy">{usage?.current || 0} <span className="text-slate-300 text-sm">/ {usage?.limit || '∞'}</span></p>
                 </div>
                 <Progress 
@@ -142,7 +142,7 @@ export default function SubscriptionUsage() {
            <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white">
               <div className="p-8 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
                  <div>
-                    <h3 className="text-xs font-black uppercase tracking-widest text-navy">Histórico de Faturamento</h3>
+                    <h3 className="text-xs font-semibold text-navy">Histórico de Faturamento</h3>
                     <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Faturas e pagamentos processados</p>
                  </div>
                  <Button variant="outline" size="sm" className="text-[9px] font-black uppercase tracking-widest border-slate-200">Exportar Tudo</Button>
@@ -190,8 +190,8 @@ export default function SubscriptionUsage() {
               </div>
               <div className="relative z-10 space-y-6">
                  <div>
-                    <h3 className="font-black uppercase tracking-widest text-[10px] text-primary mb-2">Sucesso do Cliente</h3>
-                    <h4 className="text-2xl font-black leading-tight uppercase italic tracking-tighter">Upgrade para Professional</h4>
+                    <h3 className="font-semibold text-[10px] text-primary mb-2">Sucesso do Cliente</h3>
+                    <h4 className="text-2xl font-semibold leading-tight italic">Upgrade para Professional</h4>
                  </div>
                  <ul className="space-y-4">
                     {["Assinatura Digital de PDFs", "IA de Análise Preditiva", "Suporte Prioritário 24/7", "Relatórios de Exportação Bulk"].map(feat => (
@@ -209,7 +209,7 @@ export default function SubscriptionUsage() {
            </Card>
 
            <Card className="p-8 border-slate-100 shadow-sm space-y-6 rounded-3xl bg-slate-50">
-              <h3 className="font-black text-navy uppercase tracking-widest text-xs flex items-center gap-2">
+              <h3 className="font-semibold text-navy text-xs flex items-center gap-2">
                 <Clock className="h-4 w-4 text-primary" /> Detalhes da Assinatura
               </h3>
               <div className="space-y-4">
@@ -246,7 +246,7 @@ export default function SubscriptionUsage() {
          </div>
          <div className="space-y-2 relative z-10">
             <p className="text-primary font-black uppercase text-[10px] tracking-widest">Segurança Financeira</p>
-            <h3 className="text-2xl font-black uppercase tracking-tighter italic">Infraestrutura Blindada</h3>
+            <h3 className="text-2xl font-semibold italic">Infraestrutura Blindada</h3>
             <p className="text-slate-400 text-sm max-w-xl font-medium">Seus dados de faturamento são processados via gateways certificados PCI-DSS. Nenhuma informação de cartão de crédito é armazenada em nossos servidores.</p>
          </div>
          <div className="flex items-center gap-6 relative z-10">

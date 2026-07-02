@@ -94,7 +94,7 @@ export function GoLivePanel() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-navy uppercase tracking-tighter flex items-center gap-3">
+          <h2 className="text-2xl font-semibold text-navy flex items-center gap-3">
              Painel de Maturidade & Evolução
              <Badge variant="outline" className="border-primary/20 text-primary text-[10px] font-black uppercase">v{version?.major}.{version?.minor}.{version?.patch}</Badge>
           </h2>
@@ -312,7 +312,7 @@ export function GoLivePanel() {
                          </div>
                          <div>
                            <div className="flex items-center gap-3">
-                             <h4 className="text-sm font-black text-navy uppercase tracking-tight">{incident.title}</h4>
+                             <h4 className="text-sm font-semibold text-navy">{incident.title}</h4>
                              <Badge className={incident.status === 'resolved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>{incident.status}</Badge>
                            </div>
                            <p className="text-xs text-slate-500 mt-1">{incident.description}</p>
@@ -330,7 +330,7 @@ export function GoLivePanel() {
                      <div className="h-16 w-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
                        <CheckCircle2 className="h-8 w-8" />
                      </div>
-                     <h3 className="text-lg font-black text-navy uppercase">Sistema Impecável</h3>
+                     <h3 className="text-lg font-semibold text-navy">Sistema Impecável</h3>
                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Nenhum incidente registrado nos últimos 30 dias.</p>
                    </div>
                  )}

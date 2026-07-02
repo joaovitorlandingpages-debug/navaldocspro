@@ -185,7 +185,7 @@ export function TemplateVisualEditor({ templateId, onClose }: TemplateVisualEdit
       {/* Sidebar - Tools & Field List */}
       <div className="w-80 border-r border-white/10 flex flex-col bg-slate-900/50 backdrop-blur-xl">
         <div className="p-6 border-b border-white/10">
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
+          <h2 className="text-xl font-semibold text-white flex items-center gap-3">
             <Layout className="h-5 w-5 text-red-500" /> Editor de Template
           </h2>
           <p className="text-[10px] text-slate-500 font-mono mt-1 uppercase tracking-widest italic">

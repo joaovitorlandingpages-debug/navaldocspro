@@ -37,7 +37,7 @@ export function SmartOCR() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-           <h3 className="text-xl font-black text-navy uppercase tracking-tight flex items-center gap-2">
+           <h3 className="text-xl font-semibold text-navy flex items-center gap-2">
               <Zap className="h-5 w-5 text-primary" /> OCR Inteligente
            </h3>
            <p className="text-xs text-slate-500 font-medium">Extraia dados de CNH, RG e documentos navais automaticamente.</p>

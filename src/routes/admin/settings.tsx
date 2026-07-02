@@ -15,7 +15,7 @@ function AdminSettings() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div>
-        <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Configurações Globais</h1>
+        <h1 className="text-3xl font-semibold text-navy">Configurações Globais</h1>
         <p className="text-slate-500 font-medium">Ajustes de infraestrutura e parâmetros do sistema.</p>
       </div>
 
@@ -49,7 +49,7 @@ function AdminSettings() {
       </div>
 
       <div className="bg-white rounded-3xl border border-slate-100 p-10 shadow-sm">
-         <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-8">Central de Ajuda & Documentação</h3>
+         <h3 className="text-xl font-semibold text-navy mb-8">Central de Ajuda & Documentação</h3>
          <div className="grid md:grid-cols-2 gap-10">
             <div className="space-y-6">
                <div className="flex items-start gap-4">

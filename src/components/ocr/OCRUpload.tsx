@@ -164,7 +164,7 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b pb-4">
             <div>
-              <h3 className="text-xl font-black text-navy uppercase tracking-tight flex items-center gap-2">
+              <h3 className="text-xl font-semibold text-navy flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" /> Dados Encontrados (IA)
               </h3>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
@@ -233,7 +233,7 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
             <Upload className="h-12 w-12 text-primary relative z-10" />
           </div>
           <div className="space-y-3">
-            <h4 className="text-2xl font-black text-navy uppercase tracking-tight">IA Scanner Naval Multi-Doc</h4>
+            <h4 className="text-2xl font-semibold text-navy">IA Scanner Naval Multi-Doc</h4>
             <p className="text-sm text-slate-500 max-w-sm mx-auto font-medium leading-relaxed italic">
               "Digitalização inteligente com 98% de precisão em documentos náuticos."
             </p>
@@ -297,7 +297,7 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
       ) : (
         <div className="space-y-6 relative z-10">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-navy flex items-center gap-2">
               <ListChecks className="h-4 w-4 text-primary" /> Arquivos Selecionados ({selectedFiles.length})
             </h4>
             <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase text-red-500" onClick={() => setSelectedFiles([])}>

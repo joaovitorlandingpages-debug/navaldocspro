@@ -131,8 +131,8 @@ export function WelcomeTour({
             <Rocket className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h3 className="font-black uppercase tracking-[0.25em] text-[10px] text-primary mb-1">Configuração</h3>
-            <h2 className="text-2xl font-black italic tracking-tighter leading-none uppercase">NavalDocs Pro</h2>
+            <h3 className="font-semibold tracking-[0.25em] text-[10px] text-primary mb-1">Configuração</h3>
+            <h2 className="text-2xl font-semibold italic leading-none">NavalDocs Pro</h2>
           </div>
         </div>
         
@@ -162,7 +162,7 @@ export function WelcomeTour({
               )}
             </div>
             <div className="flex-grow">
-              <h4 className={`text-[13px] font-black uppercase tracking-tight ${step.completed ? 'text-slate-300' : 'text-navy'}`}>
+              <h4 className={`text-[13px] font-semibold ${step.completed ? 'text-slate-300' : 'text-navy'}`}>
                 {step.title}
               </h4>
               <p className="text-[11px] text-slate-400 font-bold mt-1 leading-relaxed">

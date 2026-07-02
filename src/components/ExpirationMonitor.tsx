@@ -52,7 +52,7 @@ export function ExpirationMonitor() {
     <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
       <div className="flex justify-between items-center">
         <div>
-           <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
+           <h3 className="text-lg font-semibold text-navy flex items-center gap-2">
               <Clock className="h-5 w-5 text-amber-500" /> Controle de Vencimentos
            </h3>
            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Próximos 30 dias</p>

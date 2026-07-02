@@ -40,7 +40,7 @@ function SystemMonitor() {
       <BackNavigation className="w-fit lg:hidden" />
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-4xl font-black text-navy tracking-tight uppercase flex items-center gap-4">
+          <h1 className="text-4xl font-semibold text-navy flex items-center gap-4">
              <MonitorCheck className="text-primary h-10 w-10" /> Centro de Monitoramento
           </h1>
           <p className="text-slate-500 font-medium italic">Status em tempo real da infraestrutura NavalDocs Pro.</p>
@@ -59,7 +59,7 @@ function SystemMonitor() {
                 </div>
                 <Badge className="bg-emerald-100 text-emerald-700 border-none px-4 py-1">Operational</Badge>
              </div>
-             <h3 className="text-lg font-black text-navy uppercase tracking-tight">{service.name}</h3>
+             <h3 className="text-lg font-semibold text-navy">{service.name}</h3>
              <div className="mt-4 flex justify-between items-end">
                 <div className="space-y-1">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Latência / Health</p>
@@ -81,7 +81,7 @@ function SystemMonitor() {
               <Server className="h-64 w-64" />
            </div>
            <div className="relative z-10">
-              <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-8 text-primary">Fila de Processamento</h4>
+              <h4 className="text-xs font-semibold tracking-[0.2em] mb-8 text-primary">Fila de Processamento</h4>
               <div className="space-y-6">
                   {[
                     { label: "OCR Jobs Pendentes", value: 0 },
@@ -101,7 +101,7 @@ function SystemMonitor() {
 
         <div className="space-y-8">
            <Card className="p-8 border-slate-100 shadow-sm">
-              <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2 text-navy">
+              <h4 className="text-xs font-semibold tracking-[0.2em] mb-6 flex items-center gap-2 text-navy">
                  <ShieldCheck className="h-4 w-4 text-emerald-500" /> Segurança Enterprise
               </h4>
               <div className="space-y-4">
@@ -122,7 +122,7 @@ function SystemMonitor() {
            </Card>
 
            <div className="bg-white border border-slate-100 p-8 rounded-2xl shadow-sm">
-              <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2 text-navy">
+              <h4 className="text-xs font-semibold tracking-[0.2em] mb-6 flex items-center gap-2 text-navy">
                  <Activity className="h-4 w-4 text-primary" /> Logs de Sistema (Live)
               </h4>
               <div className="space-y-3 font-mono text-[10px]">

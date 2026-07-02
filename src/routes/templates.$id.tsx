@@ -191,7 +191,7 @@ function TemplateDetailPage() {
             </div>
             <div className="flex-1">
               <Badge variant="outline" className="mb-2">{category.toUpperCase()}</Badge>
-              <h1 className="text-3xl font-bold tracking-tight">{tpl.label}</h1>
+              <h1 className="text-3xl font-bold">{tpl.label}</h1>
               <p className="text-slate-600 mt-2">{tpl.description}</p>
               <div className="flex items-center gap-4 mt-4 text-sm">
                 <span className="flex items-center gap-1 text-amber-600 font-semibold">

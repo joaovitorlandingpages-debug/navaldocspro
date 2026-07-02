@@ -101,7 +101,7 @@ export default function ClientPortal() {
                 <FileText className="h-6 w-6 text-white" />
              </div>
              <div>
-                <h1 className="text-lg font-black uppercase tracking-tighter leading-none italic">NavalDocs <span className="text-primary">Client</span></h1>
+                <h1 className="text-lg font-semibold leading-none italic">NavalDocs <span className="text-primary">Client</span></h1>
                 <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-1">Ambiente Premium Seguro</p>
              </div>
           </div>
@@ -125,7 +125,7 @@ export default function ClientPortal() {
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
            <div>
-              <h2 className="text-2xl font-black text-navy uppercase tracking-tight">Olá, {profile?.full_name?.split(' ')[0]}</h2>
+              <h2 className="text-2xl font-semibold text-navy">Olá, {profile?.full_name?.split(' ')[0]}</h2>
               <p className="text-slate-500 font-medium">Acompanhe seus processos e envie pendências aqui.</p>
            </div>
            <div className="flex gap-2 w-full md:w-auto">
@@ -156,28 +156,28 @@ export default function ClientPortal() {
                  <ClipboardList className="h-16 w-16" />
               </div>
               <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Processos Ativos</p>
-              <h3 className="text-3xl font-black text-navy">{processes?.length || 0}</h3>
+              <h3 className="text-3xl font-semibold text-navy">{processes?.length || 0}</h3>
            </Card>
            <Card className="p-6 bg-white border-slate-100 shadow-sm relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
                  <Clock className="h-16 w-16 text-amber-500" />
               </div>
               <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Docs Pendentes</p>
-              <h3 className="text-3xl font-black text-amber-500">2</h3>
+              <h3 className="text-3xl font-semibold text-amber-500">2</h3>
            </Card>
            <Card className="p-6 bg-white border-slate-100 shadow-sm relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
                  <Signature className="h-16 w-16 text-primary" />
               </div>
               <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Assinaturas</p>
-              <h3 className="text-3xl font-black text-primary">{documents?.filter((d: any) => d.status === 'pending_signature').length || 0}</h3>
+              <h3 className="text-3xl font-semibold text-primary">{documents?.filter((d: any) => d.status === 'pending_signature').length || 0}</h3>
            </Card>
         </div>
 
         {/* Process Tabs */}
         <div className="space-y-6">
            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-black uppercase text-navy tracking-[0.2em] flex items-center gap-2">
+              <h3 className="text-xs font-semibold text-navy tracking-[0.2em] flex items-center gap-2">
                  <LayoutDashboard className="h-4 w-4 text-primary" /> Detalhes do Processo
               </h3>
               {processes && processes.length > 1 && (
@@ -201,7 +201,7 @@ export default function ClientPortal() {
                     </div>
                        <div>
                           <div className="flex items-center gap-3 mb-1">
-                             <h4 className="text-xl font-black text-navy uppercase tracking-tight">{selectedProcess?.process_type || "Nenhum processo selecionado"}</h4>
+                             <h4 className="text-xl font-semibold text-navy">{selectedProcess?.process_type || "Nenhum processo selecionado"}</h4>
                              <Badge className="bg-primary text-white border-none text-[8px] font-black uppercase px-2 py-0.5 rounded-md">Ativo</Badge>
                           </div>
                           <div className="flex flex-wrap items-center gap-4">

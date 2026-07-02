@@ -107,7 +107,7 @@ function FocusMode() {
               <Target className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-black uppercase tracking-tight">Modo Foco</h1>
+              <h1 className="text-2xl font-semibold">Modo Foco</h1>
               <p className="text-[10px] font-bold uppercase tracking-widest text-primary">
                 {actions.length} ações prioritárias • ESC para sair
               </p>
@@ -125,7 +125,7 @@ function FocusMode() {
         ) : actions.length === 0 ? (
           <Card className="bg-emerald-500/10 border-emerald-500/20 p-16 text-center">
             <CheckCircle2 className="h-16 w-16 text-emerald-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-black uppercase">Tudo em dia.</h2>
+            <h2 className="text-2xl font-semibold">Tudo em dia.</h2>
             <p className="text-white/60 mt-2">Nenhuma ação crítica para hoje.</p>
           </Card>
         ) : (
@@ -135,7 +135,7 @@ function FocusMode() {
                 <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-4 flex items-center gap-2">
                   <Zap className="h-3 w-3" /> Próxima Ação
                 </p>
-                <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight leading-none mb-4">
+                <h2 className="text-3xl md:text-5xl font-semibold leading-none mb-4">
                   {next.title}
                 </h2>
                 <p className="text-white/60 font-medium mb-8">{next.reason} • {next.subtitle}</p>

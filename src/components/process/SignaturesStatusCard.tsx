@@ -50,7 +50,7 @@ export function SignaturesStatusCard({ processId, onOpen }: { processId: string;
           <p className="text-[10px] uppercase tracking-widest font-black opacity-70">Assinaturas</p>
           <div className="flex items-center gap-2 mt-1">
             <span className={`h-2.5 w-2.5 rounded-full ${dot} animate-pulse`} />
-            <h3 className="text-lg font-black truncate">{label}</h3>
+            <h3 className="text-lg font-semibold truncate">{label}</h3>
           </div>
           {total > 0 && (
             <p className="text-xs mt-1 opacity-80">{completed} de {total} concluída(s)</p>

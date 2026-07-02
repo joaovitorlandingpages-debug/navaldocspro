@@ -75,7 +75,7 @@ export default function DeadlineCenter() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-navy flex items-center gap-3">
             <Clock className="h-8 w-8 text-primary" /> Prazos e Vencimentos
           </h1>
           <p className="text-muted-foreground font-medium">Monitoramento proativo de validades e marcos operacionais.</p>
@@ -98,7 +98,7 @@ export default function DeadlineCenter() {
               <p className="text-[10px] font-black uppercase tracking-widest text-red-600">Vencidos</p>
               <AlertCircle className="h-4 w-4 text-red-500" />
             </div>
-            <h3 className="text-3xl font-black text-red-900">{expiredDocs.length}</h3>
+            <h3 className="text-3xl font-semibold text-red-900">{expiredDocs.length}</h3>
             <p className="text-[10px] text-red-700 font-bold mt-1 uppercase">Ação Imediata</p>
           </CardContent>
         </Card>
@@ -109,7 +109,7 @@ export default function DeadlineCenter() {
               <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Vencendo (30d)</p>
               <Clock className="h-4 w-4 text-amber-500" />
             </div>
-            <h3 className="text-3xl font-black text-amber-900">{expiringSoonDocs.length}</h3>
+            <h3 className="text-3xl font-semibold text-amber-900">{expiringSoonDocs.length}</h3>
             <p className="text-[10px] text-amber-700 font-bold mt-1 uppercase">Planejar Renovação</p>
           </CardContent>
         </Card>
@@ -120,7 +120,7 @@ export default function DeadlineCenter() {
               <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Processos Lentos</p>
               <History className="h-4 w-4 text-blue-500" />
             </div>
-            <h3 className="text-3xl font-black text-blue-900">{delayedProcesses.length}</h3>
+            <h3 className="text-3xl font-semibold text-blue-900">{delayedProcesses.length}</h3>
             <p className="text-[10px] text-blue-700 font-bold mt-1 uppercase">Verificar Gargalos</p>
           </CardContent>
         </Card>
@@ -131,7 +131,7 @@ export default function DeadlineCenter() {
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Eficiência</p>
               <ShieldCheck className="h-4 w-4 text-emerald-500" />
             </div>
-            <h3 className="text-3xl font-black text-navy">92%</h3>
+            <h3 className="text-3xl font-semibold text-navy">92%</h3>
             <p className="text-[10px] text-emerald-600 font-bold mt-1 uppercase">SLA Cumprido</p>
           </CardContent>
         </Card>
@@ -259,7 +259,7 @@ function DeadlineCard({ item, type, onAction }: { item: any, type: 'expired' | '
 
         <div className="flex-grow text-center md:text-left">
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-1">
-            <h4 className="font-black text-navy uppercase tracking-tight">
+            <h4 className="font-semibold text-navy">
               {isDoc ? item.document_type : `Processo #${item.id.substring(0, 8).toUpperCase()}`}
             </h4>
             <Badge variant="outline" className={`text-[8px] font-black uppercase ${

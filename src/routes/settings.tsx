@@ -212,7 +212,7 @@ function CompanyTeamPage() {
                    </div>
                     <div className="space-y-4">
                        <div>
-                          <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{company?.name || "Empresa"}</h3>
+                          <h3 className="text-2xl font-semibold text-navy">{company?.name || "Empresa"}</h3>
                           <p className="text-sm text-slate-400 font-medium">Desde {new Date(company?.created_at).toLocaleDateString('pt-BR')} • ID: {company?.id?.substring(0, 8).toUpperCase()}</p>
                        </div>
                       <div className="flex flex-wrap gap-2">
@@ -346,7 +346,7 @@ function CompanyTeamPage() {
            {activeTab === "permissoes" && (
              <div className="bg-white rounded-3xl border border-slate-100 p-8 md:p-10 shadow-sm animate-in slide-in-from-right-4 duration-500">
                 <div className="flex justify-between items-center mb-10">
-                   <h3 className="text-xl font-black text-navy uppercase tracking-tight">Cargos e Níveis de Acesso</h3>
+                   <h3 className="text-xl font-semibold text-navy">Cargos e Níveis de Acesso</h3>
                    <button className="text-xs font-black uppercase tracking-widest text-primary hover:underline">+ Criar Cargo Customizado</button>
                 </div>
 
@@ -380,12 +380,12 @@ function CompanyTeamPage() {
 
            {activeTab === "assinatura" && (
              <div className="bg-white rounded-3xl border border-slate-100 p-8 md:p-10 shadow-sm animate-in slide-in-from-right-4 duration-500">
-                <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-8">Plano e Faturamento</h3>
+                <h3 className="text-xl font-semibold text-navy mb-8">Plano e Faturamento</h3>
                 <div className="grid md:grid-cols-2 gap-8">
                    <div className="p-8 bg-navy text-white rounded-2xl shadow-xl relative overflow-hidden">
                       <CreditCard className="absolute -right-4 -bottom-4 h-32 w-32 text-white/5" />
                       <p className="text-[10px] font-black uppercase text-primary mb-2">Plano Atual</p>
-                      <h4 className="text-3xl font-black mb-4">Enterprise Pro</h4>
+                      <h4 className="text-3xl font-semibold mb-4">Enterprise Pro</h4>
                       <p className="text-sm opacity-60 mb-8">Próximo faturamento em 12/06/2026</p>
                       <button className="w-full bg-primary text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest">Alterar Plano</button>
                    </div>
@@ -407,7 +407,7 @@ function CompanyTeamPage() {
                    </div>
                 </div>
                 <div className="mt-10">
-                   <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-4">Faturas Recentes</h4>
+                   <h4 className="text-xs font-semibold text-slate-400 mb-4">Faturas Recentes</h4>
                    <div className="space-y-2">
                       {[1, 2].map(i => (
                         <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 transition-all">
@@ -425,7 +425,7 @@ function CompanyTeamPage() {
 
            {activeTab === "seguranca" && (
              <div className="bg-white rounded-3xl border border-slate-100 p-8 md:p-10 shadow-sm animate-in slide-in-from-right-4 duration-500">
-                <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-8">Segurança e Auditoria</h3>
+                <h3 className="text-xl font-semibold text-navy mb-8">Segurança e Auditoria</h3>
                 <div className="space-y-8">
                    <div className="p-6 bg-rose-50 border border-rose-100 rounded-2xl flex items-center justify-between">
                       <div className="flex items-center gap-4">
@@ -441,7 +441,7 @@ function CompanyTeamPage() {
                    </div>
                    
                    <div>
-                      <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-4">Logs de Acesso Recentes</h4>
+                      <h4 className="text-xs font-semibold text-slate-400 mb-4">Logs de Acesso Recentes</h4>
                       <div className="divide-y divide-slate-50 border rounded-2xl overflow-hidden">
                          {[
                            { action: "Login realizado", ip: "189.12.34.56", time: "Hoje, 09:45" },
@@ -468,7 +468,7 @@ function CompanyTeamPage() {
                  <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6">
                     <Globe className="h-10 w-10 opacity-30" />
                  </div>
-                 <h3 className="text-xl font-black text-navy uppercase tracking-tight mb-2">Interface em Otimização</h3>
+                 <h3 className="text-xl font-semibold text-navy mb-2">Interface em Otimização</h3>
                  <p className="text-sm text-slate-400 max-w-xs mx-auto italic font-medium">O módulo de {activeTab} está sendo finalizado para oferecer a melhor experiência enterprise.</p>
               </div>
            )}

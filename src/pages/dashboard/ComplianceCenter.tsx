@@ -73,7 +73,7 @@ export default function ComplianceCenter() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-navy flex items-center gap-3">
             <ShieldCheck className="h-8 w-8 text-primary" /> Compliance Center
           </h1>
           <p className="text-muted-foreground font-medium">Monitoramento de conformidade e validação operacional naval.</p>
@@ -161,7 +161,7 @@ export default function ComplianceCenter() {
               <div className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-navy mb-4">Políticas de Bloqueio</h4>
+                    <h4 className="text-xs font-semibold text-navy mb-4">Políticas de Bloqueio</h4>
                     <div className="space-y-3">
                       {[
                         { label: "Bloquear finalização sem OCR validado", checked: true },
@@ -180,7 +180,7 @@ export default function ComplianceCenter() {
                   </div>
                   
                   <div className="p-6 rounded-2xl bg-amber-50/50 border border-amber-100">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-amber-800 mb-4">Critérios de Rigor Operacional</h4>
+                    <h4 className="text-xs font-semibold text-amber-800 mb-4">Critérios de Rigor Operacional</h4>
                     <div className="space-y-4">
                        <p className="text-[10px] text-amber-700 font-medium leading-relaxed italic">
                          Configurações de Admin Master afetam todos os usuários. Alterações aqui são registradas nos logs de auditoria de sistema.

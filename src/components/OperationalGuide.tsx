@@ -17,7 +17,7 @@ export function OperationalGuide() {
     <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm mb-6 animate-in fade-in">
       <div className="flex items-center gap-2 mb-4">
         <HelpCircle className="h-5 w-5 text-primary" />
-        <h3 className="text-sm font-black text-navy uppercase tracking-widest">Guia Rápido: Como operar um processo</h3>
+        <h3 className="text-sm font-semibold text-navy">Guia Rápido: Como operar um processo</h3>
       </div>
       <div className="flex flex-wrap gap-2">
         {steps.map((step, index) => (

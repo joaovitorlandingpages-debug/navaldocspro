@@ -67,7 +67,7 @@ function Section({ icon: Icon, title, children, action }: any) {
           <div className="h-8 w-8 shrink-0 rounded-lg bg-primary/10 grid place-items-center text-primary">
             <Icon className="h-4 w-4" />
           </div>
-          <h3 className="text-sm font-black text-navy uppercase tracking-tight truncate">{title}</h3>
+          <h3 className="text-sm font-semibold text-navy truncate">{title}</h3>
         </div>
         {action}
       </header>

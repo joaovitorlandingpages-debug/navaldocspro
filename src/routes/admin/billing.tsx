@@ -80,7 +80,7 @@ function AdminBilling() {
               <Badge className="bg-emerald-500 text-white font-black uppercase text-[9px] tracking-widest px-2">Global Finance</Badge>
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Revenue Ops</span>
            </div>
-           <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Gestão Financeira</h1>
+           <h1 className="text-3xl font-semibold text-navy">Gestão Financeira</h1>
            <p className="text-slate-500 font-medium">Monitoramento consolidado de assinaturas e fluxo de caixa SaaS.</p>
         </div>
         <div className="flex gap-2">
@@ -106,14 +106,14 @@ function AdminBilling() {
                 </Badge>
              </div>
              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
-             <h3 className="text-2xl font-black text-navy mt-1">{stat.value}</h3>
+             <h3 className="text-2xl font-semibold text-navy mt-1">{stat.value}</h3>
           </Card>
         ))}
       </div>
 
       <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
         <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/30">
-           <h3 className="text-sm font-black text-navy uppercase tracking-widest">Pagamentos Recentes</h3>
+           <h3 className="text-sm font-semibold text-navy">Pagamentos Recentes</h3>
            <div className="relative w-full md:max-w-xs">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <Input placeholder="Buscar transação..." className="pl-10 h-10 rounded-xl bg-white border-slate-200 text-xs" />
@@ -168,7 +168,7 @@ function AdminBilling() {
       </Card>
 
       <div className="mt-12 space-y-6">
-         <h3 className="text-xl font-black text-navy uppercase tracking-tight flex items-center gap-3">
+         <h3 className="text-xl font-semibold text-navy flex items-center gap-3">
             <CreditCard className="h-6 w-6 text-primary" /> Planos SaaS Ativos
          </h3>
          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -176,7 +176,7 @@ function AdminBilling() {
                <Card key={plan.id} className="p-8 rounded-3xl border-slate-100 shadow-sm hover:shadow-xl transition-all group border-t-8 border-t-primary">
                   <div className="flex justify-between items-start mb-6">
                      <div>
-                        <h4 className="text-xl font-black text-navy uppercase tracking-tighter">{plan.name}</h4>
+                        <h4 className="text-xl font-semibold text-navy">{plan.name}</h4>
                         <p className="text-xs text-slate-400 font-bold uppercase mt-1">R$ {Number(plan.price).toLocaleString()}/mês</p>
                      </div>
                      <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase">v{plan.version || 1}</Badge>
@@ -207,8 +207,8 @@ function AdminBilling() {
          </div>
          <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
             <div>
-               <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-4 text-emerald-400">Performance Comercial</h4>
-               <h3 className="text-3xl font-black mb-6">Crescimento Sustentável.</h3>
+               <h4 className="text-xs font-semibold tracking-[0.2em] mb-4 text-emerald-400">Performance Comercial</h4>
+               <h3 className="text-3xl font-semibold mb-6">Crescimento Sustentável.</h3>
                <p className="text-slate-400 leading-relaxed mb-8">
                   O NavalDocs Pro mantém um LTV (Life Time Value) superior à média do mercado naval devido à integração crítica de fluxos DPC.
                </p>

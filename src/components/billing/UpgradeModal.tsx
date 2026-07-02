@@ -81,7 +81,7 @@ export function UpgradeModal({ isOpen, onClose, resource, limit, current }: Upgr
             <div className="h-20 w-20 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/20">
               <ShieldAlert className="h-10 w-10 text-primary animate-pulse" />
             </div>
-            <h2 className="text-2xl font-black uppercase tracking-tight">Limite Atingido</h2>
+            <h2 className="text-2xl font-semibold">Limite Atingido</h2>
             <p className="text-white/60 text-sm font-medium italic">NavalDocs Pro Enterprise Architecture</p>
           </div>
         </div>
@@ -92,7 +92,7 @@ export function UpgradeModal({ isOpen, onClose, resource, limit, current }: Upgr
               {config.icon}
             </div>
             <div className="space-y-1">
-              <h4 className="font-black text-navy uppercase tracking-tight text-lg">{config.label}</h4>
+              <h4 className="font-semibold text-navy text-lg">{config.label}</h4>
               <p className="text-sm text-slate-500 leading-relaxed font-medium">
                 {config.description}
               </p>

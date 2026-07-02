@@ -156,7 +156,7 @@ export default function SecurityCenter() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-navy flex items-center gap-3">
             <ShieldCheck className="h-8 w-8 text-primary" /> Segurança & Backups
           </h1>
           <p className="text-muted-foreground font-medium italic">Proteção enterprise e integridade operacional dos dados.</p>
@@ -187,7 +187,7 @@ export default function SecurityCenter() {
               <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Status Sistema</p>
               <ShieldCheck className="h-4 w-4 text-emerald-500" />
             </div>
-            <h3 className="text-3xl font-black text-emerald-900">Protegido</h3>
+            <h3 className="text-3xl font-semibold text-emerald-900">Protegido</h3>
             <p className="text-[10px] text-emerald-700 font-bold mt-1 uppercase">Monitoramento 24/7 Ativo</p>
           </CardContent>
         </Card>
@@ -198,7 +198,7 @@ export default function SecurityCenter() {
               <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Último Backup</p>
               <Database className="h-4 w-4 text-blue-500" />
             </div>
-            <h3 className="text-3xl font-black text-blue-900">
+            <h3 className="text-3xl font-semibold text-blue-900">
               {backups?.[0] ? format(new Date(backups[0].created_at), "HH:mm") : "--:--"}
             </h3>
             <p className="text-[10px] text-blue-700 font-bold mt-1 uppercase">Integridade 100%</p>
@@ -211,7 +211,7 @@ export default function SecurityCenter() {
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-600">Sessões Ativas</p>
               <Smartphone className="h-4 w-4 text-slate-500" />
             </div>
-            <h3 className="text-3xl font-black text-navy">02</h3>
+            <h3 className="text-3xl font-semibold text-navy">02</h3>
             <p className="text-[10px] text-slate-700 font-bold mt-1 uppercase underline cursor-pointer" onClick={() => setActiveTab("sessions")}>Gerenciar Dispositivos</p>
           </CardContent>
         </Card>
@@ -222,7 +222,7 @@ export default function SecurityCenter() {
               <p className={`text-[10px] font-black uppercase tracking-widest ${alerts?.length ? 'text-amber-600' : 'text-slate-400'}`}>Alertas Críticos</p>
               <ShieldAlert className={`h-4 w-4 ${alerts?.length ? 'text-amber-500' : 'text-slate-300'}`} />
             </div>
-            <h3 className={`text-3xl font-black ${alerts?.length ? 'text-amber-900' : 'text-navy'}`}>{alerts?.length || 0}</h3>
+            <h3 className={`text-3xl font-semibold ${alerts?.length ? 'text-amber-900' : 'text-navy'}`}>{alerts?.length || 0}</h3>
             <p className={`text-[10px] font-bold mt-1 uppercase ${alerts?.length ? 'text-amber-700' : 'text-slate-400'}`}>
               {alerts?.length ? "Revisão Necessária" : "Tudo em Ordem"}
             </p>
@@ -385,7 +385,7 @@ export default function SecurityCenter() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-black text-navy uppercase text-sm tracking-tight">Sessão Atual</h4>
+                        <h4 className="font-semibold text-navy text-sm">Sessão Atual</h4>
                         <Badge className="bg-emerald-100 text-emerald-600 text-[8px] font-black uppercase border-none">Online Agora</Badge>
                       </div>
                       <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Chrome no macOS • São Paulo, BR</p>
@@ -408,7 +408,7 @@ export default function SecurityCenter() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-black text-navy uppercase text-sm tracking-tight">iPhone 14 Pro</h4>
+                        <h4 className="font-semibold text-navy text-sm">iPhone 14 Pro</h4>
                         <Badge className="bg-slate-100 text-slate-500 text-[8px] font-black uppercase border-none">Há 4 horas</Badge>
                       </div>
                       <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Safari no iOS • Rio de Janeiro, BR</p>
@@ -425,7 +425,7 @@ export default function SecurityCenter() {
             <Card className="md:col-span-2 bg-red-50 border-red-100 border-dashed border-2">
                <CardContent className="p-8 text-center">
                  <LockKeyhole className="h-12 w-12 text-red-200 mx-auto mb-4" />
-                 <h4 className="font-black text-red-900 uppercase text-lg tracking-widest mb-2">Segurança Crítica</h4>
+                 <h4 className="font-semibold text-red-900 text-lg mb-2">Segurança Crítica</h4>
                  <p className="text-[11px] font-bold text-red-700 uppercase max-w-md mx-auto mb-6">Em caso de suspeita de acesso não autorizado, você pode encerrar todas as outras sessões ativas imediatamente.</p>
                  <Button className="bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-[0.2em] px-10 h-12 shadow-xl shadow-red-500/20" onClick={handleLogoutAll}>
                    Encerrar Todas as Sessões
@@ -493,7 +493,7 @@ export default function SecurityCenter() {
                      <div className="h-20 w-20 rounded-3xl bg-slate-50 flex items-center justify-center mx-auto mb-6 border-2 border-dashed border-slate-200">
                         <Trash2 className="h-10 w-10 text-slate-200" />
                      </div>
-                     <h4 className="font-black text-navy uppercase text-sm tracking-widest mb-2">Lixeira Vazia</h4>
+                     <h4 className="font-semibold text-navy text-sm mb-2">Lixeira Vazia</h4>
                      <p className="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">Não há itens excluídos no momento. Todos os seus dados operacionais estão ativos e protegidos.</p>
                    </div>
                  </div>
@@ -509,7 +509,7 @@ export default function SecurityCenter() {
                       <RefreshCw className="h-7 w-7" />
                    </div>
                    <div>
-                      <h4 className="font-black text-navy uppercase text-xs tracking-widest">Recuperar Processo</h4>
+                      <h4 className="font-semibold text-navy text-xs">Recuperar Processo</h4>
                       <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Restaurar fluxo operacional via ID ou Meta.</p>
                    </div>
                    <ArrowRight className="h-5 w-5 ml-auto text-slate-300 group-hover:text-primary transition-colors" />
@@ -522,7 +522,7 @@ export default function SecurityCenter() {
                       <History className="h-7 w-7" />
                    </div>
                    <div>
-                      <h4 className="font-black text-navy uppercase text-xs tracking-widest">Versões de Documentos</h4>
+                      <h4 className="font-semibold text-navy text-xs">Versões de Documentos</h4>
                       <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Acessar histórico de alterações e revisões.</p>
                    </div>
                    <ArrowRight className="h-5 w-5 ml-auto text-slate-300 group-hover:text-primary transition-colors" />
@@ -539,7 +539,7 @@ export default function SecurityCenter() {
          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
                <Badge className="bg-primary text-white border-none text-[9px] font-black uppercase mb-4 px-4 py-1 tracking-widest">ISO 27001 Compliance</Badge>
-               <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight italic mb-6">Segurança Nível <span className="text-primary italic">Enterprise</span></h2>
+               <h2 className="text-3xl md:text-4xl font-semibold italic mb-6">Segurança Nível <span className="text-primary italic">Enterprise</span></h2>
                <div className="space-y-4">
                   <div className="flex items-center gap-4">
                      <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
@@ -567,7 +567,7 @@ export default function SecurityCenter() {
                      <Lock className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                     <h4 className="font-black text-sm uppercase tracking-widest">Painel de Auditoria Global</h4>
+                     <h4 className="font-semibold text-sm">Painel de Auditoria Global</h4>
                      <p className="text-[10px] font-bold text-white/40 uppercase">Acesso exclusivo para administradores.</p>
                   </div>
                </div>

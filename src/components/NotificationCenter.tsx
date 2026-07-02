@@ -34,7 +34,7 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClo
                  )}
               </div>
               <div>
-                 <h2 className="text-xl font-black text-navy uppercase tracking-tighter">Central IA</h2>
+                 <h2 className="text-xl font-semibold text-navy">Central IA</h2>
                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Alertas e Automações</p>
               </div>
            </div>
@@ -81,7 +81,7 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClo
                         </div>
                         <div className="flex-grow">
                            <div className="flex justify-between items-start mb-1">
-                              <h3 className={`font-black text-sm uppercase tracking-tight ${!n.is_read ? 'text-navy' : 'text-slate-500'}`}>{n.title}</h3>
+                              <h3 className={`font-semibold text-sm ${!n.is_read ? 'text-navy' : 'text-slate-500'}`}>{n.title}</h3>
                               <span className="text-[9px] text-slate-300 font-bold uppercase shrink-0 ml-2">
                                 {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: ptBR })}
                               </span>

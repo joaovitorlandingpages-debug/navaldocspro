@@ -79,7 +79,7 @@ function OCRCenterPage() {
                 </div>
              </div>
              <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] relative z-10">{stat.label}</p>
-             <h3 className="text-3xl font-black text-navy mt-2 relative z-10 leading-none">{stat.value}</h3>
+             <h3 className="text-3xl font-semibold text-navy mt-2 relative z-10 leading-none">{stat.value}</h3>
              <div className="flex items-center gap-2 mt-4 relative z-10">
                 <div className="h-1 w-8 bg-primary/20 rounded-full overflow-hidden">
                    <div className="h-full bg-primary animate-pulse" style={{ width: '60%' }} />
@@ -119,7 +119,7 @@ function OCRCenterPage() {
                       <div className="h-8 w-8 bg-white/10 rounded-lg flex items-center justify-center">
                         <BarChart3 className="h-4 w-4 text-primary" />
                       </div>
-                      <h4 className="text-xs font-black uppercase tracking-widest">Dica de Performance</h4>
+                      <h4 className="text-xs font-semibold">Dica de Performance</h4>
                    </div>
                    <p className="text-[11px] text-white/70 leading-relaxed font-medium">
                       Para melhores resultados em CNH e RG, garanta que o documento esteja em uma superfície plana e com boa iluminação.
@@ -145,7 +145,7 @@ function OCRCenterPage() {
                 <div className="h-24 w-24 bg-white rounded-3xl shadow-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                     <MousePointer2 className="h-10 w-10 text-primary animate-bounce" />
                 </div>
-                <h4 className="text-xl font-black text-navy uppercase tracking-tight mb-2">Aguardando Seleção</h4>
+                <h4 className="text-xl font-semibold text-navy mb-2">Aguardando Seleção</h4>
                 <p className="text-sm text-slate-400 font-medium max-w-sm">
                   Selecione um documento no histórico ao lado ou faça um novo upload para visualizar os dados extraídos pela nossa IA.
                 </p>
@@ -180,7 +180,7 @@ function OCRCenterPage() {
                       <div className="absolute top-0 left-0 w-full h-1 bg-primary shadow-[0_0_15px_rgba(var(--primary),0.8)] animate-scan"></div>
                    </div>
                    <div className="mt-8 space-y-4">
-                      <h4 className="text-xl font-black text-navy uppercase tracking-tight">Processando Documento</h4>
+                      <h4 className="text-xl font-semibold text-navy">Processando Documento</h4>
                       <div className="flex flex-col items-center gap-2">
                          <div className="flex gap-1">
                             {[1, 2, 3].map(i => (
@@ -213,7 +213,7 @@ function OCRCenterPage() {
                   <Info className="h-8 w-8 text-white" />
                </div>
                <div>
-                  <h4 className="text-lg font-black text-navy uppercase tracking-tight">Privacidade e Segurança</h4>
+                  <h4 className="text-lg font-semibold text-navy">Privacidade e Segurança</h4>
                   <p className="text-sm text-slate-500 font-medium max-w-xl">
                     Todos os documentos são processados em servidores criptografados e os dados extraídos são protegidos por sigilo empresarial.
                   </p>
