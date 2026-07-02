@@ -138,15 +138,24 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   async function goToStep2() {
     if (!selectedType) { toast.error("Selecione o tipo de processo."); return; }
     if (!customerId) { toast.error("Selecione ou crie um cliente para continuar."); return; }
-    setStep(2);
+    if (isTransfer && !secondaryCustomerId) {
+      toast.error("Selecione ou crie o vendedor (cliente secundário) para transferência.");
+      return;
+    }
     setLoadingPreview(true);
     try {
       const items = await previewProcessBlueprint(selectedType.name);
-      setPreview(items);
-      if (items.length === 0) {
-        toast.warning("Este tipo ainda não possui modelo configurado. Você poderá adicionar documentos manualmente da Biblioteca.");
+      // Bloqueia continuar se package vazio e usuário ainda não confirmou "processo vazio manual".
+      if (items.length === 0 && !allowEmptyPackage) {
+        const ok = window.confirm(
+          `⚠ O tipo "${selectedType.name}" ainda não possui modelo de documentos configurado.\n\n` +
+          `Deseja criar um PROCESSO VAZIO MANUALMENTE?\n` +
+          `Você terá que anexar/gerar cada documento à mão — sem checklist automático.`
+        );
+        if (!ok) { setLoadingPreview(false); return; }
+        setAllowEmptyPackage(true);
       }
-      // Por padrão: obrigatórios marcados, opcionais desmarcados, condicionais desmarcados.
+      setPreview(items);
       const initialExcluded = new Set<string>();
       items.forEach((i) => {
         if ((i.kind === "optional" || i.kind === "conditional") && i.templateId) {
@@ -154,6 +163,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
         }
       });
       setExcluded(initialExcluded);
+      setStep(2);
     } catch (e: any) {
       toast.error("Falha ao carregar documentos do modelo: " + (e?.message || e));
     } finally {
@@ -161,17 +171,50 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     }
   }
 
-  async function createCustomerInline() {
-    const name = window.prompt("Nome do cliente:")?.trim();
+  async function checkCustomerDuplicate(cpf?: string): Promise<boolean> {
+    if (!cpf) return true;
+    const { data } = await supabase.rpc("check_process_duplicates" as any, {
+      p_cpf_cnpj: cpf, p_hull_number: null, p_tie: null, p_vessel_name: null,
+    });
+    const dup = (data as any)?.customers ?? [];
+    if (dup.length > 0) {
+      const nomes = dup.map((c: any) => `• ${c.name} (${c.cpf_cnpj || "sem doc"})`).join("\n");
+      return window.confirm(
+        `⚠ CPF/CNPJ já cadastrado para:\n${nomes}\n\nDeseja mesmo assim criar um NOVO cadastro? (Recomenda-se usar o existente.)`
+      );
+    }
+    return true;
+  }
+
+  async function checkVesselDuplicate(name: string): Promise<boolean> {
+    const { data } = await supabase.rpc("check_process_duplicates" as any, {
+      p_cpf_cnpj: null, p_hull_number: null, p_tie: null, p_vessel_name: name,
+    });
+    const dup = (data as any)?.vessels ?? [];
+    if (dup.length > 0) {
+      const nomes = dup.map((v: any) => `• ${v.name} (${v.hull_number || v.tie || "—"})`).join("\n");
+      return window.confirm(
+        `⚠ Já existem embarcações parecidas:\n${nomes}\n\nCriar mesmo assim?`
+      );
+    }
+    return true;
+  }
+
+  async function createCustomerInline(kind: "primary" | "secondary" = "primary") {
+    const label = kind === "secondary" ? "vendedor (cliente secundário)" : "cliente";
+    const name = window.prompt(`Nome do ${label}:`)?.trim();
     if (!name) return;
+    const cpf = window.prompt(`CPF/CNPJ do ${label} (opcional):`)?.trim() || null;
     if (!profile?.company_id) { toast.error("Empresa não vinculada."); return; }
+    if (cpf && !(await checkCustomerDuplicate(cpf))) return;
     const { data, error } = await supabase
       .from("customers")
-      .insert({ company_id: profile.company_id, name })
+      .insert({ company_id: profile.company_id, name, cpf_cnpj: cpf })
       .select("id,name").single();
     if (error) { toast.error("Erro ao criar cliente: " + error.message); return; }
     setCustomers((prev) => [...prev, data as any].sort((a, b) => a.name.localeCompare(b.name)));
-    setCustomerId((data as any).id);
+    if (kind === "secondary") setSecondaryCustomerId((data as any).id);
+    else setCustomerId((data as any).id);
     toast.success(`Cliente "${name}" criado.`);
   }
 
@@ -180,6 +223,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     const name = window.prompt("Nome da embarcação:")?.trim();
     if (!name) return;
     if (!profile?.company_id) { toast.error("Empresa não vinculada."); return; }
+    if (!(await checkVesselDuplicate(name))) return;
     const { data, error } = await supabase
       .from("vessels")
       .insert({ company_id: profile.company_id, customer_id: customerId, name })
