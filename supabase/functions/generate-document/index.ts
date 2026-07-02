@@ -387,9 +387,11 @@ serve(async (req) => {
         .from('process_participants')
         .select('role, customers:customer_id(name, cpf_cnpj, rg, address, city, state, phone, email)')
         .eq('process_id', processId)
+      // Em Transferência o "owner" é o comprador (Quick Dialog salva o comprador
+      // como customer_id). Aliases duplos garantem placeholders de ambos os fluxos.
       const roleAlias: Record<string, string[]> = {
-        owner: ['proprietario', 'cliente'],
-        buyer: ['comprador', 'cliente'],
+        owner: ['proprietario', 'comprador', 'cliente'],
+        buyer: ['comprador', 'proprietario', 'cliente'],
         seller: ['vendedor'],
         representative: ['representante'],
         attorney: ['procurador', 'outorgado'],
@@ -399,6 +401,7 @@ serve(async (req) => {
         witness: ['testemunha'],
         applicant: ['requerente'],
       }
+
       for (const p of (participants ?? []) as any[]) {
         const c = p.customers
         if (!c) continue
