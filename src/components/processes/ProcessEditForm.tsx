@@ -23,6 +23,7 @@ import {
   ChevronDown, Check, Users,
 } from "lucide-react";
 import { BR_UFS, maskCpfCnpj, maskPhone, daysUntil } from "@/lib/br-format";
+import { ProcessParticipantsTab } from "./ProcessParticipantsTab";
 
 interface Props {
   process: any;
@@ -571,6 +572,7 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
             <TabsTrigger value="embarcacao"><Ship className="h-3.5 w-3.5 mr-1.5" />Embarcação</TabsTrigger>
             <TabsTrigger value="identidade"><Palette className="h-3.5 w-3.5 mr-1.5" />Identidade</TabsTrigger>
             <TabsTrigger value="checklist"><CheckSquare className="h-3.5 w-3.5 mr-1.5" />Checklist</TabsTrigger>
+            <TabsTrigger value="participantes"><Users className="h-3.5 w-3.5 mr-1.5" />Participantes</TabsTrigger>
             <TabsTrigger value="stats"><BarChart3 className="h-3.5 w-3.5 mr-1.5" />Estatísticas</TabsTrigger>
             <TabsTrigger value="acoes"><Zap className="h-3.5 w-3.5 mr-1.5" />Ações</TabsTrigger>
           </TabsList>
@@ -813,6 +815,18 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
               </ul>
             </Section>
           </TabsContent>
+
+          {/* ======================= PARTICIPANTES ======================= */}
+          <TabsContent value="participantes" className="space-y-5 m-0">
+            <ProcessParticipantsTab
+              processId={process.id}
+              companyId={process.company_id}
+              processType={process.process_type}
+              customerId={form.customer_id}
+              secondaryCustomerId={(process as any).secondary_customer_id}
+            />
+          </TabsContent>
+
 
           {/* ======================= STATS ======================= */}
           <TabsContent value="stats" className="space-y-5 m-0">
