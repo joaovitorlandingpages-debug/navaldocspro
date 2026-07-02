@@ -18,7 +18,6 @@ import { ProcessActionsMenu } from "@/components/processes/ProcessActionsMenu";
 import { ProcessEditSheet } from "@/components/processes/ProcessEditSheet";
 import type { VisibleProcessRow } from "@/services/processes/processCreation";
 import { translateTerm } from "@/lib/naval-terms";
-import { Rocket, Sparkles, Upload } from "lucide-react";
 
 export const Route = createFileRoute("/processes")({
   component: Processes,
