@@ -126,7 +126,7 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose, initialTa
     branding_logo_url: process?.branding_logo_url ?? "",
   }), [process, meta.process_number, meta.category, meta.engineer_id, meta.despachante_id]);
 
-  const [tab, setTab] = useState<string>("dados");
+  const [tab, setTab] = useState<string>(initialTab ?? "dados");
   const [form, setForm] = useState(initial);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [customers, setCustomers] = useState<any[]>([]);
