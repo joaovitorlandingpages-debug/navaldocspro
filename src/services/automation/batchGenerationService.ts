@@ -41,6 +41,10 @@ export class BatchGenerationService {
             // O serviço deve buscar os dados automaticamente no backend
           },
         });
+        if (error) {
+          const { handleGenerationError } = await import("@/services/documents/generationErrorHandler");
+          await handleGenerationError(error, { processId });
+        }
         return { name: doc.name, success: !error };
       });
 
