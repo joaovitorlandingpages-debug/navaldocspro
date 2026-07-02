@@ -117,6 +117,10 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setLibraryQuery("");
       setLibraryResults([]);
       setAllowEmptyPackage(false);
+      setGenerateNow(true);
+      setGenProgress(null);
+      setGenReport(null);
+      setCreatedProcessId(null);
     }
   }, [isOpen]);
 
