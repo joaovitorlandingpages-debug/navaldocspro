@@ -572,6 +572,7 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
             <TabsTrigger value="embarcacao"><Ship className="h-3.5 w-3.5 mr-1.5" />Embarcação</TabsTrigger>
             <TabsTrigger value="identidade"><Palette className="h-3.5 w-3.5 mr-1.5" />Identidade</TabsTrigger>
             <TabsTrigger value="checklist"><CheckSquare className="h-3.5 w-3.5 mr-1.5" />Checklist</TabsTrigger>
+            <TabsTrigger value="participantes"><Users className="h-3.5 w-3.5 mr-1.5" />Participantes</TabsTrigger>
             <TabsTrigger value="stats"><BarChart3 className="h-3.5 w-3.5 mr-1.5" />Estatísticas</TabsTrigger>
             <TabsTrigger value="acoes"><Zap className="h-3.5 w-3.5 mr-1.5" />Ações</TabsTrigger>
           </TabsList>
