@@ -94,7 +94,7 @@ function DocumentGenerator() {
     queryFn: async () => {
       let q = supabase
         .from("processes")
-        .select("*, customer:customers(name), vessel:vessels(name), company_id");
+        .select("*, customer:customers!processes_customer_id_fkey(name), vessel:vessels!processes_vessel_id_fkey(name), company_id");
       if (!isGlobalAdmin && companyId) q = q.eq("company_id", companyId);
       const { data, error } = await q;
       if (error) throw error;

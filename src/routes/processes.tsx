@@ -62,7 +62,7 @@ function Processes() {
 
       let query = supabase
         .from('processes')
-        .select('*, customers(name), vessels(name)', { count: 'exact' })
+        .select('*, customers:customers!processes_customer_id_fkey(name), vessels:vessels!processes_vessel_id_fkey(name)', { count: 'exact' })
         .eq('company_id', profile.company_id)
         .is('deleted_at', null)
         .is('archived_at', null)

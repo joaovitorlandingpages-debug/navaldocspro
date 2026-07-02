@@ -462,7 +462,7 @@ export function RouteContent() {
       if (!profile?.company_id) return [];
       const { data, error } = await supabase
         .from("processes")
-        .select("*, vessels(name), customers(name)")
+        .select("*, vessels:vessels!processes_vessel_id_fkey(name), customers:customers!processes_customer_id_fkey(name)")
         .eq("company_id", profile.company_id)
         .order("created_at", { ascending: false })
         .limit(5);

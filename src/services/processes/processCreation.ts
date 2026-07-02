@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type VisibleProcessRow = Record<string, any> & { id: string; company_id: string };
 
-const visibleProcessSelect = "*, customers(name), vessels(name)";
+const visibleProcessSelect = "*, customers:customers!processes_customer_id_fkey(name), vessels:vessels!processes_vessel_id_fkey(name)";
 
 export async function fetchVisibleProcessById(processId: string, companyId: string): Promise<VisibleProcessRow | null> {
   const { data, error } = await supabase

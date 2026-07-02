@@ -83,7 +83,7 @@ function newDossierNumber() {
 async function fetchBundle(processId: string): Promise<Bundle> {
   const { data: process } = await supabase
     .from("processes")
-    .select("*, customer:customers(*), vessel:vessels(*), company:companies(*)")
+    .select("*, customer:customers!processes_customer_id_fkey(*), vessel:vessels!processes_vessel_id_fkey(*), company:companies(*)")
     .eq("id", processId)
     .maybeSingle();
 

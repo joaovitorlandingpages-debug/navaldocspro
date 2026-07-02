@@ -23,7 +23,7 @@ function TrashProcesses() {
 
     const { data } = await supabase
       .from("processes")
-      .select("*, customers(name), vessels(name)")
+      .select("*, customers:customers!processes_customer_id_fkey(name), vessels:vessels!processes_vessel_id_fkey(name)")
       .eq("company_id", profile.company_id)
       .not("trashed_at", "is", null)
       .is("deleted_at", null)

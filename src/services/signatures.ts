@@ -274,7 +274,7 @@ export const signaturesService = {
         if (request.process_id) {
           const { data: proc } = await supabase
             .from("processes")
-            .select("id, process_type, customer:customers(name), vessel:vessels(name)")
+            .select("id, process_type, customer:customers!processes_customer_id_fkey(name), vessel:vessels!processes_vessel_id_fkey(name)")
             .eq("id", request.process_id).maybeSingle();
           if (proc) {
             processInfo = {
