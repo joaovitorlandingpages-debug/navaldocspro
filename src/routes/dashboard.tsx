@@ -281,11 +281,12 @@ function DashboardLayout() {
       {/* Desktop Sidebar */}
       <aside 
         className={`${
-          isSidebarOpen ? "w-72" : "w-20"
-        } hidden lg:flex transition-all duration-500 bg-[#000B18] text-white flex-col z-50 border-r border-white/5 shadow-[20px_0_40px_rgba(0,0,0,0.2)]`}
+          isSidebarOpen ? "w-64" : "w-16"
+        } hidden lg:flex transition-[width] duration-300 bg-[#000B18] text-white flex-col z-50 border-r border-white/5`}
       >
         <SidebarContent />
       </aside>
+
 
 
       {/* Main Content */}
