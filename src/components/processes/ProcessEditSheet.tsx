@@ -84,6 +84,7 @@ export function ProcessEditSheet({ process, processId, open, onOpenChange, onSav
               onSaved={async () => { await refresh(); }}
               onCancel={() => onOpenChange(false)}
               onClose={() => onOpenChange(false)}
+              initialTab={initialTab}
             />
           )}
         </div>
