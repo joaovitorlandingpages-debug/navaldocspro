@@ -145,37 +145,34 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const isMotorChange = /motor/i.test(typeName);
   const needsVessel = !/segunda via|licença rádio|licenca radio/i.test(typeName);
 
-  // Slots dinâmicos
-  const clientSlots = useMemo<DocSlot[]>(() => {
-    const base: DocSlot[] = [
-      { key: "cnh_rg", label: "CNH ou RG", category: "cnh", required: true, hint: "Documento com foto." },
-      { key: "cpf_cnpj", label: "CPF ou CNPJ", category: "cpf", required: isRegistration || isTransfer, hint: "Se pessoa jurídica, envie o cartão CNPJ." },
-      {
-        key: "comprovante", label: "Comprovante de residência", category: "comprovante_residencia",
-        required: true, allowMissing: true,
-        onMissingGenerate: "Declaração de Residência",
-        hint: "Aceita conta de luz, água, telefone (até 90 dias).",
-      },
-    ];
-    return base;
-  }, [isRegistration, isTransfer]);
+  // Etapa 3 — checklist completa (engenheiro marca só o que possui)
+  const clientSlots = useMemo<DocSlot[]>(() => [
+    { key: "rg",          label: "RG",                           category: "rg",                     suggested: true },
+    { key: "cnh",         label: "CNH",                          category: "cnh",                    suggested: true, hint: "Habilitação com foto." },
+    { key: "cpf",         label: "CPF",                          category: "cpf",                    suggested: !isRegistration && !isTransfer },
+    { key: "cnpj",        label: "CNPJ",                         category: "cnpj",                   hint: "Cartão CNPJ, se pessoa jurídica." },
+    {
+      key: "comprovante", label: "Comprovante de residência",    category: "comprovante_residencia",
+      suggested: true, allowMissing: true,
+      onMissingGenerate: "Declaração de Residência",
+      hint: "Conta de luz, água ou telefone (últimos 90 dias).",
+    },
+    { key: "declaracao",  label: "Declaração de residência",     category: "declaracao_residencia",  hint: "Só se já possuir a declaração pronta." },
+  ], [isRegistration, isTransfer]);
 
+  // Etapa 4 — checklist de docs da embarcação
   const vesselSlots = useMemo<DocSlot[]>(() => {
     if (!needsVessel) return [];
-    const base: DocSlot[] = [
-      { key: "tie", label: "TIE / TIEM anterior", category: "tie", required: !isRegistration, hint: "Anexe se a embarcação já foi inscrita." },
+    return [
+      { key: "tie",           label: "TIE / TIEM",                       category: "tie",              suggested: !isRegistration, hint: "Título anterior, se já registrada." },
+      { key: "nf_embarcacao", label: "Nota fiscal da embarcação",        category: "nota_fiscal",      suggested: isRegistration || isTransfer },
+      { key: "nf_motor",      label: "Nota fiscal do motor",             category: "nota_fiscal_motor", suggested: hasMotor || isMotorChange },
+      { key: "memorial",      label: "Memorial descritivo",              category: "memorial",         suggested: isRegistration, hint: "Especificações técnicas do casco." },
+      { key: "fotos",         label: "Fotos (proa, popa, casco, motor)", category: "fotos",            suggested: isRegistration },
+      { key: "outros",        label: "Outros documentos",                category: "outros" },
     ];
-    if (isRegistration || isTransfer) {
-      base.push({ key: "nf_embarcacao", label: "Nota fiscal da embarcação", category: "nota_fiscal", required: true });
-    }
-    if (hasMotor || isMotorChange) {
-      base.push({ key: "nf_motor", label: "Nota fiscal do motor", category: "nota_fiscal_motor", required: isMotorChange });
-    }
-    if (isRegistration) {
-      base.push({ key: "fotos", label: "Fotos da embarcação (proa, popa, casco)", category: "fotos", required: false, hint: "Fotos ajudam na vistoria." });
-    }
-    return base;
   }, [needsVessel, isRegistration, isTransfer, hasMotor, isMotorChange]);
+
 
   // ------------------------------------------------------------- carregamento
   useEffect(() => {
