@@ -128,6 +128,32 @@ function ProcessDetail() {
   const { dossier, generate: generateDossier, isLoading: loadingDossier } = useDossier(id, profile?.company_id);
   const [dossierData, setDossierData] = useState<any>(null);
   const [isPreviewingDossier, setIsPreviewingDossier] = useState(false);
+  const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
+
+  const { data: pendencyChecklist = [] } = useQuery({
+    queryKey: ["process-pendencies", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("document_checklists")
+        .select("item_name,status,is_mandatory,requires_signature,document_id")
+        .eq("process_id", id);
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+  const pendingDossierItems = pendencyChecklist
+    .filter((c: any) => c.is_mandatory && !["signed","completed","attached","done"].includes((c.status ?? "").toLowerCase()))
+    .map((c: any) => c.item_name as string);
+
+  const handleGenerateAll = useCallback(async () => {
+    try {
+      await BatchGenerationService.generateAllMissing(id);
+    } catch (err: any) {
+      toast.error("Erro ao gerar documentos: " + (err?.message ?? ""));
+    }
+  }, [id]);
+
+
 
 
   const { data: complianceHistory } = useQuery({
