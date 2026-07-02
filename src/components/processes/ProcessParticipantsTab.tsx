@@ -25,7 +25,9 @@ const SINGLE_ROLES: ParticipantRole[] = ["owner", "buyer", "seller"]; // only on
 
 // Roles obrigatórios por tipo de processo (nome exibido em process_types.name)
 const REQUIRED_ROLES_BY_TYPE: Record<string, ParticipantRole[]> = {
-  "Transferência de Propriedade": ["buyer", "seller"],
+  // Em Transferência o Quick Dialog salva comprador em customer_id (→ owner via trigger)
+  // e vendedor em secondary_customer_id (→ seller via trigger). Exigimos owner+seller.
+  "Transferência de Propriedade": ["owner", "seller"],
   "Inscrição de Embarcação": ["owner"],
   "Renovação de TIE": ["owner"],
   "Segunda Via de TIE": ["owner"],
@@ -34,6 +36,7 @@ const REQUIRED_ROLES_BY_TYPE: Record<string, ParticipantRole[]> = {
   "Regularização Documental": ["owner"],
   "BSADE Avulso": ["owner"],
 };
+
 
 interface Props {
   processId: string;
