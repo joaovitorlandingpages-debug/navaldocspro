@@ -56,7 +56,7 @@ export function IntelligencePanel() {
 
   return (
     <div className="space-y-6">
-      <div className="p-6 bg-gradient-to-br from-primary to-blue-700 text-white rounded-[2rem] shadow-xl relative overflow-hidden group mb-4">
+      <div className="p-6 bg-gradient-to-br from-primary to-blue-700 text-white rounded-2xl shadow-xl relative overflow-hidden group mb-4">
          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform">
             <Sparkles className="h-16 w-16" />
          </div>
@@ -71,7 +71,7 @@ export function IntelligencePanel() {
       </div>
 
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-black text-navy uppercase tracking-widest flex items-center gap-2">
+        <h3 className="text-xs font-semibold text-navy flex items-center gap-2">
           <Workflow className="h-4 w-4 text-primary" /> Automação Inteligente
         </h3>
         <Badge className="bg-emerald-500 text-white font-black text-[8px] uppercase tracking-tighter border-none animate-pulse">Live</Badge>
@@ -79,7 +79,7 @@ export function IntelligencePanel() {
 
       <div className="grid gap-4">
         {insights?.map((insight: any) => (
-          <Card key={insight.id} className="p-5 border-none shadow-sm bg-white hover:shadow-md transition-all group overflow-hidden relative rounded-[2rem]">
+          <Card key={insight.id} className="p-5 border-none shadow-sm bg-white hover:shadow-md transition-all group overflow-hidden relative rounded-2xl">
             <div className={`absolute top-0 left-0 w-1.5 h-full ${
               insight.type === 'critical' ? 'bg-red-500' : 
               insight.type === 'automation' ? 'bg-emerald-500' : 'bg-primary'
@@ -109,11 +109,11 @@ export function IntelligencePanel() {
         ))}
       </div>
 
-      <Card className="p-6 bg-navy text-white rounded-[2.5rem] relative overflow-hidden shadow-2xl">
+      <Card className="p-6 bg-navy text-white rounded-3xl relative overflow-hidden shadow-2xl">
          <div className="absolute top-0 right-0 p-6 opacity-10">
             <Bot className="h-20 w-20 text-primary" />
          </div>
-         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 text-primary">Status do Assistente</h4>
+         <h4 className="text-[10px] font-semibold tracking-[0.2em] mb-4 text-primary">Status do Assistente</h4>
          <div className="flex items-center gap-6">
             <div className="space-y-1">
                <p className="text-xl font-black">0.8s</p>

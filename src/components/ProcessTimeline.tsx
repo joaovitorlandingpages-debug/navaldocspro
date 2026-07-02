@@ -31,7 +31,7 @@ export function ProcessTimeline({ events }: { events: TimelineEvent[] }) {
               <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-slate-50 text-slate-400 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
                 {mock.type === 'creation' ? <Anchor className="w-5 h-5" /> : <Cpu className="w-5 h-5" />}
               </div>
-              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
                    <span className="font-black text-[10px] text-navy uppercase">{mock.user} • EXEMPLO</span>
                    <span className="text-[10px] text-slate-400 font-bold uppercase">Hoje</span>
@@ -59,7 +59,7 @@ export function ProcessTimeline({ events }: { events: TimelineEvent[] }) {
             {event.type === 'auto_fill' && <Sparkles className="w-5 h-5 text-purple-500" />}
           </div>
           {/* Content */}
-          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm transition-all group-hover:shadow-xl group-hover:border-primary/20 relative overflow-hidden">
+          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-2xl border border-slate-100 shadow-sm transition-all group-hover:shadow-xl group-hover:border-primary/20 relative overflow-hidden">
              <div className="absolute top-0 right-0 p-3 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
                 {event.type === 'auto_fill' && <Sparkles className="w-12 h-12" />}
                 {event.type === 'ocr_processed' && <Cpu className="w-12 h-12" />}

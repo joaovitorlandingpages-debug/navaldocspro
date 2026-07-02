@@ -18,7 +18,7 @@ interface Props {
 
 export function ProcessTimelineMacro({ stages, progress }: Props) {
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 md:p-6">
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-6">
       <div className="flex items-center justify-between mb-3">
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
           Linha do tempo do processo

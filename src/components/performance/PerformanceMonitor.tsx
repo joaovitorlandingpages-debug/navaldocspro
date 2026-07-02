@@ -36,7 +36,7 @@ export function PerformanceMonitor() {
       </div>
       
       <div className="flex items-center justify-between mb-4">
-        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+        <h4 className="text-[10px] font-semibold tracking-[0.2em] text-primary flex items-center gap-2">
           <Cpu className="h-3.5 w-3.5" /> Engine Health
         </h4>
         <Badge className="bg-emerald-500/20 text-emerald-400 border-none text-[8px] font-black uppercase tracking-widest">

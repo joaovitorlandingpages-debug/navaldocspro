@@ -48,7 +48,7 @@ function AIOperationsCenterPage() {
               <Bot className="h-7 w-7 text-primary animate-pulse" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-navy tracking-tight uppercase">Inteligência Operacional</h1>
+              <h1 className="text-3xl font-semibold text-navy">Inteligência Operacional</h1>
               <p className="text-[10px] font-black uppercase text-primary tracking-widest">Enterprise Neural Engine Active</p>
             </div>
           </div>
@@ -65,14 +65,14 @@ function AIOperationsCenterPage() {
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map((stat, idx) => (
-          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group relative overflow-hidden rounded-[2.5rem] bg-white">
+          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group relative overflow-hidden rounded-3xl bg-white">
              <div className="flex justify-between items-start mb-4">
                 <div className="p-2.5 bg-slate-50 rounded-xl group-hover:bg-primary/5 transition-colors">
                    {stat.icon}
                 </div>
              </div>
              <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">{stat.label}</p>
-             <h3 className="text-2xl font-black text-navy mt-1">{stat.value}</h3>
+             <h3 className="text-2xl font-semibold text-navy mt-1">{stat.value}</h3>
              <p className="text-[9px] font-bold text-slate-400 mt-2 flex items-center gap-1">
                {stat.trend}
              </p>
@@ -90,10 +90,10 @@ function AIOperationsCenterPage() {
         <div className="lg:col-span-8 space-y-8">
           <OperationalCharts />
 
-          <Card className="p-8 border-none shadow-sm rounded-[3rem] bg-white overflow-hidden">
+          <Card className="p-8 border-none shadow-sm rounded-3xl bg-white overflow-hidden">
              <div className="flex items-center justify-between mb-8">
                 <div>
-                   <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
+                   <h3 className="text-sm font-semibold text-navy flex items-center gap-2">
                       <History className="h-4 w-4 text-primary" /> Log de Decisões IA
                    </h3>
                    <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Rastreabilidade completa de automações</p>

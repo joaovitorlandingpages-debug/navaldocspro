@@ -90,7 +90,7 @@ export function SmartDocumentCard({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <FileText className="h-4 w-4 text-primary shrink-0" />
-                  <h4 className="text-sm md:text-base font-black text-navy uppercase tracking-tight truncate">
+                  <h4 className="text-sm md:text-base font-semibold text-navy truncate">
                     {row.item_name}
                   </h4>
                 </div>

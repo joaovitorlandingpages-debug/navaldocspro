@@ -125,7 +125,7 @@ function OnboardingFlow() {
               <div className="p-4 bg-primary/10 rounded-full text-primary mb-2">
                 <Building className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-black text-navy uppercase">Dados da Empresa</h2>
+              <h2 className="text-2xl font-semibold text-navy">Dados da Empresa</h2>
               <p className="text-slate-500">Vamos começar configurando o perfil da sua empresa.</p>
             </div>
             
@@ -210,7 +210,7 @@ function OnboardingFlow() {
               <div className="p-4 bg-emerald-100 rounded-full text-emerald-600 mb-2">
                 <CreditCard className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-black text-navy uppercase">Escolha seu Plano</h2>
+              <h2 className="text-2xl font-semibold text-navy">Escolha seu Plano</h2>
               <p className="text-slate-500">Selecione o plano que melhor atende suas necessidades.</p>
             </div>
 
@@ -249,7 +249,7 @@ function OnboardingFlow() {
               <div className="p-4 bg-indigo-100 rounded-full text-indigo-600 mb-2">
                 <Users className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-black text-navy uppercase">Perfil de Administrador</h2>
+              <h2 className="text-2xl font-semibold text-navy">Perfil de Administrador</h2>
               <p className="text-slate-500">Confirmamos que você será o administrador master da conta.</p>
             </div>
             
@@ -281,7 +281,7 @@ function OnboardingFlow() {
               <div className="p-4 bg-blue-100 rounded-full text-blue-600 mb-2">
                 <Users className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-black text-navy uppercase">Primeiro Cliente</h2>
+              <h2 className="text-2xl font-semibold text-navy">Primeiro Cliente</h2>
               <p className="text-slate-500">Cadastre o primeiro cliente da sua empresa.</p>
             </div>
             
@@ -309,7 +309,7 @@ function OnboardingFlow() {
               <div className="p-4 bg-cyan-100 rounded-full text-cyan-600 mb-2">
                 <Ship className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-black text-navy uppercase">Primeira Embarcação</h2>
+              <h2 className="text-2xl font-semibold text-navy">Primeira Embarcação</h2>
               <p className="text-slate-500">Vincule a primeira embarcação ao seu cliente.</p>
             </div>
             
@@ -343,7 +343,7 @@ function OnboardingFlow() {
               <div className="p-4 bg-amber-100 rounded-full text-amber-600 mb-2">
                 <ClipboardList className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-black text-navy uppercase">Novo Processo</h2>
+              <h2 className="text-2xl font-semibold text-navy">Novo Processo</h2>
               <p className="text-slate-500">Inicie seu primeiro processo de automação.</p>
             </div>
             
@@ -375,11 +375,11 @@ function OnboardingFlow() {
               <div className="p-4 bg-green-100 rounded-full text-green-600 mb-2">
                 <CheckCircle2 className="h-10 w-10" />
               </div>
-              <h2 className="text-3xl font-black text-navy uppercase">Tudo Configurado!</h2>
+              <h2 className="text-3xl font-semibold text-navy">Tudo Configurado!</h2>
               <p className="text-slate-500">Você está pronto para revolucionar sua gestão documental naval.</p>
             </div>
             
-            <div className="bg-navy text-white p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+            <div className="bg-navy text-white p-8 rounded-3xl shadow-2xl relative overflow-hidden group">
                <div className="relative z-10 text-center">
                   <h4 className="text-xl font-bold mb-4">Bem-vindo a Bordo</h4>
                   <p className="text-white/70 mb-8">Sua empresa agora tem acesso a todas as ferramentas profissionais do NavalDocs Pro.</p>
@@ -401,17 +401,17 @@ function OnboardingFlow() {
               <div className="p-5 bg-emerald-100 rounded-full text-emerald-600 mb-2 shadow-lg shadow-emerald-500/20">
                 <ShieldCheck className="h-12 w-12" />
               </div>
-              <h2 className="text-3xl font-black text-navy uppercase italic tracking-tighter">Gold Certification</h2>
+              <h2 className="text-3xl font-semibold text-navy italic">Gold Certification</h2>
               <p className="text-slate-500 font-medium">Sua instância NavalDocs Pro está 100% validada e certificada.</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex flex-col items-center gap-3">
+               <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center gap-3">
                   <Zap className="h-6 w-6 text-primary" />
                   <p className="text-[10px] font-black uppercase text-slate-400">OCR & IA</p>
                   <p className="text-lg font-bold text-navy uppercase">Ativado</p>
                </div>
-               <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex flex-col items-center gap-3">
+               <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center gap-3">
                   <Lock className="h-6 w-6 text-primary" />
                   <p className="text-[10px] font-black uppercase text-slate-400">Hardening</p>
                   <p className="text-lg font-bold text-navy uppercase">Certificado</p>
@@ -471,7 +471,7 @@ function OnboardingFlow() {
       </header>
 
       <main className="flex-grow flex items-center justify-center p-6">
-        <div className="max-w-xl w-full bg-white p-8 md:p-12 rounded-[3rem] shadow-2xl border border-slate-100">
+        <div className="max-w-xl w-full bg-white p-8 md:p-12 rounded-3xl shadow-2xl border border-slate-100">
            {renderStep()}
         </div>
       </main>

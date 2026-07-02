@@ -67,7 +67,7 @@ export function FeedbackButton() {
 
       {isOpen && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-navy/20 backdrop-blur-sm transition-opacity duration-300">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden transition-transform duration-300">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transition-transform duration-300">
             <div className="bg-navy p-8 text-white relative">
               <button 
                 onClick={() => setIsOpen(false)}
@@ -75,7 +75,7 @@ export function FeedbackButton() {
               >
                 <X className="h-6 w-6" />
               </button>
-              <h3 className="text-2xl font-black uppercase tracking-tight mb-2">Feedback</h3>
+              <h3 className="text-2xl font-semibold mb-2">Feedback</h3>
               <p className="text-white/60 text-xs font-medium">Ajude-nos a evoluir o NavalDocs Pro para seu dia a dia.</p>
             </div>
 

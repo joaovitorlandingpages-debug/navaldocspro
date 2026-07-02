@@ -79,7 +79,7 @@ function AdminGlobalAICenter() {
               <Bot className="h-7 w-7 text-primary animate-pulse" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-navy tracking-tight uppercase">AI Global Console</h1>
+              <h1 className="text-3xl font-semibold text-navy">AI Global Console</h1>
               <p className="text-[10px] font-black uppercase text-primary tracking-widest">Master Neural Infrastructure</p>
             </div>
           </div>
@@ -96,14 +96,14 @@ function AdminGlobalAICenter() {
       {/* Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map((stat, idx) => (
-          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group relative overflow-hidden rounded-[2.5rem] bg-white">
+          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group relative overflow-hidden rounded-3xl bg-white">
              <div className="flex justify-between items-start mb-4">
                 <div className="p-2.5 bg-slate-50 rounded-xl group-hover:bg-primary/5 transition-colors">
                    {stat.icon}
                 </div>
              </div>
              <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">{stat.label}</p>
-             <h3 className="text-2xl font-black text-navy mt-1">{stat.value}</h3>
+             <h3 className="text-2xl font-semibold text-navy mt-1">{stat.value}</h3>
              <p className="text-[9px] font-bold text-slate-400 mt-2 flex items-center gap-1">
                {stat.trend}
              </p>
@@ -122,18 +122,18 @@ function AdminGlobalAICenter() {
         <TabsContent value="overview" className="space-y-8">
            <div className="grid lg:grid-cols-12 gap-8">
               <div className="lg:col-span-8 space-y-8">
-                 <Card className="p-8 border-none shadow-sm rounded-[3rem] bg-white">
-                    <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2 mb-6">
+                 <Card className="p-8 border-none shadow-sm rounded-3xl bg-white">
+                    <h3 className="text-sm font-semibold text-navy flex items-center gap-2 mb-6">
                        <Activity className="h-4 w-4 text-primary" /> Performance da Engine de IA
                     </h3>
-                    <div className="h-[300px] flex items-center justify-center bg-slate-50 rounded-[2rem] border border-dashed border-slate-200">
+                    <div className="h-[300px] flex items-center justify-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Gráfico de Latência em Tempo Real</p>
                     </div>
                  </Card>
 
                  <div className="grid md:grid-cols-2 gap-8">
-                    <Card className="p-8 border-none shadow-sm rounded-[2.5rem] bg-[#020D1D] text-white">
-                       <h4 className="text-[10px] font-black uppercase text-primary tracking-widest mb-4">Health Check Modelos</h4>
+                    <Card className="p-8 border-none shadow-sm rounded-3xl bg-[#020D1D] text-white">
+                       <h4 className="text-[10px] font-semibold text-primary mb-4">Health Check Modelos</h4>
                        <div className="space-y-4">
                           {[
                              { name: "OCR Advanced", status: "Nominal", latency: "1.2s" },
@@ -151,8 +151,8 @@ function AdminGlobalAICenter() {
                        </div>
                     </Card>
 
-                    <Card className="p-8 border-none shadow-sm rounded-[2.5rem] bg-white">
-                       <h4 className="text-[10px] font-black uppercase text-navy tracking-widest mb-4">Consumo Top Tenants</h4>
+                    <Card className="p-8 border-none shadow-sm rounded-3xl bg-white">
+                       <h4 className="text-[10px] font-semibold text-navy mb-4">Consumo Top Tenants</h4>
                        <div className="space-y-4">
                           {[1, 2, 3].map(i => (
                              <div key={i} className="space-y-2">
@@ -169,8 +169,8 @@ function AdminGlobalAICenter() {
               </div>
 
               <div className="lg:col-span-4 space-y-8">
-                 <Card className="p-8 border-none shadow-sm rounded-[2.5rem] bg-slate-50">
-                    <h4 className="text-[10px] font-black uppercase text-navy tracking-widest mb-6 flex items-center gap-2">
+                 <Card className="p-8 border-none shadow-sm rounded-3xl bg-slate-50">
+                    <h4 className="text-[10px] font-semibold text-navy mb-6 flex items-center gap-2">
                        <History className="h-4 w-4 text-primary" /> Eventos do Kernel IA
                     </h4>
                     <div className="space-y-6">
@@ -193,9 +193,9 @@ function AdminGlobalAICenter() {
                     </div>
                  </Card>
 
-                 <div className="bg-primary p-8 rounded-[2.5rem] text-white shadow-xl shadow-primary/20 group">
+                 <div className="bg-primary p-8 rounded-3xl text-white shadow-xl shadow-primary/20 group">
                     <ShieldCheck className="h-10 w-10 mb-6 group-hover:scale-110 transition-transform" />
-                    <h4 className="text-xl font-black uppercase tracking-tight mb-2 italic">AI Safety Isolation</h4>
+                    <h4 className="text-xl font-semibold mb-2 italic">AI Safety Isolation</h4>
                     <p className="text-sm opacity-80 leading-relaxed font-medium">Arquitetura modular garantindo isolamento total por company_id. Dados nunca são cruzados para treinamento.</p>
                  </div>
               </div>
@@ -203,10 +203,10 @@ function AdminGlobalAICenter() {
         </TabsContent>
 
         <TabsContent value="models">
-           <Card className="p-8 border-none shadow-sm rounded-[3rem] bg-white">
+           <Card className="p-8 border-none shadow-sm rounded-3xl bg-white">
               <div className="flex justify-between items-center mb-8">
                  <div>
-                    <h3 className="text-sm font-black text-navy uppercase tracking-widest">Gerenciamento de Modelos</h3>
+                    <h3 className="text-sm font-semibold text-navy">Gerenciamento de Modelos</h3>
                     <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Configuração de providers e parâmetros do sistema</p>
                  </div>
                  <button className="bg-primary text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20">Configurar Novo Modelo</button>
@@ -222,7 +222,7 @@ function AdminGlobalAICenter() {
                           <Badge variant="outline" className="border-slate-200 text-slate-400 text-[8px] font-black uppercase">{m.key}</Badge>
                           <Settings className="h-4 w-4 text-slate-300 hover:text-navy cursor-pointer transition-colors" />
                        </div>
-                       <h4 className="font-black text-navy uppercase text-sm mb-1">{m.name}</h4>
+                       <h4 className="font-semibold text-navy text-sm mb-1">{m.name}</h4>
                        <div className="space-y-2 mt-4">
                           <div className="flex justify-between text-[10px]">
                              <span className="text-slate-400 font-bold uppercase">Provider:</span>

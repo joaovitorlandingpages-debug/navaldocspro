@@ -60,15 +60,15 @@ function AdminUsers() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
        <div className="flex justify-between items-end">
           <div>
-            <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Gestão de Usuários</h1>
+            <h1 className="text-3xl font-semibold text-navy">Gestão de Usuários</h1>
             <p className="text-slate-500 font-medium italic mt-1">Controle global de credenciais e permissões na plataforma.</p>
           </div>
-          <button className="bg-primary text-white px-8 py-4 rounded-[2rem] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:opacity-90 transition-all shadow-xl shadow-primary/20">
+          <button className="bg-primary text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:opacity-90 transition-all shadow-xl shadow-primary/20">
              <Plus className="h-5 w-5" /> Novo Usuário Master
           </button>
        </div>
 
-       <div className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm">
+       <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
           <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row gap-6 items-center justify-between bg-slate-50/50">
              <div className="relative w-full md:max-w-md">
                 <Search className="absolute left-4 top-3 h-4 w-4 text-slate-400" />
@@ -79,7 +79,7 @@ function AdminUsers() {
                    <Filter className="h-4 w-4" /> Filtros Avançados
                 </button>
                 <div className="h-10 w-[1px] bg-slate-200 mx-2 hidden md:block" />
-                <div className="flex bg-slate-100 rounded-[1.5rem] p-1 border border-slate-200">
+                <div className="flex bg-slate-100 rounded-2xl p-1 border border-slate-200">
                    <button className="px-5 py-2 rounded-xl text-[9px] font-black uppercase bg-navy text-white shadow-lg">Todos</button>
                    <button className="px-5 py-2 rounded-xl text-[9px] font-black uppercase text-slate-400 hover:text-navy">Empresas</button>
                    <button className="px-5 py-2 rounded-xl text-[9px] font-black uppercase text-slate-400 hover:text-navy">Staff ND</button>

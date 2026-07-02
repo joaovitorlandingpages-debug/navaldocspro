@@ -160,11 +160,11 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
 
   if (showResults && currentJob) {
     return (
-      <Card className="p-8 border-primary/20 bg-white rounded-[2.5rem] shadow-2xl animate-in zoom-in-95 duration-500">
+      <Card className="p-8 border-primary/20 bg-white rounded-3xl shadow-2xl animate-in zoom-in-95 duration-500">
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b pb-4">
             <div>
-              <h3 className="text-xl font-black text-navy uppercase tracking-tight flex items-center gap-2">
+              <h3 className="text-xl font-semibold text-navy flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" /> Dados Encontrados (IA)
               </h3>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
@@ -222,18 +222,18 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
   }
 
   return (
-    <Card className="p-8 border-dashed border-2 bg-slate-50/50 hover:bg-slate-50 transition-all group rounded-[2.5rem] relative overflow-hidden">
+    <Card className="p-8 border-dashed border-2 bg-slate-50/50 hover:bg-slate-50 transition-all group rounded-3xl relative overflow-hidden">
 
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -mr-10 -mt-10 group-hover:bg-primary/10 transition-colors"></div>
       
       {selectedFiles.length === 0 ? (
         <div className="flex flex-col items-center justify-center space-y-8 py-12 text-center relative z-10 animate-in fade-in zoom-in-95 duration-500">
-          <div className="h-28 w-28 bg-white rounded-[2rem] shadow-2xl shadow-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-700 border border-slate-100 relative">
-            <div className="absolute inset-0 bg-primary/5 rounded-[2rem] animate-pulse"></div>
+          <div className="h-28 w-28 bg-white rounded-2xl shadow-2xl shadow-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-700 border border-slate-100 relative">
+            <div className="absolute inset-0 bg-primary/5 rounded-2xl animate-pulse"></div>
             <Upload className="h-12 w-12 text-primary relative z-10" />
           </div>
           <div className="space-y-3">
-            <h4 className="text-2xl font-black text-navy uppercase tracking-tight">IA Scanner Naval Multi-Doc</h4>
+            <h4 className="text-2xl font-semibold text-navy">IA Scanner Naval Multi-Doc</h4>
             <p className="text-sm text-slate-500 max-w-sm mx-auto font-medium leading-relaxed italic">
               "Digitalização inteligente com 98% de precisão em documentos náuticos."
             </p>
@@ -297,7 +297,7 @@ export function OCRUpload({ companyId, processId }: OCRUploadProps) {
       ) : (
         <div className="space-y-6 relative z-10">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-navy flex items-center gap-2">
               <ListChecks className="h-4 w-4 text-primary" /> Arquivos Selecionados ({selectedFiles.length})
             </h4>
             <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase text-red-500" onClick={() => setSelectedFiles([])}>

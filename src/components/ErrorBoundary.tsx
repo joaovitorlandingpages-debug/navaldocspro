@@ -74,14 +74,14 @@ class ErrorBoundary extends React.Component<
         <div className="min-h-screen flex items-center justify-center bg-[#000B18] p-4 md:p-6 text-center font-sans overflow-y-auto">
           <div className="max-w-2xl w-full space-y-6 md:space-y-8 my-8">
             <div className="relative">
-              <div className="h-24 w-24 bg-red-500/10 text-red-500 rounded-[2rem] flex items-center justify-center mx-auto shadow-2xl shadow-red-500/10 border border-red-500/20 animate-pulse">
+              <div className="h-24 w-24 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mx-auto shadow-2xl shadow-red-500/10 border border-red-500/20 animate-pulse">
                 <ShieldAlert className="h-12 w-12" />
               </div>
               <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-widest">Fail-Safe Active</div>
             </div>
 
             <div className="space-y-3">
-              <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">Sistema Estabilizado</h1>
+              <h1 className="text-3xl md:text-4xl font-semibold text-white">Sistema Estabilizado</h1>
               <p className="text-white/50 text-xs md:text-sm leading-relaxed max-w-md mx-auto font-medium">
                 Detectamos uma instabilidade estrutural na interface. 
                 O motor de redundância do NavalDocs Pro isolou o erro para garantir a integridade operacional dos seus dados.

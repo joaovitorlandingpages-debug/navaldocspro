@@ -43,7 +43,7 @@ export function ConsumptionPanel() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {consumption?.map((item) => (
-        <Card key={item.id} className="border-slate-100 hover:shadow-lg transition-all rounded-[2rem] overflow-hidden group">
+        <Card key={item.id} className="border-slate-100 hover:shadow-lg transition-all rounded-2xl overflow-hidden group">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className={`p-3 rounded-2xl bg-slate-50 ${item.color} group-hover:scale-110 transition-transform`}>

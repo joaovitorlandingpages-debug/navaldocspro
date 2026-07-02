@@ -12,7 +12,7 @@ function AutomationPage() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase">Central de Automação</h1>
+          <h1 className="text-3xl font-bold text-navy">Central de Automação</h1>
           <p className="text-muted-foreground font-medium">Configure regras, fluxos e inteligência para sua operação.</p>
         </div>
         <button className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 flex items-center gap-2 shadow-lg shadow-primary/20">
@@ -30,7 +30,7 @@ function AutomationPage() {
           <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
              <div className="p-3 bg-slate-50 rounded-2xl w-fit mb-4">{stat.icon}</div>
              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
-             <h3 className="text-2xl font-black text-navy mt-1">{stat.value}</h3>
+             <h3 className="text-2xl font-semibold text-navy mt-1">{stat.value}</h3>
           </div>
         ))}
       </div>
@@ -43,8 +43,8 @@ function AutomationPage() {
            </div>
            <AutomationFlow />
            
-           <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-              <h3 className="font-bold text-navy mb-4 uppercase text-xs tracking-widest">Regras Recentes</h3>
+           <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
+              <h3 className="font-bold text-navy mb-4 text-xs">Regras Recentes</h3>
               <div className="space-y-3">
                  {[
                    { name: "Backup de Documentos", desc: "Sincroniza com Cloud a cada 4h.", status: "Online" },
@@ -69,9 +69,9 @@ function AutomationPage() {
            </div>
            <SmartOCR />
 
-           <div className="bg-navy text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden">
+           <div className="bg-navy text-white p-8 rounded-3xl shadow-xl relative overflow-hidden">
               <div className="relative z-10">
-                 <h4 className="text-lg font-bold mb-4 uppercase tracking-tighter text-primary">Logs de Automação</h4>
+                 <h4 className="text-lg font-bold mb-4 text-primary">Logs de Automação</h4>
                  <div className="space-y-4 font-mono text-[10px]">
                     <p className="text-slate-400"><span className="text-green-500">[OK]</span> 14:22:01 - Documento PHX-01 validado com sucesso.</p>
                     <p className="text-slate-400"><span className="text-green-500">[OK]</span> 14:15:44 - E-mail enviado para cliente Ricardo.</p>

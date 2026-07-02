@@ -16,7 +16,7 @@ function AnalyticsOperations() {
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-black text-navy tracking-tight uppercase">Analytics Operacional</h1>
+          <h1 className="text-4xl font-semibold text-navy">Analytics Operacional</h1>
           <p className="text-slate-500 font-medium italic">Visão detalhada de gargalos, produtividade e saúde dos processos.</p>
         </div>
         <div className="flex gap-2">
@@ -40,12 +40,12 @@ function AnalyticsOperations() {
           { label: "Produtividade Equipe", value: "94%", trend: "+2%", positive: true, icon: <Users /> },
           { label: "GRU Automatizadas", value: "320", trend: "+45", positive: true, icon: <DollarSign /> },
         ].map((stat, i) => (
-          <Card key={i} className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm hover:shadow-md transition-all group">
+          <Card key={i} className="p-8 rounded-3xl border-slate-100 shadow-sm hover:shadow-md transition-all group">
              <div className="flex items-center gap-4 mb-4">
                 <div className="p-3 bg-slate-50 rounded-xl text-primary group-hover:scale-110 transition-transform">{stat.icon}</div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
              </div>
-             <h3 className="text-3xl font-black text-navy">{stat.value}</h3>
+             <h3 className="text-3xl font-semibold text-navy">{stat.value}</h3>
              <p className={`text-[10px] font-black mt-2 ${stat.positive ? 'text-emerald-600' : 'text-rose-600'}`}>
                 {stat.trend} vs período anterior
              </p>
@@ -54,8 +54,8 @@ function AnalyticsOperations() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 p-10 rounded-[3rem] border-slate-100 shadow-sm">
-            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-navy mb-8">Produtividade por Categoria</h4>
+        <Card className="lg:col-span-2 p-10 rounded-3xl border-slate-100 shadow-sm">
+            <h4 className="text-xs font-semibold tracking-[0.2em] text-navy mb-8">Produtividade por Categoria</h4>
             <div className="h-80 flex items-end gap-6 px-4">
                 {[40, 70, 50, 90, 60, 80].map((h, i) => (
                     <div key={i} className="flex-grow bg-slate-100 rounded-t-xl h-full relative group">
@@ -64,8 +64,8 @@ function AnalyticsOperations() {
                 ))}
             </div>
         </Card>
-        <Card className="p-10 rounded-[3rem] border-slate-100 shadow-sm">
-            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-navy mb-8">Gargalos Recorrentes</h4>
+        <Card className="p-10 rounded-3xl border-slate-100 shadow-sm">
+            <h4 className="text-xs font-semibold tracking-[0.2em] text-navy mb-8">Gargalos Recorrentes</h4>
             <div className="space-y-6">
                 {[
                     { title: "Validação Documental", count: 45 },

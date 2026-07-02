@@ -98,7 +98,7 @@ function AnalyticsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
-          <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
+          <div key={i} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
             <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
                {stat.icon}
             </div>
@@ -109,7 +109,7 @@ function AnalyticsPage() {
                   </div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
                </div>
-               <h3 className="text-3xl font-black text-navy mb-2">{stat.value}</h3>
+               <h3 className="text-3xl font-semibold text-navy mb-2">{stat.value}</h3>
                <div className={`flex items-center gap-1 text-[10px] font-black uppercase ${stat.positive ? 'text-emerald-600' : 'text-rose-600'}`}>
                   {stat.positive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                   {stat.trend} <span className="text-slate-300 ml-1">vs mês anterior</span>
@@ -136,10 +136,10 @@ function AnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         <div className="lg:col-span-2 bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden">
+         <div className="lg:col-span-2 bg-white p-10 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
             <div className="flex justify-between items-center mb-10">
                <div>
-                  <h4 className="text-xs font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
+                  <h4 className="text-xs font-semibold tracking-[0.2em] text-navy flex items-center gap-2">
                      <BarChart3 className="h-4 w-4 text-primary" /> Crescimento Operacional
                   </h4>
                   <p className="text-xs text-slate-400 mt-1">Volume de processos finalizados por categoria</p>
@@ -159,8 +159,8 @@ function AnalyticsPage() {
             </div>
          </div>
 
-         <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
-            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-navy mb-10 flex items-center gap-2">
+         <div className="bg-white p-10 rounded-3xl border border-slate-100 shadow-sm">
+            <h4 className="text-xs font-semibold tracking-[0.2em] text-navy mb-10 flex items-center gap-2">
                <PieChart className="h-4 w-4 text-primary" /> Saúde Operacional
             </h4>
             <div className="relative h-64 flex items-center justify-center">

@@ -135,7 +135,7 @@ function BibliotecaPage() {
               <Library className="h-5 w-5 text-primary" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl font-black tracking-tight text-navy truncate">
+              <h1 className="text-xl font-semibold text-navy truncate">
                 Biblioteca Nacional de Documentos Navais
               </h1>
               <p className="text-xs text-slate-500 italic truncate">
@@ -467,7 +467,7 @@ function DetailModal({ t, onClose }: { t: LibraryTemplate; onClose: () => void }
         <div className="px-6 py-4 border-b flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <Sparkles className="h-4 w-4 text-primary shrink-0" />
-            <h3 className="font-black text-navy truncate">{t.name}</h3>
+            <h3 className="font-semibold text-navy truncate">{t.name}</h3>
             {t.code && (
               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
                 {t.code}

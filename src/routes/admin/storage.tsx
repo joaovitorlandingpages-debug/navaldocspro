@@ -58,7 +58,7 @@ function AdminStorage() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-black text-navy uppercase tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl font-semibold text-navy flex items-center gap-3">
             <Database className="h-8 w-8 text-primary" /> Storage Infrastructure
           </h1>
           <p className="text-slate-500 font-medium">Gestão global de ativos, buckets e limpeza de dados.</p>
@@ -74,7 +74,7 @@ function AdminStorage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-         <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm space-y-6">
+         <Card className="p-8 rounded-3xl border-slate-100 shadow-sm space-y-6">
             <div className="flex justify-between items-start">
                <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
                   <HardDrive className="h-6 w-6" />
@@ -83,19 +83,19 @@ function AdminStorage() {
             </div>
             <div>
                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Espaço Utilizado</p>
-               <h3 className="text-4xl font-black text-navy">{storageStats?.totalSize || "1.2"} GB</h3>
+               <h3 className="text-4xl font-semibold text-navy">{storageStats?.totalSize || "1.2"} GB</h3>
                <Progress value={64} className="h-1.5 mt-4" />
                <p className="text-[9px] text-slate-400 font-bold uppercase mt-2">Capacidade: 2.0 TB Global</p>
             </div>
          </Card>
 
-         <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm space-y-6">
+         <Card className="p-8 rounded-3xl border-slate-100 shadow-sm space-y-6">
             <div className="h-12 w-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
                <Server className="h-6 w-6" />
             </div>
             <div>
                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Objetos Totais</p>
-               <h3 className="text-4xl font-black text-navy">{storageStats?.count || "4,821"}</h3>
+               <h3 className="text-4xl font-semibold text-navy">{storageStats?.count || "4,821"}</h3>
                <div className="grid grid-cols-2 gap-4 mt-6">
                   <div>
                      <p className="text-[8px] font-black text-slate-400 uppercase">Buckets</p>
@@ -109,9 +109,9 @@ function AdminStorage() {
             </div>
          </Card>
 
-         <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm bg-[#020D1D] text-white space-y-6 overflow-hidden relative">
+         <Card className="p-8 rounded-3xl border-slate-100 shadow-sm bg-[#020D1D] text-white space-y-6 overflow-hidden relative">
             <ShieldAlert className="absolute -right-4 -bottom-4 h-32 w-32 opacity-5" />
-            <h4 className="text-[10px] font-black text-primary uppercase tracking-widest">Segurança de Ativos</h4>
+            <h4 className="text-[10px] font-semibold text-primary">Segurança de Ativos</h4>
             <div className="space-y-4">
                <div className="flex justify-between items-center py-2 border-b border-white/5">
                   <span className="text-xs font-bold opacity-60">Políticas RLS Storage</span>
@@ -129,7 +129,7 @@ function AdminStorage() {
          </Card>
       </div>
 
-      <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden">
+      <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
          <CardHeader className="bg-slate-50/50 border-b p-8 flex flex-row items-center justify-between">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-navy">Arquivos Pesados & Órfãos Detectados</CardTitle>
          </CardHeader>

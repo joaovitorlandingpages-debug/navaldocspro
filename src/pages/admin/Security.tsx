@@ -57,7 +57,7 @@ const SecurityDashboard = () => {
     <div className="container mx-auto p-6 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Relatório de Segurança Final</h1>
+          <h1 className="text-3xl font-bold">Relatório de Segurança Final</h1>
           <p className="text-muted-foreground">Auditoria pós-correção e validação de isolamento de dados.</p>
         </div>
         <div className="flex items-center gap-3">

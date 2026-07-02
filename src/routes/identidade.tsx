@@ -485,7 +485,7 @@ function Section({ title, icon, children }: { title: string; icon: React.ReactNo
     <Card className="p-6">
       <div className="flex items-center gap-2 mb-4">
         <div className="text-primary">{icon}</div>
-        <h2 className="text-sm font-black uppercase tracking-widest text-navy">{title}</h2>
+        <h2 className="text-sm font-semibold text-navy">{title}</h2>
       </div>
       {children}
     </Card>

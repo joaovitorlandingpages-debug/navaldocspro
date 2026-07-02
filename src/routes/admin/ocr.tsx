@@ -66,7 +66,7 @@ function AdminOCR() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div>
-        <h1 className="text-3xl font-black text-navy uppercase tracking-tight flex items-center gap-3">
+        <h1 className="text-3xl font-semibold text-navy flex items-center gap-3">
           <Zap className="h-8 w-8 text-primary" /> OCR Admin Control
         </h1>
         <p className="text-slate-500 font-medium">Monitoramento global do motor de extração e reconhecimento neural.</p>
@@ -75,25 +75,25 @@ function AdminOCR() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="p-6 border-slate-100 shadow-sm">
            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total OCR Jobs</p>
-           <h3 className="text-3xl font-black text-navy">{ocrStats?.total || "1,240"}</h3>
+           <h3 className="text-3xl font-semibold text-navy">{ocrStats?.total || "1,240"}</h3>
         </Card>
         <Card className="p-6 border-slate-100 shadow-sm">
            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Taxa de Sucesso</p>
-           <h3 className="text-3xl font-black text-emerald-500">{ocrStats?.success_rate || "98"}%</h3>
+           <h3 className="text-3xl font-semibold text-emerald-500">{ocrStats?.success_rate || "98"}%</h3>
         </Card>
         <Card className="p-6 border-slate-100 shadow-sm">
            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Falhas Detectadas</p>
-           <h3 className="text-3xl font-black text-rose-500">{ocrStats?.failed || "12"}</h3>
+           <h3 className="text-3xl font-semibold text-rose-500">{ocrStats?.failed || "12"}</h3>
         </Card>
         <Card className="p-6 border-slate-100 shadow-sm">
            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tempo Médio Processo</p>
-           <h3 className="text-3xl font-black text-blue-500">1.8s</h3>
+           <h3 className="text-3xl font-semibold text-blue-500">1.8s</h3>
         </Card>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
          <div className="lg:col-span-2">
-            <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden">
+            <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
                <CardHeader className="bg-slate-50/50 border-b p-8">
                   <CardTitle className="text-xs font-black uppercase tracking-widest text-navy">Fila de Processamento Global</CardTitle>
                </CardHeader>
@@ -124,8 +124,8 @@ function AdminOCR() {
             </Card>
          </div>
 
-         <Card className="rounded-[2.5rem] border-slate-100 shadow-sm p-8">
-            <h4 className="font-black text-navy uppercase text-[10px] tracking-widest mb-6">Top Consumidores (Mês)</h4>
+         <Card className="rounded-3xl border-slate-100 shadow-sm p-8">
+            <h4 className="font-semibold text-navy text-[10px] mb-6">Top Consumidores (Mês)</h4>
             <div className="space-y-6">
                {(ocrStats?.topUsers || [1,2,3,4]).map((item: any, i: number) => (
                   <div key={i} className="flex items-center justify-between">

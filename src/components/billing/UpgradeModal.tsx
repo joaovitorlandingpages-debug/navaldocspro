@@ -74,14 +74,14 @@ export function UpgradeModal({ isOpen, onClose, resource, limit, current }: Upgr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none rounded-[2.5rem] shadow-2xl">
+      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none rounded-3xl shadow-2xl">
         <div className="bg-navy p-8 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-[100%] -mr-10 -mt-10 opacity-50"></div>
           <div className="relative z-10 flex flex-col items-center text-center space-y-4">
-            <div className="h-20 w-20 bg-white/10 rounded-[2rem] flex items-center justify-center backdrop-blur-sm border border-white/20">
+            <div className="h-20 w-20 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/20">
               <ShieldAlert className="h-10 w-10 text-primary animate-pulse" />
             </div>
-            <h2 className="text-2xl font-black uppercase tracking-tight">Limite Atingido</h2>
+            <h2 className="text-2xl font-semibold">Limite Atingido</h2>
             <p className="text-white/60 text-sm font-medium italic">NavalDocs Pro Enterprise Architecture</p>
           </div>
         </div>
@@ -92,14 +92,14 @@ export function UpgradeModal({ isOpen, onClose, resource, limit, current }: Upgr
               {config.icon}
             </div>
             <div className="space-y-1">
-              <h4 className="font-black text-navy uppercase tracking-tight text-lg">{config.label}</h4>
+              <h4 className="font-semibold text-navy text-lg">{config.label}</h4>
               <p className="text-sm text-slate-500 leading-relaxed font-medium">
                 {config.description}
               </p>
             </div>
           </div>
 
-          <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex justify-between items-center">
+          <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center">
              <div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Uso Atual</p>
                 <p className="text-2xl font-black text-navy mt-1">{current} <span className="text-slate-300 text-lg">/ {limit}</span></p>

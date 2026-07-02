@@ -44,10 +44,10 @@ export function ActivityFeed() {
   };
 
   return (
-    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden">
+    <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden">
       <div className="p-8 border-b flex justify-between items-center bg-slate-50/30">
         <div>
-          <h3 className="font-black text-navy flex items-center gap-3 uppercase text-[10px] tracking-[0.2em]">
+          <h3 className="font-semibold text-navy flex items-center gap-3 text-[10px] tracking-[0.2em]">
             <Clock className="h-5 w-5 text-primary" /> Torre de Controle Live
           </h3>
           <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Status operacional em tempo real</p>

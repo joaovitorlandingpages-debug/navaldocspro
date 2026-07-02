@@ -40,7 +40,7 @@ export function PageHeader({
             </div>
             
             <div className="mt-1 sm:mt-2">
-              <h1 className="text-xl sm:text-2xl font-semibold text-navy tracking-tight leading-tight break-words">
+              <h1 className="text-xl sm:text-2xl font-semibold text-navy leading-tight break-words">
                 {title}
               </h1>
               {description && (

@@ -57,7 +57,7 @@ function DocumentLibraryPage() {
             <div className="h-10 w-10 bg-blue-600/10 rounded-xl flex items-center justify-center">
               <Library className="h-6 w-6 text-blue-600" />
             </div>
-            <h1 className="text-3xl font-black text-navy tracking-tight uppercase">Biblioteca Documental</h1>
+            <h1 className="text-3xl font-semibold text-navy">Biblioteca Documental</h1>
           </div>
           <p className="text-slate-500 font-medium max-w-lg">
             Gestão master de templates, formulários oficiais e repositório de engenharia.
@@ -76,7 +76,7 @@ function DocumentLibraryPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-8">
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden p-8">
         <div className="flex flex-col md:flex-row gap-6 items-center justify-between mb-10">
           <div className="flex flex-wrap gap-2">
             {displayCategories.map((cat) => (
@@ -108,11 +108,11 @@ function DocumentLibraryPage() {
         {isLoadingTemplates ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map(i => (
-              <Skeleton key={i} className="h-48 w-full rounded-[2rem]" />
+              <Skeleton key={i} className="h-48 w-full rounded-2xl" />
             ))}
           </div>
         ) : filteredTemplates?.length === 0 ? (
-          <div className="text-center py-32 border-2 border-dashed border-slate-50 rounded-[2.5rem] bg-slate-50/30">
+          <div className="text-center py-32 border-2 border-dashed border-slate-50 rounded-3xl bg-slate-50/30">
              <Archive className="h-16 w-16 text-slate-100 mx-auto mb-4" />
              <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em]">Nenhum template encontrado</p>
              <Button variant="ghost" onClick={() => {setSelectedCategory("Todos"); setSearchTerm("");}} className="mt-4 text-blue-600 text-[10px] font-bold uppercase">Limpar Filtros</Button>
@@ -120,7 +120,7 @@ function DocumentLibraryPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredTemplates?.map((template: any) => (
-              <Card key={template.id} className="group border-none shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-[2rem] overflow-hidden bg-slate-50/50">
+              <Card key={template.id} className="group border-none shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden bg-slate-50/50">
                 <CardHeader className="p-8 pb-4">
                   <div className="flex justify-between items-start">
                     <div className="p-3 rounded-2xl bg-white shadow-sm text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500">
@@ -136,7 +136,7 @@ function DocumentLibraryPage() {
                 </CardHeader>
                 <CardContent className="p-8 pt-0 space-y-6">
                   <div>
-                    <h4 className="font-black text-navy text-sm mb-1 uppercase tracking-tight group-hover:text-blue-600 transition-colors line-clamp-1" title={template.name}>
+                    <h4 className="font-semibold text-navy text-sm mb-1 group-hover:text-blue-600 transition-colors line-clamp-1" title={template.name}>
                       {template.name}
                     </h4>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">
@@ -176,17 +176,17 @@ function DocumentLibraryPage() {
         )}
       </div>
 
-      <div className="bg-navy rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-2xl shadow-navy/40">
+      <div className="bg-navy rounded-3xl p-10 text-white relative overflow-hidden shadow-2xl shadow-navy/40">
          <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-blue-600 rounded-full opacity-20 blur-3xl"></div>
          <div className="absolute -left-10 -top-10 w-40 h-40 bg-blue-400 rounded-full opacity-10 blur-2xl"></div>
          
          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="flex items-center gap-6">
-               <div className="h-16 w-16 bg-white/10 rounded-[1.5rem] flex items-center justify-center backdrop-blur-md border border-white/10">
+               <div className="h-16 w-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10">
                   <BadgeHelp className="h-8 w-8 text-blue-400" />
                </div>
                <div>
-                  <h4 className="text-xl font-black uppercase tracking-tight">Dúvidas sobre o Field Mapping?</h4>
+                  <h4 className="text-xl font-semibold">Dúvidas sobre o Field Mapping?</h4>
                   <p className="text-sm text-white/60 font-medium max-w-lg mt-1 italic">
                     Nossos templates utilizam sintaxe {"{{campo}}"} para preenchimento automático. 
                     Consulte a documentação técnica para mapear variáveis do cliente, barco ou processo.

@@ -24,7 +24,7 @@ export function OCRHistory({ onSelectJob, selectedJobId }: OCRHistoryProps) {
     return (
       <div className="space-y-3 animate-pulse">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-24 bg-slate-100 rounded-[2rem]" />
+          <div key={i} className="h-24 bg-slate-100 rounded-2xl" />
         ))}
       </div>
     );
@@ -64,7 +64,7 @@ export function OCRHistory({ onSelectJob, selectedJobId }: OCRHistoryProps) {
 
       <div className="space-y-3">
         {jobs?.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-[2rem] border-2 border-dashed border-slate-100">
+          <div className="text-center py-16 bg-white rounded-2xl border-2 border-dashed border-slate-100">
             <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <FileText className="h-6 w-6 text-slate-200" />
             </div>
@@ -77,7 +77,7 @@ export function OCRHistory({ onSelectJob, selectedJobId }: OCRHistoryProps) {
             key={job.id}
             onClick={() => onSelectJob(job)}
             className={`
-              p-5 rounded-[2rem] border-2 transition-all cursor-pointer flex items-center justify-between group relative overflow-hidden
+              p-5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between group relative overflow-hidden
               ${selectedJobId === job.id 
                 ? "border-primary bg-white shadow-xl shadow-primary/5 -translate-y-1" 
                 : "border-transparent bg-white hover:border-slate-100 hover:shadow-lg hover:-translate-y-0.5"}

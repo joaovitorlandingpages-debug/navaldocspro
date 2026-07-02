@@ -70,7 +70,7 @@ function SupportPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in duration-500">
       <header className="text-center space-y-4">
-        <h1 className="text-4xl font-black text-navy uppercase tracking-tight">Central de Suporte</h1>
+        <h1 className="text-4xl font-semibold text-navy">Central de Suporte</h1>
         <p className="text-slate-500 max-w-2xl mx-auto">Estamos aqui para ajudar você a automatizar sua engenharia naval com eficiência máxima.</p>
         <div className="relative max-w-xl mx-auto mt-8">
            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
@@ -83,7 +83,7 @@ function SupportPage() {
 
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-8">
-          <section className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+          <section className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
             <h2 className="text-xl font-bold text-navy mb-6 flex items-center gap-2">
               <MessageCircle className="h-6 w-6 text-primary" /> Enviar Mensagem
             </h2>
@@ -180,7 +180,7 @@ function SupportPage() {
                 {faqs.map((f, i) => (
                   <div key={i} className="bg-white p-6 rounded-2xl border border-slate-100 group cursor-pointer hover:border-primary/40 hover:shadow-lg transition-all">
                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-black text-navy uppercase text-xs tracking-tight">{f.q}</h4>
+                        <h4 className="font-semibold text-navy text-xs">{f.q}</h4>
                         <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-primary transition-all" />
                      </div>
                      <p className="text-sm text-slate-500 font-medium">{f.a}</p>
@@ -191,7 +191,7 @@ function SupportPage() {
         </div>
 
         <div className="space-y-8">
-           <div className="bg-gradient-to-br from-navy to-slate-800 p-8 rounded-[2rem] text-white shadow-xl group overflow-hidden relative">
+           <div className="bg-gradient-to-br from-navy to-slate-800 p-8 rounded-2xl text-white shadow-xl group overflow-hidden relative">
               <BookOpen className="absolute -right-8 -bottom-8 h-40 w-40 text-white/5 group-hover:scale-110 transition-transform duration-500" />
               <div className="relative z-10">
                 <h3 className="text-xl font-bold mb-4">Central de Conhecimento</h3>
@@ -202,7 +202,7 @@ function SupportPage() {
               </div>
            </div>
 
-           <div className="bg-slate-100 p-8 rounded-[2.5rem] border border-slate-200/50">
+           <div className="bg-slate-100 p-8 rounded-3xl border border-slate-200/50">
               <h3 className="text-navy font-bold mb-6 flex items-center gap-2">
                  <LifeBuoy className="h-5 w-5 text-primary" /> Atendimento Humano
               </h3>

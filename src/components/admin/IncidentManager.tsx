@@ -21,7 +21,7 @@ export function IncidentManager() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-black text-navy uppercase">Gestão de Incidentes</h2>
+        <h2 className="text-xl font-semibold text-navy">Gestão de Incidentes</h2>
         <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[10px] uppercase">Sistema Nominal</Badge>
       </div>
 

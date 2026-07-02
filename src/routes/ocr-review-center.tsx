@@ -46,7 +46,7 @@ function OCRReviewCenterPage() {
             <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">
               <Zap className="h-6 w-6 text-primary" />
             </div>
-            <h1 className="text-3xl font-black text-navy tracking-tight uppercase">Revisão Inteligente OCR</h1>
+            <h1 className="text-3xl font-semibold text-navy">Revisão Inteligente OCR</h1>
           </div>
           <p className="text-slate-500 font-medium max-w-lg text-sm">
             Valide extrações, resolva divergências e alimente o sistema operacional com um clique.
@@ -62,9 +62,9 @@ function OCRReviewCenterPage() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, idx) => (
-          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group relative overflow-hidden rounded-[2rem] bg-white">
+          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group relative overflow-hidden rounded-2xl bg-white">
              <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1">{stat.label}</p>
-             <h3 className="text-2xl font-black text-navy">{stat.value}</h3>
+             <h3 className="text-2xl font-semibold text-navy">{stat.value}</h3>
              <p className="text-[9px] font-bold text-slate-400 mt-2 flex items-center gap-1">
                {stat.trend}
              </p>
@@ -104,11 +104,11 @@ function OCRReviewCenterPage() {
 
         <div className="lg:col-span-2">
           {!selectedJob ? (
-            <Card className="h-full border-dashed border-2 flex flex-col items-center justify-center p-20 text-center bg-slate-50/50 rounded-[3rem] group">
+            <Card className="h-full border-dashed border-2 flex flex-col items-center justify-center p-20 text-center bg-slate-50/50 rounded-3xl group">
                <div className="h-20 w-20 bg-white rounded-3xl shadow-xl flex items-center justify-center mb-6">
                   <MousePointer2 className="h-8 w-8 text-primary animate-bounce" />
                </div>
-               <h4 className="text-xl font-black text-navy uppercase tracking-tight mb-2">Central de Aprovação</h4>
+               <h4 className="text-xl font-semibold text-navy mb-2">Central de Aprovação</h4>
                <p className="text-xs text-slate-400 font-medium max-w-sm">
                  Selecione um documento na fila lateral para iniciar a revisão técnica e aprovação de dados.
                </p>

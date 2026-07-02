@@ -67,7 +67,7 @@ function DemoPage() {
             <Badge className="bg-emerald-500 text-white border-none font-black text-[11px] uppercase tracking-[0.3em] px-6 py-2 rounded-full animate-in fade-in slide-in-from-bottom duration-700 shadow-lg shadow-emerald-500/20">
                Consolidado Enterprise • Market Ready
             </Badge>
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase italic leading-[0.9] animate-in fade-in slide-in-from-bottom duration-1000">
+            <h1 className="text-6xl md:text-8xl font-semibold italic leading-[0.9] animate-in fade-in slide-in-from-bottom duration-1000">
               Transforme sua <span className="text-primary">Engenharia</span> <br /> em Inteligência
             </h1>
             <p className="text-xl md:text-2xl text-white/50 max-w-3xl mx-auto font-medium leading-relaxed animate-in fade-in slide-in-from-bottom duration-1000 delay-200">
@@ -80,13 +80,13 @@ function DemoPage() {
              <Button 
                onClick={handleStartDemo}
                disabled={isSeeding}
-               className="bg-primary hover:bg-blue-600 text-white px-12 py-10 rounded-[2.5rem] text-[14px] font-black uppercase tracking-[0.3em] shadow-[0_30px_60px_rgba(37,99,235,0.3)] hover:scale-105 transition-all border border-white/10"
+               className="bg-primary hover:bg-blue-600 text-white px-12 py-10 rounded-3xl text-[14px] font-black uppercase tracking-[0.3em] shadow-[0_30px_60px_rgba(37,99,235,0.3)] hover:scale-105 transition-all border border-white/10"
              >
                 {isSeeding ? "Configurando..." : "Iniciar Demonstração Premium"} 
                 <Rocket className="ml-4 h-6 w-6" />
              </Button>
              
-             <button className="flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/10 px-10 py-5 rounded-[2.5rem] transition-all group">
+             <button className="flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/10 px-10 py-5 rounded-3xl transition-all group">
                 <div className="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-primary transition-all">
                    <PlayCircle className="h-6 w-6 text-white" />
                 </div>
@@ -104,7 +104,7 @@ function DemoPage() {
              ].map((f, i) => (
                <div key={i} className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl text-center group hover:bg-white/[0.05] transition-all">
                   <f.icon className="h-8 w-8 text-primary mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">{f.label}</h4>
+                  <h4 className="text-[10px] font-semibold text-white/40 mb-1">{f.label}</h4>
                   <p className="text-xs font-bold text-white/80">{f.desc}</p>
                </div>
              ))}

@@ -37,7 +37,7 @@ export function GovernancePanel() {
             <div className="text-center">
                 <Target className="h-12 w-12 text-primary/20 mx-auto mb-2" />
                 <p className="text-xs font-bold text-slate-400 uppercase">Score de Qualidade Contínua</p>
-                <h2 className="text-4xl font-black text-navy mt-1">98.5%</h2>
+                <h2 className="text-4xl font-semibold text-navy mt-1">98.5%</h2>
             </div>
         </CardContent>
       </Card>

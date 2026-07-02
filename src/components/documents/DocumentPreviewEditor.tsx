@@ -120,7 +120,7 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-black text-navy uppercase tracking-tight">{template.name}</h2>
+              <h2 className="text-xl font-semibold text-navy">{template.name}</h2>
               <Badge variant="outline" className="text-[10px] uppercase font-black tracking-widest bg-slate-50">
                 {status}
               </Badge>
@@ -170,7 +170,7 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                       <div className="flex justify-center mb-4">
                          <FileText className="h-12 w-12 text-navy opacity-20" />
                       </div>
-                      <h1 className="text-2xl font-black text-navy uppercase tracking-tight">{template.name}</h1>
+                      <h1 className="text-2xl font-semibold text-navy">{template.name}</h1>
                       <div className="flex justify-center gap-6 text-[9px] font-black uppercase text-slate-400 tracking-widest">
                          <span>Identificador: {processData.id?.substring(0,8)}</span>
                          <span>•</span>
@@ -350,7 +350,7 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
               </CardContent>
            </Card>
 
-           <div className="p-6 rounded-[2rem] bg-navy text-white shadow-xl relative overflow-hidden group">
+           <div className="p-6 rounded-2xl bg-navy text-white shadow-xl relative overflow-hidden group">
               <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
                  <FileText className="h-32 w-32" />
               </div>

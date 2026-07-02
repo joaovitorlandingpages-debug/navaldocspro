@@ -150,7 +150,7 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-black text-navy uppercase tracking-tight">Revisor OCR</h2>
+              <h2 className="text-2xl font-semibold text-navy">Revisor OCR</h2>
               <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 uppercase text-[9px] font-black tracking-widest px-2 py-0.5">
                 {job?.identified_document_type || 'Geral'}
               </Badge>
@@ -199,7 +199,7 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
           </Card>
 
           <Card className="p-6 border-slate-100 shadow-sm rounded-3xl">
-            <h4 className="text-[10px] font-black text-navy uppercase tracking-widest mb-4 flex items-center gap-2">
+            <h4 className="text-[10px] font-semibold text-navy mb-4 flex items-center gap-2">
               <History className="h-3.5 w-3.5 text-primary" /> Linha do Tempo
             </h4>
             <div className="space-y-4">
@@ -250,7 +250,7 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
 
           {job?.comparison_data && (
              <Card className="p-6 border-amber-100 bg-amber-50/30 rounded-3xl">
-                <h4 className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <h4 className="text-[10px] font-semibold text-amber-700 mb-4 flex items-center gap-2">
                   <AlertTriangle className="h-3.5 w-3.5" /> Divergências Detectadas
                 </h4>
                 <div className="grid gap-3">
@@ -296,12 +296,12 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
             </TabsList>
 
             <TabsContent value="person" className="mt-6">
-              <Card className="p-8 border-slate-100 shadow-xl rounded-[2.5rem] bg-white relative overflow-hidden">
+              <Card className="p-8 border-slate-100 shadow-xl rounded-3xl bg-white relative overflow-hidden">
                 <div className="flex items-center justify-between mb-8">
-                  <h3 className="font-black text-navy uppercase tracking-tight text-base flex items-center gap-3">
+                  <h3 className="font-semibold text-navy text-base flex items-center gap-3">
                     <User className="h-5 w-5 text-primary" /> Identificação Civil
                   </h3>
-                  <div className="flex items-center gap-4 px-5 py-3 bg-slate-50 rounded-[1.5rem] border border-slate-100 shadow-inner">
+                  <div className="flex items-center gap-4 px-5 py-3 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Confiança IA</span>
                     <div className="flex items-center gap-3">
                        <div className="h-2 w-24 bg-slate-200 rounded-full overflow-hidden">
@@ -417,9 +417,9 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
             </TabsContent>
 
             <TabsContent value="vessel" className="mt-6">
-               <Card className="p-8 border-slate-100 shadow-xl rounded-[2.5rem] bg-white">
+               <Card className="p-8 border-slate-100 shadow-xl rounded-3xl bg-white">
                 <div className="flex items-center justify-between mb-8">
-                  <h3 className="font-black text-navy uppercase tracking-tight text-base flex items-center gap-3">
+                  <h3 className="font-semibold text-navy text-base flex items-center gap-3">
                     <Ship className="h-5 w-5 text-primary" /> Ficha da Embarcação
                   </h3>
                   <Badge variant="outline" className="border-green-100 text-green-600 bg-green-50 uppercase text-[10px] font-black px-3 py-1">
@@ -501,7 +501,7 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
                     </p>
                     <div className="grid gap-3">
                       {editedData?.engines?.map((eng: any, i: number) => (
-                        <div key={i} className="p-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] flex items-center justify-between">
+                        <div key={i} className="p-5 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="h-10 w-10 bg-white rounded-xl shadow-sm flex items-center justify-center">
                               <Zap className="h-5 w-5 text-primary" />
@@ -515,7 +515,7 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
                         </div>
                       ))}
                       {editedData?.serial_numbers && (
-                         <div className="p-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] space-y-2">
+                         <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl space-y-2">
                             <p className="text-[10px] font-black text-navy uppercase tracking-widest">Números de Série NF</p>
                             <div className="flex justify-between items-center">
                                <span className="text-[10px] font-bold text-slate-500">CASCO:</span>
@@ -534,9 +534,9 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
             </TabsContent>
 
             <TabsContent value="financial" className="mt-6">
-               <Card className="p-8 border-slate-100 shadow-xl rounded-[2.5rem] bg-white">
+               <Card className="p-8 border-slate-100 shadow-xl rounded-3xl bg-white">
                 <div className="flex items-center justify-between mb-8">
-                  <h3 className="font-black text-navy uppercase tracking-tight text-base flex items-center gap-3">
+                  <h3 className="font-semibold text-navy text-base flex items-center gap-3">
                     <FileText className="h-5 w-5 text-primary" /> Dados Financeiros
                   </h3>
                   <Badge variant="outline" className="border-blue-100 text-blue-600 bg-blue-50 uppercase text-[10px] font-black px-3 py-1">
@@ -596,7 +596,7 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
             </TabsContent>
           </Tabs>
 
-          <div className="p-6 bg-slate-900 rounded-[2.5rem] text-white flex items-center justify-between gap-6 shadow-2xl">
+          <div className="p-6 bg-slate-900 rounded-3xl text-white flex items-center justify-between gap-6 shadow-2xl">
              <div className="flex items-center gap-4">
                 <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10">
                    <ShieldCheck className="h-6 w-6 text-primary" />

@@ -57,10 +57,10 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
 
 
   return (
-    <div className="grid lg:grid-cols-12 gap-8 bg-slate-50/50 p-8 rounded-[3rem] border border-slate-100 min-h-[700px]">
+    <div className="grid lg:grid-cols-12 gap-8 bg-slate-50/50 p-8 rounded-3xl border border-slate-100 min-h-[700px]">
       {/* Sidebar Navigation */}
       <div className="lg:col-span-3 space-y-2">
-        <h3 className="text-xs font-black text-navy uppercase tracking-[0.3em] mb-6 px-4">Estrutura do Dossiê</h3>
+        <h3 className="text-xs font-semibold text-navy tracking-[0.3em] mb-6 px-4">Estrutura do Dossiê</h3>
         {sections.map((section) => (
           <button
             key={section.id}
@@ -103,7 +103,7 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
       </div>
 
       {/* Preview Content */}
-      <div id="dossier-preview-content" className="lg:col-span-9 bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden flex flex-col relative group/preview print:shadow-none print:border-none">
+      <div id="dossier-preview-content" className="lg:col-span-9 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col relative group/preview print:shadow-none print:border-none">
         {/* Document Header */}
         <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30 print:hidden">
            <div className="flex items-center gap-4">
@@ -111,7 +111,7 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
                  <Award className="h-6 w-6 text-primary" />
               </div>
               <div>
-                 <h2 className="text-lg font-black text-navy uppercase tracking-tight">Dossiê Naval Enterprise</h2>
+                 <h2 className="text-lg font-semibold text-navy">Dossiê Naval Enterprise</h2>
                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Hash de Segurança: {data.process?.id?.substring(0, 16).toUpperCase()}</p>
               </div>
            </div>
@@ -133,7 +133,7 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
                      {/* Company Logo Placeholder */}
                      <Globe className="h-12 w-12" />
                   </div>
-                  <h1 className="text-4xl font-black text-navy uppercase tracking-tighter leading-tight">
+                  <h1 className="text-4xl font-semibold text-navy leading-tight">
                      {data.process?.process_type}
                   </h1>
                   <div className="h-1 w-20 bg-primary mx-auto rounded-full" />
@@ -177,7 +177,7 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
 
           {activeSection === 'summary' && (
             <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-               <h4 className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-12 flex items-center gap-3">
+               <h4 className="text-xs font-semibold text-primary tracking-[0.3em] mb-12 flex items-center gap-3">
                   <List className="h-4 w-4" /> Sumário Executivo do Processo
                </h4>
                <div className="space-y-4">
@@ -204,10 +204,10 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
           {activeSection === 'data' && (
             <div className="max-w-2xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                <section className="print:break-inside-avoid">
-                  <h4 className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                  <h4 className="text-xs font-semibold text-primary tracking-[0.3em] mb-6 flex items-center gap-3">
                      <User className="h-4 w-4" /> Especificações do Cliente
                   </h4>
-                  <div className="bg-slate-50/50 rounded-[2rem] p-8 border border-slate-100 print:bg-white print:border-none print:p-0">
+                  <div className="bg-slate-50/50 rounded-2xl p-8 border border-slate-100 print:bg-white print:border-none print:p-0">
                      <InfoRow label="Nome / Razão Social" value={data.customer?.name} />
                      <InfoRow label="CPF / CNPJ" value={data.customer?.cpf_cnpj} />
                      <InfoRow label="RG" value={data.customer?.rg} />
@@ -218,10 +218,10 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
                </section>
 
                <section className="print:break-inside-avoid print:mt-10">
-                  <h4 className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                  <h4 className="text-xs font-semibold text-primary tracking-[0.3em] mb-6 flex items-center gap-3">
                      <Ship className="h-4 w-4" /> Atributos da Embarcação
                   </h4>
-                  <div className="bg-slate-50/50 rounded-[2rem] p-8 border border-slate-100 print:bg-white print:border-none print:p-0">
+                  <div className="bg-slate-50/50 rounded-2xl p-8 border border-slate-100 print:bg-white print:border-none print:p-0">
                      <InfoRow label="Nome da Embarcação" value={data.vessel?.name} />
                      <InfoRow label="Inscrição Marinha" value={data.vessel?.registration_number} />
                      <InfoRow label="Atividade / Serviço" value={data.vessel?.activity} />
@@ -234,10 +234,10 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
 
                {data.process?.motor && (
                  <section className="print:break-inside-avoid print:mt-10">
-                    <h4 className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                    <h4 className="text-xs font-semibold text-primary tracking-[0.3em] mb-6 flex items-center gap-3">
                        <Zap className="h-4 w-4" /> Especificações do Motor
                     </h4>
-                    <div className="bg-slate-50/50 rounded-[2rem] p-8 border border-slate-100 print:bg-white print:border-none print:p-0">
+                    <div className="bg-slate-50/50 rounded-2xl p-8 border border-slate-100 print:bg-white print:border-none print:p-0">
                        <InfoRow label="Fabricante" value={data.process.motor?.manufacturer} />
                        <InfoRow label="Modelo" value={data.process.motor?.model} />
                        <InfoRow label="Potência" value={data.process.motor?.power} />
@@ -250,12 +250,12 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
 
           {activeSection === 'docs' && (
             <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-               <h4 className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+               <h4 className="text-xs font-semibold text-primary tracking-[0.3em] mb-6 flex items-center gap-3">
                   <FileText className="h-4 w-4" /> Acervo Digitalizado (OCR)
                </h4>
                <div className="grid gap-4">
                   {data.documents?.map((doc: any) => (
-                    <div key={doc.id} className="p-6 bg-white border border-slate-100 rounded-[1.5rem] flex items-center justify-between group hover:border-primary/30 transition-all shadow-sm">
+                    <div key={doc.id} className="p-6 bg-white border border-slate-100 rounded-2xl flex items-center justify-between group hover:border-primary/30 transition-all shadow-sm">
                        <div className="flex items-center gap-4">
                           <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
                              <FileText className="h-6 w-6" />
@@ -274,11 +274,11 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
 
           {activeSection === 'compliance' && (
              <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="bg-navy text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden">
+                <div className="bg-navy text-white p-10 rounded-3xl shadow-2xl relative overflow-hidden">
                    <Shield className="absolute -right-8 -bottom-8 h-48 w-48 text-white/5 rotate-12" />
                    <div className="relative z-10">
-                      <h4 className="text-primary text-[10px] font-black uppercase tracking-[0.4em] mb-2">Relatório de Conformidade</h4>
-                      <h3 className="text-2xl font-black uppercase tracking-tight mb-8">Status Geral: 100% OK</h3>
+                      <h4 className="text-primary text-[10px] font-semibold tracking-[0.4em] mb-2">Relatório de Conformidade</h4>
+                      <h3 className="text-2xl font-semibold mb-8">Status Geral: 100% OK</h3>
                       
                       <div className="grid grid-cols-2 gap-8">
                          <div className="space-y-1">
@@ -305,7 +305,7 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
 
           {activeSection === 'timeline' && (
              <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h4 className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-12 flex items-center gap-3">
+                <h4 className="text-xs font-semibold text-primary tracking-[0.3em] mb-12 flex items-center gap-3">
                    <History className="h-4 w-4" /> Rastro Operacional (Audit Trail)
                 </h4>
                 <div className="space-y-12 pl-8 border-l-2 border-slate-100">

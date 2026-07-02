@@ -111,7 +111,7 @@ export function ProcessIdentityPanel({ processId }: Props) {
     <div className="space-y-6">
       <Card className="p-5 sm:p-6 bg-white border-slate-100">
         <div className="mb-4">
-          <h3 className="text-base font-black text-navy">Identidade do Documento</h3>
+          <h3 className="text-base font-semibold text-navy">Identidade do Documento</h3>
           <p className="text-xs text-slate-500 mt-1">
             Escolha qual logo aparecerá nos PDFs gerados <strong>somente neste processo</strong>.
             Não altera documentos antigos nem a identidade global da empresa.

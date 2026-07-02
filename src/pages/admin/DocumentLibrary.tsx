@@ -194,7 +194,7 @@ export default function DocumentLibraryAdmin() {
              <Badge className="bg-amber-500 text-white font-black uppercase text-[9px] tracking-widest">Admin Master</Badge>
              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Biblioteca Global</span>
           </div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-navy flex items-center gap-3">
             <Library className="h-8 w-8 text-primary" /> Biblioteca Oficial
           </h1>
           <p className="text-muted-foreground font-medium">Gestão centralizada de templates, normas e conformidade marítima.</p>
@@ -332,7 +332,7 @@ export default function DocumentLibraryAdmin() {
 
       {/* Import Modal */}
       <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
-        <DialogContent className="max-w-2xl rounded-[2rem]">
+        <DialogContent className="max-w-2xl rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
               <Upload className="h-5 w-5 text-primary" /> Importação em Massa

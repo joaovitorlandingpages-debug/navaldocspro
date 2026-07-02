@@ -69,7 +69,7 @@ function OCRCenterPage() {
       {/* Stats Grid Premium */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, idx) => (
-          <Card key={idx} className="p-8 border-none shadow-[0_20px_50px_rgba(0,0,0,0.03)] hover:shadow-2xl transition-all group overflow-hidden relative rounded-[2rem]">
+          <Card key={idx} className="p-8 border-none shadow-[0_20px_50px_rgba(0,0,0,0.03)] hover:shadow-2xl transition-all group overflow-hidden relative rounded-2xl">
              <div className="absolute -right-6 -bottom-6 opacity-[0.03] group-hover:scale-150 group-hover:rotate-12 transition-all duration-1000 group-hover:text-primary">
                {stat.icon}
              </div>
@@ -79,7 +79,7 @@ function OCRCenterPage() {
                 </div>
              </div>
              <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] relative z-10">{stat.label}</p>
-             <h3 className="text-3xl font-black text-navy mt-2 relative z-10 leading-none">{stat.value}</h3>
+             <h3 className="text-3xl font-semibold text-navy mt-2 relative z-10 leading-none">{stat.value}</h3>
              <div className="flex items-center gap-2 mt-4 relative z-10">
                 <div className="h-1 w-8 bg-primary/20 rounded-full overflow-hidden">
                    <div className="h-full bg-primary animate-pulse" style={{ width: '60%' }} />
@@ -119,7 +119,7 @@ function OCRCenterPage() {
                       <div className="h-8 w-8 bg-white/10 rounded-lg flex items-center justify-center">
                         <BarChart3 className="h-4 w-4 text-primary" />
                       </div>
-                      <h4 className="text-xs font-black uppercase tracking-widest">Dica de Performance</h4>
+                      <h4 className="text-xs font-semibold">Dica de Performance</h4>
                    </div>
                    <p className="text-[11px] text-white/70 leading-relaxed font-medium">
                       Para melhores resultados em CNH e RG, garanta que o documento esteja em uma superfície plana e com boa iluminação.
@@ -141,11 +141,11 @@ function OCRCenterPage() {
         <div className="lg:col-span-2">
           {!selectedJob ? (
             <div className="space-y-6 h-full flex flex-col">
-              <Card className="flex-grow border-dashed border-2 flex flex-col items-center justify-center p-20 text-center bg-slate-50/50 rounded-[2.5rem] group hover:border-primary/30 transition-all">
+              <Card className="flex-grow border-dashed border-2 flex flex-col items-center justify-center p-20 text-center bg-slate-50/50 rounded-3xl group hover:border-primary/30 transition-all">
                 <div className="h-24 w-24 bg-white rounded-3xl shadow-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                     <MousePointer2 className="h-10 w-10 text-primary animate-bounce" />
                 </div>
-                <h4 className="text-xl font-black text-navy uppercase tracking-tight mb-2">Aguardando Seleção</h4>
+                <h4 className="text-xl font-semibold text-navy mb-2">Aguardando Seleção</h4>
                 <p className="text-sm text-slate-400 font-medium max-w-sm">
                   Selecione um documento no histórico ao lado ou faça um novo upload para visualizar os dados extraídos pela nossa IA.
                 </p>
@@ -157,7 +157,7 @@ function OCRCenterPage() {
               </Card>
 
               {/* Exemplo de Preview */}
-              <div className="p-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm opacity-40 grayscale pointer-events-none hidden md:block">
+              <div className="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm opacity-40 grayscale pointer-events-none hidden md:block">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary"><FileText className="h-5 w-5" /></div>
                   <div>
@@ -174,13 +174,13 @@ function OCRCenterPage() {
           ) : (
             <div className="animate-in slide-in-from-right-8 duration-500">
               {selectedJob.status === 'processing' ? (
-                <Card className="h-[600px] flex flex-col items-center justify-center p-20 text-center bg-white rounded-[2.5rem] shadow-sm">
+                <Card className="h-[600px] flex flex-col items-center justify-center p-20 text-center bg-white rounded-3xl shadow-sm">
                    <div className="relative w-48 h-64 bg-slate-50 rounded-2xl overflow-hidden border-2 border-slate-100 flex items-center justify-center">
                       <FileText className="h-20 w-20 text-slate-200" />
                       <div className="absolute top-0 left-0 w-full h-1 bg-primary shadow-[0_0_15px_rgba(var(--primary),0.8)] animate-scan"></div>
                    </div>
                    <div className="mt-8 space-y-4">
-                      <h4 className="text-xl font-black text-navy uppercase tracking-tight">Processando Documento</h4>
+                      <h4 className="text-xl font-semibold text-navy">Processando Documento</h4>
                       <div className="flex flex-col items-center gap-2">
                          <div className="flex gap-1">
                             {[1, 2, 3].map(i => (
@@ -206,14 +206,14 @@ function OCRCenterPage() {
       </div>
       
       {/* Help Banner */}
-      <div className="mt-12 p-1 bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 rounded-[2rem]">
-         <div className="bg-white rounded-[1.9rem] p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="mt-12 p-1 bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 rounded-2xl">
+         <div className="bg-white rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-6">
-               <div className="h-16 w-16 bg-navy rounded-[1.5rem] flex items-center justify-center shadow-lg">
+               <div className="h-16 w-16 bg-navy rounded-2xl flex items-center justify-center shadow-lg">
                   <Info className="h-8 w-8 text-white" />
                </div>
                <div>
-                  <h4 className="text-lg font-black text-navy uppercase tracking-tight">Privacidade e Segurança</h4>
+                  <h4 className="text-lg font-semibold text-navy">Privacidade e Segurança</h4>
                   <p className="text-sm text-slate-500 font-medium max-w-xl">
                     Todos os documentos são processados em servidores criptografados e os dados extraídos são protegidos por sigilo empresarial.
                   </p>

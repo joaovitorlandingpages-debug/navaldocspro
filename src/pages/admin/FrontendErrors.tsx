@@ -119,7 +119,7 @@ export default function FrontendErrors() {
             <div className="p-2 bg-red-500/10 rounded-lg">
               <ShieldAlert className="h-6 w-6 text-red-500" />
             </div>
-            <h1 className="text-2xl font-black uppercase tracking-tighter">Frontend Error Logs</h1>
+            <h1 className="text-2xl font-semibold">Frontend Error Logs</h1>
           </div>
           <p className="text-slate-400 text-sm">Monitoramento e correção de falhas críticas da interface</p>
         </div>
@@ -168,7 +168,7 @@ export default function FrontendErrors() {
         ) : errors.length === 0 ? (
           <div className="bg-white/5 border border-dashed border-white/10 rounded-3xl p-12 text-center">
             <CheckCircle2 className="h-12 w-12 text-green-500/20 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-white/40 uppercase">Nenhum erro detectado</h3>
+            <h3 className="text-lg font-bold text-white/40">Nenhum erro detectado</h3>
             <p className="text-white/20 text-sm">Sua interface está operando em estabilidade nominal</p>
           </div>
         ) : (
@@ -217,14 +217,14 @@ export default function FrontendErrors() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div>
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">Stack Trace</h4>
+                        <h4 className="text-[10px] font-semibold text-white/30 mb-2">Stack Trace</h4>
                         <pre className="p-4 bg-black/40 border border-white/5 rounded-xl text-[10px] font-mono text-white/60 overflow-x-auto max-h-60 custom-scrollbar">
                           {error.error_stack || 'Sem stack trace disponível'}
                         </pre>
                       </div>
                       
                       <div>
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">Component Hierarchy</h4>
+                        <h4 className="text-[10px] font-semibold text-white/30 mb-2">Component Hierarchy</h4>
                         <pre className="p-4 bg-black/40 border border-white/5 rounded-xl text-[10px] font-mono text-white/40 overflow-x-auto max-h-40 custom-scrollbar">
                           {error.component_stack || 'Hierarquia de componentes não capturada'}
                         </pre>
@@ -233,7 +233,7 @@ export default function FrontendErrors() {
 
                     <div className="space-y-6">
                       <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4 flex items-center gap-2">
+                        <h4 className="text-[10px] font-semibold text-white/30 mb-4 flex items-center gap-2">
                           <Terminal className="h-3 w-3" />
                           Ambiente e Contexto
                         </h4>

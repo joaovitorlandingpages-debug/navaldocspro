@@ -311,7 +311,7 @@ function Documents() {
                 </div>
 
                 <div className="p-4 flex-1 flex flex-col gap-3">
-                  <h4 className="font-black text-navy text-sm leading-tight line-clamp-2" title={doc.name}>{doc.name}</h4>
+                  <h4 className="font-semibold text-navy text-sm leading-tight line-clamp-2" title={doc.name}>{doc.name}</h4>
 
                   <div className="text-[10px] font-bold text-slate-500 space-y-1">
                     {doc.customer?.name && <div className="truncate">Cliente: {doc.customer.name}</div>}

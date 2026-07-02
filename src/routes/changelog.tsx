@@ -81,7 +81,7 @@ function ChangelogPage() {
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-navy text-white rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
            <Rocket className="h-3 w-3 text-primary" /> Roadmap & Evolução
         </div>
-        <h1 className="text-5xl font-black text-navy uppercase tracking-tight">O que há de novo</h1>
+        <h1 className="text-5xl font-semibold text-navy">O que há de novo</h1>
         <p className="text-slate-500 max-w-xl mx-auto font-medium">Acompanhe a evolução constante do NavalDocs Pro rumo ao padrão global de automação naval.</p>
       </header>
 
@@ -92,7 +92,7 @@ function ChangelogPage() {
                <Tag className="h-5 w-5 text-slate-400 group-hover:text-primary transition-all" />
             </div>
             
-            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500">
+            <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500">
                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                   <div>
                      <div className="flex items-center gap-3 mb-2">
@@ -101,7 +101,7 @@ function ChangelogPage() {
                            <Calendar className="h-3 w-3" /> {new Date(release.created_at).toLocaleDateString()}
                         </div>
                      </div>
-                     <h2 className="text-2xl font-black text-navy uppercase">{release.title}</h2>
+                     <h2 className="text-2xl font-semibold text-navy">{release.title}</h2>
                   </div>
                   <button className="text-[10px] font-black uppercase text-slate-400 hover:text-navy flex items-center gap-2 transition-all">
                      Compartilhar <ArrowRight className="h-4 w-4" />
@@ -127,10 +127,10 @@ function ChangelogPage() {
       </div>
 
       <footer className="mt-20 text-center">
-         <div className="bg-navy p-12 rounded-[3rem] text-white shadow-2xl relative overflow-hidden group">
+         <div className="bg-navy p-12 rounded-3xl text-white shadow-2xl relative overflow-hidden group">
             <Star className="absolute -left-12 -top-12 h-48 w-48 text-white/5 group-hover:scale-110 transition-transform duration-700" />
             <div className="relative z-10">
-               <h3 className="text-3xl font-black uppercase mb-4">Tem uma sugestão?</h3>
+               <h3 className="text-3xl font-semibold mb-4">Tem uma sugestão?</h3>
                <p className="text-white/60 text-sm mb-8 max-w-md mx-auto">Sua opinião guia nossa evolução. Se você sente falta de algo, nos conte agora mesmo.</p>
                <button className="bg-primary text-navy px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 mx-auto">
                   <Zap className="h-4 w-4" /> Enviar Sugestão

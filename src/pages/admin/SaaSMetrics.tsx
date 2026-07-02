@@ -39,7 +39,7 @@ export default function AdminSaaSMetrics() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
-          <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Consolidação SaaS Master</h1>
+          <h1 className="text-3xl font-semibold text-navy">Consolidação SaaS Master</h1>
           <p className="text-slate-500 font-medium">KPIs de crescimento, retenção e saúde financeira consolidada do ecossistema.</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl">
@@ -69,14 +69,14 @@ export default function AdminSaaSMetrics() {
                 )}
               </div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-              <h3 className="text-2xl font-black text-navy mt-1 tracking-tighter">{stat.value}</h3>
+              <h3 className="text-2xl font-semibold text-navy mt-1">{stat.value}</h3>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="border-slate-100 shadow-sm rounded-[2.5rem] overflow-hidden">
+        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden">
           <CardHeader className="bg-navy p-8">
             <CardTitle className="text-white text-sm font-black uppercase tracking-widest flex items-center gap-3">
               <TrendingUp className="h-5 w-5 text-primary" /> Distribuição de Receita
@@ -107,7 +107,7 @@ export default function AdminSaaSMetrics() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-100 shadow-sm rounded-[2.5rem] overflow-hidden">
+        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden">
           <CardHeader className="bg-slate-50 p-8 border-b border-slate-100">
             <CardTitle className="text-navy text-sm font-black uppercase tracking-widest flex items-center gap-3">
               <Activity className="h-5 w-5 text-primary" /> Uso da Infraestrutura
@@ -117,12 +117,12 @@ export default function AdminSaaSMetrics() {
             <div className="grid grid-cols-2 gap-8">
               <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Sucesso OCR</p>
-                <h4 className="text-3xl font-black text-emerald-500 tracking-tighter">98.4%</h4>
+                <h4 className="text-3xl font-semibold text-emerald-500">98.4%</h4>
                 <p className="text-[9px] text-slate-400 font-bold uppercase mt-2 italic">Meta: 99%</p>
               </div>
               <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Latência Média</p>
-                <h4 className="text-3xl font-black text-primary tracking-tighter">142ms</h4>
+                <h4 className="text-3xl font-semibold text-primary">142ms</h4>
                 <p className="text-[9px] text-slate-400 font-bold uppercase mt-2 italic">Meta: {"< 200ms"}</p>
               </div>
             </div>

@@ -21,14 +21,14 @@ export function BatchOCRQueue({ jobs, isLoading }: BatchOCRQueueProps) {
   }
 
   return (
-    <Card className="p-6 border-none shadow-xl bg-white rounded-[2rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+    <Card className="p-6 border-none shadow-xl bg-white rounded-2xl space-y-6 animate-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">
             <Zap className="h-5 w-5 text-primary animate-pulse" />
           </div>
           <div>
-            <h3 className="text-sm font-black text-navy uppercase tracking-widest">Fila de Processamento</h3>
+            <h3 className="text-sm font-semibold text-navy">Fila de Processamento</h3>
             <p className="text-[10px] text-slate-400 font-bold uppercase">Monitorando redes neurais</p>
           </div>
         </div>

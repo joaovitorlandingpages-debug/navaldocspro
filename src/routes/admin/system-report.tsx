@@ -65,7 +65,7 @@ function SystemReport() {
              <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">Ambiente de Produção Ativo</span>
           </div>
-          <h1 className="text-4xl font-black text-navy uppercase tracking-tight">System Readiness Report</h1>
+          <h1 className="text-4xl font-semibold text-navy">System Readiness Report</h1>
           <p className="text-slate-500 font-medium">Auditoria técnica final e métricas operacionais enterprise.</p>
         </div>
         <div className="bg-navy p-6 rounded-3xl text-white shadow-xl flex items-center gap-6">
@@ -80,7 +80,7 @@ function SystemReport() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-           <section className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+           <section className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
               <h2 className="text-xl font-bold text-navy mb-8 flex items-center gap-3">
                  <Zap className="h-6 w-6 text-primary" /> Status dos Módulos Core
               </h2>
@@ -100,7 +100,7 @@ function SystemReport() {
               </div>
            </section>
 
-           <section className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+           <section className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
               <h2 className="text-xl font-bold text-navy mb-8 flex items-center gap-3">
                  <Globe className="h-6 w-6 text-primary" /> Auditoria UX & Responsividade
               </h2>
@@ -121,8 +121,8 @@ function SystemReport() {
 
            <section className="grid md:grid-cols-2 gap-6">
 
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                 <h3 className="font-black text-navy uppercase tracking-widest text-xs mb-6 flex items-center gap-2">
+              <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                 <h3 className="font-semibold text-navy text-xs mb-6 flex items-center gap-2">
                     <Database className="h-4 w-4 text-indigo-500" /> Infraestrutura Supabase
                  </h3>
                  <div className="space-y-4">
@@ -138,9 +138,9 @@ function SystemReport() {
                  </div>
               </div>
 
-              <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-xl overflow-hidden relative group">
+              <div className="bg-slate-900 p-8 rounded-3xl text-white shadow-xl overflow-hidden relative group">
                  <Terminal className="absolute -right-12 -bottom-12 h-48 w-48 text-white/5 group-hover:scale-110 transition-transform duration-700" />
-                 <h3 className="font-black text-primary uppercase tracking-widest text-xs mb-6">Métricas de Performance</h3>
+                 <h3 className="font-semibold text-primary text-xs mb-6">Métricas de Performance</h3>
                  <div className="grid grid-cols-2 gap-6 relative z-10">
                     <div>
                        <p className="text-[10px] font-black uppercase opacity-40">Latência API</p>
@@ -165,7 +165,7 @@ function SystemReport() {
         </div>
 
         <aside className="space-y-8">
-           <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm text-center">
+           <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm text-center">
               <div className="h-20 w-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
                  <Globe className="h-10 w-10 text-emerald-500" />
               </div>
@@ -189,7 +189,7 @@ function SystemReport() {
               </div>
            </div>
 
-           <div className="bg-gradient-to-br from-primary to-indigo-600 p-8 rounded-[2.5rem] text-white shadow-xl">
+           <div className="bg-gradient-to-br from-primary to-indigo-600 p-8 rounded-3xl text-white shadow-xl">
               <Activity className="h-8 w-8 mb-4" />
               <h3 className="text-lg font-bold mb-2">Monitoramento Ativo</h3>
               <p className="text-white/70 text-sm mb-6">Nosso engine de auditoria verifica inconsistências a cada 15 minutos.</p>

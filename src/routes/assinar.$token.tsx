@@ -224,7 +224,7 @@ function PublicSignPage() {
     <div className="min-h-screen grid place-items-center p-4 bg-slate-50">
       <Card className="p-8 max-w-md text-center">
         <XCircle className="w-14 h-14 mx-auto text-rose-400 mb-3" />
-        <h1 className="font-black text-xl mb-2">Não foi possível abrir</h1>
+        <h1 className="font-semibold text-xl mb-2">Não foi possível abrir</h1>
         <p className="text-sm text-slate-600">{error}</p>
       </Card>
     </div>
@@ -251,7 +251,7 @@ function PublicSignPage() {
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 truncate">
               {company?.name ?? "Assinatura Eletrônica"}
             </p>
-            <h1 className="text-sm sm:text-base font-black text-slate-900 truncate">{request.title}</h1>
+            <h1 className="text-sm sm:text-base font-semibold text-slate-900 truncate">{request.title}</h1>
           </div>
         </div>
         <div className="max-w-3xl mx-auto px-4 pb-3">
@@ -503,7 +503,7 @@ function SuccessScreen({ result, company, token }: { result: any; company: any; 
         <div className="mx-auto w-16 h-16 rounded-full bg-emerald-100 grid place-items-center mb-4">
           <CheckCircle2 className="w-9 h-9 text-emerald-600" />
         </div>
-        <h1 className="font-black text-2xl text-slate-900 mb-1">Assinatura concluída!</h1>
+        <h1 className="font-semibold text-2xl text-slate-900 mb-1">Assinatura concluída!</h1>
         <p className="text-sm text-slate-600 mb-5">
           Sua assinatura foi registrada com evidência digital ({dev.device} · {dev.os} · {dev.browser}).
         </p>

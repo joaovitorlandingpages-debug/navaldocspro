@@ -61,7 +61,7 @@ function VerifyPage() {
       <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
         <Card className="p-8 max-w-md text-center">
           <XCircle className="w-12 h-12 mx-auto text-rose-500 mb-3" />
-          <h1 className="font-black text-xl">Código não encontrado</h1>
+          <h1 className="font-semibold text-xl">Código não encontrado</h1>
           <p className="text-sm text-slate-500 mt-1">O código <code className="font-mono">{code}</code> não corresponde a nenhum documento.</p>
         </Card>
       </div>
@@ -83,7 +83,7 @@ function VerifyPage() {
               <Badge className="bg-emerald-100 text-emerald-700 border-0 gap-1 mb-1">
                 <CheckCircle2 className="w-3 h-3" /> Documento Válido
               </Badge>
-              <h1 className="text-xl md:text-2xl font-black">{request?.title ?? "Documento Assinado"}</h1>
+              <h1 className="text-xl md:text-2xl font-semibold">{request?.title ?? "Documento Assinado"}</h1>
             </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-3 text-sm">
@@ -100,7 +100,7 @@ function VerifyPage() {
         </Card>
 
         <Card className="p-6">
-          <h2 className="font-black text-lg mb-4">Participantes ({participants.length})</h2>
+          <h2 className="font-semibold text-lg mb-4">Participantes ({participants.length})</h2>
           <div className="space-y-3">
             {participants.map((p, i) => (
               <div key={i} className="border-l-4 border-emerald-500 pl-3 py-1">
@@ -119,7 +119,7 @@ function VerifyPage() {
         </Card>
 
         <Card className="p-6">
-          <h2 className="font-black text-lg mb-4 flex items-center gap-2"><Clock className="w-4 h-4" /> Timeline</h2>
+          <h2 className="font-semibold text-lg mb-4 flex items-center gap-2"><Clock className="w-4 h-4" /> Timeline</h2>
           <div className="space-y-2">
             {events.map((e, i) => (
               <div key={i} className="flex flex-col sm:flex-row sm:gap-3 text-sm border-l-2 border-slate-200 pl-3 sm:border-0 sm:pl-0">

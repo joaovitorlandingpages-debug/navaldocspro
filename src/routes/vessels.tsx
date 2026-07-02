@@ -239,7 +239,7 @@ function Vessels() {
           <div 
             key={i} 
             onClick={() => handleOpenDetails(v)}
-            className="bg-white p-5 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden cursor-pointer"
+            className="bg-white p-5 md:p-8 rounded-2xl md:rounded-2xl border border-slate-100 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden cursor-pointer"
 
           >
             <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-500 group-hover:scale-110">
@@ -255,7 +255,7 @@ function Vessels() {
                </button>
             </div>
             <div className="relative z-10">
-               <h3 className="text-xl font-black text-navy mb-1 uppercase tracking-tight group-hover:text-primary transition-colors">{v.name}</h3>
+               <h3 className="text-xl font-semibold text-navy mb-1 group-hover:text-primary transition-colors">{v.name}</h3>
                <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black mb-6">{v.vessel_type}</p>
                <div className="space-y-3 pt-6 border-t border-slate-50">
                    <div className="flex justify-between text-[11px] font-bold">
@@ -503,7 +503,7 @@ function Vessels() {
              {selectedVessel?.name?.charAt(0)}
            </div>
            <div>
-              <h3 className="text-2xl font-black text-navy uppercase tracking-tight">{selectedVessel?.name}</h3>
+              <h3 className="text-2xl font-semibold text-navy">{selectedVessel?.name}</h3>
               <div className="flex flex-wrap gap-4 mt-1 text-slate-500 text-xs font-bold items-center">
                 <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedVessel?.registration_number}</span>
                 <span className="h-1 w-1 bg-slate-200 rounded-full" />
@@ -568,7 +568,7 @@ function Vessels() {
               <TabsContent value="overview" className="space-y-6">
                  <div className="grid grid-cols-2 gap-8">
                     <div className="space-y-4">
-                       <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Detalhes Técnicos</h4>
+                       <h4 className="text-[10px] font-semibold text-slate-400">Detalhes Técnicos</h4>
                        <div className="space-y-3">
                           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center">
                              <span className="text-[9px] font-bold text-slate-400 uppercase">Motor</span>
@@ -581,7 +581,7 @@ function Vessels() {
                        </div>
                     </div>
                     <div className="space-y-4">
-                       <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Status Operacional</h4>
+                       <h4 className="text-[10px] font-semibold text-slate-400">Status Operacional</h4>
                        <div className="p-6 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center text-center">
                           <div className={`h-4 w-4 rounded-full mb-3 animate-pulse ${
                             selectedVessel?.status === 'Operacional' ? 'bg-green-500' : 'bg-amber-500'
@@ -630,7 +630,7 @@ function Vessels() {
 
               <TabsContent value="documents" className="space-y-8">
                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Documentação Técnica</h4>
+                    <h4 className="text-[10px] font-semibold text-slate-400">Documentação Técnica</h4>
                     <div className="flex gap-2">
                        <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-widest">{files?.length || 0} Anexos</Badge>
                     </div>
@@ -638,7 +638,7 @@ function Vessels() {
 
                  <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-6">
-                       <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                       <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
                           <div className="flex justify-between items-center mb-4">
                              <h5 className="text-xs font-black text-navy uppercase">Novo Anexo</h5>
                              <div className="flex gap-2">
@@ -686,7 +686,7 @@ function Vessels() {
                        ))}
                        
                        {(!files || files.length === 0) && (
-                         <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-[2rem]">
+                         <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-2xl">
                             <Ship className="h-12 w-12 text-slate-100 mx-auto mb-2" />
                             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhum documento</p>
                          </div>

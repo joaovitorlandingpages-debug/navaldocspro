@@ -78,7 +78,7 @@ function ExecutiveDashboard() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto p-6 md:p-8 pb-20">
       <div>
-        <h1 className="text-3xl md:text-4xl font-black text-navy uppercase tracking-tight">Dashboard Executivo</h1>
+        <h1 className="text-3xl md:text-4xl font-semibold text-navy">Dashboard Executivo</h1>
         <p className="text-slate-500 font-medium mt-2">KPIs estratégicos para liderança e tomada de decisão.</p>
       </div>
 
@@ -93,7 +93,7 @@ function ExecutiveDashboard() {
         ))}
       </div>
 
-      <Card className="p-8 bg-[#000B18] text-white border-none rounded-[2.5rem] relative overflow-hidden">
+      <Card className="p-8 bg-[#000B18] text-white border-none rounded-3xl relative overflow-hidden">
         <div className="absolute -right-20 -bottom-20 opacity-5">
           <Award className="h-72 w-72" />
         </div>

@@ -112,7 +112,7 @@ function AdminMasterPage() {
           <div className="flex items-center gap-3">
             <ShieldCheck className="h-7 w-7 text-amber-400" />
             <div>
-              <h1 className="text-lg font-black tracking-tight">PAINEL MASTER · NavalDocs Pro</h1>
+              <h1 className="text-lg font-semibold">PAINEL MASTER · NavalDocs Pro</h1>
               <p className="text-xs text-white/60 uppercase tracking-widest">Controle global SaaS</p>
             </div>
           </div>
@@ -181,7 +181,7 @@ function DebugTab() {
 
   return (
     <Card className="p-6">
-      <h3 className="text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2">
+      <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
         <ShieldCheck className="h-4 w-4 text-amber-500" /> Diagnóstico de Permissão
       </h3>
       <div className="divide-y border rounded-lg overflow-hidden">
@@ -1011,7 +1011,7 @@ function CleanupTab() {
 
       <Card className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-bold uppercase tracking-widest">Prévia</h4>
+          <h4 className="text-sm font-bold">Prévia</h4>
           <Button size="sm" variant="outline" onClick={() => preview.refetch()} disabled={preview.isFetching}>
             {preview.isFetching ? <Loader2 className="h-3 w-3 animate-spin" /> : "Recalcular"}
           </Button>

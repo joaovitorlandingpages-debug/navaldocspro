@@ -581,7 +581,7 @@ export function AssembleProcessWizard({
             <div className="h-16 w-16 mx-auto rounded-full bg-emerald-100 flex items-center justify-center">
               <Check className="h-8 w-8 text-emerald-600" />
             </div>
-            <h3 className="text-lg font-black text-navy">Pacote gerado com sucesso!</h3>
+            <h3 className="text-lg font-semibold text-navy">Pacote gerado com sucesso!</h3>
             <p className="text-sm text-slate-600">
               {previews.filter((p) => p.selected).length} documentos foram criados.
               Os documentos pendentes de engenharia foram marcados para revisão técnica.

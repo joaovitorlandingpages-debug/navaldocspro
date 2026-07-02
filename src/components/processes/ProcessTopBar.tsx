@@ -70,7 +70,7 @@ export function ProcessTopBar({ process, onChanged, automationReady, onFinalize,
               </Badge>
               {process.is_favorite && <Star className="h-3 w-3 text-amber-500 fill-amber-500" />}
             </div>
-            <h1 className="font-black text-navy text-sm md:text-base leading-tight truncate" title={title}>
+            <h1 className="font-semibold text-navy text-sm md:text-base leading-tight truncate" title={title}>
               {title}
             </h1>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-bold text-slate-500 mt-1">

@@ -79,7 +79,7 @@ function OperationsCenterPage() {
             <div className="h-10 w-10 bg-navy rounded-xl flex items-center justify-center shadow-lg">
               <Cpu className="h-6 w-6 text-primary" />
             </div>
-            <h1 className="text-3xl font-black text-navy tracking-tight uppercase">Central de Operações</h1>
+            <h1 className="text-3xl font-semibold text-navy">Central de Operações</h1>
           </div>
           <p className="text-slate-500 font-medium max-w-lg text-sm">
             Monitoramento em tempo real da produtividade, automações e gargalos operacionais.
@@ -99,14 +99,14 @@ function OperationsCenterPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, idx) => (
-          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group relative overflow-hidden rounded-[2rem] bg-white">
+          <Card key={idx} className="p-6 border-none shadow-sm hover:shadow-md transition-all group relative overflow-hidden rounded-2xl bg-white">
              <div className="flex justify-between items-start mb-4">
                 <div className="p-2.5 bg-slate-50 rounded-xl group-hover:bg-primary/5 transition-colors">
                    {stat.icon}
                 </div>
              </div>
              <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">{stat.label}</p>
-             <h3 className="text-2xl font-black text-navy mt-1">{stat.value}</h3>
+             <h3 className="text-2xl font-semibold text-navy mt-1">{stat.value}</h3>
              <p className="text-[9px] font-bold text-slate-400 mt-2 flex items-center gap-1">
                {stat.trend}
              </p>
@@ -126,7 +126,7 @@ function OperationsCenterPage() {
         {/* Pipeline Operacional (8 colunas) */}
         <div className="lg:col-span-8 space-y-6">
           <div className="flex items-center justify-between">
-             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-navy flex items-center gap-2">
+             <h2 className="text-sm font-semibold tracking-[0.2em] text-navy flex items-center gap-2">
                 <LayoutDashboard className="h-4 w-4 text-primary" /> Pipeline de Processos
              </h2>
              <span className="text-[10px] font-bold text-slate-400 uppercase">Atualizado agora</span>
@@ -137,14 +137,14 @@ function OperationsCenterPage() {
                Array(3).fill(0).map((_, i) => <Card key={i} className="h-24 bg-slate-50 animate-pulse rounded-3xl" />)
              ) : (
                processes?.map((process: any) => (
-                 <Card key={process.id} className="p-5 border-slate-100 hover:shadow-lg transition-all rounded-[2rem] bg-white group border-l-4 border-l-primary/10">
+                 <Card key={process.id} className="p-5 border-slate-100 hover:shadow-lg transition-all rounded-2xl bg-white group border-l-4 border-l-primary/10">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                        <div className="flex items-center gap-4">
                           <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-primary/5 transition-colors shrink-0">
                              <ClipboardList className="h-6 w-6 text-navy" />
                           </div>
                           <div className="min-w-0">
-                             <h4 className="text-sm font-black text-navy uppercase truncate">{process.vessels?.name || 'Sem Barco'}</h4>
+                             <h4 className="text-sm font-semibold text-navy truncate">{process.vessels?.name || 'Sem Barco'}</h4>
                              <p className="text-[10px] text-slate-500 font-bold uppercase truncate">{process.customers?.name || 'Sem Cliente'} • {process.type}</p>
                           </div>
                        </div>

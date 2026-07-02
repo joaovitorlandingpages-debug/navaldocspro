@@ -53,7 +53,7 @@ function ArchivedProcesses() {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <span className="text-[9px] font-mono font-black text-primary bg-primary/10 px-2 py-0.5 rounded uppercase">PROC-{p.id.substring(0, 6)}</span>
-                  <h3 className="font-black text-navy text-sm leading-tight mt-1 line-clamp-2">{p.title || p.process_type}</h3>
+                  <h3 className="font-semibold text-navy text-sm leading-tight mt-1 line-clamp-2">{p.title || p.process_type}</h3>
                 </div>
                 <ProcessActionsMenu process={p} state="archived" onChanged={fetchItems} />
               </div>

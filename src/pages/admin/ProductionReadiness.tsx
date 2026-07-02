@@ -37,7 +37,7 @@ export default function ProductionReadiness() {
           <Badge className="mb-2 bg-emerald-500 text-white hover:bg-emerald-600 border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-lg shadow-emerald-500/20 animate-bounce">
             FINAL PHASE: OPERATIONAL CERTIFICATION
           </Badge>
-          <h1 className="text-5xl font-black text-navy uppercase tracking-tighter leading-none">
+          <h1 className="text-5xl font-semibold text-navy leading-none">
             Production Readiness
           </h1>
           <p className="text-slate-500 font-bold text-lg mt-2 uppercase tracking-widest opacity-50">
@@ -58,7 +58,7 @@ export default function ProductionReadiness() {
            </div>
            <div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status Final</p>
-              <h4 className="text-lg font-black text-emerald-500 uppercase leading-tight">{classification}</h4>
+              <h4 className="text-lg font-semibold text-emerald-500 leading-tight">{classification}</h4>
               <p className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1 mt-1">
                  <ShieldCheck className="h-3 w-3" /> Certificação Ativa
               </p>
@@ -79,7 +79,7 @@ export default function ProductionReadiness() {
                <TrendingUp className="h-3 w-3 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-            <h3 className="text-2xl font-black text-navy mt-1">{stat.value}</h3>
+            <h3 className="text-2xl font-semibold text-navy mt-1">{stat.value}</h3>
             <p className="text-[9px] font-bold text-slate-400 mt-2 uppercase tracking-tight">{stat.detail}</p>
           </Card>
         ))}
@@ -108,7 +108,7 @@ export default function ProductionReadiness() {
                         {test.status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> : <Activity className="h-5 w-5 animate-pulse" />}
                       </div>
                       <div>
-                        <h4 className="text-sm font-black text-navy uppercase">{test.test_name}</h4>
+                        <h4 className="text-sm font-semibold text-navy">{test.test_name}</h4>
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
                           {test.status === 'completed' ? 'UX Validada' : 'Em Execução / Pendente'}
                         </p>
@@ -248,13 +248,13 @@ export default function ProductionReadiness() {
         </CardContent>
       </Card>
 
-      <div className="p-8 bg-emerald-50 border border-emerald-100 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="p-8 bg-emerald-50 border border-emerald-100 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-6">
-          <div className="h-16 w-16 bg-emerald-500 rounded-[1.5rem] flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <div className="h-16 w-16 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
             <Award className="h-8 w-8 text-white" />
           </div>
           <div>
-            <h3 className="text-xl font-black text-navy uppercase italic tracking-tighter">Certificação de Estabilidade Real</h3>
+            <h3 className="text-xl font-semibold text-navy italic">Certificação de Estabilidade Real</h3>
             <p className="text-emerald-700 font-bold text-[10px] uppercase tracking-widest">O sistema demonstrou resiliência total em fluxos operacionais críticos.</p>
           </div>
         </div>
@@ -276,7 +276,7 @@ export default function ProductionReadiness() {
         <CardContent className="p-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
             <div className="space-y-6">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <h4 className="text-[10px] font-semibold text-slate-400 flex items-center gap-2">
                 <Star className="h-3 w-3 text-amber-500" /> Momentos WOW (Alto Valor)
               </h4>
               <div className="space-y-3">
@@ -297,7 +297,7 @@ export default function ProductionReadiness() {
             </div>
 
             <div className="space-y-6">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <h4 className="text-[10px] font-semibold text-slate-400 flex items-center gap-2">
                 <ThumbsUp className="h-3 w-3 text-blue-500" /> Ganhos Operacionais Estimados
               </h4>
               <div className="space-y-4">
@@ -317,11 +317,11 @@ export default function ProductionReadiness() {
               </div>
             </div>
 
-            <div className="bg-navy text-white p-8 rounded-[2rem] relative overflow-hidden group">
+            <div className="bg-navy text-white p-8 rounded-2xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-125 transition-transform duration-700">
                 <Target className="h-20 w-20 text-primary" />
               </div>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 text-primary">Conclusão do Auditor</h4>
+              <h4 className="text-[10px] font-semibold tracking-[0.2em] mb-4 text-primary">Conclusão do Auditor</h4>
               <p className="text-[11px] font-medium leading-relaxed italic opacity-80 mb-6">
                 "O NavalDocs Pro transcende a ferramenta técnica para se tornar um hub de eficiência. A interface limpa combinada com automação agressiva gera um valor percebido imediato já no primeiro uso."
               </p>
@@ -338,7 +338,7 @@ export default function ProductionReadiness() {
           <div className="pt-8 border-t border-slate-100">
              <div className="flex items-center gap-3 mb-6">
                 <ShieldAlert className="h-5 w-5 text-amber-500" />
-                <h4 className="text-[11px] font-black text-navy uppercase tracking-widest">UX_BLOCKERS & VALIDAÇÃO DE COMPREENSÃO</h4>
+                <h4 className="text-[11px] font-semibold text-navy">UX_BLOCKERS & VALIDAÇÃO DE COMPREENSÃO</h4>
              </div>
              
              <div className="grid md:grid-cols-2 gap-6">

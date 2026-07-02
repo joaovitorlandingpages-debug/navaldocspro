@@ -90,7 +90,7 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
 
 
   return (
-    <div className={`fixed bottom-8 right-4 md:bottom-24 md:right-8 z-[80] w-[calc(100%-2rem)] max-w-sm bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden transition-all duration-300 mb-safe-area-inset-bottom lg:mb-0 ${isMinimized ? 'h-20' : 'h-auto max-h-[80vh] md:max-h-none'}`}>
+    <div className={`fixed bottom-8 right-4 md:bottom-24 md:right-8 z-[80] w-[calc(100%-2rem)] max-w-sm bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transition-all duration-300 mb-safe-area-inset-bottom lg:mb-0 ${isMinimized ? 'h-20' : 'h-auto max-h-[80vh] md:max-h-none'}`}>
        <div className="bg-navy p-6 text-white relative flex items-center justify-between">
           <div className="flex items-center gap-4">
              <div className="h-10 w-10 bg-primary/20 rounded-xl flex items-center justify-center relative">
@@ -98,7 +98,7 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
                 <div className="absolute -top-1 -right-1 h-3 w-3 bg-emerald-500 border-2 border-navy rounded-full" />
              </div>
              <div>
-                <h3 className="font-black uppercase tracking-widest text-[10px] text-primary">NavalDocs Assistant</h3>
+                <h3 className="font-semibold text-[10px] text-primary">NavalDocs Assistant</h3>
                 <h2 className="text-lg font-bold leading-none">Inteligência Operacional</h2>
              </div>
           </div>

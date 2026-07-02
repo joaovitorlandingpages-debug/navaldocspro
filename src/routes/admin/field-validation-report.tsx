@@ -66,7 +66,7 @@ export default function FieldValidationReport() {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-black uppercase tracking-tight text-navy">Relatório de Validação de Campo</h1>
+        <h1 className="text-3xl font-semibold text-navy">Relatório de Validação de Campo</h1>
         <p className="text-slate-500 font-medium">Análise operacional baseada no uso real de engenheiros navais.</p>
       </div>
 
@@ -102,10 +102,10 @@ export default function FieldValidationReport() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Bottlenecks */}
-        <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm">
+        <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm">
           <div className="flex items-center gap-2 mb-6">
             <BarChart3 className="h-5 w-5 text-navy" />
-            <h3 className="text-lg font-black uppercase tracking-tight text-navy">Gargalos Operacionais</h3>
+            <h3 className="text-lg font-semibold text-navy">Gargalos Operacionais</h3>
           </div>
           
           <div className="space-y-4">
@@ -130,10 +130,10 @@ export default function FieldValidationReport() {
         </div>
 
         {/* Real Errors Tracking */}
-        <div className="bg-navy rounded-[2.5rem] p-8 text-white shadow-xl">
+        <div className="bg-navy rounded-3xl p-8 text-white shadow-xl">
           <div className="flex items-center gap-2 mb-6 text-white/90">
             <MousePointer2 className="h-5 w-5" />
-            <h3 className="text-lg font-black uppercase tracking-tight">Cliques sem Resposta / Dúvidas</h3>
+            <h3 className="text-lg font-semibold">Cliques sem Resposta / Dúvidas</h3>
           </div>
           
           <div className="space-y-6">
@@ -178,7 +178,7 @@ function StatCard({ title, value, icon, trend, trendUp }: any) {
         )}
       </div>
       <div>
-        <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">{title}</h4>
+        <h4 className="text-[10px] font-semibold text-slate-400 mb-1">{title}</h4>
         <p className="text-2xl font-black text-navy tracking-tight">{value}</p>
       </div>
     </div>

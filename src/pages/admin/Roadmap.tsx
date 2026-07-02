@@ -33,7 +33,7 @@ export default function AdminRoadmap() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
-          <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Roadmap & Evolução</h1>
+          <h1 className="text-3xl font-semibold text-navy">Roadmap & Evolução</h1>
           <p className="text-slate-500 font-medium">Planejamento estratégico e visão de futuro do NavalDocs Pro.</p>
         </div>
         <Button className="bg-primary text-white gap-2 font-black uppercase text-[10px] tracking-widest px-6 h-12 rounded-2xl shadow-xl shadow-primary/20">

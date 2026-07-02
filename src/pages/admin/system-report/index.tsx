@@ -126,7 +126,7 @@ export default function SystemReport() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="relative group">
           <Badge className="mb-2 bg-primary text-white hover:bg-primary/90 border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-lg shadow-primary/20 animate-bounce">NAVALDOCS ENTERPRISE EDITION SEALED</Badge>
-          <h1 className="text-5xl font-black text-navy uppercase tracking-tighter leading-none">Enterprise Quality Seal</h1>
+          <h1 className="text-5xl font-semibold text-navy leading-none">Enterprise Quality Seal</h1>
           <p className="text-slate-500 font-bold text-lg mt-2 uppercase tracking-widest opacity-50">Auditoria Final de Produção Realizada</p>
         </div>
         
@@ -200,7 +200,7 @@ export default function SystemReport() {
              </div>
              <div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Readiness Score</p>
-                <h4 className="text-lg font-black text-navy uppercase leading-tight">Produção Pronta</h4>
+                <h4 className="text-lg font-semibold text-navy leading-tight">Produção Pronta</h4>
                 <p className="text-[10px] font-bold text-emerald-500 uppercase flex items-center gap-1 mt-1">
                    <CheckCircle2 className="h-3 w-3" /> Go Live OK
                 </p>
@@ -499,7 +499,7 @@ export default function SystemReport() {
              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 px-4">
                 <div className="text-left">
                    <Badge className="bg-primary text-white border-none font-black text-[8px] px-3 py-1 mb-3 animate-pulse">OFFICIAL CERTIFICATION</Badge>
-                   <h2 className="text-2xl font-black text-white uppercase tracking-tighter">NavalDocs Pro Enterprise Sealed</h2>
+                   <h2 className="text-2xl font-semibold text-white">NavalDocs Pro Enterprise Sealed</h2>
                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Plataforma validada para operação real em escala nacional.</p>
                 </div>
                 <div className="flex items-center gap-4">

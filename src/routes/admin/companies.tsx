@@ -82,7 +82,7 @@ function AdminCompanies() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Gestão de Empresas</h1>
+          <h1 className="text-3xl font-semibold text-navy">Gestão de Empresas</h1>
           <p className="text-slate-500 font-medium">Controle de instâncias e clientes corporativos.</p>
         </div>
         <Button className="bg-primary text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:opacity-90 shadow-lg shadow-primary/20">
@@ -90,7 +90,7 @@ function AdminCompanies() {
         </Button>
       </div>
 
-      <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden">
+      <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
         <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
            <div className="relative flex-grow max-w-md">
               <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
@@ -177,10 +177,10 @@ function AdminCompanies() {
         </div>
       </Card>
 
-      <div className="p-8 bg-navy text-white rounded-[3rem] shadow-xl relative overflow-hidden group">
+      <div className="p-8 bg-navy text-white rounded-3xl shadow-xl relative overflow-hidden group">
          <ShieldCheck className="absolute -right-4 -bottom-4 h-48 w-48 text-white/5 group-hover:scale-110 transition-all duration-500" />
          <div className="relative z-10">
-            <h3 className="text-xl font-bold mb-4 uppercase tracking-tighter text-primary">Auditoria de Instâncias</h3>
+            <h3 className="text-xl font-bold mb-4 text-primary">Auditoria de Instâncias</h3>
             <p className="text-sm opacity-60 max-w-2xl leading-relaxed">
                Cada empresa possui sua própria estrutura isolada de banco de dados e buckets de armazenamento. 
                O painel master permite a supervisão técnica sem comprometer a privacidade dos dados navais dos clientes.

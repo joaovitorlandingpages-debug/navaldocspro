@@ -85,7 +85,7 @@ function BenchmarkPage() {
             <div className="h-10 w-10 bg-navy rounded-2xl flex items-center justify-center">
               <BarChart3 className="h-5 w-5 text-primary" />
             </div>
-            <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Benchmark Setorial</h1>
+            <h1 className="text-3xl font-semibold text-navy">Benchmark Setorial</h1>
           </div>
           <p className="text-slate-500 font-medium">Compare-se com o mercado de engenharia naval brasileira — 100% anônimo.</p>
         </div>

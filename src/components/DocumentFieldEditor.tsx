@@ -88,7 +88,7 @@ export function DocumentFieldEditor({ templateId }: DocumentFieldEditorProps) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold text-white uppercase tracking-tight">Campos Dinâmicos</h3>
+        <h3 className="text-lg font-bold text-white">Campos Dinâmicos</h3>
         <Button onClick={addField} size="sm" className="bg-white/5 hover:bg-white/10 text-white rounded-xl border border-white/10 gap-2">
           <Plus className="h-4 w-4" /> Adicionar Campo
         </Button>

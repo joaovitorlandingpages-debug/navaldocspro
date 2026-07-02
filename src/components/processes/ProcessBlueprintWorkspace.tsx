@@ -337,13 +337,13 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
       <ProcessTimelineMacro stages={timelineStages} progress={stats.progress} />
 
       {/* Header operacional */}
-      <div className="bg-gradient-to-br from-navy to-slate-900 text-white rounded-[2rem] p-6 md:p-8 shadow-xl shadow-navy/20">
+      <div className="bg-gradient-to-br from-navy to-slate-900 text-white rounded-2xl p-6 md:p-8 shadow-xl shadow-navy/20">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:justify-between">
           <div className="min-w-0 space-y-3">
             <Badge className="bg-white/10 text-white border-none text-[10px] font-black uppercase tracking-widest">
               <Sparkles className="h-3 w-3 mr-1" /> Workspace Inteligente
             </Badge>
-            <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight truncate">
+            <h2 className="text-xl md:text-2xl font-semibold truncate">
               {process?.title || process?.process_type || "Processo"}
             </h2>
             <div className="flex flex-wrap gap-3 text-xs">
@@ -382,11 +382,11 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
       </div>
 
       {/* CTAs rápidos pós-criação */}
-      <div className="bg-white p-5 md:p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+      <div className="bg-white p-5 md:p-6 rounded-2xl border border-slate-100 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="min-w-0">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Próximos passos</p>
-            <h3 className="text-base md:text-lg font-black text-navy uppercase tracking-tight">
+            <h3 className="text-base md:text-lg font-semibold text-navy">
               O que você quer fazer agora?
             </h3>
             <p className="text-xs text-slate-500 mt-1 font-medium">
@@ -449,9 +449,9 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
       </div>
 
       {/* Painel de pendências */}
-      <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+      <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-navy flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-500" /> Pendências
           </h3>
           {readyForDossier && (
@@ -481,8 +481,8 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
       />
 
       {/* Checklist inteligente */}
-      <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-        <h3 className="text-lg font-black text-navy uppercase tracking-tight mb-4 flex items-center gap-2">
+      <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm">
+        <h3 className="text-lg font-semibold text-navy mb-4 flex items-center gap-2">
           <CheckCircle2 className="h-5 w-5 text-primary" /> Checklist inteligente
         </h3>
         <div className="grid md:grid-cols-2 gap-2">
@@ -498,9 +498,9 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
       </div>
 
       {/* Documentos do processo */}
-      <div id="blueprint-documentos" className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm scroll-mt-24">
+      <div id="blueprint-documentos" className="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm scroll-mt-24">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <h3 className="text-lg font-black text-navy uppercase tracking-tight flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-navy flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" /> Documentos do processo
           </h3>
           <div className="flex items-center gap-2">
@@ -684,7 +684,7 @@ function SmartChecklistSections({
     <div className="space-y-6">
       {mandatory.length > 0 && (
         <section>
-          <h4 className="text-[11px] font-black uppercase tracking-widest text-red-600 mb-3 flex items-center gap-1.5">
+          <h4 className="text-[11px] font-semibold text-red-600 mb-3 flex items-center gap-1.5">
             <ShieldCheck className="h-3.5 w-3.5" /> Documentos obrigatórios ({mandatory.length})
           </h4>
           {renderGroup(mandatory)}
@@ -693,7 +693,7 @@ function SmartChecklistSections({
 
       {conditional.length > 0 && (
         <section>
-          <h4 className="text-[11px] font-black uppercase tracking-widest text-violet-600 mb-3 flex items-center gap-1.5">
+          <h4 className="text-[11px] font-semibold text-violet-600 mb-3 flex items-center gap-1.5">
             <GitBranch className="h-3.5 w-3.5" /> Documentos condicionais ({conditional.length})
           </h4>
           {renderGroup(conditional)}

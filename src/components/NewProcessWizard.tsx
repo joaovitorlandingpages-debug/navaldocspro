@@ -1597,7 +1597,7 @@ function AdditionalModals({
                   {isOcrProcessing ? <Loader2 className="h-8 w-8 animate-spin" /> : <Upload className="h-8 w-8" />}
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-navy uppercase">Scanner de Identidade IA</h4>
+                  <h4 className="text-sm font-bold text-navy">Scanner de Identidade IA</h4>
                   <p className="text-[10px] text-slate-400 font-medium max-w-[200px] mt-1">Envie CNH ou RG para preenchimento automático ultra-rápido.</p>
                 </div>
                 <input 
@@ -1839,7 +1839,7 @@ function AdditionalModals({
                   {isOcrProcessing ? <Loader2 className="h-8 w-8 animate-spin" /> : <Upload className="h-8 w-8" />}
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-navy uppercase">IA Scanner TIE/TIEM</h4>
+                  <h4 className="text-sm font-bold text-navy">IA Scanner TIE/TIEM</h4>
                   <p className="text-[10px] text-slate-400 font-medium max-w-[200px] mt-1">Envie o documento da embarcação para extração automática.</p>
                 </div>
                 <input 

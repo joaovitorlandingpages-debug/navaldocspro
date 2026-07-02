@@ -135,7 +135,7 @@ export default function DocumentCenter() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-navy tracking-tight uppercase flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-navy flex items-center gap-3">
             <Database className="h-8 w-8 text-primary" /> Central Documental
           </h1>
           <p className="text-muted-foreground font-medium">Gestão profissional de documentos, assinaturas e versões.</p>
@@ -275,14 +275,14 @@ export default function DocumentCenter() {
           ))}
 
           {filteredDocs?.length === 0 && (
-            <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-[3rem]">
+            <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-3xl">
               <Database className="h-12 w-12 text-slate-100 mx-auto mb-4" />
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhum documento encontrado</p>
         </div>
       )}
 
       {!isLoading && totalCount > pageSize && (
-        <div className="mt-8 p-6 bg-white border border-slate-100 rounded-[2rem] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+        <div className="mt-8 p-6 bg-white border border-slate-100 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
           <span>Mostrando {documents?.length} de {totalCount} documentos</span>
           <div className="flex gap-2">
             <Button 
@@ -341,7 +341,7 @@ export default function DocumentCenter() {
               </div>
               <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm text-left">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Documento Selecionado</p>
-                <h4 className="text-xs font-black text-navy uppercase tracking-tight truncate">{selectedDoc.document_type}</h4>
+                <h4 className="text-xs font-semibold text-navy truncate">{selectedDoc.document_type}</h4>
                 <div className="mt-2 flex items-center gap-2">
                   <Badge variant="outline" className="text-[8px] font-black uppercase border-slate-200">{selectedDoc.id.substring(0, 8)}</Badge>
                   {getStatusBadge(selectedDoc.status)}

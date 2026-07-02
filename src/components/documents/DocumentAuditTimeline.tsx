@@ -34,7 +34,7 @@ export function DocumentAuditTimeline({ documentId }: DocumentAuditTimelineProps
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
         <Clock className="h-4 w-4 text-primary" />
-        <h3 className="text-xs font-black uppercase tracking-widest text-navy">Histórico de Auditoria</h3>
+        <h3 className="text-xs font-semibold text-navy">Histórico de Auditoria</h3>
       </div>
 
       <div className="relative space-y-6 before:absolute before:inset-0 before:ml-4 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-slate-200 before:via-slate-200 before:to-transparent">

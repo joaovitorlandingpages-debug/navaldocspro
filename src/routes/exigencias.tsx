@@ -38,7 +38,7 @@ function ExigenciasPage() {
           <div className="h-10 w-10 bg-amber-500 rounded-2xl flex items-center justify-center">
             <FileWarning className="h-5 w-5 text-white" />
           </div>
-          <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Auto-resposta a Exigências</h1>
+          <h1 className="text-3xl font-semibold text-navy">Auto-resposta a Exigências</h1>
           <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase tracking-widest">IA</Badge>
         </div>
         <p className="text-slate-500 font-medium">Cole o texto da exigência da Capitania. IA classifica e sugere a resposta.</p>

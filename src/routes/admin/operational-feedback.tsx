@@ -66,7 +66,7 @@ export default function OperationalFeedback() {
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-3xl font-black uppercase tracking-tight text-navy">Feedback Operacional</h1>
+          <h1 className="text-3xl font-semibold text-navy">Feedback Operacional</h1>
           <p className="text-slate-500 font-medium">Monitoramento em tempo real de dificuldades e sugestões dos usuários.</p>
         </div>
         <div className="flex gap-2">

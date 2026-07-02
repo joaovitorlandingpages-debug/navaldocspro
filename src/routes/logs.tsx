@@ -38,7 +38,7 @@ function LogsPage() {
               <div className="h-10 w-10 bg-navy rounded-xl flex items-center justify-center shadow-lg border border-white/10">
                  <History className="h-6 w-6 text-primary" />
               </div>
-              <h2 className="text-3xl font-black tracking-tight text-navy uppercase">Logs de Atividade</h2>
+              <h2 className="text-3xl font-semibold text-navy">Logs de Atividade</h2>
             </div>
             <p className="text-slate-500 font-medium text-sm">Registro histórico de todas as operações e acessos no NavalDocs Pro.</p>
           </div>
@@ -51,11 +51,11 @@ function LogsPage() {
 
        <div className="grid lg:grid-cols-12 gap-8">
           <div className="lg:col-span-12">
-             <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden bg-white">
+             <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden bg-white">
                 <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/30">
                    <div className="flex items-center gap-2">
                       <Zap className="h-4 w-4 text-primary" />
-                      <h3 className="text-xs font-black uppercase tracking-widest text-navy">Fluxo de Eventos (Live)</h3>
+                      <h3 className="text-xs font-semibold text-navy">Fluxo de Eventos (Live)</h3>
                    </div>
                    <div className="relative w-full md:max-w-xs">
                       <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />

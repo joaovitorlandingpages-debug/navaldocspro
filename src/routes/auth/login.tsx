@@ -73,7 +73,7 @@ function LoginComponent() {
           <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/20 mb-4">
             <Anchor className="text-white w-10 h-10" />
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">NavalDocs Pro</h1>
+          <h1 className="text-2xl font-bold text-white">NavalDocs Pro</h1>
           <p className="text-blue-400/60 text-sm font-medium uppercase tracking-widest mt-1">Enterprise Edition</p>
         </div>
 

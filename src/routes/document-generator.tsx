@@ -260,7 +260,7 @@ function DocumentGenerator() {
             <ArrowLeft className="h-6 w-6 text-navy" />
           </Button>
           <div>
-            <h1 className="text-2xl md:text-3xl font-black text-navy tracking-tight uppercase">Gerador Profissional</h1>
+            <h1 className="text-2xl md:text-3xl font-semibold text-navy">Gerador Profissional</h1>
             <p className="text-muted-foreground font-medium italic font-mono text-[10px] md:text-xs uppercase tracking-widest">
               Selecione vários modelos · Gere todos de uma vez
             </p>
@@ -294,9 +294,9 @@ function DocumentGenerator() {
 
       <div className="grid lg:grid-cols-12 gap-8">
         <div className="lg:col-span-5 space-y-8">
-          <Card className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm space-y-8 bg-white relative">
+          <Card className="p-8 rounded-3xl border-slate-100 shadow-sm space-y-8 bg-white relative">
             <div className="space-y-6 relative z-10">
-              <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-navy flex items-center gap-2">
                 <Settings2 className="h-4 w-4 text-red-500" /> Configuração Master
               </h3>
 
@@ -441,7 +441,7 @@ function DocumentGenerator() {
 
             <div className="pt-8 border-t border-slate-50 space-y-6 relative z-10">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-navy flex items-center gap-2">
                   <FileText className="h-4 w-4 text-emerald-500" /> Diagnóstico de Dados
                 </h3>
                 <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter bg-emerald-50 text-emerald-600 border-none">
@@ -498,11 +498,11 @@ function DocumentGenerator() {
                />
             </div>
           ) : (
-            <Card className="h-full min-h-[600px] border-slate-100 border-dashed bg-slate-50/30 flex flex-col items-center justify-center p-12 text-center rounded-[2.5rem]">
+            <Card className="h-full min-h-[600px] border-slate-100 border-dashed bg-slate-50/30 flex flex-col items-center justify-center p-12 text-center rounded-3xl">
               <div className="bg-white p-8 rounded-full shadow-xl shadow-slate-200/50 mb-8 animate-bounce">
                 <LayoutTemplate className="h-16 w-16 text-slate-200" />
               </div>
-              <h3 className="text-2xl font-black text-navy uppercase tracking-tight mb-3">Selecione um Modelo</h3>
+              <h3 className="text-2xl font-semibold text-navy mb-3">Selecione um Modelo</h3>
               <p className="text-slate-400 font-medium max-w-sm leading-relaxed">
                 Escolha um ou mais modelos à esquerda para visualizar o preenchimento automático e realizar a revisão profissional.
               </p>

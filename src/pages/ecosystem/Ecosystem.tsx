@@ -12,7 +12,7 @@ export default function EcosystemPage() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-black text-navy uppercase tracking-tight">Parcerias & Ecossistema</h1>
+          <h1 className="text-3xl font-semibold text-navy">Parcerias & Ecossistema</h1>
           <p className="text-slate-500 font-medium">Conecte-se a estaleiros, vistorias e serviços navais.</p>
         </div>
         <Button className="bg-primary hover:bg-primary/90 font-black uppercase text-xs tracking-widest">
@@ -41,13 +41,13 @@ export default function EcosystemPage() {
             { name: "Marinha Serviços", type: "Vistoriador", icon: Shield },
             { name: "Engenharia Naval Pro", type: "Engenheiro", icon: Users2 },
           ].map((partner, i) => (
-            <Card key={i} className="p-6 border-slate-100 shadow-sm hover:shadow-xl transition-all group rounded-[2rem] overflow-hidden bg-white">
+            <Card key={i} className="p-6 border-slate-100 shadow-sm hover:shadow-xl transition-all group rounded-2xl overflow-hidden bg-white">
               <div className="flex items-center gap-4 mb-6">
                 <div className="h-14 w-14 bg-slate-50 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform border border-slate-100">
                   <partner.icon className="h-7 w-7" />
                 </div>
                 <div>
-                  <h3 className="font-black text-navy uppercase text-sm tracking-tight">{partner.name}</h3>
+                  <h3 className="font-semibold text-navy text-sm">{partner.name}</h3>
                   <Badge variant="outline" className="text-[8px] font-black border-primary/20 text-primary bg-primary/5 uppercase tracking-widest px-2">{partner.type}</Badge>
                 </div>
               </div>
@@ -69,8 +69,8 @@ export default function EcosystemPage() {
 
       {activeTab === "teams" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in slide-in-from-bottom-4 duration-500">
-          <Card className="p-8 border-slate-100 shadow-sm rounded-[2.5rem]">
-            <h3 className="font-black text-navy uppercase text-xs tracking-[0.2em] mb-6 flex items-center gap-2 italic">
+          <Card className="p-8 border-slate-100 shadow-sm rounded-3xl">
+            <h3 className="font-semibold text-navy text-xs tracking-[0.2em] mb-6 flex items-center gap-2 italic">
               <Users className="h-5 w-5 text-primary" /> Gestão de Departamentos
             </h3>
             <div className="space-y-4">
@@ -93,10 +93,10 @@ export default function EcosystemPage() {
             </div>
           </Card>
 
-          <Card className="p-8 bg-navy text-white border-none rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+          <Card className="p-8 bg-navy text-white border-none rounded-3xl shadow-2xl relative overflow-hidden group">
             <Activity className="absolute -right-10 -bottom-10 h-64 w-64 text-primary opacity-5 group-hover:scale-110 transition-transform duration-1000" />
             <div className="relative z-10">
-              <h3 className="text-xl font-black uppercase tracking-tighter italic mb-4">Escala de <span className="text-primary">Equipes</span></h3>
+              <h3 className="text-xl font-semibold italic mb-4">Escala de <span className="text-primary">Equipes</span></h3>
               <p className="text-sm text-slate-400 font-medium leading-relaxed mb-8">
                 Otimize seu fluxo operacional dividindo responsabilidades por departamentos. Permissões granulares garantem a segurança dos dados.
               </p>
@@ -129,12 +129,12 @@ export default function EcosystemPage() {
               <Card key={i} className="p-6 border-slate-100 shadow-sm bg-white rounded-3xl">
                 <stat.icon className="h-5 w-5 text-primary mb-3" />
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                <h4 className="text-xl font-black text-navy">{stat.val}</h4>
+                <h4 className="text-xl font-semibold text-navy">{stat.val}</h4>
               </Card>
             ))}
           </div>
-          <Card className="p-8 border-slate-100 shadow-sm rounded-[2.5rem]">
-            <h3 className="font-black text-navy uppercase text-xs tracking-[0.2em] mb-6 flex items-center gap-2 italic">
+          <Card className="p-8 border-slate-100 shadow-sm rounded-3xl">
+            <h3 className="font-semibold text-navy text-xs tracking-[0.2em] mb-6 flex items-center gap-2 italic">
               <Globe className="h-5 w-5 text-primary" /> Workflow Colaborativo Ativo
             </h3>
             <div className="divide-y divide-slate-50">

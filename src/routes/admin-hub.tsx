@@ -117,7 +117,7 @@ function AdminHub() {
               <ShieldCheck className="h-6 w-6 text-amber-400" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight truncate">Admin Hub</h1>
+              <h1 className="text-2xl sm:text-3xl font-semibold truncate">Admin Hub</h1>
               <p className="text-xs sm:text-sm text-slate-400 truncate">
                 Central administrativa unificada — {isGlobal ? 'Master Global' : isMaster ? 'Master' : 'Admin'}
               </p>
@@ -139,7 +139,7 @@ function AdminHub() {
               <section key={section.title}>
                 <div className="flex items-center gap-3 mb-4">
                   <div className={`h-1.5 w-12 rounded-full bg-gradient-to-r ${section.color}`} />
-                  <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300">{section.title}</h2>
+                  <h2 className="text-[11px] font-semibold tracking-[0.2em] text-slate-300">{section.title}</h2>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {items.map((item) => (
