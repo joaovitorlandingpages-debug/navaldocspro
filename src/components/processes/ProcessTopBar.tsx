@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ProcessActionsMenu } from "./ProcessActionsMenu";
 import { toast } from "sonner";
 import { toggleFavoriteProcess, copyShareLink } from "@/services/processLifecycle";
+import { translateTerm } from "@/lib/naval-terms";
 
 interface Props {
   process: any;
