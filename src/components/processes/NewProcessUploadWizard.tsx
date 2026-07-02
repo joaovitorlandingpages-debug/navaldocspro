@@ -157,6 +157,8 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
   // Sugestões extraídas do OCR (para criar inline).
   const [suggestedCustomer, setSuggestedCustomer] = useState<{ name?: string; cpf?: string } | null>(null);
   const [suggestedVessel, setSuggestedVessel] = useState<{ name?: string; registration?: string } | null>(null);
+  const [customerModalOpen, setCustomerModalOpen] = useState(false);
+  const [vesselModalOpen, setVesselModalOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
