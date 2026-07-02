@@ -13,6 +13,7 @@ interface Props {
   automationReady?: boolean;
   onFinalize?: () => void;
   onEdit?: () => void;
+  pendingDossierItems?: string[];
 }
 
 function statusLabel(status?: string | null) {
