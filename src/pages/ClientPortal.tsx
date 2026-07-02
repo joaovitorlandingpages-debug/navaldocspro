@@ -49,7 +49,7 @@ export default function ClientPortal() {
 
       const { data, error } = await supabase
         .from("processes")
-        .select("*, vessels(name), companies(name, email, phone)")
+        .select("*, vessels:vessels!processes_vessel_id_fkey(name), companies(name, email, phone)")
         .eq("customer_id", customer.id)
         .order('created_at', { ascending: false });
       

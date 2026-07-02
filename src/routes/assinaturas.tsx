@@ -48,7 +48,7 @@ function AssinaturasPage() {
       if (procIds.length) {
         const { data: procs } = await supabase
           .from("processes")
-          .select("id, process_type, customer:customers(id,name), vessel:vessels(id,name)")
+          .select("id, process_type, customer:customers!processes_customer_id_fkey(id,name), vessel:vessels!processes_vessel_id_fkey(id,name)")
           .in("id", procIds);
         for (const p of procs ?? []) procMap[p.id] = p;
       }

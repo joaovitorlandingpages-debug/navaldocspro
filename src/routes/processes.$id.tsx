@@ -147,8 +147,8 @@ function ProcessDetail() {
         .from('processes')
         .select(`
           *,
-          customer:customers(id, name, cpf_cnpj, email),
-          vessel:vessels(id, name, registration_number, vessel_type, current_owner_name, current_owner_cpf_cnpj, length, boca, pontal, material, capacity)
+          customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email),
+          vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, vessel_type, current_owner_name, current_owner_cpf_cnpj, length, boca, pontal, material, capacity)
         `)
         .eq('id', id)
         .maybeSingle();

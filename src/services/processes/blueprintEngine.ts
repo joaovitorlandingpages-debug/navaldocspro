@@ -73,7 +73,7 @@ export async function previewProcessBlueprint(
 async function loadContext(processId: string): Promise<ProcessRuleContext | null> {
   const { data, error } = await supabase
     .from("processes")
-    .select("*, customer:customers(*), vessel:vessels(*)")
+    .select("*, customer:customers!processes_customer_id_fkey(*), vessel:vessels!processes_vessel_id_fkey(*)")
     .eq("id", processId)
     .maybeSingle();
   if (error || !data) return null;

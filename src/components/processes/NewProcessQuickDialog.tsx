@@ -339,12 +339,6 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
         .select("id").single();
       if (error) throw error;
       const processId = (data as any).id as string;
-      const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
-
-      notifyProcessesChanged(visibleProcess);
-      setCreatedProcessId(processId);
-      onClose();
-      navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "overview" } });
 
       let blueprintWarning = false;
       try {
@@ -357,6 +351,10 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
         console.warn("Blueprint materialize falhou (não bloqueia):", e);
         blueprintWarning = true;
       }
+
+      const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
+      notifyProcessesChanged(visibleProcess);
+      setCreatedProcessId(processId);
 
       if (blueprintWarning) {
         toast.warning("Processo criado, mas o checklist automático falhou. Você pode adicionar documentos manualmente no workspace.");
@@ -390,6 +388,10 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
           console.warn("Batch pós-criação falhou:", e);
         }
       }
+
+      notifyProcessesChanged(visibleProcess);
+      onClose();
+      navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "overview" } });
 
     } catch (e: any) {
       toast.error("Erro ao criar processo: " + (e?.message || e));
