@@ -301,6 +301,5 @@ h1.uppercase, h2.uppercase, h3.uppercase {
   --tw-shadow-color: color-mix(in oklab, var(--navy) 18%, transparent) !important;
 }
 
-  text-transform: none !important;
-}
+
 
