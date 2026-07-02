@@ -650,7 +650,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:justify-between border-t pt-3 mt-2">
+        <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-between border-t pt-3 mt-2 shrink-0">
           {step === 1 ? (
             <>
               {onOpenAdvanced ? (
