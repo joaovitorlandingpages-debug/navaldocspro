@@ -322,6 +322,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       if (error) throw error;
       const processId = (data as any).id as string;
 
+      let blueprintWarning = false;
       try {
         const result = await materializeProcessBlueprint(processId, {
           excludeTemplateIds: Array.from(excluded),
@@ -330,10 +331,19 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
         console.log("[BLUEPRINT_MATERIALIZED]", result);
       } catch (e) {
         console.warn("Blueprint materialize falhou (não bloqueia):", e);
+        blueprintWarning = true;
       }
 
-      toast.success(`Processo criado com ${selectedCount} documento(s) no checklist.`);
+      // Notifica listas abertas (/processes, dashboards) para refetch imediato.
+      try { window.dispatchEvent(new CustomEvent("processes:changed", { detail: { id: processId } })); } catch {}
+
+      if (blueprintWarning) {
+        toast.warning("Processo criado, mas o checklist automático falhou. Você pode adicionar documentos manualmente no workspace.");
+      } else {
+        toast.success(`Processo criado com ${selectedCount} documento(s) no checklist.`);
+      }
       setCreatedProcessId(processId);
+
 
       // Gerar agora? Dispara batch com base no checklist recém-materializado.
       if (generateNow && selectedCount > 0) {
