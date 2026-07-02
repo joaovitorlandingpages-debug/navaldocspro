@@ -2,7 +2,8 @@
  * Sprint 1 — Item 3
  * WhatsMissingCard: lista compacta e humana do que falta para concluir o processo.
  */
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, Circle, AlertCircle, Signature, Upload, FileText, Loader2 } from "lucide-react";
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function WhatsMissingCard({ processId, onOpenTab }: Props) {
+  const queryClient = useQueryClient();
   const { data: checklist = [], isLoading } = useQuery({
     queryKey: ["missing-checklist", processId],
     queryFn: async () => {
@@ -24,6 +26,20 @@ export function WhatsMissingCard({ processId, onOpenTab }: Props) {
     },
     enabled: !!processId,
   });
+
+  useEffect(() => {
+    if (!processId) return;
+    const invalidate = () => {
+      queryClient.invalidateQueries({ queryKey: ["missing-checklist", processId] });
+    };
+    const channel = supabase
+      .channel(`whats-missing-${processId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "document_checklists", filter: `process_id=eq.${processId}` }, invalidate)
+      .on("postgres_changes", { event: "*", schema: "public", table: "generated_documents", filter: `process_id=eq.${processId}` }, invalidate)
+      .on("postgres_changes", { event: "*", schema: "public", table: "signature_requests", filter: `process_id=eq.${processId}` }, invalidate)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [processId, queryClient]);
 
   const mandatory = checklist.filter((c: any) => c.is_mandatory);
   const total = mandatory.length;
