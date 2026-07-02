@@ -23,7 +23,7 @@ function SystemMonitor() {
 
   if (loading) return null;
   if (profile?.role !== 'admin_master_global' && profile?.email !== 'joaovitor.f0725@gmail.com') {
-    return <Navigate to="/dashboard-v2" />;
+    return <Navigate to="/dashboard" />;
   }
 
   const services = [
