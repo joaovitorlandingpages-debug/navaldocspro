@@ -390,7 +390,10 @@ serve(async (req) => {
       // Em Transferência o "owner" é o comprador (Quick Dialog salva o comprador
       // como customer_id). Aliases duplos garantem placeholders de ambos os fluxos.
       const roleAlias: Record<string, string[]> = {
-        owner: ['proprietario', 'comprador', 'cliente'],
+        // Em Procuração o proprietário costuma ser o outorgante; em Transferência
+        // ele é o comprador. Aliases duplos cobrem os dois fluxos sem exigir
+        // que o usuário replique o participante em vários papéis.
+        owner: ['proprietario', 'comprador', 'cliente', 'outorgante'],
         buyer: ['comprador', 'proprietario', 'cliente'],
         seller: ['vendedor'],
         representative: ['representante'],
@@ -401,6 +404,7 @@ serve(async (req) => {
         witness: ['testemunha'],
         applicant: ['requerente'],
       }
+
 
       for (const p of (participants ?? []) as any[]) {
         const c = p.customers
