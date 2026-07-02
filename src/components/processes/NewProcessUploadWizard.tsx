@@ -157,6 +157,8 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
   // Sugestões extraídas do OCR (para criar inline).
   const [suggestedCustomer, setSuggestedCustomer] = useState<{ name?: string; cpf?: string } | null>(null);
   const [suggestedVessel, setSuggestedVessel] = useState<{ name?: string; registration?: string } | null>(null);
+  const [customerModalOpen, setCustomerModalOpen] = useState(false);
+  const [vesselModalOpen, setVesselModalOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -316,32 +318,33 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
     }
   }
 
-  async function createCustomerFromSuggestion() {
-    if (!profile?.company_id) return;
-    const name = window.prompt("Nome do cliente:", suggestedCustomer?.name || "")?.trim();
-    if (!name) return;
-    const cpf = window.prompt("CPF/CNPJ (opcional):", suggestedCustomer?.cpf || "")?.trim() || null;
+  async function createCustomerInline(payload: {
+    name: string; cpf_cnpj?: string | null; phone?: string | null;
+    email?: string | null; city?: string | null; state?: string | null;
+  }) {
+    if (!profile?.company_id) throw new Error("Empresa não vinculada.");
     const { data, error } = await supabase.from("customers")
-      .insert({ company_id: profile.company_id, name, cpf_cnpj: cpf })
+      .insert({ company_id: profile.company_id, ...payload } as any)
       .select("id,name,cpf_cnpj").single();
-    if (error) { toast.error("Erro: " + error.message); return; }
+    if (error) throw new Error(error.message);
     setCustomers((prev) => [...prev, data as any].sort((a, b) => a.name.localeCompare(b.name)));
     setCustomerId((data as any).id);
-    toast.success(`Cliente "${name}" criado.`);
+    toast.success(`Cliente "${payload.name}" criado.`);
   }
 
-  async function createVesselFromSuggestion() {
-    if (!profile?.company_id) return;
-    if (!customerId) { toast.error("Selecione o cliente antes."); return; }
-    const name = window.prompt("Nome da embarcação:", suggestedVessel?.name || "")?.trim();
-    if (!name) return;
+  async function createVesselInline(payload: {
+    name: string; vessel_type?: string | null; registration_number?: string | null;
+    hull_number?: string | null; engine?: string | null; construction_year?: number | null;
+  }) {
+    if (!profile?.company_id) throw new Error("Empresa não vinculada.");
+    if (!customerId) throw new Error("Selecione o cliente antes.");
     const { data, error } = await supabase.from("vessels")
-      .insert({ company_id: profile.company_id, customer_id: customerId, name })
+      .insert({ company_id: profile.company_id, customer_id: customerId, ...payload } as any)
       .select("id,name,customer_id").single();
-    if (error) { toast.error("Erro: " + error.message); return; }
+    if (error) throw new Error(error.message);
     setVessels((prev) => [...prev, data as any].sort((a, b) => a.name.localeCompare(b.name)));
     setVesselId((data as any).id);
-    toast.success(`Embarcação "${name}" criada.`);
+    toast.success(`Embarcação "${payload.name}" criada.`);
   }
 
   async function handleCreate() {
@@ -579,7 +582,7 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
                   <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
                     Cliente <span className="text-red-500">*</span>
                   </Label>
-                  <Button size="sm" variant="ghost" onClick={createCustomerFromSuggestion} className="h-7 text-[11px]">
+                  <Button size="sm" variant="ghost" onClick={() => setCustomerModalOpen(true)} className="h-7 text-[11px]">
                     <User className="h-3 w-3 mr-1" /> Criar cliente inline
                   </Button>
                 </div>
@@ -610,7 +613,7 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
                   <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">
                     Embarcação (opcional)
                   </Label>
-                  <Button size="sm" variant="ghost" onClick={createVesselFromSuggestion} className="h-7 text-[11px]" disabled={!customerId}>
+                  <Button size="sm" variant="ghost" onClick={() => setVesselModalOpen(true)} className="h-7 text-[11px]" disabled={!customerId}>
                     <Ship className="h-3 w-3 mr-1" /> Criar embarcação inline
                   </Button>
                 </div>
@@ -686,6 +689,25 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
           </div>
         </div>
       </DialogContent>
+
+      <InlineCustomerModal
+        isOpen={customerModalOpen}
+        onClose={() => setCustomerModalOpen(false)}
+        suggestion={suggestedCustomer}
+        onSubmit={async (payload) => {
+          await createCustomerInline(payload);
+          setCustomerModalOpen(false);
+        }}
+      />
+      <InlineVesselModal
+        isOpen={vesselModalOpen}
+        onClose={() => setVesselModalOpen(false)}
+        suggestion={suggestedVessel}
+        onSubmit={async (payload) => {
+          await createVesselInline(payload);
+          setVesselModalOpen(false);
+        }}
+      />
     </Dialog>
   );
 }
@@ -696,5 +718,214 @@ function StepPill({ n, label, active, done }: { n: number; label: string; active
       <span className="w-4 h-4 rounded-full bg-white/30 flex items-center justify-center text-[9px]">{n}</span>
       <span>{label}</span>
     </div>
+  );
+}
+
+// ============= Modais profissionais (cliente / embarcação) =============
+
+interface CustomerPayload {
+  name: string;
+  cpf_cnpj?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  city?: string | null;
+  state?: string | null;
+}
+
+function InlineCustomerModal({
+  isOpen, onClose, suggestion, onSubmit,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  suggestion: { name?: string; cpf?: string } | null;
+  onSubmit: (p: CustomerPayload) => Promise<void>;
+}) {
+  const [name, setName] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [city, setCity] = useState("");
+  const [uf, setUf] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(suggestion?.name || "");
+      setCpf(suggestion?.cpf || "");
+      setPhone(""); setEmail(""); setCity(""); setUf("");
+    }
+  }, [isOpen, suggestion]);
+
+  async function handleSave() {
+    if (!name.trim()) { toast.error("Informe o nome."); return; }
+    setSaving(true);
+    try {
+      await onSubmit({
+        name: name.trim(),
+        cpf_cnpj: cpf.trim() || null,
+        phone: phone.trim() || null,
+        email: email.trim() || null,
+        city: city.trim() || null,
+        state: uf.trim().toUpperCase() || null,
+      });
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao criar cliente.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(o) => !o && !saving && onClose()}>
+      <DialogContent className="sm:max-w-lg max-sm:h-[100dvh] max-sm:max-h-[100dvh] flex flex-col p-0">
+        <DialogHeader className="p-5 border-b">
+          <DialogTitle className="flex items-center gap-2">
+            <User className="h-5 w-5 text-primary" /> Novo cliente
+          </DialogTitle>
+          <DialogDescription>Preencha os dados básicos do cliente.</DialogDescription>
+        </DialogHeader>
+        <div className="p-5 space-y-4 overflow-y-auto flex-1">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Nome / Razão social *</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: João da Silva" autoFocus />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">CPF / CNPJ</Label>
+            <Input value={cpf} onChange={(e) => setCpf(e.target.value)} placeholder="000.000.000-00" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Telefone</Label>
+              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 90000-0000" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">E-mail</Label>
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cliente@email.com" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2 space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Cidade</Label>
+              <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="São Paulo" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">UF</Label>
+              <Input value={uf} onChange={(e) => setUf(e.target.value.toUpperCase())} placeholder="SP" maxLength={2} />
+            </div>
+          </div>
+        </div>
+        <div className="p-4 border-t bg-slate-50 flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancelar</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
+            Criar cliente
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface VesselPayload {
+  name: string;
+  vessel_type?: string | null;
+  registration_number?: string | null;
+  hull_number?: string | null;
+  engine?: string | null;
+  construction_year?: number | null;
+}
+
+function InlineVesselModal({
+  isOpen, onClose, suggestion, onSubmit,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  suggestion: { name?: string; registration?: string } | null;
+  onSubmit: (p: VesselPayload) => Promise<void>;
+}) {
+  const [name, setName] = useState("");
+  const [vtype, setVtype] = useState("");
+  const [reg, setReg] = useState("");
+  const [hull, setHull] = useState("");
+  const [engine, setEngine] = useState("");
+  const [year, setYear] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(suggestion?.name || "");
+      setReg(suggestion?.registration || "");
+      setVtype(""); setHull(""); setEngine(""); setYear("");
+    }
+  }, [isOpen, suggestion]);
+
+  async function handleSave() {
+    if (!name.trim()) { toast.error("Informe o nome da embarcação."); return; }
+    setSaving(true);
+    try {
+      const yr = year.trim() ? Number(year.trim()) : null;
+      await onSubmit({
+        name: name.trim(),
+        vessel_type: vtype.trim() || null,
+        registration_number: reg.trim() || null,
+        hull_number: hull.trim() || null,
+        engine: engine.trim() || null,
+        construction_year: yr && !Number.isNaN(yr) ? yr : null,
+      });
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao criar embarcação.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(o) => !o && !saving && onClose()}>
+      <DialogContent className="sm:max-w-lg max-sm:h-[100dvh] max-sm:max-h-[100dvh] flex flex-col p-0">
+        <DialogHeader className="p-5 border-b">
+          <DialogTitle className="flex items-center gap-2">
+            <Ship className="h-5 w-5 text-primary" /> Nova embarcação
+          </DialogTitle>
+          <DialogDescription>Cadastre a embarcação vinculada ao cliente.</DialogDescription>
+        </DialogHeader>
+        <div className="p-5 space-y-4 overflow-y-auto flex-1">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Nome da embarcação *</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Barco Vênus" autoFocus />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Tipo</Label>
+              <Input value={vtype} onChange={(e) => setVtype(e.target.value)} placeholder="Lancha, veleiro..." />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Inscrição / TIE</Label>
+              <Input value={reg} onChange={(e) => setReg(e.target.value)} placeholder="123456789" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Número do casco</Label>
+              <Input value={hull} onChange={(e) => setHull(e.target.value)} placeholder="ABC-0001" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Ano de construção</Label>
+              <Input value={year} onChange={(e) => setYear(e.target.value.replace(/\D/g, ""))} placeholder="2020" maxLength={4} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-600">Motor</Label>
+            <Input value={engine} onChange={(e) => setEngine(e.target.value)} placeholder="Yamaha 250HP" />
+          </div>
+        </div>
+        <div className="p-4 border-t bg-slate-50 flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancelar</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
+            Criar embarcação
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
