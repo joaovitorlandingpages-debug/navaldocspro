@@ -13,9 +13,11 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   /** Called after a successful save, with the fresh process row. */
   onSaved?: (fresh?: any) => void;
+  /** Optional tab to open the form on. */
+  initialTab?: string;
 }
 
-export function ProcessEditSheet({ process, processId, open, onOpenChange, onSaved }: Props) {
+export function ProcessEditSheet({ process, processId, open, onOpenChange, onSaved, initialTab }: Props) {
   const isMobile = useIsMobile();
   const [loaded, setLoaded] = useState<any>(process ?? null);
   const [loading, setLoading] = useState(false);
