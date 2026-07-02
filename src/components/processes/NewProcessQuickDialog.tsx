@@ -333,6 +333,36 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       }
 
       toast.success(`Processo criado com ${selectedCount} documento(s) no checklist.`);
+      setCreatedProcessId(processId);
+
+      // Gerar agora? Dispara batch com base no checklist recém-materializado.
+      if (generateNow && selectedCount > 0) {
+        try {
+          const { data: rows } = await supabase
+            .from("document_checklists")
+            .select("id,item_name,template_id,document_id,requires_signature")
+            .eq("process_id", processId);
+          const items: ChecklistLite[] = ((rows ?? []) as any[])
+            .filter((r) => !!r.template_id)
+            .map((r) => ({
+              id: r.id, item_name: r.item_name, template_id: r.template_id,
+              document_id: r.document_id, requires_signature: r.requires_signature,
+            }));
+          if (items.length > 0) {
+            setGenProgress({ done: 0, total: items.length, current: "" });
+            const rep = await batchGenerate(processId, items, (done, total, current) => {
+              setGenProgress({ done, total, current });
+            });
+            setGenReport(rep);
+            setGenProgress(null);
+            // Não fecha — usuário decide "abrir workspace" no relatório
+            return;
+          }
+        } catch (e) {
+          console.warn("Batch pós-criação falhou:", e);
+        }
+      }
+
       onClose();
       navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "overview" } });
     } catch (e: any) {
@@ -340,6 +370,13 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function openCreatedProcess() {
+    if (!createdProcessId) return;
+    const id = createdProcessId;
+    onClose();
+    navigate({ to: "/processes/$id", params: { id }, search: { tab: "overview" } });
   }
 
   return (
