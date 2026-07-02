@@ -816,6 +816,18 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose }: Props) 
             </Section>
           </TabsContent>
 
+          {/* ======================= PARTICIPANTES ======================= */}
+          <TabsContent value="participantes" className="space-y-5 m-0">
+            <ProcessParticipantsTab
+              processId={process.id}
+              companyId={process.company_id}
+              processType={process.process_type}
+              customerId={form.customer_id}
+              secondaryCustomerId={(process as any).secondary_customer_id}
+            />
+          </TabsContent>
+
+
           {/* ======================= STATS ======================= */}
           <TabsContent value="stats" className="space-y-5 m-0">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
