@@ -342,24 +342,21 @@ function DashboardLayout() {
                   <div className="flex gap-2">
                     <button 
                       onClick={() => setIsAssembleProcessOpen(true)}
-                      className="flex items-center gap-3 bg-emerald-600 text-white px-5 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 whitespace-nowrap group shrink-0"
+                      className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap shrink-0"
                     >
-                      <div className="h-4 w-4 md:h-5 md:w-5 bg-white/20 rounded-lg flex items-center justify-center group-hover:rotate-180 transition-transform duration-500 shrink-0">
-                        <Zap className="h-3 w-3 md:h-3.5 md:w-3.5 text-white" />
-                      </div>
+                      <Zap className="h-4 w-4 shrink-0" />
                       <span className="hidden xs:inline">Montar Processo</span>
                     </button>
 
                     <button 
                       onClick={() => setIsNewProcessOpen(true)}
-                      className="flex items-center gap-3 bg-navy text-white px-5 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-lg shadow-navy/20 whitespace-nowrap group shrink-0"
+                      className="flex items-center gap-2 bg-navy text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors whitespace-nowrap shrink-0"
                     >
-                      <div className="h-4 w-4 md:h-5 md:w-5 bg-primary rounded-lg flex items-center justify-center group-hover:rotate-180 transition-transform duration-500 shrink-0">
-                        <Plus className="h-3 w-3 md:h-3.5 md:w-3.5 text-white" />
-                      </div>
+                      <Plus className="h-4 w-4 shrink-0" />
                       <span className="hidden xs:inline">Novo Processo</span>
                     </button>
                   </div>
+
 
     
                   <div className="flex items-center gap-3 md:gap-6">
