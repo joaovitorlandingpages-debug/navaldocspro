@@ -800,6 +800,17 @@ function ProcessDetail() {
         onClose={closeFocusItem}
         onChanged={fetchProcess}
       />
+      <SignatureRequestDialog
+        open={signatureDialogOpen}
+        onOpenChange={setSignatureDialogOpen}
+        processId={id}
+        defaultCustomerId={process?.customer_id ?? undefined}
+        defaultTitle={process?.title ? `Assinatura — ${process.title}` : undefined}
+        onCreated={() => {
+          toast.success("Solicitação de assinatura enviada.");
+          fetchProcess();
+        }}
+      />
     </div>
   );
 }
