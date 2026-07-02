@@ -659,6 +659,62 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
           )}
         </DialogFooter>
       </DialogContent>
+
+      {/* Progresso da geração pós-criação */}
+      <Dialog open={!!genProgress} onOpenChange={() => { /* travado durante geração */ }}>
+        <DialogContent className="max-w-md" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              Gerando {genProgress?.total} documento{genProgress && genProgress.total === 1 ? "" : "s"}…
+            </DialogTitle>
+            <DialogDescription>Aguarde. Falhas não interrompem os demais.</DialogDescription>
+          </DialogHeader>
+          {genProgress && (
+            <div className="space-y-2 py-2">
+              <div className="flex justify-between text-xs font-bold">
+                <span className="truncate max-w-[70%]">{genProgress.current || "Preparando…"}</span>
+                <span>{genProgress.done}/{genProgress.total}</span>
+              </div>
+              <Progress value={(genProgress.done / Math.max(1, genProgress.total)) * 100} />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Relatório pós-geração */}
+      <Dialog open={!!genReport} onOpenChange={(v) => { if (!v) { setGenReport(null); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" /> Processo criado
+            </DialogTitle>
+            <DialogDescription>Resumo da geração inicial:</DialogDescription>
+          </DialogHeader>
+          {genReport && (
+            <div className="grid grid-cols-3 gap-2 py-2">
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-center">
+                <p className="text-2xl font-black text-emerald-700">{genReport.ok.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Gerados</p>
+              </div>
+              <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-center">
+                <p className="text-2xl font-black text-red-700">{genReport.failed.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-red-600">Falharam</p>
+              </div>
+              <div className="rounded-xl border border-amber-100 bg-amber-50 p-3 text-center">
+                <p className="text-2xl font-black text-amber-700">{genReport.missingData.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Pendências</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setGenReport(null)}>Fechar</Button>
+            <Button onClick={openCreatedProcess}>
+              Abrir workspace <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
