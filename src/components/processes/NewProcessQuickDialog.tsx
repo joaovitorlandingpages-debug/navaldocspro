@@ -29,7 +29,8 @@ import {
 import {
   Loader2, Sparkles, ArrowRight, ArrowLeft, Search, FileText, Plus, X,
   ShieldCheck, GitBranch, PackageOpen, Signature, Zap, User, Ship, ImageIcon,
-  CheckCircle2, Upload,
+  CheckCircle2, Upload, Eye, RotateCcw, Trash2, AlertTriangle, Link2, UserPlus,
+  Circle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,6 +49,7 @@ import {
   confirmProcessVisible, notifyProcessesChanged,
 } from "@/services/processes/processCreation";
 import { FileUploader } from "@/components/FileUploader";
+import type { FileBucket } from "@/hooks/useFiles";
 
 interface Props {
   isOpen: boolean;
@@ -116,6 +118,25 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const [vesselId, setVesselId] = useState<string>("");
   const [hasMotor, setHasMotor] = useState(false);
   const [vesselDocPicks, setVesselDocPicks] = useState<Set<string>>(new Set());
+
+  // Task files por slot: cada upload vira uma tarefa independente com OCR próprio.
+  interface TaskFile {
+    id: string;
+    file_name: string;
+    file_url: string;
+    bucket: FileBucket;
+    ocrJobId?: string;
+    ocrStatus?: "pending" | "processing" | "completed" | "failed" | "reviewed";
+    extracted?: Record<string, any>;
+    confidence?: number;
+  }
+  const [taskFiles, setTaskFiles] = useState<Record<string, TaskFile[]>>({});
+  const [matchInfo, setMatchInfo] = useState<{
+    customerMatch?: { id: string; name: string } | null;
+    customerNew?: string | null;
+    vesselMatch?: { id: string; name: string } | null;
+    vesselNew?: string | null;
+  }>({});
 
 
   // Etapa 5 — identidade
@@ -197,6 +218,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setNoResidenceProof(false); setUploadedSlots({});
       setClientDocPicks(new Set()); setVesselDocPicks(new Set());
       setVesselId(""); setHasMotor(false);
+      setTaskFiles({}); setMatchInfo({});
       setBrandingMode("company");
       setPreview([]); setExcluded(new Set()); setExtras([]);
       setLibraryOpen(false); setLibraryQuery(""); setLibraryResults([]);
@@ -245,6 +267,122 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
   const bumpSlot = (key: string) =>
     setUploadedSlots((prev) => ({ ...prev, [key]: (prev[key] || 0) + 1 }));
+
+  // Registra novo arquivo como task no slot correspondente e dispara polling do OCR.
+  function attachTaskFile(
+    slotKey: string,
+    bucket: FileBucket,
+    result: { id: string; file_name: string; file_url: string },
+  ) {
+    setTaskFiles((prev) => ({
+      ...prev,
+      [slotKey]: [
+        ...(prev[slotKey] || []),
+        { id: result.id, file_name: result.file_name, file_url: result.file_url, bucket, ocrStatus: "pending" },
+      ],
+    }));
+    bumpSlot(slotKey);
+  }
+
+  async function removeTaskFile(slotKey: string, fileId: string) {
+    setTaskFiles((prev) => ({
+      ...prev,
+      [slotKey]: (prev[slotKey] || []).filter((t) => t.id !== fileId),
+    }));
+    setUploadedSlots((prev) => ({ ...prev, [slotKey]: Math.max(0, (prev[slotKey] || 1) - 1) }));
+    try { await supabase.from("uploaded_files").delete().eq("id", fileId); } catch (e) { console.warn(e); }
+  }
+
+  async function openTaskFile(t: TaskFile) {
+    try {
+      const { data } = await supabase.storage.from(t.bucket).createSignedUrl(t.file_url, 3600);
+      if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+    } catch { toast.error("Não foi possível abrir o arquivo."); }
+  }
+
+  // Polling de ocr_jobs para todos os arquivos anexados neste wizard.
+  useEffect(() => {
+    const allFiles = Object.entries(taskFiles).flatMap(([slot, arr]) =>
+      arr.filter((f) => f.ocrStatus !== "completed" && f.ocrStatus !== "reviewed" && f.ocrStatus !== "failed")
+         .map((f) => ({ slot, f }))
+    );
+    if (allFiles.length === 0) return;
+    const iv = setInterval(async () => {
+      const ids = allFiles.map((a) => a.f.id);
+      const { data } = await supabase
+        .from("ocr_jobs")
+        .select("id,uploaded_file_id,status,extracted_data,confidence_score")
+        .in("uploaded_file_id", ids);
+      if (!data || data.length === 0) return;
+      setTaskFiles((prev) => {
+        const next: typeof prev = { ...prev };
+        for (const job of data as any[]) {
+          for (const [slot, arr] of Object.entries(next)) {
+            const idx = arr.findIndex((x) => x.id === job.uploaded_file_id);
+            if (idx >= 0) {
+              const copy = [...arr];
+              copy[idx] = {
+                ...copy[idx],
+                ocrJobId: job.id,
+                ocrStatus: job.status,
+                extracted: job.extracted_data || copy[idx].extracted,
+                confidence: job.confidence_score ?? copy[idx].confidence,
+              };
+              next[slot] = copy;
+            }
+          }
+        }
+        return next;
+      });
+    }, 2500);
+    return () => clearInterval(iv);
+  }, [taskFiles]);
+
+  // Match automático de cliente/embarcação a partir do OCR (CPF/CNPJ, inscrição).
+  useEffect(() => {
+    const clientFields = Object.entries(taskFiles)
+      .filter(([k]) => ["rg", "cnh", "cpf", "cnpj"].includes(k))
+      .flatMap(([, arr]) => arr.map((t) => t.extracted).filter(Boolean));
+    const doc = clientFields.find((f: any) => f?.cpf || f?.cnpj) as any;
+    if (doc && !customerId) {
+      const norm = (s: any) => String(s || "").replace(/\D+/g, "");
+      const key = norm(doc.cpf || doc.cnpj);
+      if (key.length >= 11) {
+        (async () => {
+          const { data } = await supabase.from("customers").select("id,name,cpf_cnpj").ilike("cpf_cnpj", `%${key.slice(-6)}%`).limit(5);
+          const match = (data as any[])?.find((c) => norm(c.cpf_cnpj) === key);
+          if (match) setMatchInfo((m) => ({ ...m, customerMatch: { id: match.id, name: match.name }, customerNew: null }));
+          else if (doc.name) setMatchInfo((m) => ({ ...m, customerMatch: null, customerNew: doc.name }));
+        })();
+      }
+    }
+    const vesselFields = Object.entries(taskFiles)
+      .filter(([k]) => ["tie", "nf_embarcacao"].includes(k))
+      .flatMap(([, arr]) => arr.map((t) => t.extracted).filter(Boolean));
+    const vdoc = vesselFields.find((f: any) => f?.registration_number || f?.vessel_name) as any;
+    if (vdoc && !vesselId) {
+      if (vdoc.registration_number) {
+        (async () => {
+          const { data } = await supabase.from("vessels").select("id,name,registration_number").eq("registration_number", String(vdoc.registration_number));
+          const match = (data as any[])?.[0];
+          if (match) setMatchInfo((m) => ({ ...m, vesselMatch: { id: match.id, name: match.name }, vesselNew: null }));
+          else if (vdoc.vessel_name) setMatchInfo((m) => ({ ...m, vesselMatch: null, vesselNew: vdoc.vessel_name }));
+        })();
+      } else if (vdoc.vessel_name) {
+        setMatchInfo((m) => ({ ...m, vesselNew: vdoc.vessel_name }));
+      }
+    }
+  }, [taskFiles, customerId, vesselId]);
+
+  const uploadedTotal = useMemo(
+    () => Object.values(taskFiles).reduce((a, arr) => a + arr.length, 0),
+    [taskFiles]
+  );
+  const avgConfidence = useMemo(() => {
+    const arr = Object.values(taskFiles).flat().map((t) => t.confidence).filter((c): c is number => typeof c === "number");
+    if (arr.length === 0) return null;
+    return Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 100);
+  }, [taskFiles]);
 
   // ------------------------------------------------------------- CRUD inline
   async function createCustomerInline(kind: "primary" | "secondary" = "primary") {
@@ -474,19 +612,30 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
   return (
     <Dialog open={isOpen} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl w-[calc(100vw-1rem)] max-h-[92vh] sm:max-h-[90vh] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:rounded-none max-sm:w-screen overflow-hidden flex flex-col p-0">
-        <DialogHeader className="p-4 sm:p-6 pb-2">
+      <DialogContent className="max-w-4xl w-[calc(100vw-1rem)] max-h-[92vh] sm:max-h-[90vh] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:rounded-none max-sm:w-screen overflow-hidden flex flex-col p-0">
+        <DialogHeader className="p-4 sm:p-6 pb-2 border-b border-slate-100">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Sparkles className="h-5 w-5 text-primary" />
             Novo Processo
           </DialogTitle>
           <DialogDescription>
-            Passo a passo guiado. O sistema pede só o que este tipo de processo exige.
+            Assistente guiado — cada documento é uma tarefa com OCR próprio.
           </DialogDescription>
-          <StepIndicator step={step} onJump={(n) => n < step && setStep(n)} />
+          {/* Mobile progress */}
+          <div className="sm:hidden pt-2">
+            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">
+              <span>Etapa {step}/7 · {STEPS[step - 1].label}</span>
+              <span>{Math.round((step / 7) * 100)}%</span>
+            </div>
+            <Progress value={(step / 7) * 100} className="h-1.5" />
+          </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6">
+        <div className="flex-1 min-h-0 flex overflow-hidden">
+          <StepSidebar step={step} onJump={(n) => n < step && setStep(n)} />
+
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6">
+
           {/* STEP 1 — Tipo */}
           {step === 1 && (
             <div className="space-y-4 py-3">
@@ -561,72 +710,49 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
             </div>
           )}
 
-          {/* STEP 3 — Docs do cliente (checklist + upload dos marcados) */}
+          {/* STEP 3 — Docs do cliente (task cards) */}
           {step === 3 && (
             <div className="space-y-4 py-3">
-              <div className="rounded-xl border border-sky-100 bg-sky-50/50 p-3">
-                <p className="text-[11px] font-black uppercase tracking-widest text-sky-700 mb-2">
-                  1. Marque tudo que você possui deste cliente
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                  {clientSlots.map((slot) => {
-                    const isComprovante = slot.key === "comprovante";
-                    const disabled = isComprovante && noResidenceProof;
-                    const checked = clientDocPicks.has(slot.key) && !disabled;
-                    return (
-                      <label key={slot.key}
-                        className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-bold cursor-pointer border transition ${
-                          checked ? "bg-white border-sky-300 text-navy" : "bg-white/60 border-transparent text-slate-500 hover:border-slate-200"
-                        } ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}>
-                        <Checkbox checked={checked} disabled={disabled} onCheckedChange={() => toggleClientPick(slot.key)} />
-                        {slot.label}
-                      </label>
-                    );
-                  })}
-                </div>
-                <label className="flex items-center gap-2 mt-2 text-[11px] font-bold text-violet-700 cursor-pointer">
-                  <Checkbox checked={noResidenceProof} onCheckedChange={(v) => {
-                    setNoResidenceProof(!!v);
-                    if (v) toggleClientPick("comprovante") /* ensure removed */;
-                  }} />
-                  Cliente não possui comprovante — gerar Declaração de Residência automaticamente
-                </label>
-              </div>
-
-              {clientDocPicks.size === 0 && !noResidenceProof ? (
-                <p className="text-xs text-slate-400 italic text-center py-6">Selecione ao menos um documento acima para anexar agora, ou avance para enviar depois.</p>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-500">
-                    2. Envie os documentos marcados
-                  </p>
-                  {clientSlots.filter((s) => clientDocPicks.has(s.key) && !(s.key === "comprovante" && noResidenceProof)).map((slot) => (
-                    <div key={slot.key} className="rounded-xl border border-slate-200 bg-white p-3">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div>
-                          <p className="text-sm font-bold text-navy flex items-center gap-2">
-                            {slot.label}
-                            {uploadedSlots[slot.key] > 0 && <Badge className="text-[9px] uppercase bg-emerald-100 text-emerald-700 border-emerald-200">{uploadedSlots[slot.key]} enviado</Badge>}
-                          </p>
-                          {slot.hint && <p className="text-[11px] text-slate-500 mt-0.5">{slot.hint}</p>}
-                        </div>
-                      </div>
-                      <FileUploader
-                        bucket="customer-documents"
-                        category={slot.category}
-                        customerId={customerId}
-                        compact
-                        onSuccess={() => bumpSlot(slot.key)}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-              <p className="text-[11px] text-slate-400 italic">
-                💡 O OCR lê cada arquivo e preenche automaticamente os dados do cliente. Você pode enviar mais depois pelo workspace.
+              <p className="text-xs text-slate-600">
+                Cada documento é uma tarefa independente. Envie, e o OCR extrai os dados automaticamente.
               </p>
+
+              {(matchInfo.customerMatch || matchInfo.customerNew) && (
+                <MatchBanner
+                  match={matchInfo.customerMatch}
+                  newName={matchInfo.customerNew}
+                  entity="cliente"
+                  onLink={() => matchInfo.customerMatch && setCustomerId(matchInfo.customerMatch.id)}
+                />
+              )}
+
+              <div className="space-y-3">
+                {clientSlots.map((slot) => {
+                  const isComprovante = slot.key === "comprovante";
+                  const skipped = isComprovante && noResidenceProof;
+                  return (
+                    <DocTaskCard
+                      key={slot.key}
+                      slot={slot}
+                      files={taskFiles[slot.key] || []}
+                      bucket="customer-documents"
+                      customerId={customerId || undefined}
+                      skipped={skipped}
+                      skipMessage={skipped ? "Declaração de Residência será gerada automaticamente." : undefined}
+                      onSkipToggle={isComprovante ? (v) => {
+                        setNoResidenceProof(v);
+                        if (v) setClientDocPicks((prev) => { const n = new Set(prev); n.delete("comprovante"); return n; });
+                      } : undefined}
+                      onUploaded={(r) => attachTaskFile(slot.key, "customer-documents", r)}
+                      onRemove={(id) => removeTaskFile(slot.key, id)}
+                      onView={openTaskFile}
+                    />
+                  );
+                })}
+              </div>
             </div>
           )}
+
 
           {/* STEP 4 — Embarcação (checklist + upload dos marcados) */}
           {step === 4 && (
@@ -658,61 +784,33 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                     Esta embarcação tem motor (pediremos a NF do motor)
                   </label>
 
-                  {vesselId && (
-                    <>
-                      <div className="rounded-xl border border-sky-100 bg-sky-50/50 p-3">
-                        <p className="text-[11px] font-black uppercase tracking-widest text-sky-700 mb-2">
-                          1. Marque tudo que você possui desta embarcação
-                        </p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                          {vesselSlots.map((slot) => {
-                            const checked = vesselDocPicks.has(slot.key);
-                            return (
-                              <label key={slot.key}
-                                className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-bold cursor-pointer border transition ${
-                                  checked ? "bg-white border-sky-300 text-navy" : "bg-white/60 border-transparent text-slate-500 hover:border-slate-200"
-                                }`}>
-                                <Checkbox checked={checked} onCheckedChange={() => toggleVesselPick(slot.key)} />
-                                {slot.label}
-                              </label>
-                            );
-                          })}
-                        </div>
-                      </div>
+                  {(matchInfo.vesselMatch || matchInfo.vesselNew) && (
+                    <MatchBanner
+                      match={matchInfo.vesselMatch}
+                      newName={matchInfo.vesselNew}
+                      entity="embarcação"
+                      onLink={() => matchInfo.vesselMatch && setVesselId(matchInfo.vesselMatch.id)}
+                    />
+                  )}
 
-                      {vesselDocPicks.size === 0 ? (
-                        <p className="text-xs text-slate-400 italic text-center py-4">Selecione ao menos um documento acima, ou avance para enviar depois.</p>
-                      ) : (
-                        <div className="space-y-3">
-                          <p className="text-[11px] font-black uppercase tracking-widest text-slate-500">
-                            2. Envie os documentos marcados
-                          </p>
-                          {vesselSlots.filter((s) => vesselDocPicks.has(s.key)).map((slot) => (
-                            <div key={slot.key} className="rounded-xl border border-slate-200 bg-white p-3">
-                              <div className="flex items-start justify-between gap-2 mb-2">
-                                <div>
-                                  <p className="text-sm font-bold text-navy flex items-center gap-2">
-                                    {slot.label}
-                                    {uploadedSlots[slot.key] > 0 && <Badge className="text-[9px] uppercase bg-emerald-100 text-emerald-700 border-emerald-200">{uploadedSlots[slot.key]} enviado</Badge>}
-                                  </p>
-                                  {slot.hint && <p className="text-[11px] text-slate-500 mt-0.5">{slot.hint}</p>}
-                                </div>
-                              </div>
-                              <FileUploader
-                                bucket="vessel-documents"
-                                category={slot.category}
-                                vesselId={vesselId}
-                                compact
-                                onSuccess={() => bumpSlot(slot.key)}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                  {vesselId && (
+                    <div className="space-y-3">
+                      {vesselSlots.map((slot) => (
+                        <DocTaskCard
+                          key={slot.key}
+                          slot={slot}
+                          files={taskFiles[slot.key] || []}
+                          bucket="vessel-documents"
+                          vesselId={vesselId}
+                          onUploaded={(r) => attachTaskFile(slot.key, "vessel-documents", r)}
+                          onRemove={(id) => removeTaskFile(slot.key, id)}
+                          onView={openTaskFile}
+                        />
+                      ))}
                       <p className="text-[11px] text-slate-400 italic">
                         💡 O OCR identifica casco, inscrição e motor e vincula automaticamente à embarcação.
                       </p>
-                    </>
+                    </div>
                   )}
                 </>
               )}
@@ -839,34 +937,48 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
           {/* STEP 7 — Resumo */}
           {step === 7 && (
-            <div className="space-y-3 py-3">
-              <SummaryRow label="Tipo"       value={selectedType?.name || "—"} />
-              <SummaryRow label="Título"     value={title || selectedType?.name || "—"} />
-              <SummaryRow label="Prioridade" value={priority} />
-              <SummaryRow label={isTransfer ? "Comprador" : "Cliente"} value={customers.find((c) => c.id === customerId)?.name || "—"} />
-              {isTransfer && <SummaryRow label="Vendedor" value={customers.find((c) => c.id === secondaryCustomerId)?.name || "—"} />}
-              {needsVessel && <SummaryRow label="Embarcação" value={vessels.find((v) => v.id === vesselId)?.name || "—"} />}
-              <SummaryRow label="Identidade" value={
-                brandingMode === "none" ? "Sem logo" :
-                brandingMode === "company" ? "Logo da empresa" :
-                brandingMode === "customer" ? "Logo do cliente" : "Logo exclusivo"
-              } />
-              <SummaryRow label="Uploads" value={
-                Object.values(uploadedSlots).reduce((a, b) => a + b, 0) + " arquivo(s) anexado(s)"
-              } />
-              <SummaryRow label="Documentos a gerar" value={`${selectedCount} documento(s)`} />
-              {noResidenceProof && (
-                <p className="text-[11px] text-violet-700 bg-violet-50 rounded-lg p-2 border border-violet-100">
-                  📝 Declaração de residência será gerada automaticamente.
-                </p>
-              )}
-              <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer border border-slate-100 bg-slate-50/50 p-2.5 rounded-lg mt-4">
+            <div className="space-y-4 py-3">
+              <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700 mb-3">Tudo pronto</p>
+                <div className="space-y-1.5 text-sm">
+                  <SummaryCheck ok={!!customerId} label={
+                    customerId ? `${isTransfer ? "Comprador" : "Cliente"}: ${customers.find(c => c.id === customerId)?.name}` : "Cliente pendente"
+                  }/>
+                  {isTransfer && <SummaryCheck ok={!!secondaryCustomerId} label={
+                    secondaryCustomerId ? `Vendedor: ${customers.find(c => c.id === secondaryCustomerId)?.name}` : "Vendedor pendente"
+                  }/>}
+                  {needsVessel && <SummaryCheck ok={!!vesselId} label={
+                    vesselId ? `Embarcação: ${vessels.find(v => v.id === vesselId)?.name}` : "Embarcação pendente"
+                  }/>}
+                  {avgConfidence !== null && (
+                    <SummaryCheck ok={avgConfidence >= 70} label={`OCR reconheceu ${avgConfidence}% em média`} />
+                  )}
+                  <SummaryCheck ok={uploadedTotal > 0} label={`${uploadedTotal} documento(s) anexado(s)`} />
+                  <SummaryCheck ok={selectedCount > 0} label={`${selectedCount} documento(s) serão gerados`} />
+                  <SummaryCheck ok label={
+                    brandingMode === "none" ? "Sem logo aplicada" :
+                    brandingMode === "company" ? "Logo da empresa aplicada" :
+                    brandingMode === "customer" ? "Logo do cliente aplicada" : "Logo exclusivo deste processo"
+                  }/>
+                  {noResidenceProof && <SummaryCheck ok label="Declaração de residência gerada automaticamente" />}
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-2 pt-1">
+                <SummaryRow label="Tipo"       value={selectedType?.name || "—"} />
+                <SummaryRow label="Título"     value={title || selectedType?.name || "—"} />
+                <SummaryRow label="Prioridade" value={priority} />
+              </div>
+
+              <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer border border-slate-100 bg-slate-50/50 p-2.5 rounded-lg">
                 <Checkbox checked={generateNow} onCheckedChange={(v) => setGenerateNow(!!v)} disabled={submitting} />
                 Gerar todos os documentos automaticamente após criar
               </label>
             </div>
           )}
+          </div>
         </div>
+
 
         <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-between border-t p-4 sm:p-6 shrink-0">
           <div className="flex gap-2">
@@ -1078,6 +1190,237 @@ function DocSection({
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+/* -------------------- Sidebar / task components -------------------- */
+
+function StepSidebar({ step, onJump }: { step: Step; onJump: (n: Step) => void }) {
+  return (
+    <aside className="hidden sm:flex flex-col shrink-0 w-52 border-r border-slate-100 bg-slate-50/50 py-4 px-2 gap-0.5 overflow-y-auto">
+      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-3 mb-2">Processo</p>
+      {STEPS.map((s) => {
+        const active = s.n === step;
+        const done = s.n < step;
+        const Icon = s.icon;
+        return (
+          <button
+            key={s.n}
+            type="button"
+            onClick={() => done && onJump(s.n)}
+            disabled={!done && !active}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-xs font-bold transition ${
+              active ? "bg-primary text-primary-foreground shadow-sm" :
+              done ? "text-emerald-700 hover:bg-emerald-50 cursor-pointer" :
+              "text-slate-400"
+            }`}
+          >
+            {done ? <CheckCircle2 className="h-4 w-4 shrink-0" /> :
+             active ? <Icon className="h-4 w-4 shrink-0" /> :
+             <Circle className="h-4 w-4 shrink-0 opacity-50" />}
+            <span className="truncate">{s.label}</span>
+          </button>
+        );
+      })}
+    </aside>
+  );
+}
+
+function MatchBanner({
+  match, newName, entity, onLink,
+}: {
+  match?: { id: string; name: string } | null;
+  newName?: string | null;
+  entity: "cliente" | "embarcação";
+  onLink: () => void;
+}) {
+  if (match) {
+    return (
+      <div className="flex items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+        <div className="flex items-center gap-2 text-sm">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+          <span className="font-bold text-emerald-800">
+            {entity === "cliente" ? "Cliente encontrado" : "Embarcação encontrada"}: {match.name}
+          </span>
+        </div>
+        <Button size="sm" variant="outline" onClick={onLink} className="border-emerald-300 text-emerald-700">
+          <Link2 className="h-3.5 w-3.5 mr-1" /> Vincular
+        </Button>
+      </div>
+    );
+  }
+  if (newName) {
+    return (
+      <div className="flex items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm">
+        <UserPlus className="h-4 w-4 text-sky-600" />
+        <span className="font-bold text-sky-800">
+          Novo {entity} será criado: {newName}
+        </span>
+      </div>
+    );
+  }
+  return null;
+}
+
+interface DocTaskCardProps {
+  slot: DocSlot;
+  files: Array<{
+    id: string; file_name: string; file_url: string;
+    ocrStatus?: string; extracted?: Record<string, any>; confidence?: number;
+  }>;
+  bucket: FileBucket;
+  customerId?: string;
+  vesselId?: string;
+  skipped?: boolean;
+  skipMessage?: string;
+  onSkipToggle?: (v: boolean) => void;
+  onUploaded: (r: { id: string; file_name: string; file_url: string }) => void;
+  onRemove: (id: string) => void;
+  onView: (t: any) => void;
+}
+
+function DocTaskCard({
+  slot, files, bucket, customerId, vesselId,
+  skipped, skipMessage, onSkipToggle,
+  onUploaded, onRemove, onView,
+}: DocTaskCardProps) {
+  const [expanded, setExpanded] = useState(files.length === 0);
+  const hasFiles = files.length > 0;
+  const allDone = hasFiles && files.every((f) => f.ocrStatus === "completed" || f.ocrStatus === "reviewed");
+  const anyProcessing = files.some((f) => f.ocrStatus === "processing" || f.ocrStatus === "pending");
+
+  return (
+    <div className={`rounded-xl border bg-white transition ${
+      skipped ? "border-violet-200 bg-violet-50/40" :
+      allDone ? "border-emerald-200" :
+      hasFiles ? "border-sky-200" : "border-slate-200"
+    }`}>
+      <div className="flex items-start justify-between gap-2 p-3">
+        <div className="flex items-start gap-2.5 min-w-0 flex-1">
+          <div className="mt-0.5">
+            {skipped ? <CheckCircle2 className="h-5 w-5 text-violet-500" /> :
+             allDone ? <CheckCircle2 className="h-5 w-5 text-emerald-500" /> :
+             anyProcessing ? <Loader2 className="h-5 w-5 text-sky-500 animate-spin" /> :
+             hasFiles ? <FileText className="h-5 w-5 text-sky-500" /> :
+             <Circle className="h-5 w-5 text-slate-300" />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-navy flex items-center gap-2 flex-wrap">
+              {slot.label}
+              {hasFiles && <Badge className="text-[9px] uppercase bg-slate-100 text-slate-600 border-slate-200">{files.length}</Badge>}
+              {allDone && <Badge className="text-[9px] uppercase bg-emerald-100 text-emerald-700 border-emerald-200">OCR pronto</Badge>}
+              {anyProcessing && <Badge className="text-[9px] uppercase bg-sky-100 text-sky-700 border-sky-200">Lendo…</Badge>}
+            </p>
+            {slot.hint && !skipped && <p className="text-[11px] text-slate-500 mt-0.5">{slot.hint}</p>}
+            {skipped && skipMessage && <p className="text-[11px] text-violet-700 mt-0.5">{skipMessage}</p>}
+          </div>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          {slot.allowMissing && onSkipToggle && (
+            <button
+              type="button"
+              onClick={() => onSkipToggle(!skipped)}
+              className="text-[11px] font-bold text-violet-600 hover:underline px-2"
+            >
+              {skipped ? "Tenho o documento" : "Não possuo"}
+            </button>
+          )}
+          {!skipped && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="text-xs text-slate-500 hover:text-navy px-2 py-1 rounded hover:bg-slate-100"
+            >
+              {expanded ? "Recolher" : hasFiles ? "Adicionar mais" : "Enviar"}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {!skipped && hasFiles && (
+        <div className="border-t border-slate-100 divide-y divide-slate-100">
+          {files.map((f) => (
+            <div key={f.id} className="px-3 py-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-navy truncate">{f.file_name}</p>
+                  {f.ocrStatus === "processing" || f.ocrStatus === "pending" ? (
+                    <p className="text-[10px] text-sky-600 font-bold mt-0.5 flex items-center gap-1">
+                      <Loader2 className="h-2.5 w-2.5 animate-spin" /> OCR lendo…
+                    </p>
+                  ) : f.ocrStatus === "failed" ? (
+                    <p className="text-[10px] text-red-600 font-bold mt-0.5 flex items-center gap-1">
+                      <AlertTriangle className="h-2.5 w-2.5" /> Falha no OCR
+                    </p>
+                  ) : f.extracted ? (
+                    <ExtractedChips fields={f.extracted} confidence={f.confidence} />
+                  ) : null}
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => onView(f)} title="Visualizar">
+                    <Eye className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500 hover:text-red-600" onClick={() => onRemove(f.id)} title="Remover">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!skipped && expanded && (
+        <div className="border-t border-slate-100 p-3 bg-slate-50/50">
+          <FileUploader
+            bucket={bucket}
+            category={slot.category}
+            customerId={customerId}
+            vesselId={vesselId}
+            compact
+            onSuccess={(r) => { onUploaded(r); }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ExtractedChips({ fields, confidence }: { fields: Record<string, any>; confidence?: number }) {
+  const LABELS: Record<string, string> = {
+    name: "Nome", cpf: "CPF", cnpj: "CNPJ", rg: "RG", birth_date: "Nascimento",
+    address: "Endereço", issuer: "Órgão emissor", expiry_date: "Validade", issue_date: "Emissão",
+    vessel_name: "Embarcação", registration_number: "Inscrição", vessel_type: "Tipo",
+    engine_model: "Motor", engine_serial: "Série motor", engine_power: "Potência",
+  };
+  const entries = Object.entries(fields).filter(([, v]) => v !== null && v !== undefined && v !== "");
+  if (entries.length === 0) return <p className="text-[10px] text-slate-400 mt-0.5">Nada reconhecido.</p>;
+  const conf = typeof confidence === "number" ? Math.round(confidence * 100) : null;
+  return (
+    <div className="flex flex-wrap gap-1 mt-1">
+      {entries.slice(0, 6).map(([k, v]) => (
+        <span key={k} className="inline-flex items-center gap-1 rounded-md bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+          <CheckCircle2 className="h-2.5 w-2.5" /> {LABELS[k] || k}
+        </span>
+      ))}
+      {entries.length > 6 && (
+        <span className="text-[10px] text-slate-500 font-bold px-1">+{entries.length - 6}</span>
+      )}
+      {conf !== null && (
+        <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+          conf >= 70 ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+        }`}>{conf}%</span>
+      )}
+    </div>
+  );
+}
+
+function SummaryCheck({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      {ok ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" /> : <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />}
+      <span className={ok ? "text-navy" : "text-amber-700"}>{label}</span>
     </div>
   );
 }
