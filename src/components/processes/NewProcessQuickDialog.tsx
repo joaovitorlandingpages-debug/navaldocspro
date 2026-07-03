@@ -773,61 +773,33 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                     Esta embarcação tem motor (pediremos a NF do motor)
                   </label>
 
-                  {vesselId && (
-                    <>
-                      <div className="rounded-xl border border-sky-100 bg-sky-50/50 p-3">
-                        <p className="text-[11px] font-black uppercase tracking-widest text-sky-700 mb-2">
-                          1. Marque tudo que você possui desta embarcação
-                        </p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                          {vesselSlots.map((slot) => {
-                            const checked = vesselDocPicks.has(slot.key);
-                            return (
-                              <label key={slot.key}
-                                className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-bold cursor-pointer border transition ${
-                                  checked ? "bg-white border-sky-300 text-navy" : "bg-white/60 border-transparent text-slate-500 hover:border-slate-200"
-                                }`}>
-                                <Checkbox checked={checked} onCheckedChange={() => toggleVesselPick(slot.key)} />
-                                {slot.label}
-                              </label>
-                            );
-                          })}
-                        </div>
-                      </div>
+                  {(matchInfo.vesselMatch || matchInfo.vesselNew) && (
+                    <MatchBanner
+                      match={matchInfo.vesselMatch}
+                      newName={matchInfo.vesselNew}
+                      entity="embarcação"
+                      onLink={() => matchInfo.vesselMatch && setVesselId(matchInfo.vesselMatch.id)}
+                    />
+                  )}
 
-                      {vesselDocPicks.size === 0 ? (
-                        <p className="text-xs text-slate-400 italic text-center py-4">Selecione ao menos um documento acima, ou avance para enviar depois.</p>
-                      ) : (
-                        <div className="space-y-3">
-                          <p className="text-[11px] font-black uppercase tracking-widest text-slate-500">
-                            2. Envie os documentos marcados
-                          </p>
-                          {vesselSlots.filter((s) => vesselDocPicks.has(s.key)).map((slot) => (
-                            <div key={slot.key} className="rounded-xl border border-slate-200 bg-white p-3">
-                              <div className="flex items-start justify-between gap-2 mb-2">
-                                <div>
-                                  <p className="text-sm font-bold text-navy flex items-center gap-2">
-                                    {slot.label}
-                                    {uploadedSlots[slot.key] > 0 && <Badge className="text-[9px] uppercase bg-emerald-100 text-emerald-700 border-emerald-200">{uploadedSlots[slot.key]} enviado</Badge>}
-                                  </p>
-                                  {slot.hint && <p className="text-[11px] text-slate-500 mt-0.5">{slot.hint}</p>}
-                                </div>
-                              </div>
-                              <FileUploader
-                                bucket="vessel-documents"
-                                category={slot.category}
-                                vesselId={vesselId}
-                                compact
-                                onSuccess={() => bumpSlot(slot.key)}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                  {vesselId && (
+                    <div className="space-y-3">
+                      {vesselSlots.map((slot) => (
+                        <DocTaskCard
+                          key={slot.key}
+                          slot={slot}
+                          files={taskFiles[slot.key] || []}
+                          bucket="vessel-documents"
+                          vesselId={vesselId}
+                          onUploaded={(r) => attachTaskFile(slot.key, "vessel-documents", r)}
+                          onRemove={(id) => removeTaskFile(slot.key, id)}
+                          onView={openTaskFile}
+                        />
+                      ))}
                       <p className="text-[11px] text-slate-400 italic">
                         💡 O OCR identifica casco, inscrição e motor e vincula automaticamente à embarcação.
                       </p>
-                    </>
+                    </div>
                   )}
                 </>
               )}
