@@ -319,8 +319,10 @@ function ProcessDetail() {
           template={selectedTemplateForGen}
           processData={process}
           onSave={async (finalContent) => {
+            console.log("ONSAVE_HANDLER_V2_START");
             try {
               const tpl = selectedTemplateForGen;
+
               // 1) Persist the generated document
               const { data: gen, error: genErr } = await supabase
                 .from("generated_documents")
