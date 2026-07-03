@@ -388,15 +388,19 @@ function ProcessDetail() {
                   .eq("process_id", id)
                   .eq("template_id", tpl.id)
                   .select("id");
+                console.log("CHECKLIST_UPDATE_BY_TPL", { tplId: tpl.id, byTpl, tplErr });
                 if (!tplErr && byTpl && byTpl.length > 0) updated = true;
               }
               if (!updated && tpl?.name) {
-                await supabase
+                const { data: byName, error: nameErr } = await supabase
                   .from("document_checklists")
                   .update({ status: "completed", document_id: gen.id, completed_at: new Date().toISOString() })
                   .eq("process_id", id)
-                  .eq("item_name", tpl.name);
+                  .eq("item_name", tpl.name)
+                  .select("id");
+                console.log("CHECKLIST_UPDATE_BY_NAME", { name: tpl.name, byName, nameErr });
               }
+
 
               // 6) Open PDF in a new tab via signed URL
               window.open(signedUrl, "_blank", "noopener,noreferrer");
