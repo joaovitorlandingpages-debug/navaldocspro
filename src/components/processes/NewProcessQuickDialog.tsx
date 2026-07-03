@@ -29,7 +29,8 @@ import {
 import {
   Loader2, Sparkles, ArrowRight, ArrowLeft, Search, FileText, Plus, X,
   ShieldCheck, GitBranch, PackageOpen, Signature, Zap, User, Ship, ImageIcon,
-  CheckCircle2, Upload,
+  CheckCircle2, Upload, Eye, RotateCcw, Trash2, AlertTriangle, Link2, UserPlus,
+  Circle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
