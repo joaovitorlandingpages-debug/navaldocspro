@@ -7,7 +7,7 @@ export async function seedAdvancedDemo(companyId: string) {
     const { data: vessel } = await supabase.from('vessels').insert({
       company_id: companyId,
       name: 'OCEAN MASTER (DEMO)',
-      type: 'TUG',
+      vessel_type: 'TUG',
       registration_number: 'PR-2024-999Z',
     }).select().single();
 
