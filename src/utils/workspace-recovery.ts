@@ -1,7 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
-export const ensureWorkspace = async (user: User, profile: any) => {
+const inFlight = new Map<string, Promise<string | undefined>>();
+
+export const ensureWorkspace = async (user: User, profile: any): Promise<string | undefined> => {
+  const existing = inFlight.get(user.id);
+  if (existing) return existing;
+  const p = _ensureWorkspace(user, profile).finally(() => inFlight.delete(user.id));
+  inFlight.set(user.id, p);
+  return p;
+};
+
+const _ensureWorkspace = async (user: User, profile: any): Promise<string | undefined> => {
   if (profile?.company_id) {
     console.log("WORKSPACE_ALREADY_EXISTS", profile.company_id);
     console.log("WORKSPACE_RESOLVE_OK");
