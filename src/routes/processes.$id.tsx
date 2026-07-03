@@ -321,6 +321,8 @@ function ProcessDetail() {
           onSave={async (finalContent) => {
             try {
               const tpl = selectedTemplateForGen;
+
+
               // 1) Persist the generated document
               const { data: gen, error: genErr } = await supabase
                 .from("generated_documents")
@@ -384,19 +386,24 @@ function ProcessDetail() {
               if (tpl?.id) {
                 const { data: byTpl, error: tplErr } = await supabase
                   .from("document_checklists")
-                  .update({ status: "completed", document_id: gen.id, completed_at: new Date().toISOString() })
+                  .update({ status: "completed", completed_at: new Date().toISOString() })
+
                   .eq("process_id", id)
                   .eq("template_id", tpl.id)
                   .select("id");
+                if (tplErr) console.warn("CHECKLIST_UPDATE_BY_TPL_ERR", tplErr);
                 if (!tplErr && byTpl && byTpl.length > 0) updated = true;
               }
               if (!updated && tpl?.name) {
-                await supabase
+                const { data: byName, error: nameErr } = await supabase
                   .from("document_checklists")
-                  .update({ status: "completed", document_id: gen.id, completed_at: new Date().toISOString() })
+                  .update({ status: "completed", completed_at: new Date().toISOString() })
                   .eq("process_id", id)
-                  .eq("item_name", tpl.name);
+                  .eq("item_name", tpl.name)
+                  .select("id");
+                if (nameErr) console.warn("CHECKLIST_UPDATE_BY_NAME_ERR", nameErr);
               }
+
 
               // 6) Open PDF in a new tab via signed URL
               window.open(signedUrl, "_blank", "noopener,noreferrer");
