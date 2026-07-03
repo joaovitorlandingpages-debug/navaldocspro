@@ -131,11 +131,8 @@ export class DocumentValidationEngine {
   static fillPlaceholder(content: string, data: any): string {
     if (!content) return "";
 
-    // Lazy imports to avoid circular deps at load time.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { ALIAS_TO_CANONICAL } = require("./documentPlaceholders");
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const N = require("./documentNormalizer");
+    // ALIAS_TO_CANONICAL and N imported statically at top of file
+
 
     const isBlank = (v: any) =>
       v === undefined || v === null ||
