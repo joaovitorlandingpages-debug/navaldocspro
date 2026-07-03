@@ -1,6 +1,9 @@
 /**
  * Motor Central de Validação Documental e Conformidade Operacional.
  */
+import { ALIAS_TO_CANONICAL } from "./documentPlaceholders";
+import * as N from "./documentNormalizer";
+
 
 export interface ValidationError {
   field?: string;
