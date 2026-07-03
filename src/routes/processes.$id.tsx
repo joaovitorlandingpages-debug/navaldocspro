@@ -400,7 +400,7 @@ function ProcessDetail() {
                   .eq("process_id", id)
                   .eq("item_name", tpl.name)
                   .select("id");
-                console.log("CHECKLIST_UPDATE_BY_NAME", { name: tpl.name, byName, nameErr });
+                console.log("CHECKLIST_UPDATE_BY_NAME", JSON.stringify({ name: tpl.name, byName, nameErr }));
               }
 
 
