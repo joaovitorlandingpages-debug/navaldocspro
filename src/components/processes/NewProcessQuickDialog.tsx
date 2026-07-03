@@ -1029,11 +1029,11 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
             </div>
           )}
 
-          {/* STEP 7 — Resumo */}
+          {/* STEP 7 — Revisar e editar */}
           {step === 7 && (
             <div className="space-y-4 py-3">
               <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700 mb-3">Tudo pronto</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700 mb-3">Revise antes de criar</p>
                 <div className="space-y-1.5 text-sm">
                   <SummaryCheck ok={!!customerId} label={
                     customerId ? `${isTransfer ? "Comprador" : "Cliente"}: ${customers.find(c => c.id === customerId)?.name}` : "Cliente pendente"
@@ -1049,19 +1049,61 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                   )}
                   <SummaryCheck ok={uploadedTotal > 0} label={`${uploadedTotal} documento(s) anexado(s)`} />
                   <SummaryCheck ok={selectedCount > 0} label={`${selectedCount} documento(s) serão gerados`} />
-                  <SummaryCheck ok label={
-                    brandingMode === "none" ? "Sem logo aplicada" :
-                    brandingMode === "company" ? "Logo da empresa aplicada" :
-                    brandingMode === "customer" ? "Logo do cliente aplicada" : "Logo exclusivo deste processo"
-                  }/>
+                  <SummaryCheck
+                    ok={brandingMode !== "exclusive" || !!exclusiveLogoUrl}
+                    label={
+                      brandingMode === "none"      ? "Sem logo aplicada" :
+                      brandingMode === "company"   ? (companyLogoUrl  ? "Logo da empresa aplicada" : "Logo da empresa — nenhum cadastrado") :
+                      brandingMode === "customer"  ? (customerLogoUrl ? "Logo do cliente aplicada" : "Logo do cliente — não cadastrado") :
+                                                     (exclusiveLogoUrl ? "Logo exclusivo carregado" : "Logo exclusivo — envie na etapa 5")
+                    }
+                  />
                   {noResidenceProof && <SummaryCheck ok label="Declaração de residência gerada automaticamente" />}
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-2 pt-1">
-                <SummaryRow label="Tipo"       value={selectedType?.name || "—"} />
-                <SummaryRow label="Título"     value={title || selectedType?.name || "—"} />
-                <SummaryRow label="Prioridade" value={priority} />
+              {/* Cards editáveis */}
+              <div className="grid sm:grid-cols-2 gap-2">
+                <ReviewCard label="Tipo & prioridade" onEdit={() => setStep(1)}>
+                  <p><b>{selectedType?.name || "—"}</b> · {priority}</p>
+                  <p className="text-slate-500 text-xs">Título: {title || selectedType?.name || "—"}</p>
+                </ReviewCard>
+                <ReviewCard label={isTransfer ? "Comprador & Vendedor" : "Cliente"} onEdit={() => setStep(2)}>
+                  <p><b>{customers.find(c => c.id === customerId)?.name || "—"}</b></p>
+                  {isTransfer && <p className="text-slate-500 text-xs">Vendedor: {customers.find(c => c.id === secondaryCustomerId)?.name || "—"}</p>}
+                </ReviewCard>
+                <ReviewCard label="Documentos do cliente" onEdit={() => setStep(3)}>
+                  <p>{clientSlots.filter(s => (taskFiles[s.key]?.length ?? 0) > 0).length} enviados</p>
+                  <p className="text-slate-500 text-xs">
+                    {clientSlots.filter(s => (taskFiles[s.key]?.length ?? 0) > 0).map(s => s.label).join(", ") || "Nenhum ainda"}
+                  </p>
+                </ReviewCard>
+                {needsVessel && (
+                  <ReviewCard label="Embarcação & docs" onEdit={() => setStep(4)}>
+                    <p><b>{vessels.find(v => v.id === vesselId)?.name || "—"}</b></p>
+                    <p className="text-slate-500 text-xs">
+                      {vesselSlots.filter(s => (taskFiles[s.key]?.length ?? 0) > 0).length} docs enviados
+                    </p>
+                  </ReviewCard>
+                )}
+                <ReviewCard label="Identidade / Logo" onEdit={() => setStep(5)}>
+                  <div className="flex items-center gap-2">
+                    {activeLogoPreview ? (
+                      <img src={activeLogoPreview} alt="" className="h-8 w-8 rounded object-contain border border-slate-100" />
+                    ) : <div className="h-8 w-8 rounded bg-slate-100" />}
+                    <p>{
+                      brandingMode === "none"      ? "Sem logo" :
+                      brandingMode === "company"   ? "Empresa" :
+                      brandingMode === "customer"  ? "Cliente" : "Exclusivo"
+                    }</p>
+                  </div>
+                </ReviewCard>
+                <ReviewCard label="Documentos a gerar" onEdit={() => setStep(6)}>
+                  <p><b>{selectedCount}</b> documento(s) selecionado(s)</p>
+                  <p className="text-slate-500 text-xs">
+                    {preview.filter(p => p.kind === "mandatory").length} obrig · {extras.length} extras
+                  </p>
+                </ReviewCard>
               </div>
 
               <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer border border-slate-100 bg-slate-50/50 p-2.5 rounded-lg">
