@@ -268,6 +268,122 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const bumpSlot = (key: string) =>
     setUploadedSlots((prev) => ({ ...prev, [key]: (prev[key] || 0) + 1 }));
 
+  // Registra novo arquivo como task no slot correspondente e dispara polling do OCR.
+  function attachTaskFile(
+    slotKey: string,
+    bucket: FileBucket,
+    result: { id: string; file_name: string; file_url: string },
+  ) {
+    setTaskFiles((prev) => ({
+      ...prev,
+      [slotKey]: [
+        ...(prev[slotKey] || []),
+        { id: result.id, file_name: result.file_name, file_url: result.file_url, bucket, ocrStatus: "pending" },
+      ],
+    }));
+    bumpSlot(slotKey);
+  }
+
+  async function removeTaskFile(slotKey: string, fileId: string) {
+    setTaskFiles((prev) => ({
+      ...prev,
+      [slotKey]: (prev[slotKey] || []).filter((t) => t.id !== fileId),
+    }));
+    setUploadedSlots((prev) => ({ ...prev, [slotKey]: Math.max(0, (prev[slotKey] || 1) - 1) }));
+    try { await supabase.from("uploaded_files").delete().eq("id", fileId); } catch (e) { console.warn(e); }
+  }
+
+  async function openTaskFile(t: TaskFile) {
+    try {
+      const { data } = await supabase.storage.from(t.bucket).createSignedUrl(t.file_url, 3600);
+      if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+    } catch { toast.error("Não foi possível abrir o arquivo."); }
+  }
+
+  // Polling de ocr_jobs para todos os arquivos anexados neste wizard.
+  useEffect(() => {
+    const allFiles = Object.entries(taskFiles).flatMap(([slot, arr]) =>
+      arr.filter((f) => f.ocrStatus !== "completed" && f.ocrStatus !== "reviewed" && f.ocrStatus !== "failed")
+         .map((f) => ({ slot, f }))
+    );
+    if (allFiles.length === 0) return;
+    const iv = setInterval(async () => {
+      const ids = allFiles.map((a) => a.f.id);
+      const { data } = await supabase
+        .from("ocr_jobs")
+        .select("id,uploaded_file_id,status,extracted_data,confidence_score")
+        .in("uploaded_file_id", ids);
+      if (!data || data.length === 0) return;
+      setTaskFiles((prev) => {
+        const next: typeof prev = { ...prev };
+        for (const job of data as any[]) {
+          for (const [slot, arr] of Object.entries(next)) {
+            const idx = arr.findIndex((x) => x.id === job.uploaded_file_id);
+            if (idx >= 0) {
+              const copy = [...arr];
+              copy[idx] = {
+                ...copy[idx],
+                ocrJobId: job.id,
+                ocrStatus: job.status,
+                extracted: job.extracted_data || copy[idx].extracted,
+                confidence: job.confidence_score ?? copy[idx].confidence,
+              };
+              next[slot] = copy;
+            }
+          }
+        }
+        return next;
+      });
+    }, 2500);
+    return () => clearInterval(iv);
+  }, [taskFiles]);
+
+  // Match automático de cliente/embarcação a partir do OCR (CPF/CNPJ, inscrição).
+  useEffect(() => {
+    const clientFields = Object.entries(taskFiles)
+      .filter(([k]) => ["rg", "cnh", "cpf", "cnpj"].includes(k))
+      .flatMap(([, arr]) => arr.map((t) => t.extracted).filter(Boolean));
+    const doc = clientFields.find((f: any) => f?.cpf || f?.cnpj) as any;
+    if (doc && !customerId) {
+      const norm = (s: any) => String(s || "").replace(/\D+/g, "");
+      const key = norm(doc.cpf || doc.cnpj);
+      if (key.length >= 11) {
+        (async () => {
+          const { data } = await supabase.from("customers").select("id,name,cpf_cnpj").ilike("cpf_cnpj", `%${key.slice(-6)}%`).limit(5);
+          const match = (data as any[])?.find((c) => norm(c.cpf_cnpj) === key);
+          if (match) setMatchInfo((m) => ({ ...m, customerMatch: { id: match.id, name: match.name }, customerNew: null }));
+          else if (doc.name) setMatchInfo((m) => ({ ...m, customerMatch: null, customerNew: doc.name }));
+        })();
+      }
+    }
+    const vesselFields = Object.entries(taskFiles)
+      .filter(([k]) => ["tie", "nf_embarcacao"].includes(k))
+      .flatMap(([, arr]) => arr.map((t) => t.extracted).filter(Boolean));
+    const vdoc = vesselFields.find((f: any) => f?.registration_number || f?.vessel_name) as any;
+    if (vdoc && !vesselId) {
+      if (vdoc.registration_number) {
+        (async () => {
+          const { data } = await supabase.from("vessels").select("id,name,registration_number").eq("registration_number", String(vdoc.registration_number));
+          const match = (data as any[])?.[0];
+          if (match) setMatchInfo((m) => ({ ...m, vesselMatch: { id: match.id, name: match.name }, vesselNew: null }));
+          else if (vdoc.vessel_name) setMatchInfo((m) => ({ ...m, vesselMatch: null, vesselNew: vdoc.vessel_name }));
+        })();
+      } else if (vdoc.vessel_name) {
+        setMatchInfo((m) => ({ ...m, vesselNew: vdoc.vessel_name }));
+      }
+    }
+  }, [taskFiles, customerId, vesselId]);
+
+  const uploadedTotal = useMemo(
+    () => Object.values(taskFiles).reduce((a, arr) => a + arr.length, 0),
+    [taskFiles]
+  );
+  const avgConfidence = useMemo(() => {
+    const arr = Object.values(taskFiles).flat().map((t) => t.confidence).filter((c): c is number => typeof c === "number");
+    if (arr.length === 0) return null;
+    return Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 100);
+  }, [taskFiles]);
+
   // ------------------------------------------------------------- CRUD inline
   async function createCustomerInline(kind: "primary" | "secondary" = "primary") {
     const label = kind === "secondary" ? "vendedor" : (isTransfer ? "comprador" : "cliente");
