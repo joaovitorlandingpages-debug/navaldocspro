@@ -224,6 +224,9 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setVesselId(""); setHasMotor(false);
       setTaskFiles({}); setMatchInfo({});
       setBrandingMode("company");
+      setExclusiveLogoPath(null); setExclusiveLogoUrl(null);
+      setCompanyLogoUrl(null); setCustomerLogoUrl(null);
+      setUploadingLogo(false);
       setPreview([]); setExcluded(new Set()); setExtras([]);
       setLibraryOpen(false); setLibraryQuery(""); setLibraryResults([]);
       setAllowEmptyPackage(false);
