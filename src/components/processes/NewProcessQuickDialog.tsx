@@ -391,6 +391,57 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     return Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 100);
   }, [taskFiles]);
 
+  // ------------------------------------------------------------- logos reais (etapa 5)
+  useEffect(() => {
+    if (step !== 5) return;
+    (async () => {
+      if (profile?.company_id && !companyLogoUrl) {
+        const { data } = await supabase
+          .from("companies")
+          .select("logo_url, logo_primary_url")
+          .eq("id", profile.company_id).maybeSingle();
+        setCompanyLogoUrl((data as any)?.logo_primary_url || (data as any)?.logo_url || null);
+      }
+      if (customerId && !customerLogoUrl) {
+        const { data } = await supabase
+          .from("customers").select("logo_url").eq("id", customerId).maybeSingle();
+        setCustomerLogoUrl((data as any)?.logo_url || null);
+      }
+    })();
+  }, [step, profile?.company_id, customerId, companyLogoUrl, customerLogoUrl]);
+
+  async function uploadExclusiveLogo(file: File) {
+    if (!profile?.company_id) { toast.error("Empresa não vinculada."); return; }
+    if (!file.type.startsWith("image/")) { toast.error("Envie uma imagem (PNG/JPG/SVG)."); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error("Logo até 2MB."); return; }
+    setUploadingLogo(true);
+    try {
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      const path = `${profile.company_id}/process-exclusive/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("company-branding").upload(path, file, {
+        contentType: file.type, upsert: false,
+      });
+      if (error) throw error;
+      const { data: signed } = await supabase.storage.from("company-branding")
+        .createSignedUrl(path, 60 * 60 * 24 * 7);
+      setExclusiveLogoPath(path);
+      setExclusiveLogoUrl(signed?.signedUrl || null);
+      setBrandingMode("exclusive");
+      toast.success("Logo exclusivo carregado.");
+    } catch (e: any) {
+      toast.error("Falha no upload: " + (e?.message || e));
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
+
+  const activeLogoPreview =
+    brandingMode === "none"      ? null :
+    brandingMode === "company"   ? companyLogoUrl :
+    brandingMode === "customer"  ? customerLogoUrl :
+    brandingMode === "exclusive" ? exclusiveLogoUrl : null;
+
+
   // ------------------------------------------------------------- CRUD inline
   async function createCustomerInline(kind: "primary" | "secondary" = "primary") {
     const label = kind === "secondary" ? "vendedor" : (isTransfer ? "comprador" : "cliente");
