@@ -699,72 +699,49 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
             </div>
           )}
 
-          {/* STEP 3 — Docs do cliente (checklist + upload dos marcados) */}
+          {/* STEP 3 — Docs do cliente (task cards) */}
           {step === 3 && (
             <div className="space-y-4 py-3">
-              <div className="rounded-xl border border-sky-100 bg-sky-50/50 p-3">
-                <p className="text-[11px] font-black uppercase tracking-widest text-sky-700 mb-2">
-                  1. Marque tudo que você possui deste cliente
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                  {clientSlots.map((slot) => {
-                    const isComprovante = slot.key === "comprovante";
-                    const disabled = isComprovante && noResidenceProof;
-                    const checked = clientDocPicks.has(slot.key) && !disabled;
-                    return (
-                      <label key={slot.key}
-                        className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-bold cursor-pointer border transition ${
-                          checked ? "bg-white border-sky-300 text-navy" : "bg-white/60 border-transparent text-slate-500 hover:border-slate-200"
-                        } ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}>
-                        <Checkbox checked={checked} disabled={disabled} onCheckedChange={() => toggleClientPick(slot.key)} />
-                        {slot.label}
-                      </label>
-                    );
-                  })}
-                </div>
-                <label className="flex items-center gap-2 mt-2 text-[11px] font-bold text-violet-700 cursor-pointer">
-                  <Checkbox checked={noResidenceProof} onCheckedChange={(v) => {
-                    setNoResidenceProof(!!v);
-                    if (v) toggleClientPick("comprovante") /* ensure removed */;
-                  }} />
-                  Cliente não possui comprovante — gerar Declaração de Residência automaticamente
-                </label>
-              </div>
-
-              {clientDocPicks.size === 0 && !noResidenceProof ? (
-                <p className="text-xs text-slate-400 italic text-center py-6">Selecione ao menos um documento acima para anexar agora, ou avance para enviar depois.</p>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-500">
-                    2. Envie os documentos marcados
-                  </p>
-                  {clientSlots.filter((s) => clientDocPicks.has(s.key) && !(s.key === "comprovante" && noResidenceProof)).map((slot) => (
-                    <div key={slot.key} className="rounded-xl border border-slate-200 bg-white p-3">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div>
-                          <p className="text-sm font-bold text-navy flex items-center gap-2">
-                            {slot.label}
-                            {uploadedSlots[slot.key] > 0 && <Badge className="text-[9px] uppercase bg-emerald-100 text-emerald-700 border-emerald-200">{uploadedSlots[slot.key]} enviado</Badge>}
-                          </p>
-                          {slot.hint && <p className="text-[11px] text-slate-500 mt-0.5">{slot.hint}</p>}
-                        </div>
-                      </div>
-                      <FileUploader
-                        bucket="customer-documents"
-                        category={slot.category}
-                        customerId={customerId}
-                        compact
-                        onSuccess={() => bumpSlot(slot.key)}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-              <p className="text-[11px] text-slate-400 italic">
-                💡 O OCR lê cada arquivo e preenche automaticamente os dados do cliente. Você pode enviar mais depois pelo workspace.
+              <p className="text-xs text-slate-600">
+                Cada documento é uma tarefa independente. Envie, e o OCR extrai os dados automaticamente.
               </p>
+
+              {(matchInfo.customerMatch || matchInfo.customerNew) && (
+                <MatchBanner
+                  match={matchInfo.customerMatch}
+                  newName={matchInfo.customerNew}
+                  entity="cliente"
+                  onLink={() => matchInfo.customerMatch && setCustomerId(matchInfo.customerMatch.id)}
+                />
+              )}
+
+              <div className="space-y-3">
+                {clientSlots.map((slot) => {
+                  const isComprovante = slot.key === "comprovante";
+                  const skipped = isComprovante && noResidenceProof;
+                  return (
+                    <DocTaskCard
+                      key={slot.key}
+                      slot={slot}
+                      files={taskFiles[slot.key] || []}
+                      bucket="customer-documents"
+                      customerId={customerId || undefined}
+                      skipped={skipped}
+                      skipMessage={skipped ? "Declaração de Residência será gerada automaticamente." : undefined}
+                      onSkipToggle={isComprovante ? (v) => {
+                        setNoResidenceProof(v);
+                        if (v) setClientDocPicks((prev) => { const n = new Set(prev); n.delete("comprovante"); return n; });
+                      } : undefined}
+                      onUploaded={(r) => attachTaskFile(slot.key, "customer-documents", r)}
+                      onRemove={(id) => removeTaskFile(slot.key, id)}
+                      onView={openTaskFile}
+                    />
+                  );
+                })}
+              </div>
             </div>
           )}
+
 
           {/* STEP 4 — Embarcação (checklist + upload dos marcados) */}
           {step === 4 && (
