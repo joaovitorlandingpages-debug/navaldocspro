@@ -69,8 +69,20 @@ export function FileUploader({
       toast.dismiss(loadingToast);
       toast.success(`Arquivo "${file.name}" enviado com sucesso!`);
 
-      const ocrCategories = ['RG', 'CNH', 'CPF', 'TIE', 'TIEM', 'Documentos Pessoais', 'Documentos da Embarcação'];
-      if (ocrCategories.some(cat => category?.toUpperCase()?.includes(cat.toUpperCase()) || result.file_name?.toUpperCase().includes(cat.toUpperCase()))) {
+      // OCR triggers para categorias reconhecidas pelo Wizard Guiado + upload avulso.
+      const ocrCategories = [
+        'RG', 'CNH', 'CPF', 'CNPJ',
+        'TIE', 'TIEM', 'NOTA_FISCAL', 'NOTA FISCAL', 'MEMORIAL',
+        'COMPROVANTE', 'DECLARACAO', 'DECLARAÇÃO',
+        'Documentos Pessoais', 'Documentos da Embarcação',
+      ];
+      const catU = (category || '').toUpperCase();
+      const nameU = (result.file_name || '').toUpperCase();
+      const hit = ocrCategories.some((cat) => {
+        const c = cat.toUpperCase();
+        return catU.includes(c) || c.includes(catU) || nameU.includes(c);
+      });
+      if (hit) {
         console.log("OCR_DOCUMENT_ATTACHED", result.id);
         try {
           createBatchJobs.mutate({
