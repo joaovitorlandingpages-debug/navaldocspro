@@ -218,6 +218,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setNoResidenceProof(false); setUploadedSlots({});
       setClientDocPicks(new Set()); setVesselDocPicks(new Set());
       setVesselId(""); setHasMotor(false);
+      setTaskFiles({}); setMatchInfo({});
       setBrandingMode("company");
       setPreview([]); setExcluded(new Set()); setExtras([]);
       setLibraryOpen(false); setLibraryQuery(""); setLibraryResults([]);
