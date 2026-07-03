@@ -9,7 +9,7 @@ export async function seedDemoData(companyId: string) {
       .insert({
         company_id: companyId,
         name: 'NAVIGATOR ONE (DEMO)',
-        type: 'CARGO',
+        vessel_type: 'CARGO',
         registration_number: 'PR-2024-001X',
       })
       .select()
