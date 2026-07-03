@@ -24,7 +24,7 @@ export async function seedDemoData(companyId: string) {
         company_id: companyId,
         name: 'MARÍTIMA GLOBAL LTDA (DEMO)',
         email: 'contato@maritimaglobal.demo',
-        document_number: '00.000.000/0001-00',
+        cpf_cnpj: '00.000.000/0001-00',
       })
       .select()
       .single();
