@@ -611,6 +611,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
           trashed_at: null,
           deleted_at: null,
           branding_mode: brandingMode,
+          branding_logo_url: brandingMode === "exclusive" ? exclusiveLogoPath : null,
         } as any)
         .select("id").single();
       if (error) throw error;
