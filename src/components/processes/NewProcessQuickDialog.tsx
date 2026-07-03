@@ -118,6 +118,25 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const [hasMotor, setHasMotor] = useState(false);
   const [vesselDocPicks, setVesselDocPicks] = useState<Set<string>>(new Set());
 
+  // Task files por slot: cada upload vira uma tarefa independente com OCR próprio.
+  interface TaskFile {
+    id: string;
+    file_name: string;
+    file_url: string;
+    bucket: FileBucket;
+    ocrJobId?: string;
+    ocrStatus?: "pending" | "processing" | "completed" | "failed" | "reviewed";
+    extracted?: Record<string, any>;
+    confidence?: number;
+  }
+  const [taskFiles, setTaskFiles] = useState<Record<string, TaskFile[]>>({});
+  const [matchInfo, setMatchInfo] = useState<{
+    customerMatch?: { id: string; name: string } | null;
+    customerNew?: string | null;
+    vesselMatch?: { id: string; name: string } | null;
+    vesselNew?: string | null;
+  }>({});
+
 
   // Etapa 5 — identidade
   const [brandingMode, setBrandingMode] = useState<BrandingMode>("company");
