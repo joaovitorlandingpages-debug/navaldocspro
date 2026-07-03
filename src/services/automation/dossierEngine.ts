@@ -87,7 +87,6 @@ export const dossierEngine = {
 
       const nextVersion = (existingDossier?.version || 0) + 1;
 
-      // 1. Create generating entry
       const { data: dossier, error: insertError } = await supabase
         .from('process_dossiers')
         .insert({
@@ -102,37 +101,128 @@ export const dossierEngine = {
       if (insertError) throw insertError;
 
       const data = await this.fetchDossierData(processId);
-      
-      console.log("DOSSIER_GENERATION_OK", data);
+      console.log("DOSSIER_GENERATION_OK", { documents: data.documents.length, signatures: data.signatures.length });
 
-      // Simulation of PDF and ZIP creation path storage
-      const pdfPath = `${companyId}/${processId}/dossier_v${nextVersion}.pdf`;
+      // Build real ZIP bundle
+      const zip = new JSZip();
+      const manifest: any = {
+        generated_at: new Date().toISOString(),
+        process_id: processId,
+        version: nextVersion,
+        client: data.customer?.name ?? null,
+        vessel: data.vessel?.name ?? null,
+        contents: [] as any[],
+      };
+
+      // Cover PDF
+      const cover = new jsPDF("p", "mm", "a4");
+      cover.setFontSize(18);
+      cover.text("Dossiê do Processo Naval", 20, 25);
+      cover.setFontSize(11);
+      cover.text(`Processo: ${data.process.process_type || processId}`, 20, 40);
+      cover.text(`Protocolo: ${data.process.protocol_number || "—"}`, 20, 48);
+      cover.text(`Cliente: ${data.customer?.name || "—"}`, 20, 56);
+      cover.text(`Embarcação: ${data.vessel?.name || "—"}`, 20, 64);
+      cover.text(`Versão: v${nextVersion}`, 20, 72);
+      cover.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, 20, 80);
+      cover.text(`Documentos: ${data.documents.length}`, 20, 92);
+      cover.text(`Assinaturas: ${data.signatures.length}`, 20, 100);
+      const coverBlob = cover.output("blob");
+      zip.file("00_capa.pdf", coverBlob);
+      manifest.contents.push({ path: "00_capa.pdf", type: "cover" });
+
+      // Helper to download a storage object into the zip
+      const addFromStorage = async (bucket: string, path: string, zipPath: string, type: string) => {
+        if (!path) return false;
+        try {
+          const { data: blob, error } = await supabase.storage.from(bucket).download(path);
+          if (error || !blob) { console.warn("[DOSSIER_MISS]", bucket, path, error?.message); return false; }
+          zip.file(zipPath, blob);
+          manifest.contents.push({ path: zipPath, type, source: `${bucket}/${path}` });
+          return true;
+        } catch (e: any) {
+          console.warn("[DOSSIER_MISS_EXC]", bucket, path, e?.message);
+          return false;
+        }
+      };
+
+      // Generated documents
+      let idx = 1;
+      for (const d of data.documents) {
+        const url: string | null = d.generated_file_url || d.file_url || null;
+        if (!url) continue;
+        const name = (d.name || d.document_type || `documento_${idx}`).toString().replace(/[^\w.\-]+/g, "_");
+        await addFromStorage("generated-documents", url, `03_Documentos/${String(idx).padStart(2, "0")}_${name}.pdf`, "generated_document");
+        idx++;
+      }
+
+      // Signed PDFs + certificates
+      let sIdx = 1;
+      for (const s of data.signatures as any[]) {
+        if (s.final_signed_pdf_url) {
+          await addFromStorage("signed-documents", s.final_signed_pdf_url,
+            `05_Assinaturas/${String(sIdx).padStart(2, "0")}_assinado.pdf`, "signed_pdf");
+        }
+        if (s.evidence_certificate_url) {
+          await addFromStorage("signed-documents", s.evidence_certificate_url,
+            `05_Assinaturas/${String(sIdx).padStart(2, "0")}_certificado.pdf`, "certificate");
+        }
+        sIdx++;
+      }
+
+      // Attachments
+      const { data: attachments } = await supabase.from("process_attachments" as any)
+        .select("*").eq("process_id", processId);
+      let aIdx = 1;
+      for (const a of (attachments as any[] | null) || []) {
+        if (!a.file_url) continue;
+        const name = (a.file_name || `anexo_${aIdx}`).replace(/[^\w.\-]+/g, "_");
+        await addFromStorage("process-attachments", a.file_url,
+          `07_Anexos/${String(aIdx).padStart(2, "0")}_${name}`, "attachment");
+        aIdx++;
+      }
+
+      // Info JSON files
+      zip.file("01_Cliente/info.json", JSON.stringify(data.customer, null, 2));
+      zip.file("02_Embarcacao/info.json", JSON.stringify(data.vessel, null, 2));
+      zip.file("06_Timeline/timeline.json", JSON.stringify(data.timeline, null, 2));
+      zip.file("manifest.json", JSON.stringify(manifest, null, 2));
+
+      const zipBlob = await zip.generateAsync({ type: "blob" });
       const zipPath = `${companyId}/${processId}/dossier_v${nextVersion}.zip`;
 
-      // Final status update
+      const { error: upErr } = await supabase.storage
+        .from("process-dossiers")
+        .upload(zipPath, zipBlob, {
+          contentType: "application/zip",
+          upsert: true,
+        });
+      if (upErr) throw new Error(`Upload do dossiê falhou: ${upErr.message}`);
+
       await supabase
         .from('process_dossiers')
         .update({
           status: 'generated',
-          file_url: pdfPath,
+          file_url: zipPath,
           metadata: {
             generated_at: new Date().toISOString(),
+            bucket: "process-dossiers",
             zip_path: zipPath,
+            zip_size: zipBlob.size,
             document_count: data.documents.length,
             signature_count: data.signatures.length,
+            attachment_count: ((attachments as any[] | null) || []).length,
             client_name: data.customer?.name,
-            vessel_name: data.vessel?.name
+            vessel_name: data.vessel?.name,
+            manifest_entries: manifest.contents.length,
           }
         })
         .eq('id', dossier.id);
 
-      // Record successful consumption (idempotent by dossier id)
       try {
-        const { limitsEngine } = await import("@/services/limitsEngine");
         await limitsEngine.consume("dossier_export", 1, { process_id: processId, version: nextVersion }, dossier.id, companyId);
       } catch (e) { console.warn("[DOSSIER_CONSUME_FAIL]", e); }
 
-      // Mark technical checklist as done
       await supabase
         .from('processes')
         .update({
@@ -143,14 +233,20 @@ export const dossierEngine = {
         })
         .eq('id', processId);
 
-      console.log("DOSSIER_VERSIONING_OK");
-      console.log("DOSSIER_TIMELINE_OK");
-      console.log("ENTERPRISE_DOSSIER_COMPLETE");
-      return { ...dossier, status: 'generated', file_url: pdfPath, metadata: { zip_path: zipPath } };
+      console.log("ENTERPRISE_DOSSIER_COMPLETE", zipPath, zipBlob.size);
+      return { ...dossier, status: 'generated', file_url: zipPath, metadata: { zip_path: zipPath, zip_size: zipBlob.size } };
     } catch (error) {
       console.error("Dossier generation error:", error);
       throw error;
     }
+  },
+
+  async downloadDossier(dossierRow: { file_url: string; company_id: string; process_id: string }) {
+    const path = dossierRow.file_url;
+    const bucket = path.endsWith(".zip") ? "process-dossiers" : "generated-documents";
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 600);
+    if (error || !data) throw new Error(error?.message || "Falha ao gerar URL");
+    window.open(data.signedUrl, "_blank");
   },
 
   async exportZip(data: DossierData) {
