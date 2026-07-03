@@ -390,7 +390,7 @@ function ProcessDetail() {
                   .eq("process_id", id)
                   .eq("template_id", tpl.id)
                   .select("id");
-                console.log("CHECKLIST_UPDATE_BY_TPL", { tplId: tpl.id, byTpl, tplErr });
+                console.log("CHECKLIST_UPDATE_BY_TPL", JSON.stringify({ tplId: tpl.id, byTpl, tplErr }));
                 if (!tplErr && byTpl && byTpl.length > 0) updated = true;
               }
               if (!updated && tpl?.name) {
