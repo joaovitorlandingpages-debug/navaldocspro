@@ -1,9 +1,10 @@
+import env from "node:process";
 import { createClient } from "@supabase/supabase-js";
 import JSZip from "jszip";
 import { jsPDF } from "jspdf";
 
-const url = process.env.SUPABASE_URL;
-const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const url = env.env.SUPABASE_URL;
+const key = env.env.SUPABASE_SERVICE_ROLE_KEY;
 const supa = createClient(url, key, { auth: { persistSession: false } });
 
 const processId = "e12d074f-34d6-456a-b984-759d6ac25571";
@@ -15,20 +16,20 @@ const nextVersion = (existing?.version || 0) + 1;
 const { data: dossier } = await supa.from("process_dossiers").insert({ process_id: processId, company_id: companyId, status: "generating", version: nextVersion }).select().single();
 console.log("DOSSIER_ID:", dossier.id, "v", nextVersion);
 
-const { data: process } = await supa.from("processes").select("*, customer:customers!processes_customer_id_fkey(*), vessel:vessels!processes_vessel_id_fkey(*)").eq("id", processId).single();
+const { data: proc } = await supa.from("processes").select("*, customer:customers!processes_customer_id_fkey(*), vessel:vessels!processes_vessel_id_fkey(*)").eq("id", processId).single();
 const { data: generatedDocs = [] } = await supa.from("generated_documents").select("*").eq("process_id", processId);
 const { data: signatures = [] } = await supa.from("signature_requests").select("*").eq("process_id", processId);
 
 const zip = new JSZip();
-const manifest = { generated_at: new Date().toISOString(), process_id: processId, version: nextVersion, client: process.customer?.name, vessel: process.vessel?.name, contents: [] };
+const manifest = { generated_at: new Date().toISOString(), process_id: processId, version: nextVersion, client: proc.customer?.name, vessel: proc.vessel?.name, contents: [] };
 
 const cover = new jsPDF("p","mm","a4");
 cover.setFontSize(18); cover.text("Dossiê do Processo Naval", 20, 25);
 cover.setFontSize(11);
-cover.text(`Processo: ${process.process_type||processId}`, 20, 40);
-cover.text(`Protocolo: ${process.protocol_number||"—"}`, 20, 48);
-cover.text(`Cliente: ${process.customer?.name||"—"}`, 20, 56);
-cover.text(`Embarcação: ${process.vessel?.name||"—"}`, 20, 64);
+cover.text(`Processo: ${proc.process_type||processId}`, 20, 40);
+cover.text(`Protocolo: ${proc.protocol_number||"—"}`, 20, 48);
+cover.text(`Cliente: ${proc.customer?.name||"—"}`, 20, 56);
+cover.text(`Embarcação: ${proc.vessel?.name||"—"}`, 20, 64);
 cover.text(`Versão: v${nextVersion}`, 20, 72);
 cover.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, 20, 80);
 cover.text(`Documentos: ${generatedDocs.length}`, 20, 92);
@@ -59,8 +60,8 @@ for (const s of signatures) {
   sIdx++;
 }
 
-zip.file("01_Cliente/info.json", JSON.stringify(process.customer,null,2));
-zip.file("02_Embarcacao/info.json", JSON.stringify(process.vessel,null,2));
+zip.file("01_Cliente/info.json", JSON.stringify(proc.customer,null,2));
+zip.file("02_Embarcacao/info.json", JSON.stringify(proc.vessel,null,2));
 zip.file("manifest.json", JSON.stringify(manifest,null,2));
 
 const zipBuf = await zip.generateAsync({ type: "nodebuffer" });
@@ -70,7 +71,7 @@ if (upErr) throw upErr;
 
 await supa.from("process_dossiers").update({
   status: "generated", file_url: zipPath,
-  metadata: { generated_at: new Date().toISOString(), bucket: "process-dossiers", zip_path: zipPath, zip_size: zipBuf.length, document_count: generatedDocs.length, signature_count: signatures.length, manifest_entries: manifest.contents.length, client_name: process.customer?.name, vessel_name: process.vessel?.name }
+  metadata: { generated_at: new Date().toISOString(), bucket: "process-dossiers", zip_path: zipPath, zip_size: zipBuf.length, document_count: generatedDocs.length, signature_count: signatures.length, manifest_entries: manifest.contents.length, client_name: proc.customer?.name, vessel_name: proc.vessel?.name }
 }).eq("id", dossier.id);
 
 console.log("OK zip_path=", zipPath, "size=", zipBuf.length, "entries=", manifest.contents.length);
