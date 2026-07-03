@@ -976,7 +976,9 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
               </label>
             </div>
           )}
+          </div>
         </div>
+
 
         <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-between border-t p-4 sm:p-6 shrink-0">
           <div className="flex gap-2">
