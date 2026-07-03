@@ -454,9 +454,24 @@ function ProcessDetail() {
         automationReady={automationState?.is_ready_for_generation}
         pendingDossierItems={pendingDossierItems}
         onFinalize={async () => {
-          toast.success("Processo finalizado! Iniciando geração do dossiê...");
-          await generateDossier();
-          setActiveTab("dossier_v2");
+          try {
+            const { data: userData } = await supabase.auth.getUser();
+            const { error } = await supabase
+              .from("processes")
+              .update({
+                status: "completed",
+                finalized_at: new Date().toISOString(),
+                finalized_by: userData.user?.id ?? null,
+              })
+              .eq("id", id!);
+            if (error) throw error;
+            toast.success("Processo finalizado! Gerando dossiê...");
+            await generateDossier();
+            await fetchProcess();
+            setActiveTab("dossier_v2");
+          } catch (e: any) {
+            toast.error(e?.message ?? "Falha ao finalizar processo");
+          }
         }}
         onEdit={() => setEditSheetOpen(true)}
         onChanged={fetchProcess}
