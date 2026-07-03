@@ -883,17 +883,20 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
             <div className="space-y-3 py-3">
               <p className="text-sm text-slate-600">Escolha como os documentos gerados serão marcados:</p>
               <div className="grid sm:grid-cols-2 gap-3">
-                {[
-                  { v: "none",      title: "Sem logo",         desc: "Documentos limpos, sem cabeçalho." },
-                  { v: "company",   title: "Logo da empresa",  desc: "Usa a identidade corporativa cadastrada." },
-                  { v: "customer",  title: "Logo do cliente",  desc: "Usa a marca do cliente (se disponível)." },
-                  { v: "exclusive", title: "Logo exclusivo",   desc: "Configure um logo só para este processo." },
-                ].map((opt) => (
+                {([
+                  { v: "none",      title: "Sem logo",         desc: "Documentos limpos, sem cabeçalho.",              disabled: false },
+                  { v: "company",   title: "Logo da empresa",  desc: companyLogoUrl ? "Usa a identidade corporativa cadastrada." : "Nenhum logo de empresa cadastrado.", disabled: !companyLogoUrl },
+                  { v: "customer",  title: "Logo do cliente",  desc: customerLogoUrl ? "Usa a marca do cliente." : "Este cliente ainda não tem logo cadastrado.", disabled: !customerLogoUrl },
+                  { v: "exclusive", title: "Logo exclusivo",   desc: exclusiveLogoUrl ? "Logo carregado para este processo." : "Envie um PNG/JPG só para este processo.", disabled: false },
+                ] as const).map((opt) => (
                   <button
                     key={opt.v} type="button"
-                    onClick={() => setBrandingMode(opt.v as BrandingMode)}
+                    onClick={() => !opt.disabled && setBrandingMode(opt.v as BrandingMode)}
+                    disabled={opt.disabled}
                     className={`text-left p-3 rounded-xl border transition ${
-                      brandingMode === opt.v ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-slate-200 hover:border-slate-300"
+                      brandingMode === opt.v ? "border-primary bg-primary/5 ring-2 ring-primary/20" :
+                      opt.disabled ? "border-slate-100 bg-slate-50/50 opacity-50 cursor-not-allowed" :
+                      "border-slate-200 hover:border-slate-300"
                     }`}
                   >
                     <p className="text-sm font-bold text-navy">{opt.title}</p>
@@ -901,24 +904,56 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                   </button>
                 ))}
               </div>
+
+              {brandingMode === "exclusive" && (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600">
+                    Logo exclusivo deste processo
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <label className="inline-flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-lg border border-primary/30 bg-white text-primary cursor-pointer hover:bg-primary/10">
+                      {uploadingLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                      {exclusiveLogoUrl ? "Trocar logo" : "Enviar logo (PNG/JPG até 2MB)"}
+                      <input
+                        type="file" accept="image/png,image/jpeg,image/svg+xml" className="hidden"
+                        disabled={uploadingLogo}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) uploadExclusiveLogo(f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    {exclusiveLogoUrl && (
+                      <button type="button" onClick={() => { setExclusiveLogoPath(null); setExclusiveLogoUrl(null); }}
+                        className="text-[11px] text-red-500 hover:underline font-bold inline-flex items-center gap-1">
+                        <X className="h-3 w-3" /> Remover
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Preview do cabeçalho</p>
                 <div className="bg-white border border-slate-200 rounded-lg p-4">
                   <div className="flex items-center gap-3 pb-2 border-b border-slate-200">
-                    {brandingMode === "none" ? (
+                    {activeLogoPreview ? (
+                      <img src={activeLogoPreview} alt="logo" className="h-10 w-10 rounded object-contain bg-white border border-slate-100" />
+                    ) : brandingMode === "none" ? (
                       <div className="h-10 w-10 rounded bg-slate-100" />
                     ) : (
-                      <div className="h-10 w-10 rounded bg-gradient-to-br from-primary/40 to-primary/10 grid place-content-center text-primary text-xs font-black">
-                        LOGO
+                      <div className="h-10 w-10 rounded bg-slate-100 grid place-content-center text-slate-400 text-[9px] font-black text-center px-1">
+                        sem<br/>logo
                       </div>
                     )}
                     <div>
                       <p className="text-sm font-bold">{title || selectedType?.name || "Documento"}</p>
                       <p className="text-[10px] text-slate-500">
-                        {brandingMode === "company" && "Empresa"}
-                        {brandingMode === "customer" && "Cliente"}
-                        {brandingMode === "exclusive" && "Exclusivo deste processo"}
-                        {brandingMode === "none" && "Sem marca"}
+                        {brandingMode === "company"   && (companyLogoUrl  ? "Empresa"    : "Empresa (sem logo)")}
+                        {brandingMode === "customer"  && (customerLogoUrl ? "Cliente"    : "Cliente (sem logo)")}
+                        {brandingMode === "exclusive" && (exclusiveLogoUrl ? "Exclusivo deste processo" : "Exclusivo — envie o logo acima")}
+                        {brandingMode === "none"      && "Sem marca"}
                       </p>
                     </div>
                   </div>
