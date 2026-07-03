@@ -340,14 +340,67 @@ function ProcessDetail() {
                 .single();
               if (genErr) throw genErr;
 
-              // 2) Mark the matching checklist item as completed
-              await supabase
-                .from("document_checklists")
-                .update({ status: "completed", document_id: gen.id })
-                .eq("process_id", id)
-                .eq("item_name", tpl?.name);
+              // 2) Resolve branding
+              const mode = (process as any)?.branding_mode ?? "none";
+              let logoUrl: string | null = (process as any)?.branding_logo_url ?? null;
+              let companyName: string | null = null;
+              if (mode === "company") {
+                const { data: co } = await supabase
+                  .from("companies")
+                  .select("name,logo_url")
+                  .eq("id", process?.company_id)
+                  .maybeSingle();
+                logoUrl = logoUrl || (co as any)?.logo_url || null;
+                companyName = (co as any)?.name ?? null;
+              } else if (mode === "client" && process?.customer_id) {
+                const { data: cu } = await supabase
+                  .from("customers")
+                  .select("name,logo_url")
+                  .eq("id", process.customer_id)
+                  .maybeSingle();
+                logoUrl = logoUrl || (cu as any)?.logo_url || null;
+                companyName = (cu as any)?.name ?? null;
+              }
 
-              toast.success("Documento finalizado e anexado.");
+              // 3) Generate + upload real PDF
+              const { generateAndUploadPdf } = await import("@/utils/pdf-export");
+              const { path, signedUrl } = await generateAndUploadPdf({
+                name: tpl?.name ?? "documento",
+                content: finalContent,
+                processId: id!,
+                companyId: process!.company_id,
+                generatedDocumentId: gen.id,
+                branding: { mode, logoUrl, companyName },
+              });
+
+              // 4) Save storage path on the row
+              await supabase
+                .from("generated_documents")
+                .update({ generated_file_url: path })
+                .eq("id", gen.id);
+
+              // 5) Mark checklist item completed — prefer template_id, fallback to item_name
+              let updated = false;
+              if (tpl?.id) {
+                const { data: byTpl, error: tplErr } = await supabase
+                  .from("document_checklists")
+                  .update({ status: "completed", document_id: gen.id, completed_at: new Date().toISOString() })
+                  .eq("process_id", id)
+                  .eq("template_id", tpl.id)
+                  .select("id");
+                if (!tplErr && byTpl && byTpl.length > 0) updated = true;
+              }
+              if (!updated && tpl?.name) {
+                await supabase
+                  .from("document_checklists")
+                  .update({ status: "completed", document_id: gen.id, completed_at: new Date().toISOString() })
+                  .eq("process_id", id)
+                  .eq("item_name", tpl.name);
+              }
+
+              // 6) Open PDF in a new tab via signed URL
+              window.open(signedUrl, "_blank", "noopener,noreferrer");
+              toast.success("Documento finalizado, PDF gerado e anexado.");
             } catch (e: any) {
               console.error("PROCESS_GENERATION_SAVE_FAIL", e);
               toast.error(`Falha ao salvar documento: ${e?.message ?? e}`);
@@ -356,6 +409,7 @@ function ProcessDetail() {
               fetchProcess();
             }
           }}
+
           onCancel={() => setSelectedTemplateForGen(null)}
         />
       </div>
