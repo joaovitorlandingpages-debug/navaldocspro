@@ -19,7 +19,7 @@ import { ProcessEditSheet } from "@/components/processes/ProcessEditSheet";
 import type { VisibleProcessRow } from "@/services/processes/processCreation";
 import { translateTerm } from "@/lib/naval-terms";
 
-export const Route = createFileRoute("/processes")({
+export const Route = createFileRoute("/processes/")({
   component: Processes,
 });
 
