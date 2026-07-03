@@ -49,6 +49,7 @@ import {
   confirmProcessVisible, notifyProcessesChanged,
 } from "@/services/processes/processCreation";
 import { FileUploader } from "@/components/FileUploader";
+import type { FileBucket } from "@/hooks/useFiles";
 
 interface Props {
   isOpen: boolean;
