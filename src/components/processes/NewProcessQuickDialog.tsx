@@ -1552,6 +1552,20 @@ function ExtractedChips({ fields, confidence }: { fields: Record<string, any>; c
   );
 }
 
+function ReviewCard({ label, onEdit, children }: { label: string; onEdit: () => void; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-slate-100 bg-white p-3">
+      <div className="flex items-center justify-between mb-1.5">
+        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{label}</p>
+        <button type="button" onClick={onEdit} className="text-[11px] font-bold text-primary hover:underline">
+          Editar
+        </button>
+      </div>
+      <div className="text-sm text-navy space-y-0.5">{children}</div>
+    </div>
+  );
+}
+
 function SummaryCheck({ ok, label }: { ok: boolean; label: string }) {
   return (
     <div className="flex items-center gap-2">
