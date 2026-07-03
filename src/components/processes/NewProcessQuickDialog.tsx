@@ -138,9 +138,13 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     vesselNew?: string | null;
   }>({});
 
-
   // Etapa 5 — identidade
   const [brandingMode, setBrandingMode] = useState<BrandingMode>("company");
+  const [exclusiveLogoPath, setExclusiveLogoPath] = useState<string | null>(null);
+  const [exclusiveLogoUrl, setExclusiveLogoUrl] = useState<string | null>(null);
+  const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
+  const [customerLogoUrl, setCustomerLogoUrl] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   // Etapa 6 — documentos gerados
   const [preview, setPreview] = useState<BlueprintPreviewItem[]>([]);
