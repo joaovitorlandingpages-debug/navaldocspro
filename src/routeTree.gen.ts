@@ -17,7 +17,6 @@ import { Route as StatusRouteImport } from './routes/status'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SalesCenterRouteImport } from './routes/sales-center'
 import { Route as QaChecklistRouteImport } from './routes/qa-checklist'
-import { Route as ProcessesRouteImport } from './routes/processes'
 import { Route as PredictionsRouteImport } from './routes/predictions'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PilotoRouteImport } from './routes/piloto'
@@ -55,6 +54,7 @@ import { Route as AdminHubRouteImport } from './routes/admin-hub'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
+import { Route as ProcessesIndexRouteImport } from './routes/processes.index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as VerificarAssinaturaCodeRouteImport } from './routes/verificar-assinatura.$code'
@@ -148,11 +148,6 @@ const SalesCenterRoute = SalesCenterRouteImport.update({
 const QaChecklistRoute = QaChecklistRouteImport.update({
   id: '/qa-checklist',
   path: '/qa-checklist',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProcessesRoute = ProcessesRouteImport.update({
-  id: '/processes',
-  path: '/processes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PredictionsRoute = PredictionsRouteImport.update({
@@ -340,6 +335,11 @@ const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => TemplatesRoute,
 } as any)
+const ProcessesIndexRoute = ProcessesIndexRouteImport.update({
+  id: '/processes/',
+  path: '/processes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -376,19 +376,19 @@ const TemplatesIdRoute = TemplatesIdRouteImport.update({
   getParentRoute: () => TemplatesRoute,
 } as any)
 const ProcessesTrashRoute = ProcessesTrashRouteImport.update({
-  id: '/trash',
-  path: '/trash',
-  getParentRoute: () => ProcessesRoute,
+  id: '/processes/trash',
+  path: '/processes/trash',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ProcessesArchivedRoute = ProcessesArchivedRouteImport.update({
-  id: '/archived',
-  path: '/archived',
-  getParentRoute: () => ProcessesRoute,
+  id: '/processes/archived',
+  path: '/processes/archived',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ProcessesIdRoute = ProcessesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ProcessesRoute,
+  id: '/processes/$id',
+  path: '/processes/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PortalTokenRoute = PortalTokenRouteImport.update({
   id: '/portal/$token',
@@ -652,7 +652,6 @@ export interface FileRoutesByFullPath {
   '/piloto': typeof PilotoRoute
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
-  '/processes': typeof ProcessesRouteWithChildren
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
@@ -715,6 +714,7 @@ export interface FileRoutesByFullPath {
   '/verificar-assinatura/$code': typeof VerificarAssinaturaCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -752,7 +752,6 @@ export interface FileRoutesByTo {
   '/piloto': typeof PilotoRoute
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
-  '/processes': typeof ProcessesRouteWithChildren
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
@@ -814,6 +813,7 @@ export interface FileRoutesByTo {
   '/verificar-assinatura/$code': typeof VerificarAssinaturaCodeRoute
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/processes': typeof ProcessesIndexRoute
   '/templates': typeof TemplatesIndexRoute
 }
 export interface FileRoutesById {
@@ -854,7 +854,6 @@ export interface FileRoutesById {
   '/piloto': typeof PilotoRoute
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
-  '/processes': typeof ProcessesRouteWithChildren
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
@@ -917,6 +916,7 @@ export interface FileRoutesById {
   '/verificar-assinatura/$code': typeof VerificarAssinaturaCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
 }
 export interface FileRouteTypes {
@@ -958,7 +958,6 @@ export interface FileRouteTypes {
     | '/piloto'
     | '/plans'
     | '/predictions'
-    | '/processes'
     | '/qa-checklist'
     | '/sales-center'
     | '/settings'
@@ -1021,6 +1020,7 @@ export interface FileRouteTypes {
     | '/verificar-assinatura/$code'
     | '/admin/'
     | '/dashboard/'
+    | '/processes/'
     | '/templates/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1058,7 +1058,6 @@ export interface FileRouteTypes {
     | '/piloto'
     | '/plans'
     | '/predictions'
-    | '/processes'
     | '/qa-checklist'
     | '/sales-center'
     | '/settings'
@@ -1120,6 +1119,7 @@ export interface FileRouteTypes {
     | '/verificar-assinatura/$code'
     | '/admin'
     | '/dashboard'
+    | '/processes'
     | '/templates'
   id:
     | '__root__'
@@ -1159,7 +1159,6 @@ export interface FileRouteTypes {
     | '/piloto'
     | '/plans'
     | '/predictions'
-    | '/processes'
     | '/qa-checklist'
     | '/sales-center'
     | '/settings'
@@ -1222,6 +1221,7 @@ export interface FileRouteTypes {
     | '/verificar-assinatura/$code'
     | '/admin/'
     | '/dashboard/'
+    | '/processes/'
     | '/templates/'
   fileRoutesById: FileRoutesById
 }
@@ -1262,7 +1262,6 @@ export interface RootRouteChildren {
   PilotoRoute: typeof PilotoRoute
   PlansRoute: typeof PlansRoute
   PredictionsRoute: typeof PredictionsRoute
-  ProcessesRoute: typeof ProcessesRouteWithChildren
   QaChecklistRoute: typeof QaChecklistRoute
   SalesCenterRoute: typeof SalesCenterRoute
   SettingsRoute: typeof SettingsRoute
@@ -1280,7 +1279,11 @@ export interface RootRouteChildren {
   BillingSuccessRoute: typeof BillingSuccessRoute
   DocumentosBibliotecaRoute: typeof DocumentosBibliotecaRoute
   PortalTokenRoute: typeof PortalTokenRoute
+  ProcessesIdRoute: typeof ProcessesIdRoute
+  ProcessesArchivedRoute: typeof ProcessesArchivedRoute
+  ProcessesTrashRoute: typeof ProcessesTrashRoute
   VerificarAssinaturaCodeRoute: typeof VerificarAssinaturaCodeRoute
+  ProcessesIndexRoute: typeof ProcessesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1339,13 +1342,6 @@ declare module '@tanstack/react-router' {
       path: '/qa-checklist'
       fullPath: '/qa-checklist'
       preLoaderRoute: typeof QaChecklistRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/processes': {
-      id: '/processes'
-      path: '/processes'
-      fullPath: '/processes'
-      preLoaderRoute: typeof ProcessesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/predictions': {
@@ -1607,6 +1603,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TemplatesIndexRouteImport
       parentRoute: typeof TemplatesRoute
     }
+    '/processes/': {
+      id: '/processes/'
+      path: '/processes'
+      fullPath: '/processes/'
+      preLoaderRoute: typeof ProcessesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/': {
       id: '/dashboard/'
       path: '/'
@@ -1658,24 +1661,24 @@ declare module '@tanstack/react-router' {
     }
     '/processes/trash': {
       id: '/processes/trash'
-      path: '/trash'
+      path: '/processes/trash'
       fullPath: '/processes/trash'
       preLoaderRoute: typeof ProcessesTrashRouteImport
-      parentRoute: typeof ProcessesRoute
+      parentRoute: typeof rootRouteImport
     }
     '/processes/archived': {
       id: '/processes/archived'
-      path: '/archived'
+      path: '/processes/archived'
       fullPath: '/processes/archived'
       preLoaderRoute: typeof ProcessesArchivedRouteImport
-      parentRoute: typeof ProcessesRoute
+      parentRoute: typeof rootRouteImport
     }
     '/processes/$id': {
       id: '/processes/$id'
-      path: '/$id'
+      path: '/processes/$id'
       fullPath: '/processes/$id'
       preLoaderRoute: typeof ProcessesIdRouteImport
-      parentRoute: typeof ProcessesRoute
+      parentRoute: typeof rootRouteImport
     }
     '/portal/$token': {
       id: '/portal/$token'
@@ -2090,22 +2093,6 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
   DashboardRouteChildren,
 )
 
-interface ProcessesRouteChildren {
-  ProcessesIdRoute: typeof ProcessesIdRoute
-  ProcessesArchivedRoute: typeof ProcessesArchivedRoute
-  ProcessesTrashRoute: typeof ProcessesTrashRoute
-}
-
-const ProcessesRouteChildren: ProcessesRouteChildren = {
-  ProcessesIdRoute: ProcessesIdRoute,
-  ProcessesArchivedRoute: ProcessesArchivedRoute,
-  ProcessesTrashRoute: ProcessesTrashRoute,
-}
-
-const ProcessesRouteWithChildren = ProcessesRoute._addFileChildren(
-  ProcessesRouteChildren,
-)
-
 interface TemplatesRouteChildren {
   TemplatesIdRoute: typeof TemplatesIdRoute
   TemplatesGratuitosRoute: typeof TemplatesGratuitosRoute
@@ -2163,7 +2150,6 @@ const rootRouteChildren: RootRouteChildren = {
   PilotoRoute: PilotoRoute,
   PlansRoute: PlansRoute,
   PredictionsRoute: PredictionsRoute,
-  ProcessesRoute: ProcessesRouteWithChildren,
   QaChecklistRoute: QaChecklistRoute,
   SalesCenterRoute: SalesCenterRoute,
   SettingsRoute: SettingsRoute,
@@ -2181,18 +2167,12 @@ const rootRouteChildren: RootRouteChildren = {
   BillingSuccessRoute: BillingSuccessRoute,
   DocumentosBibliotecaRoute: DocumentosBibliotecaRoute,
   PortalTokenRoute: PortalTokenRoute,
+  ProcessesIdRoute: ProcessesIdRoute,
+  ProcessesArchivedRoute: ProcessesArchivedRoute,
+  ProcessesTrashRoute: ProcessesTrashRoute,
   VerificarAssinaturaCodeRoute: VerificarAssinaturaCodeRoute,
+  ProcessesIndexRoute: ProcessesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
