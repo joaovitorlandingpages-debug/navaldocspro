@@ -172,19 +172,21 @@ function PortalPage() {
                     <div className="font-medium">{d.metadata?.label || d.metadata?.code || "Documento"}</div>
                     <div className="text-xs text-muted-foreground">{d.status}</div>
                   </div>
-                  <label className="cursor-pointer">
+                  <label className="cursor-pointer inline-flex items-center rounded-md text-sm font-medium h-9 px-3 bg-primary text-primary-foreground hover:bg-primary/90">
                     <input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], d.id)} />
-                    <Button asChild size="sm" disabled={busy}><span><Upload className="w-4 h-4 mr-2" />Enviar</span></Button>
+                    <Upload className="w-4 h-4 mr-2" />Enviar
                   </label>
+
                 </li>
               ))}
             </ul>
           )}
           <div className="mt-4 border-t pt-4">
-            <label className="cursor-pointer inline-block">
+            <label className="cursor-pointer inline-flex items-center rounded-md text-sm font-medium h-9 px-3 border border-input bg-background hover:bg-accent hover:text-accent-foreground">
               <input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])} />
-              <Button variant="outline" asChild disabled={busy}><span><Upload className="w-4 h-4 mr-2" />Enviar outro documento</span></Button>
+              <Upload className="w-4 h-4 mr-2" />Enviar outro documento
             </label>
+
           </div>
         </Card>
 

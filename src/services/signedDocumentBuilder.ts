@@ -112,7 +112,7 @@ async function drawAnchoredSignature(
   page.drawText(when, { x: x + 8, y: y + 2, size: 6.5, font: helv, color: MUTED });
 
   // gold "Assinado eletronicamente" seal
-  page.drawText("✓ Assinado eletronicamente", {
+  page.drawText("[OK] Assinado eletronicamente", {
     x: x + width - 130, y: y + 20, size: 7, font: helvBold, color: GOLD,
   });
   page.drawText(`Hash ${(participant.signature_hash ?? "").slice(0, 10)}`, {
@@ -147,7 +147,7 @@ function drawFallbackBlock(
       { x: 50, y: y - 48, size: 9, font: helv, color: NAVY_SOFT });
     sp.drawText(`Método: ${p.signature_type ?? "—"}`, { x: 50, y: y - 62, size: 9, font: helv, color: NAVY_SOFT });
     sp.drawText(`Hash: ${(p.signature_hash ?? "").slice(0, 56)}`, { x: 50, y: y - 76, size: 7, font: helv, color: MUTED });
-    sp.drawText("✓ Assinado eletronicamente", { x: 420, y: y - 18, size: 8, font: helvBold, color: GOLD });
+    sp.drawText("[OK] Assinado eletronicamente", { x: 420, y: y - 18, size: 8, font: helvBold, color: GOLD });
     y -= 102;
   }
 
@@ -295,7 +295,7 @@ export async function buildSignedDocumentArtifacts(opts: {
       cp.drawText(String(v), { x: 130, y: row, size: 7, font: cf, color: NAVY_SOFT });
       row -= 8;
     }
-    cp.drawText("✓ ASSINADO", { x: 470, y: cy - 14, size: 9, font: cfb, color: GOLD });
+    cp.drawText("[OK] ASSINADO", { x: 470, y: cy - 14, size: 9, font: cfb, color: GOLD });
     cy -= 96;
   }
 
