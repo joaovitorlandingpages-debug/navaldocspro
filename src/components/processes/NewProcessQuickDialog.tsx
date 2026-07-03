@@ -926,28 +926,40 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
           {/* STEP 7 — Resumo */}
           {step === 7 && (
-            <div className="space-y-3 py-3">
-              <SummaryRow label="Tipo"       value={selectedType?.name || "—"} />
-              <SummaryRow label="Título"     value={title || selectedType?.name || "—"} />
-              <SummaryRow label="Prioridade" value={priority} />
-              <SummaryRow label={isTransfer ? "Comprador" : "Cliente"} value={customers.find((c) => c.id === customerId)?.name || "—"} />
-              {isTransfer && <SummaryRow label="Vendedor" value={customers.find((c) => c.id === secondaryCustomerId)?.name || "—"} />}
-              {needsVessel && <SummaryRow label="Embarcação" value={vessels.find((v) => v.id === vesselId)?.name || "—"} />}
-              <SummaryRow label="Identidade" value={
-                brandingMode === "none" ? "Sem logo" :
-                brandingMode === "company" ? "Logo da empresa" :
-                brandingMode === "customer" ? "Logo do cliente" : "Logo exclusivo"
-              } />
-              <SummaryRow label="Uploads" value={
-                Object.values(uploadedSlots).reduce((a, b) => a + b, 0) + " arquivo(s) anexado(s)"
-              } />
-              <SummaryRow label="Documentos a gerar" value={`${selectedCount} documento(s)`} />
-              {noResidenceProof && (
-                <p className="text-[11px] text-violet-700 bg-violet-50 rounded-lg p-2 border border-violet-100">
-                  📝 Declaração de residência será gerada automaticamente.
-                </p>
-              )}
-              <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer border border-slate-100 bg-slate-50/50 p-2.5 rounded-lg mt-4">
+            <div className="space-y-4 py-3">
+              <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700 mb-3">Tudo pronto</p>
+                <div className="space-y-1.5 text-sm">
+                  <SummaryCheck ok={!!customerId} label={
+                    customerId ? `${isTransfer ? "Comprador" : "Cliente"}: ${customers.find(c => c.id === customerId)?.name}` : "Cliente pendente"
+                  }/>
+                  {isTransfer && <SummaryCheck ok={!!secondaryCustomerId} label={
+                    secondaryCustomerId ? `Vendedor: ${customers.find(c => c.id === secondaryCustomerId)?.name}` : "Vendedor pendente"
+                  }/>}
+                  {needsVessel && <SummaryCheck ok={!!vesselId} label={
+                    vesselId ? `Embarcação: ${vessels.find(v => v.id === vesselId)?.name}` : "Embarcação pendente"
+                  }/>}
+                  {avgConfidence !== null && (
+                    <SummaryCheck ok={avgConfidence >= 70} label={`OCR reconheceu ${avgConfidence}% em média`} />
+                  )}
+                  <SummaryCheck ok={uploadedTotal > 0} label={`${uploadedTotal} documento(s) anexado(s)`} />
+                  <SummaryCheck ok={selectedCount > 0} label={`${selectedCount} documento(s) serão gerados`} />
+                  <SummaryCheck ok label={
+                    brandingMode === "none" ? "Sem logo aplicada" :
+                    brandingMode === "company" ? "Logo da empresa aplicada" :
+                    brandingMode === "customer" ? "Logo do cliente aplicada" : "Logo exclusivo deste processo"
+                  }/>
+                  {noResidenceProof && <SummaryCheck ok label="Declaração de residência gerada automaticamente" />}
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-2 pt-1">
+                <SummaryRow label="Tipo"       value={selectedType?.name || "—"} />
+                <SummaryRow label="Título"     value={title || selectedType?.name || "—"} />
+                <SummaryRow label="Prioridade" value={priority} />
+              </div>
+
+              <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer border border-slate-100 bg-slate-50/50 p-2.5 rounded-lg">
                 <Checkbox checked={generateNow} onCheckedChange={(v) => setGenerateNow(!!v)} disabled={submitting} />
                 Gerar todos os documentos automaticamente após criar
               </label>
