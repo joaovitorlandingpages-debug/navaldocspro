@@ -138,9 +138,13 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     vesselNew?: string | null;
   }>({});
 
-
   // Etapa 5 — identidade
   const [brandingMode, setBrandingMode] = useState<BrandingMode>("company");
+  const [exclusiveLogoPath, setExclusiveLogoPath] = useState<string | null>(null);
+  const [exclusiveLogoUrl, setExclusiveLogoUrl] = useState<string | null>(null);
+  const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
+  const [customerLogoUrl, setCustomerLogoUrl] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   // Etapa 6 — documentos gerados
   const [preview, setPreview] = useState<BlueprintPreviewItem[]>([]);
@@ -220,6 +224,9 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setVesselId(""); setHasMotor(false);
       setTaskFiles({}); setMatchInfo({});
       setBrandingMode("company");
+      setExclusiveLogoPath(null); setExclusiveLogoUrl(null);
+      setCompanyLogoUrl(null); setCustomerLogoUrl(null);
+      setUploadingLogo(false);
       setPreview([]); setExcluded(new Set()); setExtras([]);
       setLibraryOpen(false); setLibraryQuery(""); setLibraryResults([]);
       setAllowEmptyPackage(false);
@@ -383,6 +390,57 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     if (arr.length === 0) return null;
     return Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 100);
   }, [taskFiles]);
+
+  // ------------------------------------------------------------- logos reais (etapa 5)
+  useEffect(() => {
+    if (step !== 5) return;
+    (async () => {
+      if (profile?.company_id && !companyLogoUrl) {
+        const { data } = await supabase
+          .from("companies")
+          .select("logo_url, logo_primary_url")
+          .eq("id", profile.company_id).maybeSingle();
+        setCompanyLogoUrl((data as any)?.logo_primary_url || (data as any)?.logo_url || null);
+      }
+      if (customerId && !customerLogoUrl) {
+        const { data } = await supabase
+          .from("customers").select("logo_url").eq("id", customerId).maybeSingle();
+        setCustomerLogoUrl((data as any)?.logo_url || null);
+      }
+    })();
+  }, [step, profile?.company_id, customerId, companyLogoUrl, customerLogoUrl]);
+
+  async function uploadExclusiveLogo(file: File) {
+    if (!profile?.company_id) { toast.error("Empresa não vinculada."); return; }
+    if (!file.type.startsWith("image/")) { toast.error("Envie uma imagem (PNG/JPG/SVG)."); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error("Logo até 2MB."); return; }
+    setUploadingLogo(true);
+    try {
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      const path = `${profile.company_id}/process-exclusive/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("company-branding").upload(path, file, {
+        contentType: file.type, upsert: false,
+      });
+      if (error) throw error;
+      const { data: signed } = await supabase.storage.from("company-branding")
+        .createSignedUrl(path, 60 * 60 * 24 * 7);
+      setExclusiveLogoPath(path);
+      setExclusiveLogoUrl(signed?.signedUrl || null);
+      setBrandingMode("exclusive");
+      toast.success("Logo exclusivo carregado.");
+    } catch (e: any) {
+      toast.error("Falha no upload: " + (e?.message || e));
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
+
+  const activeLogoPreview =
+    brandingMode === "none"      ? null :
+    brandingMode === "company"   ? companyLogoUrl :
+    brandingMode === "customer"  ? customerLogoUrl :
+    brandingMode === "exclusive" ? exclusiveLogoUrl : null;
+
 
   // ------------------------------------------------------------- CRUD inline
   async function createCustomerInline(kind: "primary" | "secondary" = "primary") {
@@ -553,6 +611,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
           trashed_at: null,
           deleted_at: null,
           branding_mode: brandingMode,
+          branding_logo_url: brandingMode === "exclusive" ? exclusiveLogoPath : null,
         } as any)
         .select("id").single();
       if (error) throw error;
@@ -824,17 +883,20 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
             <div className="space-y-3 py-3">
               <p className="text-sm text-slate-600">Escolha como os documentos gerados serão marcados:</p>
               <div className="grid sm:grid-cols-2 gap-3">
-                {[
-                  { v: "none",      title: "Sem logo",         desc: "Documentos limpos, sem cabeçalho." },
-                  { v: "company",   title: "Logo da empresa",  desc: "Usa a identidade corporativa cadastrada." },
-                  { v: "customer",  title: "Logo do cliente",  desc: "Usa a marca do cliente (se disponível)." },
-                  { v: "exclusive", title: "Logo exclusivo",   desc: "Configure um logo só para este processo." },
-                ].map((opt) => (
+                {([
+                  { v: "none",      title: "Sem logo",         desc: "Documentos limpos, sem cabeçalho.",              disabled: false },
+                  { v: "company",   title: "Logo da empresa",  desc: companyLogoUrl ? "Usa a identidade corporativa cadastrada." : "Nenhum logo de empresa cadastrado.", disabled: !companyLogoUrl },
+                  { v: "customer",  title: "Logo do cliente",  desc: customerLogoUrl ? "Usa a marca do cliente." : "Este cliente ainda não tem logo cadastrado.", disabled: !customerLogoUrl },
+                  { v: "exclusive", title: "Logo exclusivo",   desc: exclusiveLogoUrl ? "Logo carregado para este processo." : "Envie um PNG/JPG só para este processo.", disabled: false },
+                ] as const).map((opt) => (
                   <button
                     key={opt.v} type="button"
-                    onClick={() => setBrandingMode(opt.v as BrandingMode)}
+                    onClick={() => !opt.disabled && setBrandingMode(opt.v as BrandingMode)}
+                    disabled={opt.disabled}
                     className={`text-left p-3 rounded-xl border transition ${
-                      brandingMode === opt.v ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-slate-200 hover:border-slate-300"
+                      brandingMode === opt.v ? "border-primary bg-primary/5 ring-2 ring-primary/20" :
+                      opt.disabled ? "border-slate-100 bg-slate-50/50 opacity-50 cursor-not-allowed" :
+                      "border-slate-200 hover:border-slate-300"
                     }`}
                   >
                     <p className="text-sm font-bold text-navy">{opt.title}</p>
@@ -842,24 +904,56 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                   </button>
                 ))}
               </div>
+
+              {brandingMode === "exclusive" && (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600">
+                    Logo exclusivo deste processo
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <label className="inline-flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-lg border border-primary/30 bg-white text-primary cursor-pointer hover:bg-primary/10">
+                      {uploadingLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                      {exclusiveLogoUrl ? "Trocar logo" : "Enviar logo (PNG/JPG até 2MB)"}
+                      <input
+                        type="file" accept="image/png,image/jpeg,image/svg+xml" className="hidden"
+                        disabled={uploadingLogo}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) uploadExclusiveLogo(f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    {exclusiveLogoUrl && (
+                      <button type="button" onClick={() => { setExclusiveLogoPath(null); setExclusiveLogoUrl(null); }}
+                        className="text-[11px] text-red-500 hover:underline font-bold inline-flex items-center gap-1">
+                        <X className="h-3 w-3" /> Remover
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Preview do cabeçalho</p>
                 <div className="bg-white border border-slate-200 rounded-lg p-4">
                   <div className="flex items-center gap-3 pb-2 border-b border-slate-200">
-                    {brandingMode === "none" ? (
+                    {activeLogoPreview ? (
+                      <img src={activeLogoPreview} alt="logo" className="h-10 w-10 rounded object-contain bg-white border border-slate-100" />
+                    ) : brandingMode === "none" ? (
                       <div className="h-10 w-10 rounded bg-slate-100" />
                     ) : (
-                      <div className="h-10 w-10 rounded bg-gradient-to-br from-primary/40 to-primary/10 grid place-content-center text-primary text-xs font-black">
-                        LOGO
+                      <div className="h-10 w-10 rounded bg-slate-100 grid place-content-center text-slate-400 text-[9px] font-black text-center px-1">
+                        sem<br/>logo
                       </div>
                     )}
                     <div>
                       <p className="text-sm font-bold">{title || selectedType?.name || "Documento"}</p>
                       <p className="text-[10px] text-slate-500">
-                        {brandingMode === "company" && "Empresa"}
-                        {brandingMode === "customer" && "Cliente"}
-                        {brandingMode === "exclusive" && "Exclusivo deste processo"}
-                        {brandingMode === "none" && "Sem marca"}
+                        {brandingMode === "company"   && (companyLogoUrl  ? "Empresa"    : "Empresa (sem logo)")}
+                        {brandingMode === "customer"  && (customerLogoUrl ? "Cliente"    : "Cliente (sem logo)")}
+                        {brandingMode === "exclusive" && (exclusiveLogoUrl ? "Exclusivo deste processo" : "Exclusivo — envie o logo acima")}
+                        {brandingMode === "none"      && "Sem marca"}
                       </p>
                     </div>
                   </div>
@@ -935,11 +1029,11 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
             </div>
           )}
 
-          {/* STEP 7 — Resumo */}
+          {/* STEP 7 — Revisar e editar */}
           {step === 7 && (
             <div className="space-y-4 py-3">
               <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700 mb-3">Tudo pronto</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700 mb-3">Revise antes de criar</p>
                 <div className="space-y-1.5 text-sm">
                   <SummaryCheck ok={!!customerId} label={
                     customerId ? `${isTransfer ? "Comprador" : "Cliente"}: ${customers.find(c => c.id === customerId)?.name}` : "Cliente pendente"
@@ -955,19 +1049,61 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                   )}
                   <SummaryCheck ok={uploadedTotal > 0} label={`${uploadedTotal} documento(s) anexado(s)`} />
                   <SummaryCheck ok={selectedCount > 0} label={`${selectedCount} documento(s) serão gerados`} />
-                  <SummaryCheck ok label={
-                    brandingMode === "none" ? "Sem logo aplicada" :
-                    brandingMode === "company" ? "Logo da empresa aplicada" :
-                    brandingMode === "customer" ? "Logo do cliente aplicada" : "Logo exclusivo deste processo"
-                  }/>
+                  <SummaryCheck
+                    ok={brandingMode !== "exclusive" || !!exclusiveLogoUrl}
+                    label={
+                      brandingMode === "none"      ? "Sem logo aplicada" :
+                      brandingMode === "company"   ? (companyLogoUrl  ? "Logo da empresa aplicada" : "Logo da empresa — nenhum cadastrado") :
+                      brandingMode === "customer"  ? (customerLogoUrl ? "Logo do cliente aplicada" : "Logo do cliente — não cadastrado") :
+                                                     (exclusiveLogoUrl ? "Logo exclusivo carregado" : "Logo exclusivo — envie na etapa 5")
+                    }
+                  />
                   {noResidenceProof && <SummaryCheck ok label="Declaração de residência gerada automaticamente" />}
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-2 pt-1">
-                <SummaryRow label="Tipo"       value={selectedType?.name || "—"} />
-                <SummaryRow label="Título"     value={title || selectedType?.name || "—"} />
-                <SummaryRow label="Prioridade" value={priority} />
+              {/* Cards editáveis */}
+              <div className="grid sm:grid-cols-2 gap-2">
+                <ReviewCard label="Tipo & prioridade" onEdit={() => setStep(1)}>
+                  <p><b>{selectedType?.name || "—"}</b> · {priority}</p>
+                  <p className="text-slate-500 text-xs">Título: {title || selectedType?.name || "—"}</p>
+                </ReviewCard>
+                <ReviewCard label={isTransfer ? "Comprador & Vendedor" : "Cliente"} onEdit={() => setStep(2)}>
+                  <p><b>{customers.find(c => c.id === customerId)?.name || "—"}</b></p>
+                  {isTransfer && <p className="text-slate-500 text-xs">Vendedor: {customers.find(c => c.id === secondaryCustomerId)?.name || "—"}</p>}
+                </ReviewCard>
+                <ReviewCard label="Documentos do cliente" onEdit={() => setStep(3)}>
+                  <p>{clientSlots.filter(s => (taskFiles[s.key]?.length ?? 0) > 0).length} enviados</p>
+                  <p className="text-slate-500 text-xs">
+                    {clientSlots.filter(s => (taskFiles[s.key]?.length ?? 0) > 0).map(s => s.label).join(", ") || "Nenhum ainda"}
+                  </p>
+                </ReviewCard>
+                {needsVessel && (
+                  <ReviewCard label="Embarcação & docs" onEdit={() => setStep(4)}>
+                    <p><b>{vessels.find(v => v.id === vesselId)?.name || "—"}</b></p>
+                    <p className="text-slate-500 text-xs">
+                      {vesselSlots.filter(s => (taskFiles[s.key]?.length ?? 0) > 0).length} docs enviados
+                    </p>
+                  </ReviewCard>
+                )}
+                <ReviewCard label="Identidade / Logo" onEdit={() => setStep(5)}>
+                  <div className="flex items-center gap-2">
+                    {activeLogoPreview ? (
+                      <img src={activeLogoPreview} alt="" className="h-8 w-8 rounded object-contain border border-slate-100" />
+                    ) : <div className="h-8 w-8 rounded bg-slate-100" />}
+                    <p>{
+                      brandingMode === "none"      ? "Sem logo" :
+                      brandingMode === "company"   ? "Empresa" :
+                      brandingMode === "customer"  ? "Cliente" : "Exclusivo"
+                    }</p>
+                  </div>
+                </ReviewCard>
+                <ReviewCard label="Documentos a gerar" onEdit={() => setStep(6)}>
+                  <p><b>{selectedCount}</b> documento(s) selecionado(s)</p>
+                  <p className="text-slate-500 text-xs">
+                    {preview.filter(p => p.kind === "mandatory").length} obrig · {extras.length} extras
+                  </p>
+                </ReviewCard>
               </div>
 
               <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer border border-slate-100 bg-slate-50/50 p-2.5 rounded-lg">
@@ -1412,6 +1548,20 @@ function ExtractedChips({ fields, confidence }: { fields: Record<string, any>; c
           conf >= 70 ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
         }`}>{conf}%</span>
       )}
+    </div>
+  );
+}
+
+function ReviewCard({ label, onEdit, children }: { label: string; onEdit: () => void; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-slate-100 bg-white p-3">
+      <div className="flex items-center justify-between mb-1.5">
+        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{label}</p>
+        <button type="button" onClick={onEdit} className="text-[11px] font-bold text-primary hover:underline">
+          Editar
+        </button>
+      </div>
+      <div className="text-sm text-navy space-y-0.5">{children}</div>
     </div>
   );
 }
