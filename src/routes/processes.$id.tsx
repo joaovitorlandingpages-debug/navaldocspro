@@ -318,17 +318,50 @@ function ProcessDetail() {
         <DocumentPreviewEditor 
           template={selectedTemplateForGen}
           processData={process}
-          onSave={(finalContent) => {
-            setSelectedTemplateForGen(null);
-            console.log("PROCESS_GENERATION_OK");
-            toast.success("Documento finalizado e anexado.");
-            fetchProcess();
+          onSave={async (finalContent) => {
+            try {
+              const tpl = selectedTemplateForGen;
+              // 1) Persist the generated document
+              const { data: gen, error: genErr } = await supabase
+                .from("generated_documents")
+                .insert({
+                  company_id: process?.company_id,
+                  process_id: id,
+                  customer_id: process?.customer_id ?? null,
+                  vessel_id: process?.vessel_id ?? null,
+                  template_id: tpl?.id ?? null,
+                  name: tpl?.name ?? "Documento gerado",
+                  status: "approved",
+                  generated_by: profile?.id ?? null,
+                  issue_date: new Date().toISOString().slice(0, 10),
+                  metadata: { content: finalContent, source: "preview_editor" },
+                })
+                .select("id")
+                .single();
+              if (genErr) throw genErr;
+
+              // 2) Mark the matching checklist item as completed
+              await supabase
+                .from("document_checklists")
+                .update({ status: "completed", document_id: gen.id })
+                .eq("process_id", id)
+                .eq("item_name", tpl?.name);
+
+              toast.success("Documento finalizado e anexado.");
+            } catch (e: any) {
+              console.error("PROCESS_GENERATION_SAVE_FAIL", e);
+              toast.error(`Falha ao salvar documento: ${e?.message ?? e}`);
+            } finally {
+              setSelectedTemplateForGen(null);
+              fetchProcess();
+            }
           }}
           onCancel={() => setSelectedTemplateForGen(null)}
         />
       </div>
     );
   }
+
 
   if (!process && !id) {
     return (
