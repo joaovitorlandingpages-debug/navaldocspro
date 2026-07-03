@@ -612,19 +612,30 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
   return (
     <Dialog open={isOpen} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl w-[calc(100vw-1rem)] max-h-[92vh] sm:max-h-[90vh] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:rounded-none max-sm:w-screen overflow-hidden flex flex-col p-0">
-        <DialogHeader className="p-4 sm:p-6 pb-2">
+      <DialogContent className="max-w-4xl w-[calc(100vw-1rem)] max-h-[92vh] sm:max-h-[90vh] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:rounded-none max-sm:w-screen overflow-hidden flex flex-col p-0">
+        <DialogHeader className="p-4 sm:p-6 pb-2 border-b border-slate-100">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Sparkles className="h-5 w-5 text-primary" />
             Novo Processo
           </DialogTitle>
           <DialogDescription>
-            Passo a passo guiado. O sistema pede só o que este tipo de processo exige.
+            Assistente guiado — cada documento é uma tarefa com OCR próprio.
           </DialogDescription>
-          <StepIndicator step={step} onJump={(n) => n < step && setStep(n)} />
+          {/* Mobile progress */}
+          <div className="sm:hidden pt-2">
+            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">
+              <span>Etapa {step}/7 · {STEPS[step - 1].label}</span>
+              <span>{Math.round((step / 7) * 100)}%</span>
+            </div>
+            <Progress value={(step / 7) * 100} className="h-1.5" />
+          </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6">
+        <div className="flex-1 min-h-0 flex overflow-hidden">
+          <StepSidebar step={step} onJump={(n) => n < step && setStep(n)} />
+
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6">
+
           {/* STEP 1 — Tipo */}
           {step === 1 && (
             <div className="space-y-4 py-3">
