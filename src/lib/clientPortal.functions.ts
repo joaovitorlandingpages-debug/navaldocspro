@@ -353,7 +353,7 @@ export const portalDownloadFile = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const access = await loadByToken(data.token);
     if (!(access.allowed_actions as any)?.download) throw new Error("Download não permitido");
-    const allowedBuckets = ["generated-documents", "process-attachments", "process-dossiers"];
+    const allowedBuckets = ["generated-documents", "process-attachments", "process-dossiers", "signed-documents"];
     if (!allowedBuckets.includes(data.bucket)) throw new Error("Bucket inválido");
 
     // confirm path belongs to this process/company
