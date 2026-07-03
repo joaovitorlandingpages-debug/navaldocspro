@@ -397,7 +397,7 @@ function ProcessDetail() {
               if (!updated && tpl?.name) {
                 const { data: byName, error: nameErr } = await supabase
                   .from("document_checklists")
-                  .update({ status: "completed", document_id: gen.id, completed_at: new Date().toISOString() })
+                  .update({ status: "completed", completed_at: new Date().toISOString() })
                   .eq("process_id", id)
                   .eq("item_name", tpl.name)
                   .select("id");
