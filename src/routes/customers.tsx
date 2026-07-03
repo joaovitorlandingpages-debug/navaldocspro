@@ -176,7 +176,7 @@ function Customers() {
       if (user) {
         const { data: currentProfile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
         const { ensureWorkspace } = await import("@/utils/workspace-recovery");
-        effectiveCompanyId = await ensureWorkspace(user, currentProfile);
+        effectiveCompanyId = (await ensureWorkspace(user, currentProfile)) ?? null;
         setCompanyId(effectiveCompanyId);
         telemetry.track('workspace_recovered', 'customers', { companyId: effectiveCompanyId });
       }
