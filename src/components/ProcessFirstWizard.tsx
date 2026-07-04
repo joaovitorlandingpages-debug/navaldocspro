@@ -204,6 +204,7 @@ function reducer(s: WizardState, a: Action): WizardState {
     case "LOG": return { ...s, progressLog: [...s.progressLog, a.line] };
     case "CREATED": return { ...s, createdProcessId: a.processId };
     case "SET_RESULT": return { ...s, generationResult: a.result };
+    case "HYDRATE": return a.state;
   }
 }
 
