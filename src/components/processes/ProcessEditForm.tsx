@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { BR_UFS, maskCpfCnpj, maskPhone, daysUntil } from "@/lib/br-format";
 import { ProcessParticipantsTab } from "./ProcessParticipantsTab";
+import { casUpdate, notifyConflict } from "@/lib/optimisticLock";
 
 interface Props {
   process: any;
