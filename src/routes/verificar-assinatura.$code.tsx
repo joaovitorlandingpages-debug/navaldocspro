@@ -20,25 +20,11 @@ function VerifyPage() {
   useEffect(() => {
     (async () => {
       try {
-        const { data: c } = await supabase
-          .from("signature_evidence_certificates")
-          .select("*")
-          .eq("verification_code", code)
-          .maybeSingle();
-        if (!c) { setLoading(false); return; }
-        setCert(c);
-        const { data: r } = await supabase
-          .from("signature_requests")
-          .select("id,title,status,created_at,company_id")
-          .eq("id", c.signature_request_id)
-          .maybeSingle();
-        setRequest(r);
-        await supabase.from("signature_events").insert({
-          signature_request_id: c.signature_request_id,
-          company_id: c.company_id,
-          event_type: "verification_page_opened",
-          event_message: `Página pública aberta para ${code}`,
-        });
+        const { data } = await supabase.rpc("certificate_verify" as any, { p_code: code });
+        if (!data) { setLoading(false); return; }
+        const payload = data as any;
+        setCert(payload.cert);
+        setRequest(payload.request);
       } finally { setLoading(false); }
     })();
   }, [code]);

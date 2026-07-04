@@ -6409,6 +6409,7 @@ export type Database = {
         Args: { p_company_id: string }
         Returns: number
       }
+      certificate_verify: { Args: { p_code: string }; Returns: Json }
       check_process_duplicates: {
         Args: {
           p_cpf_cnpj?: string
@@ -6521,6 +6522,16 @@ export type Database = {
         Returns: Json
       }
       seed_demo_data: { Args: { p_company_id: string }; Returns: undefined }
+      signature_get_by_token: { Args: { p_token: string }; Returns: Json }
+      signature_get_sequential_prev: {
+        Args: { p_token: string }
+        Returns: {
+          id: string
+          name: string
+          signing_order: number
+          status: string
+        }[]
+      }
       track_usage: {
         Args: {
           p_action: string

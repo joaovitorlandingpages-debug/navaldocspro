@@ -118,19 +118,11 @@ export const signaturesService = {
   },
 
   async getByToken(token: string) {
-    const { data: participant, error } = await supabase
-      .from("signature_participants")
-      .select("*")
-      .eq("access_token", token)
-      .maybeSingle();
+    const { data, error } = await supabase.rpc("signature_get_by_token" as any, { p_token: token });
     if (error) throw error;
-    if (!participant) return null;
-    const { data: request } = await supabase
-      .from("signature_requests")
-      .select("*")
-      .eq("id", participant.signature_request_id)
-      .maybeSingle();
-    return { participant, request };
+    if (!data) return null;
+    const payload = data as any;
+    return { participant: payload.participant, request: payload.request };
   },
 
   async signByToken(token: string, payload: {
