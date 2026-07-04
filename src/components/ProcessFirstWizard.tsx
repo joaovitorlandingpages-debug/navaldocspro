@@ -491,6 +491,21 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   const addressInputRef = useRef<HTMLInputElement>(null);
   const vesselInputRef = useRef<HTMLInputElement>(null);
 
+  // Autosave draft (Onda 2B.2)
+  const draft = useLocalDraft<WizardState>("wizard:process-first", state, isOpen && !state.createdProcessId);
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (!isOpen) { hydratedRef.current = false; return; }
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+    const saved = draft.load();
+    if (saved && (saved.service || saved.customer?.name || saved.vessel?.name)) {
+      dispatch({ type: "HYDRATE", state: { ...saved, generating: false, generationResult: null } });
+      toast.info("Rascunho recuperado.");
+    }
+  }, [isOpen, draft]);
+  useEffect(() => { if (state.createdProcessId) draft.clear(); }, [state.createdProcessId, draft]);
+
   // ---- Bloco 5: library-suggested templates state ----
   const [suggestedTemplates, setSuggestedTemplates] = useState<SuggestedTemplate[]>([]);
   const [selectedOptionalIds, setSelectedOptionalIds] = useState<Set<string>>(new Set());
