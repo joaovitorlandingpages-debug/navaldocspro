@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { PDFDocument, rgb, StandardFonts, degrees } from "https://esm.sh/pdf-lib"
 import docxtemplater from "https://esm.sh/docxtemplater"
 import PizZip from "https://esm.sh/pizzip"
-import { authContext, rateLimit, consume, jsonResponse, corsHeaders, HttpError, clientIp } from "../_shared/auth.ts"
+import { authContext, rateLimit, consume, jsonResponse, corsHeaders, HttpError, clientIp, assertProcessNotFinalized } from "../_shared/auth.ts"
 
 
 type Branding = {
