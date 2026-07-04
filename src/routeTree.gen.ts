@@ -103,7 +103,6 @@ import { Route as AdminFieldValidationReportRouteImport } from './routes/admin/f
 import { Route as AdminExecutiveOverviewRouteImport } from './routes/admin/executive-overview'
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 import { Route as AdminDocumentosRouteImport } from './routes/admin/documentos'
-import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
 import { Route as AdminDiagnosticoRouteImport } from './routes/admin.diagnostico'
 import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
 import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
@@ -584,11 +583,6 @@ const AdminDocumentosRoute = AdminDocumentosRouteImport.update({
   path: '/documentos',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminDocumentLibraryRoute = AdminDocumentLibraryRouteImport.update({
-  id: '/document-library',
-  path: '/document-library',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminDiagnosticoRoute = AdminDiagnosticoRouteImport.update({
   id: '/diagnostico',
   path: '/diagnostico',
@@ -665,7 +659,6 @@ export interface FileRoutesByFullPath {
   '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/diagnostico': typeof AdminDiagnosticoRoute
-  '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documentos': typeof AdminDocumentosRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
@@ -764,7 +757,6 @@ export interface FileRoutesByTo {
   '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/diagnostico': typeof AdminDiagnosticoRoute
-  '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documentos': typeof AdminDocumentosRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
@@ -867,7 +859,6 @@ export interface FileRoutesById {
   '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/diagnostico': typeof AdminDiagnosticoRoute
-  '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documentos': typeof AdminDocumentosRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/executive-overview': typeof AdminExecutiveOverviewRoute
@@ -971,7 +962,6 @@ export interface FileRouteTypes {
     | '/admin/commercial'
     | '/admin/companies'
     | '/admin/diagnostico'
-    | '/admin/document-library'
     | '/admin/documentos'
     | '/admin/documents'
     | '/admin/executive-overview'
@@ -1070,7 +1060,6 @@ export interface FileRouteTypes {
     | '/admin/commercial'
     | '/admin/companies'
     | '/admin/diagnostico'
-    | '/admin/document-library'
     | '/admin/documentos'
     | '/admin/documents'
     | '/admin/executive-overview'
@@ -1172,7 +1161,6 @@ export interface FileRouteTypes {
     | '/admin/commercial'
     | '/admin/companies'
     | '/admin/diagnostico'
-    | '/admin/document-library'
     | '/admin/documentos'
     | '/admin/documents'
     | '/admin/executive-overview'
@@ -1946,13 +1934,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocumentosRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/document-library': {
-      id: '/admin/document-library'
-      path: '/document-library'
-      fullPath: '/admin/document-library'
-      preLoaderRoute: typeof AdminDocumentLibraryRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/diagnostico': {
       id: '/admin/diagnostico'
       path: '/diagnostico'
@@ -1997,7 +1978,6 @@ interface AdminRouteChildren {
   AdminCommercialRoute: typeof AdminCommercialRoute
   AdminCompaniesRoute: typeof AdminCompaniesRoute
   AdminDiagnosticoRoute: typeof AdminDiagnosticoRoute
-  AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
   AdminDocumentosRoute: typeof AdminDocumentosRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminExecutiveOverviewRoute: typeof AdminExecutiveOverviewRoute
@@ -2028,7 +2008,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCommercialRoute: AdminCommercialRoute,
   AdminCompaniesRoute: AdminCompaniesRoute,
   AdminDiagnosticoRoute: AdminDiagnosticoRoute,
-  AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
   AdminDocumentosRoute: AdminDocumentosRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
   AdminExecutiveOverviewRoute: AdminExecutiveOverviewRoute,
