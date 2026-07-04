@@ -121,9 +121,14 @@ export function SignatureRequestDialog({
     selectCustomer(data);
     setCreatingNew(false);
     setNewCustomer({ name: "", cpf_cnpj: "", email: "", phone: "", address: "" });
-    // Optionally link to process
+    // Optionally link to process (CAS: fetch version → compare-and-swap)
     if (processId) {
-      await supabase.from("processes").update({ customer_id: data.id }).eq("id", processId);
+      const { data: p } = await supabase.from("processes").select("version").eq("id", processId).single();
+      const expected = Number((p as any)?.version ?? 1);
+      const res = await casUpdate("processes", processId, expected, { customer_id: data.id });
+      if (!res.ok && res.conflict) {
+        toast.error("Processo alterado por outro usuário. Recarregue para vincular o cliente.");
+      }
     }
   };
 
