@@ -333,14 +333,21 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose, initialTa
         }
       });
       if (extrasChanged) payload.draft_data = extras;
-      const { error } = await supabase.from("processes").update(payload).eq("id", process.id);
-      if (error) throw error;
+      const expectedVersion = Number(process?.version ?? 1);
+      const res = await casUpdate("processes", process.id, expectedVersion, payload);
+      if (!res.ok) {
+        if (res.conflict) {
+          notifyConflict(res, () => onSaved?.());
+          return;
+        }
+        throw new Error(res.error);
+      }
       toast.success("Processo atualizado.");
       onSaved?.();
     } catch (err: any) {
       toast.error(err.message || "Falha ao salvar.");
     } finally { setSaving(false); }
-  }, [isDirty, form, dirtyFields, meta, process?.id, onSaved]);
+  }, [isDirty, form, dirtyFields, meta, process?.id, process?.version, onSaved]);
 
   // Ctrl/Cmd + S
   useEffect(() => {
