@@ -25,6 +25,8 @@ import {
 import { BR_UFS, maskCpfCnpj, maskPhone, daysUntil } from "@/lib/br-format";
 import { ProcessParticipantsTab } from "./ProcessParticipantsTab";
 import { casUpdate, notifyConflict } from "@/lib/optimisticLock";
+import { useAutosave } from "@/hooks/useAutosave";
+import { AutosaveIndicator } from "@/components/AutosaveIndicator";
 
 interface Props {
   process: any;
@@ -362,6 +364,61 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose, initialTa
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [handleSave, newCustomerOpen, editCustomerOpen, newVesselOpen, editVesselOpen, confirmAction]);
+
+  // -------- Autosave (Onda 2B.2) — debounced, version-safe, localStorage-backed
+  const autosaveEnabled =
+    !!process?.id && !newCustomerOpen && !editCustomerOpen &&
+    !newVesselOpen && !editVesselOpen && confirmAction === null;
+
+  const autosaveSave = useCallback(async (snapshot: typeof form) => {
+    // Build payload from diff vs. `initial`
+    const columnMap: Record<string, string> = {
+      title: "title", process_type: "process_type", status: "status", priority: "priority",
+      due_date: "due_date", notes: "notes", customer_id: "customer_id", vessel_id: "vessel_id",
+      responsible_id: "responsible_id", technical_manager_id: "technical_manager_id",
+      started_at: "started_at", tags: "tags", branding_mode: "branding_mode",
+      branding_logo_url: "branding_logo_url",
+    };
+    const nullable = new Set(["due_date","vessel_id","responsible_id","technical_manager_id","notes","title","started_at","branding_logo_url"]);
+    const payload: any = {};
+    const extras: any = { ...meta };
+    let extrasChanged = false;
+    let anyChange = false;
+    (Object.keys(snapshot) as (keyof typeof snapshot)[]).forEach((k) => {
+      const a = JSON.stringify((snapshot as any)[k] ?? null);
+      const b = JSON.stringify((initial as any)[k] ?? null);
+      if (a === b) return;
+      anyChange = true;
+      const key = String(k);
+      if (columnMap[key]) {
+        payload[columnMap[key]] = nullable.has(key) ? ((snapshot as any)[k] || null) : (snapshot as any)[k];
+      } else {
+        extras[key] = (snapshot as any)[k] || null;
+        extrasChanged = true;
+      }
+    });
+    if (!anyChange) return { ok: true as const };
+    if (!snapshot.process_type?.trim() || !snapshot.customer_id) {
+      // required fields missing — don't blow up autosave, just skip
+      return { ok: false as const, error: "required fields missing" };
+    }
+    if (extrasChanged) payload.draft_data = extras;
+    const expectedVersion = Number(process?.version ?? 1);
+    const res = await casUpdate("processes", process.id, expectedVersion, payload);
+    if (res.ok) return { ok: true as const };
+    if (res.conflict) return { ok: false as const, conflict: true };
+    return { ok: false as const, error: res.error };
+  }, [initial, meta, process?.id, process?.version]);
+
+  const autosave = useAutosave({
+    draftKey: `process:${process?.id ?? "new"}`,
+    data: form,
+    onSave: autosaveSave,
+    enabled: autosaveEnabled,
+    initial,
+    debounceMs: 1500,
+  });
+
 
 
   // -------- Quick Actions
@@ -894,10 +951,16 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose, initialTa
 
       {/* Sticky save bar */}
       <div className="sticky bottom-0 border-t border-slate-100 bg-white/95 backdrop-blur px-5 sm:px-8 py-3 flex items-center justify-between gap-3">
-        <div className="text-[11px] text-slate-500 font-medium truncate">
+        <div className="text-[11px] text-slate-500 font-medium truncate flex items-center gap-3">
+          <AutosaveIndicator
+            status={autosave.status}
+            lastSavedAt={autosave.lastSavedAt}
+            onRetry={() => autosave.saveNow()}
+            onReload={() => onSaved?.()}
+          />
           {isDirty
             ? <span className="text-amber-600 font-bold">Alterações não salvas · <kbd className="px-1.5 py-0.5 rounded border border-slate-200 bg-slate-50 text-[10px]">Ctrl</kbd>+<kbd className="px-1.5 py-0.5 rounded border border-slate-200 bg-slate-50 text-[10px]">S</kbd> para salvar</span>
-            : "Nenhuma alteração"}
+            : <span>Nenhuma alteração</span>}
         </div>
         <div className="flex gap-2 shrink-0">
           {onCancel && (
