@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { getRouteApi } from "@tanstack/react-router";
+import { queryClient } from "@/router";
 import {
   Outlet,
   Link,
@@ -122,15 +122,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
-const rootRouteApi = getRouteApi("__root__");
-
 function RootShell({ children }: { children: React.ReactNode }) {
-  // Onda 3B.1 — usar o QueryClient único vindo do router context.
-  // Antes existiam duas instâncias (router.tsx + __root.tsx), causando
-  // caches paralelos, invalidations parciais e refetches duplicados.
-  const { queryClient } = rootRouteApi.useRouteContext();
-
-
+  // Onda 3B.1 — QueryClient único importado do router (singleton CSR).
+  // Elimina cache paralelo que existia antes.
 
   return (
     <html lang="pt-BR">
