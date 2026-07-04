@@ -2496,6 +2496,7 @@ export type Database = {
           generated_by: string | null
           generated_file_url: string | null
           id: string
+          idempotency_key: string | null
           issue_date: string | null
           metadata: Json | null
           name: string
@@ -2517,6 +2518,7 @@ export type Database = {
           generated_by?: string | null
           generated_file_url?: string | null
           id?: string
+          idempotency_key?: string | null
           issue_date?: string | null
           metadata?: Json | null
           name: string
@@ -2538,6 +2540,7 @@ export type Database = {
           generated_by?: string | null
           generated_file_url?: string | null
           id?: string
+          idempotency_key?: string | null
           issue_date?: string | null
           metadata?: Json | null
           name?: string
@@ -4140,6 +4143,7 @@ export type Database = {
           generated_at: string | null
           generated_by: string | null
           id: string
+          idempotency_key: string | null
           metadata: Json | null
           process_id: string
           status: string
@@ -4162,6 +4166,7 @@ export type Database = {
           generated_at?: string | null
           generated_by?: string | null
           id?: string
+          idempotency_key?: string | null
           metadata?: Json | null
           process_id: string
           status?: string
@@ -4184,6 +4189,7 @@ export type Database = {
           generated_at?: string | null
           generated_by?: string | null
           id?: string
+          idempotency_key?: string | null
           metadata?: Json | null
           process_id?: string
           status?: string
@@ -5063,6 +5069,7 @@ export type Database = {
           events_snapshot: Json | null
           generated_at: string
           id: string
+          idempotency_key: string | null
           participants_snapshot: Json | null
           pdf_url: string | null
           signature_request_id: string
@@ -5075,6 +5082,7 @@ export type Database = {
           events_snapshot?: Json | null
           generated_at?: string
           id?: string
+          idempotency_key?: string | null
           participants_snapshot?: Json | null
           pdf_url?: string | null
           signature_request_id: string
@@ -5087,6 +5095,7 @@ export type Database = {
           events_snapshot?: Json | null
           generated_at?: string
           id?: string
+          idempotency_key?: string | null
           participants_snapshot?: Json | null
           pdf_url?: string | null
           signature_request_id?: string
@@ -6426,6 +6435,16 @@ export type Database = {
       current_company_id: { Args: never; Returns: string }
       current_user_company_id: { Args: never; Returns: string }
       duplicate_document: { Args: { doc_id: string }; Returns: string }
+      generated_document_upsert: {
+        Args: {
+          p_idempotency_key?: string
+          p_metadata?: Json
+          p_name: string
+          p_process_id: string
+          p_template_id: string
+        }
+        Returns: string
+      }
       get_system_readiness: { Args: never; Returns: Json }
       increment_ocr_usage: {
         Args: { amount: number; company_id_param: string }
