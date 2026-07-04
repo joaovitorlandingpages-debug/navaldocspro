@@ -6501,6 +6501,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      normalize_tax_id: { Args: { p_tax_id: string }; Returns: string }
       process_archive: { Args: { p_id: string }; Returns: undefined }
       process_duplicate: { Args: { p_id: string }; Returns: string }
       process_get_participants: {
