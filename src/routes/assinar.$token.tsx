@@ -81,13 +81,9 @@ function PublicSignPage() {
           setResult({ status: "already", participant, request });
         }
 
-        // Sequential check
+        // Sequential check via secure RPC (validates token)
         if (request.signing_order === "sequential") {
-          const { data: prev } = await supabase
-            .from("signature_participants")
-            .select("id,name,status,signing_order")
-            .eq("signature_request_id", request.id)
-            .lt("signing_order", participant.signing_order ?? 0);
+          const { data: prev } = await supabase.rpc("signature_get_sequential_prev" as any, { p_token: token });
           const blocker = (prev ?? []).find((p: any) => p.status !== "signed");
           if (blocker) {
             setError(`Aguardando assinatura anterior: ${blocker.name}. Você receberá acesso quando chegar sua vez.`);
