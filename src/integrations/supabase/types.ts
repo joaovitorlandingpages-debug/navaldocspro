@@ -1553,6 +1553,7 @@ export type Database = {
           status: string | null
           template_id: string | null
           updated_at: string | null
+          version: number
         }
         Insert: {
           completed_at?: string | null
@@ -1573,6 +1574,7 @@ export type Database = {
           status?: string | null
           template_id?: string | null
           updated_at?: string | null
+          version?: number
         }
         Update: {
           completed_at?: string | null
@@ -1593,6 +1595,7 @@ export type Database = {
           status?: string | null
           template_id?: string | null
           updated_at?: string | null
+          version?: number
         }
         Relationships: [
           {
@@ -2508,6 +2511,7 @@ export type Database = {
           template_id: string | null
           updated_at: string
           verification_code: string | null
+          version: number
           vessel_id: string | null
         }
         Insert: {
@@ -2530,6 +2534,7 @@ export type Database = {
           template_id?: string | null
           updated_at?: string
           verification_code?: string | null
+          version?: number
           vessel_id?: string | null
         }
         Update: {
@@ -2552,6 +2557,7 @@ export type Database = {
           template_id?: string | null
           updated_at?: string
           verification_code?: string | null
+          version?: number
           vessel_id?: string | null
         }
         Relationships: [
@@ -4479,6 +4485,7 @@ export type Database = {
           trashed_at: string | null
           updated_at: string
           validation_errors: Json | null
+          version: number
           vessel_id: string | null
         }
         Insert: {
@@ -4539,6 +4546,7 @@ export type Database = {
           trashed_at?: string | null
           updated_at?: string
           validation_errors?: Json | null
+          version?: number
           vessel_id?: string | null
         }
         Update: {
@@ -4599,6 +4607,7 @@ export type Database = {
           trashed_at?: string | null
           updated_at?: string
           validation_errors?: Json | null
+          version?: number
           vessel_id?: string | null
         }
         Relationships: [
@@ -6414,9 +6423,34 @@ export type Database = {
     }
     Functions: {
       _assert_process_access: { Args: { p_id: string }; Returns: string }
+      _raise_lock_conflict: {
+        Args: {
+          p_current: number
+          p_entity: string
+          p_expected: number
+          p_id: string
+        }
+        Returns: undefined
+      }
       active_processes_count: {
         Args: { p_company_id: string }
         Returns: number
+      }
+      cas_update_checklist_item: {
+        Args: { p_expected_version: number; p_id: string; p_patch: Json }
+        Returns: Json
+      }
+      cas_update_dossier: {
+        Args: { p_expected_version: number; p_id: string; p_patch: Json }
+        Returns: Json
+      }
+      cas_update_generated_document: {
+        Args: { p_expected_version: number; p_id: string; p_patch: Json }
+        Returns: Json
+      }
+      cas_update_process: {
+        Args: { p_expected_version: number; p_id: string; p_patch: Json }
+        Returns: Json
       }
       certificate_verify: { Args: { p_code: string }; Returns: Json }
       check_process_duplicates: {
