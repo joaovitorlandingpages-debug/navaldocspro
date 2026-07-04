@@ -23,6 +23,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocalDraft } from "@/hooks/useLocalDraft";
 import {
   mergeExtractedData,
   type SourceCategory,
