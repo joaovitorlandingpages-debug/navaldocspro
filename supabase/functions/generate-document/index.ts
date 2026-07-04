@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { PDFDocument, rgb, StandardFonts, degrees } from "https://esm.sh/pdf-lib"
 import docxtemplater from "https://esm.sh/docxtemplater"
 import PizZip from "https://esm.sh/pizzip"
-import { authContext, rateLimit, consume, jsonResponse, corsHeaders, HttpError, clientIp } from "../_shared/auth.ts"
+import { authContext, rateLimit, consume, jsonResponse, corsHeaders, HttpError, clientIp, assertProcessNotFinalized } from "../_shared/auth.ts"
 
 
 type Branding = {
@@ -307,7 +307,7 @@ serve(async (req) => {
     await rateLimit(ctx.admin, `user:${ctx.userId}`, 'generate-document', 30, 60)
     if (ctx.companyId) await rateLimit(ctx.admin, `company:${ctx.companyId}`, 'generate-document', 120, 60)
 
-    const { templateId, customerId, vesselId, processId, fieldValues } = await req.json()
+    const { templateId, customerId, vesselId, processId, fieldValues, idempotencyKey } = await req.json()
     // companyId NEVER trusted from payload — derived from authenticated profile
     const companyId = ctx.companyId
     if (!companyId && !ctx.isAdminMaster) throw new HttpError(403, { error: 'no_company_bound' })
@@ -328,6 +328,8 @@ serve(async (req) => {
     if (processId) {
       const { data: proc } = await supabaseAdmin.from('processes').select('company_id').eq('id', processId).maybeSingle()
       if (proc) ctx.requireCompany(proc.company_id)
+      // Block generation on finalized processes (defense in depth vs DB triggers).
+      await assertProcessNotFinalized(supabaseAdmin, processId, ctx.isAdminMaster)
     }
     if (customerId) {
       const { data: cust } = await supabaseAdmin.from('customers').select('company_id').eq('id', customerId).maybeSingle()
@@ -338,8 +340,31 @@ serve(async (req) => {
       if (ves) ctx.requireCompany(ves.company_id)
     }
 
-    // 3) Enforce limits BEFORE incurring cost (PDF generation)
-    const requestId = req.headers.get('x-request-id') || crypto.randomUUID()
+    // Idempotency: reuse existing generated document when the caller replays with
+    // the same key (or the default composite key for the same template/process).
+    const effectiveKey = idempotencyKey
+      || (processId ? `${processId}:${templateId}` : null)
+    if (effectiveKey && companyId) {
+      const { data: existing } = await supabaseAdmin
+        .from('generated_documents')
+        .select('id, generated_file_url, metadata, name, status')
+        .eq('company_id', companyId)
+        .eq('idempotency_key', effectiveKey)
+        .maybeSingle()
+      if (existing && existing.generated_file_url) {
+        return jsonResponse({
+          success: true,
+          idempotent: true,
+          document: existing,
+          url: existing.generated_file_url,
+          verificationCode: (existing.metadata as any)?.verificationCode,
+        })
+      }
+    }
+
+    // 3) Enforce limits BEFORE incurring cost (PDF generation).
+    // Use a stable idempotency key so retries do not double-charge.
+    const requestId = effectiveKey || req.headers.get('x-request-id') || crypto.randomUUID()
     if (companyId) {
       await consume(supabaseAdmin, companyId, 'pdf_generation', 1, requestId, { templateId, processId })
     }
@@ -684,7 +709,7 @@ serve(async (req) => {
 
     const { data: generatedDoc, error: dbError } = await supabaseAdmin
       .from('generated_documents')
-      .insert({
+      .upsert({
         company_id: companyId,
         customer_id: customerId,
         vessel_id: vesselId,
@@ -694,7 +719,8 @@ serve(async (req) => {
         generated_file_url: generatedPath,
         status: 'completed',
         metadata: { fieldValues, verificationCode },
-      })
+        idempotency_key: effectiveKey,
+      }, { onConflict: 'company_id,idempotency_key', ignoreDuplicates: false })
       .select()
       .single()
 

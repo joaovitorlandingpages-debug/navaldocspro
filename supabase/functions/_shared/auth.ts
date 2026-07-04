@@ -164,6 +164,60 @@ export async function consume(
   }
 }
 
+/**
+ * Throws HttpError(409 process_finalized) when the process is finalized/completed/archived.
+ * Admin master callers bypass (mirrors DB trigger behavior).
+ */
+export async function assertProcessNotFinalized(
+  admin: SupabaseClient,
+  processId: string | null | undefined,
+  isAdminMaster = false,
+): Promise<void> {
+  if (!processId || isAdminMaster) return;
+  const { data } = await admin
+    .from("processes")
+    .select("id, status, finalized_at")
+    .eq("id", processId)
+    .maybeSingle();
+  if (!data) return;
+  const finalized =
+    !!data.finalized_at ||
+    ["completed", "finalized", "archived"].includes(String(data.status));
+  if (finalized) {
+    throw new HttpError(409, { error: "process_finalized", processId });
+  }
+}
+
+/**
+ * Atomic claim helper for idempotent processing.
+ * Returns { claimed: true } if this call transitioned the row to `toStatus`,
+ * or { claimed: false, currentStatus } if it was already advanced.
+ * Prevents concurrent workers from double-processing the same job.
+ */
+export async function claimStatus(
+  admin: SupabaseClient,
+  table: string,
+  id: string,
+  statusColumn: string,
+  fromStatuses: string[],
+  toStatus: string,
+): Promise<{ claimed: boolean; currentStatus?: string | null }> {
+  const { data: updated } = await admin
+    .from(table)
+    .update({ [statusColumn]: toStatus, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .in(statusColumn, fromStatuses)
+    .select("id")
+    .maybeSingle();
+  if (updated) return { claimed: true };
+  const { data: current } = await admin
+    .from(table)
+    .select(statusColumn)
+    .eq("id", id)
+    .maybeSingle();
+  return { claimed: false, currentStatus: (current as any)?.[statusColumn] ?? null };
+}
+
 /** Wraps a handler so HttpError is rendered with CORS + JSON. */
 export function withErrors(
   handler: (req: Request) => Promise<Response>

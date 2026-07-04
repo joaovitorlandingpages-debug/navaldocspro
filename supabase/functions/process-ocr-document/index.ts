@@ -1,7 +1,7 @@
 // Real OCR using Lovable AI Gateway (Gemini 2.5 Flash vision)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-import { authContext, rateLimit, consume, jsonResponse, corsHeaders, HttpError } from "../_shared/auth.ts"
+import { authContext, rateLimit, consume, jsonResponse, corsHeaders, HttpError, assertProcessNotFinalized, claimStatus } from "../_shared/auth.ts"
 
 
 const EXTRACTION_PROMPT = `Você é um OCR especialista em documentos brasileiros (CNH, RG, CPF, comprovantes, TIE/TIEM de embarcações, CSN, DPEM, GRU, recibos, laudos).
@@ -115,13 +115,38 @@ serve(async (req) => {
     // 2) Cross-check tenant — never trust payload
     ctx.requireCompany(job.company_id)
 
-    // 3) Enforce OCR limit before incurring cost (idempotent per jobId)
+    // Idempotency: if job already completed, return without re-running.
+    if (job.status === 'completed') {
+      return jsonResponse({ ok: true, idempotent: true, jobId, result: job.extracted_data ?? null })
+    }
+
+    // Guard against processing for finalized processes.
+    await assertProcessNotFinalized(ctx.admin, job.process_id, ctx.isAdminMaster)
+
+    // Atomic claim to prevent double-execution.
+    const claim = await claimStatus(
+      ctx.admin,
+      'ocr_jobs',
+      jobId,
+      'status',
+      ['queued', 'pending', 'failed', 'error', null as unknown as string],
+      'processing',
+    )
+    if (!claim.claimed) {
+      if (claim.currentStatus === 'processing') {
+        throw new HttpError(409, { error: 'ocr_in_progress', jobId })
+      }
+      if (claim.currentStatus === 'completed') {
+        return jsonResponse({ ok: true, idempotent: true, jobId })
+      }
+    }
+
+    // 3) Enforce OCR limit (idempotent per jobId — same key never double-charges)
     if (job.company_id) {
       await consume(ctx.admin, job.company_id, 'ocr', 1, `ocr:${jobId}`, { jobId })
     }
 
     await supabase.from('ocr_jobs').update({
-      status: 'processing',
       provider_used: 'Lovable AI / google/gemini-2.5-flash',
       updated_at: new Date().toISOString(),
     }).eq('id', jobId)
