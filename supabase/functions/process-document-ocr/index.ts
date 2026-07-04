@@ -51,15 +51,41 @@ serve(async (req) => {
 
     ctx.requireCompany(upload.company_id);
 
+    // Idempotency: if already completed, return cached result — do not re-run OCR or re-consume quota.
+    if (upload.ocr_status === "concluido") {
+      return jsonResponse({
+        ok: true,
+        idempotent: true,
+        document_type: upload.detected_document_type,
+        fields: upload.extracted_fields ?? {},
+        confidence: upload.confidence_score,
+      });
+    }
+
+    // Guard against processing files that belong to finalized processes.
+    await assertProcessNotFinalized(ctx.admin, upload.process_id, ctx.isAdminMaster);
+
+    // Atomic claim: prevent double-clicks / concurrent workers from running OCR twice.
+    const claim = await claimStatus(
+      ctx.admin,
+      "process_document_uploads",
+      uploadId,
+      "ocr_status",
+      ["pendente", "falhou", "erro", null as unknown as string],
+      "processando",
+    );
+    if (!claim.claimed) {
+      if (claim.currentStatus === "processando") {
+        throw new HttpError(409, { error: "ocr_in_progress", uploadId });
+      }
+      if (claim.currentStatus === "concluido") {
+        return jsonResponse({ ok: true, idempotent: true, uploadId });
+      }
+    }
+
     if (upload.company_id) {
       await consume(ctx.admin, upload.company_id, "ocr", 1, `pdu:${uploadId}`, { uploadId });
     }
-
-
-    await supabase
-      .from("process_document_uploads")
-      .update({ ocr_status: "processando", updated_at: new Date().toISOString() })
-      .eq("id", uploadId);
 
     // Download bytes from bucket
     const path = upload.file_url; // stored as relative path within bucket
