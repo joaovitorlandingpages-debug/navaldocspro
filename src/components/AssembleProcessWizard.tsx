@@ -135,7 +135,7 @@ export function AssembleProcessWizard({
   type Snap = { step: number; extractions: Record<string, OCRExtraction | null>; selectedProcedure: string | null };
   const draftSnap: Snap = useMemo(() => ({ step, extractions, selectedProcedure }), [step, extractions, selectedProcedure]);
   const draft = useLocalDraft<Snap>("wizard:assemble-process", draftSnap, isOpen);
-  const hydratedRef = React.useRef ? React.useRef(false) : { current: false };
+  const hydratedRef = useRef(false);
 
   // Load packages on first open
   useEffect(() => {
