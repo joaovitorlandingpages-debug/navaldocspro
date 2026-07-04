@@ -25,6 +25,7 @@ import {
   Zap, PackageOpen, CheckCircle2, AlertTriangle, Clock, ArrowRight,
   User, Ship, Target, Loader2, Sparkles, Download, XCircle, ChevronDown,
 } from "lucide-react";
+import { casUpdate, notifyConflict } from "@/lib/optimisticLock";
 
 interface Props {
   process: any;
