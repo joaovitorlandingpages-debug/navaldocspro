@@ -25,6 +25,8 @@ import {
 import { BR_UFS, maskCpfCnpj, maskPhone, daysUntil } from "@/lib/br-format";
 import { ProcessParticipantsTab } from "./ProcessParticipantsTab";
 import { casUpdate, notifyConflict } from "@/lib/optimisticLock";
+import { useAutosave } from "@/hooks/useAutosave";
+import { AutosaveIndicator } from "@/components/AutosaveIndicator";
 
 interface Props {
   process: any;
