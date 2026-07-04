@@ -365,6 +365,61 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose, initialTa
     return () => window.removeEventListener("keydown", onKey);
   }, [handleSave, newCustomerOpen, editCustomerOpen, newVesselOpen, editVesselOpen, confirmAction]);
 
+  // -------- Autosave (Onda 2B.2) — debounced, version-safe, localStorage-backed
+  const autosaveEnabled =
+    !!process?.id && !newCustomerOpen && !editCustomerOpen &&
+    !newVesselOpen && !editVesselOpen && confirmAction === null;
+
+  const autosaveSave = useCallback(async (snapshot: typeof form) => {
+    // Build payload from diff vs. `initial`
+    const columnMap: Record<string, string> = {
+      title: "title", process_type: "process_type", status: "status", priority: "priority",
+      due_date: "due_date", notes: "notes", customer_id: "customer_id", vessel_id: "vessel_id",
+      responsible_id: "responsible_id", technical_manager_id: "technical_manager_id",
+      started_at: "started_at", tags: "tags", branding_mode: "branding_mode",
+      branding_logo_url: "branding_logo_url",
+    };
+    const nullable = new Set(["due_date","vessel_id","responsible_id","technical_manager_id","notes","title","started_at","branding_logo_url"]);
+    const payload: any = {};
+    const extras: any = { ...meta };
+    let extrasChanged = false;
+    let anyChange = false;
+    (Object.keys(snapshot) as (keyof typeof snapshot)[]).forEach((k) => {
+      const a = JSON.stringify((snapshot as any)[k] ?? null);
+      const b = JSON.stringify((initial as any)[k] ?? null);
+      if (a === b) return;
+      anyChange = true;
+      const key = String(k);
+      if (columnMap[key]) {
+        payload[columnMap[key]] = nullable.has(key) ? ((snapshot as any)[k] || null) : (snapshot as any)[k];
+      } else {
+        extras[key] = (snapshot as any)[k] || null;
+        extrasChanged = true;
+      }
+    });
+    if (!anyChange) return { ok: true as const };
+    if (!snapshot.process_type?.trim() || !snapshot.customer_id) {
+      // required fields missing — don't blow up autosave, just skip
+      return { ok: false as const, error: "required fields missing" };
+    }
+    if (extrasChanged) payload.draft_data = extras;
+    const expectedVersion = Number(process?.version ?? 1);
+    const res = await casUpdate("processes", process.id, expectedVersion, payload);
+    if (res.ok) return { ok: true as const };
+    if (res.conflict) return { ok: false as const, conflict: true };
+    return { ok: false as const, error: res.error };
+  }, [initial, meta, process?.id, process?.version]);
+
+  const autosave = useAutosave({
+    draftKey: `process:${process?.id ?? "new"}`,
+    data: form,
+    onSave: autosaveSave,
+    enabled: autosaveEnabled,
+    initial,
+    debounceMs: 1500,
+  });
+
+
 
   // -------- Quick Actions
   async function goTo(t: string) {
