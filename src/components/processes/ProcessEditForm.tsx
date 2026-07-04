@@ -951,10 +951,16 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose, initialTa
 
       {/* Sticky save bar */}
       <div className="sticky bottom-0 border-t border-slate-100 bg-white/95 backdrop-blur px-5 sm:px-8 py-3 flex items-center justify-between gap-3">
-        <div className="text-[11px] text-slate-500 font-medium truncate">
+        <div className="text-[11px] text-slate-500 font-medium truncate flex items-center gap-3">
+          <AutosaveIndicator
+            status={autosave.status}
+            lastSavedAt={autosave.lastSavedAt}
+            onRetry={() => autosave.saveNow()}
+            onReload={() => onSaved?.()}
+          />
           {isDirty
             ? <span className="text-amber-600 font-bold">Alterações não salvas · <kbd className="px-1.5 py-0.5 rounded border border-slate-200 bg-slate-50 text-[10px]">Ctrl</kbd>+<kbd className="px-1.5 py-0.5 rounded border border-slate-200 bg-slate-50 text-[10px]">S</kbd> para salvar</span>
-            : "Nenhuma alteração"}
+            : <span>Nenhuma alteração</span>}
         </div>
         <div className="flex gap-2 shrink-0">
           {onCancel && (
