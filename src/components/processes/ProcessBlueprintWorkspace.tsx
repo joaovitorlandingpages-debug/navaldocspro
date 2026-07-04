@@ -47,6 +47,7 @@ type ChecklistRow = {
   template_id: string | null;
   document_role: string | null;
   sort_order: number | null;
+  version: number | null;
 };
 
 function classify(row: ChecklistRow) {
