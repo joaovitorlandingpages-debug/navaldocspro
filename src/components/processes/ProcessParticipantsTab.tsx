@@ -15,6 +15,7 @@ import {
   ROLE_LABEL, type ParticipantRole, type ProcessParticipant,
 } from "@/services/processes/participants";
 import { maskCpfCnpj, maskPhone } from "@/lib/br-format";
+import { casUpdate, notifyConflict } from "@/lib/optimisticLock";
 
 const ROLES: ParticipantRole[] = [
   "owner", "buyer", "seller", "attorney", "grantor",
