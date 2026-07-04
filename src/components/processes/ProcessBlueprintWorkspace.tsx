@@ -86,7 +86,7 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     queryFn: async () => {
       const { data, error } = await supabase
         .from("document_checklists")
-        .select("id,item_name,status,is_mandatory,is_conditional,conditional_rule,requires_signature,requires_ocr,document_id,template_id,document_role,sort_order")
+        .select("id,item_name,status,is_mandatory,is_conditional,conditional_rule,requires_signature,requires_ocr,document_id,template_id,document_role,sort_order,version")
         .eq("process_id", processId)
         .order("sort_order", { ascending: true });
       if (error) throw error;
