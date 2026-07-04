@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { ModalLayout } from "@/components/ui/ModalLayout";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocalDraft } from "@/hooks/useLocalDraft";
 import {
   mergeExtractedData,
   type SourceCategory,
@@ -130,6 +131,12 @@ export function AssembleProcessWizard({
   const [previews, setPreviews] = useState<PreviewDoc[]>([]);
   const [generating, setGenerating] = useState(false);
 
+  // Autosave draft (Onda 2B.2) — persist step + extractions + selectedProcedure
+  type Snap = { step: number; extractions: Record<string, OCRExtraction | null>; selectedProcedure: string | null };
+  const draftSnap: Snap = useMemo(() => ({ step, extractions, selectedProcedure }), [step, extractions, selectedProcedure]);
+  const draft = useLocalDraft<Snap>("wizard:assemble-process", draftSnap, isOpen);
+  const hydratedRef = useRef(false);
+
   // Load packages on first open
   useEffect(() => {
     if (!isOpen || packages.length > 0) return;
@@ -150,6 +157,20 @@ export function AssembleProcessWizard({
         setLoadingPkgs(false);
       });
   }, [isOpen]);
+
+  // Hydrate draft on open
+  useEffect(() => {
+    if (!isOpen) { hydratedRef.current = false; return; }
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+    const saved = draft.load();
+    if (saved && (saved.selectedProcedure || Object.keys(saved.extractions || {}).length)) {
+      setStep(saved.step ?? 0);
+      setExtractions(saved.extractions ?? {});
+      setSelectedProcedure(saved.selectedProcedure ?? null);
+      toast.info("Rascunho recuperado.");
+    }
+  }, [isOpen, draft]);
 
   // Reset on close
   useEffect(() => {
@@ -321,6 +342,7 @@ export function AssembleProcessWizard({
       const { error } = await supabase.from("generated_documents").insert(rows);
       if (error) throw error;
       toast.success(`Pacote gerado: ${rows.length} documentos!`);
+      draft.clear();
       setStep(3);
     } catch (e: any) {
       toast.error("Erro ao gerar: " + e.message);

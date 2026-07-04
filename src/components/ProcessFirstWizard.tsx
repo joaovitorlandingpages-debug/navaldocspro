@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useOCR } from "@/hooks/useOCR";
+import { useLocalDraft } from "@/hooks/useLocalDraft";
 import {
   SERVICES,
   findService,
@@ -154,7 +155,8 @@ type Action =
   | { type: "GENERATING"; on: boolean }
   | { type: "LOG"; line: string }
   | { type: "CREATED"; processId: string }
-  | { type: "SET_RESULT"; result: PersistenceResult | null };
+  | { type: "SET_RESULT"; result: PersistenceResult | null }
+  | { type: "HYDRATE"; state: WizardState };
 
 const bucketKey = (b: "personal" | "address" | "vessel") =>
   b === "personal" ? "personalDocs" : b === "address" ? "addressDocs" : "vesselDocs";
@@ -203,6 +205,7 @@ function reducer(s: WizardState, a: Action): WizardState {
     case "LOG": return { ...s, progressLog: [...s.progressLog, a.line] };
     case "CREATED": return { ...s, createdProcessId: a.processId };
     case "SET_RESULT": return { ...s, generationResult: a.result };
+    case "HYDRATE": return a.state;
   }
 }
 
@@ -488,6 +491,21 @@ export function ProcessFirstWizard({ isOpen, onClose }: Props) {
   const personalInputRef = useRef<HTMLInputElement>(null);
   const addressInputRef = useRef<HTMLInputElement>(null);
   const vesselInputRef = useRef<HTMLInputElement>(null);
+
+  // Autosave draft (Onda 2B.2)
+  const draft = useLocalDraft<WizardState>("wizard:process-first", state, isOpen && !state.createdProcessId);
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (!isOpen) { hydratedRef.current = false; return; }
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+    const saved = draft.load();
+    if (saved && (saved.service || saved.customer?.name || saved.vessel?.name)) {
+      dispatch({ type: "HYDRATE", state: { ...saved, generating: false, generationResult: null } });
+      toast.info("Rascunho recuperado.");
+    }
+  }, [isOpen, draft]);
+  useEffect(() => { if (state.createdProcessId) draft.clear(); }, [state.createdProcessId, draft]);
 
   // ---- Bloco 5: library-suggested templates state ----
   const [suggestedTemplates, setSuggestedTemplates] = useState<SuggestedTemplate[]>([]);
