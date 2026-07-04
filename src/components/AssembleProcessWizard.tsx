@@ -158,6 +158,20 @@ export function AssembleProcessWizard({
       });
   }, [isOpen]);
 
+  // Hydrate draft on open
+  useEffect(() => {
+    if (!isOpen) { hydratedRef.current = false; return; }
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+    const saved = draft.load();
+    if (saved && (saved.selectedProcedure || Object.keys(saved.extractions || {}).length)) {
+      setStep(saved.step ?? 0);
+      setExtractions(saved.extractions ?? {});
+      setSelectedProcedure(saved.selectedProcedure ?? null);
+      toast.info("Rascunho recuperado.");
+    }
+  }, [isOpen, draft]);
+
   // Reset on close
   useEffect(() => {
     if (!isOpen) {
