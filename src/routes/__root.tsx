@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { getRouteApi } from "@tanstack/react-router";
 import {
   Outlet,
   Link,
@@ -121,18 +122,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+const rootRouteApi = getRouteApi("__root__");
+
 function RootShell({ children }: { children: React.ReactNode }) {
-  const queryClient = React.useMemo(() => {
-    console.log("REMOVE_CHILD_AUDIT_START");
-    console.log("SYSTEM_STABLE");
-    console.log("REMOVE_CHILD_ERROR_FIXED");
-    console.log("FINAL_ENTERPRISE_AUDIT_OK");
-    console.log("FINAL_SECURITY_OK");
-    console.log("FINAL_OCR_OK");
-    console.log("FINAL_DOCUMENT_FLOW_OK");
-    console.log("FINAL_COMMERCIAL_READY");
-    return new QueryClient();
-  }, []);
+  // Onda 3B.1 — usar o QueryClient único vindo do router context.
+  // Antes existiam duas instâncias (router.tsx + __root.tsx), causando
+  // caches paralelos, invalidations parciais e refetches duplicados.
+  const { queryClient } = rootRouteApi.useRouteContext();
 
 
 
