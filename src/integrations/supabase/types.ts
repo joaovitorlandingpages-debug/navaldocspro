@@ -4221,6 +4221,48 @@ export type Database = {
           },
         ]
       }
+      process_finalization_overrides: {
+        Row: {
+          actor_id: string | null
+          actor_role: string | null
+          created_at: string
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          op: string
+          process_id: string
+          reason: string | null
+          row_pk: string | null
+          table_name: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          op: string
+          process_id: string
+          reason?: string | null
+          row_pk?: string | null
+          table_name: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          op?: string
+          process_id?: string
+          reason?: string | null
+          row_pk?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
       process_insights: {
         Row: {
           company_id: string | null
@@ -6485,6 +6527,7 @@ export type Database = {
         Returns: undefined
       }
       is_admin_master: { Args: never; Returns: boolean }
+      is_admin_master_caller: { Args: never; Returns: boolean }
       limits_check: {
         Args: { p_amount?: number; p_company: string; p_resource: string }
         Returns: Json
