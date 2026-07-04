@@ -342,6 +342,7 @@ export function AssembleProcessWizard({
       const { error } = await supabase.from("generated_documents").insert(rows);
       if (error) throw error;
       toast.success(`Pacote gerado: ${rows.length} documentos!`);
+      draft.clear();
       setStep(3);
     } catch (e: any) {
       toast.error("Erro ao gerar: " + e.message);
