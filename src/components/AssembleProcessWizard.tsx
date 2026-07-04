@@ -131,6 +131,12 @@ export function AssembleProcessWizard({
   const [previews, setPreviews] = useState<PreviewDoc[]>([]);
   const [generating, setGenerating] = useState(false);
 
+  // Autosave draft (Onda 2B.2) — persist step + extractions + selectedProcedure
+  type Snap = { step: number; extractions: Record<string, OCRExtraction | null>; selectedProcedure: string | null };
+  const draftSnap: Snap = useMemo(() => ({ step, extractions, selectedProcedure }), [step, extractions, selectedProcedure]);
+  const draft = useLocalDraft<Snap>("wizard:assemble-process", draftSnap, isOpen);
+  const hydratedRef = React.useRef ? React.useRef(false) : { current: false };
+
   // Load packages on first open
   useEffect(() => {
     if (!isOpen || packages.length > 0) return;
