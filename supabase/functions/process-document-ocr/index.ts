@@ -1,7 +1,7 @@
 // OCR for process_document_uploads — calls Lovable AI Gateway (Gemini 2.5 Flash vision)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { authContext, rateLimit, consume, jsonResponse, corsHeaders, HttpError } from "../_shared/auth.ts";
+import { authContext, rateLimit, consume, jsonResponse, corsHeaders, HttpError, assertProcessNotFinalized, claimStatus } from "../_shared/auth.ts";
 
 
 const PROMPT = `Você é um OCR especialista em documentos brasileiros (CNH, RG, CPF, CNPJ, Título, CR, Procuração, Contrato Social, Comprovante de endereço, TIE/TIEM de embarcações, CSN, DPEM, GRU).
