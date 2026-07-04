@@ -223,21 +223,28 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     });
   }, [checklist, process, stats, uploads, signatures]);
 
-  const handleWaive = useCallback(async (id: string) => {
-    const { error } = await supabase.from("document_checklists").update({ status: "waived" }).eq("id", id);
-    if (error) return toast.error("Falha ao marcar como não aplicável.");
-    toast.success("Item marcado como não aplicável.");
+  const casChecklistStatus = useCallback(async (id: string, status: string, successMsg: string, failMsg: string) => {
+    const item = checklist.find((c) => c.id === id);
+    const expected = Number(item?.version ?? 1);
+    const res = await casUpdate("document_checklists", id, expected, { status });
+    if (!res.ok) {
+      if (res.conflict) { notifyConflict(res, () => refetch()); return false; }
+      toast.error(failMsg + ": " + res.error);
+      return false;
+    }
+    toast.success(successMsg);
     await refetch();
     onChanged?.();
-  }, [refetch, onChanged]);
+    return true;
+  }, [checklist, refetch, onChanged]);
 
-  const handleMarkAttached = useCallback(async (id: string) => {
-    const { error } = await supabase.from("document_checklists").update({ status: "attached" }).eq("id", id);
-    if (error) return toast.error("Falha ao marcar como anexado.");
-    toast.success("Comprovante marcado como anexado.");
-    await refetch();
-    onChanged?.();
-  }, [refetch, onChanged]);
+  const handleWaive = useCallback((id: string) =>
+    casChecklistStatus(id, "waived", "Item marcado como não aplicável.", "Falha ao marcar como não aplicável"),
+  [casChecklistStatus]);
+
+  const handleMarkAttached = useCallback((id: string) =>
+    casChecklistStatus(id, "attached", "Comprovante marcado como anexado.", "Falha ao marcar como anexado"),
+  [casChecklistStatus]);
 
   const handleEditVessel = useCallback(() => {
     window.dispatchEvent(new CustomEvent("naval:edit-vessel", { detail: { processId, vesselId: process?.vessel_id } }));
