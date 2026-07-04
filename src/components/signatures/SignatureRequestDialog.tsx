@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { signaturesService, type ParticipantRole } from "@/services/signatures";
 import { useAuth } from "@/hooks/useAuth";
+import { casUpdate } from "@/lib/optimisticLock";
 
 interface Props {
   open: boolean;
