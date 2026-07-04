@@ -15,6 +15,7 @@ import {
   ROLE_LABEL, type ParticipantRole, type ProcessParticipant,
 } from "@/services/processes/participants";
 import { maskCpfCnpj, maskPhone } from "@/lib/br-format";
+import { casUpdate, notifyConflict } from "@/lib/optimisticLock";
 
 const ROLES: ParticipantRole[] = [
   "owner", "buyer", "seller", "attorney", "grantor",
@@ -79,13 +80,20 @@ export function ProcessParticipantsTab({
   const missingRoles = requiredRoles.filter((r) => !grouped[r]?.length);
 
   async function syncProcessColumns(role: ParticipantRole, customer_id: string | null) {
-    if (role === "owner") {
-      await supabase.from("processes").update({ customer_id }).eq("id", processId);
-      onSyncProcess?.({ customer_id });
-    } else if (role === "seller") {
-      await supabase.from("processes").update({ secondary_customer_id: customer_id } as any).eq("id", processId);
-      onSyncProcess?.({ secondary_customer_id: customer_id });
+    if (role !== "owner" && role !== "seller") return;
+    // Buscar versão atual para CAS (fetch-then-cas)
+    const { data: p } = await supabase.from("processes").select("version").eq("id", processId).single();
+    const expected = Number((p as any)?.version ?? 1);
+    const patch = role === "owner"
+      ? { customer_id }
+      : { secondary_customer_id: customer_id };
+    const res = await casUpdate("processes", processId, expected, patch);
+    if (!res.ok) {
+      if (res.conflict) { notifyConflict(res, () => load()); return; }
+      toast.error("Falha ao sincronizar processo: " + res.error);
+      return;
     }
+    onSyncProcess?.(patch as any);
   }
 
   async function handleAdd(customer_id: string, role: ParticipantRole) {
