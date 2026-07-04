@@ -709,7 +709,7 @@ serve(async (req) => {
 
     const { data: generatedDoc, error: dbError } = await supabaseAdmin
       .from('generated_documents')
-      .insert({
+      .upsert({
         company_id: companyId,
         customer_id: customerId,
         vessel_id: vesselId,
@@ -719,7 +719,8 @@ serve(async (req) => {
         generated_file_url: generatedPath,
         status: 'completed',
         metadata: { fieldValues, verificationCode },
-      })
+        idempotency_key: effectiveKey,
+      }, { onConflict: 'company_id,idempotency_key', ignoreDuplicates: false })
       .select()
       .single()
 
