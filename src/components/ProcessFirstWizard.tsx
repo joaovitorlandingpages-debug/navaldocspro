@@ -154,7 +154,8 @@ type Action =
   | { type: "GENERATING"; on: boolean }
   | { type: "LOG"; line: string }
   | { type: "CREATED"; processId: string }
-  | { type: "SET_RESULT"; result: PersistenceResult | null };
+  | { type: "SET_RESULT"; result: PersistenceResult | null }
+  | { type: "HYDRATE"; state: WizardState };
 
 const bucketKey = (b: "personal" | "address" | "vessel") =>
   b === "personal" ? "personalDocs" : b === "address" ? "addressDocs" : "vesselDocs";
