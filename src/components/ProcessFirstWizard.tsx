@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useOCR } from "@/hooks/useOCR";
+import { useLocalDraft } from "@/hooks/useLocalDraft";
 import {
   SERVICES,
   findService,
