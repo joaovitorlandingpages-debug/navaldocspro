@@ -25,7 +25,8 @@ function statusColor(p: number) {
 }
 
 function ConsumoPage() {
-  const { data, isLoading, refetch, isFetching } = useResourceStatus();
+  // /consumo é a única tela legítima de polling de limites (5min).
+  const { data, isLoading, refetch, isFetching } = useResourceStatus({ pollMs: 5 * 60_000 });
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500">
