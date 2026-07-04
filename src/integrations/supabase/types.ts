@@ -6629,6 +6629,11 @@ export type Database = {
           status: string
         }[]
       }
+      storage_object_company: { Args: { p_name: string }; Returns: string }
+      storage_object_is_finalized: {
+        Args: { p_bucket: string; p_name: string }
+        Returns: boolean
+      }
       track_usage: {
         Args: {
           p_action: string
