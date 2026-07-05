@@ -62,18 +62,20 @@ export function WelcomeTour({
           setDossierStatus('waiting');
         }
 
-        const { data: scores } = await supabase
-          .from('system_readiness_scores')
-          .select('score');
-        
-        const avg = scores && scores.length > 0 
-          ? scores.reduce((acc: number, curr: any) => acc + curr.score, 0) / scores.length 
-          : 0;
-        
-        if (avg > 80) {
-          setReadinessStatus('completed');
+        // Onda 3B.3 — só admin master consulta readiness scores; usuários
+        // comuns não precisam desse dado e a query gera custo administrativo.
+        if (isAdminMaster) {
+          const { data: scores } = await supabase
+            .from('system_readiness_scores')
+            .select('score');
+
+          const avg = scores && scores.length > 0
+            ? scores.reduce((acc: number, curr: any) => acc + curr.score, 0) / scores.length
+            : 0;
+
+          setReadinessStatus(avg > 80 ? 'completed' : 'waiting');
         } else {
-          setReadinessStatus('waiting');
+          setReadinessStatus('completed');
         }
       } catch (error) {
         console.error("Error auditing enterprise steps:", error);
