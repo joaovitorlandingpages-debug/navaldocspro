@@ -46,11 +46,11 @@ const REASON_LABEL: Record<string, string> = {
   monthly_limit_exceeded: "Limite mensal atingido. Faça upgrade do plano ou adquira um pacote adicional.",
 };
 
+import { getCurrentCompanyId } from "@/lib/currentCompany";
+
 async function currentCompanyId(): Promise<string | null> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data } = await supabase.from("profiles").select("company_id").eq("id", user.id).maybeSingle();
-  return data?.company_id ?? null;
+  // Onda 3C.2: use process-wide cache to avoid re-querying profiles per action.
+  return getCurrentCompanyId();
 }
 
 export const limitsEngine = {
