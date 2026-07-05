@@ -40,6 +40,9 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
 
   const isAuthPage = typeof window !== 'undefined' && (window.location.pathname.startsWith('/auth') || window.location.pathname === '/');
 
+  // Onda 3B.3 — só consulta insights quando o painel está aberto e visível.
+  // Antes: refetch a cada 30s em toda página (root-mounted). Agora: enabled
+  // apenas quando painel aberto + não minimizado, polling a cada 5min.
   const { data: insights, refetch } = useQuery({
     queryKey: ['operational_insights', processId, profile?.company_id],
     queryFn: async () => {
@@ -70,8 +73,10 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
       }
       return data as Insight[];
     },
-    enabled: !!profile?.company_id && !isAuthPage,
-    refetchInterval: 30000 // Refresh a cada 30s para novos insights
+    enabled: isOpen && !isMinimized && !!profile?.company_id && !isAuthPage,
+    refetchInterval: isOpen && !isMinimized ? 5 * 60_000 : false,
+    refetchOnWindowFocus: false,
+    staleTime: 60_000,
   });
 
   if (!isOpen) return (
