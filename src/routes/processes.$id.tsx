@@ -321,7 +321,9 @@ function ProcessDetail() {
   if (selectedTemplateForGen) {
     return (
       <div className="max-w-7xl mx-auto p-8">
+        <Suspense fallback={<TabLoader />}>
         <DocumentPreviewEditor 
+
           template={selectedTemplateForGen}
           processData={process}
           onSave={async (finalContent) => {
