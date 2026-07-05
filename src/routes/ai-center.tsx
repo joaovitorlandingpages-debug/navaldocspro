@@ -92,7 +92,7 @@ function AIOperationsCenterPage() {
 
         {/* Analytics & Controle Central */}
         <div className="lg:col-span-8 space-y-8">
-          <OperationalCharts />
+          <Suspense fallback={<div className="h-64" />}><OperationalCharts /></Suspense>
 
           <Card className="p-8 border-none shadow-sm rounded-3xl bg-white overflow-hidden">
              <div className="flex items-center justify-between mb-8">
