@@ -118,7 +118,7 @@ function OperationsCenterPage() {
       </div>
       
       {/* Visual Analytics Section */}
-      <OperationalCharts />
+      <Suspense fallback={<div className="h-64" />}><OperationalCharts /></Suspense>
 
       <div className="grid lg:grid-cols-12 gap-8">
         {/* Inteligência IA (4 colunas) */}
