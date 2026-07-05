@@ -488,6 +488,7 @@ function ProcessDetail() {
 
       <OperationalGuide />
 
+      <Suspense fallback={<TabLoader />}>
       <div className="grid lg:grid-cols-4 gap-8">
          <div className="lg:col-span-3 space-y-8">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
