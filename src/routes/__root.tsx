@@ -13,10 +13,17 @@ import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { NewProcessProvider } from "@/hooks/useNewProcess";
 import { PlanLimitProvider } from "@/hooks/usePlanLimits";
-import { FeedbackButton } from "@/components/FeedbackButton";
-import { IntelligentAssistant } from "@/components/IntelligentAssistant";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
+
+// Onda 3C.3 — floating widgets são lazy: só entram no bundle quando o usuário
+// interage após idle. Removem ~15KB + deps (sonner/supabase call sites) do main.
+const FeedbackButton = React.lazy(() =>
+  import("@/components/FeedbackButton").then((m) => ({ default: m.FeedbackButton })),
+);
+const IntelligentAssistant = React.lazy(() =>
+  import("@/components/IntelligentAssistant").then((m) => ({ default: m.IntelligentAssistant })),
+);
 
 function NotFoundComponent() {
   return (
@@ -155,10 +162,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 // Separate component to safely handle floating widgets
 function SafeFloatingWidgets() {
   return (
-    <>
+    <React.Suspense fallback={null}>
       <FeedbackButton />
       <IntelligentAssistant />
-    </>
+    </React.Suspense>
   );
 }
 
