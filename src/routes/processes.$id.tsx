@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense, lazy } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useFiles } from "@/hooks/useFiles";
 import { FileUploader } from "@/components/FileUploader";
@@ -26,35 +26,41 @@ import { toast } from "sonner";
 import { formatDistanceToNow, isPast, parseISO, differenceInDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
-import { ProcessChecklist } from "@/components/ProcessChecklist";
-import { SmartAutomationDashboard } from "@/components/automation/SmartAutomationDashboard";
-import { ProcessTimeline } from "@/components/ProcessTimeline";
-import { DocumentPreviewEditor } from "@/components/documents/DocumentPreviewEditor";
 import { useProcessAutomation } from "@/hooks/useProcessAutomation";
-import { IntelligencePanel } from "@/components/IntelligencePanel";
 import { useOCR } from "@/hooks/useOCR";
-import { OCRUpload } from "@/components/ocr/OCRUpload";
 import { useDossier } from "@/hooks/useDossier";
-import { DossierPreview } from "@/components/dossier/DossierPreview";
-import { dossierEngine } from "@/services/automation/dossierEngine";
-import { ProcessDossierTab } from "@/components/dossier/ProcessDossierTab";
-import ProcessFinalDossierTab from "@/components/process/ProcessFinalDossierTab";
 import { openStoredFile } from "@/utils/file-preview";
-import { ProcessDocumentsPanel } from "@/components/process/ProcessDocumentsPanel";
-import { ClientPortalPanel } from "@/components/process/ClientPortalPanel";
-import { ProcessSignaturesPanel } from "@/components/process/ProcessSignaturesPanel";
 import { SignaturesStatusCard } from "@/components/process/SignaturesStatusCard";
-import { ProcessIdentityPanel } from "@/components/process/ProcessIdentityPanel";
 import { ProcessTopBar } from "@/components/processes/ProcessTopBar";
-import { ProcessEditForm } from "@/components/processes/ProcessEditForm";
-import { ProcessEditSheet } from "@/components/processes/ProcessEditSheet";
-import { ProcessBlueprintWorkspace } from "@/components/processes/ProcessBlueprintWorkspace";
-import { ProcessItemFocusDialog } from "@/components/processes/ProcessItemFocusDialog";
 import { NextActionCard } from "@/components/processes/NextActionCard";
 import { WhatsMissingCard } from "@/components/processes/WhatsMissingCard";
-import { SignatureRequestDialog } from "@/components/signatures/SignatureRequestDialog";
 import { BatchGenerationService } from "@/services/automation/batchGenerationService";
 import { Palette } from "lucide-react";
+
+// Lazy-loaded heavy panels/modals (Onda 3C.1 — code splitting)
+const ProcessChecklist = lazy(() => import("@/components/ProcessChecklist").then(m => ({ default: m.ProcessChecklist })));
+const ProcessTimeline = lazy(() => import("@/components/ProcessTimeline").then(m => ({ default: m.ProcessTimeline })));
+const DocumentPreviewEditor = lazy(() => import("@/components/documents/DocumentPreviewEditor").then(m => ({ default: m.DocumentPreviewEditor })));
+const IntelligencePanel = lazy(() => import("@/components/IntelligencePanel").then(m => ({ default: m.IntelligencePanel })));
+const OCRUpload = lazy(() => import("@/components/ocr/OCRUpload").then(m => ({ default: m.OCRUpload })));
+const ProcessFinalDossierTab = lazy(() => import("@/components/process/ProcessFinalDossierTab"));
+const ProcessDocumentsPanel = lazy(() => import("@/components/process/ProcessDocumentsPanel").then(m => ({ default: m.ProcessDocumentsPanel })));
+const ClientPortalPanel = lazy(() => import("@/components/process/ClientPortalPanel").then(m => ({ default: m.ClientPortalPanel })));
+const ProcessSignaturesPanel = lazy(() => import("@/components/process/ProcessSignaturesPanel").then(m => ({ default: m.ProcessSignaturesPanel })));
+const ProcessIdentityPanel = lazy(() => import("@/components/process/ProcessIdentityPanel").then(m => ({ default: m.ProcessIdentityPanel })));
+const ProcessEditForm = lazy(() => import("@/components/processes/ProcessEditForm").then(m => ({ default: m.ProcessEditForm })));
+const ProcessEditSheet = lazy(() => import("@/components/processes/ProcessEditSheet").then(m => ({ default: m.ProcessEditSheet })));
+const ProcessBlueprintWorkspace = lazy(() => import("@/components/processes/ProcessBlueprintWorkspace").then(m => ({ default: m.ProcessBlueprintWorkspace })));
+const ProcessItemFocusDialog = lazy(() => import("@/components/processes/ProcessItemFocusDialog").then(m => ({ default: m.ProcessItemFocusDialog })));
+const SignatureRequestDialog = lazy(() => import("@/components/signatures/SignatureRequestDialog").then(m => ({ default: m.SignatureRequestDialog })));
+
+function TabLoader() {
+  return (
+    <div className="flex items-center justify-center py-16">
+      <Loader2 className="h-6 w-6 animate-spin text-slate-300" />
+    </div>
+  );
+}
 
 const VALID_TABS = [
   "overview","edit","requirements","documents","library_docs","ocr",
@@ -315,7 +321,9 @@ function ProcessDetail() {
   if (selectedTemplateForGen) {
     return (
       <div className="max-w-7xl mx-auto p-8">
+        <Suspense fallback={<TabLoader />}>
         <DocumentPreviewEditor 
+
           template={selectedTemplateForGen}
           processData={process}
           onSave={async (finalContent) => {
@@ -419,6 +427,7 @@ function ProcessDetail() {
 
           onCancel={() => setSelectedTemplateForGen(null)}
         />
+        </Suspense>
       </div>
     );
   }
@@ -479,6 +488,7 @@ function ProcessDetail() {
 
       <OperationalGuide />
 
+      <Suspense fallback={<TabLoader />}>
       <div className="grid lg:grid-cols-4 gap-8">
          <div className="lg:col-span-3 space-y-8">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -920,6 +930,7 @@ function ProcessDetail() {
           fetchProcess();
         }}
       />
+      </Suspense>
     </div>
   );
 }
