@@ -162,10 +162,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 // Separate component to safely handle floating widgets
 function SafeFloatingWidgets() {
   return (
-    <>
+    <React.Suspense fallback={null}>
       <FeedbackButton />
       <IntelligentAssistant />
-    </>
+    </React.Suspense>
   );
 }
 
