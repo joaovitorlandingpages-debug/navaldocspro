@@ -16,22 +16,20 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 
 export function IntelligencePanel() {
+  // Onda 3C.2: read companyId from AuthContext instead of a per-mount profiles query.
+  const { companyId } = useAuth();
   const { data: insights } = useQuery({
-    queryKey: ["operational-insights-real"],
+    queryKey: ["operational-insights-real", companyId],
+    enabled: !!companyId,
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
-
-      const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user.id).single();
-      if (!profile) return [];
-
       const { data, error } = await supabase
         .from('operational_insights')
         .select('*, processes(id, process_type)')
-        .eq('company_id', profile.company_id)
+        .eq('company_id', companyId!)
         .eq('is_resolved', false)
         .order('created_at', { ascending: false })
         .limit(6);
