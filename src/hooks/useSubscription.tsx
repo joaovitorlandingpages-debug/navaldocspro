@@ -33,7 +33,7 @@ export const useSubscription = () => {
   console.log("SAAS_PLANS_READY");
   console.log("SUBSCRIPTION_SYSTEM_OK");
 
-  const { user } = useAuth();
+  const { user, companyId } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: plans } = useQuery({
