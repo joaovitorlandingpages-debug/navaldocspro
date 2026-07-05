@@ -930,6 +930,7 @@ function ProcessDetail() {
           fetchProcess();
         }}
       />
+      </Suspense>
     </div>
   );
 }
