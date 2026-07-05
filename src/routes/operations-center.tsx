@@ -16,9 +16,12 @@ import {
   MoreVertical,
   CheckCircle2
 } from "lucide-react";
-import { OperationalCharts } from "@/components/OperationalCharts";
 import { IntelligencePanel } from "@/components/IntelligencePanel";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
+// Onda 3C.3 — recharts (~400KB) sai do bundle desta rota.
+const OperationalCharts = lazy(() =>
+  import("@/components/OperationalCharts").then((m) => ({ default: m.OperationalCharts })),
+);
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
