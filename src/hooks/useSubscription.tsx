@@ -51,7 +51,6 @@ export const useSubscription = () => {
     enabled: !!user,
   });
 
-  const { companyId } = useAuth();
   const { data: subscription, isLoading: isLoadingSubscription } = useQuery({
     queryKey: ["subscription", companyId],
     queryFn: async () => {
