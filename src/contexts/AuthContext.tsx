@@ -1,144 +1,137 @@
-import React, { createContext, useState, useEffect, ReactNode, useRef } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useRef, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
+import { setCachedCompanyId, clearCachedCompanyId } from '@/lib/currentCompany';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
   profile: any | null;
+  companyId: string | null;
+  role: string | null;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Onda 3C.2: single bootstrap fetch + filtered auth listener.
+// - Only refetch profile on SIGNED_IN / SIGNED_OUT / USER_UPDATED.
+// - TOKEN_REFRESHED (hourly + tab focus) and INITIAL_SESSION no longer refire
+//   the profile query — eliminates seq_scan storm on `profiles`.
+// - `companyId`/`role` exposed so consumers stop re-querying profiles.
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any | null>(null);
   const isTransitioningRef = useRef(false);
+  const lastFetchedUserIdRef = useRef<string | null>(null);
+
+  const loadProfile = useCallback(async (u: User) => {
+    if (lastFetchedUserIdRef.current === u.id) return;
+    lastFetchedUserIdRef.current = u.id;
+    const { data } = await supabase
+      .from('profiles')
+      .select('*, companies(*)')
+      .eq('id', u.id)
+      .maybeSingle();
+    if (data) {
+      setProfile(data);
+      setCachedCompanyId(u.id, data.company_id ?? null);
+      if (!data.company_id) {
+        const { ensureWorkspace } = await import('@/utils/workspace-recovery');
+        await ensureWorkspace(u, data);
+        const { data: updated } = await supabase
+          .from('profiles')
+          .select('*, companies(*)')
+          .eq('id', u.id)
+          .single();
+        if (updated) {
+          setProfile(updated);
+          setCachedCompanyId(u.id, updated.company_id ?? null);
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
-    console.log("AUTH_INIT");
-    console.log("AUTH_STABLE");
-    console.log("RLS_PROFILES_FIXED");
-    
-    const initAuth = async () => {
-      console.log("GET_SESSION_START");
+    const init = async () => {
       try {
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("GET_SESSION_ERROR:", error);
+        const { data: { session: s } } = await supabase.auth.getSession();
+        if (s?.user) {
+          setSession(s);
+          setUser(s.user);
+          loadProfile(s.user);
         }
-        
-        if (initialSession) {
-          console.log("GET_SESSION_SUCCESS", initialSession.user.id);
-          setSession(initialSession);
-          setUser(initialSession.user);
-          
-          // Fetch profile in background and ensure workspace
-          supabase
-            .from('profiles')
-            .select('*, companies(*)')
-            .eq('id', initialSession.user.id)
-            .maybeSingle()
-            .then(async ({ data }: { data: any }) => {
-              if (data) {
-                setProfile(data);
-                // Auto-recovery: ensure workspace exists
-                if (!data.company_id) {
-                  const { ensureWorkspace } = await import("@/utils/workspace-recovery");
-                  await ensureWorkspace(initialSession.user, data);
-                  // Refresh profile after creation
-                  const { data: updatedProfile } = await supabase
-                    .from('profiles')
-                    .select('*, companies(*)')
-                    .eq('id', initialSession.user.id)
-                    .single();
-                  if (updatedProfile) setProfile(updatedProfile);
-                }
-              }
-            });
-        } else {
-          console.log("GET_SESSION_EMPTY");
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-        }
-      } catch (err) {
-        console.error("GET_SESSION_CATCH:", err);
       } finally {
         setLoading(false);
       }
     };
+    init();
 
-    initAuth();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event: AuthChangeEvent, currentSession: Session | null) => {
+        if (isTransitioningRef.current) return;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, currentSession: Session | null) => {
-      console.log("AUTH_STATE_CHANGED:", event);
-      
-      if (isTransitioningRef.current) return;
+        // Ignore noisy events: INITIAL_SESSION, TOKEN_REFRESHED, PASSWORD_RECOVERY, MFA_CHALLENGE_VERIFIED.
+        if (event !== 'SIGNED_IN' && event !== 'SIGNED_OUT' && event !== 'USER_UPDATED') {
+          return;
+        }
 
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      
-      if (currentSession?.user) {
-        supabase
-          .from('profiles')
-          .select('*, companies(*)')
-          .eq('id', currentSession.user.id)
-          .maybeSingle()
-          .then(async ({ data }: { data: any }) => {
-            if (data) {
-              setProfile(data);
-              // Auto-recovery for state changes
-              if (!data.company_id) {
-                const { ensureWorkspace } = await import("@/utils/workspace-recovery");
-                await ensureWorkspace(currentSession.user, data);
-                const { data: updatedProfile } = await supabase
-                  .from('profiles')
-                  .select('*, companies(*)')
-                  .eq('id', currentSession.user.id)
-                  .single();
-                if (updatedProfile) setProfile(updatedProfile);
-              }
-            }
-          });
-      } else {
-        setProfile(null);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (event === 'SIGNED_OUT' || !currentSession?.user) {
+          lastFetchedUserIdRef.current = null;
+          setProfile(null);
+          clearCachedCompanyId();
+          return;
+        }
+
+        // On USER_UPDATED, force refetch by clearing sentinel.
+        if (event === 'USER_UPDATED') lastFetchedUserIdRef.current = null;
+        loadProfile(currentSession.user);
       }
-      
-      setLoading(false);
-    });
+    );
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+    return () => subscription.unsubscribe();
+  }, [loadProfile]);
 
   const signOut = async () => {
-    console.log("LOGOUT");
     isTransitioningRef.current = true;
     try {
       setSession(null);
       setUser(null);
       setProfile(null);
+      lastFetchedUserIdRef.current = null;
+      clearCachedCompanyId();
       await supabase.auth.signOut();
-    } catch (err) {
-      console.error("LOGOUT_ERROR:", err);
     } finally {
       setTimeout(() => {
         isTransitioningRef.current = false;
-        window.location.href = "/auth/login";
+        window.location.href = '/auth/login';
       }, 500);
     }
   };
 
-  return (
-    <AuthContext.Provider value={{ user, session, loading, profile, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const refreshProfile = useCallback(async () => {
+    if (!user) return;
+    lastFetchedUserIdRef.current = null;
+    await loadProfile(user);
+  }, [user, loadProfile]);
+
+  const value = useMemo<AuthContextType>(() => ({
+    user,
+    session,
+    loading,
+    profile,
+    companyId: profile?.company_id ?? null,
+    role: profile?.role ?? null,
+    signOut,
+    refreshProfile,
+  }), [user, session, loading, profile, refreshProfile]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

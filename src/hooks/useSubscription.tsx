@@ -33,7 +33,7 @@ export const useSubscription = () => {
   console.log("SAAS_PLANS_READY");
   console.log("SUBSCRIPTION_SYSTEM_OK");
 
-  const { user } = useAuth();
+  const { user, companyId } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: plans } = useQuery({
@@ -52,28 +52,19 @@ export const useSubscription = () => {
   });
 
   const { data: subscription, isLoading: isLoadingSubscription } = useQuery({
-    queryKey: ["subscription", user?.id],
+    queryKey: ["subscription", companyId],
     queryFn: async () => {
-      if (!user) return null;
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("company_id")
-        .eq("id", user.id)
-        .single();
-
-      if (!profile?.company_id) return null;
-
+      if (!companyId) return null;
       const { data, error } = await supabase
         .from("subscriptions")
         .select("*, plan:plans(*)")
-        .eq("company_id", profile.company_id)
+        .eq("company_id", companyId)
         .maybeSingle();
 
       if (error && error.code !== "PGRST116") throw error;
       return data as (Subscription & { plan: Plan }) | null;
     },
-    enabled: !!user,
+    enabled: !!companyId,
   });
 
   const createPreference = useMutation({
