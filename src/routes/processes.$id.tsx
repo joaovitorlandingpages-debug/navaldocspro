@@ -427,6 +427,7 @@ function ProcessDetail() {
 
           onCancel={() => setSelectedTemplateForGen(null)}
         />
+        </Suspense>
       </div>
     );
   }
