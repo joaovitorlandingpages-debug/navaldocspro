@@ -18,7 +18,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { IntelligencePanel } from "@/components/IntelligencePanel";
-import { OperationalCharts } from "@/components/OperationalCharts";
+import { lazy, Suspense } from "react";
+// Onda 3C.3 — recharts (~400KB) sai deste bundle.
+const OperationalCharts = lazy(() =>
+  import("@/components/OperationalCharts").then((m) => ({ default: m.OperationalCharts })),
+);
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const Route = createFileRoute("/ai-center")({
