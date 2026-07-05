@@ -38,7 +38,7 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
   // Antes: refetch a cada 30s em toda página (root-mounted). Agora: enabled
   // apenas quando painel aberto + não minimizado, polling a cada 5min.
   const { data: insights, refetch } = useQuery({
-    queryKey: ['operational_insights', processId, profile?.company_id],
+    queryKey: ['operational_insights', processId, companyId],
     queryFn: async () => {
       let query = supabase
         .from('operational_insights')
@@ -49,7 +49,7 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
       if (processId) {
         query = query.eq('process_id', processId);
       } else {
-        query = query.eq('company_id', profile?.company_id);
+        query = query.eq('company_id', companyId);
       }
       
       const { data, error } = await query.limit(5);
@@ -67,7 +67,7 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
       }
       return data as Insight[];
     },
-    enabled: isOpen && !isMinimized && !!profile?.company_id && !isAuthPage,
+    enabled: isOpen && !isMinimized && !!companyId && !isAuthPage,
     refetchInterval: isOpen && !isMinimized ? 5 * 60_000 : false,
     refetchOnWindowFocus: false,
     staleTime: 60_000,
