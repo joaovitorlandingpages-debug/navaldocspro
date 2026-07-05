@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 
@@ -28,15 +29,8 @@ interface Insight {
 export function IntelligentAssistant({ processId }: { processId?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const { data: profile } = useQuery({
-    queryKey: ['auth-profile'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      return data;
-    }
-  });
+  // Onda 3C.2: reuse AuthContext instead of a separate profile query.
+  const { profile, companyId } = useAuth();
 
   const isAuthPage = typeof window !== 'undefined' && (window.location.pathname.startsWith('/auth') || window.location.pathname === '/');
 
