@@ -155,8 +155,8 @@ function Documents() {
       if (tab === "signed" && !(d.signature_status === "signed" || d.signed_file_url)) return false;
       if (tab === "pending" && !(d.status === "pending" || d.signature_status === "pending")) return false;
 
-      if (search) {
-        const t = search.toLowerCase();
+      if (debouncedSearch) {
+        const t = debouncedSearch.toLowerCase();
         const blob = `${d.name || ""} ${d.customer?.name || ""} ${d.vessel?.name || ""} ${d.template?.name || ""}`.toLowerCase();
         if (!blob.includes(t)) return false;
       }
@@ -168,7 +168,12 @@ function Documents() {
       if (dateTo && new Date(d.created_at) > new Date(dateTo + "T23:59:59")) return false;
       return true;
     });
-  }, [allDocs, archived, favorites, tab, search, customerFilter, vesselFilter, templateFilter, categoryFilter, dateFrom, dateTo]);
+  }, [allDocs, archived, favorites, tab, debouncedSearch, customerFilter, vesselFilter, templateFilter, categoryFilter, dateFrom, dateTo]);
+
+  const PAGE_SIZE = 60;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [tab, debouncedSearch, customerFilter, vesselFilter, templateFilter, categoryFilter, dateFrom, dateTo, viewMode]);
+  const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
   const counts = useMemo(() => {
     const c = { all: 0, recent: 0, favorites: 0, signed: 0, pending: 0, archived: 0 };
