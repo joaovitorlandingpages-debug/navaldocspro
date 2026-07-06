@@ -41,6 +41,11 @@ function Documents() {
 
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 250);
+    return () => clearTimeout(t);
+  }, [search]);
   const [customerFilter, setCustomerFilter] = useState("all");
   const [vesselFilter, setVesselFilter] = useState("all");
   const [templateFilter, setTemplateFilter] = useState("all");
