@@ -1,28 +1,23 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentCompanyId } from "@/lib/currentCompany";
 
 export const telemetry = {
   track: async (event_type: string, module_name?: string, metadata: any = {}) => {
     try {
-      // Get user session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // Get user profile for company_id
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', session.user.id)
-        .single();
+      const company_id = await getCurrentCompanyId().catch(() => null);
 
       await supabase.from('telemetry_logs').insert({
         user_id: session.user.id,
-        company_id: profile?.company_id,
+        company_id,
         event_type,
         module_name,
         metadata: {
           ...metadata,
-          url: window.location.href,
-          userAgent: navigator.userAgent,
+          url: typeof window !== 'undefined' ? window.location.href : undefined,
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
           timestamp: new Date().toISOString()
         }
       });
