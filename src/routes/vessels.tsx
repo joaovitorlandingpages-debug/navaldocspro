@@ -91,8 +91,10 @@ function Vessels() {
         // Fetch Vessels
         const { data: vesselData } = await supabase
           .from('vessels')
-          .select('*, customers(name)')
-          .eq('company_id', profile.company_id);
+          .select('id, name, vessel_type, registration_number, current_owner_name, status, customer_id, customers(name)')
+          .eq('company_id', profile.company_id)
+          .order('created_at', { ascending: false })
+          .limit(500);
         
         if (vesselData) setVessels(vesselData);
 

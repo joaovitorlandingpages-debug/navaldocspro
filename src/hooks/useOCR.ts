@@ -48,7 +48,7 @@ export function useOCR(processId?: string) {
         query = query.eq('uploaded_files.process_id', processId);
       }
       
-      const { data, error } = await query.order("created_at", { ascending: false });
+      const { data, error } = await query.order("created_at", { ascending: false }).limit(100);
 
       if (error) throw error;
       return data as OCRJob[];

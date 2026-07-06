@@ -24,7 +24,8 @@ function AdminLogs() {
       const { data, error } = await supabase
         .from("global_audit_logs")
         .select("*, profile:profiles(name, email)")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(100);
       if (error) throw error;
       return data;
     }

@@ -41,6 +41,11 @@ function Documents() {
 
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 250);
+    return () => clearTimeout(t);
+  }, [search]);
   const [customerFilter, setCustomerFilter] = useState("all");
   const [vesselFilter, setVesselFilter] = useState("all");
   const [templateFilter, setTemplateFilter] = useState("all");
@@ -150,8 +155,8 @@ function Documents() {
       if (tab === "signed" && !(d.signature_status === "signed" || d.signed_file_url)) return false;
       if (tab === "pending" && !(d.status === "pending" || d.signature_status === "pending")) return false;
 
-      if (search) {
-        const t = search.toLowerCase();
+      if (debouncedSearch) {
+        const t = debouncedSearch.toLowerCase();
         const blob = `${d.name || ""} ${d.customer?.name || ""} ${d.vessel?.name || ""} ${d.template?.name || ""}`.toLowerCase();
         if (!blob.includes(t)) return false;
       }
@@ -163,7 +168,12 @@ function Documents() {
       if (dateTo && new Date(d.created_at) > new Date(dateTo + "T23:59:59")) return false;
       return true;
     });
-  }, [allDocs, archived, favorites, tab, search, customerFilter, vesselFilter, templateFilter, categoryFilter, dateFrom, dateTo]);
+  }, [allDocs, archived, favorites, tab, debouncedSearch, customerFilter, vesselFilter, templateFilter, categoryFilter, dateFrom, dateTo]);
+
+  const PAGE_SIZE = 60;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [tab, debouncedSearch, customerFilter, vesselFilter, templateFilter, categoryFilter, dateFrom, dateTo, viewMode]);
+  const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
   const counts = useMemo(() => {
     const c = { all: 0, recent: 0, favorites: 0, signed: 0, pending: 0, archived: 0 };
@@ -292,7 +302,7 @@ function Documents() {
         />
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-          {filtered.map((doc: any) => {
+          {visible.map((doc: any) => {
             const b = statusBadge(doc.status);
             const isFav = favorites.has(doc.id);
             const isSigned = doc.signature_status === "signed" || !!doc.signed_file_url;
@@ -359,7 +369,7 @@ function Documents() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {filtered.map((doc: any) => {
+                {visible.map((doc: any) => {
                   const b = statusBadge(doc.status);
                   const isSigned = doc.signature_status === "signed" || !!doc.signed_file_url;
                   const isFav = favorites.has(doc.id);
@@ -405,7 +415,7 @@ function Documents() {
 
           {/* Mobile list */}
           <div className="md:hidden divide-y divide-slate-100">
-            {filtered.map((doc: any) => {
+            {visible.map((doc: any) => {
               const b = statusBadge(doc.status);
               const isSigned = doc.signature_status === "signed" || !!doc.signed_file_url;
               return (
@@ -431,6 +441,17 @@ function Documents() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {visible.length < filtered.length && (
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
+            className="px-6 py-2.5 rounded-xl bg-white border border-slate-200 text-navy font-black text-[10px] uppercase tracking-widest hover:border-primary/40 hover:text-primary transition-all"
+          >
+            Carregar mais ({filtered.length - visible.length} restantes)
+          </button>
         </div>
       )}
 
