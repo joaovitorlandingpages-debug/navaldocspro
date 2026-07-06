@@ -444,6 +444,17 @@ function Documents() {
         </div>
       )}
 
+      {visible.length < filtered.length && (
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
+            className="px-6 py-2.5 rounded-xl bg-white border border-slate-200 text-navy font-black text-[10px] uppercase tracking-widest hover:border-primary/40 hover:text-primary transition-all"
+          >
+            Carregar mais ({filtered.length - visible.length} restantes)
+          </button>
+        </div>
+      )}
+
       {/* Upload modal */}
       {isUploadOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/20 backdrop-blur-sm animate-in fade-in duration-200">
