@@ -84,6 +84,7 @@ import { Route as AnalyticsOperationsRouteImport } from './routes/analytics.oper
 import { Route as AnalyticsOcrRouteImport } from './routes/analytics.ocr'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
+import { Route as AdminSystemHealthRouteImport } from './routes/admin/system-health'
 import { Route as AdminSupportRouteImport } from './routes/admin/support'
 import { Route as AdminStorageRouteImport } from './routes/admin/storage'
 import { Route as AdminSignatureAnchorsRouteImport } from './routes/admin.signature-anchors'
@@ -486,6 +487,11 @@ const AdminSystemReportRoute = AdminSystemReportRouteImport.update({
   path: '/system-report',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSystemHealthRoute = AdminSystemHealthRouteImport.update({
+  id: '/system-health',
+  path: '/system-health',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSupportRoute = AdminSupportRouteImport.update({
   id: '/support',
   path: '/support',
@@ -685,6 +691,7 @@ export interface FileRoutesByFullPath {
   '/admin/signature-anchors': typeof AdminSignatureAnchorsRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/support': typeof AdminSupportRoute
+  '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
@@ -784,6 +791,7 @@ export interface FileRoutesByTo {
   '/admin/signature-anchors': typeof AdminSignatureAnchorsRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/support': typeof AdminSupportRoute
+  '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
@@ -887,6 +895,7 @@ export interface FileRoutesById {
   '/admin/signature-anchors': typeof AdminSignatureAnchorsRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/support': typeof AdminSupportRoute
+  '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
@@ -991,6 +1000,7 @@ export interface FileRouteTypes {
     | '/admin/signature-anchors'
     | '/admin/storage'
     | '/admin/support'
+    | '/admin/system-health'
     | '/admin/system-report'
     | '/admin/users'
     | '/analytics/ocr'
@@ -1090,6 +1100,7 @@ export interface FileRouteTypes {
     | '/admin/signature-anchors'
     | '/admin/storage'
     | '/admin/support'
+    | '/admin/system-health'
     | '/admin/system-report'
     | '/admin/users'
     | '/analytics/ocr'
@@ -1192,6 +1203,7 @@ export interface FileRouteTypes {
     | '/admin/signature-anchors'
     | '/admin/storage'
     | '/admin/support'
+    | '/admin/system-health'
     | '/admin/system-report'
     | '/admin/users'
     | '/analytics/ocr'
@@ -1813,6 +1825,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSystemReportRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/system-health': {
+      id: '/admin/system-health'
+      path: '/system-health'
+      fullPath: '/admin/system-health'
+      preLoaderRoute: typeof AdminSystemHealthRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/support': {
       id: '/admin/support'
       path: '/support'
@@ -2017,6 +2036,7 @@ interface AdminRouteChildren {
   AdminSignatureAnchorsRoute: typeof AdminSignatureAnchorsRoute
   AdminStorageRoute: typeof AdminStorageRoute
   AdminSupportRoute: typeof AdminSupportRoute
+  AdminSystemHealthRoute: typeof AdminSystemHealthRoute
   AdminSystemReportRoute: typeof AdminSystemReportRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -2048,6 +2068,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSignatureAnchorsRoute: AdminSignatureAnchorsRoute,
   AdminStorageRoute: AdminStorageRoute,
   AdminSupportRoute: AdminSupportRoute,
+  AdminSystemHealthRoute: AdminSystemHealthRoute,
   AdminSystemReportRoute: AdminSystemReportRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
