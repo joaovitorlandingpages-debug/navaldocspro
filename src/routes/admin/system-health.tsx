@@ -241,9 +241,9 @@ async function avgProcessing(): Promise<number | null> {
       .not("processing_time", "is", null)
       .limit(200);
     if (!data || data.length === 0) return null;
-    const vals = data.map((r: any) => Number(r.processing_time)).filter(n => Number.isFinite(n));
+    const vals = data.map((r: any) => Number(r.processing_time)).filter((n: number) => Number.isFinite(n));
     if (!vals.length) return null;
-    return Math.round(vals.reduce((s, v) => s + v, 0) / vals.length);
+    return Math.round(vals.reduce((s: number, v: number) => s + v, 0) / vals.length);
   } catch {
     return null;
   }
