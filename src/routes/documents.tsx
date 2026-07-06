@@ -302,7 +302,7 @@ function Documents() {
         />
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-          {filtered.map((doc: any) => {
+          {visible.map((doc: any) => {
             const b = statusBadge(doc.status);
             const isFav = favorites.has(doc.id);
             const isSigned = doc.signature_status === "signed" || !!doc.signed_file_url;
@@ -369,7 +369,7 @@ function Documents() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {filtered.map((doc: any) => {
+                {visible.map((doc: any) => {
                   const b = statusBadge(doc.status);
                   const isSigned = doc.signature_status === "signed" || !!doc.signed_file_url;
                   const isFav = favorites.has(doc.id);
@@ -415,7 +415,7 @@ function Documents() {
 
           {/* Mobile list */}
           <div className="md:hidden divide-y divide-slate-100">
-            {filtered.map((doc: any) => {
+            {visible.map((doc: any) => {
               const b = statusBadge(doc.status);
               const isSigned = doc.signature_status === "signed" || !!doc.signed_file_url;
               return (
