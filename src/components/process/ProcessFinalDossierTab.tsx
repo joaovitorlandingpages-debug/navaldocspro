@@ -604,7 +604,34 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
     );
   }
 
-  if (!bundle) return null;
+  if (loadError) {
+    return (
+      <div className="bg-white p-8 rounded-2xl border border-red-100 shadow-sm text-center space-y-4">
+        <AlertTriangle className="h-10 w-10 text-red-500 mx-auto" />
+        <div>
+          <h3 className="text-lg font-semibold text-navy">Não foi possível carregar o dossiê</h3>
+          <p className="text-sm text-slate-500 mt-1">{loadError}</p>
+        </div>
+        <Button onClick={reload} className="gap-2">
+          <RefreshCcw className="h-4 w-4" /> Tentar novamente
+        </Button>
+      </div>
+    );
+  }
+
+  if (!bundle) {
+    return (
+      <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm text-center space-y-4">
+        <FileText className="h-10 w-10 text-slate-300 mx-auto" />
+        <p className="text-sm text-slate-500">Sem dados do processo para montar o dossiê.</p>
+        <Button variant="outline" onClick={reload} className="gap-2">
+          <RefreshCcw className="h-4 w-4" /> Recarregar
+        </Button>
+      </div>
+    );
+  }
+
+
 
   return (
     <div className="space-y-6">
