@@ -112,6 +112,7 @@ import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
 import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
 import { Route as AdminBillingRouteImport } from './routes/admin/billing'
 import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
+import { Route as AdminDocsCentralIndexRouteImport } from './routes/admin/docs-central/index'
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
 
@@ -634,6 +635,11 @@ const AdminAutomationRoute = AdminAutomationRouteImport.update({
   path: '/automation',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDocsCentralIndexRoute = AdminDocsCentralIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
 const AdminTemplatesPfwRoute = AdminTemplatesPfwRouteImport.update({
   id: '/pfw',
   path: '/pfw',
@@ -695,7 +701,7 @@ export interface FileRoutesByFullPath {
   '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/diagnostico': typeof AdminDiagnosticoRoute
-  '/admin/docs-central': typeof AdminDocsCentralRoute
+  '/admin/docs-central': typeof AdminDocsCentralRouteWithChildren
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documentos': typeof AdminDocumentosRoute
   '/admin/documents': typeof AdminDocumentsRoute
@@ -751,6 +757,7 @@ export interface FileRoutesByFullPath {
   '/templates/': typeof TemplatesIndexRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -799,7 +806,6 @@ export interface FileRoutesByTo {
   '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/diagnostico': typeof AdminDiagnosticoRoute
-  '/admin/docs-central': typeof AdminDocsCentralRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documentos': typeof AdminDocumentosRoute
   '/admin/documents': typeof AdminDocumentsRoute
@@ -855,6 +861,7 @@ export interface FileRoutesByTo {
   '/templates': typeof TemplatesIndexRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/admin/docs-central': typeof AdminDocsCentralIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -907,7 +914,7 @@ export interface FileRoutesById {
   '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/diagnostico': typeof AdminDiagnosticoRoute
-  '/admin/docs-central': typeof AdminDocsCentralRoute
+  '/admin/docs-central': typeof AdminDocsCentralRouteWithChildren
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documentos': typeof AdminDocumentosRoute
   '/admin/documents': typeof AdminDocumentsRoute
@@ -963,6 +970,7 @@ export interface FileRoutesById {
   '/templates/': typeof TemplatesIndexRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1072,6 +1080,7 @@ export interface FileRouteTypes {
     | '/templates/'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/admin/docs-central/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1120,7 +1129,6 @@ export interface FileRouteTypes {
     | '/admin/commercial'
     | '/admin/companies'
     | '/admin/diagnostico'
-    | '/admin/docs-central'
     | '/admin/document-library'
     | '/admin/documentos'
     | '/admin/documents'
@@ -1176,6 +1184,7 @@ export interface FileRouteTypes {
     | '/templates'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/admin/docs-central'
   id:
     | '__root__'
     | '/'
@@ -1283,6 +1292,7 @@ export interface FileRouteTypes {
     | '/templates/'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/admin/docs-central/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2069,6 +2079,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/docs-central/': {
+      id: '/admin/docs-central/'
+      path: '/'
+      fullPath: '/admin/docs-central/'
+      preLoaderRoute: typeof AdminDocsCentralIndexRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
     '/admin/templates/pfw': {
       id: '/admin/templates/pfw'
       path: '/pfw'
@@ -2085,6 +2102,17 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AdminDocsCentralRouteChildren {
+  AdminDocsCentralIndexRoute: typeof AdminDocsCentralIndexRoute
+}
+
+const AdminDocsCentralRouteChildren: AdminDocsCentralRouteChildren = {
+  AdminDocsCentralIndexRoute: AdminDocsCentralIndexRoute,
+}
+
+const AdminDocsCentralRouteWithChildren =
+  AdminDocsCentralRoute._addFileChildren(AdminDocsCentralRouteChildren)
 
 interface AdminTemplatesRouteChildren {
   AdminTemplatesIdRoute: typeof AdminTemplatesIdRoute
@@ -2106,7 +2134,7 @@ interface AdminRouteChildren {
   AdminCommercialRoute: typeof AdminCommercialRoute
   AdminCompaniesRoute: typeof AdminCompaniesRoute
   AdminDiagnosticoRoute: typeof AdminDiagnosticoRoute
-  AdminDocsCentralRoute: typeof AdminDocsCentralRoute
+  AdminDocsCentralRoute: typeof AdminDocsCentralRouteWithChildren
   AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
   AdminDocumentosRoute: typeof AdminDocumentosRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
@@ -2140,7 +2168,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCommercialRoute: AdminCommercialRoute,
   AdminCompaniesRoute: AdminCompaniesRoute,
   AdminDiagnosticoRoute: AdminDiagnosticoRoute,
-  AdminDocsCentralRoute: AdminDocsCentralRoute,
+  AdminDocsCentralRoute: AdminDocsCentralRouteWithChildren,
   AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
   AdminDocumentosRoute: AdminDocumentosRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
