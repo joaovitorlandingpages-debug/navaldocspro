@@ -44,8 +44,11 @@ function dueInfo(due?: string | null) {
 
 export function ProcessTopBar({ process, onChanged, automationReady, onFinalize, onEdit, pendingDossierItems }: Props) {
   if (!process) return null;
+  const isFinalized = ["completed", "finalized", "archived"].includes(String(process.status ?? "").toLowerCase()) || !!process.finalized_at;
   const due = dueInfo(process.due_date);
-  const progress = Math.max(0, Math.min(100, process.completion_percentage ?? 0));
+  const rawProgress = process.completion_percentage ?? 0;
+  const progress = isFinalized ? 100 : Math.max(0, Math.min(100, rawProgress));
+
   const customerName = process.customer?.name ?? process.customers?.name ?? "—";
   const vesselName = process.vessel?.name ?? process.vessels?.name ?? "Sem embarcação";
   const title = process.title || process.process_type || "Processo";
