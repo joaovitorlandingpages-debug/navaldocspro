@@ -27,17 +27,22 @@ export class DocumentAutomationEngine {
       }
 
       // 2. Buscar requisitos do tipo de processo (pacote documental)
-      const { data: requirements, error: reqError } = await supabase
-        .from('process_document_packages')
-        .select(`
-          *,
-          template:document_templates(*)
-        `)
-        .eq('process_type_id', process.process_type_id);
+      // Guard: sem process_type_id não há requisitos a buscar (evita 22P02 "invalid uuid: null")
+      let requirements: any[] = [];
+      if (process.process_type_id) {
+        const { data: reqData, error: reqError } = await supabase
+          .from('process_document_packages')
+          .select(`
+            *,
+            template:document_templates(*)
+          `)
+          .eq('process_type_id', process.process_type_id);
 
-      if (reqError) {
-        console.error("Erro ao buscar requisitos:", reqError);
-        return null;
+        if (reqError) {
+          console.error("Erro ao buscar requisitos:", reqError);
+          return null;
+        }
+        requirements = reqData || [];
       }
 
       // 3. Buscar documentos atuais vinculados ao processo (nas tabelas uploaded_files e documents)
