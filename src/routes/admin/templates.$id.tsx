@@ -268,37 +268,69 @@ function AdminTemplateDetail() {
           </Card>
         )}
 
-        <Card className="p-4">
-          <h2 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-            <History className="h-4 w-4" /> Histórico de versões
-          </h2>
-          {versionsQ.isLoading && <Loader2 className="h-5 w-5 animate-spin text-slate-400" />}
-          {!versionsQ.isLoading && (versionsQ.data ?? []).length === 0 && (
-            <p className="text-sm text-slate-500 py-6 text-center">
-              Nenhuma versão publicada ainda. {canEdit && "Use \"Publicar versão\" para publicar a v1."}
-            </p>
-          )}
-          <div className="divide-y">
-            {(versionsQ.data ?? []).map((v: any) => (
-              <div key={v.id} className="py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium">v{v.version_number ?? v.version}</span>
-                    <VersionStatus status={v.status} />
+        <Tabs defaultValue="editor">
+          <TabsList>
+            <TabsTrigger value="editor">Editor</TabsTrigger>
+            <TabsTrigger value="history">Histórico</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="editor" className="mt-4">
+            <TemplateEditor
+              initial={{
+                name: t.name ?? "",
+                code: t.code ?? "",
+                category: t.category ?? "",
+                process_type: t.process_type ?? "",
+                region_tag: (t as any).region_tag ?? "",
+                description: (t as any).description ?? "",
+                base_content: (t as any).base_content ?? "",
+              }}
+              readOnly={!canEdit || lifecycle !== "draft"}
+              saving={saveDraftMut.isPending}
+              onSave={(draft) => saveDraftMut.mutate(draft)}
+            />
+            {canEdit && lifecycle !== "draft" && (
+              <p className="text-xs text-amber-700 mt-3">
+                Modelo {lifecycle === "published" ? "publicado" : "arquivado"} — edições diretas estão bloqueadas.
+                {lifecycle === "published" && " Use \"Criar nova versão\" para promover uma alteração."}
+              </p>
+            )}
+          </TabsContent>
+
+          <TabsContent value="history" className="mt-4">
+            <Card className="p-4">
+              <h2 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                <History className="h-4 w-4" /> Histórico de versões
+              </h2>
+              {versionsQ.isLoading && <Loader2 className="h-5 w-5 animate-spin text-slate-400" />}
+              {!versionsQ.isLoading && (versionsQ.data ?? []).length === 0 && (
+                <p className="text-sm text-slate-500 py-6 text-center">
+                  Nenhuma versão publicada ainda. {canEdit && "Use \"Publicar versão\" para publicar a v1."}
+                </p>
+              )}
+              <div className="divide-y">
+                {(versionsQ.data ?? []).map((v: any) => (
+                  <div key={v.id} className="py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium">v{v.version_number ?? v.version}</span>
+                        <VersionStatus status={v.status} />
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        {v.created_at && <>Criada {formatDistanceToNow(new Date(v.created_at), { addSuffix: true, locale: ptBR })}</>}
+                      </div>
+                      {Array.isArray(v.changelog) && v.changelog.length > 0 && (
+                        <p className="text-xs text-slate-600 mt-1 line-clamp-2">
+                          {v.changelog.map((c: any) => c?.note).filter(Boolean).join(" · ") || v.notes || "—"}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">
-                    {v.created_at && <>Criada {formatDistanceToNow(new Date(v.created_at), { addSuffix: true, locale: ptBR })}</>}
-                  </div>
-                  {Array.isArray(v.changelog) && v.changelog.length > 0 && (
-                    <p className="text-xs text-slate-600 mt-1 line-clamp-2">
-                      {v.changelog.map((c: any) => c?.note).filter(Boolean).join(" · ") || v.notes || "—"}
-                    </p>
-                  )}
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </Card>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <Dialog open={publishOpen} onOpenChange={setPublishOpen}>
