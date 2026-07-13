@@ -103,11 +103,11 @@ function AdminTemplatesPage() {
   const rows = query.data ?? [];
 
   const categories = useMemo(
-    () => Array.from(new Set(rows.map((r: any) => r.category).filter(Boolean))).sort(),
+    () => Array.from(new Set(rows.map((r: any) => r.category as string).filter(Boolean) as string[])).sort(),
     [rows],
   );
   const processTypes = useMemo(
-    () => Array.from(new Set(rows.map((r: any) => r.process_type).filter(Boolean))).sort(),
+    () => Array.from(new Set(rows.map((r: any) => r.process_type as string).filter(Boolean) as string[])).sort(),
     [rows],
   );
 
