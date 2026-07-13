@@ -116,6 +116,7 @@ import { Route as AdminDocsCentralIndexRouteImport } from './routes/admin/docs-c
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
 import { Route as AdminDocsCentralVersionsRouteImport } from './routes/admin/docs-central/versions'
+import { Route as AdminDocsCentralReviewRouteImport } from './routes/admin/docs-central/review'
 import { Route as AdminDocsCentralPublishingRouteImport } from './routes/admin/docs-central/publishing'
 import { Route as AdminDocsCentralProcessTypesRouteImport } from './routes/admin/docs-central/process-types'
 import { Route as AdminDocsCentralModelsRouteImport } from './routes/admin/docs-central/models'
@@ -662,6 +663,11 @@ const AdminDocsCentralVersionsRoute =
     path: '/versions',
     getParentRoute: () => AdminDocsCentralRoute,
   } as any)
+const AdminDocsCentralReviewRoute = AdminDocsCentralReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
 const AdminDocsCentralPublishingRoute =
   AdminDocsCentralPublishingRouteImport.update({
     id: '/publishing',
@@ -800,6 +806,7 @@ export interface FileRoutesByFullPath {
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
   '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
+  '/admin/docs-central/review': typeof AdminDocsCentralReviewRoute
   '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
@@ -910,6 +917,7 @@ export interface FileRoutesByTo {
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
   '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
+  '/admin/docs-central/review': typeof AdminDocsCentralReviewRoute
   '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
@@ -1025,6 +1033,7 @@ export interface FileRoutesById {
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
   '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
+  '/admin/docs-central/review': typeof AdminDocsCentralReviewRoute
   '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
@@ -1141,6 +1150,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
     | '/admin/docs-central/publishing'
+    | '/admin/docs-central/review'
     | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
@@ -1251,6 +1261,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
     | '/admin/docs-central/publishing'
+    | '/admin/docs-central/review'
     | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
@@ -1365,6 +1376,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
     | '/admin/docs-central/publishing'
+    | '/admin/docs-central/review'
     | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
@@ -2183,6 +2195,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocsCentralVersionsRouteImport
       parentRoute: typeof AdminDocsCentralRoute
     }
+    '/admin/docs-central/review': {
+      id: '/admin/docs-central/review'
+      path: '/review'
+      fullPath: '/admin/docs-central/review'
+      preLoaderRoute: typeof AdminDocsCentralReviewRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
     '/admin/docs-central/publishing': {
       id: '/admin/docs-central/publishing'
       path: '/publishing'
@@ -2227,6 +2246,7 @@ interface AdminDocsCentralRouteChildren {
   AdminDocsCentralModelsRoute: typeof AdminDocsCentralModelsRoute
   AdminDocsCentralProcessTypesRoute: typeof AdminDocsCentralProcessTypesRoute
   AdminDocsCentralPublishingRoute: typeof AdminDocsCentralPublishingRoute
+  AdminDocsCentralReviewRoute: typeof AdminDocsCentralReviewRoute
   AdminDocsCentralVersionsRoute: typeof AdminDocsCentralVersionsRoute
   AdminDocsCentralIndexRoute: typeof AdminDocsCentralIndexRoute
 }
@@ -2237,6 +2257,7 @@ const AdminDocsCentralRouteChildren: AdminDocsCentralRouteChildren = {
   AdminDocsCentralModelsRoute: AdminDocsCentralModelsRoute,
   AdminDocsCentralProcessTypesRoute: AdminDocsCentralProcessTypesRoute,
   AdminDocsCentralPublishingRoute: AdminDocsCentralPublishingRoute,
+  AdminDocsCentralReviewRoute: AdminDocsCentralReviewRoute,
   AdminDocsCentralVersionsRoute: AdminDocsCentralVersionsRoute,
   AdminDocsCentralIndexRoute: AdminDocsCentralIndexRoute,
 }
