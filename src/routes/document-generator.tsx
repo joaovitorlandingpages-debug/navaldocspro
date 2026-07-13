@@ -199,6 +199,11 @@ function DocumentGenerator() {
       toast.error("Selecione ao menos um modelo.");
       return;
     }
+    if (!selectedProcessId) {
+      toast.error("Selecione um processo para gerar o documento.");
+      return;
+    }
+    if (isGenerating) return; // proteção contra duplo clique
     const limit = await checkLimit("documents");
     if (limit.reached) {
       toast.error("Limite de documentos mensais atingido.");

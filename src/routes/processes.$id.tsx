@@ -270,10 +270,13 @@ function ProcessDetail() {
       )
       .subscribe();
 
-    const handleGenEvent = (e: any) => {
-      setSelectedTemplateForGen(e.detail);
+    // Sub-fatia F.2.b — C4 listener transitório (compat com C3/C5 até
+    // o DocumentPreviewEditor migrar ao pipeline canônico).
+    const handleGenEvent = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setSelectedTemplateForGen(detail);
     };
-    window.addEventListener('generate-document', handleGenEvent);
+    window.addEventListener('generate-document', handleGenEvent as EventListener);
 
     const handleOpenTab = (e: any) => {
       const detail = e?.detail ?? {};
@@ -285,7 +288,7 @@ function ProcessDetail() {
 
     return () => {
       supabase.removeChannel(channel);
-      window.removeEventListener('generate-document', handleGenEvent);
+      window.removeEventListener('generate-document', handleGenEvent as EventListener);
       window.removeEventListener('open-process-tab', handleOpenTab);
     };
   }, [id]);
