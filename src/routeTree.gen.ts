@@ -106,13 +106,26 @@ import { Route as AdminExecutiveOverviewRouteImport } from './routes/admin/execu
 import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
 import { Route as AdminDocumentosRouteImport } from './routes/admin/documentos'
 import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
+import { Route as AdminDocsCentralRouteImport } from './routes/admin/docs-central'
 import { Route as AdminDiagnosticoRouteImport } from './routes/admin.diagnostico'
 import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
 import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
 import { Route as AdminBillingRouteImport } from './routes/admin/billing'
 import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
+import { Route as AdminDocsCentralIndexRouteImport } from './routes/admin/docs-central/index'
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
+import { Route as AdminDocsCentralVersionsRouteImport } from './routes/admin/docs-central/versions'
+import { Route as AdminDocsCentralSetupAssistantRouteImport } from './routes/admin/docs-central/setup-assistant'
+import { Route as AdminDocsCentralReviewRouteImport } from './routes/admin/docs-central/review'
+import { Route as AdminDocsCentralPublishingRouteImport } from './routes/admin/docs-central/publishing'
+import { Route as AdminDocsCentralProcessTypesRouteImport } from './routes/admin/docs-central/process-types'
+import { Route as AdminDocsCentralModelsRouteImport } from './routes/admin/docs-central/models'
+import { Route as AdminDocsCentralMarketplaceRouteImport } from './routes/admin/docs-central/marketplace'
+import { Route as AdminDocsCentralMappingsRouteImport } from './routes/admin/docs-central/mappings'
+import { Route as AdminDocsCentralLibraryRouteImport } from './routes/admin/docs-central/library'
+import { Route as AdminDocsCentralFieldsRouteImport } from './routes/admin/docs-central/fields'
+import { Route as AdminDocsCentralAuditRouteImport } from './routes/admin/docs-central/audit'
 
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
@@ -603,6 +616,11 @@ const AdminDocumentLibraryRoute = AdminDocumentLibraryRouteImport.update({
   path: '/document-library',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDocsCentralRoute = AdminDocsCentralRouteImport.update({
+  id: '/docs-central',
+  path: '/docs-central',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDiagnosticoRoute = AdminDiagnosticoRouteImport.update({
   id: '/diagnostico',
   path: '/diagnostico',
@@ -628,6 +646,11 @@ const AdminAutomationRoute = AdminAutomationRouteImport.update({
   path: '/automation',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDocsCentralIndexRoute = AdminDocsCentralIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
 const AdminTemplatesPfwRoute = AdminTemplatesPfwRouteImport.update({
   id: '/pfw',
   path: '/pfw',
@@ -637,6 +660,67 @@ const AdminTemplatesIdRoute = AdminTemplatesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AdminTemplatesRoute,
+} as any)
+const AdminDocsCentralVersionsRoute =
+  AdminDocsCentralVersionsRouteImport.update({
+    id: '/versions',
+    path: '/versions',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
+const AdminDocsCentralSetupAssistantRoute =
+  AdminDocsCentralSetupAssistantRouteImport.update({
+    id: '/setup-assistant',
+    path: '/setup-assistant',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
+const AdminDocsCentralReviewRoute = AdminDocsCentralReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
+const AdminDocsCentralPublishingRoute =
+  AdminDocsCentralPublishingRouteImport.update({
+    id: '/publishing',
+    path: '/publishing',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
+const AdminDocsCentralProcessTypesRoute =
+  AdminDocsCentralProcessTypesRouteImport.update({
+    id: '/process-types',
+    path: '/process-types',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
+const AdminDocsCentralModelsRoute = AdminDocsCentralModelsRouteImport.update({
+  id: '/models',
+  path: '/models',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
+const AdminDocsCentralMarketplaceRoute =
+  AdminDocsCentralMarketplaceRouteImport.update({
+    id: '/marketplace',
+    path: '/marketplace',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
+const AdminDocsCentralMappingsRoute =
+  AdminDocsCentralMappingsRouteImport.update({
+    id: '/mappings',
+    path: '/mappings',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
+const AdminDocsCentralLibraryRoute = AdminDocsCentralLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
+const AdminDocsCentralFieldsRoute = AdminDocsCentralFieldsRouteImport.update({
+  id: '/fields',
+  path: '/fields',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
+const AdminDocsCentralAuditRoute = AdminDocsCentralAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AdminDocsCentralRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -689,6 +773,7 @@ export interface FileRoutesByFullPath {
   '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/diagnostico': typeof AdminDiagnosticoRoute
+  '/admin/docs-central': typeof AdminDocsCentralRouteWithChildren
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documentos': typeof AdminDocumentosRoute
   '/admin/documents': typeof AdminDocumentsRoute
@@ -742,8 +827,20 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
+  '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
+  '/admin/docs-central/library': typeof AdminDocsCentralLibraryRoute
+  '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
+  '/admin/docs-central/marketplace': typeof AdminDocsCentralMarketplaceRoute
+  '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
+  '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
+  '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
+  '/admin/docs-central/review': typeof AdminDocsCentralReviewRoute
+  '/admin/docs-central/setup-assistant': typeof AdminDocsCentralSetupAssistantRoute
+  '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -845,8 +942,20 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/processes': typeof ProcessesIndexRoute
   '/templates': typeof TemplatesIndexRoute
+  '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
+  '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
+  '/admin/docs-central/library': typeof AdminDocsCentralLibraryRoute
+  '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
+  '/admin/docs-central/marketplace': typeof AdminDocsCentralMarketplaceRoute
+  '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
+  '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
+  '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
+  '/admin/docs-central/review': typeof AdminDocsCentralReviewRoute
+  '/admin/docs-central/setup-assistant': typeof AdminDocsCentralSetupAssistantRoute
+  '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/admin/docs-central': typeof AdminDocsCentralIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -899,6 +1008,7 @@ export interface FileRoutesById {
   '/admin/commercial': typeof AdminCommercialRoute
   '/admin/companies': typeof AdminCompaniesRoute
   '/admin/diagnostico': typeof AdminDiagnosticoRoute
+  '/admin/docs-central': typeof AdminDocsCentralRouteWithChildren
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documentos': typeof AdminDocumentosRoute
   '/admin/documents': typeof AdminDocumentsRoute
@@ -952,8 +1062,20 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
+  '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
+  '/admin/docs-central/library': typeof AdminDocsCentralLibraryRoute
+  '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
+  '/admin/docs-central/marketplace': typeof AdminDocsCentralMarketplaceRoute
+  '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
+  '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
+  '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
+  '/admin/docs-central/review': typeof AdminDocsCentralReviewRoute
+  '/admin/docs-central/setup-assistant': typeof AdminDocsCentralSetupAssistantRoute
+  '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1007,6 +1129,7 @@ export interface FileRouteTypes {
     | '/admin/commercial'
     | '/admin/companies'
     | '/admin/diagnostico'
+    | '/admin/docs-central'
     | '/admin/document-library'
     | '/admin/documentos'
     | '/admin/documents'
@@ -1060,8 +1183,20 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/processes/'
     | '/templates/'
+    | '/admin/docs-central/audit'
+    | '/admin/docs-central/fields'
+    | '/admin/docs-central/library'
+    | '/admin/docs-central/mappings'
+    | '/admin/docs-central/marketplace'
+    | '/admin/docs-central/models'
+    | '/admin/docs-central/process-types'
+    | '/admin/docs-central/publishing'
+    | '/admin/docs-central/review'
+    | '/admin/docs-central/setup-assistant'
+    | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/admin/docs-central/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1163,8 +1298,20 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/processes'
     | '/templates'
+    | '/admin/docs-central/audit'
+    | '/admin/docs-central/fields'
+    | '/admin/docs-central/library'
+    | '/admin/docs-central/mappings'
+    | '/admin/docs-central/marketplace'
+    | '/admin/docs-central/models'
+    | '/admin/docs-central/process-types'
+    | '/admin/docs-central/publishing'
+    | '/admin/docs-central/review'
+    | '/admin/docs-central/setup-assistant'
+    | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/admin/docs-central'
   id:
     | '__root__'
     | '/'
@@ -1216,6 +1363,7 @@ export interface FileRouteTypes {
     | '/admin/commercial'
     | '/admin/companies'
     | '/admin/diagnostico'
+    | '/admin/docs-central'
     | '/admin/document-library'
     | '/admin/documentos'
     | '/admin/documents'
@@ -1269,8 +1417,20 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/processes/'
     | '/templates/'
+    | '/admin/docs-central/audit'
+    | '/admin/docs-central/fields'
+    | '/admin/docs-central/library'
+    | '/admin/docs-central/mappings'
+    | '/admin/docs-central/marketplace'
+    | '/admin/docs-central/models'
+    | '/admin/docs-central/process-types'
+    | '/admin/docs-central/publishing'
+    | '/admin/docs-central/review'
+    | '/admin/docs-central/setup-assistant'
+    | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/admin/docs-central/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2015,6 +2175,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocumentLibraryRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/docs-central': {
+      id: '/admin/docs-central'
+      path: '/docs-central'
+      fullPath: '/admin/docs-central'
+      preLoaderRoute: typeof AdminDocsCentralRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/diagnostico': {
       id: '/admin/diagnostico'
       path: '/diagnostico'
@@ -2050,6 +2217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/docs-central/': {
+      id: '/admin/docs-central/'
+      path: '/'
+      fullPath: '/admin/docs-central/'
+      preLoaderRoute: typeof AdminDocsCentralIndexRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
     '/admin/templates/pfw': {
       id: '/admin/templates/pfw'
       path: '/pfw'
@@ -2064,8 +2238,118 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTemplatesIdRouteImport
       parentRoute: typeof AdminTemplatesRoute
     }
+    '/admin/docs-central/versions': {
+      id: '/admin/docs-central/versions'
+      path: '/versions'
+      fullPath: '/admin/docs-central/versions'
+      preLoaderRoute: typeof AdminDocsCentralVersionsRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/setup-assistant': {
+      id: '/admin/docs-central/setup-assistant'
+      path: '/setup-assistant'
+      fullPath: '/admin/docs-central/setup-assistant'
+      preLoaderRoute: typeof AdminDocsCentralSetupAssistantRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/review': {
+      id: '/admin/docs-central/review'
+      path: '/review'
+      fullPath: '/admin/docs-central/review'
+      preLoaderRoute: typeof AdminDocsCentralReviewRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/publishing': {
+      id: '/admin/docs-central/publishing'
+      path: '/publishing'
+      fullPath: '/admin/docs-central/publishing'
+      preLoaderRoute: typeof AdminDocsCentralPublishingRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/process-types': {
+      id: '/admin/docs-central/process-types'
+      path: '/process-types'
+      fullPath: '/admin/docs-central/process-types'
+      preLoaderRoute: typeof AdminDocsCentralProcessTypesRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/models': {
+      id: '/admin/docs-central/models'
+      path: '/models'
+      fullPath: '/admin/docs-central/models'
+      preLoaderRoute: typeof AdminDocsCentralModelsRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/marketplace': {
+      id: '/admin/docs-central/marketplace'
+      path: '/marketplace'
+      fullPath: '/admin/docs-central/marketplace'
+      preLoaderRoute: typeof AdminDocsCentralMarketplaceRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/mappings': {
+      id: '/admin/docs-central/mappings'
+      path: '/mappings'
+      fullPath: '/admin/docs-central/mappings'
+      preLoaderRoute: typeof AdminDocsCentralMappingsRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/library': {
+      id: '/admin/docs-central/library'
+      path: '/library'
+      fullPath: '/admin/docs-central/library'
+      preLoaderRoute: typeof AdminDocsCentralLibraryRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/fields': {
+      id: '/admin/docs-central/fields'
+      path: '/fields'
+      fullPath: '/admin/docs-central/fields'
+      preLoaderRoute: typeof AdminDocsCentralFieldsRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/audit': {
+      id: '/admin/docs-central/audit'
+      path: '/audit'
+      fullPath: '/admin/docs-central/audit'
+      preLoaderRoute: typeof AdminDocsCentralAuditRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
   }
 }
+
+interface AdminDocsCentralRouteChildren {
+  AdminDocsCentralAuditRoute: typeof AdminDocsCentralAuditRoute
+  AdminDocsCentralFieldsRoute: typeof AdminDocsCentralFieldsRoute
+  AdminDocsCentralLibraryRoute: typeof AdminDocsCentralLibraryRoute
+  AdminDocsCentralMappingsRoute: typeof AdminDocsCentralMappingsRoute
+  AdminDocsCentralMarketplaceRoute: typeof AdminDocsCentralMarketplaceRoute
+  AdminDocsCentralModelsRoute: typeof AdminDocsCentralModelsRoute
+  AdminDocsCentralProcessTypesRoute: typeof AdminDocsCentralProcessTypesRoute
+  AdminDocsCentralPublishingRoute: typeof AdminDocsCentralPublishingRoute
+  AdminDocsCentralReviewRoute: typeof AdminDocsCentralReviewRoute
+  AdminDocsCentralSetupAssistantRoute: typeof AdminDocsCentralSetupAssistantRoute
+  AdminDocsCentralVersionsRoute: typeof AdminDocsCentralVersionsRoute
+  AdminDocsCentralIndexRoute: typeof AdminDocsCentralIndexRoute
+}
+
+const AdminDocsCentralRouteChildren: AdminDocsCentralRouteChildren = {
+  AdminDocsCentralAuditRoute: AdminDocsCentralAuditRoute,
+  AdminDocsCentralFieldsRoute: AdminDocsCentralFieldsRoute,
+  AdminDocsCentralLibraryRoute: AdminDocsCentralLibraryRoute,
+  AdminDocsCentralMappingsRoute: AdminDocsCentralMappingsRoute,
+  AdminDocsCentralMarketplaceRoute: AdminDocsCentralMarketplaceRoute,
+  AdminDocsCentralModelsRoute: AdminDocsCentralModelsRoute,
+  AdminDocsCentralProcessTypesRoute: AdminDocsCentralProcessTypesRoute,
+  AdminDocsCentralPublishingRoute: AdminDocsCentralPublishingRoute,
+  AdminDocsCentralReviewRoute: AdminDocsCentralReviewRoute,
+  AdminDocsCentralSetupAssistantRoute: AdminDocsCentralSetupAssistantRoute,
+  AdminDocsCentralVersionsRoute: AdminDocsCentralVersionsRoute,
+  AdminDocsCentralIndexRoute: AdminDocsCentralIndexRoute,
+}
+
+const AdminDocsCentralRouteWithChildren =
+  AdminDocsCentralRoute._addFileChildren(AdminDocsCentralRouteChildren)
 
 interface AdminTemplatesRouteChildren {
   AdminTemplatesIdRoute: typeof AdminTemplatesIdRoute
@@ -2087,6 +2371,7 @@ interface AdminRouteChildren {
   AdminCommercialRoute: typeof AdminCommercialRoute
   AdminCompaniesRoute: typeof AdminCompaniesRoute
   AdminDiagnosticoRoute: typeof AdminDiagnosticoRoute
+  AdminDocsCentralRoute: typeof AdminDocsCentralRouteWithChildren
   AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
   AdminDocumentosRoute: typeof AdminDocumentosRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
@@ -2120,6 +2405,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCommercialRoute: AdminCommercialRoute,
   AdminCompaniesRoute: AdminCompaniesRoute,
   AdminDiagnosticoRoute: AdminDiagnosticoRoute,
+  AdminDocsCentralRoute: AdminDocsCentralRouteWithChildren,
   AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,
   AdminDocumentosRoute: AdminDocumentosRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
@@ -2270,13 +2556,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
