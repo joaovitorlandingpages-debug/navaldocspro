@@ -36,7 +36,7 @@ export function DocsCentralSidebar() {
           return (
             <Link
               key={item.to}
-              to={item.to}
+              to={item.to as any}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
                 active ? "bg-primary/10 text-primary font-semibold" : "text-slate-600 hover:bg-slate-50"
               }`}
