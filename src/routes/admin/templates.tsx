@@ -238,7 +238,7 @@ function AdminTemplatesPage() {
             </p>
           </div>
           <div className="flex items-center gap-2 self-start md:self-end">
-            <Button className="gap-2">
+            <Button className="gap-2" onClick={() => setNewOpen(true)}>
               <Plus className="h-4 w-4" /> Novo modelo
             </Button>
             <DropdownMenu>
@@ -377,7 +377,7 @@ function AdminTemplatesPage() {
               <>
                 <p className="font-medium">Você ainda não tem modelos cadastrados.</p>
                 <p className="text-sm text-slate-500 mt-1">Comece criando um modelo ou importe do marketplace.</p>
-                <Button className="mt-4 gap-2"><Plus className="h-4 w-4" /> Novo modelo</Button>
+                <Button className="mt-4 gap-2" onClick={() => setNewOpen(true)}><Plus className="h-4 w-4" /> Novo modelo</Button>
               </>
             )}
           </Card>
