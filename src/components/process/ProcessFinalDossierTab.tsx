@@ -411,6 +411,7 @@ async function buildZip(
 
 export default function ProcessFinalDossierTab({ processId }: Props) {
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState<null | "generate" | "deliver" | "cancel" | "pdf" | "zip">(null);
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [dossier, setDossier] = useState<any>(null);
@@ -418,8 +419,12 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
 
   const reload = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
-      const b = await fetchBundle(processId);
+      const timeout = new Promise<never>((_, rej) =>
+        setTimeout(() => rej(new Error("Tempo esgotado ao carregar o dossiê (15s). Verifique sua conexão e tente novamente.")), 15000)
+      );
+      const b = await Promise.race([fetchBundle(processId), timeout]);
       setBundle(b);
       const { data } = await supabase
         .from("process_dossiers")
@@ -438,7 +443,9 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
       const certificates = (sigs ?? []).filter((s: any) => !!s.evidence_certificate_url).length;
       setSignaturesSummary({ total, completed, certificates });
     } catch (e: any) {
-      toast.error(e.message || "Falha ao carregar dossiê");
+      const msg = e?.message || "Falha ao carregar dossiê";
+      setLoadError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -448,6 +455,7 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
     reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [processId]);
+
 
   const checklist = useMemo(() => (bundle ? computeChecklist(bundle) : []), [bundle]);
   const canGenerate = checklist.length > 0 && checklist.every((c) => c.ok);
