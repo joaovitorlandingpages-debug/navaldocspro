@@ -124,6 +124,7 @@ import { Route as AdminDocsCentralMarketplaceRouteImport } from './routes/admin/
 import { Route as AdminDocsCentralMappingsRouteImport } from './routes/admin/docs-central/mappings'
 import { Route as AdminDocsCentralLibraryRouteImport } from './routes/admin/docs-central/library'
 import { Route as AdminDocsCentralFieldsRouteImport } from './routes/admin/docs-central/fields'
+import { Route as AdminDocsCentralAuditRouteImport } from './routes/admin/docs-central/audit'
 
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
@@ -709,6 +710,11 @@ const AdminDocsCentralFieldsRoute = AdminDocsCentralFieldsRouteImport.update({
   path: '/fields',
   getParentRoute: () => AdminDocsCentralRoute,
 } as any)
+const AdminDocsCentralAuditRoute = AdminDocsCentralAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -814,6 +820,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
   '/admin/docs-central/library': typeof AdminDocsCentralLibraryRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
@@ -927,6 +934,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/processes': typeof ProcessesIndexRoute
   '/templates': typeof TemplatesIndexRoute
+  '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
   '/admin/docs-central/library': typeof AdminDocsCentralLibraryRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
@@ -1045,6 +1053,7 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
   '/admin/docs-central/library': typeof AdminDocsCentralLibraryRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
@@ -1164,6 +1173,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/processes/'
     | '/templates/'
+    | '/admin/docs-central/audit'
     | '/admin/docs-central/fields'
     | '/admin/docs-central/library'
     | '/admin/docs-central/mappings'
@@ -1277,6 +1287,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/processes'
     | '/templates'
+    | '/admin/docs-central/audit'
     | '/admin/docs-central/fields'
     | '/admin/docs-central/library'
     | '/admin/docs-central/mappings'
@@ -1394,6 +1405,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/processes/'
     | '/templates/'
+    | '/admin/docs-central/audit'
     | '/admin/docs-central/fields'
     | '/admin/docs-central/library'
     | '/admin/docs-central/mappings'
@@ -2276,10 +2288,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocsCentralFieldsRouteImport
       parentRoute: typeof AdminDocsCentralRoute
     }
+    '/admin/docs-central/audit': {
+      id: '/admin/docs-central/audit'
+      path: '/audit'
+      fullPath: '/admin/docs-central/audit'
+      preLoaderRoute: typeof AdminDocsCentralAuditRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
   }
 }
 
 interface AdminDocsCentralRouteChildren {
+  AdminDocsCentralAuditRoute: typeof AdminDocsCentralAuditRoute
   AdminDocsCentralFieldsRoute: typeof AdminDocsCentralFieldsRoute
   AdminDocsCentralLibraryRoute: typeof AdminDocsCentralLibraryRoute
   AdminDocsCentralMappingsRoute: typeof AdminDocsCentralMappingsRoute
@@ -2293,6 +2313,7 @@ interface AdminDocsCentralRouteChildren {
 }
 
 const AdminDocsCentralRouteChildren: AdminDocsCentralRouteChildren = {
+  AdminDocsCentralAuditRoute: AdminDocsCentralAuditRoute,
   AdminDocsCentralFieldsRoute: AdminDocsCentralFieldsRoute,
   AdminDocsCentralLibraryRoute: AdminDocsCentralLibraryRoute,
   AdminDocsCentralMappingsRoute: AdminDocsCentralMappingsRoute,
