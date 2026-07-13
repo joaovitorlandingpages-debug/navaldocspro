@@ -5,10 +5,14 @@
  * /admin/modelos-processo (redirecionadas).
  */
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -64,10 +68,13 @@ type SortKey = "updated_desc" | "updated_asc" | "name_asc" | "version_desc";
 
 function AdminTemplatesPage() {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const qc = useQueryClient();
   const role = profile?.role ?? "";
   const companyId = profile?.company_id ?? null;
   const isMaster = role === "admin_master" || role === "admin_master_global";
   const canAdmin = isMaster || ["company_admin", "admin", "manager", "owner"].includes(role);
+  const [newOpen, setNewOpen] = useState(false);
 
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
@@ -231,7 +238,7 @@ function AdminTemplatesPage() {
             </p>
           </div>
           <div className="flex items-center gap-2 self-start md:self-end">
-            <Button className="gap-2">
+            <Button className="gap-2" onClick={() => setNewOpen(true)}>
               <Plus className="h-4 w-4" /> Novo modelo
             </Button>
             <DropdownMenu>
@@ -370,7 +377,7 @@ function AdminTemplatesPage() {
               <>
                 <p className="font-medium">Você ainda não tem modelos cadastrados.</p>
                 <p className="text-sm text-slate-500 mt-1">Comece criando um modelo ou importe do marketplace.</p>
-                <Button className="mt-4 gap-2"><Plus className="h-4 w-4" /> Novo modelo</Button>
+                <Button className="mt-4 gap-2" onClick={() => setNewOpen(true)}><Plus className="h-4 w-4" /> Novo modelo</Button>
               </>
             )}
           </Card>
@@ -389,7 +396,96 @@ function AdminTemplatesPage() {
           </div>
         )}
       </div>
+
+      <NewTemplateDialog
+        open={newOpen}
+        onOpenChange={setNewOpen}
+        canGlobal={isMaster}
+        onCreated={(id) => {
+          setNewOpen(false);
+          qc.invalidateQueries({ queryKey: ["admin-templates-canonical"] });
+          navigate({ to: "/admin/templates/$id", params: { id } });
+        }}
+      />
     </div>
+  );
+}
+
+function NewTemplateDialog({
+  open, onOpenChange, canGlobal, onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  canGlobal: boolean;
+  onCreated: (id: string) => void;
+}) {
+  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [category, setCategory] = useState("");
+  const [processType, setProcessType] = useState("");
+  const [region, setRegion] = useState("");
+  const [isGlobal, setIsGlobal] = useState(false);
+
+  const createMut = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await (supabase.rpc as any)("template_create_draft", {
+        p_name: name.trim(),
+        p_code: code.trim() || null,
+        p_category: category.trim() || null,
+        p_process_type: processType.trim() || null,
+        p_region: region.trim() || null,
+        p_is_global: canGlobal ? isGlobal : false,
+      });
+      if (error) throw new Error(error.message);
+      return data as string;
+    },
+    onSuccess: (id) => {
+      toast.success("Modelo criado como rascunho");
+      setName(""); setCode(""); setCategory(""); setProcessType(""); setRegion(""); setIsGlobal(false);
+      onCreated(id);
+    },
+    onError: (e: Error) => {
+      const m = e.message;
+      if (m.includes("name_required")) toast.error("Informe o nome do modelo.");
+      else if (m.includes("forbidden")) toast.error("Sem permissão para criar este modelo.");
+      else toast.error(m);
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Novo modelo</DialogTitle>
+          <DialogDescription>
+            O modelo será criado como rascunho. Você poderá editar e publicar depois.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-3">
+          <Input placeholder="Nome *" value={name} onChange={(e) => setName(e.target.value)} />
+          <Input placeholder="Código (opcional)" value={code} onChange={(e) => setCode(e.target.value)} />
+          <Input placeholder="Categoria (opcional)" value={category} onChange={(e) => setCategory(e.target.value)} />
+          <Input placeholder="Tipo de processo (opcional)" value={processType} onChange={(e) => setProcessType(e.target.value)} />
+          <Input placeholder="Região (opcional)" value={region} onChange={(e) => setRegion(e.target.value)} />
+          {canGlobal && (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={isGlobal} onChange={(e) => setIsGlobal(e.target.checked)} />
+              Modelo global (visível a todas as empresas)
+            </label>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button
+            onClick={() => createMut.mutate()}
+            disabled={createMut.isPending || name.trim().length < 2}
+          >
+            {createMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            Criar rascunho
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -439,8 +535,10 @@ function TemplateRow({
           </div>
         </div>
         <div className="flex items-center gap-2 self-end md:self-center">
-          <Button variant="outline" size="sm" className="gap-1">
-            <Eye className="h-3.5 w-3.5" /> Abrir
+          <Button variant="outline" size="sm" className="gap-1" asChild>
+            <Link to="/admin/templates/$id" params={{ id: t.id }}>
+              <Eye className="h-3.5 w-3.5" /> Abrir
+            </Link>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
