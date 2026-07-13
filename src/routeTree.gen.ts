@@ -120,6 +120,7 @@ import { Route as AdminDocsCentralReviewRouteImport } from './routes/admin/docs-
 import { Route as AdminDocsCentralPublishingRouteImport } from './routes/admin/docs-central/publishing'
 import { Route as AdminDocsCentralProcessTypesRouteImport } from './routes/admin/docs-central/process-types'
 import { Route as AdminDocsCentralModelsRouteImport } from './routes/admin/docs-central/models'
+import { Route as AdminDocsCentralMarketplaceRouteImport } from './routes/admin/docs-central/marketplace'
 import { Route as AdminDocsCentralMappingsRouteImport } from './routes/admin/docs-central/mappings'
 import { Route as AdminDocsCentralFieldsRouteImport } from './routes/admin/docs-central/fields'
 
@@ -685,6 +686,12 @@ const AdminDocsCentralModelsRoute = AdminDocsCentralModelsRouteImport.update({
   path: '/models',
   getParentRoute: () => AdminDocsCentralRoute,
 } as any)
+const AdminDocsCentralMarketplaceRoute =
+  AdminDocsCentralMarketplaceRouteImport.update({
+    id: '/marketplace',
+    path: '/marketplace',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
 const AdminDocsCentralMappingsRoute =
   AdminDocsCentralMappingsRouteImport.update({
     id: '/mappings',
@@ -803,6 +810,7 @@ export interface FileRoutesByFullPath {
   '/templates/': typeof TemplatesIndexRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
+  '/admin/docs-central/marketplace': typeof AdminDocsCentralMarketplaceRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
   '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
@@ -914,6 +922,7 @@ export interface FileRoutesByTo {
   '/templates': typeof TemplatesIndexRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
+  '/admin/docs-central/marketplace': typeof AdminDocsCentralMarketplaceRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
   '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
@@ -1030,6 +1039,7 @@ export interface FileRoutesById {
   '/templates/': typeof TemplatesIndexRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
+  '/admin/docs-central/marketplace': typeof AdminDocsCentralMarketplaceRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
   '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
@@ -1147,6 +1157,7 @@ export interface FileRouteTypes {
     | '/templates/'
     | '/admin/docs-central/fields'
     | '/admin/docs-central/mappings'
+    | '/admin/docs-central/marketplace'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
     | '/admin/docs-central/publishing'
@@ -1258,6 +1269,7 @@ export interface FileRouteTypes {
     | '/templates'
     | '/admin/docs-central/fields'
     | '/admin/docs-central/mappings'
+    | '/admin/docs-central/marketplace'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
     | '/admin/docs-central/publishing'
@@ -1373,6 +1385,7 @@ export interface FileRouteTypes {
     | '/templates/'
     | '/admin/docs-central/fields'
     | '/admin/docs-central/mappings'
+    | '/admin/docs-central/marketplace'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
     | '/admin/docs-central/publishing'
@@ -2223,6 +2236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocsCentralModelsRouteImport
       parentRoute: typeof AdminDocsCentralRoute
     }
+    '/admin/docs-central/marketplace': {
+      id: '/admin/docs-central/marketplace'
+      path: '/marketplace'
+      fullPath: '/admin/docs-central/marketplace'
+      preLoaderRoute: typeof AdminDocsCentralMarketplaceRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
     '/admin/docs-central/mappings': {
       id: '/admin/docs-central/mappings'
       path: '/mappings'
@@ -2243,6 +2263,7 @@ declare module '@tanstack/react-router' {
 interface AdminDocsCentralRouteChildren {
   AdminDocsCentralFieldsRoute: typeof AdminDocsCentralFieldsRoute
   AdminDocsCentralMappingsRoute: typeof AdminDocsCentralMappingsRoute
+  AdminDocsCentralMarketplaceRoute: typeof AdminDocsCentralMarketplaceRoute
   AdminDocsCentralModelsRoute: typeof AdminDocsCentralModelsRoute
   AdminDocsCentralProcessTypesRoute: typeof AdminDocsCentralProcessTypesRoute
   AdminDocsCentralPublishingRoute: typeof AdminDocsCentralPublishingRoute
@@ -2254,6 +2275,7 @@ interface AdminDocsCentralRouteChildren {
 const AdminDocsCentralRouteChildren: AdminDocsCentralRouteChildren = {
   AdminDocsCentralFieldsRoute: AdminDocsCentralFieldsRoute,
   AdminDocsCentralMappingsRoute: AdminDocsCentralMappingsRoute,
+  AdminDocsCentralMarketplaceRoute: AdminDocsCentralMarketplaceRoute,
   AdminDocsCentralModelsRoute: AdminDocsCentralModelsRoute,
   AdminDocsCentralProcessTypesRoute: AdminDocsCentralProcessTypesRoute,
   AdminDocsCentralPublishingRoute: AdminDocsCentralPublishingRoute,
