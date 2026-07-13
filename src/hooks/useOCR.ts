@@ -39,7 +39,7 @@ export function useOCR(processId?: string) {
           *,
           uploaded_files!inner (
             file_name,
-            file_path,
+            file_url,
             process_id
           )
         `);
