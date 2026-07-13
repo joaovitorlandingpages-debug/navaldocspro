@@ -566,7 +566,7 @@ function CrmGrid({
 
             {/* Body */}
             <Link
-              to="/processes/$id" params={{ id: p.id }} search={{ tab: "overview" }}
+              to="/processes/$id" params={{ id: p.id }} search={{ tab: "processo", sub: "geral" }}
               className="block p-5 flex-1"
             >
               <div className="flex items-start justify-between gap-3 mb-3">

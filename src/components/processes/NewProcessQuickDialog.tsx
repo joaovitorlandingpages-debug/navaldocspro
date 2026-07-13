@@ -707,7 +707,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       }
 
       onClose();
-      navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "overview" } });
+      navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "processo", sub: "geral" } });
     } catch (e: any) {
       toast.error("Erro ao criar processo: " + (e?.message || e));
     } finally {
@@ -719,7 +719,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     if (!createdProcessId) return;
     const id = createdProcessId;
     onClose();
-    navigate({ to: "/processes/$id", params: { id }, search: { tab: "overview" } });
+    navigate({ to: "/processes/$id", params: { id }, search: { tab: "processo", sub: "geral" } });
   }
 
   // ------------------------------------------------------------- render
