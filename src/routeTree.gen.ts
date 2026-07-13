@@ -117,6 +117,7 @@ import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
 import { Route as AdminDocsCentralProcessTypesRouteImport } from './routes/admin/docs-central/process-types'
 import { Route as AdminDocsCentralModelsRouteImport } from './routes/admin/docs-central/models'
+import { Route as AdminDocsCentralMappingsRouteImport } from './routes/admin/docs-central/mappings'
 
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
@@ -663,6 +664,12 @@ const AdminDocsCentralModelsRoute = AdminDocsCentralModelsRouteImport.update({
   path: '/models',
   getParentRoute: () => AdminDocsCentralRoute,
 } as any)
+const AdminDocsCentralMappingsRoute =
+  AdminDocsCentralMappingsRouteImport.update({
+    id: '/mappings',
+    path: '/mappings',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -768,6 +775,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
@@ -874,6 +882,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/processes': typeof ProcessesIndexRoute
   '/templates': typeof TemplatesIndexRoute
+  '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
@@ -985,6 +994,7 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
@@ -1097,6 +1107,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/processes/'
     | '/templates/'
+    | '/admin/docs-central/mappings'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
     | '/admin/templates/$id'
@@ -1203,6 +1214,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/processes'
     | '/templates'
+    | '/admin/docs-central/mappings'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
     | '/admin/templates/$id'
@@ -1313,6 +1325,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/processes/'
     | '/templates/'
+    | '/admin/docs-central/mappings'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
     | '/admin/templates/$id'
@@ -2139,16 +2152,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocsCentralModelsRouteImport
       parentRoute: typeof AdminDocsCentralRoute
     }
+    '/admin/docs-central/mappings': {
+      id: '/admin/docs-central/mappings'
+      path: '/mappings'
+      fullPath: '/admin/docs-central/mappings'
+      preLoaderRoute: typeof AdminDocsCentralMappingsRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
   }
 }
 
 interface AdminDocsCentralRouteChildren {
+  AdminDocsCentralMappingsRoute: typeof AdminDocsCentralMappingsRoute
   AdminDocsCentralModelsRoute: typeof AdminDocsCentralModelsRoute
   AdminDocsCentralProcessTypesRoute: typeof AdminDocsCentralProcessTypesRoute
   AdminDocsCentralIndexRoute: typeof AdminDocsCentralIndexRoute
 }
 
 const AdminDocsCentralRouteChildren: AdminDocsCentralRouteChildren = {
+  AdminDocsCentralMappingsRoute: AdminDocsCentralMappingsRoute,
   AdminDocsCentralModelsRoute: AdminDocsCentralModelsRoute,
   AdminDocsCentralProcessTypesRoute: AdminDocsCentralProcessTypesRoute,
   AdminDocsCentralIndexRoute: AdminDocsCentralIndexRoute,
