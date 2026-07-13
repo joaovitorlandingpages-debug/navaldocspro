@@ -13,7 +13,8 @@
  * O modo "Upload rápido" continua acessível pelo Chooser.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocalDraft } from "@/hooks/useLocalDraft";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
