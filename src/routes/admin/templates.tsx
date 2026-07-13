@@ -396,7 +396,97 @@ function AdminTemplatesPage() {
           </div>
         )}
       </div>
+      </div>
+
+      <NewTemplateDialog
+        open={newOpen}
+        onOpenChange={setNewOpen}
+        canGlobal={isMaster}
+        onCreated={(id) => {
+          setNewOpen(false);
+          qc.invalidateQueries({ queryKey: ["admin-templates-canonical"] });
+          navigate({ to: "/admin/templates/$id", params: { id } });
+        }}
+      />
     </div>
+  );
+}
+
+function NewTemplateDialog({
+  open, onOpenChange, canGlobal, onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  canGlobal: boolean;
+  onCreated: (id: string) => void;
+}) {
+  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [category, setCategory] = useState("");
+  const [processType, setProcessType] = useState("");
+  const [region, setRegion] = useState("");
+  const [isGlobal, setIsGlobal] = useState(false);
+
+  const createMut = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await (supabase.rpc as any)("template_create_draft", {
+        p_name: name.trim(),
+        p_code: code.trim() || null,
+        p_category: category.trim() || null,
+        p_process_type: processType.trim() || null,
+        p_region: region.trim() || null,
+        p_is_global: canGlobal ? isGlobal : false,
+      });
+      if (error) throw new Error(error.message);
+      return data as string;
+    },
+    onSuccess: (id) => {
+      toast.success("Modelo criado como rascunho");
+      setName(""); setCode(""); setCategory(""); setProcessType(""); setRegion(""); setIsGlobal(false);
+      onCreated(id);
+    },
+    onError: (e: Error) => {
+      const m = e.message;
+      if (m.includes("name_required")) toast.error("Informe o nome do modelo.");
+      else if (m.includes("forbidden")) toast.error("Sem permissão para criar este modelo.");
+      else toast.error(m);
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Novo modelo</DialogTitle>
+          <DialogDescription>
+            O modelo será criado como rascunho. Você poderá editar e publicar depois.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-3">
+          <Input placeholder="Nome *" value={name} onChange={(e) => setName(e.target.value)} />
+          <Input placeholder="Código (opcional)" value={code} onChange={(e) => setCode(e.target.value)} />
+          <Input placeholder="Categoria (opcional)" value={category} onChange={(e) => setCategory(e.target.value)} />
+          <Input placeholder="Tipo de processo (opcional)" value={processType} onChange={(e) => setProcessType(e.target.value)} />
+          <Input placeholder="Região (opcional)" value={region} onChange={(e) => setRegion(e.target.value)} />
+          {canGlobal && (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={isGlobal} onChange={(e) => setIsGlobal(e.target.checked)} />
+              Modelo global (visível a todas as empresas)
+            </label>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button
+            onClick={() => createMut.mutate()}
+            disabled={createMut.isPending || name.trim().length < 2}
+          >
+            {createMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            Criar rascunho
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
