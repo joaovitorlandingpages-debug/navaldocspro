@@ -173,6 +173,12 @@ export const useDocuments = () => {
     },
   });
 
+  /**
+   * Sub-fatia F.2.b — C1 migrado.
+   * Delegado ao pipeline canônico (resolveTemplate → RPC → Edge modo novo).
+   * Idempotência determinística: mesmos parâmetros → mesma linha; nova versão
+   * publicada → nova linha; retry NÃO gera UUID aleatório.
+   */
   const generateDocument = useMutation({
     mutationFn: async (payload: {
       templateId: string;
@@ -181,27 +187,79 @@ export const useDocuments = () => {
       vesselId?: string;
       processId?: string;
       fieldValues: Record<string, any>;
+      category?: string | null;
+      checklistItemId?: string | null;
+      actionIntent?: string;
+      regenerationRevision?: number;
     }) => {
+      if (!payload.processId) {
+        throw new Error("Selecione um processo para gerar o documento.");
+      }
       const { limitsEngine } = await import("@/services/limitsEngine");
       const allowed = await limitsEngine.enforce("pdf_generation", 1, payload.companyId);
       if (!allowed) throw new Error("Limite de geração de documentos atingido para o plano atual.");
 
-      const { data, error } = await supabase.functions.invoke("generate-document", {
-        body: payload,
+      const { generateDocumentCanonical } = await import(
+        "@/services/documents/canonicalDocumentGeneration"
+      );
+      const result = await generateDocumentCanonical({
+        processId: payload.processId,
+        templateId: payload.templateId,
+        category: payload.category ?? null,
+        customerId: payload.customerId ?? null,
+        vesselId: payload.vesselId ?? null,
+        checklistItemId: payload.checklistItemId ?? null,
+        actionIntent: payload.actionIntent ?? "manual_generate",
+        regenerationRevision: payload.regenerationRevision ?? 0,
+        fieldValues: payload.fieldValues,
       });
 
-      if (error) throw error;
-      await limitsEngine.consume("pdf_generation", 1, { template_id: payload.templateId, process_id: payload.processId }, undefined, payload.companyId);
-      return data;
+      if (!result.ok) {
+        const err = new Error(result.message) as Error & { code?: string };
+        err.code = result.error;
+        throw err;
+      }
+
+      // Consume limit apenas quando a linha é nova (evita cobrar em reused).
+      if (!result.reused) {
+        await limitsEngine.consume(
+          "pdf_generation",
+          1,
+          { template_id: result.templateId, process_id: payload.processId },
+          undefined,
+          payload.companyId,
+        );
+      }
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["generated-documents"] });
-      toast.success("Documento oficial gerado com sucesso!");
+      if (result && "ok" in result && result.ok && result.reused) {
+        toast.success("Documento já existente reutilizado.");
+      } else {
+        toast.success("Documento oficial gerado com sucesso!");
+      }
     },
     onError: async (error: any, variables: any) => {
+      const code: string | undefined = error?.code;
+      const friendly: Record<string, string> = {
+        no_company: "Sem empresa vinculada — faça login novamente.",
+        process_finalized: "Processo finalizado — geração bloqueada.",
+        template_not_resolved: "Nenhum modelo padrão encontrado para esta categoria.",
+        template_not_published: "Este modelo não possui versão publicada.",
+        template_not_found: "Modelo não encontrado ou indisponível.",
+        cross_tenant: "Sem permissão para este processo.",
+        render_failed: "Falha ao montar o conteúdo do documento.",
+        rpc_failed: "Falha ao registrar o documento.",
+        edge_failed: "Falha ao gerar o PDF do documento.",
+      };
+      if (code && friendly[code]) {
+        toast.error(friendly[code]);
+        return;
+      }
       const { handleGenerationError } = await import("@/services/documents/generationErrorHandler");
       const handled = await handleGenerationError(error, { processId: variables?.processId });
-      if (!handled) toast.error(`Erro na geração: ${error?.message ?? "falha desconhecida"}`);
+      if (!handled) toast.error("Erro na geração do documento.");
     },
   });
 

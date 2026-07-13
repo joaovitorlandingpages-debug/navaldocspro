@@ -199,6 +199,11 @@ function DocumentGenerator() {
       toast.error("Selecione ao menos um modelo.");
       return;
     }
+    if (!selectedProcessId) {
+      toast.error("Selecione um processo para gerar o documento.");
+      return;
+    }
+    if (isGenerating) return; // proteção contra duplo clique
     const limit = await checkLimit("documents");
     if (limit.reached) {
       toast.error("Limite de documentos mensais atingido.");
@@ -226,7 +231,9 @@ function DocumentGenerator() {
             companyId: profile.company_id,
             customerId: selectedCustomerId || undefined,
             vesselId: selectedVesselId || undefined,
-            processId: selectedProcessId || undefined,
+            processId: selectedProcessId,
+            category: tpl.category ?? null,
+            actionIntent: "manual_generate",
             fieldValues: buildValuesFor(tpl),
           });
           console.log("PDF_FIELDS_FILLED_OK", tpl.name);
