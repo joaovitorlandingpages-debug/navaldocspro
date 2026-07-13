@@ -480,6 +480,19 @@ async function createProcessFirstPdfDocument(params: {
     .select()
     .single();
   assertNoError(dbError, `Persistência do PDF ${params.docName}`);
+
+  // F.2.d.b — Telemetria de uso legado (freeform sem template canônico).
+  if (!params.templateId) {
+    try {
+      const { telemetry } = await import("@/utils/telemetry");
+      telemetry.track("pfw_legacy_freeform_pdf", "process_first_wizard", {
+        docName: params.docName,
+        processId: params.processId,
+        reason: params.reason,
+      });
+    } catch { /* telemetry best-effort */ }
+  }
+
   return generatedDoc;
 }
 
