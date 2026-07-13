@@ -53,7 +53,14 @@ function LoginComponent() {
       console.log("LOGIN_SUCCESS_LOGGED");
       
       setTimeout(() => {
-        window.location.href = "/dashboard-v2";
+        let target = FALLBACK_REDIRECT;
+        try {
+          const stored = sessionStorage.getItem("returnTo") || localStorage.getItem("returnTo");
+          if (isSafeInternalPath(redirectParam)) target = redirectParam!;
+          else if (isSafeInternalPath(stored)) target = stored!;
+        } catch {}
+        try { sessionStorage.removeItem("returnTo"); localStorage.removeItem("returnTo"); } catch {}
+        window.location.href = target;
       }, 500);
     } catch (error: any) {
       // Prevenir crash no toast de erro de login
