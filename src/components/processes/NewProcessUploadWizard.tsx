@@ -515,7 +515,7 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
       notifyProcessesChanged(visibleProcess);
       clearDraft();
       onClose();
-      navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "overview" } });
+      navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "processo", sub: "geral" } });
       toast.success("Processo criado e confirmado na lista.");
 
       // Materializa blueprint.
