@@ -148,6 +148,27 @@ function AdminTemplateDetail() {
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
+  const saveDraftMut = useMutation({
+    mutationFn: async (draft: EditorDraft) => {
+      const { error } = await supabase
+        .from("document_templates")
+        .update({
+          name: draft.name,
+          code: draft.code || null,
+          category: draft.category || null,
+          process_type: draft.process_type || null,
+          region_tag: draft.region_tag || null,
+          description: draft.description || null,
+          base_content: draft.base_content,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => { toast.success("Rascunho salvo"); invalidate(); },
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
+  });
+
   if (!user) {
     return (
       <div className="p-10 max-w-md mx-auto text-center">
