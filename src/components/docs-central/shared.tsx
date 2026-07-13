@@ -6,7 +6,7 @@ import {
 import { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 
-export const dcNav = [
+export const dcNav: { to: string; label: string; icon: any; exact?: boolean }[] = [
   { to: "/admin/docs-central", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/docs-central/models", label: "Modelos", icon: FileText },
   { to: "/admin/docs-central/process-types", label: "Tipos de Processo", icon: Workflow },
@@ -19,7 +19,7 @@ export const dcNav = [
   { to: "/admin/docs-central/library", label: "Biblioteca Nacional", icon: Library },
   { to: "/admin/docs-central/audit", label: "Auditoria", icon: ShieldCheck },
   { to: "/admin/docs-central/setup-assistant", label: "Assistente", icon: Sparkles },
-] as const;
+];
 
 export function DocsCentralSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
