@@ -169,6 +169,15 @@ function AdminTemplateDetail() {
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
+  const newDraftMut = useMutation({
+    mutationFn: async () => rpc("template_start_new_draft", { p_template_id: id }),
+    onSuccess: () => {
+      toast.success("Nova versão em rascunho criada — edite e publique quando estiver pronto.");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
+  });
+
   if (!user) {
     return (
       <div className="p-10 max-w-md mx-auto text-center">
