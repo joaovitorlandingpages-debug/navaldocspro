@@ -19,12 +19,15 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft, Star, StarOff, Archive, RotateCcw, GitBranch, MoreVertical,
   Loader2, AlertTriangle, Globe, Building2, ShieldAlert, History, FileText,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { TemplateEditor, type EditorDraft } from "@/components/admin/templates/TemplateEditor";
+import { validateTemplate, canPublish } from "@/lib/templates/templateValidator";
 
 export const Route = createFileRoute("/admin/templates/$id")({
   component: AdminTemplateDetail,
