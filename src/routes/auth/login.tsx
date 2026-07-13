@@ -11,14 +11,27 @@ import { ShieldCheck, Mail, Lock, Loader2, ArrowRight, Anchor } from "lucide-rea
 // motion removed to prevent removeChild crash
 
 export const Route = createFileRoute("/auth/login")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+  }),
   component: LoginComponent,
 });
+
+const FALLBACK_REDIRECT = "/dashboard";
+
+function isSafeInternalPath(path: string | undefined | null): path is string {
+  if (!path) return false;
+  if (!path.startsWith("/") || path.startsWith("//")) return false;
+  if (path.startsWith("/auth")) return false;
+  return true;
+}
 
 function LoginComponent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { redirect: redirectParam } = Route.useSearch();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +53,14 @@ function LoginComponent() {
       console.log("LOGIN_SUCCESS_LOGGED");
       
       setTimeout(() => {
-        window.location.href = "/dashboard-v2";
+        let target = FALLBACK_REDIRECT;
+        try {
+          const stored = sessionStorage.getItem("returnTo") || localStorage.getItem("returnTo");
+          if (isSafeInternalPath(redirectParam)) target = redirectParam!;
+          else if (isSafeInternalPath(stored)) target = stored!;
+        } catch {}
+        try { sessionStorage.removeItem("returnTo"); localStorage.removeItem("returnTo"); } catch {}
+        window.location.href = target;
       }, 500);
     } catch (error: any) {
       // Prevenir crash no toast de erro de login
