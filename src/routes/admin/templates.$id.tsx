@@ -205,7 +205,12 @@ function AdminTemplateDetail() {
       return <Button className="gap-2" onClick={() => setPublishOpen(true)}><GitBranch className="h-4 w-4" /> Publicar versão</Button>;
     }
     if (lifecycle === "published") {
-      return <Button className="gap-2" onClick={() => setPublishOpen(true)}><GitBranch className="h-4 w-4" /> Criar nova versão</Button>;
+      return (
+        <Button className="gap-2" onClick={() => newDraftMut.mutate()} disabled={newDraftMut.isPending}>
+          {newDraftMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <GitBranch className="h-4 w-4" />}
+          Criar nova versão
+        </Button>
+      );
     }
     if (lifecycle === "archived") {
       return <Button variant="outline" className="gap-2" onClick={() => restoreMut.mutate()} disabled={restoreMut.isPending}>
