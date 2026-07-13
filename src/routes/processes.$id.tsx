@@ -62,25 +62,47 @@ function TabLoader() {
   );
 }
 
-const VALID_TABS = [
-  "overview","edit","requirements","documents","library_docs","ocr",
-  "generation","dossier_v2","history","signatures","protocol","client_portal","identity"
-] as const;
-type ProcessTab = typeof VALID_TABS[number];
+const OUTER_TABS = ["processo", "assinaturas", "dossier", "historico"] as const;
+type OuterTab = typeof OUTER_TABS[number];
+
+// Legacy → outer/sub mapping so old links (setActiveTab("dossier_v2"), etc.) keep working.
+const LEGACY_TAB_MAP: Record<string, { outer: OuterTab; sub?: string }> = {
+  overview: { outer: "processo", sub: "geral" },
+  edit: { outer: "historico", sub: "editar" },
+  requirements: { outer: "processo", sub: "checklist" },
+  documents: { outer: "processo", sub: "uploads" },
+  library_docs: { outer: "processo", sub: "documentos" },
+  ocr: { outer: "processo", sub: "ocr" },
+  generation: { outer: "processo", sub: "geracao" },
+  dossier_v2: { outer: "dossier", sub: "dossie" },
+  history: { outer: "historico", sub: "timeline" },
+  signatures: { outer: "assinaturas" },
+  protocol: { outer: "dossier", sub: "protocolo" },
+  client_portal: { outer: "dossier", sub: "portal" },
+  identity: { outer: "historico", sub: "identidade" },
+  processo: { outer: "processo", sub: "geral" },
+  assinaturas: { outer: "assinaturas" },
+  dossier: { outer: "dossier", sub: "dossie" },
+  historico: { outer: "historico", sub: "timeline" },
+};
+
 const VALID_FOCUS_ACTIONS = ["gerar","editar","anexar","assinar","historico"] as const;
 type FocusAction = typeof VALID_FOCUS_ACTIONS[number];
 
-type ProcessSearch = { tab?: ProcessTab; focus?: string; action?: FocusAction };
+type ProcessSearch = { tab?: OuterTab; sub?: string; focus?: string; action?: FocusAction };
 
 export const Route = createFileRoute("/processes/$id")({
-  validateSearch: (s: Record<string, unknown>): ProcessSearch => ({
-    tab: typeof s.tab === "string" && (VALID_TABS as readonly string[]).includes(s.tab)
-      ? (s.tab as ProcessTab)
-      : undefined,
-    focus: typeof s.focus === "string" ? s.focus : undefined,
-    action: typeof s.action === "string" && (VALID_FOCUS_ACTIONS as readonly string[]).includes(s.action)
-      ? (s.action as FocusAction) : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): ProcessSearch => {
+    const raw = typeof s.tab === "string" ? s.tab : undefined;
+    const mapped = raw ? LEGACY_TAB_MAP[raw] : undefined;
+    return {
+      tab: mapped?.outer,
+      sub: typeof s.sub === "string" ? s.sub : mapped?.sub,
+      focus: typeof s.focus === "string" ? s.focus : undefined,
+      action: typeof s.action === "string" && (VALID_FOCUS_ACTIONS as readonly string[]).includes(s.action)
+        ? (s.action as FocusAction) : undefined,
+    };
+  },
   component: ProcessDetail,
 });
 
@@ -94,16 +116,27 @@ function ProcessDetail() {
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [showAdminDetails, setShowAdminDetails] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const search = Route.useSearch();
-  const activeTab: ProcessTab = search.tab ?? "overview";
+  const activeTab: OuterTab = search.tab ?? "processo";
+  const activeSub: string = search.sub ?? (activeTab === "processo" ? "geral" : activeTab === "dossier" ? "dossie" : activeTab === "historico" ? "timeline" : "");
   const focusItemId = search.focus ?? null;
   const focusAction = search.action ?? null;
   const setActiveTab = useCallback((tab: string) => {
+    const mapped = LEGACY_TAB_MAP[tab] ?? { outer: "processo" as OuterTab };
     navigate({
       to: "/processes/$id",
       params: { id },
-      search: (prev: any) => ({ ...prev, tab: (VALID_TABS as readonly string[]).includes(tab) ? (tab as ProcessTab) : ("overview" as ProcessTab) }),
+      search: (prev: any) => ({ ...prev, tab: mapped.outer, sub: mapped.sub }),
+      replace: true,
+    });
+  }, [id, navigate]);
+  const setActiveSub = useCallback((sub: string) => {
+    navigate({
+      to: "/processes/$id",
+      params: { id },
+      search: (prev: any) => ({ ...prev, sub }),
       replace: true,
     });
   }, [id, navigate]);
@@ -123,6 +156,7 @@ function ProcessDetail() {
       replace: true,
     });
   }, [id, navigate]);
+
   const [selectedTemplateForGen, setSelectedTemplateForGen] = useState<any | null>(null);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [editInitialTab, setEditInitialTab] = useState<string | undefined>(undefined);
