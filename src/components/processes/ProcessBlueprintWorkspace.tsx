@@ -135,28 +135,35 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
 
 
 
+  // Um processo é "finalizado" quando entra em qualquer estado terminal.
+  // Nesse caso timeline/progresso devem refletir 100% (não podem contradizer o TopBar).
+  const isFinalized = useMemo(() => {
+    const s = (process?.status || "").toLowerCase();
+    return ["finalizado", "finalized", "completed", "delivered", "dossier_ready", "concluido", "concluído"].includes(s);
+  }, [process?.status]);
+
   const stats = useMemo(() => {
     const done = (r: ChecklistRow) => !!r.document_id || ["completed", "done", "ok", "generated", "attached"].includes((r.status || "").toLowerCase());
     const mandatory = checklist.filter((r) => r.is_mandatory && !r.is_conditional);
     const optional = checklist.filter((r) => !r.is_mandatory && !r.is_conditional);
     const conditional = checklist.filter((r) => r.is_conditional);
     const mandatoryDone = mandatory.filter(done);
-    const pendingMandatory = mandatory.filter((r) => !done(r));
-    const needsSignature = checklist.filter((r) => r.requires_signature && !done(r));
-    const needsOcr = checklist.filter((r) => r.requires_ocr && !done(r));
-    const pendingSignatures = (signatures as any[]).filter((s) => !["completed", "signed"].includes((s.status || "").toLowerCase()));
-    const pendingOcr = (uploads as any[]).filter((u) => !["completed", "done", "ok"].includes((u.ocr_status || u.validation_status || "").toLowerCase()));
+    const pendingMandatory = isFinalized ? [] : mandatory.filter((r) => !done(r));
+    const needsSignature = isFinalized ? [] : checklist.filter((r) => r.requires_signature && !done(r));
+    const needsOcr = isFinalized ? [] : checklist.filter((r) => r.requires_ocr && !done(r));
+    const pendingSignatures = isFinalized ? [] : (signatures as any[]).filter((s) => !["completed", "signed"].includes((s.status || "").toLowerCase()));
+    const pendingOcr = isFinalized ? [] : (uploads as any[]).filter((u) => !["completed", "done", "ok"].includes((u.ocr_status || u.validation_status || "").toLowerCase()));
 
     const total = checklist.length || 1;
     const totalDone = checklist.filter(done).length;
-    const progress = Math.round((totalDone / total) * 100);
+    const progress = isFinalized ? 100 : Math.round((totalDone / total) * 100);
 
     return {
       mandatory, optional, conditional, mandatoryDone, pendingMandatory,
       needsSignature, needsOcr, pendingSignatures, pendingOcr,
       progress, totalDone, total: checklist.length,
     };
-  }, [checklist, signatures, uploads]);
+  }, [checklist, signatures, uploads, isFinalized]);
 
   const pendencies = useMemo(() => {
     const list: string[] = [];
