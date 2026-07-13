@@ -250,8 +250,45 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setAllowEmptyPackage(false);
       setGenerateNow(false); setGenProgress(null); setGenReport(null);
       setCreatedProcessId(null);
+      draftCheckedRef.current = false;
+      setPendingDraft(null);
     }
   }, [isOpen]);
+
+  // Draft: detecta rascunho válido ao abrir
+  useEffect(() => {
+    if (!isOpen || !userId || draftCheckedRef.current) return;
+    draftCheckedRef.current = true;
+    const d = loadDraft() as any;
+    if (d && typeof d === "object" && d.v === 1 && (d.selectedTypeId || d.customerId || d.title || (d.step ?? 1) > 1)) {
+      setPendingDraft(d);
+    }
+  }, [isOpen, userId, loadDraft]);
+
+  function resumeDraft() {
+    const d = pendingDraft;
+    if (!d) return;
+    try {
+      setStep(((d.step ?? 1) as Step));
+      setSelectedTypeId(d.selectedTypeId ?? "");
+      setPriority(d.priority ?? "normal");
+      setTitle(d.title ?? "");
+      setCustomerId(d.customerId ?? "");
+      setSecondaryCustomerId(d.secondaryCustomerId ?? "");
+      setVesselId(d.vesselId ?? "");
+      setHasMotor(!!d.hasMotor);
+      setBrandingMode(d.brandingMode ?? "company");
+      setClientDocPicks(new Set(Array.isArray(d.clientDocPicks) ? d.clientDocPicks : []));
+      setVesselDocPicks(new Set(Array.isArray(d.vesselDocPicks) ? d.vesselDocPicks : []));
+      setNoResidenceProof(!!d.noResidenceProof);
+    } catch { /* ignore corrupt draft */ }
+    setPendingDraft(null);
+  }
+  function discardDraft() {
+    clearDraft();
+    setPendingDraft(null);
+  }
+
 
   // Pré-seleção da checklist de docs assim que o tipo é escolhido
   useEffect(() => {
