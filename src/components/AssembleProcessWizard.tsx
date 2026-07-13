@@ -325,31 +325,23 @@ export function AssembleProcessWizard({
     }
     setGenerating(true);
     try {
-      const rows = toGenerate.map((f) => ({
-        company_id: profile.company_id,
-        template_id: f.templateId,
-        name: f.name,
-        status: f.pendingEngineering ? "pendente_engenharia" : "rascunho",
-        metadata: {
-          content: f.content,
-          missing_fields: f.missingFields,
-          role: f.role,
-          procedure: selectedProcedure,
-          source: "auto_assembly_package",
-          pending_engineering: f.pendingEngineering,
-        },
-      }));
-      const { error } = await supabase.from("generated_documents").insert(rows);
-      if (error) throw error;
-      toast.success(`Pacote gerado: ${rows.length} documentos!`);
-      draft.clear();
+      // F.2.d.a: NÃO persistir documentos órfãos (sem process_id).
+      // O canônico exige processId. Este wizard não cria processo,
+      // portanto o "Pacote Gerado" é apenas um preview em memória.
+      // Os documentos oficiais são gerados via pipeline canônico
+      // (C1/C6) quando o usuário abrir/criar um processo real.
+      toast.success(
+        `Pacote preparado: ${toGenerate.length} documento(s). Crie ou abra um processo para gerar os documentos oficiais.`
+      );
+      // Preservar draft (uploads, seleções, previews) para uso posterior.
       setStep(3);
     } catch (e: any) {
-      toast.error("Erro ao gerar: " + e.message);
+      toast.error("Erro ao preparar pacote: " + e.message);
     } finally {
       setGenerating(false);
     }
   };
+
 
   const hasMinUpload =
     extractions["PERSONAL_IDENTITY"]?.status === "done" ||
@@ -597,22 +589,25 @@ export function AssembleProcessWizard({
           </div>
         )}
 
-        {/* Step 3 — Done */}
+        {/* Step 3 — Preview em memória (nenhum documento persistido) */}
         {step === 3 && (
           <div className="text-center py-10 space-y-4">
             <div className="h-16 w-16 mx-auto rounded-full bg-emerald-100 flex items-center justify-center">
               <Check className="h-8 w-8 text-emerald-600" />
             </div>
-            <h3 className="text-lg font-semibold text-navy">Pacote gerado com sucesso!</h3>
-            <p className="text-sm text-slate-600">
-              {previews.filter((p) => p.selected).length} documentos foram criados.
-              Os documentos pendentes de engenharia foram marcados para revisão técnica.
+            <h3 className="text-lg font-semibold text-navy">Pacote preparado</h3>
+            <p className="text-sm text-slate-600 max-w-md mx-auto">
+              {previews.filter((p) => p.selected).length} documento(s) foram preparados em memória.
+              Crie ou abra um processo para gerar os documentos oficiais pelo pipeline canônico.
+              Seus uploads e seleções permanecem salvos até você concluir a geração.
             </p>
             <Button onClick={onClose} className="bg-primary">
               Fechar
             </Button>
           </div>
         )}
+
+
 
         {/* Footer */}
         {step < 3 && (
