@@ -446,8 +446,10 @@ function TemplateRow({
           </div>
         </div>
         <div className="flex items-center gap-2 self-end md:self-center">
-          <Button variant="outline" size="sm" className="gap-1">
-            <Eye className="h-3.5 w-3.5" /> Abrir
+          <Button variant="outline" size="sm" className="gap-1" asChild>
+            <Link to="/admin/templates/$id" params={{ id: t.id }}>
+              <Eye className="h-3.5 w-3.5" /> Abrir
+            </Link>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
