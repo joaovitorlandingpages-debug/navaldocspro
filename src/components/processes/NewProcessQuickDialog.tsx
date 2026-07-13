@@ -682,6 +682,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
       notifyProcessesChanged(visibleProcess);
       setCreatedProcessId(processId);
+      clearDraft();
       toast.success(`Processo criado com ${selectedCount} documento(s) no checklist.`);
 
       if (generateNow && selectedCount > 0) {
