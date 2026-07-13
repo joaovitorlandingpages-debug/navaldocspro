@@ -238,6 +238,9 @@ function AdminTemplatesPage() {
             </p>
           </div>
           <div className="flex items-center gap-2 self-start md:self-end">
+            <Button variant="outline" className="gap-2" asChild>
+              <Link to="/admin/templates/pfw">Modelos do Processo Guiado</Link>
+            </Button>
             <Button className="gap-2" onClick={() => setNewOpen(true)}>
               <Plus className="h-4 w-4" /> Novo modelo
             </Button>
