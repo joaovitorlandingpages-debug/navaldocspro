@@ -28,7 +28,7 @@ function ProcessTypesPage() {
           return { label: r.document_label, required: r.is_required, configured };
         });
         const total = docs.length || 1;
-        const done = docs.filter((d) => d.configured).length;
+        const done = docs.filter((d: any) => d.configured).length;
         return { ...p, docs, percent: Math.round((done / total) * 100) };
       });
     },
