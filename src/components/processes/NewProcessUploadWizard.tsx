@@ -513,6 +513,7 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
 
       const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
       notifyProcessesChanged(visibleProcess);
+      clearDraft();
       onClose();
       navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "overview" } });
       toast.success("Processo criado e confirmado na lista.");
