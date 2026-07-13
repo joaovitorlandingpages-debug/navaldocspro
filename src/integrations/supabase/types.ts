@@ -2063,7 +2063,9 @@ export type Database = {
           file_type: string | null
           id: string
           is_active: boolean | null
+          is_default_for_scope: boolean
           is_global: boolean
+          lifecycle_status: Database["public"]["Enums"]["template_lifecycle"]
           metadata: Json | null
           name: string
           ocr_enabled: boolean | null
@@ -2092,7 +2094,9 @@ export type Database = {
           file_type?: string | null
           id?: string
           is_active?: boolean | null
+          is_default_for_scope?: boolean
           is_global?: boolean
+          lifecycle_status?: Database["public"]["Enums"]["template_lifecycle"]
           metadata?: Json | null
           name: string
           ocr_enabled?: boolean | null
@@ -2121,7 +2125,9 @@ export type Database = {
           file_type?: string | null
           id?: string
           is_active?: boolean | null
+          is_default_for_scope?: boolean
           is_global?: boolean
+          lifecycle_status?: Database["public"]["Enums"]["template_lifecycle"]
           metadata?: Json | null
           name?: string
           ocr_enabled?: boolean | null
@@ -2495,6 +2501,7 @@ export type Database = {
           company_id: string | null
           created_at: string
           customer_id: string | null
+          document_structure_snapshot: Json | null
           expiry_date: string | null
           generated_by: string | null
           generated_file_url: string | null
@@ -2509,6 +2516,9 @@ export type Database = {
           signed_file_url: string | null
           status: string
           template_id: string | null
+          template_snapshot: Json | null
+          template_snapshot_hash: string | null
+          template_version_id: string | null
           updated_at: string
           verification_code: string | null
           version: number
@@ -2518,6 +2528,7 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           customer_id?: string | null
+          document_structure_snapshot?: Json | null
           expiry_date?: string | null
           generated_by?: string | null
           generated_file_url?: string | null
@@ -2532,6 +2543,9 @@ export type Database = {
           signed_file_url?: string | null
           status?: string
           template_id?: string | null
+          template_snapshot?: Json | null
+          template_snapshot_hash?: string | null
+          template_version_id?: string | null
           updated_at?: string
           verification_code?: string | null
           version?: number
@@ -2541,6 +2555,7 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           customer_id?: string | null
+          document_structure_snapshot?: Json | null
           expiry_date?: string | null
           generated_by?: string | null
           generated_file_url?: string | null
@@ -2555,6 +2570,9 @@ export type Database = {
           signed_file_url?: string | null
           status?: string
           template_id?: string | null
+          template_snapshot?: Json | null
+          template_snapshot_hash?: string | null
+          template_version_id?: string | null
           updated_at?: string
           verification_code?: string | null
           version?: number
@@ -2587,6 +2605,13 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_documents_template_version_id_fkey"
+            columns: ["template_version_id"]
+            isOneToOne: false
+            referencedRelation: "template_versions"
             referencedColumns: ["id"]
           },
           {
@@ -6024,33 +6049,59 @@ export type Database = {
       }
       template_versions: {
         Row: {
+          base_content: string | null
           changelog: Json
           created_at: string
+          created_by: string | null
+          document_structure: Json
           id: string
+          metadata: Json
           notes: string | null
           released_at: string
+          status: Database["public"]["Enums"]["template_lifecycle"]
           template_id: string
           version: string
+          version_number: number | null
         }
         Insert: {
+          base_content?: string | null
           changelog?: Json
           created_at?: string
+          created_by?: string | null
+          document_structure?: Json
           id?: string
+          metadata?: Json
           notes?: string | null
           released_at?: string
+          status?: Database["public"]["Enums"]["template_lifecycle"]
           template_id: string
           version: string
+          version_number?: number | null
         }
         Update: {
+          base_content?: string | null
           changelog?: Json
           created_at?: string
+          created_by?: string | null
+          document_structure?: Json
           id?: string
+          metadata?: Json
           notes?: string | null
           released_at?: string
+          status?: Database["public"]["Enums"]["template_lifecycle"]
           template_id?: string
           version?: string
+          version_number?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tickets: {
         Row: {
@@ -6664,6 +6715,7 @@ export type Database = {
         | "witness"
         | "applicant"
         | "grantor"
+      template_lifecycle: "draft" | "published" | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -6812,6 +6864,7 @@ export const Constants = {
         "applicant",
         "grantor",
       ],
+      template_lifecycle: ["draft", "published", "archived"],
     },
   },
 } as const
