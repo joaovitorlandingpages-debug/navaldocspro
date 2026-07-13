@@ -1002,9 +1002,9 @@ function ProcessDetail() {
              </div>
            )}
          </div>
-      </div>
+       </div>
 
-      </div>
+
 
       <ProcessEditSheet
         process={process}
