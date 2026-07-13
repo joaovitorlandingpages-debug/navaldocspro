@@ -299,9 +299,11 @@ export function ProcessChecklist({ processId, processTypeId, processTypeSlug }: 
                         size="sm" 
                         className="h-9 px-4 rounded-xl gap-2 font-bold text-xs border-primary/20 text-primary hover:bg-primary/5"
                         onClick={async () => {
+                           // Sub-fatia F.2.b — C3 migrado ao helper tipado (evento transitório).
                            const { data } = await supabase.from('document_templates').select('*').eq('name', req.template?.name).single();
                            if (data) {
-                             window.dispatchEvent(new CustomEvent('generate-document', { detail: data }));
+                             const { dispatchGenerateDocument } = await import("@/lib/events/generateDocumentEvent");
+                             dispatchGenerateDocument(data as any);
                            }
                         }}
                       >

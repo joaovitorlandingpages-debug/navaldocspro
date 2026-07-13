@@ -132,13 +132,14 @@ export function ProcessItemFocusDialog({ processId, process, checklistId, action
     onChanged?.();
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!template) {
       toast.error("Este item não tem template vinculado. Vincule um modelo no painel do processo.");
       return;
     }
-    // Reaproveita o handler existente na rota /processes/$id
-    window.dispatchEvent(new CustomEvent("generate-document", { detail: template }));
+    // Sub-fatia F.2.b — C5 migrado ao helper tipado (evento transitório).
+    const { dispatchGenerateDocument } = await import("@/lib/events/generateDocumentEvent");
+    dispatchGenerateDocument(template as any);
     onClose();
   };
 
