@@ -68,10 +68,13 @@ type SortKey = "updated_desc" | "updated_asc" | "name_asc" | "version_desc";
 
 function AdminTemplatesPage() {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const qc = useQueryClient();
   const role = profile?.role ?? "";
   const companyId = profile?.company_id ?? null;
   const isMaster = role === "admin_master" || role === "admin_master_global";
   const canAdmin = isMaster || ["company_admin", "admin", "manager", "owner"].includes(role);
+  const [newOpen, setNewOpen] = useState(false);
 
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
