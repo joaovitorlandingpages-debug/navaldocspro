@@ -1,14 +1,23 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DocumentAutomationEngine } from "./documentAutomationEngine";
+import {
+  runCanonicalBatch,
+  type CanonicalBatchItem,
+  type CanonicalBatchReport,
+} from "@/services/documents/canonicalBatchRunner";
 
 export class BatchGenerationService {
   /**
    * Gera todos os documentos obrigatórios pendentes de um processo.
+   *
+   * Sub-sub-fatia F.2.c — C7 migrado:
+   *   delega ao pipeline canônico via `runCanonicalBatch`.
+   *   Não invoca Edge, não monta idempotency key, não insere em
+   *   `generated_documents`, não resolve template.
    */
-  static async generateAllMissing(processId: string) {
+  static async generateAllMissing(processId: string): Promise<CanonicalBatchReport | null> {
     try {
-      // 1. Obter estado de automação
       const { data: state } = await supabase
         .from('process_automation_state')
         .select('*')
@@ -17,54 +26,67 @@ export class BatchGenerationService {
 
       if (!state || !state.checklist_status) {
         toast.error("Estado de automação não encontrado para este processo.");
-        return;
+        return null;
       }
 
-      const missingDocs = state.checklist_status.filter((item: any) => 
-        item.is_mandatory && item.status === 'missing'
+      const missingDocs = (state.checklist_status as any[]).filter(
+        (item: any) => item.is_mandatory && item.status === 'missing',
       );
 
       if (missingDocs.length === 0) {
         toast.info("Todos os documentos obrigatórios já estão presentes.");
-        return;
+        return null;
       }
 
-      toast.info(`Iniciando geração de ${missingDocs.length} documentos...`);
+      toast.info(`Iniciando geração de ${missingDocs.length} documento(s)...`);
 
-      // 2. Para cada documento faltando, chamar o serviço de geração (Edge Function)
-      // Aqui simulamos chamando a edge function 'generate-document'
-      const generationPromises = missingDocs.map(async (doc: any) => {
-        const { error } = await supabase.functions.invoke("generate-document", {
-          body: {
-            templateId: doc.template_id,
-            processId: processId,
-            // O serviço deve buscar os dados automaticamente no backend
+      const items: CanonicalBatchItem[] = missingDocs
+        .filter((d: any) => d.template_id || d.category)
+        .map((d: any) => ({
+          key: String(d.checklist_id ?? d.id ?? d.template_id ?? d.name),
+          label: String(d.name ?? d.item_name ?? "documento"),
+          input: {
+            processId,
+            templateId: d.template_id ?? null,
+            category: d.category ?? null,
+            checklistItemId: d.checklist_id ?? d.id ?? null,
+            actionIntent: "automation_batch_generate",
           },
-        });
-        if (error) {
-          const { handleGenerationError } = await import("@/services/documents/generationErrorHandler");
-          await handleGenerationError(error, { processId });
-        }
-        return { name: doc.name, success: !error };
-      });
+        }));
 
-      const results = await Promise.all(generationPromises);
-      
-      const successCount = results.filter(r => r.success).length;
-      
-      if (successCount > 0) {
-        toast.success(`${successCount} documentos gerados com sucesso!`);
-        await DocumentAutomationEngine.logEvent(processId, 'batch_generation', `${successCount} documentos gerados em lote.`);
+      const skippedNoTemplate = missingDocs.length - items.length;
+      const report = await runCanonicalBatch(items);
+
+      if (report.generated > 0 || report.reused > 0) {
+        const parts = [
+          report.generated ? `${report.generated} gerado(s)` : null,
+          report.reused ? `${report.reused} reaproveitado(s)` : null,
+          report.failed ? `${report.failed} falha(s)` : null,
+          report.skipped + skippedNoTemplate
+            ? `${report.skipped + skippedNoTemplate} ignorado(s)`
+            : null,
+        ].filter(Boolean);
+        toast.success(`Lote concluído: ${parts.join(", ")}.`);
+        await DocumentAutomationEngine.logEvent(
+          processId,
+          'batch_generation',
+          `Lote canônico: ${report.generated} gerado(s), ${report.reused} reaproveitado(s), ${report.failed} falha(s).`,
+        );
         await DocumentAutomationEngine.analyzeProcess(processId);
+      } else if (report.failed > 0) {
+        toast.error(`Falha ao gerar documentos em lote (${report.failed} item(ns)).`);
       } else {
-        toast.error("Falha ao gerar documentos em lote.");
+        toast.info("Nenhum documento gerado — verifique modelos vinculados.");
       }
 
+      return report;
     } catch (error) {
       console.error("Erro na geração em lote:", error);
       toast.error("Ocorreu um erro inesperado na geração em lote.");
+      return null;
     }
   }
+
 
   /**
    * Cria um pacote ZIP com todos os documentos do processo (Simulado).
