@@ -411,6 +411,7 @@ async function buildZip(
 
 export default function ProcessFinalDossierTab({ processId }: Props) {
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState<null | "generate" | "deliver" | "cancel" | "pdf" | "zip">(null);
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [dossier, setDossier] = useState<any>(null);
@@ -418,8 +419,12 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
 
   const reload = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
-      const b = await fetchBundle(processId);
+      const timeout = new Promise<never>((_, rej) =>
+        setTimeout(() => rej(new Error("Tempo esgotado ao carregar o dossiê (15s). Verifique sua conexão e tente novamente.")), 15000)
+      );
+      const b = await Promise.race([fetchBundle(processId), timeout]);
       setBundle(b);
       const { data } = await supabase
         .from("process_dossiers")
@@ -438,7 +443,9 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
       const certificates = (sigs ?? []).filter((s: any) => !!s.evidence_certificate_url).length;
       setSignaturesSummary({ total, completed, certificates });
     } catch (e: any) {
-      toast.error(e.message || "Falha ao carregar dossiê");
+      const msg = e?.message || "Falha ao carregar dossiê";
+      setLoadError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -448,6 +455,7 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
     reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [processId]);
+
 
   const checklist = useMemo(() => (bundle ? computeChecklist(bundle) : []), [bundle]);
   const canGenerate = checklist.length > 0 && checklist.every((c) => c.ok);
@@ -596,7 +604,34 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
     );
   }
 
-  if (!bundle) return null;
+  if (loadError) {
+    return (
+      <div className="bg-white p-8 rounded-2xl border border-red-100 shadow-sm text-center space-y-4">
+        <AlertTriangle className="h-10 w-10 text-red-500 mx-auto" />
+        <div>
+          <h3 className="text-lg font-semibold text-navy">Não foi possível carregar o dossiê</h3>
+          <p className="text-sm text-slate-500 mt-1">{loadError}</p>
+        </div>
+        <Button onClick={reload} className="gap-2">
+          <RefreshCcw className="h-4 w-4" /> Tentar novamente
+        </Button>
+      </div>
+    );
+  }
+
+  if (!bundle) {
+    return (
+      <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm text-center space-y-4">
+        <FileText className="h-10 w-10 text-slate-300 mx-auto" />
+        <p className="text-sm text-slate-500">Sem dados do processo para montar o dossiê.</p>
+        <Button variant="outline" onClick={reload} className="gap-2">
+          <RefreshCcw className="h-4 w-4" /> Recarregar
+        </Button>
+      </div>
+    );
+  }
+
+
 
   return (
     <div className="space-y-6">

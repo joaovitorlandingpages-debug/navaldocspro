@@ -62,25 +62,47 @@ function TabLoader() {
   );
 }
 
-const VALID_TABS = [
-  "overview","edit","requirements","documents","library_docs","ocr",
-  "generation","dossier_v2","history","signatures","protocol","client_portal","identity"
-] as const;
-type ProcessTab = typeof VALID_TABS[number];
+const OUTER_TABS = ["processo", "assinaturas", "dossier", "historico"] as const;
+type OuterTab = typeof OUTER_TABS[number];
+
+// Legacy → outer/sub mapping so old links (setActiveTab("dossier_v2"), etc.) keep working.
+const LEGACY_TAB_MAP: Record<string, { outer: OuterTab; sub?: string }> = {
+  overview: { outer: "processo", sub: "geral" },
+  edit: { outer: "historico", sub: "editar" },
+  requirements: { outer: "processo", sub: "checklist" },
+  documents: { outer: "processo", sub: "uploads" },
+  library_docs: { outer: "processo", sub: "documentos" },
+  ocr: { outer: "processo", sub: "ocr" },
+  generation: { outer: "processo", sub: "geracao" },
+  dossier_v2: { outer: "dossier", sub: "dossie" },
+  history: { outer: "historico", sub: "timeline" },
+  signatures: { outer: "assinaturas" },
+  protocol: { outer: "dossier", sub: "protocolo" },
+  client_portal: { outer: "dossier", sub: "portal" },
+  identity: { outer: "historico", sub: "identidade" },
+  processo: { outer: "processo", sub: "geral" },
+  assinaturas: { outer: "assinaturas" },
+  dossier: { outer: "dossier", sub: "dossie" },
+  historico: { outer: "historico", sub: "timeline" },
+};
+
 const VALID_FOCUS_ACTIONS = ["gerar","editar","anexar","assinar","historico"] as const;
 type FocusAction = typeof VALID_FOCUS_ACTIONS[number];
 
-type ProcessSearch = { tab?: ProcessTab; focus?: string; action?: FocusAction };
+type ProcessSearch = { tab?: OuterTab; sub?: string; focus?: string; action?: FocusAction };
 
 export const Route = createFileRoute("/processes/$id")({
-  validateSearch: (s: Record<string, unknown>): ProcessSearch => ({
-    tab: typeof s.tab === "string" && (VALID_TABS as readonly string[]).includes(s.tab)
-      ? (s.tab as ProcessTab)
-      : undefined,
-    focus: typeof s.focus === "string" ? s.focus : undefined,
-    action: typeof s.action === "string" && (VALID_FOCUS_ACTIONS as readonly string[]).includes(s.action)
-      ? (s.action as FocusAction) : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): ProcessSearch => {
+    const raw = typeof s.tab === "string" ? s.tab : undefined;
+    const mapped = raw ? LEGACY_TAB_MAP[raw] : undefined;
+    return {
+      tab: mapped?.outer,
+      sub: typeof s.sub === "string" ? s.sub : mapped?.sub,
+      focus: typeof s.focus === "string" ? s.focus : undefined,
+      action: typeof s.action === "string" && (VALID_FOCUS_ACTIONS as readonly string[]).includes(s.action)
+        ? (s.action as FocusAction) : undefined,
+    };
+  },
   component: ProcessDetail,
 });
 
@@ -94,16 +116,27 @@ function ProcessDetail() {
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [showAdminDetails, setShowAdminDetails] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const search = Route.useSearch();
-  const activeTab: ProcessTab = search.tab ?? "overview";
+  const activeTab: OuterTab = search.tab ?? "processo";
+  const activeSub: string = search.sub ?? (activeTab === "processo" ? "geral" : activeTab === "dossier" ? "dossie" : activeTab === "historico" ? "timeline" : "");
   const focusItemId = search.focus ?? null;
   const focusAction = search.action ?? null;
   const setActiveTab = useCallback((tab: string) => {
+    const mapped = LEGACY_TAB_MAP[tab] ?? { outer: "processo" as OuterTab };
     navigate({
       to: "/processes/$id",
       params: { id },
-      search: (prev: any) => ({ ...prev, tab: (VALID_TABS as readonly string[]).includes(tab) ? (tab as ProcessTab) : ("overview" as ProcessTab) }),
+      search: (prev: any) => ({ ...prev, tab: mapped.outer, sub: mapped.sub }),
+      replace: true,
+    });
+  }, [id, navigate]);
+  const setActiveSub = useCallback((sub: string) => {
+    navigate({
+      to: "/processes/$id",
+      params: { id },
+      search: (prev: any) => ({ ...prev, sub }),
       replace: true,
     });
   }, [id, navigate]);
@@ -123,6 +156,7 @@ function ProcessDetail() {
       replace: true,
     });
   }, [id, navigate]);
+
   const [selectedTemplateForGen, setSelectedTemplateForGen] = useState<any | null>(null);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [editInitialTab, setEditInitialTab] = useState<string | undefined>(undefined);
@@ -489,40 +523,113 @@ function ProcessDetail() {
       <OperationalGuide />
 
       <Suspense fallback={<TabLoader />}>
-      <div className="grid lg:grid-cols-4 gap-8">
-         <div className="lg:col-span-3 space-y-8">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex w-full overflow-x-auto custom-scrollbar h-auto justify-start gap-1">
-                   <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geral</TabsTrigger>
-                   <TabsTrigger value="edit" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                     <Pencil className="h-3 w-3" /> Editar
-                   </TabsTrigger>
-                   <TabsTrigger value="requirements" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                     Checklist
-                   </TabsTrigger>
-                   <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Uploads</TabsTrigger>
-                   <TabsTrigger value="library_docs" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
-                     <FileCheck className="h-3 w-3" /> Documentos
-                   </TabsTrigger>
-                   <TabsTrigger value="ocr" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
-                     <Zap className="h-3 w-3" /> OCR
-                   </TabsTrigger>
-                    <TabsTrigger value="generation" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geração</TabsTrigger>
-                    <TabsTrigger value="dossier_v2" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                      <FilePlus className="h-3.5 w-3.5" /> Dossiê
-                    </TabsTrigger>
-                    <TabsTrigger value="history" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Timeline</TabsTrigger>
-                   <TabsTrigger value="signatures" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                     <Signature className="h-3 w-3" /> Assinaturas
-                   </TabsTrigger>
-                   <TabsTrigger value="protocol" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Protocolo</TabsTrigger>
-                   <TabsTrigger value="client_portal" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                     <Link2 className="h-3 w-3" /> Portal Cliente
-                   </TabsTrigger>
-                   <TabsTrigger value="identity" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                     <Palette className="h-3 w-3" /> Identidade
-                   </TabsTrigger>
-                </TabsList>
+      <div className="space-y-6">
+         <div>
+            {(() => {
+              // Map (outer, sub) → legacy inner value used by TabsContent below.
+              const innerMap: Record<string, string> = {
+                "processo/geral": "overview",
+                "processo/checklist": "requirements",
+                "processo/uploads": "documents",
+                "processo/documentos": "library_docs",
+                "processo/ocr": "ocr",
+                "processo/geracao": "generation",
+                "assinaturas/": "signatures",
+                "dossier/dossie": "dossier_v2",
+                "dossier/portal": "client_portal",
+                "dossier/protocolo": "protocol",
+                "historico/timeline": "history",
+                "historico/identidade": "identity",
+                "historico/editar": "edit",
+              };
+              const key = `${activeTab}/${activeSub ?? ""}`;
+              const innerValue = innerMap[key] ?? innerMap[`${activeTab}/`] ?? "overview";
+              return (
+            <Tabs value={innerValue} onValueChange={setActiveTab} className="w-full">
+                {/* Outer 4-tab nav */}
+                <div className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-3 flex w-full overflow-x-auto custom-scrollbar h-auto justify-start gap-1">
+                  {([
+                    { key: "processo", label: "Processo", icon: <FileCheck className="h-3 w-3" /> },
+                    { key: "assinaturas", label: "Assinaturas", icon: <Signature className="h-3 w-3" /> },
+                    { key: "dossier", label: "Dossiê", icon: <FilePlus className="h-3 w-3" /> },
+                    { key: "historico", label: "Histórico", icon: <History className="h-3 w-3" /> },
+                  ] as const).map((t) => (
+                    <button
+                      key={t.key}
+                      onClick={() => setActiveTab(t.key)}
+                      className={`rounded-xl px-4 sm:px-6 py-2.5 font-bold text-xs uppercase tracking-widest flex items-center gap-2 whitespace-nowrap transition ${
+                        activeTab === t.key
+                          ? "bg-white shadow-sm text-navy"
+                          : "text-slate-500 hover:text-navy"
+                      }`}
+                    >
+                      {t.icon} {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Contextual sub-nav */}
+                {activeTab === "processo" && (
+                  <div className="flex w-full overflow-x-auto custom-scrollbar gap-1 mb-6 pb-1">
+                    {[
+                      { k: "geral", l: "Visão geral" },
+                      { k: "checklist", l: "Checklist" },
+                      { k: "documentos", l: "Documentos" },
+                      { k: "uploads", l: "Uploads" },
+                      { k: "ocr", l: "OCR" },
+                      { k: "geracao", l: "Geração" },
+                    ].map((s) => (
+                      <button
+                        key={s.k}
+                        onClick={() => setActiveSub(s.k)}
+                        className={`rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition ${
+                          activeSub === s.k ? "bg-navy text-white" : "text-slate-500 hover:bg-slate-100"
+                        }`}
+                      >
+                        {s.l}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {activeTab === "dossier" && (
+                  <div className="flex w-full overflow-x-auto custom-scrollbar gap-1 mb-6 pb-1">
+                    {[
+                      { k: "dossie", l: "Dossiê final" },
+                      { k: "portal", l: "Portal do cliente" },
+                      { k: "protocolo", l: "Protocolo" },
+                    ].map((s) => (
+                      <button
+                        key={s.k}
+                        onClick={() => setActiveSub(s.k)}
+                        className={`rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition ${
+                          activeSub === s.k ? "bg-navy text-white" : "text-slate-500 hover:bg-slate-100"
+                        }`}
+                      >
+                        {s.l}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {activeTab === "historico" && (
+                  <div className="flex w-full overflow-x-auto custom-scrollbar gap-1 mb-6 pb-1">
+                    {[
+                      { k: "timeline", l: "Timeline" },
+                      { k: "identidade", l: "Identidade" },
+                      { k: "editar", l: "Editar" },
+                    ].map((s) => (
+                      <button
+                        key={s.k}
+                        onClick={() => setActiveSub(s.k)}
+                        className={`rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition ${
+                          activeSub === s.k ? "bg-navy text-white" : "text-slate-500 hover:bg-slate-100"
+                        }`}
+                      >
+                        {s.l}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
 
                 <TabsContent value="identity" className="animate-in fade-in duration-300">
                    <ProcessIdentityPanel processId={id} />
@@ -824,84 +931,80 @@ function ProcessDetail() {
                  <ClientPortalPanel processId={id} />
                </TabsContent>
             </Tabs>
+              );
+            })()}
          </div>
 
-         {/* Sidebar */}
-         <aside className="space-y-8">
-            <IntelligencePanel />
-            
-            <div className="bg-navy p-8 rounded-3xl text-white shadow-xl shadow-navy/20">
-               <h3 className="text-sm font-semibold text-slate-400 mb-6">Ações Rápidas</h3>
-               <div className="space-y-3">
-                  <Button 
-                    className="w-full bg-primary hover:opacity-90 text-white h-12 rounded-2xl font-bold gap-2"
-                    onClick={async () => {
-                      setIsGenerating(true);
-                      const { data } = await supabase.from('document_templates').select('*').eq('name', 'Requerimento DPC-2211').single();
-                      if (data) setSelectedTemplateForGen(data);
-                      setIsGenerating(false);
-                    }}
-                  >
-                     {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FilePlus className="h-4 w-4" />} 
-                     Gerar Requerimento
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full h-12 rounded-2xl font-bold gap-2 border-white/10 text-white hover:bg-white/5"
-                    onClick={() => setActiveTab("signatures")}
-                  >
-                     <Signature className="h-4 w-4" /> Enviar para Assinatura
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full h-12 rounded-2xl font-bold gap-2 border-white/10 text-white hover:bg-white/5"
-                    onClick={() => setActiveTab("client_portal")}
-                  >
-                     <Link2 className="h-4 w-4" /> Portal do Cliente
-                  </Button>
-               </div>
-            </div>
+         {/* Full-width chat + optional admin details */}
+         <div className="grid lg:grid-cols-3 gap-6">
+           <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col h-[420px] overflow-hidden">
+             <div className="p-4 border-b bg-slate-50/50 flex justify-between items-center">
+                <h3 className="text-sm font-semibold text-navy flex items-center gap-2">
+                   <MessageSquare className="h-4 w-4 text-primary" /> Notas internas
+                </h3>
+             </div>
+             <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+                <div className="space-y-3">
+                   {comments.map((comment) => (
+                      <div key={comment.id} className={`flex flex-col ${comment.user_id === profile?.id ? "items-end" : "items-start"}`}>
+                         <div className={`max-w-[90%] p-3 rounded-2xl text-xs ${
+                            comment.user_id === profile?.id
+                               ? "bg-navy text-white rounded-tr-none"
+                               : "bg-slate-100 text-navy rounded-tl-none"
+                         }`}>
+                            {comment.content}
+                         </div>
+                         <span className="text-[8px] font-black text-slate-400 uppercase mt-1">
+                            {comment.profiles?.name} • {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}
+                         </span>
+                      </div>
+                   ))}
+                   {comments.length === 0 && (
+                     <p className="text-xs text-slate-400 text-center py-8">Nenhuma nota interna ainda.</p>
+                   )}
+                </div>
+             </ScrollArea>
+             <form onSubmit={handleSendComment} className="p-3 border-t bg-white flex gap-2">
+                <Input
+                   placeholder="Nota interna..."
+                   value={newComment}
+                   onChange={(e) => setNewComment(e.target.value)}
+                   className="h-10 rounded-xl bg-slate-50 text-xs"
+                />
+                <Button size="icon" type="submit" className="h-10 w-10 shrink-0 rounded-xl bg-primary">
+                   <Send className="h-4 w-4" />
+                </Button>
+             </form>
+           </div>
 
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col h-[500px] overflow-hidden">
-               <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
-                  <h3 className="text-sm font-semibold text-navy flex items-center gap-2">
-                     <MessageSquare className="h-4 w-4 text-primary" /> Chat Interno
-                  </h3>
-               </div>
-               
-               <ScrollArea className="flex-1 p-6" ref={scrollRef}>
-                  <div className="space-y-4">
-                     {comments.map((comment) => (
-                        <div key={comment.id} className={`flex flex-col ${comment.user_id === profile?.id ? "items-end" : "items-start"}`}>
-                           <div className={`max-w-[90%] p-3 rounded-2xl text-xs ${
-                              comment.user_id === profile?.id 
-                                 ? "bg-navy text-white rounded-tr-none" 
-                                 : "bg-slate-100 text-navy rounded-tl-none"
-                           }`}>
-                              {comment.content}
-                           </div>
-                           <span className="text-[8px] font-black text-slate-400 uppercase mt-1">
-                              {comment.profiles?.name} • {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}
-                           </span>
-                        </div>
-                     ))}
-                  </div>
-               </ScrollArea>
+           {/* Admin-only technical details, collapsed by default */}
+           {(profile?.role === "admin_master" || profile?.role === "admin_master_global") && (
+             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+               <button
+                 onClick={() => setShowAdminDetails((v) => !v)}
+                 className="w-full flex items-center justify-between text-left"
+               >
+                 <span className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                   <Info className="h-3.5 w-3.5" /> Detalhes técnicos (admin)
+                 </span>
+                 <span className="text-xs text-slate-400">{showAdminDetails ? "Ocultar" : "Mostrar"}</span>
+               </button>
+               {showAdminDetails && (
+                 <div className="mt-4 space-y-2 text-[11px] font-mono text-slate-600">
+                   <div><span className="text-slate-400">process.id:</span> {process?.id}</div>
+                   <div><span className="text-slate-400">status:</span> {process?.status}</div>
+                   <div><span className="text-slate-400">company_id:</span> {process?.company_id}</div>
+                   <div><span className="text-slate-400">version:</span> {process?.version ?? "—"}</div>
+                   <div><span className="text-slate-400">automation_ready:</span> {String(automationState?.is_ready_for_generation ?? false)}</div>
+                   <div><span className="text-slate-400">completion:</span> {automationState?.completion_percentage ?? 0}%</div>
+                 </div>
+               )}
+             </div>
+           )}
+         </div>
+       </div>
 
-               <form onSubmit={handleSendComment} className="p-4 border-t bg-white flex gap-2">
-                  <Input 
-                     placeholder="Nota interna..." 
-                     value={newComment}
-                     onChange={(e) => setNewComment(e.target.value)}
-                     className="h-10 rounded-xl bg-slate-50 text-xs"
-                  />
-                  <Button size="icon" type="submit" className="h-10 w-10 shrink-0 rounded-xl bg-primary">
-                     <Send className="h-4 w-4" />
-                  </Button>
-               </form>
-            </div>
-         </aside>
-      </div>
+
 
       <ProcessEditSheet
         process={process}

@@ -44,8 +44,11 @@ function dueInfo(due?: string | null) {
 
 export function ProcessTopBar({ process, onChanged, automationReady, onFinalize, onEdit, pendingDossierItems }: Props) {
   if (!process) return null;
+  const isFinalized = ["completed", "finalized", "archived"].includes(String(process.status ?? "").toLowerCase()) || !!process.finalized_at;
   const due = dueInfo(process.due_date);
-  const progress = Math.max(0, Math.min(100, process.completion_percentage ?? 0));
+  const rawProgress = process.completion_percentage ?? 0;
+  const progress = isFinalized ? 100 : Math.max(0, Math.min(100, rawProgress));
+
   const customerName = process.customer?.name ?? process.customers?.name ?? "—";
   const vesselName = process.vessel?.name ?? process.vessels?.name ?? "Sem embarcação";
   const title = process.title || process.process_type || "Processo";
@@ -125,7 +128,7 @@ export function ProcessTopBar({ process, onChanged, automationReady, onFinalize,
               <Pencil className="h-4 w-4" /> Editar
             </Button>
           )}
-          {onFinalize && automationReady && (pendingDossierItems?.length ?? 0) === 0 && (
+          {onFinalize && !isFinalized && automationReady && (pendingDossierItems?.length ?? 0) === 0 && (
             <Button
               size="sm"
               className="h-9 rounded-xl gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
@@ -135,7 +138,7 @@ export function ProcessTopBar({ process, onChanged, automationReady, onFinalize,
               Concluir processo
             </Button>
           )}
-          {onFinalize && (!automationReady || (pendingDossierItems?.length ?? 0) > 0) && (
+          {onFinalize && !isFinalized && (!automationReady || (pendingDossierItems?.length ?? 0) > 0) && (
             <div
               className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-xl bg-slate-100 text-slate-500 text-[11px] font-semibold max-w-[320px] truncate"
               title={`Para gerar o dossiê falta: ${(pendingDossierItems ?? []).join(", ") || "concluir todos os documentos obrigatórios"}`}
@@ -147,6 +150,12 @@ export function ProcessTopBar({ process, onChanged, automationReady, onFinalize,
               </span>
             </div>
           )}
+          {isFinalized && (
+            <div className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded-xl bg-emerald-50 text-emerald-700 text-[11px] font-bold">
+              <CheckCircle2 className="h-4 w-4" /> Finalizado
+            </div>
+          )}
+
           <ProcessActionsMenu
             process={process}
             onChanged={onChanged}
