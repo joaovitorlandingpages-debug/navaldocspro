@@ -617,6 +617,27 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
           </div>
         </DialogHeader>
 
+        {pendingDraft && (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 flex flex-col sm:flex-row sm:items-center gap-2 justify-between mb-2">
+            <div className="text-sm text-amber-900">
+              <strong>Rascunho encontrado.</strong>{" "}
+              {Array.isArray(pendingDraft.filesMeta) && pendingDraft.filesMeta.length > 0
+                ? "Os arquivos precisarão ser selecionados novamente."
+                : "Deseja retomar de onde parou?"}
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={discardDraft}>Descartar</Button>
+              <Button size="sm" onClick={resumeDraft}>Retomar rascunho</Button>
+            </div>
+          </div>
+        )}
+        {draftSavedAt && !pendingDraft && (
+          <div className="text-[10px] text-slate-400 -mt-1">
+            Rascunho salvo automaticamente às {draftSavedAt.toLocaleTimeString()}
+          </div>
+        )}
+
+
         <div className="flex-1 overflow-y-auto pr-1 py-2">
           {step === 1 && (
             <div className="space-y-4">
