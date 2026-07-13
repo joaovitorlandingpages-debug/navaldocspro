@@ -6701,6 +6701,21 @@ export type Database = {
         }
         Returns: string
       }
+      template_generate_document: {
+        Args: {
+          p_customer_id?: string
+          p_idempotency_key: string
+          p_name?: string
+          p_placeholders_used?: Json
+          p_process_id: string
+          p_rendered_content: string
+          p_rendered_hash: string
+          p_template_id: string
+          p_variables_used?: Json
+          p_vessel_id?: string
+        }
+        Returns: Json
+      }
       template_publish_version: {
         Args: {
           p_base_content?: string
@@ -6716,6 +6731,10 @@ export type Database = {
       template_set_default: {
         Args: { p_template_id: string }
         Returns: undefined
+      }
+      template_start_new_draft: {
+        Args: { p_template_id: string }
+        Returns: string
       }
       template_unset_default: {
         Args: { p_template_id: string }
