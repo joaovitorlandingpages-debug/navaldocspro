@@ -40,7 +40,7 @@ function ProcessTypesPage() {
       {isLoading && <p className="text-sm text-slate-500">Carregando...</p>}
       {!isLoading && (data?.length ?? 0) === 0 && <Empty title="Nenhum tipo de processo cadastrado" />}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {(data ?? []).map((p) => (
+        {(data ?? []).map((p: any) => (
           <Card key={p.id} className="p-5 border-slate-100">
             <div className="flex items-start justify-between mb-3">
               <div>
