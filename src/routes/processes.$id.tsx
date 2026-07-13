@@ -931,83 +931,79 @@ function ProcessDetail() {
                  <ClientPortalPanel processId={id} />
                </TabsContent>
             </Tabs>
+              );
+            })()}
          </div>
 
-         {/* Sidebar */}
-         <aside className="space-y-8">
-            <IntelligencePanel />
-            
-            <div className="bg-navy p-8 rounded-3xl text-white shadow-xl shadow-navy/20">
-               <h3 className="text-sm font-semibold text-slate-400 mb-6">Ações Rápidas</h3>
-               <div className="space-y-3">
-                  <Button 
-                    className="w-full bg-primary hover:opacity-90 text-white h-12 rounded-2xl font-bold gap-2"
-                    onClick={async () => {
-                      setIsGenerating(true);
-                      const { data } = await supabase.from('document_templates').select('*').eq('name', 'Requerimento DPC-2211').single();
-                      if (data) setSelectedTemplateForGen(data);
-                      setIsGenerating(false);
-                    }}
-                  >
-                     {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FilePlus className="h-4 w-4" />} 
-                     Gerar Requerimento
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full h-12 rounded-2xl font-bold gap-2 border-white/10 text-white hover:bg-white/5"
-                    onClick={() => setActiveTab("signatures")}
-                  >
-                     <Signature className="h-4 w-4" /> Enviar para Assinatura
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full h-12 rounded-2xl font-bold gap-2 border-white/10 text-white hover:bg-white/5"
-                    onClick={() => setActiveTab("client_portal")}
-                  >
-                     <Link2 className="h-4 w-4" /> Portal do Cliente
-                  </Button>
-               </div>
-            </div>
+         {/* Full-width chat + optional admin details */}
+         <div className="grid lg:grid-cols-3 gap-6">
+           <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col h-[420px] overflow-hidden">
+             <div className="p-4 border-b bg-slate-50/50 flex justify-between items-center">
+                <h3 className="text-sm font-semibold text-navy flex items-center gap-2">
+                   <MessageSquare className="h-4 w-4 text-primary" /> Notas internas
+                </h3>
+             </div>
+             <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+                <div className="space-y-3">
+                   {comments.map((comment) => (
+                      <div key={comment.id} className={`flex flex-col ${comment.user_id === profile?.id ? "items-end" : "items-start"}`}>
+                         <div className={`max-w-[90%] p-3 rounded-2xl text-xs ${
+                            comment.user_id === profile?.id
+                               ? "bg-navy text-white rounded-tr-none"
+                               : "bg-slate-100 text-navy rounded-tl-none"
+                         }`}>
+                            {comment.content}
+                         </div>
+                         <span className="text-[8px] font-black text-slate-400 uppercase mt-1">
+                            {comment.profiles?.name} • {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}
+                         </span>
+                      </div>
+                   ))}
+                   {comments.length === 0 && (
+                     <p className="text-xs text-slate-400 text-center py-8">Nenhuma nota interna ainda.</p>
+                   )}
+                </div>
+             </ScrollArea>
+             <form onSubmit={handleSendComment} className="p-3 border-t bg-white flex gap-2">
+                <Input
+                   placeholder="Nota interna..."
+                   value={newComment}
+                   onChange={(e) => setNewComment(e.target.value)}
+                   className="h-10 rounded-xl bg-slate-50 text-xs"
+                />
+                <Button size="icon" type="submit" className="h-10 w-10 shrink-0 rounded-xl bg-primary">
+                   <Send className="h-4 w-4" />
+                </Button>
+             </form>
+           </div>
 
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col h-[500px] overflow-hidden">
-               <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
-                  <h3 className="text-sm font-semibold text-navy flex items-center gap-2">
-                     <MessageSquare className="h-4 w-4 text-primary" /> Chat Interno
-                  </h3>
-               </div>
-               
-               <ScrollArea className="flex-1 p-6" ref={scrollRef}>
-                  <div className="space-y-4">
-                     {comments.map((comment) => (
-                        <div key={comment.id} className={`flex flex-col ${comment.user_id === profile?.id ? "items-end" : "items-start"}`}>
-                           <div className={`max-w-[90%] p-3 rounded-2xl text-xs ${
-                              comment.user_id === profile?.id 
-                                 ? "bg-navy text-white rounded-tr-none" 
-                                 : "bg-slate-100 text-navy rounded-tl-none"
-                           }`}>
-                              {comment.content}
-                           </div>
-                           <span className="text-[8px] font-black text-slate-400 uppercase mt-1">
-                              {comment.profiles?.name} • {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}
-                           </span>
-                        </div>
-                     ))}
-                  </div>
-               </ScrollArea>
+           {/* Admin-only technical details, collapsed by default */}
+           {(profile?.role === "admin_master" || profile?.role === "admin_master_global") && (
+             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+               <button
+                 onClick={() => setShowAdminDetails((v) => !v)}
+                 className="w-full flex items-center justify-between text-left"
+               >
+                 <span className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                   <Info className="h-3.5 w-3.5" /> Detalhes técnicos (admin)
+                 </span>
+                 <span className="text-xs text-slate-400">{showAdminDetails ? "Ocultar" : "Mostrar"}</span>
+               </button>
+               {showAdminDetails && (
+                 <div className="mt-4 space-y-2 text-[11px] font-mono text-slate-600">
+                   <div><span className="text-slate-400">process.id:</span> {process?.id}</div>
+                   <div><span className="text-slate-400">status:</span> {process?.status}</div>
+                   <div><span className="text-slate-400">company_id:</span> {process?.company_id}</div>
+                   <div><span className="text-slate-400">version:</span> {process?.version ?? "—"}</div>
+                   <div><span className="text-slate-400">automation_ready:</span> {String(automationState?.is_ready_for_generation ?? false)}</div>
+                   <div><span className="text-slate-400">completion:</span> {automationState?.completion_percentage ?? 0}%</div>
+                 </div>
+               )}
+             </div>
+           )}
+         </div>
+      </div>
 
-               <form onSubmit={handleSendComment} className="p-4 border-t bg-white flex gap-2">
-                  <Input 
-                     placeholder="Nota interna..." 
-                     value={newComment}
-                     onChange={(e) => setNewComment(e.target.value)}
-                     className="h-10 rounded-xl bg-slate-50 text-xs"
-                  />
-                  <Button size="icon" type="submit" className="h-10 w-10 shrink-0 rounded-xl bg-primary">
-                     <Send className="h-4 w-4" />
-                  </Button>
-               </form>
-            </div>
-         </aside>
       </div>
 
       <ProcessEditSheet
