@@ -115,6 +115,7 @@ import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
 import { Route as AdminDocsCentralIndexRouteImport } from './routes/admin/docs-central/index'
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
+import { Route as AdminDocsCentralModelsRouteImport } from './routes/admin/docs-central/models'
 
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
@@ -650,6 +651,11 @@ const AdminTemplatesIdRoute = AdminTemplatesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminTemplatesRoute,
 } as any)
+const AdminDocsCentralModelsRoute = AdminDocsCentralModelsRouteImport.update({
+  id: '/models',
+  path: '/models',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -755,6 +761,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
@@ -859,6 +866,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/processes': typeof ProcessesIndexRoute
   '/templates': typeof TemplatesIndexRoute
+  '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/admin/docs-central': typeof AdminDocsCentralIndexRoute
@@ -968,6 +976,7 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
@@ -1078,6 +1087,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/processes/'
     | '/templates/'
+    | '/admin/docs-central/models'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/admin/docs-central/'
@@ -1182,6 +1192,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/processes'
     | '/templates'
+    | '/admin/docs-central/models'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/admin/docs-central'
@@ -1290,6 +1301,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/processes/'
     | '/templates/'
+    | '/admin/docs-central/models'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/admin/docs-central/'
@@ -2100,14 +2112,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTemplatesIdRouteImport
       parentRoute: typeof AdminTemplatesRoute
     }
+    '/admin/docs-central/models': {
+      id: '/admin/docs-central/models'
+      path: '/models'
+      fullPath: '/admin/docs-central/models'
+      preLoaderRoute: typeof AdminDocsCentralModelsRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
   }
 }
 
 interface AdminDocsCentralRouteChildren {
+  AdminDocsCentralModelsRoute: typeof AdminDocsCentralModelsRoute
   AdminDocsCentralIndexRoute: typeof AdminDocsCentralIndexRoute
 }
 
 const AdminDocsCentralRouteChildren: AdminDocsCentralRouteChildren = {
+  AdminDocsCentralModelsRoute: AdminDocsCentralModelsRoute,
   AdminDocsCentralIndexRoute: AdminDocsCentralIndexRoute,
 }
 
