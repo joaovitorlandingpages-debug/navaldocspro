@@ -116,6 +116,7 @@ import { Route as AdminDocsCentralIndexRouteImport } from './routes/admin/docs-c
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
 import { Route as AdminDocsCentralVersionsRouteImport } from './routes/admin/docs-central/versions'
+import { Route as AdminDocsCentralSetupAssistantRouteImport } from './routes/admin/docs-central/setup-assistant'
 import { Route as AdminDocsCentralReviewRouteImport } from './routes/admin/docs-central/review'
 import { Route as AdminDocsCentralPublishingRouteImport } from './routes/admin/docs-central/publishing'
 import { Route as AdminDocsCentralProcessTypesRouteImport } from './routes/admin/docs-central/process-types'
@@ -666,6 +667,12 @@ const AdminDocsCentralVersionsRoute =
     path: '/versions',
     getParentRoute: () => AdminDocsCentralRoute,
   } as any)
+const AdminDocsCentralSetupAssistantRoute =
+  AdminDocsCentralSetupAssistantRouteImport.update({
+    id: '/setup-assistant',
+    path: '/setup-assistant',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
 const AdminDocsCentralReviewRoute = AdminDocsCentralReviewRouteImport.update({
   id: '/review',
   path: '/review',
@@ -829,6 +836,7 @@ export interface FileRoutesByFullPath {
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
   '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
   '/admin/docs-central/review': typeof AdminDocsCentralReviewRoute
+  '/admin/docs-central/setup-assistant': typeof AdminDocsCentralSetupAssistantRoute
   '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
@@ -943,6 +951,7 @@ export interface FileRoutesByTo {
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
   '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
   '/admin/docs-central/review': typeof AdminDocsCentralReviewRoute
+  '/admin/docs-central/setup-assistant': typeof AdminDocsCentralSetupAssistantRoute
   '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
@@ -1062,6 +1071,7 @@ export interface FileRoutesById {
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
   '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
   '/admin/docs-central/review': typeof AdminDocsCentralReviewRoute
+  '/admin/docs-central/setup-assistant': typeof AdminDocsCentralSetupAssistantRoute
   '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
@@ -1182,6 +1192,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/process-types'
     | '/admin/docs-central/publishing'
     | '/admin/docs-central/review'
+    | '/admin/docs-central/setup-assistant'
     | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
@@ -1296,6 +1307,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/process-types'
     | '/admin/docs-central/publishing'
     | '/admin/docs-central/review'
+    | '/admin/docs-central/setup-assistant'
     | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
@@ -1414,6 +1426,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/process-types'
     | '/admin/docs-central/publishing'
     | '/admin/docs-central/review'
+    | '/admin/docs-central/setup-assistant'
     | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
@@ -2232,6 +2245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocsCentralVersionsRouteImport
       parentRoute: typeof AdminDocsCentralRoute
     }
+    '/admin/docs-central/setup-assistant': {
+      id: '/admin/docs-central/setup-assistant'
+      path: '/setup-assistant'
+      fullPath: '/admin/docs-central/setup-assistant'
+      preLoaderRoute: typeof AdminDocsCentralSetupAssistantRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
     '/admin/docs-central/review': {
       id: '/admin/docs-central/review'
       path: '/review'
@@ -2308,6 +2328,7 @@ interface AdminDocsCentralRouteChildren {
   AdminDocsCentralProcessTypesRoute: typeof AdminDocsCentralProcessTypesRoute
   AdminDocsCentralPublishingRoute: typeof AdminDocsCentralPublishingRoute
   AdminDocsCentralReviewRoute: typeof AdminDocsCentralReviewRoute
+  AdminDocsCentralSetupAssistantRoute: typeof AdminDocsCentralSetupAssistantRoute
   AdminDocsCentralVersionsRoute: typeof AdminDocsCentralVersionsRoute
   AdminDocsCentralIndexRoute: typeof AdminDocsCentralIndexRoute
 }
@@ -2322,6 +2343,7 @@ const AdminDocsCentralRouteChildren: AdminDocsCentralRouteChildren = {
   AdminDocsCentralProcessTypesRoute: AdminDocsCentralProcessTypesRoute,
   AdminDocsCentralPublishingRoute: AdminDocsCentralPublishingRoute,
   AdminDocsCentralReviewRoute: AdminDocsCentralReviewRoute,
+  AdminDocsCentralSetupAssistantRoute: AdminDocsCentralSetupAssistantRoute,
   AdminDocsCentralVersionsRoute: AdminDocsCentralVersionsRoute,
   AdminDocsCentralIndexRoute: AdminDocsCentralIndexRoute,
 }
