@@ -746,6 +746,23 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
           </div>
         </DialogHeader>
 
+        {pendingDraft && (
+          <div className="mx-4 sm:mx-6 mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 flex flex-col sm:flex-row sm:items-center gap-2 justify-between">
+            <div className="text-sm text-amber-900">
+              <strong>Rascunho encontrado.</strong> Deseja retomar de onde parou?
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={discardDraft}>Descartar</Button>
+              <Button size="sm" onClick={resumeDraft}>Retomar rascunho</Button>
+            </div>
+          </div>
+        )}
+        {draftSavedAt && !pendingDraft && (
+          <div className="px-4 sm:px-6 -mb-1 mt-1 text-[10px] text-slate-400">
+            Rascunho salvo automaticamente às {draftSavedAt.toLocaleTimeString()}
+          </div>
+        )}
+
         <div className="flex-1 min-h-0 flex overflow-hidden">
           <StepSidebar step={step} onJump={(n) => n < step && setStep(n)} />
 
