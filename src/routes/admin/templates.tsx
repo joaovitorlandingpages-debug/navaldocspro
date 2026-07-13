@@ -396,7 +396,6 @@ function AdminTemplatesPage() {
           </div>
         )}
       </div>
-      </div>
 
       <NewTemplateDialog
         open={newOpen}
