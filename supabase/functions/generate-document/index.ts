@@ -307,12 +307,33 @@ serve(async (req) => {
     await rateLimit(ctx.admin, `user:${ctx.userId}`, 'generate-document', 30, 60)
     if (ctx.companyId) await rateLimit(ctx.admin, `company:${ctx.companyId}`, 'generate-document', 120, 60)
 
-    const { templateId, customerId, vesselId, processId, fieldValues, idempotencyKey } = await req.json()
+    const payload = await req.json()
+
+    // ==========================================================================
+    // MODO NOVO — Sub-fatia F.2.a
+    // Caller já criou a linha canônica via `template_generate_document` (RPC).
+    // A Edge apenas lê o snapshot congelado, gera PDF e atualiza a MESMA linha.
+    // Não resolve template, não cria linha, não troca versão, não reinterpreta.
+    // ==========================================================================
+    if (payload && typeof payload.generatedDocumentId === 'string' && payload.generatedDocumentId) {
+      return await handleNewModeGeneration(ctx, payload.generatedDocumentId)
+    }
+
+    // ------------------- MODO LEGADO (deprecated) -------------------
+    // Mantido até F.2.b–F.2.e migrarem todos os callers (C1–C9).
+    console.warn('[generate-document][LEGACY_MODE]', {
+      userId: ctx.userId,
+      companyId: ctx.companyId,
+      templateId: payload?.templateId,
+      processId: payload?.processId,
+    })
+    const { templateId, customerId, vesselId, processId, fieldValues, idempotencyKey } = payload
     // companyId NEVER trusted from payload — derived from authenticated profile
     const companyId = ctx.companyId
     if (!companyId && !ctx.isAdminMaster) throw new HttpError(403, { error: 'no_company_bound' })
 
     const supabaseAdmin = ctx.admin
+
 
     const { data: template, error: templateError } = await supabaseAdmin
       .from('document_templates')
@@ -758,4 +779,177 @@ function flattenValues(input: any, prefix = ""): any {
     out["sistema.data_atual"] = new Date().toLocaleDateString('pt-BR');
   }
   return out;
+}
+
+// ============================================================================
+// MODO NOVO (Sub-fatia F.2.a) — geração a partir do snapshot congelado.
+// A Edge NUNCA resolve template, NUNCA cria linha, NUNCA reinterpreta.
+// ============================================================================
+async function handleNewModeGeneration(
+  ctx: Awaited<ReturnType<typeof authContext>>,
+  generatedDocumentId: string,
+): Promise<Response> {
+  const admin = ctx.admin
+
+  const { data: row, error: rowErr } = await admin
+    .from('generated_documents')
+    .select('id, company_id, process_id, template_id, template_version_id, template_snapshot, document_structure_snapshot, name, status, generated_file_url, metadata, idempotency_key')
+    .eq('id', generatedDocumentId)
+    .maybeSingle()
+
+  if (rowErr || !row) throw new HttpError(404, { error: 'generated_document_not_found' })
+
+  // Tenant + processo finalizado.
+  ctx.requireCompany(row.company_id)
+  await assertProcessNotFinalized(admin, row.process_id ?? undefined, ctx.isAdminMaster)
+
+  // Reuso idempotente: já gerou PDF? devolve como está.
+  if (row.generated_file_url && row.status === 'generated') {
+    return jsonResponse({
+      success: true,
+      mode: 'new',
+      idempotent: true,
+      document: row,
+      url: row.generated_file_url,
+      verificationCode: (row.metadata as any)?.verificationCode,
+    })
+  }
+
+  // Consume PDF quota (mesma request_id = idempotency_key evita cobrança dupla).
+  const requestId = row.idempotency_key || generatedDocumentId
+  if (row.company_id) {
+    await consume(admin, row.company_id, 'pdf_generation', 1, requestId, {
+      generatedDocumentId,
+      mode: 'new',
+    })
+  }
+
+  try {
+    const snapshot = (row.template_snapshot as Record<string, unknown> | null) ?? {}
+    const renderedContent = typeof snapshot.rendered_content === 'string' ? snapshot.rendered_content : ''
+    if (!renderedContent) throw new HttpError(422, { error: 'snapshot_missing_rendered_content' })
+
+    const templateName = (typeof snapshot.template_name === 'string' && snapshot.template_name) || row.name || 'Documento'
+    const branding = await loadBranding(admin, row.company_id ?? '')
+    const verificationCode = (row.metadata as any)?.verificationCode || crypto.randomUUID().slice(0, 8).toUpperCase()
+
+    let processNumber: string | undefined
+    if (row.process_id) {
+      const { data: proc } = await admin
+        .from('processes')
+        .select('process_number, protocol_number')
+        .eq('id', row.process_id)
+        .maybeSingle()
+      processNumber = proc?.process_number || proc?.protocol_number || undefined
+    }
+
+    // rendered_content é HTML sanitizado (do templateRenderer). Convertemos
+    // para texto simples para o pipeline PDF atual — sem reinterpretar variáveis.
+    const plainText = renderedContent
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, '\n')
+      .replace(/<li[^>]*>/gi, '• ')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+
+    const pdfDoc = await PDFDocument.create()
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+    const TOP_MARGIN = 90
+    const BOTTOM_MARGIN = 70
+    const margin = 50
+    const fontSize = 11
+    const lineHeight = 14
+
+    let page = pdfDoc.addPage([595.28, 841.89])
+    const { height } = page.getSize()
+    let currentY = height - TOP_MARGIN
+    for (const rawLine of plainText.split('\n')) {
+      if (currentY < BOTTOM_MARGIN + lineHeight) {
+        page = pdfDoc.addPage([595.28, 841.89])
+        currentY = height - TOP_MARGIN
+      }
+      const isTitle = rawLine === rawLine.toUpperCase() && rawLine.trim().length > 3
+      page.drawText(rawLine, {
+        x: margin,
+        y: currentY,
+        size: isTitle ? fontSize + 1 : fontSize,
+        font: isTitle ? boldFont : font,
+        color: rgb(0, 0, 0),
+        maxWidth: 595.28 - margin * 2,
+      })
+      currentY -= lineHeight
+    }
+
+    await applyBranding(pdfDoc, branding, {
+      documentName: templateName,
+      processNumber,
+      verificationCode,
+    })
+
+    const bytes = await pdfDoc.save()
+    const generatedFileName = `${crypto.randomUUID()}.pdf`
+    const generatedPath = `${row.company_id}/${generatedFileName}`
+
+    const { error: uploadError } = await admin
+      .storage.from('generated-documents')
+      .upload(generatedPath, bytes.buffer, { contentType: 'application/pdf', upsert: true })
+    if (uploadError) throw uploadError
+
+    const mergedMetadata = {
+      ...(row.metadata as Record<string, unknown> | null ?? {}),
+      verificationCode,
+      generator: 'canonical_new_mode',
+    }
+
+    // Atualiza APENAS status/url/metadata/timestamps — snapshot permanece intocado.
+    const { data: updated, error: updErr } = await admin
+      .from('generated_documents')
+      .update({
+        status: 'generated',
+        generated_file_url: generatedPath,
+        metadata: mergedMetadata,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', row.id)
+      .select()
+      .single()
+    if (updErr) throw updErr
+
+    return jsonResponse({
+      success: true,
+      mode: 'new',
+      idempotent: false,
+      document: updated,
+      url: generatedPath,
+      verificationCode,
+    })
+  } catch (e) {
+    // Falha: marca a MESMA linha como failed + erro sanitizado. Não cria nova.
+    const sanitizedError =
+      e instanceof HttpError
+        ? JSON.stringify(e.body).slice(0, 500)
+        : String((e as Error)?.message ?? e).slice(0, 500)
+    await admin
+      .from('generated_documents')
+      .update({
+        status: 'failed',
+        metadata: {
+          ...(row.metadata as Record<string, unknown> | null ?? {}),
+          last_error: sanitizedError,
+          failed_at: new Date().toISOString(),
+        },
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', row.id)
+    if (e instanceof HttpError) throw e
+    throw new HttpError(500, { error: 'pdf_generation_failed', message: sanitizedError })
+  }
 }
