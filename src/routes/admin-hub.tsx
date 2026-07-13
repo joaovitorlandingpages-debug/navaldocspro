@@ -43,8 +43,7 @@ const SECTIONS: Section[] = [
     color: "from-violet-500 to-violet-700",
     items: [
       { name: "Marketplace Admin", to: "/admin-master", icon: <LayoutTemplate />, desc: "Curadoria de templates", globalOnly: true },
-      { name: "Biblioteca Master", to: "/admin/document-library", icon: <Library />, desc: "Documentos navais" },
-      { name: "Motor de Documentos", to: "/admin/documentos", icon: <FileText />, desc: "Templates oficiais" },
+      { name: "Modelos de Documentação", to: "/admin/templates", icon: <Library />, desc: "Rascunhos, publicados, globais e arquivados" },
       { name: "Biblioteca Nacional", to: "/documentos/biblioteca", icon: <FileText />, desc: "Catálogo público" },
       { name: "Âncoras de Assinatura", to: "/admin/signature-anchors", icon: <Signature />, desc: "Editor visual" },
     ],

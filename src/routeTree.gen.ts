@@ -83,6 +83,7 @@ import { Route as AssinarTokenRouteImport } from './routes/assinar.$token'
 import { Route as AnalyticsOperationsRouteImport } from './routes/analytics.operations'
 import { Route as AnalyticsOcrRouteImport } from './routes/analytics.ocr'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminTemplatesRouteImport } from './routes/admin/templates'
 import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
 import { Route as AdminSystemHealthRouteImport } from './routes/admin/system-health'
 import { Route as AdminSupportRouteImport } from './routes/admin/support'
@@ -482,6 +483,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminTemplatesRoute = AdminTemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSystemReportRoute = AdminSystemReportRouteImport.update({
   id: '/system-report',
   path: '/system-report',
@@ -693,6 +699,7 @@ export interface FileRoutesByFullPath {
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
+  '/admin/templates': typeof AdminTemplatesRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
@@ -793,6 +800,7 @@ export interface FileRoutesByTo {
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
+  '/admin/templates': typeof AdminTemplatesRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
@@ -897,6 +905,7 @@ export interface FileRoutesById {
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
+  '/admin/templates': typeof AdminTemplatesRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
@@ -1002,6 +1011,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/system-health'
     | '/admin/system-report'
+    | '/admin/templates'
     | '/admin/users'
     | '/analytics/ocr'
     | '/analytics/operations'
@@ -1102,6 +1112,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/system-health'
     | '/admin/system-report'
+    | '/admin/templates'
     | '/admin/users'
     | '/analytics/ocr'
     | '/analytics/operations'
@@ -1205,6 +1216,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/system-health'
     | '/admin/system-report'
+    | '/admin/templates'
     | '/admin/users'
     | '/analytics/ocr'
     | '/analytics/operations'
@@ -1818,6 +1830,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/templates': {
+      id: '/admin/templates'
+      path: '/templates'
+      fullPath: '/admin/templates'
+      preLoaderRoute: typeof AdminTemplatesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/system-report': {
       id: '/admin/system-report'
       path: '/system-report'
@@ -2038,6 +2057,7 @@ interface AdminRouteChildren {
   AdminSupportRoute: typeof AdminSupportRoute
   AdminSystemHealthRoute: typeof AdminSystemHealthRoute
   AdminSystemReportRoute: typeof AdminSystemReportRoute
+  AdminTemplatesRoute: typeof AdminTemplatesRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -2070,6 +2090,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSupportRoute: AdminSupportRoute,
   AdminSystemHealthRoute: AdminSystemHealthRoute,
   AdminSystemReportRoute: AdminSystemReportRoute,
+  AdminTemplatesRoute: AdminTemplatesRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
