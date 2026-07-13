@@ -24,8 +24,8 @@ function FieldsPage() {
       const byKey: Record<string, number> = {};
       for (const r of rows) byKey[r.field_key] = (byKey[r.field_key] || 0) + 1;
       const duplicates = Object.entries(byKey).filter(([, c]) => c > 1).length;
-      const required = rows.filter((r) => r.is_required).length;
-      const tplWithFields = new Set(rows.map((r) => r.template_id));
+      const required = rows.filter((r: any) => r.is_required).length;
+      const tplWithFields = new Set(rows.map((r: any) => r.template_id));
       const tplWithoutFields = (tpl.data ?? []).filter((t: any) => !tplWithFields.has(t.id)).length;
       return { rows, duplicates, required, tplWithoutFields, distinct: Object.keys(byKey).length };
     },

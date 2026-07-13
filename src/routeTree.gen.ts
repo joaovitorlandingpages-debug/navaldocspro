@@ -118,6 +118,7 @@ import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$
 import { Route as AdminDocsCentralProcessTypesRouteImport } from './routes/admin/docs-central/process-types'
 import { Route as AdminDocsCentralModelsRouteImport } from './routes/admin/docs-central/models'
 import { Route as AdminDocsCentralMappingsRouteImport } from './routes/admin/docs-central/mappings'
+import { Route as AdminDocsCentralFieldsRouteImport } from './routes/admin/docs-central/fields'
 
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
@@ -670,6 +671,11 @@ const AdminDocsCentralMappingsRoute =
     path: '/mappings',
     getParentRoute: () => AdminDocsCentralRoute,
   } as any)
+const AdminDocsCentralFieldsRoute = AdminDocsCentralFieldsRouteImport.update({
+  id: '/fields',
+  path: '/fields',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -775,6 +781,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
@@ -882,6 +889,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/processes': typeof ProcessesIndexRoute
   '/templates': typeof TemplatesIndexRoute
+  '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
@@ -994,6 +1002,7 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
@@ -1107,6 +1116,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/processes/'
     | '/templates/'
+    | '/admin/docs-central/fields'
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
@@ -1214,6 +1224,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/processes'
     | '/templates'
+    | '/admin/docs-central/fields'
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
@@ -1325,6 +1336,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/processes/'
     | '/templates/'
+    | '/admin/docs-central/fields'
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
@@ -2159,10 +2171,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocsCentralMappingsRouteImport
       parentRoute: typeof AdminDocsCentralRoute
     }
+    '/admin/docs-central/fields': {
+      id: '/admin/docs-central/fields'
+      path: '/fields'
+      fullPath: '/admin/docs-central/fields'
+      preLoaderRoute: typeof AdminDocsCentralFieldsRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
   }
 }
 
 interface AdminDocsCentralRouteChildren {
+  AdminDocsCentralFieldsRoute: typeof AdminDocsCentralFieldsRoute
   AdminDocsCentralMappingsRoute: typeof AdminDocsCentralMappingsRoute
   AdminDocsCentralModelsRoute: typeof AdminDocsCentralModelsRoute
   AdminDocsCentralProcessTypesRoute: typeof AdminDocsCentralProcessTypesRoute
@@ -2170,6 +2190,7 @@ interface AdminDocsCentralRouteChildren {
 }
 
 const AdminDocsCentralRouteChildren: AdminDocsCentralRouteChildren = {
+  AdminDocsCentralFieldsRoute: AdminDocsCentralFieldsRoute,
   AdminDocsCentralMappingsRoute: AdminDocsCentralMappingsRoute,
   AdminDocsCentralModelsRoute: AdminDocsCentralModelsRoute,
   AdminDocsCentralProcessTypesRoute: AdminDocsCentralProcessTypesRoute,
