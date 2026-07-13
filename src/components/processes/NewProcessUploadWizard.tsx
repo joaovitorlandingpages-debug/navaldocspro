@@ -170,6 +170,63 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [vesselModalOpen, setVesselModalOpen] = useState(false);
 
+  // --- Draft (autosave & recuperação) ---------------------------------------
+  const userId = profile?.id ?? null;
+  const companyId = profile?.company_id ?? null;
+  const draftKey = userId ? `wizard-upload:${userId}${companyId ? `:${companyId}` : ""}` : "anon";
+  const filesMeta = files.map((f) => ({
+    localId: f.localId, name: f.file?.name, size: f.file?.size, type: f.file?.type,
+    status: f.status, docType: f.docType ?? null, uploadedFileId: f.uploadedFileId ?? null,
+    storagePath: f.storagePath ?? null,
+  }));
+  const draftState = {
+    v: 1, step, selectedTypeId, customerId, vesselId, title, useCompanyLogo,
+    filesMeta,
+  };
+  const draftEnabled = isOpen && !!userId && !submitting;
+  const { load: loadDraft, clear: clearDraft, savedAt: draftSavedAt } =
+    useLocalDraft(draftKey, draftState, draftEnabled);
+  const [pendingDraft, setPendingDraft] = useState<any>(null);
+  const draftCheckedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      draftCheckedRef.current = false;
+      setPendingDraft(null);
+      return;
+    }
+    if (!userId || draftCheckedRef.current) return;
+    draftCheckedRef.current = true;
+    const d = loadDraft() as any;
+    if (d && typeof d === "object" && d.v === 1 &&
+        (d.selectedTypeId || d.customerId || d.title || (d.step ?? 1) > 1 ||
+         (Array.isArray(d.filesMeta) && d.filesMeta.length > 0))) {
+      setPendingDraft(d);
+    }
+  }, [isOpen, userId, loadDraft]);
+
+  function resumeDraft() {
+    const d = pendingDraft;
+    if (!d) return;
+    try {
+      setStep(((d.step ?? 1) as Step));
+      setSelectedTypeId(d.selectedTypeId ?? "");
+      setCustomerId(d.customerId ?? "");
+      setVesselId(d.vesselId ?? "");
+      setTitle(d.title ?? "");
+      setUseCompanyLogo(d.useCompanyLogo !== false);
+      if (Array.isArray(d.filesMeta) && d.filesMeta.length > 0) {
+        toast.info("Rascunho retomado. Os arquivos precisam ser selecionados novamente.");
+      }
+    } catch { /* ignore corrupt draft */ }
+    setPendingDraft(null);
+  }
+  function discardDraft() {
+    clearDraft();
+    setPendingDraft(null);
+  }
+
+
   useEffect(() => {
     if (!isOpen) {
       setStep(1);
