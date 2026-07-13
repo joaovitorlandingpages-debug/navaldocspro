@@ -169,6 +169,15 @@ function AdminTemplateDetail() {
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
+  const newDraftMut = useMutation({
+    mutationFn: async () => rpc("template_start_new_draft", { p_template_id: id }),
+    onSuccess: () => {
+      toast.success("Nova versão em rascunho criada — edite e publique quando estiver pronto.");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
+  });
+
   if (!user) {
     return (
       <div className="p-10 max-w-md mx-auto text-center">
@@ -196,7 +205,12 @@ function AdminTemplateDetail() {
       return <Button className="gap-2" onClick={() => setPublishOpen(true)}><GitBranch className="h-4 w-4" /> Publicar versão</Button>;
     }
     if (lifecycle === "published") {
-      return <Button className="gap-2" onClick={() => setPublishOpen(true)}><GitBranch className="h-4 w-4" /> Criar nova versão</Button>;
+      return (
+        <Button className="gap-2" onClick={() => newDraftMut.mutate()} disabled={newDraftMut.isPending}>
+          {newDraftMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <GitBranch className="h-4 w-4" />}
+          Criar nova versão
+        </Button>
+      );
     }
     if (lifecycle === "archived") {
       return <Button variant="outline" className="gap-2" onClick={() => restoreMut.mutate()} disabled={restoreMut.isPending}>
@@ -419,5 +433,12 @@ function friendlyError(msg: string): string {
   if (msg.includes("forbidden")) return "Você não tem permissão para esta ação.";
   if (msg.includes("template_in_use")) return "Este modelo já foi usado e não pode ser excluído. Arquive em vez de excluir.";
   if (msg.includes("template_not_found")) return "Modelo não encontrado.";
+  if (msg.includes("only_published_can_branch")) return "Só é possível criar nova versão a partir de um modelo publicado.";
+  if (msg.includes("template_not_published")) return "O modelo precisa estar publicado para gerar documentos.";
+  if (msg.includes("no_published_version")) return "Nenhuma versão publicada disponível para este modelo.";
+  if (msg.includes("template_cross_tenant")) return "Este modelo pertence a outra empresa.";
+  if (msg.includes("idempotency_key_required")) return "Chave de idempotência ausente ou inválida.";
+  if (msg.includes("snapshot_hash_required")) return "Hash do snapshot ausente — geração bloqueada por segurança.";
+  if (msg.includes("rendered_content_required")) return "Conteúdo renderizado ausente — geração bloqueada.";
   return msg;
 }
