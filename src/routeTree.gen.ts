@@ -111,6 +111,7 @@ import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
 import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
 import { Route as AdminBillingRouteImport } from './routes/admin/billing'
 import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
+import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
 
 const VesselsRoute = VesselsRouteImport.update({
@@ -627,6 +628,11 @@ const AdminAutomationRoute = AdminAutomationRouteImport.update({
   path: '/automation',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminTemplatesPfwRoute = AdminTemplatesPfwRouteImport.update({
+  id: '/pfw',
+  path: '/pfw',
+  getParentRoute: () => AdminTemplatesRoute,
+} as any)
 const AdminTemplatesIdRoute = AdminTemplatesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -737,6 +743,7 @@ export interface FileRoutesByFullPath {
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
+  '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -839,6 +846,7 @@ export interface FileRoutesByTo {
   '/processes': typeof ProcessesIndexRoute
   '/templates': typeof TemplatesIndexRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
+  '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -945,6 +953,7 @@ export interface FileRoutesById {
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
+  '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1052,6 +1061,7 @@ export interface FileRouteTypes {
     | '/processes/'
     | '/templates/'
     | '/admin/templates/$id'
+    | '/admin/templates/pfw'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1154,6 +1164,7 @@ export interface FileRouteTypes {
     | '/processes'
     | '/templates'
     | '/admin/templates/$id'
+    | '/admin/templates/pfw'
   id:
     | '__root__'
     | '/'
@@ -1259,6 +1270,7 @@ export interface FileRouteTypes {
     | '/processes/'
     | '/templates/'
     | '/admin/templates/$id'
+    | '/admin/templates/pfw'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2038,6 +2050,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/templates/pfw': {
+      id: '/admin/templates/pfw'
+      path: '/pfw'
+      fullPath: '/admin/templates/pfw'
+      preLoaderRoute: typeof AdminTemplatesPfwRouteImport
+      parentRoute: typeof AdminTemplatesRoute
+    }
     '/admin/templates/$id': {
       id: '/admin/templates/$id'
       path: '/$id'
@@ -2050,10 +2069,12 @@ declare module '@tanstack/react-router' {
 
 interface AdminTemplatesRouteChildren {
   AdminTemplatesIdRoute: typeof AdminTemplatesIdRoute
+  AdminTemplatesPfwRoute: typeof AdminTemplatesPfwRoute
 }
 
 const AdminTemplatesRouteChildren: AdminTemplatesRouteChildren = {
   AdminTemplatesIdRoute: AdminTemplatesIdRoute,
+  AdminTemplatesPfwRoute: AdminTemplatesPfwRoute,
 }
 
 const AdminTemplatesRouteWithChildren = AdminTemplatesRoute._addFileChildren(

@@ -4015,6 +4015,72 @@ export type Database = {
           },
         ]
       }
+      process_document_template_mappings: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          created_by: string | null
+          document_category: string | null
+          document_label: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          process_type: string
+          region_tag: string | null
+          required: boolean
+          service_kind: string
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_category?: string | null
+          document_label: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          process_type: string
+          region_tag?: string | null
+          required?: boolean
+          service_kind: string
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_category?: string | null
+          document_label?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          process_type?: string
+          region_tag?: string | null
+          required?: boolean
+          service_kind?: string
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_document_template_mappings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_document_template_mappings_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_document_uploads: {
         Row: {
           company_id: string
