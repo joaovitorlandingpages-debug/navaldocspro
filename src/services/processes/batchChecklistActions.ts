@@ -1,10 +1,20 @@
 /**
  * Ações em lote para itens do checklist do processo (Blueprint Workspace).
- * Reaproveita a edge function `generate-document` e o modelo de signature_requests
- * existentes — não altera esquema nem quebra fluxos individuais.
+ *
+ * Sub-sub-fatia F.2.c — C6 migrado:
+ *   `batchGenerate` agora delega ao pipeline canônico via
+ *   `runCanonicalBatch` → `generateDocumentCanonical`.
+ *   NÃO invoca a Edge diretamente, NÃO monta idempotency key,
+ *   NÃO insere em `generated_documents`, NÃO resolve template.
+ *   O relatório expande `BatchReport` com `canonical` (relatório estruturado).
  */
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  runCanonicalBatch,
+  type CanonicalBatchItem,
+  type CanonicalBatchReport,
+} from "@/services/documents/canonicalBatchRunner";
 
 export type ChecklistLite = {
   id: string;
@@ -12,47 +22,76 @@ export type ChecklistLite = {
   template_id: string | null;
   document_id: string | null;
   requires_signature?: boolean | null;
+  /** Categoria opcional para resolução automática de template padrão. */
+  category?: string | null;
 };
 
 export interface BatchReport {
   ok: string[];
   failed: { name: string; reason: string }[];
   missingData: string[];
+  reused?: string[];
+  /** Relatório canônico completo (novo — F.2.c). */
+  canonical?: CanonicalBatchReport;
+}
+
+export interface BatchGenerateOptions {
+  concurrency?: number;
+  actionIntent?: string;
+  regenerationRevision?: number;
 }
 
 export async function batchGenerate(
   processId: string,
   items: ChecklistLite[],
   onProgress?: (done: number, total: number, current: string) => void,
+  options: BatchGenerateOptions = {},
 ): Promise<BatchReport> {
-  const report: BatchReport = { ok: [], failed: [], missingData: [] };
-  const total = items.length;
-  let done = 0;
+  const report: BatchReport = { ok: [], failed: [], missingData: [], reused: [] };
 
+  // Itens sem template E sem categoria não podem ser resolvidos pelo canônico.
+  const runnable: CanonicalBatchItem[] = [];
   for (const it of items) {
-    onProgress?.(done, total, it.item_name);
-    if (!it.template_id) {
+    if (!it.template_id && !it.category) {
       report.missingData.push(it.item_name);
-      done += 1;
-      onProgress?.(done, total, it.item_name);
       continue;
     }
-    try {
-      const { error } = await supabase.functions.invoke("generate-document", {
-        body: { templateId: it.template_id, processId, checklistId: it.id },
-      });
-      if (error) throw error;
-      report.ok.push(it.item_name);
-    } catch (e: any) {
-      const { handleGenerationError } = await import("@/services/documents/generationErrorHandler");
-      await handleGenerationError(e, { processId });
-      report.failed.push({ name: it.item_name, reason: e?.message || "erro desconhecido" });
-    }
-    done += 1;
-    onProgress?.(done, total, it.item_name);
+    runnable.push({
+      key: it.id,
+      label: it.item_name,
+      input: {
+        processId,
+        templateId: it.template_id ?? null,
+        category: it.category ?? null,
+        checklistItemId: it.id,
+        actionIntent: options.actionIntent ?? "checklist_batch_generate",
+        regenerationRevision: options.regenerationRevision ?? 0,
+      },
+    });
   }
+
+  const total = items.length;
+  const preSkipped = report.missingData.length;
+  onProgress?.(preSkipped, total, "");
+
+  const canonical = await runCanonicalBatch(runnable, {
+    concurrency: options.concurrency,
+    onItemDone: (result, doneCanonical) => {
+      onProgress?.(preSkipped + doneCanonical, total, result.label);
+    },
+  });
+
+  for (const r of canonical.items) {
+    if (r.status === "generated") report.ok.push(r.label);
+    else if (r.status === "reused") report.reused!.push(r.label);
+    else if (r.status === "skipped") report.missingData.push(r.label);
+    else report.failed.push({ name: r.label, reason: r.reason ?? "erro desconhecido" });
+  }
+
+  report.canonical = canonical;
   return report;
 }
+
 
 import type { ParticipantRole, SignatureParticipantInput } from "@/services/signatures";
 
