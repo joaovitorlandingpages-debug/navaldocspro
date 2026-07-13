@@ -224,7 +224,7 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     ];
     let currentSet = false;
     return stages.map((s) => {
-      if (s.done) return { key: s.key, label: s.label, status: "done" as const };
+      if (isFinalized || s.done) return { key: s.key, label: s.label, status: "done" as const };
       if (!currentSet) { currentSet = true; return { key: s.key, label: s.label, status: "current" as const }; }
       return { key: s.key, label: s.label, status: "pending" as const };
     });
