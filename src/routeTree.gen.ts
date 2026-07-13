@@ -115,6 +115,7 @@ import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
 import { Route as AdminDocsCentralIndexRouteImport } from './routes/admin/docs-central/index'
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
+import { Route as AdminDocsCentralVersionsRouteImport } from './routes/admin/docs-central/versions'
 import { Route as AdminDocsCentralProcessTypesRouteImport } from './routes/admin/docs-central/process-types'
 import { Route as AdminDocsCentralModelsRouteImport } from './routes/admin/docs-central/models'
 import { Route as AdminDocsCentralMappingsRouteImport } from './routes/admin/docs-central/mappings'
@@ -654,6 +655,12 @@ const AdminTemplatesIdRoute = AdminTemplatesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminTemplatesRoute,
 } as any)
+const AdminDocsCentralVersionsRoute =
+  AdminDocsCentralVersionsRouteImport.update({
+    id: '/versions',
+    path: '/versions',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
 const AdminDocsCentralProcessTypesRoute =
   AdminDocsCentralProcessTypesRouteImport.update({
     id: '/process-types',
@@ -785,6 +792,7 @@ export interface FileRoutesByFullPath {
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
+  '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
@@ -893,6 +901,7 @@ export interface FileRoutesByTo {
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
+  '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/admin/docs-central': typeof AdminDocsCentralIndexRoute
@@ -1006,6 +1015,7 @@ export interface FileRoutesById {
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
+  '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
@@ -1120,6 +1130,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
+    | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/admin/docs-central/'
@@ -1228,6 +1239,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
+    | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/admin/docs-central'
@@ -1340,6 +1352,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
+    | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/admin/docs-central/'
@@ -2150,6 +2163,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTemplatesIdRouteImport
       parentRoute: typeof AdminTemplatesRoute
     }
+    '/admin/docs-central/versions': {
+      id: '/admin/docs-central/versions'
+      path: '/versions'
+      fullPath: '/admin/docs-central/versions'
+      preLoaderRoute: typeof AdminDocsCentralVersionsRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
     '/admin/docs-central/process-types': {
       id: '/admin/docs-central/process-types'
       path: '/process-types'
@@ -2186,6 +2206,7 @@ interface AdminDocsCentralRouteChildren {
   AdminDocsCentralMappingsRoute: typeof AdminDocsCentralMappingsRoute
   AdminDocsCentralModelsRoute: typeof AdminDocsCentralModelsRoute
   AdminDocsCentralProcessTypesRoute: typeof AdminDocsCentralProcessTypesRoute
+  AdminDocsCentralVersionsRoute: typeof AdminDocsCentralVersionsRoute
   AdminDocsCentralIndexRoute: typeof AdminDocsCentralIndexRoute
 }
 
@@ -2194,6 +2215,7 @@ const AdminDocsCentralRouteChildren: AdminDocsCentralRouteChildren = {
   AdminDocsCentralMappingsRoute: AdminDocsCentralMappingsRoute,
   AdminDocsCentralModelsRoute: AdminDocsCentralModelsRoute,
   AdminDocsCentralProcessTypesRoute: AdminDocsCentralProcessTypesRoute,
+  AdminDocsCentralVersionsRoute: AdminDocsCentralVersionsRoute,
   AdminDocsCentralIndexRoute: AdminDocsCentralIndexRoute,
 }
 
