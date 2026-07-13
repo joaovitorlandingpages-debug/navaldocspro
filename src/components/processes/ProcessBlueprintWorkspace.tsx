@@ -228,7 +228,7 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
       if (!currentSet) { currentSet = true; return { key: s.key, label: s.label, status: "current" as const }; }
       return { key: s.key, label: s.label, status: "pending" as const };
     });
-  }, [checklist, process, stats, uploads, signatures]);
+  }, [checklist, process, stats, uploads, signatures, isFinalized]);
 
   const casChecklistStatus = useCallback(async (id: string, status: string, successMsg: string, failMsg: string) => {
     const item = checklist.find((c) => c.id === id);
