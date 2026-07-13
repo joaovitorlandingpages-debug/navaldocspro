@@ -6516,6 +6516,10 @@ export type Database = {
     }
     Functions: {
       _assert_process_access: { Args: { p_id: string }; Returns: string }
+      _assert_template_admin: {
+        Args: { p_template_id: string }
+        Returns: undefined
+      }
       _raise_lock_conflict: {
         Args: {
           p_current: number
@@ -6685,6 +6689,39 @@ export type Database = {
         Args: { p_bucket: string; p_name: string }
         Returns: boolean
       }
+      template_archive: { Args: { p_template_id: string }; Returns: undefined }
+      template_create_draft: {
+        Args: {
+          p_category?: string
+          p_code?: string
+          p_is_global?: boolean
+          p_name: string
+          p_process_type?: string
+          p_region?: string
+        }
+        Returns: string
+      }
+      template_publish_version: {
+        Args: {
+          p_base_content?: string
+          p_changelog: string
+          p_document_structure?: Json
+          p_metadata?: Json
+          p_notes?: string
+          p_template_id: string
+        }
+        Returns: string
+      }
+      template_restore: { Args: { p_template_id: string }; Returns: undefined }
+      template_set_default: {
+        Args: { p_template_id: string }
+        Returns: undefined
+      }
+      template_unset_default: {
+        Args: { p_template_id: string }
+        Returns: undefined
+      }
+      template_usage_count: { Args: { p_template_id: string }; Returns: number }
       track_usage: {
         Args: {
           p_action: string
