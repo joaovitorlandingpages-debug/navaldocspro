@@ -19,12 +19,15 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft, Star, StarOff, Archive, RotateCcw, GitBranch, MoreVertical,
   Loader2, AlertTriangle, Globe, Building2, ShieldAlert, History, FileText,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { TemplateEditor, type EditorDraft } from "@/components/admin/templates/TemplateEditor";
+import { validateTemplate, canPublish } from "@/lib/templates/templateValidator";
 
 export const Route = createFileRoute("/admin/templates/$id")({
   component: AdminTemplateDetail,
@@ -145,6 +148,27 @@ function AdminTemplateDetail() {
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
+  const saveDraftMut = useMutation({
+    mutationFn: async (draft: EditorDraft) => {
+      const { error } = await supabase
+        .from("document_templates")
+        .update({
+          name: draft.name,
+          code: draft.code || null,
+          category: draft.category || null,
+          process_type: draft.process_type || null,
+          region_tag: draft.region_tag || null,
+          description: draft.description || null,
+          base_content: draft.base_content,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => { toast.success("Rascunho salvo"); invalidate(); },
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
+  });
+
   if (!user) {
     return (
       <div className="p-10 max-w-md mx-auto text-center">
@@ -244,37 +268,69 @@ function AdminTemplateDetail() {
           </Card>
         )}
 
-        <Card className="p-4">
-          <h2 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-            <History className="h-4 w-4" /> Histórico de versões
-          </h2>
-          {versionsQ.isLoading && <Loader2 className="h-5 w-5 animate-spin text-slate-400" />}
-          {!versionsQ.isLoading && (versionsQ.data ?? []).length === 0 && (
-            <p className="text-sm text-slate-500 py-6 text-center">
-              Nenhuma versão publicada ainda. {canEdit && "Use \"Publicar versão\" para publicar a v1."}
-            </p>
-          )}
-          <div className="divide-y">
-            {(versionsQ.data ?? []).map((v: any) => (
-              <div key={v.id} className="py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium">v{v.version_number ?? v.version}</span>
-                    <VersionStatus status={v.status} />
+        <Tabs defaultValue="editor">
+          <TabsList>
+            <TabsTrigger value="editor">Editor</TabsTrigger>
+            <TabsTrigger value="history">Histórico</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="editor" className="mt-4">
+            <TemplateEditor
+              initial={{
+                name: t.name ?? "",
+                code: t.code ?? "",
+                category: t.category ?? "",
+                process_type: t.process_type ?? "",
+                region_tag: (t as any).region_tag ?? "",
+                description: (t as any).description ?? "",
+                base_content: (t as any).base_content ?? "",
+              }}
+              readOnly={!canEdit || lifecycle !== "draft"}
+              saving={saveDraftMut.isPending}
+              onSave={(draft) => saveDraftMut.mutate(draft)}
+            />
+            {canEdit && lifecycle !== "draft" && (
+              <p className="text-xs text-amber-700 mt-3">
+                Modelo {lifecycle === "published" ? "publicado" : "arquivado"} — edições diretas estão bloqueadas.
+                {lifecycle === "published" && " Use \"Criar nova versão\" para promover uma alteração."}
+              </p>
+            )}
+          </TabsContent>
+
+          <TabsContent value="history" className="mt-4">
+            <Card className="p-4">
+              <h2 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                <History className="h-4 w-4" /> Histórico de versões
+              </h2>
+              {versionsQ.isLoading && <Loader2 className="h-5 w-5 animate-spin text-slate-400" />}
+              {!versionsQ.isLoading && (versionsQ.data ?? []).length === 0 && (
+                <p className="text-sm text-slate-500 py-6 text-center">
+                  Nenhuma versão publicada ainda. {canEdit && "Use \"Publicar versão\" para publicar a v1."}
+                </p>
+              )}
+              <div className="divide-y">
+                {(versionsQ.data ?? []).map((v: any) => (
+                  <div key={v.id} className="py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium">v{v.version_number ?? v.version}</span>
+                        <VersionStatus status={v.status} />
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        {v.created_at && <>Criada {formatDistanceToNow(new Date(v.created_at), { addSuffix: true, locale: ptBR })}</>}
+                      </div>
+                      {Array.isArray(v.changelog) && v.changelog.length > 0 && (
+                        <p className="text-xs text-slate-600 mt-1 line-clamp-2">
+                          {v.changelog.map((c: any) => c?.note).filter(Boolean).join(" · ") || v.notes || "—"}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">
-                    {v.created_at && <>Criada {formatDistanceToNow(new Date(v.created_at), { addSuffix: true, locale: ptBR })}</>}
-                  </div>
-                  {Array.isArray(v.changelog) && v.changelog.length > 0 && (
-                    <p className="text-xs text-slate-600 mt-1 line-clamp-2">
-                      {v.changelog.map((c: any) => c?.note).filter(Boolean).join(" · ") || v.notes || "—"}
-                    </p>
-                  )}
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </Card>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <Dialog open={publishOpen} onOpenChange={setPublishOpen}>
@@ -286,32 +342,55 @@ function AdminTemplateDetail() {
               arquivada automaticamente. Documentos existentes mantêm o snapshot da versão original.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs font-medium text-slate-700">Resumo da alteração (obrigatório)</label>
-              <Input
-                value={changelog}
-                onChange={(e) => setChangelog(e.target.value)}
-                placeholder="Ex.: Ajuste em campos obrigatórios do bloco de identificação"
-                maxLength={200}
-              />
-              <p className="text-[10px] text-slate-500 mt-1">Mínimo 5 caracteres.</p>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-slate-700">Notas técnicas (opcional)</label>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPublishOpen(false)}>Cancelar</Button>
-            <Button
-              onClick={() => publishMut.mutate()}
-              disabled={publishMut.isPending || changelog.trim().length < 5}
-            >
-              {publishMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Publicar
-            </Button>
-          </DialogFooter>
+          {(() => {
+            const preflight = validateTemplate({
+              name: t.name,
+              code: t.code,
+              category: t.category,
+              process_type: t.process_type,
+              base_content: (t as any).base_content ?? "",
+            });
+            const publishable = canPublish(preflight);
+            const errors = preflight.filter((i) => i.level === "error");
+            return (
+              <>
+                <div className="space-y-3">
+                  {!publishable && (
+                    <div className="border border-red-200 bg-red-50 rounded p-2 text-xs text-red-800 space-y-1">
+                      <p className="font-semibold">Publicação bloqueada — corrija antes de continuar:</p>
+                      <ul className="list-disc pl-4">
+                        {errors.slice(0, 5).map((e, i) => <li key={i}>{e.message}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  <div>
+                    <label className="text-xs font-medium text-slate-700">Resumo da alteração (obrigatório)</label>
+                    <Input
+                      value={changelog}
+                      onChange={(e) => setChangelog(e.target.value)}
+                      placeholder="Ex.: Ajuste em campos obrigatórios do bloco de identificação"
+                      maxLength={200}
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">Mínimo 5 caracteres.</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-700">Notas técnicas (opcional)</label>
+                    <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setPublishOpen(false)}>Cancelar</Button>
+                  <Button
+                    onClick={() => publishMut.mutate()}
+                    disabled={publishMut.isPending || changelog.trim().length < 5 || !publishable}
+                  >
+                    {publishMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                    Publicar
+                  </Button>
+                </DialogFooter>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
