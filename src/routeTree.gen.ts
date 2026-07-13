@@ -116,6 +116,7 @@ import { Route as AdminDocsCentralIndexRouteImport } from './routes/admin/docs-c
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
 import { Route as AdminDocsCentralVersionsRouteImport } from './routes/admin/docs-central/versions'
+import { Route as AdminDocsCentralPublishingRouteImport } from './routes/admin/docs-central/publishing'
 import { Route as AdminDocsCentralProcessTypesRouteImport } from './routes/admin/docs-central/process-types'
 import { Route as AdminDocsCentralModelsRouteImport } from './routes/admin/docs-central/models'
 import { Route as AdminDocsCentralMappingsRouteImport } from './routes/admin/docs-central/mappings'
@@ -661,6 +662,12 @@ const AdminDocsCentralVersionsRoute =
     path: '/versions',
     getParentRoute: () => AdminDocsCentralRoute,
   } as any)
+const AdminDocsCentralPublishingRoute =
+  AdminDocsCentralPublishingRouteImport.update({
+    id: '/publishing',
+    path: '/publishing',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
 const AdminDocsCentralProcessTypesRoute =
   AdminDocsCentralProcessTypesRouteImport.update({
     id: '/process-types',
@@ -792,6 +799,7 @@ export interface FileRoutesByFullPath {
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
+  '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
   '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
@@ -901,6 +909,7 @@ export interface FileRoutesByTo {
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
+  '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
   '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
@@ -1015,6 +1024,7 @@ export interface FileRoutesById {
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
   '/admin/docs-central/process-types': typeof AdminDocsCentralProcessTypesRoute
+  '/admin/docs-central/publishing': typeof AdminDocsCentralPublishingRoute
   '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
@@ -1130,6 +1140,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
+    | '/admin/docs-central/publishing'
     | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
@@ -1239,6 +1250,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
+    | '/admin/docs-central/publishing'
     | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
@@ -1352,6 +1364,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/models'
     | '/admin/docs-central/process-types'
+    | '/admin/docs-central/publishing'
     | '/admin/docs-central/versions'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
@@ -2170,6 +2183,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocsCentralVersionsRouteImport
       parentRoute: typeof AdminDocsCentralRoute
     }
+    '/admin/docs-central/publishing': {
+      id: '/admin/docs-central/publishing'
+      path: '/publishing'
+      fullPath: '/admin/docs-central/publishing'
+      preLoaderRoute: typeof AdminDocsCentralPublishingRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
     '/admin/docs-central/process-types': {
       id: '/admin/docs-central/process-types'
       path: '/process-types'
@@ -2206,6 +2226,7 @@ interface AdminDocsCentralRouteChildren {
   AdminDocsCentralMappingsRoute: typeof AdminDocsCentralMappingsRoute
   AdminDocsCentralModelsRoute: typeof AdminDocsCentralModelsRoute
   AdminDocsCentralProcessTypesRoute: typeof AdminDocsCentralProcessTypesRoute
+  AdminDocsCentralPublishingRoute: typeof AdminDocsCentralPublishingRoute
   AdminDocsCentralVersionsRoute: typeof AdminDocsCentralVersionsRoute
   AdminDocsCentralIndexRoute: typeof AdminDocsCentralIndexRoute
 }
@@ -2215,6 +2236,7 @@ const AdminDocsCentralRouteChildren: AdminDocsCentralRouteChildren = {
   AdminDocsCentralMappingsRoute: AdminDocsCentralMappingsRoute,
   AdminDocsCentralModelsRoute: AdminDocsCentralModelsRoute,
   AdminDocsCentralProcessTypesRoute: AdminDocsCentralProcessTypesRoute,
+  AdminDocsCentralPublishingRoute: AdminDocsCentralPublishingRoute,
   AdminDocsCentralVersionsRoute: AdminDocsCentralVersionsRoute,
   AdminDocsCentralIndexRoute: AdminDocsCentralIndexRoute,
 }
