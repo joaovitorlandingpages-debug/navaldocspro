@@ -52,7 +52,7 @@ function ProcessTypesPage() {
             <ProgressBar value={p.percent} />
             <ul className="mt-4 space-y-1.5">
               {p.docs.length === 0 && <li className="text-xs text-slate-400">Sem documentos requeridos.</li>}
-              {p.docs.map((d, i) => (
+              {p.docs.map((d: any, i: number) => (
                 <li key={i} className="flex items-center gap-2 text-xs">
                   {d.configured ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <X className="h-3.5 w-3.5 text-rose-500" />}
                   <span className={d.configured ? "text-slate-700" : "text-slate-500"}>{d.label}</span>
