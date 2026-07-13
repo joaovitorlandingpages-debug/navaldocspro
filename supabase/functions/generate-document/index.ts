@@ -307,12 +307,33 @@ serve(async (req) => {
     await rateLimit(ctx.admin, `user:${ctx.userId}`, 'generate-document', 30, 60)
     if (ctx.companyId) await rateLimit(ctx.admin, `company:${ctx.companyId}`, 'generate-document', 120, 60)
 
-    const { templateId, customerId, vesselId, processId, fieldValues, idempotencyKey } = await req.json()
+    const payload = await req.json()
+
+    // ==========================================================================
+    // MODO NOVO — Sub-fatia F.2.a
+    // Caller já criou a linha canônica via `template_generate_document` (RPC).
+    // A Edge apenas lê o snapshot congelado, gera PDF e atualiza a MESMA linha.
+    // Não resolve template, não cria linha, não troca versão, não reinterpreta.
+    // ==========================================================================
+    if (payload && typeof payload.generatedDocumentId === 'string' && payload.generatedDocumentId) {
+      return await handleNewModeGeneration(ctx, payload.generatedDocumentId)
+    }
+
+    // ------------------- MODO LEGADO (deprecated) -------------------
+    // Mantido até F.2.b–F.2.e migrarem todos os callers (C1–C9).
+    console.warn('[generate-document][LEGACY_MODE]', {
+      userId: ctx.userId,
+      companyId: ctx.companyId,
+      templateId: payload?.templateId,
+      processId: payload?.processId,
+    })
+    const { templateId, customerId, vesselId, processId, fieldValues, idempotencyKey } = payload
     // companyId NEVER trusted from payload — derived from authenticated profile
     const companyId = ctx.companyId
     if (!companyId && !ctx.isAdminMaster) throw new HttpError(403, { error: 'no_company_bound' })
 
     const supabaseAdmin = ctx.admin
+
 
     const { data: template, error: templateError } = await supabaseAdmin
       .from('document_templates')
