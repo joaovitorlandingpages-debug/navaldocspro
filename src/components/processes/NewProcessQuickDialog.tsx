@@ -164,7 +164,23 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const [genReport, setGenReport] = useState<BatchReport | null>(null);
   const [createdProcessId, setCreatedProcessId] = useState<string | null>(null);
 
-  const selectedType = types.find((t) => t.id === selectedTypeId) || null;
+  // --- Draft (autosave & recuperação) ---------------------------------------
+  const userId = profile?.id ?? null;
+  const companyId = profile?.company_id ?? null;
+  const draftKey = userId ? `wizard-guided:${userId}${companyId ? `:${companyId}` : ""}` : "anon";
+  const draftState = {
+    v: 1, step, selectedTypeId, priority, title,
+    customerId, secondaryCustomerId, vesselId, hasMotor, brandingMode,
+    clientDocPicks: Array.from(clientDocPicks),
+    vesselDocPicks: Array.from(vesselDocPicks),
+    noResidenceProof,
+  };
+  const draftEnabled = isOpen && !!userId && !createdProcessId && !submitting;
+  const { load: loadDraft, clear: clearDraft, savedAt: draftSavedAt } =
+    useLocalDraft(draftKey, draftState, draftEnabled);
+  const [pendingDraft, setPendingDraft] = useState<any>(null);
+  const draftCheckedRef = useRef(false);
+
   const typeName = selectedType?.name || "";
   const isTransfer = /transfer/i.test(typeName);
   const isRegistration = /registro/i.test(typeName);
