@@ -607,11 +607,7 @@ export function AssembleProcessWizard({
           </div>
         )}
 
-            <Button onClick={onClose} className="bg-primary">
-              Fechar
-            </Button>
-          </div>
-        )}
+
 
         {/* Footer */}
         {step < 3 && (
