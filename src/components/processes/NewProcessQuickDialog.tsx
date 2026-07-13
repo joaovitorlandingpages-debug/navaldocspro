@@ -181,6 +181,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const [pendingDraft, setPendingDraft] = useState<any>(null);
   const draftCheckedRef = useRef(false);
 
+  const selectedType = types.find((t) => t.id === selectedTypeId) || null;
   const typeName = selectedType?.name || "";
   const isTransfer = /transfer/i.test(typeName);
   const isRegistration = /registro/i.test(typeName);
