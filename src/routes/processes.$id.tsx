@@ -523,40 +523,113 @@ function ProcessDetail() {
       <OperationalGuide />
 
       <Suspense fallback={<TabLoader />}>
-      <div className="grid lg:grid-cols-4 gap-8">
-         <div className="lg:col-span-3 space-y-8">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-6 flex w-full overflow-x-auto custom-scrollbar h-auto justify-start gap-1">
-                   <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geral</TabsTrigger>
-                   <TabsTrigger value="edit" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                     <Pencil className="h-3 w-3" /> Editar
-                   </TabsTrigger>
-                   <TabsTrigger value="requirements" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                     Checklist
-                   </TabsTrigger>
-                   <TabsTrigger value="documents" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Uploads</TabsTrigger>
-                   <TabsTrigger value="library_docs" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
-                     <FileCheck className="h-3 w-3" /> Documentos
-                   </TabsTrigger>
-                   <TabsTrigger value="ocr" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex gap-2 items-center">
-                     <Zap className="h-3 w-3" /> OCR
-                   </TabsTrigger>
-                    <TabsTrigger value="generation" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Geração</TabsTrigger>
-                    <TabsTrigger value="dossier_v2" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                      <FilePlus className="h-3.5 w-3.5" /> Dossiê
-                    </TabsTrigger>
-                    <TabsTrigger value="history" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Timeline</TabsTrigger>
-                   <TabsTrigger value="signatures" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                     <Signature className="h-3 w-3" /> Assinaturas
-                   </TabsTrigger>
-                   <TabsTrigger value="protocol" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest">Protocolo</TabsTrigger>
-                   <TabsTrigger value="client_portal" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                     <Link2 className="h-3 w-3" /> Portal Cliente
-                   </TabsTrigger>
-                   <TabsTrigger value="identity" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                     <Palette className="h-3 w-3" /> Identidade
-                   </TabsTrigger>
-                </TabsList>
+      <div className="space-y-6">
+         <div>
+            {(() => {
+              // Map (outer, sub) → legacy inner value used by TabsContent below.
+              const innerMap: Record<string, string> = {
+                "processo/geral": "overview",
+                "processo/checklist": "requirements",
+                "processo/uploads": "documents",
+                "processo/documentos": "library_docs",
+                "processo/ocr": "ocr",
+                "processo/geracao": "generation",
+                "assinaturas/": "signatures",
+                "dossier/dossie": "dossier_v2",
+                "dossier/portal": "client_portal",
+                "dossier/protocolo": "protocol",
+                "historico/timeline": "history",
+                "historico/identidade": "identity",
+                "historico/editar": "edit",
+              };
+              const key = `${activeTab}/${activeSub ?? ""}`;
+              const innerValue = innerMap[key] ?? innerMap[`${activeTab}/`] ?? "overview";
+              return (
+            <Tabs value={innerValue} onValueChange={setActiveTab} className="w-full">
+                {/* Outer 4-tab nav */}
+                <div className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-3 flex w-full overflow-x-auto custom-scrollbar h-auto justify-start gap-1">
+                  {([
+                    { key: "processo", label: "Processo", icon: <FileCheck className="h-3 w-3" /> },
+                    { key: "assinaturas", label: "Assinaturas", icon: <Signature className="h-3 w-3" /> },
+                    { key: "dossier", label: "Dossiê", icon: <FilePlus className="h-3 w-3" /> },
+                    { key: "historico", label: "Histórico", icon: <History className="h-3 w-3" /> },
+                  ] as const).map((t) => (
+                    <button
+                      key={t.key}
+                      onClick={() => setActiveTab(t.key)}
+                      className={`rounded-xl px-4 sm:px-6 py-2.5 font-bold text-xs uppercase tracking-widest flex items-center gap-2 whitespace-nowrap transition ${
+                        activeTab === t.key
+                          ? "bg-white shadow-sm text-navy"
+                          : "text-slate-500 hover:text-navy"
+                      }`}
+                    >
+                      {t.icon} {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Contextual sub-nav */}
+                {activeTab === "processo" && (
+                  <div className="flex w-full overflow-x-auto custom-scrollbar gap-1 mb-6 pb-1">
+                    {[
+                      { k: "geral", l: "Visão geral" },
+                      { k: "checklist", l: "Checklist" },
+                      { k: "documentos", l: "Documentos" },
+                      { k: "uploads", l: "Uploads" },
+                      { k: "ocr", l: "OCR" },
+                      { k: "geracao", l: "Geração" },
+                    ].map((s) => (
+                      <button
+                        key={s.k}
+                        onClick={() => setActiveSub(s.k)}
+                        className={`rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition ${
+                          activeSub === s.k ? "bg-navy text-white" : "text-slate-500 hover:bg-slate-100"
+                        }`}
+                      >
+                        {s.l}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {activeTab === "dossier" && (
+                  <div className="flex w-full overflow-x-auto custom-scrollbar gap-1 mb-6 pb-1">
+                    {[
+                      { k: "dossie", l: "Dossiê final" },
+                      { k: "portal", l: "Portal do cliente" },
+                      { k: "protocolo", l: "Protocolo" },
+                    ].map((s) => (
+                      <button
+                        key={s.k}
+                        onClick={() => setActiveSub(s.k)}
+                        className={`rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition ${
+                          activeSub === s.k ? "bg-navy text-white" : "text-slate-500 hover:bg-slate-100"
+                        }`}
+                      >
+                        {s.l}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {activeTab === "historico" && (
+                  <div className="flex w-full overflow-x-auto custom-scrollbar gap-1 mb-6 pb-1">
+                    {[
+                      { k: "timeline", l: "Timeline" },
+                      { k: "identidade", l: "Identidade" },
+                      { k: "editar", l: "Editar" },
+                    ].map((s) => (
+                      <button
+                        key={s.k}
+                        onClick={() => setActiveSub(s.k)}
+                        className={`rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition ${
+                          activeSub === s.k ? "bg-navy text-white" : "text-slate-500 hover:bg-slate-100"
+                        }`}
+                      >
+                        {s.l}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
 
                 <TabsContent value="identity" className="animate-in fade-in duration-300">
                    <ProcessIdentityPanel processId={id} />
