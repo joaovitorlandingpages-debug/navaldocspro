@@ -16,6 +16,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocalDraft } from "@/hooks/useLocalDraft";
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -168,6 +169,63 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
   const [suggestedVessel, setSuggestedVessel] = useState<{ name?: string; registration?: string } | null>(null);
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [vesselModalOpen, setVesselModalOpen] = useState(false);
+
+  // --- Draft (autosave & recuperação) ---------------------------------------
+  const userId = profile?.id ?? null;
+  const companyId = profile?.company_id ?? null;
+  const draftKey = userId ? `wizard-upload:${userId}${companyId ? `:${companyId}` : ""}` : "anon";
+  const filesMeta = files.map((f) => ({
+    localId: f.localId, name: f.file?.name, size: f.file?.size, type: f.file?.type,
+    status: f.status, docType: f.docType ?? null, uploadedFileId: f.uploadedFileId ?? null,
+    storagePath: f.storagePath ?? null,
+  }));
+  const draftState = {
+    v: 1, step, selectedTypeId, customerId, vesselId, title, useCompanyLogo,
+    filesMeta,
+  };
+  const draftEnabled = isOpen && !!userId && !submitting;
+  const { load: loadDraft, clear: clearDraft, savedAt: draftSavedAt } =
+    useLocalDraft(draftKey, draftState, draftEnabled);
+  const [pendingDraft, setPendingDraft] = useState<any>(null);
+  const draftCheckedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      draftCheckedRef.current = false;
+      setPendingDraft(null);
+      return;
+    }
+    if (!userId || draftCheckedRef.current) return;
+    draftCheckedRef.current = true;
+    const d = loadDraft() as any;
+    if (d && typeof d === "object" && d.v === 1 &&
+        (d.selectedTypeId || d.customerId || d.title || (d.step ?? 1) > 1 ||
+         (Array.isArray(d.filesMeta) && d.filesMeta.length > 0))) {
+      setPendingDraft(d);
+    }
+  }, [isOpen, userId, loadDraft]);
+
+  function resumeDraft() {
+    const d = pendingDraft;
+    if (!d) return;
+    try {
+      setStep(((d.step ?? 1) as Step));
+      setSelectedTypeId(d.selectedTypeId ?? "");
+      setCustomerId(d.customerId ?? "");
+      setVesselId(d.vesselId ?? "");
+      setTitle(d.title ?? "");
+      setUseCompanyLogo(d.useCompanyLogo !== false);
+      if (Array.isArray(d.filesMeta) && d.filesMeta.length > 0) {
+        toast.info("Rascunho retomado. Os arquivos precisam ser selecionados novamente.");
+      }
+    } catch { /* ignore corrupt draft */ }
+    setPendingDraft(null);
+  }
+  function discardDraft() {
+    clearDraft();
+    setPendingDraft(null);
+  }
+
 
   useEffect(() => {
     if (!isOpen) {
@@ -455,6 +513,7 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
 
       const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
       notifyProcessesChanged(visibleProcess);
+      clearDraft();
       onClose();
       navigate({ to: "/processes/$id", params: { id: processId }, search: { tab: "overview" } });
       toast.success("Processo criado e confirmado na lista.");
@@ -557,6 +616,27 @@ export function NewProcessUploadWizard({ isOpen, onClose }: Props) {
             <StepPill n={3} label="Revisão" active={step === 3} done={false} />
           </div>
         </DialogHeader>
+
+        {pendingDraft && (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 flex flex-col sm:flex-row sm:items-center gap-2 justify-between mb-2">
+            <div className="text-sm text-amber-900">
+              <strong>Rascunho encontrado.</strong>{" "}
+              {Array.isArray(pendingDraft.filesMeta) && pendingDraft.filesMeta.length > 0
+                ? "Os arquivos precisarão ser selecionados novamente."
+                : "Deseja retomar de onde parou?"}
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={discardDraft}>Descartar</Button>
+              <Button size="sm" onClick={resumeDraft}>Retomar rascunho</Button>
+            </div>
+          </div>
+        )}
+        {draftSavedAt && !pendingDraft && (
+          <div className="text-[10px] text-slate-400 -mt-1">
+            Rascunho salvo automaticamente às {draftSavedAt.toLocaleTimeString()}
+          </div>
+        )}
+
 
         <div className="flex-1 overflow-y-auto pr-1 py-2">
           {step === 1 && (

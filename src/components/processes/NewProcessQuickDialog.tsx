@@ -13,7 +13,8 @@
  * O modo "Upload rápido" continua acessível pelo Chooser.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocalDraft } from "@/hooks/useLocalDraft";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -163,6 +164,23 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const [genReport, setGenReport] = useState<BatchReport | null>(null);
   const [createdProcessId, setCreatedProcessId] = useState<string | null>(null);
 
+  // --- Draft (autosave & recuperação) ---------------------------------------
+  const userId = profile?.id ?? null;
+  const companyId = profile?.company_id ?? null;
+  const draftKey = userId ? `wizard-guided:${userId}${companyId ? `:${companyId}` : ""}` : "anon";
+  const draftState = {
+    v: 1, step, selectedTypeId, priority, title,
+    customerId, secondaryCustomerId, vesselId, hasMotor, brandingMode,
+    clientDocPicks: Array.from(clientDocPicks),
+    vesselDocPicks: Array.from(vesselDocPicks),
+    noResidenceProof,
+  };
+  const draftEnabled = isOpen && !!userId && !createdProcessId && !submitting;
+  const { load: loadDraft, clear: clearDraft, savedAt: draftSavedAt } =
+    useLocalDraft(draftKey, draftState, draftEnabled);
+  const [pendingDraft, setPendingDraft] = useState<any>(null);
+  const draftCheckedRef = useRef(false);
+
   const selectedType = types.find((t) => t.id === selectedTypeId) || null;
   const typeName = selectedType?.name || "";
   const isTransfer = /transfer/i.test(typeName);
@@ -232,8 +250,45 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setAllowEmptyPackage(false);
       setGenerateNow(false); setGenProgress(null); setGenReport(null);
       setCreatedProcessId(null);
+      draftCheckedRef.current = false;
+      setPendingDraft(null);
     }
   }, [isOpen]);
+
+  // Draft: detecta rascunho válido ao abrir
+  useEffect(() => {
+    if (!isOpen || !userId || draftCheckedRef.current) return;
+    draftCheckedRef.current = true;
+    const d = loadDraft() as any;
+    if (d && typeof d === "object" && d.v === 1 && (d.selectedTypeId || d.customerId || d.title || (d.step ?? 1) > 1)) {
+      setPendingDraft(d);
+    }
+  }, [isOpen, userId, loadDraft]);
+
+  function resumeDraft() {
+    const d = pendingDraft;
+    if (!d) return;
+    try {
+      setStep(((d.step ?? 1) as Step));
+      setSelectedTypeId(d.selectedTypeId ?? "");
+      setPriority(d.priority ?? "normal");
+      setTitle(d.title ?? "");
+      setCustomerId(d.customerId ?? "");
+      setSecondaryCustomerId(d.secondaryCustomerId ?? "");
+      setVesselId(d.vesselId ?? "");
+      setHasMotor(!!d.hasMotor);
+      setBrandingMode(d.brandingMode ?? "company");
+      setClientDocPicks(new Set(Array.isArray(d.clientDocPicks) ? d.clientDocPicks : []));
+      setVesselDocPicks(new Set(Array.isArray(d.vesselDocPicks) ? d.vesselDocPicks : []));
+      setNoResidenceProof(!!d.noResidenceProof);
+    } catch { /* ignore corrupt draft */ }
+    setPendingDraft(null);
+  }
+  function discardDraft() {
+    clearDraft();
+    setPendingDraft(null);
+  }
+
 
   // Pré-seleção da checklist de docs assim que o tipo é escolhido
   useEffect(() => {
@@ -627,6 +682,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
       notifyProcessesChanged(visibleProcess);
       setCreatedProcessId(processId);
+      clearDraft();
       toast.success(`Processo criado com ${selectedCount} documento(s) no checklist.`);
 
       if (generateNow && selectedCount > 0) {
@@ -689,6 +745,23 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
             <Progress value={(step / 7) * 100} className="h-1.5" />
           </div>
         </DialogHeader>
+
+        {pendingDraft && (
+          <div className="mx-4 sm:mx-6 mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 flex flex-col sm:flex-row sm:items-center gap-2 justify-between">
+            <div className="text-sm text-amber-900">
+              <strong>Rascunho encontrado.</strong> Deseja retomar de onde parou?
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={discardDraft}>Descartar</Button>
+              <Button size="sm" onClick={resumeDraft}>Retomar rascunho</Button>
+            </div>
+          </div>
+        )}
+        {draftSavedAt && !pendingDraft && (
+          <div className="px-4 sm:px-6 -mb-1 mt-1 text-[10px] text-slate-400">
+            Rascunho salvo automaticamente às {draftSavedAt.toLocaleTimeString()}
+          </div>
+        )}
 
         <div className="flex-1 min-h-0 flex overflow-hidden">
           <StepSidebar step={step} onJump={(n) => n < step && setStep(n)} />
