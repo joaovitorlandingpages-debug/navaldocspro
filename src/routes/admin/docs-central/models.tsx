@@ -75,7 +75,7 @@ function ModelsPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {grouped[cat].map((t: any) => (
-                <Link key={t.id} to={"/admin/templates/$id" as any} params={{ id: t.id }}>
+                <Link key={t.id} to={"/admin/templates/$id" as any} params={{ id: t.id } as any}>
                   <Card className="p-4 border-slate-100 hover:shadow-md transition-shadow cursor-pointer">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 min-w-0">
