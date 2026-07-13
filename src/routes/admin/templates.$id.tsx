@@ -342,32 +342,55 @@ function AdminTemplateDetail() {
               arquivada automaticamente. Documentos existentes mantêm o snapshot da versão original.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs font-medium text-slate-700">Resumo da alteração (obrigatório)</label>
-              <Input
-                value={changelog}
-                onChange={(e) => setChangelog(e.target.value)}
-                placeholder="Ex.: Ajuste em campos obrigatórios do bloco de identificação"
-                maxLength={200}
-              />
-              <p className="text-[10px] text-slate-500 mt-1">Mínimo 5 caracteres.</p>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-slate-700">Notas técnicas (opcional)</label>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPublishOpen(false)}>Cancelar</Button>
-            <Button
-              onClick={() => publishMut.mutate()}
-              disabled={publishMut.isPending || changelog.trim().length < 5}
-            >
-              {publishMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Publicar
-            </Button>
-          </DialogFooter>
+          {(() => {
+            const preflight = validateTemplate({
+              name: t.name,
+              code: t.code,
+              category: t.category,
+              process_type: t.process_type,
+              base_content: (t as any).base_content ?? "",
+            });
+            const publishable = canPublish(preflight);
+            const errors = preflight.filter((i) => i.level === "error");
+            return (
+              <>
+                <div className="space-y-3">
+                  {!publishable && (
+                    <div className="border border-red-200 bg-red-50 rounded p-2 text-xs text-red-800 space-y-1">
+                      <p className="font-semibold">Publicação bloqueada — corrija antes de continuar:</p>
+                      <ul className="list-disc pl-4">
+                        {errors.slice(0, 5).map((e, i) => <li key={i}>{e.message}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  <div>
+                    <label className="text-xs font-medium text-slate-700">Resumo da alteração (obrigatório)</label>
+                    <Input
+                      value={changelog}
+                      onChange={(e) => setChangelog(e.target.value)}
+                      placeholder="Ex.: Ajuste em campos obrigatórios do bloco de identificação"
+                      maxLength={200}
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">Mínimo 5 caracteres.</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-700">Notas técnicas (opcional)</label>
+                    <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setPublishOpen(false)}>Cancelar</Button>
+                  <Button
+                    onClick={() => publishMut.mutate()}
+                    disabled={publishMut.isPending || changelog.trim().length < 5 || !publishable}
+                  >
+                    {publishMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                    Publicar
+                  </Button>
+                </DialogFooter>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
