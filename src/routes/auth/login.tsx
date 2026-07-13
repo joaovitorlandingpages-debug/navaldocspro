@@ -11,8 +11,20 @@ import { ShieldCheck, Mail, Lock, Loader2, ArrowRight, Anchor } from "lucide-rea
 // motion removed to prevent removeChild crash
 
 export const Route = createFileRoute("/auth/login")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+  }),
   component: LoginComponent,
 });
+
+const FALLBACK_REDIRECT = "/dashboard";
+
+function isSafeInternalPath(path: string | undefined | null): path is string {
+  if (!path) return false;
+  if (!path.startsWith("/") || path.startsWith("//")) return false;
+  if (path.startsWith("/auth")) return false;
+  return true;
+}
 
 function LoginComponent() {
   const [email, setEmail] = useState("");
