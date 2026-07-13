@@ -112,7 +112,7 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     queryFn: async () => {
       const { data } = await supabase
         .from("process_document_uploads")
-        .select("id,status")
+        .select("id,ocr_status,validation_status")
         .eq("process_id", processId);
       return data ?? [];
     },
@@ -145,7 +145,7 @@ export function ProcessBlueprintWorkspace({ process, onOpenTab, onFocusItem, onC
     const needsSignature = checklist.filter((r) => r.requires_signature && !done(r));
     const needsOcr = checklist.filter((r) => r.requires_ocr && !done(r));
     const pendingSignatures = (signatures as any[]).filter((s) => !["completed", "signed"].includes((s.status || "").toLowerCase()));
-    const pendingOcr = (uploads as any[]).filter((u) => !["completed", "done", "ok"].includes((u.status || "").toLowerCase()));
+    const pendingOcr = (uploads as any[]).filter((u) => !["completed", "done", "ok"].includes((u.ocr_status || u.validation_status || "").toLowerCase()));
 
     const total = checklist.length || 1;
     const totalDone = checklist.filter(done).length;

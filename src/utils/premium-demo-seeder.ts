@@ -101,25 +101,25 @@ export async function seedPremiumDemo(companyId: string, userId: string) {
       company_id: companyId,
       user_id: userId,
       type: 'automation',
-      message: 'O processo Phoenix Explorer II já possui todos os dados extraídos via OCR para emissão do BCE.',
+      title: 'Pronto para gerar BCE',
+      description: 'O processo Phoenix Explorer II já possui todos os dados extraídos via OCR para emissão do BCE.',
       action_label: 'Gerar BCE Agora',
-      confidence_score: 0.99
     },
     {
       company_id: companyId,
       user_id: userId,
       type: 'critical',
-      message: 'Divergência crítica resolvida: O número do motor no TIE coincide agora com o Memorial.',
+      title: 'Divergência resolvida',
+      description: 'Divergência crítica resolvida: O número do motor no TIE coincide agora com o Memorial.',
       action_label: 'Ver Histórico',
-      confidence_score: 1.0
     },
     {
       company_id: companyId,
       user_id: userId,
       type: 'suggestion',
-      message: 'Sugestão IA: Iniciar processo de renovação de CSN (vence em 30 dias).',
+      title: 'Renovação de CSN próxima',
+      description: 'Sugestão IA: Iniciar processo de renovação de CSN (vence em 30 dias).',
       action_label: 'Abrir Renovação',
-      confidence_score: 0.95
     }
   ];
 

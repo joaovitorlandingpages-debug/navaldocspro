@@ -94,7 +94,7 @@ export function IntelligencePanel() {
               </div>
               
               <div className="flex-grow space-y-1">
-                <p className="text-[11px] font-bold text-navy leading-relaxed">{insight.message}</p>
+                <p className="text-[11px] font-bold text-navy leading-relaxed">{insight.description}</p>
                 <div className="flex items-center gap-3 pt-2">
                    <Button variant="ghost" size="sm" className="h-7 px-3 text-[9px] font-black uppercase text-primary hover:bg-primary/5 rounded-lg group/btn">
                      {insight.action_label || 'Ver Detalhes'} <ArrowRight className="h-3 w-3 ml-1.5 group-hover/btn:translate-x-1 transition-transform" />

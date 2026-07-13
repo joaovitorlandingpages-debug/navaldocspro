@@ -157,6 +157,9 @@ export class DocumentAutomationEngine {
       );
 
       // 9. Salvar Estado de Automação no Banco
+      // NOTE: completion_percentage e estimated_time_saved_minutes NÃO são persistidos
+      // (colunas não existem em process_automation_state). São expostos apenas em
+      // memória no retorno para consumo pela UI.
       const automationStateData = {
         process_id: processId,
         checklist_status,
@@ -164,8 +167,6 @@ export class DocumentAutomationEngine {
         pending_items,
         is_ready_for_generation,
         next_suggested_steps,
-        completion_percentage,
-        estimated_time_saved_minutes: estimated_time_saved,
         last_analyzed_at: new Date().toISOString()
       };
       
@@ -214,8 +215,10 @@ export class DocumentAutomationEngine {
 
       return {
         id: existingState?.id || '',
-        ...automationStateData
-      };
+        ...automationStateData,
+        completion_percentage,
+        estimated_time_saved_minutes: estimated_time_saved,
+      } as ProcessAutomationState & { estimated_time_saved_minutes: number };
 
     } catch (error) {
       console.error("Falha crítica no motor de automação:", error);
@@ -259,10 +262,9 @@ export class DocumentAutomationEngine {
           process_id: processId,
           company_id,
           type: 'automation',
-          message: 'Processo completo! A IA já pode gerar o pacote documental.',
+          title: 'Pronto para gerar',
+          description: 'Processo completo! A IA já pode gerar o pacote documental.',
           action_label: 'Gerar Agora',
-          confidence_score: 1.0,
-          metadata: { action: 'generate_docs' }
         });
       }
 
@@ -273,10 +275,9 @@ export class DocumentAutomationEngine {
           process_id: processId,
           company_id,
           type: 'critical',
-          message: `Faltam ${missingMandatory.length} documentos obrigatórios para este processo.`,
+          title: 'Documentos obrigatórios pendentes',
+          description: `Faltam ${missingMandatory.length} documentos obrigatórios para este processo.`,
           action_label: 'Ver Checklist',
-          confidence_score: 0.95,
-          metadata: { missing_count: missingMandatory.length }
         });
       }
 
@@ -288,10 +289,9 @@ export class DocumentAutomationEngine {
           process_id: processId,
           company_id,
           type: 'suggestion',
-          message: `Cadastro de ${entity} incompleto. Preencha para evitar erros no protocolo.`,
+          title: `Cadastro de ${entity} incompleto`,
+          description: `Preencha o campo ${missingData[0].field} do ${entity} para evitar erros no protocolo.`,
           action_label: 'Completar Cadastro',
-          confidence_score: 0.9,
-          metadata: { entity: missingData[0].entity, field: missingData[0].field }
         });
       }
 

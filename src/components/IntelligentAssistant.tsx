@@ -20,10 +20,10 @@ import { Badge } from './ui/badge';
 interface Insight {
   id: string;
   type: 'automation' | 'critical' | 'bottleneck' | 'suggestion' | 'error_prevention';
-  message: string;
+  title?: string | null;
+  description: string;
   action_label?: string;
   action_url?: string;
-  confidence_score: number;
 }
 
 export function IntelligentAssistant({ processId }: { processId?: string }) {
@@ -44,7 +44,7 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
         .from('operational_insights')
         .select('*')
         .eq('is_resolved', false)
-        .order('confidence_score', { ascending: false });
+        .order('created_at', { ascending: false });
       
       if (processId) {
         query = query.eq('process_id', processId);
@@ -60,8 +60,7 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
           { 
             id: 'welcome', 
             type: 'suggestion', 
-            message: `Olá, ${profile?.full_name?.split(' ')[0]}! Eu sou sua IA Operacional. Estou analisando seus processos em tempo real.`, 
-            confidence_score: 1.0 
+            description: `Olá, ${profile?.full_name?.split(' ')[0]}! Eu sou sua IA Operacional. Estou analisando seus processos em tempo real.`,
           }
         ] as Insight[];
       }
@@ -130,7 +129,7 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
                          insight.type === 'automation' ? <Zap className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}
                      </div>
                      <div className="space-y-2">
-                        <p className="text-xs font-bold text-navy leading-relaxed">{insight.message}</p>
+                        <p className="text-xs font-bold text-navy leading-relaxed">{insight.description}</p>
                         {insight.action_label && (
                            <button className="flex items-center gap-2 text-[9px] font-black uppercase text-primary hover:underline group/btn">
                               {insight.action_label} <ArrowRight className="h-3 w-3 group-hover/btn:translate-x-1 transition-transform" />
