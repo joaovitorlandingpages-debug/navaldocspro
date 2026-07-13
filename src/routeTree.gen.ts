@@ -122,6 +122,7 @@ import { Route as AdminDocsCentralProcessTypesRouteImport } from './routes/admin
 import { Route as AdminDocsCentralModelsRouteImport } from './routes/admin/docs-central/models'
 import { Route as AdminDocsCentralMarketplaceRouteImport } from './routes/admin/docs-central/marketplace'
 import { Route as AdminDocsCentralMappingsRouteImport } from './routes/admin/docs-central/mappings'
+import { Route as AdminDocsCentralLibraryRouteImport } from './routes/admin/docs-central/library'
 import { Route as AdminDocsCentralFieldsRouteImport } from './routes/admin/docs-central/fields'
 
 const VesselsRoute = VesselsRouteImport.update({
@@ -698,6 +699,11 @@ const AdminDocsCentralMappingsRoute =
     path: '/mappings',
     getParentRoute: () => AdminDocsCentralRoute,
   } as any)
+const AdminDocsCentralLibraryRoute = AdminDocsCentralLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
 const AdminDocsCentralFieldsRoute = AdminDocsCentralFieldsRouteImport.update({
   id: '/fields',
   path: '/fields',
@@ -809,6 +815,7 @@ export interface FileRoutesByFullPath {
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
+  '/admin/docs-central/library': typeof AdminDocsCentralLibraryRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/marketplace': typeof AdminDocsCentralMarketplaceRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
@@ -921,6 +928,7 @@ export interface FileRoutesByTo {
   '/processes': typeof ProcessesIndexRoute
   '/templates': typeof TemplatesIndexRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
+  '/admin/docs-central/library': typeof AdminDocsCentralLibraryRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/marketplace': typeof AdminDocsCentralMarketplaceRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
@@ -1038,6 +1046,7 @@ export interface FileRoutesById {
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
+  '/admin/docs-central/library': typeof AdminDocsCentralLibraryRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/marketplace': typeof AdminDocsCentralMarketplaceRoute
   '/admin/docs-central/models': typeof AdminDocsCentralModelsRoute
@@ -1156,6 +1165,7 @@ export interface FileRouteTypes {
     | '/processes/'
     | '/templates/'
     | '/admin/docs-central/fields'
+    | '/admin/docs-central/library'
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/marketplace'
     | '/admin/docs-central/models'
@@ -1268,6 +1278,7 @@ export interface FileRouteTypes {
     | '/processes'
     | '/templates'
     | '/admin/docs-central/fields'
+    | '/admin/docs-central/library'
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/marketplace'
     | '/admin/docs-central/models'
@@ -1384,6 +1395,7 @@ export interface FileRouteTypes {
     | '/processes/'
     | '/templates/'
     | '/admin/docs-central/fields'
+    | '/admin/docs-central/library'
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/marketplace'
     | '/admin/docs-central/models'
@@ -2250,6 +2262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocsCentralMappingsRouteImport
       parentRoute: typeof AdminDocsCentralRoute
     }
+    '/admin/docs-central/library': {
+      id: '/admin/docs-central/library'
+      path: '/library'
+      fullPath: '/admin/docs-central/library'
+      preLoaderRoute: typeof AdminDocsCentralLibraryRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
     '/admin/docs-central/fields': {
       id: '/admin/docs-central/fields'
       path: '/fields'
@@ -2262,6 +2281,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminDocsCentralRouteChildren {
   AdminDocsCentralFieldsRoute: typeof AdminDocsCentralFieldsRoute
+  AdminDocsCentralLibraryRoute: typeof AdminDocsCentralLibraryRoute
   AdminDocsCentralMappingsRoute: typeof AdminDocsCentralMappingsRoute
   AdminDocsCentralMarketplaceRoute: typeof AdminDocsCentralMarketplaceRoute
   AdminDocsCentralModelsRoute: typeof AdminDocsCentralModelsRoute
@@ -2274,6 +2294,7 @@ interface AdminDocsCentralRouteChildren {
 
 const AdminDocsCentralRouteChildren: AdminDocsCentralRouteChildren = {
   AdminDocsCentralFieldsRoute: AdminDocsCentralFieldsRoute,
+  AdminDocsCentralLibraryRoute: AdminDocsCentralLibraryRoute,
   AdminDocsCentralMappingsRoute: AdminDocsCentralMappingsRoute,
   AdminDocsCentralMarketplaceRoute: AdminDocsCentralMarketplaceRoute,
   AdminDocsCentralModelsRoute: AdminDocsCentralModelsRoute,
