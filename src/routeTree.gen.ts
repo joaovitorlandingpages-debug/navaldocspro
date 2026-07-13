@@ -111,6 +111,7 @@ import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
 import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
 import { Route as AdminBillingRouteImport } from './routes/admin/billing'
 import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
+import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
 
 const VesselsRoute = VesselsRouteImport.update({
   id: '/vessels',
@@ -626,6 +627,11 @@ const AdminAutomationRoute = AdminAutomationRouteImport.update({
   path: '/automation',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminTemplatesIdRoute = AdminTemplatesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminTemplatesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -699,7 +705,7 @@ export interface FileRoutesByFullPath {
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
-  '/admin/templates': typeof AdminTemplatesRoute
+  '/admin/templates': typeof AdminTemplatesRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
@@ -730,6 +736,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/admin/templates/$id': typeof AdminTemplatesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -800,7 +807,7 @@ export interface FileRoutesByTo {
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
-  '/admin/templates': typeof AdminTemplatesRoute
+  '/admin/templates': typeof AdminTemplatesRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
@@ -831,6 +838,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/processes': typeof ProcessesIndexRoute
   '/templates': typeof TemplatesIndexRoute
+  '/admin/templates/$id': typeof AdminTemplatesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -905,7 +913,7 @@ export interface FileRoutesById {
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
-  '/admin/templates': typeof AdminTemplatesRoute
+  '/admin/templates': typeof AdminTemplatesRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
@@ -936,6 +944,7 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/admin/templates/$id': typeof AdminTemplatesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1042,6 +1051,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/processes/'
     | '/templates/'
+    | '/admin/templates/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1143,6 +1153,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/processes'
     | '/templates'
+    | '/admin/templates/$id'
   id:
     | '__root__'
     | '/'
@@ -1247,6 +1258,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/processes/'
     | '/templates/'
+    | '/admin/templates/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2026,8 +2038,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/templates/$id': {
+      id: '/admin/templates/$id'
+      path: '/$id'
+      fullPath: '/admin/templates/$id'
+      preLoaderRoute: typeof AdminTemplatesIdRouteImport
+      parentRoute: typeof AdminTemplatesRoute
+    }
   }
 }
+
+interface AdminTemplatesRouteChildren {
+  AdminTemplatesIdRoute: typeof AdminTemplatesIdRoute
+}
+
+const AdminTemplatesRouteChildren: AdminTemplatesRouteChildren = {
+  AdminTemplatesIdRoute: AdminTemplatesIdRoute,
+}
+
+const AdminTemplatesRouteWithChildren = AdminTemplatesRoute._addFileChildren(
+  AdminTemplatesRouteChildren,
+)
 
 interface AdminRouteChildren {
   AdminAutomationRoute: typeof AdminAutomationRoute
@@ -2057,7 +2088,7 @@ interface AdminRouteChildren {
   AdminSupportRoute: typeof AdminSupportRoute
   AdminSystemHealthRoute: typeof AdminSystemHealthRoute
   AdminSystemReportRoute: typeof AdminSystemReportRoute
-  AdminTemplatesRoute: typeof AdminTemplatesRoute
+  AdminTemplatesRoute: typeof AdminTemplatesRouteWithChildren
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -2090,7 +2121,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSupportRoute: AdminSupportRoute,
   AdminSystemHealthRoute: AdminSystemHealthRoute,
   AdminSystemReportRoute: AdminSystemReportRoute,
-  AdminTemplatesRoute: AdminTemplatesRoute,
+  AdminTemplatesRoute: AdminTemplatesRouteWithChildren,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
