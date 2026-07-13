@@ -216,7 +216,7 @@ function PfwMatrixPage() {
                 <tbody>
                   {CELLS.map((cell, i) => {
                     const m = findMapping(cell);
-                    const t = m ? templates.find((x) => x.id === m.template_id) : null;
+                    const t = m ? templates.find((x: any) => x.id === m.template_id) : null;
                     const st = stateFor(cell, m);
                     const hint = UNAMBIGUOUS_HINTS[`${cell.serviceKind}|${cell.documentLabel}`];
                     return (
