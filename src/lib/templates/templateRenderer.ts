@@ -70,7 +70,7 @@ export function renderTemplate(
   });
 
   // Sanitiza antes de reinserir marcações — evita bypass.
-  const clean = getSanitizer().sanitize(substituted, SANITIZE_CONFIG);
+  const clean = purifier.sanitize(substituted, SANITIZE_CONFIG);
 
   const withMarks = clean
     .replace(/__TPL_UNKNOWN__([a-zA-Z0-9_.]+)__END__/g, (_m: string, k: string) =>
