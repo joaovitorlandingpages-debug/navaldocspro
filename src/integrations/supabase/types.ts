@@ -6024,6 +6024,98 @@ export type Database = {
         }
         Relationships: []
       }
+      template_review_comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          review_request_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          review_request_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          review_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_review_comments_review_request_id_fkey"
+            columns: ["review_request_id"]
+            isOneToOne: false
+            referencedRelation: "template_review_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_review_requests: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          id: string
+          request_note: string | null
+          requested_by: string
+          status: string
+          template_id: string
+          updated_at: string
+          version_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          id?: string
+          request_note?: string | null
+          requested_by: string
+          status?: string
+          template_id: string
+          updated_at?: string
+          version_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          id?: string
+          request_note?: string | null
+          requested_by?: string
+          status?: string
+          template_id?: string
+          updated_at?: string
+          version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_review_requests_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "template_review_requests_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "template_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       template_reviews: {
         Row: {
           comment: string | null
@@ -6794,6 +6886,18 @@ export type Database = {
         Returns: string
       }
       template_restore: { Args: { p_template_id: string }; Returns: undefined }
+      template_review_comment: {
+        Args: { p_body: string; p_request_id: string }
+        Returns: string
+      }
+      template_review_decide: {
+        Args: { p_decision: string; p_reason?: string; p_request_id: string }
+        Returns: undefined
+      }
+      template_review_open: {
+        Args: { p_note?: string; p_template_id: string; p_version_id?: string }
+        Returns: string
+      }
       template_set_default: {
         Args: { p_template_id: string }
         Returns: undefined
