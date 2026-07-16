@@ -116,7 +116,7 @@ export async function loadDocumentationCoverage(
     }
   }
 
-  const templates: TemplateSnapshot[] = templatesFiltered.map((t) => {
+  const templates: TemplateSnapshot[] = templatesFiltered.map((t: any) => {
     const bv = bestVersion.get(t.id);
     return {
       id: t.id,
@@ -131,7 +131,7 @@ export async function loadDocumentationCoverage(
     };
   });
 
-  const fields: TemplateFieldSnapshot[] = (fieldsRes.data ?? []).map((f) => ({
+  const fields: TemplateFieldSnapshot[] = ((fieldsRes.data ?? []) as any[]).map((f: any) => ({
     id: f.id,
     template_id: f.template_id!,
     field_key: f.field_key,
