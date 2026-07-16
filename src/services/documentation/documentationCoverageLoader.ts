@@ -57,14 +57,14 @@ export async function loadDocumentationCoverage(
   if (ptRes.error) throw ptRes.error;
   if (reqRes.error) throw reqRes.error;
 
-  const rawTemplates = tplRes.data ?? [];
+  const rawTemplates = (tplRes.data ?? []) as any[];
 
   // Sobreposição por code: empresa vence global
-  const byCode = new Map<string, string>(); // code -> companyTemplateId
+  const byCode = new Map<string, string>();
   for (const t of rawTemplates) {
     if (t.code && !t.is_global && t.company_id === companyId) byCode.set(t.code, t.id);
   }
-  const templatesFiltered = rawTemplates.filter((t) => {
+  const templatesFiltered = rawTemplates.filter((t: any) => {
     if (t.is_global && t.code && byCode.has(t.code)) return false;
     return true;
   });

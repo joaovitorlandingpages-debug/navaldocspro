@@ -124,7 +124,9 @@ import { Route as AdminDocsCentralModelsRouteImport } from './routes/admin/docs-
 import { Route as AdminDocsCentralMarketplaceRouteImport } from './routes/admin/docs-central/marketplace'
 import { Route as AdminDocsCentralMappingsRouteImport } from './routes/admin/docs-central/mappings'
 import { Route as AdminDocsCentralLibraryRouteImport } from './routes/admin/docs-central/library'
+import { Route as AdminDocsCentralHealthRouteImport } from './routes/admin/docs-central/health'
 import { Route as AdminDocsCentralFieldsRouteImport } from './routes/admin/docs-central/fields'
+import { Route as AdminDocsCentralCoverageRouteImport } from './routes/admin/docs-central/coverage'
 import { Route as AdminDocsCentralAuditRouteImport } from './routes/admin/docs-central/audit'
 
 const VesselsRoute = VesselsRouteImport.update({
@@ -712,11 +714,22 @@ const AdminDocsCentralLibraryRoute = AdminDocsCentralLibraryRouteImport.update({
   path: '/library',
   getParentRoute: () => AdminDocsCentralRoute,
 } as any)
+const AdminDocsCentralHealthRoute = AdminDocsCentralHealthRouteImport.update({
+  id: '/health',
+  path: '/health',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
 const AdminDocsCentralFieldsRoute = AdminDocsCentralFieldsRouteImport.update({
   id: '/fields',
   path: '/fields',
   getParentRoute: () => AdminDocsCentralRoute,
 } as any)
+const AdminDocsCentralCoverageRoute =
+  AdminDocsCentralCoverageRouteImport.update({
+    id: '/coverage',
+    path: '/coverage',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
 const AdminDocsCentralAuditRoute = AdminDocsCentralAuditRouteImport.update({
   id: '/audit',
   path: '/audit',
@@ -828,7 +841,9 @@ export interface FileRoutesByFullPath {
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
+  '/admin/docs-central/coverage': typeof AdminDocsCentralCoverageRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
+  '/admin/docs-central/health': typeof AdminDocsCentralHealthRoute
   '/admin/docs-central/library': typeof AdminDocsCentralLibraryRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/marketplace': typeof AdminDocsCentralMarketplaceRoute
@@ -943,7 +958,9 @@ export interface FileRoutesByTo {
   '/processes': typeof ProcessesIndexRoute
   '/templates': typeof TemplatesIndexRoute
   '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
+  '/admin/docs-central/coverage': typeof AdminDocsCentralCoverageRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
+  '/admin/docs-central/health': typeof AdminDocsCentralHealthRoute
   '/admin/docs-central/library': typeof AdminDocsCentralLibraryRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/marketplace': typeof AdminDocsCentralMarketplaceRoute
@@ -1063,7 +1080,9 @@ export interface FileRoutesById {
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
+  '/admin/docs-central/coverage': typeof AdminDocsCentralCoverageRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
+  '/admin/docs-central/health': typeof AdminDocsCentralHealthRoute
   '/admin/docs-central/library': typeof AdminDocsCentralLibraryRoute
   '/admin/docs-central/mappings': typeof AdminDocsCentralMappingsRoute
   '/admin/docs-central/marketplace': typeof AdminDocsCentralMarketplaceRoute
@@ -1184,7 +1203,9 @@ export interface FileRouteTypes {
     | '/processes/'
     | '/templates/'
     | '/admin/docs-central/audit'
+    | '/admin/docs-central/coverage'
     | '/admin/docs-central/fields'
+    | '/admin/docs-central/health'
     | '/admin/docs-central/library'
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/marketplace'
@@ -1299,7 +1320,9 @@ export interface FileRouteTypes {
     | '/processes'
     | '/templates'
     | '/admin/docs-central/audit'
+    | '/admin/docs-central/coverage'
     | '/admin/docs-central/fields'
+    | '/admin/docs-central/health'
     | '/admin/docs-central/library'
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/marketplace'
@@ -1418,7 +1441,9 @@ export interface FileRouteTypes {
     | '/processes/'
     | '/templates/'
     | '/admin/docs-central/audit'
+    | '/admin/docs-central/coverage'
     | '/admin/docs-central/fields'
+    | '/admin/docs-central/health'
     | '/admin/docs-central/library'
     | '/admin/docs-central/mappings'
     | '/admin/docs-central/marketplace'
@@ -2301,11 +2326,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocsCentralLibraryRouteImport
       parentRoute: typeof AdminDocsCentralRoute
     }
+    '/admin/docs-central/health': {
+      id: '/admin/docs-central/health'
+      path: '/health'
+      fullPath: '/admin/docs-central/health'
+      preLoaderRoute: typeof AdminDocsCentralHealthRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
     '/admin/docs-central/fields': {
       id: '/admin/docs-central/fields'
       path: '/fields'
       fullPath: '/admin/docs-central/fields'
       preLoaderRoute: typeof AdminDocsCentralFieldsRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/coverage': {
+      id: '/admin/docs-central/coverage'
+      path: '/coverage'
+      fullPath: '/admin/docs-central/coverage'
+      preLoaderRoute: typeof AdminDocsCentralCoverageRouteImport
       parentRoute: typeof AdminDocsCentralRoute
     }
     '/admin/docs-central/audit': {
@@ -2320,7 +2359,9 @@ declare module '@tanstack/react-router' {
 
 interface AdminDocsCentralRouteChildren {
   AdminDocsCentralAuditRoute: typeof AdminDocsCentralAuditRoute
+  AdminDocsCentralCoverageRoute: typeof AdminDocsCentralCoverageRoute
   AdminDocsCentralFieldsRoute: typeof AdminDocsCentralFieldsRoute
+  AdminDocsCentralHealthRoute: typeof AdminDocsCentralHealthRoute
   AdminDocsCentralLibraryRoute: typeof AdminDocsCentralLibraryRoute
   AdminDocsCentralMappingsRoute: typeof AdminDocsCentralMappingsRoute
   AdminDocsCentralMarketplaceRoute: typeof AdminDocsCentralMarketplaceRoute
@@ -2335,7 +2376,9 @@ interface AdminDocsCentralRouteChildren {
 
 const AdminDocsCentralRouteChildren: AdminDocsCentralRouteChildren = {
   AdminDocsCentralAuditRoute: AdminDocsCentralAuditRoute,
+  AdminDocsCentralCoverageRoute: AdminDocsCentralCoverageRoute,
   AdminDocsCentralFieldsRoute: AdminDocsCentralFieldsRoute,
+  AdminDocsCentralHealthRoute: AdminDocsCentralHealthRoute,
   AdminDocsCentralLibraryRoute: AdminDocsCentralLibraryRoute,
   AdminDocsCentralMappingsRoute: AdminDocsCentralMappingsRoute,
   AdminDocsCentralMarketplaceRoute: AdminDocsCentralMarketplaceRoute,
@@ -2556,13 +2599,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
