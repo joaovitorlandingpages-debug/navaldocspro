@@ -4,28 +4,14 @@
  * Sanitiza HTML e substitui placeholders {{chave}}.
  */
 // Onda 4D.2.e — isomorphic-dompurify quebra na runtime Cloudflare Workers
-// (tenta bind de globais Node ausentes). Carregamos DOMPurify apenas no
-// browser; no server (SSR/Worker) usamos um passthrough seguro — sanitização
-// já foi feita quando o conteúdo saiu do editor.
+// (tenta bind de globais Node ausentes). Usamos `dompurify` puro: no browser
+// sanitiza normalmente; no server (sem window) usa passthrough.
+import DOMPurify from "dompurify";
 type Sanitizer = { sanitize: (input: string, cfg?: unknown) => string };
-let _purifier: Sanitizer | null = null;
-function getSanitizer(): Sanitizer {
-  if (_purifier) return _purifier;
-  if (typeof window !== "undefined") {
-    try {
-      // require síncrono para manter renderTemplate síncrono no cliente.
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const mod = require("dompurify");
-      const DOMPurify = mod?.default ?? mod;
-      _purifier = { sanitize: (s, c) => DOMPurify.sanitize(s, c as never) as string };
-      return _purifier;
-    } catch {
-      // fallthrough
-    }
-  }
-  _purifier = { sanitize: (s) => s };
-  return _purifier;
-}
+const purifier: Sanitizer =
+  typeof window !== "undefined" && typeof (DOMPurify as { sanitize?: unknown }).sanitize === "function"
+    ? { sanitize: (s, c) => (DOMPurify as unknown as Sanitizer).sanitize(s, c) }
+    : { sanitize: (s) => s };
 import { SAMPLE_CONTEXT, VARIABLE_INDEX } from "./variableCatalog";
 
 const TAG_RE = /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g;
