@@ -87,9 +87,9 @@ export function renderTemplate(
   const clean = getSanitizer().sanitize(substituted, SANITIZE_CONFIG);
 
   const withMarks = clean
-    .replace(/__TPL_UNKNOWN__([a-zA-Z0-9_.]+)__END__/g, (_m, k) =>
+    .replace(/__TPL_UNKNOWN__([a-zA-Z0-9_.]+)__END__/g, (_m: string, k: string) =>
       `<mark style="background:#fee2e2;color:#991b1b;padding:0 4px;border-radius:2px;">{{${escapeHtml(k)}}}</mark>`)
-    .replace(/__TPL_MISSING__([a-zA-Z0-9_.]+)__END__/g, (_m, k) =>
+    .replace(/__TPL_MISSING__([a-zA-Z0-9_.]+)__END__/g, (_m: string, k: string) =>
       `<mark style="background:#fef3c7;color:#92400e;padding:0 4px;border-radius:2px;">[${escapeHtml(k)}]</mark>`);
 
   return { html: withMarks, unknownKeys: Array.from(unknown) };
