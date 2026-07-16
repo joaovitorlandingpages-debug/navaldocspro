@@ -57,6 +57,7 @@ function AdminTemplateDetail() {
   const [publishOpen, setPublishOpen] = useState(false);
   const [changelog, setChangelog] = useState("");
   const [notes, setNotes] = useState("");
+  const [restoreSource, setRestoreSource] = useState<any | null>(null);
 
   const templateQ = useQuery({
     queryKey: ["admin-template", id],
