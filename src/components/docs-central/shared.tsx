@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  LayoutDashboard, FileText, Workflow, Link2, Type, GitBranch,
+  LayoutDashboard, Activity, PieChart, FileText, Workflow, Link2, Type, GitBranch,
   Send, CheckSquare, Store, Library, ShieldCheck, Sparkles,
 } from "lucide-react";
 import { ReactNode } from "react";
@@ -8,6 +8,8 @@ import { Card } from "@/components/ui/card";
 
 export const dcNav: { to: string; label: string; icon: any; exact?: boolean }[] = [
   { to: "/admin/docs-central", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/admin/docs-central/health", label: "Saúde", icon: Activity },
+  { to: "/admin/docs-central/coverage", label: "Cobertura", icon: PieChart },
   { to: "/admin/docs-central/models", label: "Modelos", icon: FileText },
   { to: "/admin/docs-central/process-types", label: "Tipos de Processo", icon: Workflow },
   { to: "/admin/docs-central/mappings", label: "Mapeamentos", icon: Link2 },
