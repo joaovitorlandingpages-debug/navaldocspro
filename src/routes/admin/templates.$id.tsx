@@ -325,29 +325,58 @@ function AdminTemplateDetail() {
                 </p>
               )}
               <div className="divide-y">
-                {(versionsQ.data ?? []).map((v: any) => (
-                  <div key={v.id} className="py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium">v{v.version_number ?? v.version}</span>
-                        <VersionStatus status={v.status} />
+                {(() => {
+                  const versions = versionsQ.data ?? [];
+                  const currentPublished = versions.find((v: any) => v.status === "published") ?? null;
+                  return versions.map((v: any) => (
+                    <div key={v.id} className="py-3 flex flex-col md:flex-row md:items-start md:justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium">v{v.version_number ?? v.version}</span>
+                          <VersionStatus status={v.status} />
+                          {v.change_type === "restore" && v.restored_from_version_id && (
+                            <Badge variant="outline" className="gap-1 text-primary border-primary/40">
+                              <RotateCcw className="h-3 w-3" /> Restaurado
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-500 mt-1">
+                          {v.created_at && <>Criada {formatDistanceToNow(new Date(v.created_at), { addSuffix: true, locale: ptBR })}</>}
+                        </div>
+                        {v.restore_reason && (
+                          <p className="text-xs text-primary mt-1">Motivo do rollback: {v.restore_reason}</p>
+                        )}
+                        {Array.isArray(v.changelog) && v.changelog.length > 0 && (
+                          <p className="text-xs text-slate-600 mt-1 line-clamp-2">
+                            {v.changelog.map((c: any) => c?.note).filter(Boolean).join(" · ") || v.notes || "—"}
+                          </p>
+                        )}
                       </div>
-                      <div className="text-xs text-slate-500 mt-1">
-                        {v.created_at && <>Criada {formatDistanceToNow(new Date(v.created_at), { addSuffix: true, locale: ptBR })}</>}
-                      </div>
-                      {Array.isArray(v.changelog) && v.changelog.length > 0 && (
-                        <p className="text-xs text-slate-600 mt-1 line-clamp-2">
-                          {v.changelog.map((c: any) => c?.note).filter(Boolean).join(" · ") || v.notes || "—"}
-                        </p>
+                      {canEdit && lifecycle !== "archived" && v.status !== "draft" && (
+                        <Button
+                          variant="outline" size="sm" className="gap-1 shrink-0"
+                          onClick={() => setRestoreSource({ ...v, __currentPublished: currentPublished })}
+                        >
+                          <RotateCcw className="h-3 w-3" /> Restaurar como rascunho
+                        </Button>
                       )}
                     </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
+
+      <RestoreVersionDialog
+        open={!!restoreSource}
+        onOpenChange={(v) => { if (!v) setRestoreSource(null); }}
+        templateId={id}
+        source={restoreSource}
+        currentPublished={restoreSource?.__currentPublished ?? null}
+      />
+
 
       <Dialog open={publishOpen} onOpenChange={setPublishOpen}>
         <DialogContent>
