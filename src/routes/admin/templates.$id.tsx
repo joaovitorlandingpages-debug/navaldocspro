@@ -78,7 +78,7 @@ function AdminTemplateDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("template_versions")
-        .select("id, version, version_number, status, changelog, notes, created_by, created_at, released_at")
+        .select("id, version, version_number, status, changelog, notes, created_by, created_at, released_at, base_content, document_structure, metadata, restored_from_version_id, restore_reason, change_type")
         .eq("template_id", id)
         .order("version_number", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
