@@ -6208,6 +6208,7 @@ export type Database = {
       template_versions: {
         Row: {
           base_content: string | null
+          change_type: string
           changelog: Json
           created_at: string
           created_by: string | null
@@ -6216,6 +6217,8 @@ export type Database = {
           metadata: Json
           notes: string | null
           released_at: string
+          restore_reason: string | null
+          restored_from_version_id: string | null
           status: Database["public"]["Enums"]["template_lifecycle"]
           template_id: string
           version: string
@@ -6223,6 +6226,7 @@ export type Database = {
         }
         Insert: {
           base_content?: string | null
+          change_type?: string
           changelog?: Json
           created_at?: string
           created_by?: string | null
@@ -6231,6 +6235,8 @@ export type Database = {
           metadata?: Json
           notes?: string | null
           released_at?: string
+          restore_reason?: string | null
+          restored_from_version_id?: string | null
           status?: Database["public"]["Enums"]["template_lifecycle"]
           template_id: string
           version: string
@@ -6238,6 +6244,7 @@ export type Database = {
         }
         Update: {
           base_content?: string | null
+          change_type?: string
           changelog?: Json
           created_at?: string
           created_by?: string | null
@@ -6246,12 +6253,21 @@ export type Database = {
           metadata?: Json
           notes?: string | null
           released_at?: string
+          restore_reason?: string | null
+          restored_from_version_id?: string | null
           status?: Database["public"]["Enums"]["template_lifecycle"]
           template_id?: string
           version?: string
           version_number?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "template_versions_restored_from_version_id_fkey"
+            columns: ["restored_from_version_id"]
+            isOneToOne: false
+            referencedRelation: "template_versions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "template_versions_template_id_fkey"
             columns: ["template_id"]
@@ -6886,6 +6902,15 @@ export type Database = {
         Returns: string
       }
       template_restore: { Args: { p_template_id: string }; Returns: undefined }
+      template_restore_version_as_draft: {
+        Args: {
+          p_optional_changelog?: string
+          p_restore_reason: string
+          p_source_version_id: string
+          p_template_id: string
+        }
+        Returns: string
+      }
       template_review_comment: {
         Args: { p_body: string; p_request_id: string }
         Returns: string

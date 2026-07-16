@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.template_restore_version_as_draft(uuid, uuid, text, text) FROM PUBLIC, anon;
