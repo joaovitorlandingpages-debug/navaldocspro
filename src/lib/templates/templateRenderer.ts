@@ -3,7 +3,15 @@
  * Renderer canônico usado no preview E na geração real.
  * Sanitiza HTML e substitui placeholders {{chave}}.
  */
-import DOMPurify from "isomorphic-dompurify";
+// Onda 4D.2.e — isomorphic-dompurify quebra na runtime Cloudflare Workers
+// (tenta bind de globais Node ausentes). Usamos `dompurify` puro: no browser
+// sanitiza normalmente; no server (sem window) usa passthrough.
+import DOMPurify from "dompurify";
+type Sanitizer = { sanitize: (input: string, cfg?: unknown) => string };
+const purifier: Sanitizer =
+  typeof window !== "undefined" && typeof (DOMPurify as { sanitize?: unknown }).sanitize === "function"
+    ? { sanitize: (s, c) => (DOMPurify as unknown as Sanitizer).sanitize(s, c) }
+    : { sanitize: (s) => s };
 import { SAMPLE_CONTEXT, VARIABLE_INDEX } from "./variableCatalog";
 
 const TAG_RE = /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g;
@@ -62,12 +70,12 @@ export function renderTemplate(
   });
 
   // Sanitiza antes de reinserir marcações — evita bypass.
-  const clean = DOMPurify.sanitize(substituted, SANITIZE_CONFIG);
+  const clean = purifier.sanitize(substituted, SANITIZE_CONFIG);
 
   const withMarks = clean
-    .replace(/__TPL_UNKNOWN__([a-zA-Z0-9_.]+)__END__/g, (_m, k) =>
+    .replace(/__TPL_UNKNOWN__([a-zA-Z0-9_.]+)__END__/g, (_m: string, k: string) =>
       `<mark style="background:#fee2e2;color:#991b1b;padding:0 4px;border-radius:2px;">{{${escapeHtml(k)}}}</mark>`)
-    .replace(/__TPL_MISSING__([a-zA-Z0-9_.]+)__END__/g, (_m, k) =>
+    .replace(/__TPL_MISSING__([a-zA-Z0-9_.]+)__END__/g, (_m: string, k: string) =>
       `<mark style="background:#fef3c7;color:#92400e;padding:0 4px;border-radius:2px;">[${escapeHtml(k)}]</mark>`);
 
   return { html: withMarks, unknownKeys: Array.from(unknown) };
