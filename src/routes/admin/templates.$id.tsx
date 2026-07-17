@@ -29,6 +29,7 @@ import { ptBR } from "date-fns/locale";
 import { TemplateEditor, type EditorDraft } from "@/components/admin/templates/TemplateEditor";
 import { validateTemplate, canPublish } from "@/lib/templates/templateValidator";
 import { RestoreVersionDialog } from "@/components/admin/templates/RestoreVersionDialog";
+import { invalidateDocsCoverage } from "@/hooks/useDocumentationCoverage";
 
 export const Route = createFileRoute("/admin/templates/$id")({
   component: AdminTemplateDetail,
