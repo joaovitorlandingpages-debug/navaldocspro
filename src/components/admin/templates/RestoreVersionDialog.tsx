@@ -65,6 +65,8 @@ export function RestoreVersionDialog({
       toast.success("Nova versão de rascunho criada a partir da versão selecionada.");
       qc.invalidateQueries({ queryKey: ["admin-template", templateId] });
       qc.invalidateQueries({ queryKey: ["admin-template-versions", templateId] });
+      // Gate 0.1 — rollback altera lifecycle de versões → cobertura documental.
+      void invalidateDocsCoverage(qc);
       onOpenChange(false);
       setReason(""); setChangelog("");
       onRestored?.(newId);
