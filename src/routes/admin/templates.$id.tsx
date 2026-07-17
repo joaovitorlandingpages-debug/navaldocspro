@@ -29,6 +29,7 @@ import { ptBR } from "date-fns/locale";
 import { TemplateEditor, type EditorDraft } from "@/components/admin/templates/TemplateEditor";
 import { validateTemplate, canPublish } from "@/lib/templates/templateValidator";
 import { RestoreVersionDialog } from "@/components/admin/templates/RestoreVersionDialog";
+import { invalidateDocsCoverage } from "@/hooks/useDocumentationCoverage";
 
 export const Route = createFileRoute("/admin/templates/$id")({
   component: AdminTemplateDetail,
@@ -101,6 +102,8 @@ function AdminTemplateDetail() {
     qc.invalidateQueries({ queryKey: ["admin-template", id] });
     qc.invalidateQueries({ queryKey: ["admin-template-versions", id] });
     qc.invalidateQueries({ queryKey: ["admin-templates-canonical"] });
+    // Gate 0.1 — toda mutação de template afeta cobertura/saúde documental.
+    void invalidateDocsCoverage(qc);
   };
 
   const rpc = async (fn: string, params: Record<string, unknown>) => {
