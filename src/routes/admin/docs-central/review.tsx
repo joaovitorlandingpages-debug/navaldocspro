@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, MessageSquare, AlertTriangle, Clock } from "lucide-react";
+import { invalidateDocsCoverage } from "@/hooks/useDocumentationCoverage";
 
 export const Route = createFileRoute("/admin/docs-central/review")({
   component: ReviewPage,
@@ -170,6 +171,7 @@ function ReviewDrawer({
     },
     onSuccess: () => {
       toast.success("Decisão registrada");
+      void invalidateDocsCoverage(qc);
       onChanged();
     },
     onError: (e: any) => toast.error(e?.message ?? "Falha ao decidir"),
