@@ -171,6 +171,7 @@ function ReviewDrawer({
     },
     onSuccess: () => {
       toast.success("Decisão registrada");
+      void invalidateDocsCoverage(qc);
       onChanged();
     },
     onError: (e: any) => toast.error(e?.message ?? "Falha ao decidir"),
