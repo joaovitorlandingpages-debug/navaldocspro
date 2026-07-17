@@ -112,11 +112,13 @@ export async function loadDocumentationCoverage(
   const templatesFiltered = applyPrecedence((tplRes.data ?? []) as any[], companyId);
   const templateIds = templatesFiltered.map((t) => t.id);
 
+  // Fold base_content into the versions request — total loader is now
+  // exactly 5 Data API round-trips (3 iniciais em paralelo + 2 dependentes).
   const [verRes, fieldsRes] = templateIds.length
     ? await Promise.all([
         supabase
           .from("template_versions")
-          .select("template_id,version_number,status")
+          .select("template_id,version_number,status,base_content")
           .in("template_id", templateIds)
           .eq("status", "published")
           .limit(10000),
@@ -132,21 +134,11 @@ export async function loadDocumentationCoverage(
   if (fieldsRes.error) throw fieldsRes.error;
 
   const bestVersion = new Map<string, { version: number; base: string | null }>();
-  for (const v of verRes.data ?? []) {
+  for (const v of (verRes.data ?? []) as any[]) {
     const cur = bestVersion.get(v.template_id);
     const vn = v.version_number ?? 0;
-    if (!cur || vn > cur.version) bestVersion.set(v.template_id, { version: vn, base: null });
-  }
-  if (bestVersion.size > 0) {
-    const { data: baseRows, error: baseErr } = await supabase
-      .from("template_versions")
-      .select("template_id,version_number,base_content")
-      .in("template_id", Array.from(bestVersion.keys()))
-      .eq("status", "published");
-    if (baseErr) throw baseErr;
-    for (const b of baseRows ?? []) {
-      const cur = bestVersion.get(b.template_id);
-      if (cur && (b.version_number ?? 0) === cur.version) cur.base = b.base_content ?? null;
+    if (!cur || vn > cur.version) {
+      bestVersion.set(v.template_id, { version: vn, base: v.base_content ?? null });
     }
   }
 
