@@ -33,7 +33,7 @@ function PublishingPage() {
 
   return (
     <div>
-      <PageTitle title="Publicações" description="Fila de estados por versão" />
+      <PageTitle title="Publicações" description="Enterprise Documentation Central v2.0" />
       {isLoading && <p className="text-sm text-slate-500">Carregando...</p>}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {COLUMNS.map((c) => {
