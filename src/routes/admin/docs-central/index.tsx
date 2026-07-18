@@ -57,7 +57,7 @@ function DashboardPage() {
 
   return (
     <div>
-      <PageTitle title="Dashboard" description="Visão consolidada da documentação do sistema" />
+      <PageTitle title="Dashboard" description="Enterprise Documentation Central v2.0" />
 
       <section className="mb-8">
         <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Modelos</h3>
