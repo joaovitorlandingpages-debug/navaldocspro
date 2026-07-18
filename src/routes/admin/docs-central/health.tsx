@@ -39,7 +39,7 @@ function HealthPage() {
   if (isLoading) {
     return (
       <div>
-        <PageTitle title="Saúde da Documentação" description="Visão executiva da conformidade documental" />
+        <PageTitle title="Saúde da Documentação" description="Enterprise Documentation Central v2.0" />
         <Skeleton />
       </div>
     );
