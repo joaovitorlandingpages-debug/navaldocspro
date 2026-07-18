@@ -59,7 +59,7 @@ function ModelsPage() {
 
   return (
     <div>
-      <PageTitle title="Modelos" description="Catálogo de templates agrupado por categoria" />
+      <PageTitle title="Modelos" description="Enterprise Documentation Central v2.0" />
       <div className="mb-6 relative max-w-md">
         <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar modelo..." className="pl-9" />
