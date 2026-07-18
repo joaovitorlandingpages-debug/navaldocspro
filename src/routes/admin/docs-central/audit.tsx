@@ -24,7 +24,7 @@ function AuditPage() {
 
   return (
     <div>
-      <PageTitle title="Auditoria" description="Rastro documental — quem, quando, o quê" />
+      <PageTitle title="Auditoria" description="Enterprise Documentation Central v2.0" />
       {isLoading && <p className="text-sm text-slate-500">Carregando...</p>}
       {!isLoading && (data?.length ?? 0) === 0 && <Empty title="Nenhum evento auditável" />}
       <Card className="border-slate-100 overflow-hidden">
