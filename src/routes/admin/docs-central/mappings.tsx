@@ -10,7 +10,7 @@ export const Route = createFileRoute("/admin/docs-central/mappings")({
 function MappingsPage() {
   return (
     <div>
-      <PageTitle title="Mapeamentos" description="Vinculação Serviço → Documento → Modelo → Versão → Escopo → Status" />
+      <PageTitle title="Mapeamentos" description="Enterprise Documentation Central v2.0" />
       <Card className="p-6 border-slate-100">
         <p className="text-sm text-slate-600 mb-4">
           A matriz completa de mapeamentos do Processo Guiado está disponível na tela dedicada,
