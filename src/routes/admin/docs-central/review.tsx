@@ -71,7 +71,7 @@ function ReviewPage() {
     <div>
       <PageTitle
         title="Revisão"
-        description="Aprovar, rejeitar, solicitar mudanças e comentar em versões de modelos"
+        description="Enterprise Documentation Central v2.0"
         actions={
           <div className="flex gap-2">
             <Button size="sm" variant={filter === "pending" ? "default" : "outline"} onClick={() => setFilter("pending")}>
