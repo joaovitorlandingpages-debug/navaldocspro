@@ -25,7 +25,7 @@ function VersionsPage() {
 
   return (
     <div>
-      <PageTitle title="Versões" description="Histórico completo de publicações e alterações" />
+      <PageTitle title="Versões" description="Enterprise Documentation Central v2.0" />
       {isLoading && <p className="text-sm text-slate-500">Carregando...</p>}
       {!isLoading && (data?.length ?? 0) === 0 && <Empty title="Nenhuma versão registrada" />}
       <Card className="border-slate-100 overflow-hidden">

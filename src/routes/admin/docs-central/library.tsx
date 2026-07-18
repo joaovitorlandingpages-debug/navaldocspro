@@ -10,7 +10,7 @@ export const Route = createFileRoute("/admin/docs-central/library")({
 function LibraryPage() {
   return (
     <div>
-      <PageTitle title="Biblioteca Nacional" description="Templates oficiais consolidados" />
+      <PageTitle title="Biblioteca Nacional" description="Enterprise Documentation Central v2.0" />
       <Card className="p-6 border-slate-100 flex items-center gap-6">
         <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
           <Library className="h-6 w-6 text-primary" />

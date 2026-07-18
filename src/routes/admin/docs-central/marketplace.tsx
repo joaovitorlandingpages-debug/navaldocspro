@@ -10,7 +10,7 @@ export const Route = createFileRoute("/admin/docs-central/marketplace")({
 function MarketplacePage() {
   return (
     <div>
-      <PageTitle title="Marketplace" description="Templates públicos disponíveis para todas as empresas" />
+      <PageTitle title="Marketplace" description="Enterprise Documentation Central v2.0" />
       <Card className="p-6 border-slate-100 flex items-center gap-6">
         <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
           <Store className="h-6 w-6 text-primary" />

@@ -29,7 +29,7 @@ export function DocsCentralSidebar() {
     <aside className="w-64 shrink-0 border-r border-slate-200 bg-white">
       <div className="px-6 py-6 border-b border-slate-100">
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Módulo</p>
-        <h2 className="text-lg font-bold text-navy mt-1">Central de Documentação</h2>
+        <h2 className="text-lg font-bold text-navy mt-1">Enterprise Documentation Central v2.0</h2>
       </div>
       <nav className="p-3 space-y-1">
         {dcNav.map((item) => {

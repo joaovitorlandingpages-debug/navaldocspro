@@ -69,7 +69,7 @@ function SetupAssistantPage() {
 
   return (
     <div>
-      <PageTitle title="Assistente de Configuração" description="Checklist geral do ambiente" />
+      <PageTitle title="Assistente de Configuração" description="Enterprise Documentation Central v2.0" />
       {isLoading && <p className="text-sm text-slate-500 mb-4">Analisando ambiente...</p>}
       <Card className="p-6 border-slate-100 mb-6">
         <div className="flex items-baseline justify-between mb-3">

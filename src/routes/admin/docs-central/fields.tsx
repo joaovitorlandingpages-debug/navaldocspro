@@ -38,7 +38,7 @@ function FieldsPage() {
 
   return (
     <div>
-      <PageTitle title="Campos" description="Placeholders e variáveis usadas nos modelos" />
+      <PageTitle title="Campos" description="Enterprise Documentation Central v2.0" />
       {isLoading && <p className="text-sm text-slate-500">Carregando...</p>}
       {data && (
         <>

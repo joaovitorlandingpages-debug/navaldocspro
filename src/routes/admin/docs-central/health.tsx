@@ -39,7 +39,7 @@ function HealthPage() {
   if (isLoading) {
     return (
       <div>
-        <PageTitle title="Saúde da Documentação" description="Visão executiva da conformidade documental" />
+        <PageTitle title="Saúde da Documentação" description="Enterprise Documentation Central v2.0" />
         <Skeleton />
       </div>
     );
@@ -59,7 +59,7 @@ function HealthPage() {
     <div>
       <PageTitle
         title="Saúde da Documentação"
-        description="Visão executiva da conformidade documental"
+        description="Enterprise Documentation Central v2.0"
         actions={
           <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching}>
             <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isFetching ? "animate-spin" : ""}`} />

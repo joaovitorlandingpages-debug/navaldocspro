@@ -125,7 +125,7 @@ function CoveragePage() {
     <div>
       <PageTitle
         title="Cobertura por Processo"
-        description={`Cobertura geral: ${data.coverage}% · ${data.processes.length} tipos de processo`}
+        description={`Enterprise Documentation Central v2.0 · Cobertura geral: ${data.coverage}%`}
       />
       <div className="space-y-2">
         {data.processes.map((p) => <CoverageItem key={p.process_type_id} p={p} />)}

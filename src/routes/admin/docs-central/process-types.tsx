@@ -36,7 +36,7 @@ function ProcessTypesPage() {
 
   return (
     <div>
-      <PageTitle title="Tipos de Processo" description="Cobertura documental por tipo de serviço" />
+      <PageTitle title="Tipos de Processo" description="Enterprise Documentation Central v2.0" />
       {isLoading && <p className="text-sm text-slate-500">Carregando...</p>}
       {!isLoading && (data?.length ?? 0) === 0 && <Empty title="Nenhum tipo de processo cadastrado" />}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
