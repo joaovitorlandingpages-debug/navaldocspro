@@ -88,13 +88,17 @@ export class ActionExecutor {
       const durationMs = finishedAt.getTime() - startedAt.getTime();
 
       // Audit Success
-      await auditLogger.logSuccess(executionId, {
-        finishedAt,
-        durationMs,
-        metadata: result.metadata,
-        warnings: result.warnings,
-        documentId: result.metadata?.documentId
-      });
+      try {
+        await auditLogger.logSuccess(executionId, {
+          finishedAt,
+          durationMs,
+          metadata: result.metadata,
+          warnings: result.warnings,
+          documentId: result.metadata?.documentId
+        });
+      } catch (auditError) {
+        console.warn('Audit success log failed:', auditError);
+      }
 
       return {
         success: result.success,
@@ -125,12 +129,16 @@ export class ActionExecutor {
       }
 
       // Audit Failure
-      await auditLogger.logFailure(executionId, {
-        error: errors,
-        finishedAt,
-        durationMs: finishedAt.getTime() - startedAt.getTime(),
-        metadata: { errorCode: error.code }
-      });
+      try {
+        await auditLogger.logFailure(executionId, {
+          error: errors,
+          finishedAt,
+          durationMs: finishedAt.getTime() - startedAt.getTime(),
+          metadata: { errorCode: error.code }
+        });
+      } catch (auditError) {
+        console.warn('Audit failure log failed:', auditError);
+      }
 
       return {
         success: false,
