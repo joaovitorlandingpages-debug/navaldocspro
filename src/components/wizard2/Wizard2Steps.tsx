@@ -19,6 +19,8 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { FileUploader } from '@/components/FileUploader';
 import { previewProcessBlueprint } from '@/services/processes/blueprintEngine';
+import { runSmartOcr, detectExistingCustomer, detectExistingVessel } from '@/services/smartOnboardingService';
+import { previewProcessBlueprint } from '@/services/processes/blueprintEngine';
 
 // --- Shared Components ---
 
