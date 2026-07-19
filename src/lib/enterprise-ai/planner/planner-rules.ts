@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ActionRiskLevelSchema } from "./planner-types";
+import { ActionRiskLevel, ActionRiskLevelSchema, ExecutionStep } from "./planner-types";
 import { ConfirmationPolicy } from "../actions/action-types";
 
 /**
@@ -36,3 +36,31 @@ export const IntentRuleSchema = z.object({
 });
 
 export type IntentRule = z.infer<typeof IntentRuleSchema>;
+
+/**
+ * Calculate overall risk level for a plan based on steps' individual risks.
+ */
+export function calculateOverallRisk(steps: { actionId: string, riskLevel?: ActionRiskLevel }[]): ActionRiskLevel {
+  const risks = steps.map(s => s.riskLevel || "LOW");
+  
+  if (risks.includes("CRITICAL")) return "CRITICAL";
+  
+  const highCount = risks.filter(r => r === "HIGH").length;
+  if (highCount >= 1) return "HIGH";
+  
+  const mediumCount = risks.filter(r => r === "MEDIUM").length;
+  if (mediumCount >= 3) return "HIGH"; // Accumulated risk
+  if (mediumCount >= 1) return "MEDIUM";
+  
+  return "LOW";
+}
+
+/**
+ * Default intent mapping rules
+ */
+export const DEFAULT_INTENT_RULES: IntentRule[] = [
+  { intentKeywords: ["processo", "process", "criar processo"], actionId: "create-process" },
+  { intentKeywords: ["pdf", "documento", "gerar pdf"], actionId: "generate-pdf" },
+  { intentKeywords: ["checklist", "concluir checklist"], actionId: "complete-checklist" },
+  { intentKeywords: ["assinatura", "signature", "enviar assinatura"], actionId: "request-signature" },
+];
