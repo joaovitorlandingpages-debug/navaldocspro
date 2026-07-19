@@ -274,8 +274,9 @@ export class ActionExecutor {
 
           await idempotencyService.update(idempotencyRecordId, {
             status: isRecoverable ? 'recoverable_failed' : 'failed',
-            errorCode: errorCode,
+            errorCode: effectiveErrorCode,
             processId: finalProcessId
+
           });
         }
 
