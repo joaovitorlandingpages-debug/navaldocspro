@@ -109,7 +109,6 @@ function AICommandCenterPage() {
         </div>
       </div>
 
-
       <div className="grid grid-cols-1 gap-8">
         <Card className="p-8 border-slate-200 bg-white font-mono text-[11px] leading-relaxed shadow-sm">
           <ScrollArea className="h-[1200px] pr-4">
@@ -118,37 +117,26 @@ function AICommandCenterPage() {
                 <h2 className="text-sm font-black border-b-2 border-slate-900 pb-2 mb-4">1. ÁRVORE COMPLETA</h2>
                 <pre className="bg-slate-50 p-4 rounded-lg text-[10px]">
 {`src/lib/enterprise-ai/
+├── providers/ (SPRINT 3 - NEW)
+│   ├── provider-types.ts
+│   ├── provider-manager.ts
+│   ├── provider-registry.ts
+│   ├── mock-provider.ts
+│   ├── openai-provider.ts
+│   ├── gemini-provider.ts
+│   └── claude-provider.ts
 ├── agents/
-│   ├── agent-registry.ts
-│   └── process-specialist.agent.ts
 ├── context/
-│   ├── context-engine.ts
-│   └── context-types.ts
 ├── conversations/
-│   ├── conversation-repository.ts
-│   └── conversation-types.ts
 ├── core/
-│   ├── ai-errors.ts
-│   ├── ai-orchestrator.ts
-│   └── ai-types.ts
 ├── intents/
-│   ├── intent-classifier.ts
-│   └── intent-types.ts
 ├── planning/
-│   ├── execution-planner.ts
-│   └── plan-types.ts
 ├── prompts/
-│   └── prompt-builder.ts
-├── providers/
-│   └── mock-provider.ts
 ├── responses/
-│   └── response-builder.ts
 ├── tests/
-│   └── eacc-foundation.test.ts
-└── tools/
-    ├── process-tools.ts
-    ├── tool-registry-init.ts
-    └── tool-registry.ts`}
+│   ├── eacc-foundation.test.ts
+│   └── provider-layer.test.ts (NEW)
+└── tools/`}
                 </pre>
               </section>
 
@@ -227,7 +215,6 @@ Duration 412ms`}
                   <p className="text-[10px] font-bold mt-2 leading-relaxed">Camada Enterprise AI Provider concluída. Abstração total de fornecedores, suporte a stubs para OpenAI/Gemini/Claude e motor de fallback funcional.</p>
                 </div>
               </section>
-
             </div>
           </ScrollArea>
         </Card>
