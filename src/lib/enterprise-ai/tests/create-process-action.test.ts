@@ -34,12 +34,16 @@ vi.mock("@/integrations/supabase/client", () => {
   m.insert.mockReturnValue(m);
   m.update.mockReturnValue(m);
   m.eq.mockReturnValue(m);
-  m.single.mockImplementation(() => Promise.resolve({ data: null, error: null }));
-  m.maybeSingle.mockImplementation(() => Promise.resolve({ data: null, error: null }));
+  m.single.mockReturnValue(m); // Return self for chaining
+  m.maybeSingle.mockReturnValue(m); // Return self for chaining
   m.auth.getUser.mockResolvedValue({ 
     data: { user: { id: "550e8400-e29b-41d4-a716-446655440000" } }, 
     error: null 
   });
+  
+  // Terminal promise methods
+  (m as any).then = (onRes: any) => Promise.resolve({ data: null, error: null }).then(onRes);
+  
   return { supabase: m, _mocks: m };
 });
 
@@ -76,14 +80,23 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
     const m = (supabase as any);
     m.auth.getUser.mockResolvedValue({ data: { user: { id: mockUserId } }, error: null });
     
-    // Reset sequences
-    m.maybeSingle.mockReset();
-    m.maybeSingle.mockImplementation(() => Promise.resolve({ data: null, error: null }));
-    m.single.mockReset();
-    m.single.mockImplementation(() => Promise.resolve({ data: null, error: null }));
+    // Reset sequences by overriding 'then'
+    m.then = (onRes: any) => Promise.resolve({ data: null, error: null }).then(onRes);
   });
 
   const getMockSupabase = () => (supabase as any);
+
+  const mockSupabaseResponse = (data: any, error: any = null) => {
+    getMockSupabase().then = (onRes: any) => Promise.resolve({ data, error }).then(onRes);
+  };
+
+  const mockSupabaseSequence = (responses: Array<{data: any, error?: any}>) => {
+    let index = 0;
+    getMockSupabase().then = (onRes: any) => {
+      const res = responses[index++] || { data: null, error: null };
+      return Promise.resolve(res).then(onRes);
+    };
+  };
 
   describe("Validation", () => {
     it("should fail if customerId is missing", async () => {
@@ -97,9 +110,10 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
     });
 
     it("should fail if customer belongs to another tenant", async () => {
-      getMockSupabase().maybeSingle
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId }, error: null }) // Profile
-        .mockResolvedValueOnce({ data: { company_id: "550e8400-e29b-41d4-a716-446655449999" }, error: null }); // Other Customer
+      mockSupabaseSequence([
+        { data: { company_id: mockCompanyId } }, // Profile
+        { data: { company_id: "550e8400-e29b-41d4-a716-446655449999" } } // Other Customer
+      ]);
 
       await expect(action.validate({
         customerId: mockCustomerId,
@@ -110,10 +124,11 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
     });
 
     it("should fail if vessel belongs to another tenant", async () => {
-      getMockSupabase().maybeSingle
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId }, error: null }) // Profile
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId }, error: null }) // Customer
-        .mockResolvedValueOnce({ data: { company_id: "550e8400-e29b-41d4-a716-446655449999" }, error: null }); // Other Vessel
+      mockSupabaseSequence([
+        { data: { company_id: mockCompanyId } }, // Profile
+        { data: { company_id: mockCompanyId } }, // Customer
+        { data: { company_id: "550e8400-e29b-41d4-a716-446655449999" } } // Other Vessel
+      ]);
 
       await expect(action.validate({
         customerId: mockCustomerId,
@@ -125,10 +140,11 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
     });
 
     it("should fail if vessel belongs to another customer", async () => {
-      getMockSupabase().maybeSingle
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId }, error: null }) // Profile
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId }, error: null }) // Customer
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId, customer_id: "550e8400-e29b-41d4-a716-446655449999" }, error: null }); // Other Vessel owner
+      mockSupabaseSequence([
+        { data: { company_id: mockCompanyId } }, // Profile
+        { data: { company_id: mockCompanyId } }, // Customer
+        { data: { company_id: mockCompanyId, customer_id: "550e8400-e29b-41d4-a716-446655449999" } } // Other Vessel owner
+      ]);
 
       const result = await action.validate({
         customerId: mockCustomerId,
@@ -143,10 +159,11 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
     });
 
     it("should succeed if all data is valid", async () => {
-      getMockSupabase().maybeSingle
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId }, error: null }) // Profile
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId }, error: null }) // Customer
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId, customer_id: mockCustomerId }, error: null }); // Vessel
+      mockSupabaseSequence([
+        { data: { company_id: mockCompanyId } }, // Profile
+        { data: { company_id: mockCompanyId } }, // Customer
+        { data: { company_id: mockCompanyId, customer_id: mockCustomerId } } // Vessel
+      ]);
 
       const result = await action.validate({
         customerId: mockCustomerId,
@@ -161,10 +178,10 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
 
   describe("Execution", () => {
     it("should create process and materialize blueprint", async () => {
-      const m = getMockSupabase();
-      m.single
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId }, error: null }) // Profile check in execute
-        .mockResolvedValueOnce({ data: { id: "550e8400-e29b-41d4-a716-446655440999", status: "pending" }, error: null }); // Process insertion
+      mockSupabaseSequence([
+        { data: { company_id: mockCompanyId } }, // Profile check in execute
+        { data: { id: "550e8400-e29b-41d4-a716-446655440999", status: "pending" } } // Process insertion
+      ]);
 
       const input = {
         customerId: mockCustomerId,
@@ -183,7 +200,7 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
       expect(result.metadata?.processId).toBe("550e8400-e29b-41d4-a716-446655440999");
       
       // Verify reuse of insert logic
-      expect(m.insert).toHaveBeenCalledWith(expect.objectContaining({
+      expect(getMockSupabase().insert).toHaveBeenCalledWith(expect.objectContaining({
         customer_id: mockCustomerId,
         vessel_id: mockVesselId,
         process_type: "Transferência",
@@ -201,10 +218,10 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
     });
 
     it("should handle insertion errors", async () => {
-      const m = getMockSupabase();
-      m.single
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId }, error: null })
-        .mockResolvedValueOnce({ data: null, error: { message: "Database Error" } });
+      mockSupabaseSequence([
+        { data: { company_id: mockCompanyId } },
+        { data: null, error: { message: "Database Error" } }
+      ]);
 
       const input = {
         customerId: mockCustomerId,
@@ -225,16 +242,12 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
       const guard = new PermissionGuard();
       const executor = new ActionExecutor(ActionRegistry, validator, guard);
 
-      const m = getMockSupabase();
-      // Validator checks
-      m.maybeSingle
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId }, error: null }) // Profile in validate
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId }, error: null }); // Customer in validate
-      
-      // Execute checks
-      m.single
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId }, error: null }) // Profile in execute
-        .mockResolvedValueOnce({ data: { id: "550e8400-e29b-41d4-a716-446655440999", status: "pending" }, error: null }); // Process insertion
+      mockSupabaseSequence([
+        { data: { company_id: mockCompanyId } }, // Profile in validate
+        { data: { company_id: mockCompanyId } }, // Customer in validate
+        { data: { company_id: mockCompanyId } }, // Profile in execute
+        { data: { id: "550e8400-e29b-41d4-a716-446655440999", status: "pending" } } // Process insertion
+      ]);
 
       const security = {
         userId: mockUserId,
@@ -266,10 +279,10 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
 
   describe("Security Mandates", () => {
     it("should strictly use user company_id and not allow spoofing via input", async () => {
-      const m = getMockSupabase();
-      m.single
-        .mockResolvedValueOnce({ data: { company_id: mockCompanyId }, error: null }) // Real company from profile
-        .mockResolvedValueOnce({ data: { id: "550e8400-e29b-41d4-a716-446655440123", status: "pending" }, error: null });
+      mockSupabaseSequence([
+        { data: { company_id: mockCompanyId } }, // Real company from profile
+        { data: { id: "550e8400-e29b-41d4-a716-446655440123", status: "pending" } }
+      ]);
 
       const input = {
         customerId: mockCustomerId,
@@ -282,7 +295,7 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
       await action.execute(input as any);
 
       // Verify the insert used mockCompanyId, not malicious-company
-      expect(m.insert).toHaveBeenCalledWith(expect.objectContaining({
+      expect(getMockSupabase().insert).toHaveBeenCalledWith(expect.objectContaining({
         company_id: mockCompanyId
       }));
     });
