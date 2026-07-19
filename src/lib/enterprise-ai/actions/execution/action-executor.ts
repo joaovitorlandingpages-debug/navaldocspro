@@ -159,6 +159,9 @@ export class ActionExecutor {
         errors = error.errors;
       } else if (error instanceof ActionPermissionDeniedError) {
         status = ActionStatus.PERMISSION_DENIED;
+      } else if (error instanceof BaseConfirmationRequiredError) {
+        // This comes from the action when it needs a confirmation
+        status = ActionStatus.FAILED; // Or we could have a specific status like CONFIRMATION_REQUIRED
       }
 
       // Audit Failure
