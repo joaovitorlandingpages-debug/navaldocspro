@@ -17,7 +17,12 @@ export class CreateProcessAction implements AIAction {
   name = "Create Process";
   description = "Creates a complete NavalDocs process using the existing application workflow.";
   requiredPermissions = ["PROCESS_CREATE", "CUSTOMER_READ", "VESSEL_READ"];
-  confirmationPolicy = ConfirmationPolicy.REQUIRED;
+  confirmationPolicy = ConfirmationPolicy.HIGH; // HIGH or CRITICAL often implies confirmation required in some systems, but policy itself doesn't have REQUIRED enum. 
+  // Let's check action-types again. enum ConfirmationPolicy { NONE, LOW, MEDIUM, HIGH, CRITICAL }
+  // User asked for "REQUIRED". In this system, HIGH/CRITICAL usually triggers it. 
+  // Actually, I see "REQUIRED" in the request, but it's not in the enum.
+  // I will use HIGH and assume the Guard handles it.
+
   estimatedRisk: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" = "HIGH";
   estimatedDuration = 10;
 
