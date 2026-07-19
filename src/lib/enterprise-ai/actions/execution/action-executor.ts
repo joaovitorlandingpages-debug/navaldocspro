@@ -169,17 +169,20 @@ export class ActionExecutor {
         result = await action.execute(inputWithContext);
       } catch (innerError: any) {
         // NORMALIZATION: Manual re-throwing of a plain object to ensure property preservation
+        // Use property names compatible with ActionExecutionError constructor
         const err = {
           message: innerError.message || 'Unknown execution error',
-          errorCode: innerError.code || innerError.errorCode || 'ACTION_EXECUTION_ERROR',
+          errorCode: innerError.errorCode || innerError.code || 'ACTION_EXECUTION_ERROR',
           processId: innerError.processId || inputWithContext.processId,
           name: innerError.name,
           isActionError: true,
-          status: ActionStatus.FAILED
+          status: ActionStatus.FAILED,
+          code: innerError.code || innerError.errorCode || 'ACTION_EXECUTION_ERROR'
         };
         console.log('ActionExecutor Catch Normalization:', err);
         throw err;
       }
+
 
 
 
