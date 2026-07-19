@@ -7,6 +7,7 @@ import { ExecutionContext } from './execution-context';
 import { ExecutionResult } from './execution-result';
 import { auditLogger } from '../audit/audit-logger';
 import { confirmationService } from '../confirmation/confirmation-service';
+import { idempotencyService } from './idempotency-service';
 import { ConfirmationRequiredError as BaseConfirmationRequiredError } from '../confirmation/confirmation-errors';
 import { 
   ActionNotFoundError, 
