@@ -130,10 +130,8 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
 
   describe("1. Audit & Service Responsibility", () => {
     it("should use processCreationService instead of direct insert", async () => {
-      mockSupabaseSequence([
-        { data: { id: mockProcessId, status: "pending" } } // Service insert
-      ]);
-
+      const { processCreationService } = await import("@/services/processes/process-creation-service");
+      
       await action.execute({
         customerId: mockCustomerId,
         processType: "Transferência",
@@ -141,9 +139,7 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
         title: "Test"
       } as any);
 
-      // Verify insert was called via service logic (verified by spying on supabase.from('processes'))
-      expect(getMockSupabase().from).toHaveBeenCalledWith("processes");
-      expect(getMockSupabase().insert).toHaveBeenCalled();
+      expect(processCreationService.createProcess).toHaveBeenCalled();
     });
   });
 
