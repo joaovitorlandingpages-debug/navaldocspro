@@ -96,7 +96,14 @@ export class PlannerEngine {
       }
     } while (result.size > size);
     
-    return Array.from(result);
+    // Sort to maintain deterministic order (dependencies first where possible)
+    return Array.from(result).sort((a, b) => {
+      const actionA = availableActions.find(x => x.id === a);
+      if (actionA?.metadata.dependencies.includes(b)) return 1;
+      const actionB = availableActions.find(x => x.id === b);
+      if (actionB?.metadata.dependencies.includes(a)) return -1;
+      return 0;
+    });
   }
 
   private resolveIntent(intent: string): string[] {
