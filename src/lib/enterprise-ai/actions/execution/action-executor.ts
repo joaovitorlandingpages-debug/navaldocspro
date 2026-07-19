@@ -270,13 +270,14 @@ export class ActionExecutor {
             processId: finalProcessId
           });
 
+          // FORCE: Ensure we are using the normalized error code
           await idempotencyService.update(idempotencyRecordId, {
             status: isRecoverable ? 'recoverable_failed' : 'failed',
             errorCode: errorCode,
             processId: finalProcessId
           });
-
         }
+
 
         await auditLogger.logFailure(executionId, {
           error: errors,
