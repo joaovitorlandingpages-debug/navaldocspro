@@ -6,6 +6,7 @@ import { ToolExecutor } from '../tools/tool-registry';
 import { registerAgents } from '../agents/process-specialist.agent';
 import { registerTools } from '../tools/tool-registry-init';
 import { AIExecutionContext } from '../core/ai-types';
+import { PromptBuilder } from '../prompts/prompt-builder';
 
 vi.mock('../tools/tool-registry', async (importOriginal) => {
   const actual = await importOriginal<any>();
@@ -54,6 +55,24 @@ describe('EACC Foundation', () => {
 
     expect(response.warnings).toContain('unsupported_intent');
     expect(response.answer).toContain('Desculpe');
+  });
+
+  it('should isolate tenants (Mock validation)', async () => {
+     const request = { message: 'Listar processos' };
+     await AIOrchestrator.process(request, mockContext);
+     
+     expect(ToolExecutor.execute).toHaveBeenCalledWith(
+       'searchProcesses', 
+       expect.objectContaining({ companyId: 'company-456' }), 
+       expect.any(Object)
+     );
+  });
+
+  it('should build prompt correctly via PromptBuilder', () => {
+    const agent = AgentRegistry.list()[0];
+    const prompt = PromptBuilder.build(agent, mockContext, 'Test msg', []);
+    expect(prompt).toContain(agent.name);
+    expect(prompt).toContain(mockContext.userId);
   });
 
   it('should list agents and tools correctly', () => {
