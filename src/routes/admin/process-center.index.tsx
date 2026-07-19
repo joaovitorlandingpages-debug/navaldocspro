@@ -595,7 +595,7 @@ POST /enterprise-ai-chat
 
 Entrada:
 
-{
+{`{
   "message": "Quais processos críticos estão parados?",
   "conversationId": "opcional",
   "entityContext": {
@@ -603,7 +603,7 @@ Entrada:
     "customerId": "opcional",
     "vesselId": "opcional"
   }
-}
+}`}
 
 Não aceitar userId, role ou companyId como fonte de autorização.
 
