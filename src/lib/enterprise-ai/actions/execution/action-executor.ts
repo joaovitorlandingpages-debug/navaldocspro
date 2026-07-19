@@ -32,12 +32,46 @@ export class ActionExecutor {
   ): Promise<ExecutionResult> {
     const startedAt = new Date();
     const executionId = this.generateId();
+    let idempotencyRecordId: string | undefined;
     
     try {
       // 1. Fetch action
       const action = this.registry.get(actionId);
       if (!action) {
         throw new ActionNotFoundError(actionId);
+      }
+
+      // 1.1 Handle Idempotency
+      if (input.idempotencyKey) {
+        const { idempotencyKey, ...payload } = input;
+        const record = await idempotencyService.claim({
+          idempotencyKey,
+          payload,
+          executionId,
+          actionId,
+          companyId: authContext.companyId,
+          userId: authContext.userId
+        });
+
+        idempotencyRecordId = record.id;
+
+        if (record.status === 'completed') {
+          return {
+            success: true,
+            status: ActionStatus.SUCCESS,
+            executionId: record.executionId,
+            actionId,
+            startedAt: new Date(record.createdAt),
+            finishedAt: new Date(record.updatedAt),
+            durationMs: new Date(record.updatedAt).getTime() - new Date(record.createdAt).getTime(),
+            data: record.result,
+            metadata: { ...record.result, isIdempotentResponse: true }
+          };
+        }
+
+        if (record.status === 'processing' && record.executionId !== executionId) {
+          throw new ActionExecutionError('Concurrent execution in progress for this idempotency key');
+        }
       }
 
       // 2. Audit Start (Enterprise Audit Logger Integration)
