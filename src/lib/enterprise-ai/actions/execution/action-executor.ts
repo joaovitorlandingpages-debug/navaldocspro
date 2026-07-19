@@ -6,6 +6,8 @@ import { ActionStatus } from '../action-types';
 import { ExecutionContext } from './execution-context';
 import { ExecutionResult } from './execution-result';
 import { auditLogger } from '../audit/audit-logger';
+import { confirmationService } from '../confirmation/confirmation-service';
+import { ConfirmationRequiredError as BaseConfirmationRequiredError } from '../confirmation/confirmation-errors';
 import { 
   ActionNotFoundError, 
   ActionValidationError, 
@@ -85,8 +87,35 @@ export class ActionExecutor {
         throw new ActionPermissionDeniedError(security.errors?.[0]);
       }
 
-      // 5. Execute
-      const result = await action.execute({ ...input, ...context, input });
+      // 5. Handle Confirmation Token if present
+      let confirmationMetadata = {};
+      if (input.confirmationToken) {
+        try {
+          // Prepare sensitive payload for hash comparison
+          // We exclude the token itself and other non-functional metadata
+          const { confirmationToken, metadata, executionId: _, ...sensitivePayload } = input;
+          
+          const confirmation = await confirmationService.validateAndConsume(
+            input.confirmationToken,
+            sensitivePayload,
+            authContext.userId,
+            authContext.companyId
+          );
+          
+          confirmationMetadata = {
+            confirmationId: confirmation.id,
+            confirmationValidated: true,
+            confirmationConsumed: true,
+            payloadHashMatched: true
+          };
+        } catch (confError: any) {
+          // Wrap and rethrow as validation error or specific confirmation error
+          throw confError;
+        }
+      }
+
+      // 6. Execute
+      const result = await action.execute({ ...input, ...context, ...confirmationMetadata, input });
 
       const finishedAt = new Date();
       const durationMs = finishedAt.getTime() - startedAt.getTime();
@@ -130,6 +159,9 @@ export class ActionExecutor {
         errors = error.errors;
       } else if (error instanceof ActionPermissionDeniedError) {
         status = ActionStatus.PERMISSION_DENIED;
+      } else if (error instanceof BaseConfirmationRequiredError || error.code === 'CHECKLIST_CONFIRMATION_REQUIRED') {
+        // This comes from the action when it needs a confirmation
+        status = ActionStatus.FAILED; 
       }
 
       // Audit Failure
@@ -153,7 +185,11 @@ export class ActionExecutor {
         finishedAt,
         durationMs: finishedAt.getTime() - startedAt.getTime(),
         errors,
-        metadata: { errorCode: error.code }
+        metadata: { 
+          errorCode: error.code,
+          confirmationToken: (error as any).publicToken,
+          summary: (error as any).summary
+        }
       };
     }
   }

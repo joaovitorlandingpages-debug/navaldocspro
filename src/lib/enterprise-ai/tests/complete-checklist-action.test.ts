@@ -28,7 +28,15 @@ vi.mock("@/integrations/supabase/client", () => {
 
 // Mock Optimistic Lock
 vi.mock("@/lib/optimisticLock", () => ({
-  casUpdate: vi.fn(),
+  casUpdate: vi.fn()
+}));
+
+// Mock Confirmation Service
+vi.mock("../actions/confirmation/confirmation-service", () => ({
+  confirmationService: {
+    createConfirmation: vi.fn().mockResolvedValue({ publicToken: "mock-token" }),
+    validateAndConsume: vi.fn().mockResolvedValue({ id: "conf-1" })
+  }
 }));
 
 describe("CompleteChecklistAction (Sprint 5.0)", () => {

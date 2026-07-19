@@ -56,7 +56,7 @@ export class ChecklistEvidenceInvalidError extends ChecklistActionError {
 }
 
 export class ChecklistConfirmationRequiredError extends ChecklistActionError {
-  constructor(public summary: string) {
+  constructor(public summary: string, public publicToken?: string) {
     super("Human confirmation required for this operation", "CHECKLIST_CONFIRMATION_REQUIRED");
   }
 }

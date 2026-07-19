@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { casUpdate } from "@/lib/optimisticLock";
 import { createActionResult } from "../action-result";
+import { confirmationService } from "../confirmation/confirmation-service";
 
 export class CompleteChecklistAction implements AIAction {
   id = "complete-checklist";
@@ -84,8 +85,9 @@ export class CompleteChecklistAction implements AIAction {
         throw new ChecklistTenantMismatchError();
       }
 
-      // 3. Human Confirmation Check (Stub for now, according to requirement 14)
+      // 3. Human Confirmation Check
       const requiresConfirmation = (input.operation === "complete" || input.operation === "waive") && !input.confirmationToken;
+      const isConfirmed = (context as any).confirmationValidated === true;
       
       // 6. Idempotency Check (Check before confirmation to avoid unnecessary prompts)
       const isIdempotent = this.checkIdempotency(item, input);
@@ -107,10 +109,36 @@ export class CompleteChecklistAction implements AIAction {
         });
       }
 
-      if (requiresConfirmation) {
-        // In a real implementation, we would check if a valid confirmation exists in a table
-        // For this sprint, we return the specific status if token is missing
-        throw new ChecklistConfirmationRequiredError(`Operation ${input.operation} on item ${item.title || item.id} requires confirmation.`);
+      if (requiresConfirmation && !isConfirmed) {
+        // Create a real persistent confirmation request
+        const sensitivePayload = {
+          processId: input.processId,
+          checklistItemId: input.checklistItemId,
+          operation: input.operation,
+          expectedVersion: input.expectedVersion,
+          reason: input.reason,
+          notes: input.notes,
+          evidenceDocumentId: input.evidenceDocumentId
+        };
+
+        const { publicToken } = await confirmationService.createConfirmation({
+          actionId: this.id,
+          userId: input.userId,
+          companyId: input.companyId,
+          processId: input.processId,
+          resourceId: input.checklistItemId,
+          operation: input.operation,
+          payload: sensitivePayload,
+          metadata: {
+            title: item.title || item.id,
+            summary: `Operation ${input.operation} on item ${item.title || item.id}`
+          }
+        });
+
+        throw new ChecklistConfirmationRequiredError(
+          `Operation ${input.operation} on item ${item.title || item.id} requires confirmation.`,
+          publicToken
+        );
       }
 
       // 4. Validate Transitions
@@ -181,7 +209,8 @@ export class CompleteChecklistAction implements AIAction {
           metadata: { 
             errorCode: error.code,
             confirmationRequired: true,
-            summary: error.summary
+            summary: error.summary,
+            confirmationToken: error.publicToken
           }
         });
 
