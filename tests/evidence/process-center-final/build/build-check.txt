@@ -577,3 +577,4 @@ node_modules/@radix-ui/react-roving-focus/dist/index.mjs (1:0): Module level dir
 node_modules/@radix-ui/react-menu/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-menu/dist/index.mjs" was ignored.
 node_modules/@tanstack/react-query/build/modern/errorBoundaryUtils.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/errorBoundaryUtils.js" was ignored.
 node_modules/@tanstack/react-query/build/modern/useBaseQuery.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/useBaseQuery.js" was ignored.
+error: script "build" was terminated by signal SIGTERM (Polite quit request)
