@@ -8,28 +8,26 @@ import { ActionValidator } from "../actions/security/action-validator";
 import { PermissionGuard } from "../actions/security/permission-guard";
 
 // Mock do Supabase
-vi.mock("@/integrations/supabase/client", () => {
-  const m = {
-    single: vi.fn(),
-    eq: vi.fn(),
-    select: vi.fn(),
-    insert: vi.fn(),
-    update: vi.fn(),
-    from: vi.fn(),
-  };
-  
-  m.from.mockReturnValue(m);
-  m.select.mockReturnValue(m);
-  m.insert.mockReturnValue(m);
-  m.update.mockReturnValue(m);
-  m.eq.mockReturnValue(m);
-  m.single.mockImplementation(() => Promise.resolve({ data: null, error: null }));
+const supabaseMock = {
+  single: vi.fn(),
+  eq: vi.fn(),
+  select: vi.fn(),
+  insert: vi.fn(),
+  update: vi.fn(),
+  from: vi.fn(),
+};
 
-  return {
-    supabase: m,
-    _mocks: m
-  };
-});
+supabaseMock.from.mockReturnValue(supabaseMock);
+supabaseMock.select.mockReturnValue(supabaseMock);
+supabaseMock.insert.mockReturnValue(supabaseMock);
+supabaseMock.update.mockReturnValue(supabaseMock);
+supabaseMock.eq.mockReturnValue(supabaseMock);
+supabaseMock.single.mockImplementation(() => Promise.resolve({ data: null, error: null }));
+
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: supabaseMock,
+  _mocks: supabaseMock
+}));
 
 vi.mock("@/utils/pdf-export", () => ({
   generateAndUploadPdf: vi.fn(() => Promise.resolve({ path: "path/to/pdf", signedUrl: "http://signed-url" })),
@@ -37,16 +35,13 @@ vi.mock("@/utils/pdf-export", () => ({
 
 describe("GeneratePdfAction (Sprint 4.4)", () => {
   let action: GeneratePdfAction;
-  let supabaseMock: any;
   const mockCompanyId = "company-123";
   const mockUserId = "user-456";
   const mockProcessId = "process-789";
 
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.clearAllMocks();
     action = new GeneratePdfAction();
-    const client = await import("@/integrations/supabase/client");
-    supabaseMock = client.supabase;
     supabaseMock.single.mockResolvedValue({ data: null, error: null });
   });
 
@@ -60,7 +55,7 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
     supabaseMock.single.mockResolvedValue({ data: null, error: new Error("Not found") });
 
     const result = await action.validate({ 
-      input: { processId: mockProcessId }, 
+      processId: mockProcessId, 
       companyId: mockCompanyId 
     });
 
@@ -75,7 +70,7 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
     });
 
     const result = await action.validate({ 
-      input: { processId: mockProcessId }, 
+      processId: mockProcessId, 
       companyId: mockCompanyId 
     });
 
@@ -90,7 +85,7 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
     });
 
     const result = await action.validate({ 
-      input: { processId: mockProcessId }, 
+      processId: mockProcessId, 
       companyId: mockCompanyId 
     });
 
@@ -121,7 +116,6 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
       executionId: "exec-1"
     });
 
-
     expect(result.success).toBe(true);
     expect(result.status).toBe(ActionStatus.SUCCESS);
     expect(result.metadata?.documentId).toBe("doc-123");
@@ -132,15 +126,28 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
     ActionRegistry.register(action);
     const executor = new ActionExecutor(ActionRegistry, new ActionValidator(), new PermissionGuard());
 
-    // Mock para validation (encontrar processo)
-    supabaseMock.single.mockResolvedValue({
-      data: { 
-        id: mockProcessId, 
-        company_id: mockCompanyId, 
-        title: "Process Title",
-        companies: { name: "NavalDocs" }
-      },
-      error: null
+    // Setup behavior for validation and execution
+    supabaseMock.single.mockImplementation(async () => {
+      // Logic inside action.execute or action.validate
+      const callCount = supabaseMock.single.mock.calls.length;
+      
+      if (callCount <= 2) { 
+        // Validation + First fetch in Execute
+        return {
+          data: { 
+            id: mockProcessId, 
+            company_id: mockCompanyId, 
+            title: "Process Title",
+            companies: { name: "NavalDocs" }
+          },
+          error: null
+        };
+      }
+      // Second call in execute (doc insert select)
+      return {
+        data: { id: "doc-999" },
+        error: null
+      };
     });
 
     const authContext = {
@@ -151,16 +158,10 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
       isAuthenticated: true
     };
 
-    // No teste 6, a integração falha porque action.execute() faz um segundo single() para o insert.
-    // Vamos garantir que o segundo single() retorne sucesso.
     const result = await executor.execute("generate-pdf", { processId: mockProcessId }, authContext);
-
-    // Se falhou, vamos ver o erro
-    if (!result.success) {
-      console.log("INTEGRATION_TEST_FAIL_DEBUG:", result.errors);
-    }
 
     expect(result.success).toBe(true);
     expect(result.actionId).toBe("generate-pdf");
+    expect(result.metadata?.documentId).toBe("doc-999");
   });
 });
