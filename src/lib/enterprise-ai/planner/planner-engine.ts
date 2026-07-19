@@ -47,7 +47,7 @@ export class PlannerEngine {
     this.detectCircularDependencies(steps);
 
     const requiresConfirmation = steps.some((s: ExecutionStep) => s.confirmationRequired);
-    const riskLevel = calculateOverallRisk(actions.filter(a => matchedActionIds.includes(a.id)).map(a => ({ 
+    const riskLevel = calculateOverallRisk(intentActions.map(a => ({ 
       actionId: a.id, 
       riskLevel: a.metadata.riskLevel 
     })));
