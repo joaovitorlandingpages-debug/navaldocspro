@@ -169,8 +169,6 @@ export class ActionExecutor {
         result = await action.execute(inputWithContext);
       } catch (innerError: any) {
         // NORMALIZATION: Manual re-throwing of a plain object to ensure property preservation
-        // Use property names compatible with ActionExecutionError constructor
-        // CRITICAL: Read properties before they might be lost or transformed
         const innerErrorCode = innerError.errorCode || innerError.code;
         const innerProcessId = innerError.processId || inputWithContext.processId;
         
@@ -180,16 +178,19 @@ export class ActionExecutor {
           msg: innerError.message 
         });
 
-        // THROWING SPECIALIZED ERROR: Re-constructing with the correct class to preserve metadata
-        if (innerErrorCode === 'MATERIALIZATION_FAILED' || innerErrorCode === 'VISIBILITY_FAILED') {
-          throw new ActionExecutionError(innerError.message || 'Recovery stage failed', { 
-            errorCode: innerErrorCode, 
-            processId: innerProcessId 
-          });
-        }
+        const normalizedError = new ActionExecutionError(innerError.message || 'Recovery stage failed', { 
+          errorCode: innerErrorCode || 'ACTION_EXECUTION_ERROR', 
+          processId: innerProcessId 
+        });
         
-        throw innerError;
+        console.log('ActionExecutor Catch Normalization (Normalized):', { 
+          errorCode: normalizedError.errorCode, 
+          processId: normalizedError.processId 
+        });
+
+        throw normalizedError;
       }
+
 
 
 
