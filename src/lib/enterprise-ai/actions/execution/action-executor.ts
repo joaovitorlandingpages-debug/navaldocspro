@@ -172,8 +172,15 @@ export class ActionExecutor {
         if (innerError.code && !innerError.errorCode) {
           innerError.errorCode = innerError.code;
         }
+        console.log('ActionExecutor Inner Catch DEBUG:', { 
+          code: innerError.code, 
+          errorCode: innerError.errorCode, 
+          processId: innerError.processId,
+          instanceOfActionError: innerError instanceof ActionError
+        });
         throw innerError;
       }
+
 
       // 6.1 Update Idempotency Record if success
       if (idempotencyRecordId && result.success) {
