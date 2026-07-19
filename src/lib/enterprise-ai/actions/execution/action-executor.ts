@@ -285,7 +285,7 @@ export class ActionExecutor {
       try {
         if (idempotencyRecordId) {
           const isRecoverable = effectiveErrorCode === 'MATERIALIZATION_FAILED' || effectiveErrorCode === 'VISIBILITY_FAILED';
-          const finalProcessId = (error as any).processId || (input as any).processId;
+          const finalProcessId = processId || (error as any).processId || (input as any).processId;
           
           console.log('ActionExecutor Idempotency Update (Final):', {
             id: idempotencyRecordId,
