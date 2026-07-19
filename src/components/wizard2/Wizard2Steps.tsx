@@ -204,12 +204,22 @@ export function StepClient() {
 }
 
 
-// --- Step 2: Vessel ---
+// --- Step 3: Vessel (Previously Step 2) ---
 
 export function StepVessel() {
-  const { customerId, vesselId, setData, companyId } = useWizardStore();
+  const { customerId, vesselId, setData, companyId, ocrData } = useWizardStore();
   const [results, setResults] = useState<any[]>([]);
   const [query, setQuery] = useState('');
+
+  // Auto-populate from OCR if available
+  useEffect(() => {
+    if (ocrData.extractedFields?.vesselName && !vesselId && !query) {
+      setQuery(ocrData.extractedFields.vesselName);
+      toast.info(`Busca sugerida pela IA: ${ocrData.extractedFields.vesselName}`, {
+        description: "Encontramos este nome nos documentos enviados."
+      });
+    }
+  }, [ocrData.extractedFields?.vesselName]);
 
   useEffect(() => {
     if (!companyId) return;
@@ -241,11 +251,17 @@ export function StepVessel() {
   };
 
   const handleCreateNew = async () => {
-    const name = window.prompt("Nome da embarcação:");
+    const name = window.prompt("Nome da embarcação:", ocrData.extractedFields?.vesselName || "");
     if (!name || !companyId || !customerId) return;
     const { data, error } = await supabase
       .from('vessels')
-      .insert({ name, company_id: companyId, customer_id: customerId })
+      .insert({ 
+        name, 
+        company_id: companyId, 
+        customer_id: customerId,
+        registration_number: ocrData.extractedFields?.registrationNumber || null,
+        vessel_type: ocrData.extractedFields?.vesselType || null
+      })
       .select().single();
     if (error) toast.error("Erro ao criar embarcação");
     else {
@@ -256,11 +272,18 @@ export function StepVessel() {
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-right-2 duration-300">
-      <StepHeader 
-        title="Embarcação" 
-        description="Selecione a embarcação objeto do processo." 
-        icon={Ship} 
-      />
+      <div className="flex justify-between items-start">
+        <StepHeader 
+          title="Revisão de Embarcação" 
+          description="Selecione a embarcação objeto do processo." 
+          icon={Ship} 
+        />
+        {ocrData.confidence > 0 && (
+          <Badge className="bg-blue-50 text-blue-600 border-none px-3 py-1 flex items-center gap-1 font-black text-[9px] uppercase">
+            <Sparkles className="h-3 w-3" /> IA Confiança: {Math.round(ocrData.confidence * 100)}%
+          </Badge>
+        )}
+      </div>
 
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
@@ -304,15 +327,16 @@ export function StepVessel() {
         
         <button
           onClick={handleCreateNew}
-          className="flex flex-col items-center justify-center gap-1 p-6 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary hover:text-primary transition-all text-slate-500 font-bold text-sm"
+          className="flex flex-col items-center justify-center gap-1 p-6 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary hover:text-primary transition-all text-slate-500 font-bold text-sm bg-slate-50/30"
         >
           <Plus className="h-5 w-5" />
-          Nova Embarcação
+          {ocrData.extractedFields?.vesselName ? `Confirmar Nova: ${ocrData.extractedFields.vesselName}` : 'Nova Embarcação'}
         </button>
       </div>
     </div>
   );
 }
+
 
 // --- Step 3: Process Type ---
 
