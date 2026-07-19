@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Plus, Ship, User, Calendar, ArrowRight,
-  MoreVertical, Loader2, Zap, Activity, Search, Filter
+  MoreVertical, Loader2, Activity, Search, Filter
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,14 +37,10 @@ function ProcessCenterListPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <PageHeader 
-        title="Enterprise Process Center v1.0" 
-        description="O novo coração operacional do NavalDocs Pro."
+        title="Enterprise Process Center v1.1" 
+        description="Painel Central de Processos Navais."
         actions={
           <div className="flex gap-3">
-             <Button variant="outline" className="gap-2 font-bold uppercase text-[10px] tracking-widest rounded-xl border-slate-200 shadow-sm">
-                <Activity className="h-4 w-4 text-primary" />
-                Métricas Globais
-             </Button>
              <Button className="gap-2 bg-slate-900 font-black uppercase text-[10px] tracking-widest rounded-xl px-6 shadow-xl shadow-slate-200 transition-all hover:scale-105 active:scale-95">
                 <Plus className="h-4 w-4" /> Novo Processo
              </Button>
@@ -56,23 +52,14 @@ function ProcessCenterListPage() {
          <Card className="p-6 border-slate-200 bg-white shadow-sm border-b-4 border-b-primary">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Processos Ativos</p>
             <h3 className="text-4xl font-black text-slate-900 tracking-tighter">{processes?.length || 0}</h3>
-            <div className="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-               <div className="h-full bg-primary" style={{ width: '65%' }} />
-            </div>
          </Card>
          <Card className="p-6 border-slate-200 bg-white shadow-sm border-b-4 border-b-emerald-500">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Health Score Médio</p>
             <h3 className="text-4xl font-black text-emerald-600 tracking-tighter">--</h3>
-            <div className="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-               <div className="h-full bg-emerald-500" style={{ width: '0%' }} />
-            </div>
          </Card>
          <Card className="p-6 border-slate-200 bg-white shadow-sm border-b-4 border-b-blue-500">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Automação OCR</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Automação</p>
             <h3 className="text-4xl font-black text-blue-600 tracking-tighter">--</h3>
-            <div className="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-               <div className="h-full bg-blue-500" style={{ width: '0%' }} />
-            </div>
          </Card>
       </div>
 
@@ -83,7 +70,7 @@ function ProcessCenterListPage() {
             <Input className="pl-11 h-12 bg-white border-slate-200 rounded-xl font-bold uppercase text-[10px] tracking-widest" placeholder="Pesquisar processos por número, cliente ou embarcação..." />
           </div>
           <Button variant="outline" className="gap-2 h-12 px-6 rounded-xl font-bold uppercase text-[10px] tracking-widest bg-white border-slate-200">
-            <Filter className="h-4 w-4" /> Filtros Avançados
+            <Filter className="h-4 w-4" /> Filtros
           </Button>
         </div>
       </Card>
@@ -124,10 +111,6 @@ function ProcessCenterListPage() {
                       <span className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" /> {format(new Date(process.created_at), "dd/MM/yyyy", { locale: ptBR })}
                       </span>
-                      <div className="h-3 w-px bg-slate-200" />
-                      <span className="flex items-center gap-2 text-blue-600">
-                        <Zap className="h-4 w-4" /> Documentos não contados
-                      </span>
                     </div>
                   </div>
                 </div>
@@ -162,22 +145,6 @@ function ProcessCenterListPage() {
           ))}
         </div>
       )}
-      <div id="ts-visual-edit-probe-e7656597c0424703" className="hidden whitespace-pre-wrap">Pare de editar visualmente o arquivo src/routes/admin/process-center.index.tsx.
-
-O conteúdo inserido nessa página nas últimas alterações é apenas um texto de especificação e não deve fazer parte da interface do produto.
-
-Antes de qualquer nova funcionalidade:
-
-1. Reverta somente as alterações visuais recentes que transformaram o Process Center em uma página de probe/especificação.
-2. Preserve todas as funcionalidades reais que já existiam no Process Center.
-3. Não reverta códigos funcionais anteriores.
-4. Restaure a interface funcional imediatamente anterior ao primeiro texto “Operação Fortaleza” ou “Enterprise AI Command Center”.
-5. Mostre quais alterações foram revertidas e qual versão funcional foi restaurada.
-
-Depois de restaurar, PARE e aguarde minha próxima instrução.
-
-Não implemente ainda o EACC.
-Não altere banco, migrations, Edge Functions ou outros módulos nesta etapa.</div>
     </div>
   );
 }
