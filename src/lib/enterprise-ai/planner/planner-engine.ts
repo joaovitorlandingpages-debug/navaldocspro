@@ -129,13 +129,26 @@ export class PlannerEngine {
     const stepIds = new Set(steps.map(s => s.stepId));
     
     for (const step of steps) {
-      // Validate dependencies exist in the same plan
+      // 1. Validate dependencies exist in the same plan
       for (const depId of step.dependsOn) {
         if (!stepIds.has(depId)) {
           throw new PlannerError(
             PlannerErrorCodes.INVALID_DEPENDENCY,
             `Step ${step.stepId} depends on non-existent step ${depId}`
           );
+        }
+      }
+
+      // 2. Validate action existence and dependencies in metadata
+      const action = availableActions.find(a => a.id === step.actionId);
+      if (action) {
+        for (const depActionId of action.metadata.dependencies) {
+          if (!steps.some(s => s.actionId === depActionId)) {
+             throw new PlannerError(
+              PlannerErrorCodes.INVALID_DEPENDENCY,
+              `Action ${action.id} requires ${depActionId} which is missing from the plan`
+            );
+          }
         }
       }
     }
