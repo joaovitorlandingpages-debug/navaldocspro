@@ -258,8 +258,10 @@ describe("RequestSignatureAction (Sprint 5.1)", () => {
           participants: [{ name: "Test", email: "test@test.com", role: "cliente" }],
           confirmationToken: "conf-123"
         },
-        security
+        security,
+        "test-session-id"
       );
+
 
       expect(result.success).toBe(true);
       expect(result.status).toBe(ActionStatus.SUCCESS);
