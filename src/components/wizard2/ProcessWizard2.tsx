@@ -48,8 +48,8 @@ const STEPS = [
 
 
 export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
-  const { step, setStep, reset, companyId, setData, ...state } = useWizardStore();
-  const { profile } = useAuth();
+  const { step, sessionId, setStep, reset, companyId, setData, ...state } = useWizardStore();
+  const { profile, user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -58,6 +58,37 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
       setData({ companyId: profile.company_id });
     }
   }, [profile, companyId]);
+
+  // Persistent Session Initialization
+  useEffect(() => {
+    if (isOpen && !sessionId && profile?.company_id && user?.id) {
+      const init = async () => {
+        try {
+          const session = await createWizardSession(profile.company_id, user.id);
+          setData({ sessionId: session.id });
+        } catch (e) {
+          console.error("Failed to initialize wizard session", e);
+        }
+      };
+      init();
+    }
+  }, [isOpen, sessionId, profile?.company_id, user?.id]);
+
+  // Sync state to backend session on step change or data change
+  useEffect(() => {
+    if (sessionId && (step || state.customerId || state.vesselId)) {
+      const sync = async () => {
+        try {
+          const patch = mapStateToSession({ step, sessionId, companyId, ...state } as any);
+          await updateWizardSession(sessionId, patch as any);
+        } catch (e) {
+          console.warn("Failed to sync wizard session", e);
+        }
+      };
+      const timer = setTimeout(sync, 1000); // Debounced sync
+      return () => clearTimeout(timer);
+    }
+  }, [sessionId, step, state.customerId, state.vesselId, state.processTypeId]);
 
   const currentIndex = STEPS.findIndex(s => s.id === step);
   const progress = ((currentIndex + 1) / STEPS.length) * 100;
