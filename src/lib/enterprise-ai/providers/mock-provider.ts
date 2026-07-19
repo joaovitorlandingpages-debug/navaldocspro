@@ -58,7 +58,15 @@ export class MockProvider implements AIProvider {
   supportsFunctionCalling(): boolean { return false; }
   supportsJsonMode(): boolean { return true; }
 
+  async generateResponse(agent: any, context: any, message: string, toolResults: any[]): Promise<{ answer: string; references?: string[] }> {
+    return {
+      answer: `[Mock AI Answer] Baseado na análise do agente ${agent.name}, identifiquei os seguintes resultados para sua mensagem: "${message}".`,
+      references: toolResults.map(r => `${r.toolId}: ${r.success ? 'Success' : 'Failed'}`)
+    };
+  }
+
   async shutdown(): Promise<void> {
     this.initialized = false;
   }
 }
+
