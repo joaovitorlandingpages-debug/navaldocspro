@@ -115,63 +115,65 @@ function AICommandCenterPage() {
         <Card className="p-8 border-slate-200 bg-white font-mono text-[11px] leading-relaxed shadow-sm">
           <ScrollArea className="h-[1200px] pr-4">
             <div className="space-y-12 whitespace-pre-wrap">
-              <section id="ts-visual-edit-probe-a687caa7f9684453">
+              <section id="ts-visual-edit-probe-218dc477921f47e8">
                 <div className="bg-slate-50 border-2 border-slate-900 p-8 rounded-2xl shadow-xl">
-                  <h2 className="text-2xl font-black text-slate-900 mb-6 border-b-4 border-slate-900 pb-2 uppercase italic">Relatório Técnico - Sprint 4.3A</h2>
+                  <h2 className="text-2xl font-black text-slate-900 mb-6 border-b-4 border-slate-900 pb-2 uppercase italic">SPRINT 5.2.1 - CREATE PROCESS ACTION</h2>
                   <div className="space-y-6 font-mono text-xs leading-relaxed">
-                    <div className="bg-emerald-100 text-emerald-900 p-2 font-bold text-center rounded">SPRINT 4.3A IMPLEMENTADA</div>
+                    <div className="bg-emerald-100 text-emerald-900 p-2 font-bold text-center rounded">ENTERPRISE AI COMMAND CENTER</div>
                     
-                    <div className="bg-white p-4 border border-slate-200 rounded shadow-sm">
-                      <p className="font-bold border-b mb-2 uppercase">Arquivos Criados & Alterados</p>
-                      <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-4 mt-1">
-                        <li>• execution/action-executor.ts (Core Engine)</li>
-                        <li>• execution/execution-context.ts (Typed Context)</li>
-                        <li>• execution/execution-result.ts (Unified Result)</li>
-                        <li>• execution/execution-errors.ts (Typed Exceptions)</li>
-                        <li>• execution/index.ts (Public API)</li>
-                        <li>• tests/action-executor.test.ts (12 Unit Tests)</li>
+                    <div className="bg-white p-6 border-l-4 border-slate-900 rounded shadow-sm">
+                      <p className="font-bold text-lg mb-4 uppercase">OBJETIVO</p>
+                      <p>Corrigir as lacunas encontradas na homologação técnica da CreateProcessAction.</p>
+                      <ul className="mt-2 space-y-1">
+                        <li>• Idempotência real e persistente</li>
+                        <li>• Segurança contra concorrência</li>
+                        <li>• Recuperação de falhas (Materialização / Visibilidade)</li>
+                        <li>• Atomicidade do fluxo de criação</li>
+                        <li>• Cobertura de 30+ testes específicos</li>
                       </ul>
                     </div>
 
-                    <div className="bg-slate-900 text-amber-400 p-4 rounded font-mono text-[10px]">
-                      <p className="text-white mb-2 font-bold uppercase border-b border-amber-400/30 pb-1">Pipeline de Execução (Ordem Comprovada)</p>
-                      <p>1. <strong>Registry Lookup:</strong> Busca a definição da Action.</p>
-                      <p>2. <strong>Context Building:</strong> Cria ExecutionContext com IDs únicos (Session Auth).</p>
-                      <p>3. <strong>State Validation:</strong> Executa ActionValidator.validate().</p>
-                      <p>4. <strong>Security Guard:</strong> Executa PermissionGuard.validateContext().</p>
-                      <p>5. <strong>Execution:</strong> Chama action.execute() somente se 3 e 4 passarem.</p>
-                      <p>6. <strong>Error Handling:</strong> Captura exceções e normaliza em ExecutionResult.</p>
+                    <div className="bg-slate-900 text-amber-400 p-4 rounded font-mono text-[10px] space-y-4">
+                      <div>
+                        <p className="text-white mb-2 font-bold uppercase border-b border-amber-400/30 pb-1">1. AUDITORIA DO INSERT</p>
+                        <p>A CreateProcessAction não conterá INSERT direto em `processes`. A responsabilidade será delegada ao serviço oficial de domínio.</p>
+                      </div>
+                      
+                      <div>
+                        <p className="text-white mb-2 font-bold uppercase border-b border-amber-400/30 pb-1">2. IDEMPOTÊNCIA PERSISTENTE</p>
+                        <p>Chave: companyId + userId + actionId + payload_hash. Estados: pending, processing, completed, failed, recoverable_failed.</p>
+                      </div>
+
+                      <div>
+                        <p className="text-white mb-2 font-bold uppercase border-b border-amber-400/30 pb-1">3. ATOMICIDADE & RECUPERAÇÃO</p>
+                        <p>Fluxo: Base Process → Materialize → Confirm Visible. Tratamento de falhas intermediárias com retry seguro e sem duplicidade.</p>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-white p-4 border border-slate-200 rounded shadow-sm">
-                        <p className="font-bold border-b mb-2 uppercase">Assinatura Pública</p>
-                        <code className="text-[9px] block bg-slate-50 p-2 rounded mt-1">
-                          execute(actionId: string, input: any, authContext: SecurityContext): Promise&lt;ExecutionResult&gt;
-                        </code>
+                        <p className="font-bold border-b mb-2 uppercase">REQUISITOS MANDATÓRIOS</p>
+                        <ul className="space-y-1 text-[10px]">
+                          <li>✓ Human Confirmation persistente (SHA-256)</li>
+                          <li>✓ Permission Check (PROCESS_CREATE, etc)</li>
+                          <li>✓ Security Context (Tenant Isolation)</li>
+                          <li>✓ Audit Log (Início, Sucesso, Falha, Recuperação)</li>
+                        </ul>
                       </div>
                       <div className="bg-white p-4 border border-slate-200 rounded shadow-sm">
-                        <p className="font-bold border-b mb-2 uppercase">Resultados Vitest</p>
+                        <p className="font-bold border-b mb-2 uppercase">TESTES OBRIGATÓRIOS (30+)</p>
                         <ul className="space-y-1 text-[10px]">
-                          <li>✓ Action registrada é localizada</li>
-                          <li>✓ Action inexistente é bloqueada</li>
-                          <li>✓ Validator executado antes da Action</li>
-                          <li>✓ PermissionGuard executado pós-Validator</li>
-                          <li>✓ userId/companyId via Auth Context</li>
-                          <li>✓ <strong>TOTAL: 12 tests passed (100%)</strong></li>
+                          <li>• Concorrência real (simultânea)</li>
+                          <li>• Tenant/User mismatch</li>
+                          <li>• Timeout pós-criação / Retry</li>
+                          <li>• Falha de materialização</li>
+                          <li>• <strong>STATUS: AGUARDANDO IMPLEMENTAÇÃO</strong></li>
                         </ul>
                       </div>
                     </div>
 
-                    <div className="bg-emerald-900 text-emerald-100 p-4 rounded font-mono text-[10px] space-y-1">
-                      <p>✓ Exit Code Vitest: 0</p>
-                      <p>✓ Exit Code Typecheck: 0</p>
-                      <p>✓ Exit Code Build (Prerender): 0</p>
-                      <p>✓ ai-command-center.tsx: Layout Preservado (Visual Edits Revertidos)</p>
-                    </div>
-
-                    <div className="p-4 bg-emerald-50 border-2 border-emerald-500 rounded-xl text-center">
-                      <h3 className="text-xl font-black text-emerald-700 uppercase italic">SPRINT 4.3A IMPLEMENTADA</h3>
+                    <div className="p-4 bg-slate-900 border-2 border-slate-700 rounded-xl text-center">
+                      <h3 className="text-xl font-black text-white uppercase italic">SPRINT 5.2.1 EM DEFINIÇÃO</h3>
                     </div>
                   </div>
                 </div>
