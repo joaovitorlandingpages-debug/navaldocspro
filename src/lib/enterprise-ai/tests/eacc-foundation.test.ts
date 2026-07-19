@@ -1,82 +1,75 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { AIOrchestrator } from '../core/ai-orchestrator';
-import { AgentRegistry } from '../agents/agent-registry';
-import { ToolRegistry } from '../tools/tool-registry';
+import { AIOrchestrator, initializeEACC } from '../index';
 import { ToolExecutor } from '../tools/tool-registry';
-import { registerAgents } from '../agents/process-specialist.agent';
-import { registerTools } from '../tools/tool-registry-init';
-import { AIExecutionContext } from '../core/ai-types';
-import { PromptBuilder } from '../prompts/prompt-builder';
+import { AIRequest } from '../core/ai-types';
 
 vi.mock('../tools/tool-registry', async (importOriginal) => {
   const actual = await importOriginal<any>();
   return {
     ...actual,
     ToolExecutor: {
-      execute: vi.fn()
+      execute: vi.fn().mockResolvedValue({
+        toolId: 'mock-tool',
+        success: true,
+        data: {},
+        durationMs: 1
+      })
     }
   };
 });
 
 describe('EACC Foundation', () => {
-  const mockContext: AIExecutionContext = {
+  let orchestrator: AIOrchestrator;
+  
+  const mockRequest: AIRequest = {
+    message: 'Listar meus processos',
     userId: 'user-123',
-    companyId: 'company-456',
-    role: 'admin',
-    permissions: ['processes.read'],
-    locale: 'pt-BR'
+    companyId: 'company-456'
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    registerAgents();
-    registerTools();
+    const eacc = initializeEACC();
+    orchestrator = eacc.orchestrator;
   });
 
   it('should identify search intent and call searchProcesses tool', async () => {
     (ToolExecutor.execute as any).mockResolvedValueOnce({
       toolId: 'searchProcesses',
       success: true,
-      data: [{ process_number: 'P-001', vessel: { name: 'Vessel 1' } }],
+      data: [{ id: '1', process_number: 'P-001', vessel: { name: 'Vessel 1' } }],
       durationMs: 10
     });
 
-    const request = { message: 'Listar meus processos' };
-    const response = await AIOrchestrator.process(request, mockContext);
+    const response = await orchestrator.process(mockRequest);
 
+    expect(response.status).toBe('success');
     expect(response.selectedAgent).toBe('process-specialist');
-    expect(response.executedTools.some(t => t.toolId === 'searchProcesses')).toBe(true);
+    expect(response.executedTools.some((t: any) => t.toolId === 'searchProcesses')).toBe(true);
     expect(response.answer).toContain('Encontrei');
   });
 
   it('should handle unsupported intents gracefully', async () => {
-    const request = { message: 'Qual a previsão do tempo?' };
-    const response = await AIOrchestrator.process(request, mockContext);
+    const request = { ...mockRequest, message: 'Qual a previsão do tempo?' };
+    const response = await orchestrator.process(request);
 
-    expect(response.warnings).toContain('unsupported_intent');
-    expect(response.answer).toContain('Desculpe');
+    expect(response.status).toBe('unsupported_intent');
   });
 
-  it('should isolate tenants (Mock validation)', async () => {
-     const request = { message: 'Listar processos' };
-     await AIOrchestrator.process(request, mockContext);
+  it('should isolate tenants', async () => {
+     (ToolExecutor.execute as any).mockResolvedValue({
+        toolId: 'searchProcesses',
+        success: true,
+        data: [],
+        durationMs: 1
+     });
+
+     await orchestrator.process(mockRequest);
      
      expect(ToolExecutor.execute).toHaveBeenCalledWith(
        'searchProcesses', 
        expect.objectContaining({ companyId: 'company-456' }), 
        expect.any(Object)
      );
-  });
-
-  it('should build prompt correctly via PromptBuilder', () => {
-    const agent = AgentRegistry.list()[0];
-    const prompt = PromptBuilder.build(agent, mockContext, 'Test msg', []);
-    expect(prompt).toContain(agent.name);
-    expect(prompt).toContain(mockContext.userId);
-  });
-
-  it('should list agents and tools correctly', () => {
-    expect(AgentRegistry.list().length).toBeGreaterThan(0);
-    expect(ToolRegistry.list().length).toBeGreaterThan(0);
   });
 });

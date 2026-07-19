@@ -1,4 +1,14 @@
-export type AIIntent = 'search_processes' | 'get_process_details' | 'get_process_health' | 'get_process_risk' | 'unsupported_intent';
+export type AIIntent = 
+  | 'PROCESS_SEARCH' 
+  | 'PROCESS_DETAILS' 
+  | 'PROCESS_HEALTH' 
+  | 'PROCESS_RISK' 
+  | 'PROCESS_SUMMARY' 
+  | 'PROCESS_CRITICAL_LIST' 
+  | 'PROCESS_LOW_HEALTH_LIST' 
+  | 'PROCESS_HEALTH_AND_RISK' 
+  | 'CONVERSATION_HELP' 
+  | 'UNKNOWN';
 
 export interface AIExecutionContext {
   userId: string;
@@ -7,41 +17,53 @@ export interface AIExecutionContext {
   permissions: string[];
   locale: string;
   conversationId?: string;
-  entityContext?: {
-    processId?: string;
-  };
+  contextState?: Record<string, any>;
 }
 
 export interface AIRequest {
   message: string;
   conversationId?: string;
-  entityContext?: {
-    processId?: string;
-  };
+  userId?: string;
+  companyId?: string;
 }
 
 export interface AIResponse {
   answer: string;
-  selectedAgent?: string;
+  conversationId: string;
+  selectedAgent: string;
+  intent: AIIntent;
+  plan?: {
+    id: string;
+    steps: {
+      id: string;
+      description: string;
+      status: string;
+    }[];
+  };
   executedTools: {
     toolId: string;
     success: boolean;
     durationMs: number;
     error?: string;
+    data?: any;
   }[];
-  references?: {
-    type: 'process' | 'document' | 'vessel';
+  references: {
+    type: 'process' | 'document' | 'vessel' | 'customer';
     id: string;
     label: string;
+    metadata?: any;
   }[];
-  suggestedActions?: {
+  suggestedActions: {
     label: string;
     action: string;
     path?: string;
   }[];
-  warnings?: string[];
+  warnings: string[];
   executionId: string;
   durationMs: number;
+  confidence: number;
+  contextUpdates: Record<string, any>;
+  status: 'success' | 'partial_success' | 'unsupported_intent' | 'context_reference_missing' | 'permission_denied' | 'execution_failed';
 }
 
 export interface AgentDefinition {
@@ -59,7 +81,7 @@ export interface ToolDefinition {
   id: string;
   category: 'process' | 'document' | 'ocr' | 'signature' | 'management';
   description: string;
-  inputSchema: any; // Ideally Zod schema
+  inputSchema: any;
   requiredPermissions: string[];
   timeoutMs: number;
   cachePolicy: 'none' | 'short' | 'long';

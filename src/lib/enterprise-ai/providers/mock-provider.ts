@@ -1,4 +1,4 @@
-import { AIExecutionContext, AIResponse, AgentDefinition, ToolExecutionResult } from "../core/ai-types";
+import { AIExecutionContext, AIResponse, AgentDefinition, ToolExecutionResult, AIIntent } from "../core/ai-types";
 import { PromptBuilder } from "../prompts/prompt-builder";
 
 export interface AIProvider {
@@ -7,7 +7,10 @@ export interface AIProvider {
     context: AIExecutionContext,
     message: string,
     toolResults: ToolExecutionResult[]
-  ): Promise<AIResponse>;
+  ): Promise<{
+    answer: string;
+    references?: AIResponse['references'];
+  }>;
 }
 
 export class MockProvider implements AIProvider {
@@ -16,21 +19,16 @@ export class MockProvider implements AIProvider {
     context: AIExecutionContext,
     message: string,
     toolResults: ToolExecutionResult[]
-  ): Promise<AIResponse> {
-    const start = Date.now();
-    
+  ): Promise<{
+    answer: string;
+    references?: AIResponse['references'];
+  }> {
     // Build prompt (for audit/telemetry simulation)
     const prompt = PromptBuilder.build(agent, context, message, toolResults);
-    // console.log("[EACC-Prompt]", prompt); // Silent for now
 
     // Deterministic mock logic based on tool results
     let answer = "Entendido. ";
-    const executedTools = toolResults.map(tr => ({
-      toolId: tr.toolId,
-      success: tr.success,
-      durationMs: tr.durationMs,
-      error: tr.error
-    }));
+    const references: AIResponse['references'] = [];
 
     const searchTool = toolResults.find(r => r.toolId === 'searchProcesses');
     const getProcessTool = toolResults.find(r => r.toolId === 'getProcess');
@@ -44,6 +42,12 @@ export class MockProvider implements AIProvider {
         answer += "Aqui estão os mais recentes:\n";
         searchTool.data.forEach((p: any) => {
           answer += `- ${p.process_number} (${p.vessel?.name || 'Sem embarcação'})\n`;
+          references.push({
+            type: 'process',
+            id: p.id,
+            label: p.process_number,
+            metadata: { vessel: p.vessel?.name }
+          });
         });
       }
     }
@@ -52,6 +56,13 @@ export class MockProvider implements AIProvider {
       const p = getProcessTool.data;
       answer += `O processo ${p.process_number} está com status "${p.status}". `;
       answer += `Embarcação: ${p.vessel?.name || 'N/A'}. Cliente: ${p.customer?.name || 'N/A'}. `;
+      
+      references.push({
+        type: 'process',
+        id: p.id,
+        label: p.process_number,
+        metadata: { status: p.status }
+      });
     }
 
     if (healthTool?.success && healthTool.data) {
@@ -74,10 +85,7 @@ export class MockProvider implements AIProvider {
 
     return {
       answer,
-      selectedAgent: agent.id,
-      executedTools,
-      executionId: Math.random().toString(36).substring(7),
-      durationMs: Date.now() - start
+      references
     };
   }
 }
