@@ -139,6 +139,7 @@ describe("PlanExecutionEngine", () => {
   });
 
   it("should allow cancellation", async () => {
+    executor.execute.mockResolvedValue({ success: true, status: ActionStatus.SUCCESS, data: {} });
     const plan = createMockPlan([{ actionId: "action-1", confirmationRequired: true }]);
     const session = await engine.execute(plan, authContext);
     
