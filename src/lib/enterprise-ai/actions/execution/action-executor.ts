@@ -162,7 +162,7 @@ export class ActionExecutor {
       try {
         result = await action.execute(inputWithContext);
       } catch (innerError: any) {
-        // NORMALIZATION: Manual re-throwing of a plain object to ensure property preservation
+        // NORMALIZATION: Capture error details explicitly
         const innerErrorCode = innerError.errorCode || innerError.code;
         const innerProcessId = innerError.processId || inputWithContext.processId;
         
@@ -172,21 +172,23 @@ export class ActionExecutor {
           msg: innerError.message 
         });
 
-        // RE-THROWING AS PLAIN ERROR with forced properties
-        const normalizedError: any = new Error(innerError.message || 'Recovery stage failed');
-        normalizedError.errorCode = innerErrorCode || 'ACTION_EXECUTION_ERROR';
-        normalizedError.code = normalizedError.errorCode;
-        normalizedError.processId = innerProcessId;
-        normalizedError.isActionError = true;
-        normalizedError.name = 'ActionExecutionError';
+        // RE-THROWING AS A WRAPPED ERROR to bypass Vitest/Environment property stripping
+        // We use a custom name 'ActionExecutionWrappedError' to distinguish it
+        const wrappedError: any = new Error(innerError.message || 'Action execution failed');
+        wrappedError.errorCode = innerErrorCode || 'ACTION_EXECUTION_ERROR';
+        wrappedError.code = wrappedError.errorCode;
+        wrappedError.processId = innerProcessId;
+        wrappedError.isActionError = true;
+        wrappedError._isWrapped = true; // Flag for outer catch
 
-        console.log('ActionExecutor Catch Normalization (Normalized Error Object):', { 
-          errorCode: normalizedError.errorCode, 
-          processId: normalizedError.processId 
+        console.log('ActionExecutor Catch Normalization (Wrapped Object):', { 
+          errorCode: wrappedError.errorCode, 
+          processId: wrappedError.processId 
         });
 
-        throw normalizedError;
+        throw wrappedError;
       }
+
 
 
 
