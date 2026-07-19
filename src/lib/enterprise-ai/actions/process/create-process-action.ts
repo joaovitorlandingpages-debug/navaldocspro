@@ -85,7 +85,7 @@ export class CreateProcessAction implements AIAction {
 
   async execute(rawInput: CreateProcessInput): Promise<ActionResult> {
     const context = (rawInput as any).input || rawInput;
-    console.log('AI CreateProcessAction: executing with context', JSON.stringify(context, null, 2));
+
 
 
     const start = Date.now();
