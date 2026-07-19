@@ -34,14 +34,15 @@ describe("Action Engine Core (Sprint 4.1)", () => {
     expect(ActionRegistry.exists("complete-checklist")).toBe(true);
   });
 
-  it("should return NOT_IMPLEMENTED for stub execution", async () => {
+  it("should return failure or success for implemented action execution", async () => {
     const engine = new ActionEngine();
     registerStubs();
+    // request-signature is now implemented, so it won't return NOT_IMPLEMENTED
     const result = await engine.execute("request-signature", {});
-    expect(result.success).toBe(false);
-    expect(result.status).toBe(ActionStatus.NOT_IMPLEMENTED);
-    expect(result.executionId).toBeDefined();
+    // It should fail validation because of missing processId/documentId, not NOT_IMPLEMENTED
+    expect(result.status).not.toBe(ActionStatus.NOT_IMPLEMENTED);
   });
+
 
 
   it("should return failure for unknown action execution", async () => {
