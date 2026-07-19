@@ -130,6 +130,17 @@ export class PlannerEngine {
       if (!action) return;
 
       const stepId = stepIdMap.get(actionId)!;
+      
+      // Check if all declared dependencies are present in the plan
+      action.metadata.dependencies.forEach(depId => {
+        if (!stepIdMap.has(depId)) {
+          throw new PlannerError(
+            PlannerErrorCodes.INVALID_DEPENDENCY,
+            `Action '${actionId}' depends on '${depId}', but '${depId}' is not in the ExecutionPlan and could not be resolved.`
+          );
+        }
+      });
+
       const dependencies = action.metadata.dependencies
         .map(depActionId => stepIdMap.get(depActionId))
         .filter((sid): sid is string => !!sid);
