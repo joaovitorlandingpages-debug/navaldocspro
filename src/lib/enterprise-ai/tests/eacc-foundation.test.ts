@@ -1,10 +1,40 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+// Mock Supabase before other imports
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    from: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    or: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+    single: vi.fn().mockResolvedValue({ data: { id: '1', process_number: 'P-001', status: 'active', created_at: new Date().toISOString() }, error: null }),
+    order: vi.fn().mockReturnThis(),
+  }
+}));
+
+// Mock process metrics
+vi.mock('@/features/process-center/utils/processMetrics', () => ({
+  getProcessDocumentStats: vi.fn().mockResolvedValue({
+    totalRequired: 10,
+    totalAttached: 5,
+    totalApproved: 3,
+    totalPending: 2,
+    totalBlocking: 5,
+    totalRejected: 0,
+    totalOutdated: 0,
+    percentage: 50
+  })
+}));
+
 import { AIOrchestrator } from '../core/ai-orchestrator';
 import { AgentRegistry } from '../agents/agent-registry';
 import { ToolRegistry } from '../tools/tool-registry';
 import { registerAgents } from '../agents/process-specialist.agent';
 import { registerTools } from '../tools/tool-registry-init';
 import { AIExecutionContext } from '../core/ai-types';
+import { supabase } from '@/integrations/supabase/client';
 
 describe('EACC Foundation', () => {
   const mockContext: AIExecutionContext = {
