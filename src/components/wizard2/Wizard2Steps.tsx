@@ -847,37 +847,3 @@ export function StepReview() {
     </div>
   );
 }
-    <div className="space-y-6 animate-in fade-in zoom-in-95 duration-400">
-      <StepHeader 
-        title="Revisão Geral" 
-        description="Confira todas as informações antes de oficializar o processo." 
-        icon={CheckCircle2} 
-      />
-
-      <div className="grid gap-3">
-        <Item label="Cliente" value={customer?.name} icon={User} />
-        <Item label="Embarcação" value={vessel?.name} icon={Ship} />
-        <Item label="Processo" value={state.processTypeName} icon={Sparkles} />
-        
-        <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-2xl border border-primary/20">
-          <div className="w-10 h-10 rounded-xl bg-white border border-primary/20 flex items-center justify-center text-primary shadow-sm">
-            <ListChecks className="h-5 w-5" />
-          </div>
-          <div className="flex-1">
-            <div className="text-[10px] font-black uppercase tracking-widest text-primary/60">Checklist & Documentos</div>
-            <div className="font-bold text-slate-900">{state.docPicks.length} itens configurados</div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] font-black text-slate-400">UPLOAD CONCLUÍDO</div>
-            <div className="font-black text-emerald-600">{Object.keys(state.uploadedFiles).length} / {state.docPicks.length}</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 text-[11px] text-amber-700 leading-relaxed flex gap-3">
-        <ShieldCheck className="h-5 w-5 text-amber-500 shrink-0" />
-        Ao clicar em "Criar Processo", o sistema iniciará a materialização dos documentos, automações de OCR e notificará os envolvidos.
-      </div>
-    </div>
-  );
-}
