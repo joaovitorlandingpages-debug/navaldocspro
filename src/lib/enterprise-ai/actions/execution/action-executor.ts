@@ -241,12 +241,13 @@ export class ActionExecutor {
 
     } catch (error: any) {
       const finishedAt = new Date();
+      const durationMs = finishedAt.getTime() - startedAt.getTime();
       
       const errorCode = error.errorCode || error.code || 'ACTION_EXECUTION_ERROR';
       let status = error.status || ActionStatus.FAILED;
       let errors = [error.message || 'Unknown execution error'];
 
-      console.log('ActionExecutor Catch DEBUG (Final):', { 
+      console.log('ActionExecutor Catch DEBUG (Final External):', { 
         name: error.name, 
         code: error.code, 
         errorCode, 
@@ -264,25 +265,22 @@ export class ActionExecutor {
       } else if (error instanceof BaseConfirmationRequiredError || error.code === 'CHECKLIST_CONFIRMATION_REQUIRED') {
         status = ActionStatus.FAILED; 
       } else if (error.isActionError || (error.errorCode && error.errorCode !== 'ACTION_EXECUTION_ERROR')) {
-        // Normalized ActionError or specific ActionExecutionError sub-type
         status = ActionStatus.FAILED;
       }
 
-
-      // Audit Failure
+      // Audit Failure & Idempotency Update
       try {
         if (idempotencyRecordId) {
           const isRecoverable = errorCode === 'MATERIALIZATION_FAILED' || errorCode === 'VISIBILITY_FAILED';
           const finalProcessId = (error as any).processId || (input as any).processId;
           
-          console.log('ActionExecutor Idempotency Update:', {
+          console.log('ActionExecutor Idempotency Update (Final):', {
             id: idempotencyRecordId,
             status: isRecoverable ? 'recoverable_failed' : 'failed',
             errorCode,
             processId: finalProcessId
           });
 
-          // FORCE: Ensure we are using the normalized error code
           await idempotencyService.update(idempotencyRecordId, {
             status: isRecoverable ? 'recoverable_failed' : 'failed',
             errorCode: errorCode,
@@ -290,12 +288,12 @@ export class ActionExecutor {
           });
         }
 
-
         await auditLogger.logFailure(executionId, {
           error: errors,
           finishedAt,
-          durationMs: finishedAt.getTime() - startedAt.getTime(),
-          metadata: { errorCode: error.code }
+          durationMs,
+          errorCode,
+          metadata: { errorCode, processId: error.processId }
         });
       } catch (auditError) {
         console.warn('Audit failure log failed:', auditError);
@@ -308,10 +306,10 @@ export class ActionExecutor {
         actionId,
         startedAt,
         finishedAt,
-        durationMs: finishedAt.getTime() - startedAt.getTime(),
+        durationMs,
         errors,
         metadata: { 
-          errorCode: errorCode,
+          errorCode, 
           processId: (error as any).processId,
           confirmationToken: (error as any).publicToken,
           summary: (error as any).summary
@@ -319,6 +317,7 @@ export class ActionExecutor {
       };
     }
   }
+
 
   private generateId(): string {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
