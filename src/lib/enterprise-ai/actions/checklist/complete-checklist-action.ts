@@ -209,7 +209,8 @@ export class CompleteChecklistAction implements AIAction {
           metadata: { 
             errorCode: error.code,
             confirmationRequired: true,
-            summary: error.summary
+            summary: error.summary,
+            confirmationToken: error.publicToken
           }
         });
 
