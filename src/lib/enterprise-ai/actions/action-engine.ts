@@ -3,6 +3,8 @@ import { ActionRegistry } from "./action-registry";
 import { createActionResult } from "./action-result";
 import { GeneratePdfAction } from "./pdf/generate-pdf-action";
 import { CompleteChecklistAction } from "./checklist/complete-checklist-action";
+import { RequestSignatureAction } from "./signatures/request-signature-action";
+
 
 
 
@@ -74,16 +76,18 @@ export class BaseStubAction implements AIAction {
 
 // Register stubs
 export const registerStubs = () => {
-  const stubs = [
+  const stubs: AIAction[] = [
     
-    new BaseStubAction("request-signature", "Request Signature", "Requests an electronic signature"),
+    // new BaseStubAction("request-signature", "Request Signature", "Requests an electronic signature"),
 
   ];
 
   stubs.forEach(stub => ActionRegistry.register(stub));
+
   
   // Register Real Actions
   ActionRegistry.register(new GeneratePdfAction());
-  ActionRegistry.register(new CompleteChecklistAction());
+  ActionRegistry.register(new RequestSignatureAction());
 };
+
 
