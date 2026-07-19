@@ -89,6 +89,7 @@ function AdminLayout() {
     { name: "Implantação & Status", icon: <Activity className="h-5 w-5" />, path: "/admin/system-report" },
     { name: "Ajustes Master", icon: <Settings className="h-5 w-5" />, path: "/admin/settings" },
     { name: "Relatório QA Final", icon: <CheckCircle2 className="h-5 w-5" />, path: "/admin/full-qa-report" },
+    { name: "AI Command Center", icon: <Bot className="h-5 w-5" />, path: "/admin/ai-command-center" },
     { name: "Prontidão de Produção", icon: <Rocket className="h-5 w-5" />, path: "/admin/production-readiness" },
   ];
 
