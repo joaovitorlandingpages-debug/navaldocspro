@@ -78,10 +78,14 @@ function EnterpriseProcessCenterPage() {
       <ProcessCenterSidebar suggestions={suggestions} />
       
       <div className="flex-1 flex flex-col min-w-0">
-        <ProcessCenterHeader process={process} timeInProgress={timeInProgress} />
+        <Suspense fallback={<div className="h-20 bg-white animate-pulse" />}>
+          <Workspace3Header process={process} timeInProgress={timeInProgress} />
+        </Suspense>
         
         <ScrollArea className="flex-1">
-          <ProcessCenterDashboard docStats={docStats} healthReport={healthReport} riskReport={riskReport} />
+          {search.tab !== 'workspace' && (
+            <ProcessCenterDashboard docStats={docStats} healthReport={healthReport} riskReport={riskReport} />
+          )}
           
           <div className="px-6 pb-20">
             <Tabs value={search.tab} className="w-full">
