@@ -260,8 +260,9 @@ export function ProcessCenterSidebar({
               return (
                 <button
                   key={item.id}
-                  onClick={() => navigate({ search: (prev: any) => ({ ...prev, tab: item.id }) })}
+                  onClick={() => navigate({ search: { tab: item.id } as any })}
                   className={cn(
+
                     "w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all group",
                     isActive 
                       ? "bg-slate-900 text-white shadow-lg shadow-slate-200" 
