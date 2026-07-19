@@ -1,134 +1,155 @@
-import { AIAction, AIActionContext, ActionMetadata } from '../action-types';
-import { ExecutionResult } from '../execution/execution-result';
-import { RequestSignatureInput, RequestSignatureResult } from './signature-action-types';
+import { AIAction, ActionResult, ActionStatus, ConfirmationPolicy } from '../action-types';
+import { RequestSignatureInput, DocumentNotFoundError, SignatureExecutionError } from './signature-action-types';
 import { signaturesService } from '@/services/signatures';
 import { supabase } from '@/integrations/supabase/client';
 import { AIPermission } from '../security/permission-types';
-import { 
-  DocumentNotFoundError, 
-  SignatureExecutionError 
-} from '../execution/execution-errors';
 
-export class RequestSignatureAction implements AIAction<RequestSignatureInput, RequestSignatureResult> {
-  public metadata: ActionMetadata = {
-    id: 'request-signature',
-    name: 'Request Signature',
-    description: 'Creates electronic signature requests for generated documents.',
-    category: 'document-operation',
-    risk: 'high',
-    requiresConfirmation: true,
-    requiredPermissions: [
-      AIPermission.DOCUMENT_READ,
-      AIPermission.SIGNATURE_CREATE,
-      AIPermission.PROCESS_READ
-    ]
-  };
+export class RequestSignatureAction implements AIAction {
+  id = 'request-signature';
+  name = 'Request Signature';
+  description = 'Creates electronic signature requests for generated documents.';
+  requiredPermissions = [
+    AIPermission.DOCUMENT_READ,
+    AIPermission.SIGNATURE_CREATE,
+    AIPermission.PROCESS_READ
+  ];
+  confirmationPolicy = ConfirmationPolicy.HIGH;
+  estimatedRisk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'HIGH';
+  estimatedDuration = 3;
 
-  async execute(
-    input: RequestSignatureInput,
-    context: AIActionContext
-  ): Promise<ExecutionResult<RequestSignatureResult>> {
-    const { userId, companyId } = context.security;
-    const executionId = crypto.randomUUID();
+  async validate(context: RequestSignatureInput & { companyId: string }): Promise<{ valid: boolean; errors?: string[] }> {
+    const { processId, documentId, participants, companyId } = context;
+    const errors: string[] = [];
+
+    if (!processId) errors.push("processId is required");
+    if (!documentId) errors.push("documentId is required");
+    if (!participants || participants.length === 0) errors.push("at least one participant is required");
+
+    if (errors.length > 0) return { valid: false, errors };
 
     try {
-      // 1. Validations
       // Verify document exists and belongs to company
       const { data: document, error: docError } = await supabase
         .from('generated_documents')
-        .select('id, process_id, title')
-        .eq('id', input.documentId)
+        .select('id, process_id')
+        .eq('id', documentId)
         .eq('company_id', companyId)
         .single();
 
       if (docError || !document) {
-        throw new DocumentNotFoundError(input.documentId);
+        return { valid: false, errors: [`Document ${documentId} not found or access denied`] };
       }
 
-      // Verify document belongs to the specified process
-      if (document.process_id !== input.processId) {
-        throw new SignatureExecutionError(
-          `Document ${input.documentId} does not belong to process ${input.processId}`
-        );
+      if (document.process_id !== processId) {
+        return { valid: false, errors: [`Document ${documentId} does not belong to process ${processId}`] };
       }
 
       // Verify process exists and belongs to company
       const { data: process, error: procError } = await supabase
         .from('processes')
-        .select('id, customer_id')
-        .eq('id', input.processId)
+        .select('id')
+        .eq('id', processId)
         .eq('company_id', companyId)
         .single();
 
       if (procError || !process) {
-        throw new SignatureExecutionError(`Process ${input.processId} not found or access denied`);
+        return { valid: false, errors: [`Process ${processId} not found or access denied`] };
       }
 
-      // 2. Prepare payload for signaturesService
-      // Map participants to service format
-      const participants = input.participants.map(p => ({
+      return { valid: true };
+    } catch (err: any) {
+      return { valid: false, errors: [err.message] };
+    }
+  }
+
+  async execute(context: RequestSignatureInput & { 
+    companyId: string; 
+    userId: string; 
+    executionId: string;
+  }): Promise<ActionResult> {
+    const startTime = Date.now();
+    const { processId, documentId, participants, expirationDate, message, companyId, userId, executionId } = context;
+
+    try {
+      // 1. Fetch process to get customer_id
+      const { data: process, error: procError } = await supabase
+        .from('processes')
+        .select('customer_id, title')
+        .eq('id', processId)
+        .single();
+
+      if (procError || !process) {
+        throw new SignatureExecutionError(`Process ${processId} not found`);
+      }
+
+      // 2. Fetch document to get its title
+      const { data: document, error: docError } = await supabase
+        .from('generated_documents')
+        .select('title')
+        .eq('id', documentId)
+        .single();
+
+      if (docError || !document) {
+        throw new DocumentNotFoundError(documentId);
+      }
+
+      // 3. Map participants
+      const serviceParticipants = participants.map((p: any) => ({
         name: p.name,
         email: p.email,
         role: p.role,
         signing_order: p.signingOrder,
-        customer_id: p.participantId // Reusing participantId as customer_id if provided
+        customer_id: p.participantId 
       }));
 
-      // 3. Call existing Signature Service
+      // 4. Call existing Signature Service
       const result = await signaturesService.create({
         company_id: companyId,
-        title: input.message || `Assinatura: ${document.title || 'Documento'}`,
-        process_id: input.processId,
-        document_id: input.documentId,
+        title: message || `Assinatura: ${document.title || 'Documento'}`,
+        process_id: processId,
+        document_id: documentId,
         customer_id: process.customer_id,
-        signing_order: 'sequential', // Default to sequential for AI-triggered requests
-        expires_at: input.expirationDate,
-        participants: participants,
+        signing_order: 'sequential', 
+        expires_at: expirationDate,
+        participants: serviceParticipants,
         created_by: userId
       });
 
-      // 4. Return formatted result
-      const actionResult: RequestSignatureResult = {
+      return {
         success: true,
+        status: ActionStatus.SUCCESS,
+        message: 'Signature request created successfully',
         executionId,
-        signatureRequestId: result.request.id,
-        documentId: input.documentId,
-        processId: input.processId,
-        participants: result.participants.map(p => ({
-          id: p.id,
-          name: p.name,
-          email: p.email || '',
-          status: p.status
-        })),
-        expirationDate: input.expirationDate,
-        status: result.request.status,
+        duration: (Date.now() - startTime) / 1000,
         metadata: {
-          title: result.request.title
+          signatureRequestId: result.request.id,
+          documentId,
+          processId,
+          participants: result.participants.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            email: p.email,
+            status: p.status
+          })),
+          expirationDate,
+          status: result.request.status
         }
       };
 
-      return {
-        success: true,
-        executionId,
-        actionId: this.metadata.id,
-        data: actionResult,
-        timestamp: new Date().toISOString()
-      };
-
     } catch (error: any) {
-      console.error('[RequestSignatureAction] Execution failed:', error);
-      
       return {
         success: false,
+        status: ActionStatus.FAILED,
+        message: error.message || 'Failed to request signature',
         executionId,
-        actionId: this.metadata.id,
-        error: {
-          code: error.code || 'SIGNATURE_EXECUTION_ERROR',
-          message: error.message || 'Failed to request signature',
-          details: error
-        },
-        timestamp: new Date().toISOString()
+        duration: (Date.now() - startTime) / 1000,
+        errors: [error.message]
       };
     }
+  }
+
+  async rollback(context: any): Promise<void> {
+    // In a real scenario, we might want to cancel the signature request
+    console.log("Rollback for RequestSignatureAction not yet implemented");
   }
 }
