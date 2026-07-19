@@ -32,7 +32,9 @@ describe("Action Engine Core (Sprint 4.1)", () => {
     expect(ActionRegistry.exists("request-signature")).toBe(true);
     expect(ActionRegistry.exists("generate-pdf")).toBe(true);
     expect(ActionRegistry.exists("complete-checklist")).toBe(true);
+    expect(ActionRegistry.exists("create-process")).toBe(true);
   });
+
 
 
 
