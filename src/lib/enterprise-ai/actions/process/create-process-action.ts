@@ -83,7 +83,9 @@ export class CreateProcessAction implements AIAction {
     return { valid: true };
   }
 
-  async execute(context: CreateProcessInput): Promise<ActionResult> {
+  async execute(rawInput: CreateProcessInput): Promise<ActionResult> {
+    const context = (rawInput as any).input || rawInput;
+
     const start = Date.now();
     try {
       const { data: { user } } = await supabase.auth.getUser();
