@@ -8,28 +8,26 @@ import { ActionValidator } from "../actions/security/action-validator";
 import { PermissionGuard } from "../actions/security/permission-guard";
 
 // Mock do Supabase
-vi.mock("@/integrations/supabase/client", () => {
-  const m = {
-    single: vi.fn(),
-    eq: vi.fn(),
-    select: vi.fn(),
-    insert: vi.fn(),
-    update: vi.fn(),
-    from: vi.fn(),
-  };
-  
-  m.from.mockReturnValue(m);
-  m.select.mockReturnValue(m);
-  m.insert.mockReturnValue(m);
-  m.update.mockReturnValue(m);
-  m.eq.mockReturnValue(m);
-  m.single.mockImplementation(() => Promise.resolve({ data: null, error: null }));
+const supabaseMock = {
+  single: vi.fn(),
+  eq: vi.fn(),
+  select: vi.fn(),
+  insert: vi.fn(),
+  update: vi.fn(),
+  from: vi.fn(),
+};
 
-  return {
-    supabase: m,
-    _mocks: m
-  };
-});
+supabaseMock.from.mockReturnValue(supabaseMock);
+supabaseMock.select.mockReturnValue(supabaseMock);
+supabaseMock.insert.mockReturnValue(supabaseMock);
+supabaseMock.update.mockReturnValue(supabaseMock);
+supabaseMock.eq.mockReturnValue(supabaseMock);
+supabaseMock.single.mockImplementation(() => Promise.resolve({ data: null, error: null }));
+
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: supabaseMock,
+  _mocks: supabaseMock
+}));
 
 vi.mock("@/utils/pdf-export", () => ({
   generateAndUploadPdf: vi.fn(() => Promise.resolve({ path: "path/to/pdf", signedUrl: "http://signed-url" })),
@@ -41,11 +39,10 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
   const mockUserId = "user-456";
   const mockProcessId = "process-789";
 
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.clearAllMocks();
     action = new GeneratePdfAction();
-    const { supabase } = await import("@/integrations/supabase/client");
-    (supabase as any).single.mockResolvedValue({ data: null, error: null });
+    supabaseMock.single.mockResolvedValue({ data: null, error: null });
   });
 
   it("1. Metadata básico da Action", () => {
@@ -55,8 +52,7 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
   });
 
   it("2. Validação: Falha se processo não for encontrado", async () => {
-    const { supabase } = await import("@/integrations/supabase/client");
-    (supabase as any).single.mockResolvedValue({ data: null, error: new Error("Not found") });
+    supabaseMock.single.mockResolvedValue({ data: null, error: new Error("Not found") });
 
     const result = await action.validate({ 
       input: { processId: mockProcessId }, 
@@ -68,8 +64,7 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
   });
 
   it("3. Validação: Falha se processo pertencer a outro tenant", async () => {
-    const { supabase } = await import("@/integrations/supabase/client");
-    (supabase as any).single.mockResolvedValue({ 
+    supabaseMock.single.mockResolvedValue({ 
       data: { id: mockProcessId, company_id: "other-company" }, 
       error: null 
     });
@@ -84,8 +79,7 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
   });
 
   it("4. Validação: Sucesso para processo válido e tenant correto", async () => {
-    const { supabase } = await import("@/integrations/supabase/client");
-    (supabase as any).single.mockResolvedValue({ 
+    supabaseMock.single.mockResolvedValue({ 
       data: { id: mockProcessId, company_id: mockCompanyId }, 
       error: null 
     });
@@ -99,10 +93,8 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
   });
 
   it("5. Execução: Sucesso completa o fluxo", async () => {
-    const { supabase } = await import("@/integrations/supabase/client");
-    
     // Mock sequence
-    (supabase as any).single
+    supabaseMock.single
       .mockResolvedValueOnce({
         data: { 
           id: mockProcessId, 
@@ -129,32 +121,32 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
   });
 
   it("6. Integração com ActionExecutor", async () => {
-    const { supabase } = await import("@/integrations/supabase/client");
-    
     ActionRegistry.clear();
     ActionRegistry.register(action);
     const executor = new ActionExecutor(ActionRegistry, new ActionValidator(), new PermissionGuard());
 
-    // Mocks for validation AND execution
-    // Resetting mocks to provide fixed responses for both validation and execution phases
-    (supabase as any).single.mockResolvedValue({
-      data: { 
-        id: mockProcessId, 
-        company_id: mockCompanyId, 
-        title: "Process Title",
-        companies: { name: "NavalDocs" }
-      },
-      error: null
-    });
-
-    // Specific insert response for doc ID
-    (supabase as any).insert.mockReturnValueOnce({
-      select: vi.fn().mockReturnValueOnce({
-        single: vi.fn().mockResolvedValueOnce({
-          data: { id: "doc-999" },
+    // Setup behavior for validation and execution
+    supabaseMock.single.mockImplementation(async () => {
+      // Logic inside action.execute or action.validate
+      const callCount = supabaseMock.single.mock.calls.length;
+      
+      if (callCount <= 2) { 
+        // Validation + First fetch in Execute
+        return {
+          data: { 
+            id: mockProcessId, 
+            company_id: mockCompanyId, 
+            title: "Process Title",
+            companies: { name: "NavalDocs" }
+          },
           error: null
-        })
-      })
+        };
+      }
+      // Second call in execute (doc insert select)
+      return {
+        data: { id: "doc-999" },
+        error: null
+      };
     });
 
     const authContext = {
