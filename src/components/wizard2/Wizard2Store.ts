@@ -13,13 +13,12 @@ export interface WizardState {
   processTypeName: string | null;
   title: string;
   priority: 'low' | 'normal' | 'high' | 'urgent';
-  docPicks: string[]; // checklist item keys
-  uploadedFiles: Record<string, any[]>; // slotKey -> files
+  docPicks: string[]; 
+  uploadedFiles: Record<string, any[]>; 
   brandingMode: 'none' | 'company' | 'customer' | 'exclusive';
   
-  // Actions
   setStep: (step: WizardStep) => void;
-  setData: (data: Partial<Omit<WizardState, 'actions'>>) => void;
+  setData: (data: Partial<Omit<WizardState, 'setStep' | 'setData' | 'reset'>>) => void;
   reset: () => void;
 }
 
