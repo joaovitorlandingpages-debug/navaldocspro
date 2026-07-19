@@ -1,85 +1,117 @@
-import { 
-  AIRequest, 
-  AIResponse, 
-  AIExecutionContext, 
-  AIIntent,
-  ToolExecutionResult 
-} from "./ai-types";
+import { AIIntent, AIRequest, AIResponse, AgentDefinition, ToolExecutionResult } from "./ai-types";
 import { AgentRegistry } from "../agents/agent-registry";
-import { ToolExecutor } from "../tools/tool-registry";
-import { MockProvider } from "../providers/mock-provider";
-import { AIError } from "./ai-errors";
+import { ToolRegistry } from "../tools/tool-registry";
+import { ToolExecutor } from "../tools/tool-executor";
+import { AIProvider } from "../providers/ai-provider";
+import { AIError, PermissionError } from "./ai-errors";
+import { IntentClassifier } from "../intents/intent-classifier";
+import { ExecutionPlanner } from "../planning/execution-planner";
+import { ConversationRepository } from "../conversations/conversation-repository";
+import { ContextEngine } from "../context/context-engine";
+import { ResponseBuilder } from "../responses/response-builder";
 
 export class AIOrchestrator {
-  private static provider = new MockProvider();
+  private classifier = new IntentClassifier();
+  private planner = new ExecutionPlanner();
+  private conversationRepo = new ConversationRepository();
+  private contextEngine = new ContextEngine();
+  private responseBuilder = new ResponseBuilder();
 
-  static async process(request: AIRequest, context: AIExecutionContext): Promise<AIResponse> {
-    const start = Date.now();
-    
-    // 1. Detect Intent
-    const intent = this.detectIntent(request.message);
-    
-    if (intent === 'unsupported_intent') {
-      return {
-        answer: "Desculpe, ainda não consigo processar essa solicitação específica. Posso ajudar você a pesquisar processos ou analisar a saúde e o risco de um processo.",
-        executedTools: [],
-        executionId: Math.random().toString(36).substring(7),
-        durationMs: Date.now() - start,
-        warnings: ["unsupported_intent"]
-      };
+  constructor(
+    private agentRegistry: AgentRegistry,
+    private toolRegistry: ToolRegistry,
+    private toolExecutor: ToolExecutor,
+    private provider: AIProvider
+  ) {}
+
+  async process(request: AIRequest): Promise<AIResponse> {
+    const startTime = Date.now();
+    const { message, conversationId, userId, companyId } = request;
+
+    if (!userId || !companyId) {
+      return this.responseBuilder.buildError(request, 'permission_denied', 'Usuário não autenticado.');
     }
 
-    // 2. Select Agent
-    const agent = AgentRegistry.findByIntent(intent);
+    // 1. Intent Classification
+    const classification = this.classifier.classify(message);
+
+    // 2. Load Conversation and Context
+    let conversation = conversationId ? await this.conversationRepo.getConversation(conversationId, companyId) : null;
+    if (!conversation && conversationId) {
+      return this.responseBuilder.buildError(request, 'execution_failed', 'Conversa não encontrada.');
+    }
+
+    const contextState = conversation?.contextState || {};
+
+    // 3. Resolve References
+    const resolution = this.contextEngine.resolveReferences(message, contextState as any);
+    if (resolution.entityType !== 'none' && resolution.entityId) {
+       // Add resolved entity to classification entities
+       classification.entities.processId = resolution.entityId;
+    }
+
+    // 4. Select Agent
+    const agent = this.agentRegistry.findAgentByIntent(classification.intent);
     if (!agent) {
-      throw new AIError('AGENT_NOT_FOUND', `Nenhum agente disponível para a intenção: ${intent}`);
+      return this.responseBuilder.buildError(request, 'unsupported_intent', 'Não encontrei um agente para processar sua solicitação.');
     }
 
-    // 3. Determine and Execute Tools
+    // 5. Create Execution Plan
+    const plan = this.planner.createPlan(classification.intent, classification.entities, contextState);
+
+    // 6. Execute Tools
     const toolResults: ToolExecutionResult[] = [];
-    
-    if (intent === 'search_processes') {
-      const result = await ToolExecutor.execute('searchProcesses', context, { query: request.message });
-      if (result) toolResults.push(result);
-    } else if (intent === 'get_process_details' && context.entityContext?.processId) {
-      const result = await ToolExecutor.execute('getProcess', context, { processId: context.entityContext.processId });
-      if (result) toolResults.push(result);
-    } else if (intent === 'get_process_health' && context.entityContext?.processId) {
-      const result = await ToolExecutor.execute('getProcessHealth', context, { processId: context.entityContext.processId });
-      if (result) toolResults.push(result);
-    } else if (intent === 'get_process_risk' && context.entityContext?.processId) {
-      const result = await ToolExecutor.execute('getProcessRisk', context, { processId: context.entityContext.processId });
-      if (result) toolResults.push(result);
+    for (const step of plan.steps) {
+      if (step.toolId) {
+        const result = await this.toolExecutor.execute(
+          step.toolId,
+          { userId, companyId, role: 'user', permissions: [], locale: 'pt-BR', conversationId, contextState },
+          step.input
+        );
+        toolResults.push(result);
+        step.status = result.success ? 'completed' : 'failed';
+      }
     }
 
-    // 4. Generate Response via Provider
-    const response = await this.provider.generateResponse(agent, context, request.message, toolResults);
-    
-    return {
-      ...response,
-      durationMs: Date.now() - start
-    };
-  }
+    // 7. Generate Answer via Provider
+    const providerResponse = await this.provider.generateResponse({
+      agent,
+      intent: classification.intent,
+      plan,
+      results: toolResults,
+      context: contextState,
+      history: [] // Should load from DB
+    });
 
-  private static detectIntent(message: string): AIIntent {
-    const msg = message.toLowerCase();
-    
-    if (msg.includes('pesquisar') || msg.includes('listar') || msg.includes('procurar') || msg.includes('quais processos')) {
-      return 'search_processes';
-    }
-    
-    if (msg.includes('detalhe') || msg.includes('sobre o processo') || msg.includes('abrir processo')) {
-      return 'get_process_details';
-    }
-    
-    if (msg.includes('saúde') || msg.includes('health') || msg.includes('está saudável')) {
-      return 'get_process_health';
-    }
-    
-    if (msg.includes('risco') || msg.includes('risk') || msg.includes('perigoso')) {
-      return 'get_process_risk';
+    // 8. Update Context State
+    const updatedState = this.contextEngine.updateState(contextState as any, {
+      lastIntent: classification.intent,
+      lastExecutedTools: plan.requiredTools,
+      // Update IDs if found in results
+      ...(classification.entities.processId ? { lastProcessId: classification.entities.processId } : {})
+    });
+
+    if (conversationId) {
+      await this.conversationRepo.updateContextState(conversationId, companyId, updatedState);
     }
 
-    return 'unsupported_intent';
+    // 9. Final Response
+    const response = this.responseBuilder.buildSuccess(
+      request,
+      providerResponse.answer,
+      plan,
+      toolResults.map(r => ({
+        toolId: r.toolId,
+        success: r.success,
+        durationMs: r.durationMs,
+        error: r.error,
+        data: r.data
+      })),
+      providerResponse.references || [],
+      updatedState
+    );
+
+    response.durationMs = Date.now() - startTime;
+    return response;
   }
 }
