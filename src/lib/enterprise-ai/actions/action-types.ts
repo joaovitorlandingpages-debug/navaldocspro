@@ -1,6 +1,8 @@
-export enum ConfirmationPolicy {
 import { ActionError } from "./process/process-action-types";
 
+export { ActionError };
+
+export enum ConfirmationPolicy {
   NONE = 'NONE',
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
@@ -42,7 +44,3 @@ export interface ActionResult {
   errors?: string[];
   metadata?: Record<string, any>;
 }
-
-
-
-
