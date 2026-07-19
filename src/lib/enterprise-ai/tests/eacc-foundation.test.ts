@@ -46,7 +46,7 @@ describe('EACC Foundation', () => {
     expect(response.status).toBe('success');
     expect(response.selectedAgent).toBe('process-specialist');
     expect(response.executedTools.some((t: any) => t.toolId === 'searchProcesses')).toBe(true);
-    expect(response.answer).toContain('Encontrei');
+    expect(response.answer).toContain('identifiquei');
   });
 
   it('should handle unsupported intents gracefully', async () => {
