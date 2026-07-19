@@ -40,16 +40,16 @@ export class AIOrchestrator {
     
     if (intent === 'search_processes') {
       const result = await ToolExecutor.execute('searchProcesses', context, { query: request.message });
-      toolResults.push(result);
+      if (result) toolResults.push(result);
     } else if (intent === 'get_process_details' && context.entityContext?.processId) {
       const result = await ToolExecutor.execute('getProcess', context, { processId: context.entityContext.processId });
-      toolResults.push(result);
+      if (result) toolResults.push(result);
     } else if (intent === 'get_process_health' && context.entityContext?.processId) {
       const result = await ToolExecutor.execute('getProcessHealth', context, { processId: context.entityContext.processId });
-      toolResults.push(result);
+      if (result) toolResults.push(result);
     } else if (intent === 'get_process_risk' && context.entityContext?.processId) {
       const result = await ToolExecutor.execute('getProcessRisk', context, { processId: context.entityContext.processId });
-      toolResults.push(result);
+      if (result) toolResults.push(result);
     }
 
     // 4. Generate Response via Provider
