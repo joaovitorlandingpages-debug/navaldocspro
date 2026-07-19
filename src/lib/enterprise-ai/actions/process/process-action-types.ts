@@ -44,8 +44,10 @@ export class VesselNotFoundError extends ActionError {
 }
 
 export class ProcessCreationError extends ActionError {
-  constructor(message: string) {
-    super(message, "PROCESS_CREATION_ERROR");
+  public status = 'FAILED';
+  constructor(message: string, code: string = "PROCESS_CREATION_ERROR") {
+    super(message, code);
+    this.name = "ProcessCreationError";
     Object.setPrototypeOf(this, ProcessCreationError.prototype);
   }
 }
