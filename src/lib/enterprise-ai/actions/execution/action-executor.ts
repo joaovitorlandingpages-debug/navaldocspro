@@ -153,8 +153,10 @@ export class ActionExecutor {
         ...input, 
         ...context, 
         ...confirmationMetadata, 
-        _user: { id: authContext.userId }
+        _user: { id: authContext.userId },
+        processId: input.processId || context.processId
       };
+
 
       console.log('ActionExecutor Execute Call:', { actionId, processId: inputWithContext.processId });
       
