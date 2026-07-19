@@ -25,6 +25,7 @@ const NewProcessContext = createContext<Ctx | undefined>(undefined);
 export function NewProcessProvider({ children }: { children: React.ReactNode }) {
   const [chooserOpen, setChooserOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
+  const [wizard2Open, setWizard2Open] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
 
   const openUpload = (open: boolean) => setUploadOpen(open);
