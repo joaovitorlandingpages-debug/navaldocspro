@@ -198,9 +198,11 @@ describe("Enterprise Audit Logger (Sprint 4.5)", () => {
 
     await executor.execute("generate-pdf", { processId: mockProcessId }, authContext);
 
-    expect(logSuccessSpy).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({
+    expect(logSuccessSpy).toHaveBeenCalled();
+    const lastCall = logSuccessSpy.mock.calls[logSuccessSpy.mock.calls.length - 1];
+    expect(lastCall[1]).toMatchObject({
       documentId: "doc-123"
-    }));
+    });
   });
 
   it("6. Robusteza: Erro na auditoria não trava a Action", async () => {
@@ -208,7 +210,9 @@ describe("Enterprise Audit Logger (Sprint 4.5)", () => {
     const client = await import("@/integrations/supabase/client");
     const supabaseMock = client.supabase;
 
-    vi.spyOn(auditLogger, "logStart").mockRejectedValue(new Error("Database down"));
+    vi.spyOn(auditLogger, "logStart").mockImplementation(async () => {
+      throw new Error("Database down");
+    });
 
     // Mock action
     class MockAction implements AIAction {

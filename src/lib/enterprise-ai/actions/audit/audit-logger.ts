@@ -36,7 +36,7 @@ export class AuditLogger {
           started_at: new Date().toISOString(),
           metadata: params.metadata || {}
         })
-        .select()
+        .select('id, execution_id, action_id, action_name, user_id, company_id, process_id, conversation_id, provider, status, started_at, finished_at, duration_ms, warnings, errors, metadata, created_at')
         .single();
 
       if (error) throw error;
@@ -89,7 +89,7 @@ export class AuditLogger {
         .from('ai_action_audits')
         .update(updates)
         .eq('execution_id', executionId)
-        .select()
+        .select('id, execution_id, action_id, action_name, user_id, company_id, process_id, conversation_id, provider, status, started_at, finished_at, duration_ms, warnings, errors, metadata, created_at')
         .single();
 
       if (error) throw error;
