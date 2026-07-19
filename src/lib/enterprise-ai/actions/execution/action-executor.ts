@@ -155,7 +155,13 @@ export class ActionExecutor {
       }
 
       // 6. Execute
-      const result = await action.execute({ ...input, ...context, ...confirmationMetadata, input });
+      const result = await action.execute({ 
+        ...input, 
+        ...context, 
+        ...confirmationMetadata, 
+        _user: user,
+        ...(idempotencyRecord?.process_id ? { processId: idempotencyRecord.process_id } : {})
+      });
 
       // 6.1 Update Idempotency Record if success
       if (idempotencyRecordId && result.success) {
