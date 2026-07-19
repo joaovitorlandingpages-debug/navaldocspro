@@ -162,198 +162,288 @@ function ProcessCenterListPage() {
           ))}
         </div>
       )}
-      <div id="ts-visual-edit-probe-8be306f86f424bd3" className="hidden whitespace-pre-wrap">ENTERPRISE AI COMMAND CENTER
-SPRINT 1 — AI ORCHESTRATION LAYER
+      <div id="ts-visual-edit-probe-50b5e3f5db534859" className="hidden whitespace-pre-wrap">ENTERPRISE AI COMMAND CENTER
 
-O EACC não deve começar pela interface do chat.
+SPRINT 2 — ENTERPRISE TOOL INTELLIGENCE
 
-Primeiro construiremos a camada de orquestração da IA.
+A camada de orquestração já existe.
 
+Agora transformar o EACC em um verdadeiro agente operacional.
+
+NÃO criar um chatbot simples.
+
+Criar um sistema de ferramentas inteligentes.
+
+==================================================
 OBJETIVO
-
-Criar toda a infraestrutura que permitirá conectar qualquer LLM (OpenAI, Gemini, Claude ou modelos locais) sem alterar a lógica do sistema.
-
-==================================================
-1. AI ORCHESTRATOR
 ==================================================
 
-Criar um AIOrchestrator central responsável por:
+Toda resposta da IA deve ser construída utilizando ferramentas reais.
 
-- receber a pergunta do usuário;
-- identificar intenção;
-- selecionar o(s) agente(s);
-- montar contexto;
-- consultar dados reais;
-- executar validações de permissão;
-- enviar ao modelo de IA;
-- receber resposta;
-- registrar auditoria.
+A IA nunca deve inventar informações.
 
-Nenhum agente conversa diretamente com a IA.
-
-Tudo passa pelo Orchestrator.
+Ela somente responderá utilizando dados obtidos pelas ferramentas.
 
 ==================================================
-2. AGENT REGISTRY
+TOOL REGISTRY
 ==================================================
 
-Criar um registro central dos agentes.
-
-Cada agente deve possuir:
-
-- id
-- nome
-- descrição
-- responsabilidades
-- ferramentas disponíveis
-- permissões necessárias
-- prioridade
-- contexto suportado
-- limite de execução
-
-Os agentes devem poder ser adicionados futuramente sem alterar o núcleo.
-
-==================================================
-3. TOOL SYSTEM
-==================================================
-
-Criar um sistema de ferramentas.
-
-Exemplos:
-
-searchProcesses()
-
-searchDocuments()
-
-searchCustomers()
-
-searchVessels()
-
-searchCertificates()
-
-searchTimeline()
-
-generateDocument()
-
-requestSignature()
-
-createChecklist()
+Criar um Tool Registry Enterprise.
 
 Cada ferramenta deve possuir:
 
+- id
+- nome
+- categoria
+- descrição
 - schema
+- parâmetros
 - validação
-- autorização
+- permissões
+- timeout
+- cache
 - auditoria
 - tratamento de erro
+- custo estimado
+- prioridade
 
 ==================================================
-4. CONTEXT ENGINE
+PROCESS TOOLS
 ==================================================
 
-Criar um motor de contexto.
+Criar ferramentas para:
 
-Ele deve:
+searchProcesses()
 
-- manter histórico da conversa;
-- resumir contexto antigo;
-- eliminar contexto irrelevante;
-- manter referências aos processos consultados;
-- permitir perguntas sequenciais.
+getProcess()
 
-==================================================
-5. PERMISSION ENGINE
-==================================================
+getProcessTimeline()
 
-Antes de qualquer resposta:
+getHealthScore()
 
-validar:
+getRiskReport()
 
-- tenant
-- role
-- ownership
-- permissões
+listBlockingIssues()
 
-A IA nunca poderá receber dados não autorizados.
+listPendingDocuments()
 
-==================================================
-6. PROMPT BUILDER
-==================================================
+listExpiredDocuments()
 
-Criar um PromptBuilder determinístico.
+listProcessesByCustomer()
 
-Ele deve montar o prompt usando:
+listProcessesByVessel()
 
-- contexto
-- pergunta
-- agente
-- dados
-- instruções
-- idioma
-- limitações
-
-Nenhum prompt gigante hardcoded.
+listProcessesReadyToFinalize()
 
 ==================================================
-7. PROVIDERS
+DOCUMENT TOOLS
 ==================================================
 
-Criar interface única:
+Criar ferramentas:
 
-AIProvider
+searchDocuments()
 
-Implementações:
+getDocument()
 
-OpenAIProvider
+compareDocumentVersions()
 
-GeminiProvider
+findRejectedDocuments()
 
-ClaudeProvider
+findExpiredDocuments()
 
-MockProvider
+findMissingDocuments()
 
-Troca de provider sem alterar regras de negócio.
+generateDocument()
 
 ==================================================
-8. AUDITORIA
+CUSTOMER TOOLS
+==================================================
+
+searchCustomers()
+
+getCustomer()
+
+findCustomersWithoutDocumentation()
+
+findInactiveCustomers()
+
+==================================================
+VESSEL TOOLS
+==================================================
+
+searchVessels()
+
+getVessel()
+
+findExpiredCertificates()
+
+findIncompleteVessels()
+
+==================================================
+OCR TOOLS
+==================================================
+
+listOCRPending()
+
+findOCRFailures()
+
+findLowConfidenceOCR()
+
+==================================================
+SIGNATURE TOOLS
+==================================================
+
+listPendingSignatures()
+
+findExpiredSignatures()
+
+requestSignature()
+
+==================================================
+MANAGEMENT TOOLS
+==================================================
+
+companyMetrics()
+
+processKPIs()
+
+operatorRanking()
+
+slaReport()
+
+dashboardSummary()
+
+==================================================
+ACTION TOOLS
+==================================================
+
+Todas as ações devem exigir confirmação.
+
+Exemplo:
+
+generateDocument()
+
+createChecklist()
+
+requestSignature()
+
+sendReminder()
+
+openProcess()
+
+createComment()
+
+==================================================
+TOOL EXECUTION ENGINE
+==================================================
+
+Criar um motor responsável por:
+
+- validar parâmetros
+- validar permissões
+- executar ferramentas
+- combinar resultados
+- tratar erros
+- registrar auditoria
+- retornar contexto para IA
+
+==================================================
+MULTI TOOL EXECUTION
+==================================================
+
+Permitir execução de várias ferramentas.
+
+Exemplo:
+
+Pergunta:
+
+"Quais processos críticos vencem amanhã e possuem documentos pendentes?"
+
+A IA poderá utilizar:
+
+searchProcesses()
+
+getRiskReport()
+
+listPendingDocuments()
+
+==================================================
+RETRY
+==================================================
+
+Criar política de retry.
+
+Não repetir chamadas desnecessárias.
+
+Registrar:
+
+- tentativa
+- erro
+- duração
+
+==================================================
+CACHE
+==================================================
+
+Ferramentas devem informar:
+
+cacheable
+
+ttl
+
+invalidateKeys
+
+==================================================
+AUDITORIA
 ==================================================
 
 Registrar:
 
 - usuário
 - tenant
-- agente
-- provider
+- pergunta
 - ferramentas utilizadas
+- parâmetros
 - duração
-- custo estimado
-- tokens
-- sucesso
-- erro
+- resultado
+- falhas
 
 ==================================================
-9. TESTES
+PERFORMANCE
 ==================================================
 
-Criar testes para:
+Evitar consultas completas.
 
-- Orchestrator
-- Context Engine
-- Prompt Builder
-- Permission Engine
-- Tool Registry
-- Providers
-- Agent Registry
+Usar:
+
+- paginação
+- filtros
+- lazy execution
+- paralelismo quando seguro
 
 ==================================================
-10. RESULTADO ESPERADO
+TESTES
 ==================================================
 
-Ao final deste Sprint ainda NÃO deve existir um chat bonito.
+Criar:
 
-Deve existir uma infraestrutura enterprise sólida, extensível e desacoplada que servirá de base para toda a IA do NavalDocs Pro.
+- Tool Registry tests
+- Tool Execution tests
+- Permission tests
+- Cache tests
+- Retry tests
+- Multi Tool tests
+- Auditoria
 
-Somente após essa fundação iniciaremos a interface conversacional.</div>
+==================================================
+RESULTADO
+==================================================
+
+Ao final deste Sprint, a IA ainda não precisa responder em linguagem natural.
+
+Ela deve ser capaz de executar corretamente todas as ferramentas e devolver resultados estruturados para o Orchestrator.
+
+Somente depois construiremos o Chat Enterprise.</div>
     </div>
   );
 }
