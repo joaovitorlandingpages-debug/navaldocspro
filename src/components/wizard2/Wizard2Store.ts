@@ -35,6 +35,7 @@ export const useWizardStore = create<WizardState>()(
   persist(
     (set) => ({
       step: 'documents',
+      sessionId: null,
       companyId: null,
       customerId: null,
       secondaryCustomerId: null,
@@ -56,6 +57,7 @@ export const useWizardStore = create<WizardState>()(
       setData: (data) => set((state) => ({ ...state, ...data })),
       reset: () => set({
         step: 'documents',
+        sessionId: null,
         customerId: null,
         secondaryCustomerId: null,
         vesselId: null,
