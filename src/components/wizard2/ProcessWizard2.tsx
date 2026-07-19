@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
 import { confirmProcessVisible, notifyProcessesChanged } from '@/services/processes/processCreation';
 import { materializeProcessBlueprint } from '@/services/processes/blueprintEngine';
+import { createWizardSession, updateWizardSession, mapStateToSession } from '@/services/wizardSessionService';
 
 const STEPS = [
   { id: 'documents', label: 'Docs', icon: FileText },
@@ -47,8 +48,8 @@ const STEPS = [
 
 
 export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
-  const { step, setStep, reset, companyId, setData, ...state } = useWizardStore();
-  const { profile } = useAuth();
+  const { step, sessionId, setStep, reset, companyId, setData, ...state } = useWizardStore();
+  const { profile, user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -57,6 +58,37 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
       setData({ companyId: profile.company_id });
     }
   }, [profile, companyId]);
+
+  // Persistent Session Initialization
+  useEffect(() => {
+    if (isOpen && !sessionId && profile?.company_id && user?.id) {
+      const init = async () => {
+        try {
+          const session = await createWizardSession(profile.company_id, user.id);
+          setData({ sessionId: session.id });
+        } catch (e) {
+          console.error("Failed to initialize wizard session", e);
+        }
+      };
+      init();
+    }
+  }, [isOpen, sessionId, profile?.company_id, user?.id]);
+
+  // Sync state to backend session on step change or data change
+  useEffect(() => {
+    if (sessionId && (step || state.customerId || state.vesselId)) {
+      const sync = async () => {
+        try {
+          const patch = mapStateToSession({ step, sessionId, companyId, ...state } as any);
+          await updateWizardSession(sessionId, patch as any);
+        } catch (e) {
+          console.warn("Failed to sync wizard session", e);
+        }
+      };
+      const timer = setTimeout(sync, 1000); // Debounced sync
+      return () => clearTimeout(timer);
+    }
+  }, [sessionId, step, state.customerId, state.vesselId, state.processTypeId]);
 
   const currentIndex = STEPS.findIndex(s => s.id === step);
   const progress = ((currentIndex + 1) / STEPS.length) * 100;
@@ -80,10 +112,32 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
   };
 
   const handleFinish = async () => {
-    if (!profile?.company_id || !state.customerId || !state.processTypeName) return;
+    if (!profile?.company_id || !state.customerId || !state.processTypeName) {
+      toast.error("Dados incompletos para criação do processo.");
+      return;
+    }
     
     setSubmitting(true);
     try {
+      // 18. Criação Transacional (Estratégia Compensatória)
+      // 19. Idempotência: Check if already created for this session
+      const { data: existingProcess } = await supabase
+        .from('processes')
+        .select('id')
+        .eq('company_id', profile.company_id)
+        .eq('customer_id', state.customerId)
+        .eq('process_type_id', state.processTypeId)
+        .limit(1)
+        .maybeSingle();
+
+      if (existingProcess) {
+        toast.info("Um processo idêntico já foi detectado. Reutilizando...");
+        navigate({ to: '/processes/$id', params: { id: existingProcess.id } });
+        reset();
+        onClose();
+        return;
+      }
+
       const { data, error } = await supabase
         .from('processes')
         .insert({
@@ -101,6 +155,14 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
 
       if (error) throw error;
       const processId = data.id;
+
+      // Update session status
+      if (sessionId) {
+        await updateWizardSession(sessionId, { 
+          status: 'completed', 
+          process_id: processId 
+        } as any);
+      }
 
       // Materialize documents
       try {
@@ -123,7 +185,6 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
       reset();
       onClose();
       
-      // Animação discreta simulada pelo tempo de redirecionamento
       setTimeout(() => {
         navigate({ to: '/processes/$id', params: { id: processId } });
       }, 300);
@@ -133,6 +194,7 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
       setSubmitting(false);
     }
   };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={(v) => !v && onClose()}>

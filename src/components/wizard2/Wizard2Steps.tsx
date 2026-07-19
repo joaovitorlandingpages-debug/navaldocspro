@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { FileUploader } from '@/components/FileUploader';
 import { previewProcessBlueprint } from '@/services/processes/blueprintEngine';
+import { runSmartOcr, detectExistingCustomer, detectExistingVessel } from '@/services/smartOnboardingService';
 
 // --- Shared Components ---
 
@@ -490,17 +491,15 @@ export function StepChecklist() {
 // --- Step 1: Documents (Previously Step 5) ---
 
 export function StepDocuments() {
-  const { docPicks, uploadedFiles, setData, processTypeName, ocrData } = useWizardStore();
+  const { docPicks, uploadedFiles, setData, processTypeName, ocrData, companyId, sessionId } = useWizardStore();
+  const { user } = useAuth();
   const [blueprint, setBlueprint] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   
   useEffect(() => {
-    // Start with a default set of documents if none picked yet (since this is now step 1)
     const load = async () => {
       setLoading(true);
-      // If we don't have a type yet, show common onboarding docs (ID, Boat Doc)
       const data = await previewProcessBlueprint(processTypeName || "Registro Inicial");
-      
       const defaultDocs = ["template-id-card", "template-boat-card"]; 
       const picked = data.filter(item => 
         item.kind === 'mandatory' || (item.templateId && defaultDocs.includes(item.templateId))
@@ -512,37 +511,72 @@ export function StepDocuments() {
   }, [processTypeName]);
 
   const handleUpload = async (slot: string, files: any[]) => {
+    if (!companyId || !user?.id || !sessionId) {
+      toast.error("Sessão não inicializada corretamente.");
+      return;
+    }
+
     setData({
       uploadedFiles: { ...uploadedFiles, [slot]: [...(uploadedFiles[slot] || []), ...files] }
     });
 
-    // Simulated AI/OCR Trigger for the new "Step 1" flow
     if (files.length > 0) {
       setData({ ocrData: { ...ocrData, isExtracting: true } });
+      
+      const file = files[0]; // Process the first file for OCR
+      
       toast.promise(
-        new Promise((resolve) => setTimeout(() => {
-          // Mocking OCR results based on file slot
-          const mockData = slot === 'template-id-card' 
-            ? { customerName: "ROBERTO NAVAL SILVA", customerCpfCnpj: "123.456.789-00" }
-            : { vesselName: "MAR AZUL II", registrationNumber: "PR-12345", vesselType: "Lancha" };
-          
+        runSmartOcr({
+          file,
+          companyId,
+          userId: user.id,
+          sessionId,
+        }).then(async (result) => {
           setData({ 
             ocrData: { 
               isExtracting: false, 
-              confidence: 0.94, 
-              extractedFields: { ...ocrData.extractedFields, ...mockData } 
+              confidence: result.confidence, 
+              extractedFields: { ...ocrData.extractedFields, ...result.extractedFields } 
             } 
           });
-          resolve(true);
-        }, 2500)),
+
+          // Inteligência de Duplicidade e Comparação Documental
+          if (result.extractedFields.cpf || result.extractedFields.cnpj || result.extractedFields.name) {
+            const existing = await detectExistingCustomer({
+              cpf_cnpj: result.extractedFields.cpf || result.extractedFields.cnpj,
+              name: result.extractedFields.name,
+              companyId,
+            });
+            if (existing) {
+              toast.info(`Cliente existente detectado: ${existing.customer.name}.`);
+            }
+          }
+
+          if (result.extractedFields.registration_number || result.extractedFields.vessel_name) {
+            const existing = await detectExistingVessel({
+              registration_number: result.extractedFields.registration_number,
+              name: result.extractedFields.vessel_name,
+              companyId,
+            });
+            if (existing) {
+              toast.info(`Embarcação já cadastrada detectada: ${existing.vessel.name}.`);
+            }
+          }
+
+          return true;
+        }).catch(err => {
+          setData({ ocrData: { ...ocrData, isExtracting: false } });
+          throw err;
+        }),
         {
-          loading: 'IA analisando documento...',
-          success: 'Dados extraídos com sucesso! Próximas etapas pré-preenchidas.',
-          error: 'Falha na leitura automática.',
+          loading: 'IA analisando documento real...',
+          success: 'Análise concluída com sucesso!',
+          error: 'Falha na análise do documento.',
         }
       );
     }
   };
+
 
   const progressCount = blueprint.filter(item => item.templateId && (uploadedFiles[item.templateId] || []).length > 0).length;
 
