@@ -153,6 +153,7 @@ export class CreateProcessAction implements AIAction {
       });
 
     } catch (error: any) {
+      console.error('AI CreateProcessAction: execution failed', error);
       return createActionResult({
         success: false,
         status: ActionStatus.FAILED,
@@ -161,6 +162,7 @@ export class CreateProcessAction implements AIAction {
         duration: Date.now() - start,
       });
     }
+
   }
 
   async rollback(context: any): Promise<void> {
