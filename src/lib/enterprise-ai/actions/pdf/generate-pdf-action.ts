@@ -77,8 +77,9 @@ export class GeneratePdfAction implements AIAction {
       }
 
       // 2. Resolver conteúdo (template ou custom)
-      let content = options?.customContent || "";
       let documentName = processData.title || "Documento de Processo";
+      let content = options?.customContent || `Relatório de Processo: ${documentName}`;
+
 
       if (templateId) {
         const { data: template, error: tplError } = await supabase
