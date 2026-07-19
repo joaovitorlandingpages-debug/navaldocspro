@@ -2,7 +2,7 @@
  * Feature Flags Configuration
  */
 export const FEATURE_FLAGS = {
-  ENTERPRISE_AI_COMMAND_CENTER_ENABLED: false,
+  ENTERPRISE_AI_COMMAND_CENTER_ENABLED: true,
   // Add other flags here
 } as const;
 
