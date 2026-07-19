@@ -147,7 +147,8 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
         customerId: mockCustomerId,
         processType: "Transferência",
         priority: "high",
-        title: "Test"
+        title: "Test",
+        _user: { id: mockUserId }
       } as any);
 
       expect(processCreationService.createProcess).toHaveBeenCalled();
