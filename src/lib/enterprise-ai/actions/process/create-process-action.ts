@@ -131,9 +131,8 @@ export class CreateProcessAction implements AIAction {
       const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
       
       // We check for window to avoid SSR issues if this runs in a worker that mimics browser env partially
-      if (typeof window !== 'undefined') {
-        notifyProcessesChanged(visibleProcess);
-      }
+      notifyProcessesChanged(visibleProcess);
+
 
       return createActionResult({
         success: true,
