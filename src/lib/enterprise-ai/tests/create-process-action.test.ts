@@ -249,6 +249,7 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
         { data: { id: "550e8400-e29b-41d4-a716-446655440999", status: "pending" } } // Process insertion
       ]);
 
+
       const security = {
         userId: mockUserId,
         companyId: mockCompanyId,
