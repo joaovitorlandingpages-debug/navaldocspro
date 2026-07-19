@@ -37,13 +37,17 @@ export class CreateProcessAction implements AIAction {
     
     if (!user) throw new Error("User context missing in execute");
 
-    const { data: profile } = await supabase
+    console.log('CreateProcessAction Start profile check for user:', user.id);
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("company_id")
       .eq("id", user.id)
       .single();
 
-    if (!profile) throw new Error("User profile not found");
+    if (profileError || !profile) {
+      console.log('Profile error or missing:', profileError);
+      throw new Error("User profile not found");
+    }
 
     let processId = (context as any).processId;
     console.log('CreateProcessAction ID check:', { processId });

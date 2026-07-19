@@ -116,6 +116,21 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
     
     const m = (supabase as any);
     m.auth.getUser.mockResolvedValue({ data: { user: { id: mockUserId } }, error: null });
+    
+    // Default response for profile check
+    m.from.mockImplementation((table: string) => {
+      if (table === "profiles") {
+        return {
+          select: () => ({
+            eq: () => ({
+              single: () => Promise.resolve({ data: { company_id: mockCompanyId }, error: null })
+            })
+          })
+        };
+      }
+      return m;
+    });
+
     m.then = (onRes: any) => Promise.resolve({ data: null, error: null }).then(onRes);
   });
 
