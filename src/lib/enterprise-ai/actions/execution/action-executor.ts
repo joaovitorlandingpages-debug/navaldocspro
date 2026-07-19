@@ -5,6 +5,7 @@ import { SecurityContext } from '../security/permission-types';
 import { ActionStatus } from '../action-types';
 import { ExecutionContext } from './execution-context';
 import { ExecutionResult } from './execution-result';
+import { auditLogger } from '../audit/audit-logger';
 import { 
   ActionNotFoundError, 
   ActionValidationError, 
@@ -36,7 +37,20 @@ export class ActionExecutor {
         throw new ActionNotFoundError(actionId);
       }
 
-      // 2. Build Context (Strictly using authContext for identity/tenant)
+      // 2. Audit Start (Enterprise Audit Logger Integration)
+      await auditLogger.logStart({
+        executionId,
+        actionId,
+        actionName: action.name,
+        userId: authContext.userId,
+        companyId: authContext.companyId,
+        processId: input.processId,
+        conversationId: options.conversationId,
+        provider: options.provider,
+        metadata: input.metadata
+      });
+
+      // 3. Build Context (Strictly using authContext for identity/tenant)
       const context: ExecutionContext = {
         executionId,
         requestId: options.requestId || this.generateId(),
@@ -71,6 +85,17 @@ export class ActionExecutor {
       const result = await action.execute({ ...input, ...context, input });
 
       const finishedAt = new Date();
+      const durationMs = finishedAt.getTime() - startedAt.getTime();
+
+      // Audit Success
+      await auditLogger.logSuccess(executionId, {
+        finishedAt,
+        durationMs,
+        metadata: result.metadata,
+        warnings: result.warnings,
+        documentId: result.metadata?.documentId
+      });
+
       return {
         success: result.success,
         status: result.status,
@@ -78,7 +103,7 @@ export class ActionExecutor {
         actionId,
         startedAt,
         finishedAt,
-        durationMs: finishedAt.getTime() - startedAt.getTime(),
+        durationMs,
         data: result.metadata, // Following ActionResult pattern
         warnings: result.warnings,
         errors: result.errors,
@@ -98,6 +123,14 @@ export class ActionExecutor {
       } else if (error instanceof ActionPermissionDeniedError) {
         status = ActionStatus.PERMISSION_DENIED;
       }
+
+      // Audit Failure
+      await auditLogger.logFailure(executionId, {
+        error: errors,
+        finishedAt,
+        durationMs: finishedAt.getTime() - startedAt.getTime(),
+        metadata: { errorCode: error.code }
+      });
 
       return {
         success: false,
