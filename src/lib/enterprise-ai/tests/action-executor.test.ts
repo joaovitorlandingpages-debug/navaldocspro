@@ -14,12 +14,24 @@ import {
 // Mocking a basic action
 class MockAction implements AIAction {
   id = "test-action";
-  name = "Test Action";
-  description = "A test action";
-  requiredPermissions = [AIPermission.PROCESS_READ];
-  confirmationPolicy = ConfirmationPolicy.NONE;
-  estimatedRisk = 'LOW' as const;
-  estimatedDuration = 1;
+  metadata = {
+    actionId: "test-action",
+    displayName: "Test Action",
+    description: "A test action",
+    category: "TEST",
+    riskLevel: 'LOW' as const,
+    requiredPermissions: [AIPermission.PROCESS_READ],
+    confirmationPolicy: ConfirmationPolicy.NONE,
+    dependencies: [],
+    retryPolicy: {
+      maxRetries: 3,
+      backoff: 'fixed' as const
+    },
+    estimatedDuration: 1,
+    enabled: true,
+    supportsRetry: true,
+    supportsPlanner: true
+  };
 
   async validate() { return { valid: true }; }
   async execute(ctx: any): Promise<ActionResult> {

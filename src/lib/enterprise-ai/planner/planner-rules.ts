@@ -1,38 +1,72 @@
-import { ActionRiskLevel } from "./planner-types";
+import { z } from "zod";
+import { ActionRiskLevel, ActionRiskLevelSchema } from "./planner-types";
+import { ConfirmationPolicy } from "../actions/action-types";
 
-export interface PlanningRule {
-  id: string;
-  name: string;
-  description: string;
-  evaluate: (steps: any[]) => void;
-}
+/**
+ * Enhanced metadata required for actions to be discoverable and usable by the Planner.
+ */
+export const ActionMetadataSchema = z.object({
+  actionId: z.string(),
+  displayName: z.string(),
+  description: z.string(),
+  category: z.string(),
+  riskLevel: ActionRiskLevelSchema,
+  requiredPermissions: z.array(z.string()),
+  confirmationPolicy: z.nativeEnum(ConfirmationPolicy),
+  dependencies: z.array(z.string()).default([]),
+  retryPolicy: z.object({
+    maxRetries: z.number().default(3),
+    backoff: z.enum(["fixed", "exponential"]).default("exponential"),
+  }).default({}),
+  estimatedDuration: z.number().default(30), // in seconds
+  enabled: z.boolean().default(true),
+  supportsRetry: z.boolean().default(true),
+  supportsPlanner: z.boolean().default(true),
+});
 
-export const ActionRisks: Record<string, ActionRiskLevel> = {
-  "create-process": "MEDIUM",
-  "generate-pdf": "LOW",
-  "complete-checklist": "MEDIUM",
-  "request-signature": "HIGH",
-};
+export type ActionMetadata = z.infer<typeof ActionMetadataSchema>;
 
-export function calculateOverallRisk(steps: { actionId: string }[]): ActionRiskLevel {
-  const risks = steps.map(s => ActionRisks[s.actionId] || "LOW");
+/**
+ * Intent mapping rule for declarative discovery
+ */
+export const IntentRuleSchema = z.object({
+  intentKeywords: z.array(z.string()),
+  actionId: z.string(),
+  priority: z.number().default(1),
+  requiresActions: z.array(z.string()).optional(), // Optional list of actions this intent *must* include
+});
+
+export type IntentRule = z.infer<typeof IntentRuleSchema>;
+
+/**
+ * Calculate overall risk level for a plan based on steps' individual risks.
+ */
+export function calculateOverallRisk(steps: { actionId: string, riskLevel?: ActionRiskLevel }[]): ActionRiskLevel {
+  const risks = steps.map(s => s.riskLevel || "LOW");
   
   if (risks.includes("CRITICAL")) return "CRITICAL";
-  if (risks.includes("HIGH")) {
-    // Multiple high risks could upgrade to critical, but for now we stay high
-    if (risks.filter(r => r === "HIGH").length > 2) return "CRITICAL";
-    return "HIGH";
-  }
-  if (risks.includes("MEDIUM")) {
-    if (risks.filter(r => r === "MEDIUM").length >= 2) return "HIGH";
-    return "MEDIUM";
-  }
-  return "LOW";
+  
+  const highCount = risks.filter(r => r === "HIGH").length;
+  if (highCount >= 1) return "HIGH";
+  
+  const mediumCount = risks.filter(r => r === "MEDIUM").length;
+  if (mediumCount >= 2) return "HIGH"; // 2+ MEDIUM = HIGH
+
+  if (mediumCount >= 1) return "MEDIUM";
+  
+  // Rule: 2+ LOW risks upgrade to MEDIUM
+  const lowCount = risks.filter(r => r === "LOW").length;
+  if (lowCount >= 2) return "MEDIUM";
+  
+  return lowCount > 0 ? "LOW" : "LOW";
 }
 
-export const RequiredPermissions: Record<string, string[]> = {
-  "create-process": ["PROCESS_CREATE"],
-  "generate-pdf": ["DOCUMENT_CREATE"],
-  "complete-checklist": ["PROCESS_UPDATE"],
-  "request-signature": ["SIGNATURE_REQUEST"],
-};
+/**
+ * Default intent mapping rules
+ */
+export const DEFAULT_INTENT_RULES: IntentRule[] = [
+  { intentKeywords: ["processo", "process", "criar processo", "proc"], actionId: "create-process", priority: 1 },
+  { intentKeywords: ["pdf", "documento", "gerar pdf"], actionId: "generate-pdf", priority: 1, requiresActions: ["create-process"] },
+  { intentKeywords: ["checklist", "concluir checklist"], actionId: "complete-checklist", priority: 1, requiresActions: ["create-process"] },
+  { intentKeywords: ["assinatura", "signature", "enviar assinatura", "assinar", "sign"], actionId: "request-signature", priority: 1, requiresActions: ["create-process", "generate-pdf"] },
+];

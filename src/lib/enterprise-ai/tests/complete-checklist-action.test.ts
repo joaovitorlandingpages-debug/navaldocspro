@@ -53,8 +53,8 @@ describe("CompleteChecklistAction (Sprint 5.0)", () => {
 
   it("1. Metadata básico da Action", () => {
     expect(action.id).toBe("complete-checklist");
-    expect(action.requiredPermissions).toContain("PROCESS_UPDATE");
-    expect(action.requiredPermissions).toContain("CHECKLIST_UPDATE");
+    expect(action.metadata.requiredPermissions).toContain("PROCESS_UPDATE");
+    expect(action.metadata.requiredPermissions).toContain("CHECKLIST_UPDATE");
   });
 
   it("2. Validação: Campos obrigatórios", async () => {

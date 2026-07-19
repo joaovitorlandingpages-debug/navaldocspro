@@ -20,8 +20,7 @@ export class ActionValidator {
     // 2. Validate Security Context (Auth, Tenant, Role, Permissions)
     const securityResult = this.guard.validateContext(
       context, 
-      action.requiredPermissions, 
-      action.requiredRole
+      action.metadata.requiredPermissions
     );
 
     if (!securityResult.success) {

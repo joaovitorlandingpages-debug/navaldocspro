@@ -15,13 +15,24 @@ import { confirmProcessVisible, notifyProcessesChanged } from "@/services/proces
 
 export class CreateProcessAction implements AIAction {
   id = "create-process";
-  name = "Create Process";
-  description = "Creates a new process with blueprint materialization and tenant isolation";
-  
-  requiredPermissions = ["PROCESS_CREATE"];
-  confirmationPolicy = ConfirmationPolicy.HIGH;
-  estimatedRisk = 'MEDIUM' as const;
-  estimatedDuration = 5;
+  metadata = {
+    actionId: "create-process",
+    displayName: "Create Process",
+    description: "Creates a new process with blueprint materialization and tenant isolation",
+    category: "process",
+    riskLevel: "MEDIUM" as const,
+    requiredPermissions: ["PROCESS_CREATE"],
+    confirmationPolicy: ConfirmationPolicy.HIGH,
+    dependencies: [],
+    retryPolicy: {
+      maxRetries: 3,
+      backoff: "exponential" as const
+    },
+    estimatedDuration: 5,
+    enabled: true,
+    supportsRetry: true,
+    supportsPlanner: true
+  };
 
   async validate(context: any): Promise<{ valid: boolean; errors?: string[] }> {
     const result = CreateProcessInputSchema.safeParse(context);

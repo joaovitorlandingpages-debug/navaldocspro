@@ -21,14 +21,26 @@ export enum ActionStatus {
 
 export interface AIAction {
   id: string;
-  name: string;
-  description: string;
-  requiredPermissions: string[];
-  requiredRole?: string;
-  confirmationPolicy: ConfirmationPolicy;
-  estimatedRisk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  estimatedDuration: number; // in seconds
+  metadata: {
+    actionId: string;
+    displayName: string;
+    description: string;
+    category: string;
+    riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    requiredPermissions: string[];
+    confirmationPolicy: ConfirmationPolicy;
+    dependencies: string[];
+    retryPolicy: {
+      maxRetries: number;
+      backoff: 'fixed' | 'exponential';
+    };
+    estimatedDuration: number; // in seconds
+    enabled: boolean;
+    supportsRetry: boolean;
+    supportsPlanner: boolean;
+  };
 
+  
   validate(context: any): Promise<{ valid: boolean; errors?: string[] }>;
   execute(context: any): Promise<ActionResult>;
   rollback(context: any): Promise<void>;

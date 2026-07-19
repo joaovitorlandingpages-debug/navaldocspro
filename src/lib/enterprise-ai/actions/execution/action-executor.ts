@@ -84,7 +84,7 @@ export class ActionExecutor {
         await auditLogger.logStart({
           executionId,
           actionId,
-          actionName: action.name,
+          actionName: action.metadata?.displayName || action.id,
           userId: authContext.userId,
           companyId: authContext.companyId,
           processId: input.processId,
@@ -122,7 +122,7 @@ export class ActionExecutor {
       }
 
 
-      const security = this.guard.validateContext(authContext, action.requiredPermissions, action.requiredRole);
+      const security = this.guard.validateContext(authContext, action.metadata.requiredPermissions);
       if (!security.success) {
         throw new ActionPermissionDeniedError(security.errors?.[0]);
       }

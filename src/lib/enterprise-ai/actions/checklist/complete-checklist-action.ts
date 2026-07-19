@@ -17,12 +17,24 @@ import { confirmationService } from "../confirmation/confirmation-service";
 
 export class CompleteChecklistAction implements AIAction {
   id = "complete-checklist";
-  name = "Complete Checklist Item";
-  description = "Completes, waives or updates a checklist item of an existing process.";
-  requiredPermissions = ["PROCESS_READ", "PROCESS_UPDATE", "CHECKLIST_UPDATE"];
-  confirmationPolicy = ConfirmationPolicy.MEDIUM;
-  estimatedRisk: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" = "MEDIUM";
-  estimatedDuration = 2;
+  metadata = {
+    actionId: "complete-checklist",
+    displayName: "Complete Checklist Item",
+    description: "Completes, waives or updates a checklist item of an existing process.",
+    category: "checklist",
+    riskLevel: "MEDIUM" as const,
+    requiredPermissions: ["PROCESS_READ", "PROCESS_UPDATE", "CHECKLIST_UPDATE"],
+    confirmationPolicy: ConfirmationPolicy.MEDIUM,
+    dependencies: ["create-process"],
+    retryPolicy: {
+      maxRetries: 3,
+      backoff: "exponential" as const
+    },
+    estimatedDuration: 2,
+    enabled: true,
+    supportsRetry: true,
+    supportsPlanner: true
+  };
 
   async validate(context: any): Promise<{ valid: boolean; errors?: string[] }> {
     const input = context as CompleteChecklistInput & { companyId: string; userId: string };

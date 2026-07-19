@@ -15,12 +15,25 @@ export interface GeneratePdfInput {
 
 export class GeneratePdfAction implements AIAction {
   id = "generate-pdf";
-  name = "Generate PDF";
-  description = "Generate PDF for an existing process.";
-  requiredPermissions = [AIPermission.PROCESS_READ, AIPermission.DOCUMENT_GENERATE];
-  confirmationPolicy = ConfirmationPolicy.LOW;
-  estimatedRisk: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" = "LOW";
-  estimatedDuration = 5;
+  metadata = {
+    actionId: "generate-pdf",
+    displayName: "Generate PDF",
+    description: "Generate PDF for an existing process.",
+    category: "document",
+    riskLevel: "LOW" as const,
+    requiredPermissions: [AIPermission.PROCESS_READ, AIPermission.DOCUMENT_GENERATE],
+    confirmationPolicy: ConfirmationPolicy.LOW,
+    dependencies: ["create-process"],
+    retryPolicy: {
+      maxRetries: 3,
+      backoff: "exponential" as const
+    },
+    estimatedDuration: 5,
+    enabled: true,
+    supportsRetry: true,
+    supportsPlanner: true
+  };
+
 
   async validate(context: GeneratePdfInput & { companyId: string }): Promise<{ valid: boolean; errors?: string[] }> {
     const { processId, companyId } = context;

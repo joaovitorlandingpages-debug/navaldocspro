@@ -6,16 +6,29 @@ import { AIPermission } from '../security/permission-types';
 
 export class RequestSignatureAction implements AIAction {
   id = 'request-signature';
-  name = 'Request Signature';
-  description = 'Creates electronic signature requests for generated documents.';
-  requiredPermissions = [
-    AIPermission.DOCUMENT_READ,
-    AIPermission.SIGNATURE_CREATE,
-    AIPermission.PROCESS_READ
-  ];
-  confirmationPolicy = ConfirmationPolicy.HIGH;
-  estimatedRisk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'HIGH';
-  estimatedDuration = 3;
+  metadata = {
+    actionId: 'request-signature',
+    displayName: 'Request Signature',
+    description: 'Creates electronic signature requests for generated documents.',
+    category: 'signature',
+    riskLevel: 'HIGH' as const,
+    requiredPermissions: [
+      AIPermission.DOCUMENT_READ,
+      AIPermission.SIGNATURE_CREATE,
+      AIPermission.PROCESS_READ
+    ],
+    confirmationPolicy: ConfirmationPolicy.HIGH,
+    dependencies: ['generate-pdf'],
+    retryPolicy: {
+      maxRetries: 3,
+      backoff: 'exponential' as const
+    },
+    estimatedDuration: 3,
+    enabled: true,
+    supportsRetry: true,
+    supportsPlanner: true
+  };
+
 
   async validate(context: RequestSignatureInput & { companyId: string }): Promise<{ valid: boolean; errors?: string[] }> {
     const { processId, documentId, participants, companyId } = context;

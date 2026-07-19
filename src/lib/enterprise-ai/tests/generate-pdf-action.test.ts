@@ -47,12 +47,16 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
     const client = await import("@/integrations/supabase/client");
     const supabaseMock = client.supabase;
     supabaseMock.single.mockResolvedValue({ data: null, error: null });
+    
+    // Ensure action is registered for executor tests
+    ActionRegistry.clear();
+    ActionRegistry.register(action);
   });
 
   it("1. Metadata básico da Action", () => {
     expect(action.id).toBe("generate-pdf");
-    expect(action.requiredPermissions).toContain(AIPermission.PROCESS_READ);
-    expect(action.requiredPermissions).toContain(AIPermission.DOCUMENT_GENERATE);
+    expect(action.metadata.requiredPermissions).toContain(AIPermission.PROCESS_READ);
+    expect(action.metadata.requiredPermissions).toContain(AIPermission.DOCUMENT_GENERATE);
   });
 
   it("2. Validação: Falha se processo não for encontrado", async () => {
