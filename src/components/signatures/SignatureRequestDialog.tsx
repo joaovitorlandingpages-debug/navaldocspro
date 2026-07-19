@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,7 @@ type Participant = {
 export function SignatureRequestDialog({
   open, onOpenChange, onCreated, processId, documentId, defaultTitle, defaultCustomerId,
 }: Props) {
+  const qc = useQueryClient();
   const { profile, user } = useAuth();
   const [title, setTitle] = useState(defaultTitle ?? "");
   const [order, setOrder] = useState<"free" | "sequential">("sequential");
@@ -165,6 +167,7 @@ export function SignatureRequestDialog({
       });
       toast.success("Solicitação criada — links gerados");
       onOpenChange(false);
+      qc.invalidateQueries({ queryKey: ["process-center", "detail", processId] });
       onCreated?.();
     } catch (e: any) {
       toast.error(e.message ?? "Falha ao criar");

@@ -16,6 +16,7 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { OperationalSuggestion } from "@/features/process-center/engines/OperationalSuggestionEngine";
 import { ProcessHealthReport } from "@/features/process-center/engines/ProcessHealthEngine";
 import { DocumentStats } from "@/features/process-center/utils/processMetrics";
+import { ProcessRiskReport } from "@/features/process-center/engines/ProcessRiskEngine";
 
 export function ProcessCenterHeader({ 
   process, 
@@ -103,10 +104,12 @@ export function ProcessCenterHeader({
 
 export function ProcessCenterDashboard({ 
   docStats, 
-  healthReport 
+  healthReport,
+  riskReport
 }: { 
   docStats?: DocumentStats,
-  healthReport?: ProcessHealthReport
+  healthReport?: ProcessHealthReport,
+  riskReport?: ProcessRiskReport
 }) {
   const navigate = useNavigate();
 
@@ -173,17 +176,19 @@ export function ProcessCenterDashboard({
         <div className="space-y-1">
           <p className={cn(
             "text-3xl font-black tracking-tighter uppercase",
-            docStats?.totalBlocking && docStats.totalBlocking > 0 ? "text-rose-600" : "text-amber-600"
+            riskReport?.level === 'critical' ? "text-rose-600" : 
+            riskReport?.level === 'high' ? "text-amber-600" : 
+            riskReport?.level === 'medium' ? "text-blue-600" : "text-emerald-600"
           )}>
-            {docStats?.totalBlocking && docStats.totalBlocking > 0 ? "ALTO" : "BAIXO"}
+            {riskReport?.level === 'not_evaluated' ? "N/A" : riskReport?.level || "BAIXO"}
           </p>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 flex items-center gap-1.5">
-            {docStats?.totalBlocking && docStats.totalBlocking > 0 ? (
+            {riskReport?.level === 'critical' || riskReport?.level === 'high' ? (
               <AlertTriangle className="h-3 w-3 text-rose-500" />
             ) : (
               <CheckCircle2 className="h-3 w-3 text-emerald-500" />
             )}
-            {docStats?.totalBlocking && docStats.totalBlocking > 0 ? "Bloqueantes Encontrados" : "Operação Estável"}
+            {riskReport?.causes?.[0] || "Operação Estável"}
           </p>
         </div>
       </Card>
@@ -337,10 +342,10 @@ export function ProcessCenterSidebar({
           </div>
           <div className="flex items-center gap-2 mb-2">
             <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sincronização Real</span>
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sincronização Ativa</span>
           </div>
           <p className="text-[10px] font-bold text-slate-600 leading-relaxed uppercase tracking-tight">
-            Última atualização agora.
+            Monitorando eventos em tempo real.
           </p>
         </div>
       </div>

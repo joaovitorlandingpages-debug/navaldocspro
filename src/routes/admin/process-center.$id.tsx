@@ -65,7 +65,7 @@ function EnterpriseProcessCenterPage() {
     );
   }
 
-  const { process, docStats, healthReport, suggestions, timeInProgress } = data;
+  const { process, docStats, healthReport, riskReport, suggestions, timeInProgress } = data;
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
@@ -75,7 +75,7 @@ function EnterpriseProcessCenterPage() {
         <ProcessCenterHeader process={process} timeInProgress={timeInProgress} />
         
         <ScrollArea className="flex-1">
-          <ProcessCenterDashboard docStats={docStats} healthReport={healthReport} />
+          <ProcessCenterDashboard docStats={docStats} healthReport={healthReport} riskReport={riskReport} />
           
           <div className="px-6 pb-20">
             <Tabs value={search.tab} className="w-full">
@@ -149,9 +149,9 @@ function EnterpriseProcessCenterPage() {
                                      <span className="text-[11px] font-black text-slate-900">{item.score}</span>
                                   </div>
                                   <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                     <div className={cn(
+                                   <div className={cn(
                                        "h-full transition-all duration-1000", 
-                                       item.status === 'stable' ? "bg-emerald-500" : item.status === 'warning' ? "bg-amber-500" : "bg-rose-500"
+                                       item.status === 'healthy' ? "bg-emerald-500" : item.status === 'attention' ? "bg-amber-500" : "bg-rose-500"
                                      )} style={{ width: `${item.score}%` }} />
                                   </div>
                                </div>

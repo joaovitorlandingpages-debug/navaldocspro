@@ -2,7 +2,7 @@ export type SuggestionPriority = 'critical' | 'high' | 'medium' | 'low' | 'info'
 
 export interface OperationalSuggestion {
   id: string;
-  type: string;
+  type: 'documentation' | 'checklist' | 'ocr' | 'signatures' | 'deadlines' | 'registration' | 'review' | 'finalization';
   priority: SuggestionPriority;
   title: string;
   message: string;
@@ -10,7 +10,9 @@ export interface OperationalSuggestion {
   reason: string;
   entityRelated?: string;
   resolutionPath?: string;
-  createdAt: string;
+  sourceDate?: string;
+  dismissible: boolean;
+  blocker: boolean;
 }
 
 import { DocumentStats } from "../utils/processMetrics";
@@ -19,10 +21,10 @@ import { DocumentStats } from "../utils/processMetrics";
  * OperationalSuggestionEngine - Deterministic suggestions based on real data
  */
 export class OperationalSuggestionEngine {
-  static generate(processId: string, stats: DocumentStats): OperationalSuggestion[] {
+  static generate(processId: string, stats: DocumentStats, processData: any): OperationalSuggestion[] {
     const suggestions: OperationalSuggestion[] = [];
 
-    // Rule: Missing required documents
+    // --- DOCUMENTATION RULES ---
     if (stats.totalBlocking > 0) {
       suggestions.push({
         id: `missing-docs-${processId}`,
@@ -33,11 +35,44 @@ export class OperationalSuggestionEngine {
         impact: 'Impede a finalização e o protocolo do processo.',
         reason: 'Mapeamento de processo exige estes documentos para conformidade.',
         resolutionPath: `/admin/process-center/${processId}?tab=documentos`,
-        createdAt: new Date().toISOString()
+        dismissible: false,
+        blocker: true
       });
     }
 
-    // Rule: Pending approvals
+    // Rule: Outdated template versions
+    if (stats.totalOutdated > 0) {
+      suggestions.push({
+        id: `outdated-template-${processId}`,
+        type: 'documentation',
+        priority: 'medium',
+        title: 'Modelos Desatualizados Detectados',
+        message: `Existem ${stats.totalOutdated} documentos usando versões antigas de modelos.`,
+        impact: 'Pode gerar exigência por uso de formulário obsoleto.',
+        reason: 'Uma nova versão do modelo foi publicada pelo Admin.',
+        resolutionPath: `/admin/process-center/${processId}?tab=documentos`,
+        dismissible: true,
+        blocker: false
+      });
+    }
+
+    // Rule: Rejected documents
+    if (stats.totalRejected > 0) {
+      suggestions.push({
+        id: `rejected-docs-${processId}`,
+        type: 'documentation',
+        priority: 'high',
+        title: 'Documentos Rejeitados',
+        message: `Existem ${stats.totalRejected} documentos que foram reprovados na revisão.`,
+        impact: 'Impede o avanço do processo.',
+        reason: 'O revisor identificou inconsistências no arquivo.',
+        resolutionPath: `/admin/process-center/${processId}?tab=documentos`,
+        dismissible: false,
+        blocker: true
+      });
+    }
+
+    // --- REVIEW RULES ---
     if (stats.totalPending > 0) {
       suggestions.push({
         id: `pending-approval-${processId}`,
@@ -48,11 +83,47 @@ export class OperationalSuggestionEngine {
         impact: 'Atrasa o fluxo de assinaturas e publicação.',
         reason: 'Upload realizado, aguardando aprovação do gestor.',
         resolutionPath: `/admin/process-center/${processId}?tab=workspace`,
-        createdAt: new Date().toISOString()
+        dismissible: true,
+        blocker: false
       });
     }
 
+    // --- REGISTRATION RULES (Customer/Vessel data) ---
+    if (!processData.customer?.cpf_cnpj || !processData.customer?.email) {
+      suggestions.push({
+        id: `incomplete-customer-${processId}`,
+        type: 'registration',
+        priority: 'medium',
+        title: 'Dados do Cliente Incompletos',
+        message: 'O cliente vinculado não possui todos os dados obrigatórios preenchidos.',
+        impact: 'Pode causar erros na geração de documentos dinâmicos.',
+        reason: 'CPF/CNPJ ou Email ausentes.',
+        resolutionPath: `/admin/customers/${processData.customer_id}`,
+        dismissible: false,
+        blocker: false
+      });
+    }
+
+    if (!processData.vessel?.registration_number) {
+        suggestions.push({
+          id: `incomplete-vessel-${processId}`,
+          type: 'registration',
+          priority: 'medium',
+          title: 'Dados da Embarcação Incompletos',
+          message: 'A embarcação vinculada não possui número de inscrição.',
+          impact: 'Documentos de transferência e renovação exigem este dado.',
+          reason: 'Número de inscrição ausente.',
+          resolutionPath: `/admin/vessels/${processData.vessel_id}`,
+          dismissible: false,
+          blocker: false
+        });
+    }
+
+    // Sorting Logic: 1. Blocker, 2. Priority, 3. Date (if exists)
     return suggestions.sort((a, b) => {
+      if (a.blocker && !b.blocker) return -1;
+      if (!a.blocker && b.blocker) return 1;
+
       const priorityOrder: Record<SuggestionPriority, number> = {
         critical: 0,
         high: 1,
