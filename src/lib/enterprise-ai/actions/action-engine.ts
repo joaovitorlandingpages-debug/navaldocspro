@@ -26,7 +26,7 @@ export class ActionEngine {
       return await action.execute(context);
 
     } catch (error: any) {
-      console.log(`ActionEngine.execute caught error for ${actionId}: ${error.message}`);
+
       return createActionResult({
         success: false,
         status: ActionStatus.FAILED,
