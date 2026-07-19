@@ -244,7 +244,8 @@ export class ActionExecutor {
         durationMs: finishedAt.getTime() - startedAt.getTime(),
         errors,
         metadata: { 
-          errorCode: error.code,
+          errorCode: errorCode,
+          processId: (error as any).processId,
           confirmationToken: (error as any).publicToken,
           summary: (error as any).summary
         }
