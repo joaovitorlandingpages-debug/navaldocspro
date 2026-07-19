@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { ActionRegistry } from "../action-registry";
-import { ActionEngine, registerStubs, BaseStubAction } from "../action-engine";
-import { ActionStatus, ConfirmationPolicy } from "../action-types";
+import { ActionRegistry } from "../actions/action-registry";
+import { ActionEngine, registerStubs, BaseStubAction } from "../actions/action-engine";
+import { ActionStatus, ConfirmationPolicy } from "../actions/action-types";
 
 describe("Action Engine Core (Sprint 4.1)", () => {
   beforeEach(() => {
