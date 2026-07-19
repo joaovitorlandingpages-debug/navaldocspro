@@ -129,8 +129,7 @@ export class CreateProcessAction implements AIAction {
           extraTemplateIds: context.initialChecklist || [],
         });
       } catch (e: any) {
-        const error = new ProcessCreationError(e.message || "Blueprint materialization failed");
-        (error as any).code = 'MATERIALIZATION_FAILED';
+        const error = new ProcessCreationError(e.message || "Blueprint materialization failed", 'MATERIALIZATION_FAILED');
         (error as any).processId = processId;
         throw error;
       }
@@ -140,8 +139,7 @@ export class CreateProcessAction implements AIAction {
         const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
         notifyProcessesChanged(visibleProcess);
       } catch (e: any) {
-        const error = new ProcessCreationError(e.message || "Process visibility confirmation failed");
-        (error as any).code = 'VISIBILITY_FAILED';
+        const error = new ProcessCreationError(e.message || "Process visibility confirmation failed", 'VISIBILITY_FAILED');
         (error as any).processId = processId;
         throw error;
       }
