@@ -34,19 +34,28 @@ function StepHeader({ title, description, icon: Icon }: { title: string, descrip
   );
 }
 
-// --- Step 1: Client ---
+// --- Step 2: Client (Previously Step 1) ---
 
 export function StepClient() {
-  const { customerId, setData, companyId, clearStepData } = useWizardStore();
+  const { customerId, setData, companyId, ocrData } = useWizardStore();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [favorites, setFavorites] = useState<any[]>([]);
 
+  // Auto-populate from OCR if available
+  useEffect(() => {
+    if (ocrData.extractedFields?.customerName && !customerId && !query) {
+      setQuery(ocrData.extractedFields.customerName);
+      toast.info(`Busca sugerida pela IA: ${ocrData.extractedFields.customerName}`, {
+        description: "Encontramos este nome nos documentos enviados."
+      });
+    }
+  }, [ocrData.extractedFields?.customerName]);
+
   useEffect(() => {
     const loadFavorites = async () => {
       if (!companyId) return;
-      // Simulação de favoritos: clientes com processos recentes
       const { data } = await supabase
         .from('processes')
         .select('customer:customers(id, name, cpf_cnpj, phone, city)')
@@ -83,11 +92,15 @@ export function StepClient() {
   }, [query, companyId]);
 
   const handleCreateNew = async () => {
-    const name = window.prompt("Nome do novo cliente:");
+    const name = window.prompt("Nome do novo cliente:", ocrData.extractedFields?.customerName || "");
     if (!name || !companyId) return;
     const { data, error } = await supabase
       .from('customers')
-      .insert({ name, company_id: companyId })
+      .insert({ 
+        name, 
+        company_id: companyId,
+        cpf_cnpj: ocrData.extractedFields?.customerCpfCnpj || null
+      })
       .select().single();
     if (error) toast.error("Erro ao criar cliente");
     else {
@@ -98,11 +111,18 @@ export function StepClient() {
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <StepHeader 
-        title="Cliente" 
-        description="Quem é o responsável ou solicitante deste processo?" 
-        icon={User} 
-      />
+      <div className="flex justify-between items-start">
+        <StepHeader 
+          title="Revisão de Cliente" 
+          description="Confirme o responsável ou solicitante deste processo." 
+          icon={User} 
+        />
+        {ocrData.confidence > 0 && (
+          <Badge className="bg-blue-50 text-blue-600 border-none px-3 py-1 flex items-center gap-1 font-black text-[9px] uppercase">
+            <Sparkles className="h-3 w-3" /> IA Confiança: {Math.round(ocrData.confidence * 100)}%
+          </Badge>
+        )}
+      </div>
       
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
@@ -176,19 +196,30 @@ export function StepClient() {
           className="flex items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary hover:text-primary transition-all text-slate-500 font-bold text-sm bg-slate-50/30"
         >
           <UserPlus className="h-4 w-4" />
-          Novo Cliente
+          {ocrData.extractedFields?.customerName ? `Confirmar Novo: ${ocrData.extractedFields.customerName}` : 'Novo Cliente'}
         </button>
       </div>
     </div>
   );
 }
 
-// --- Step 2: Vessel ---
+
+// --- Step 3: Vessel (Previously Step 2) ---
 
 export function StepVessel() {
-  const { customerId, vesselId, setData, companyId } = useWizardStore();
+  const { customerId, vesselId, setData, companyId, ocrData } = useWizardStore();
   const [results, setResults] = useState<any[]>([]);
   const [query, setQuery] = useState('');
+
+  // Auto-populate from OCR if available
+  useEffect(() => {
+    if (ocrData.extractedFields?.vesselName && !vesselId && !query) {
+      setQuery(ocrData.extractedFields.vesselName);
+      toast.info(`Busca sugerida pela IA: ${ocrData.extractedFields.vesselName}`, {
+        description: "Encontramos este nome nos documentos enviados."
+      });
+    }
+  }, [ocrData.extractedFields?.vesselName]);
 
   useEffect(() => {
     if (!companyId) return;
@@ -220,11 +251,17 @@ export function StepVessel() {
   };
 
   const handleCreateNew = async () => {
-    const name = window.prompt("Nome da embarcação:");
+    const name = window.prompt("Nome da embarcação:", ocrData.extractedFields?.vesselName || "");
     if (!name || !companyId || !customerId) return;
     const { data, error } = await supabase
       .from('vessels')
-      .insert({ name, company_id: companyId, customer_id: customerId })
+      .insert({ 
+        name, 
+        company_id: companyId, 
+        customer_id: customerId,
+        registration_number: ocrData.extractedFields?.registrationNumber || null,
+        vessel_type: ocrData.extractedFields?.vesselType || null
+      })
       .select().single();
     if (error) toast.error("Erro ao criar embarcação");
     else {
@@ -235,11 +272,18 @@ export function StepVessel() {
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-right-2 duration-300">
-      <StepHeader 
-        title="Embarcação" 
-        description="Selecione a embarcação objeto do processo." 
-        icon={Ship} 
-      />
+      <div className="flex justify-between items-start">
+        <StepHeader 
+          title="Revisão de Embarcação" 
+          description="Selecione a embarcação objeto do processo." 
+          icon={Ship} 
+        />
+        {ocrData.confidence > 0 && (
+          <Badge className="bg-blue-50 text-blue-600 border-none px-3 py-1 flex items-center gap-1 font-black text-[9px] uppercase">
+            <Sparkles className="h-3 w-3" /> IA Confiança: {Math.round(ocrData.confidence * 100)}%
+          </Badge>
+        )}
+      </div>
 
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
@@ -283,15 +327,16 @@ export function StepVessel() {
         
         <button
           onClick={handleCreateNew}
-          className="flex flex-col items-center justify-center gap-1 p-6 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary hover:text-primary transition-all text-slate-500 font-bold text-sm"
+          className="flex flex-col items-center justify-center gap-1 p-6 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary hover:text-primary transition-all text-slate-500 font-bold text-sm bg-slate-50/30"
         >
           <Plus className="h-5 w-5" />
-          Nova Embarcação
+          {ocrData.extractedFields?.vesselName ? `Confirmar Nova: ${ocrData.extractedFields.vesselName}` : 'Nova Embarcação'}
         </button>
       </div>
     </div>
   );
 }
+
 
 // --- Step 3: Process Type ---
 
@@ -442,32 +487,61 @@ export function StepChecklist() {
   );
 }
 
-// --- Step 5: Documents ---
+// --- Step 1: Documents (Previously Step 5) ---
 
 export function StepDocuments() {
-  const { docPicks, uploadedFiles, setData, processTypeName } = useWizardStore();
+  const { docPicks, uploadedFiles, setData, processTypeName, ocrData } = useWizardStore();
   const [blueprint, setBlueprint] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   
   useEffect(() => {
-    if (!processTypeName) return;
+    // Start with a default set of documents if none picked yet (since this is now step 1)
     const load = async () => {
       setLoading(true);
-      const data = await previewProcessBlueprint(processTypeName);
-      // Filter to only picked or mandatory items
+      // If we don't have a type yet, show common onboarding docs (ID, Boat Doc)
+      const data = await previewProcessBlueprint(processTypeName || "Registro Inicial");
+      
+      const defaultDocs = ["template-id-card", "template-boat-card"]; 
       const picked = data.filter(item => 
-        item.templateId && docPicks.includes(item.templateId)
+        item.kind === 'mandatory' || (item.templateId && defaultDocs.includes(item.templateId))
       );
       setBlueprint(picked);
       setLoading(false);
     };
     load();
-  }, [processTypeName, docPicks]);
+  }, [processTypeName]);
 
-  const handleUpload = (slot: string, files: any[]) => {
+  const handleUpload = async (slot: string, files: any[]) => {
     setData({
       uploadedFiles: { ...uploadedFiles, [slot]: [...(uploadedFiles[slot] || []), ...files] }
     });
+
+    // Simulated AI/OCR Trigger for the new "Step 1" flow
+    if (files.length > 0) {
+      setData({ ocrData: { ...ocrData, isExtracting: true } });
+      toast.promise(
+        new Promise((resolve) => setTimeout(() => {
+          // Mocking OCR results based on file slot
+          const mockData = slot === 'template-id-card' 
+            ? { customerName: "ROBERTO NAVAL SILVA", customerCpfCnpj: "123.456.789-00" }
+            : { vesselName: "MAR AZUL II", registrationNumber: "PR-12345", vesselType: "Lancha" };
+          
+          setData({ 
+            ocrData: { 
+              isExtracting: false, 
+              confidence: 0.94, 
+              extractedFields: { ...ocrData.extractedFields, ...mockData } 
+            } 
+          });
+          resolve(true);
+        }, 2500)),
+        {
+          loading: 'IA analisando documento...',
+          success: 'Dados extraídos com sucesso! Próximas etapas pré-preenchidas.',
+          error: 'Falha na leitura automática.',
+        }
+      );
+    }
   };
 
   const progressCount = blueprint.filter(item => item.templateId && (uploadedFiles[item.templateId] || []).length > 0).length;
@@ -476,15 +550,17 @@ export function StepDocuments() {
     <div className="space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <StepHeader 
-          title="Documentação Visual" 
-          description="Envie as fotos ou PDFs solicitados conforme o blueprint." 
+          title="Início: Documentação" 
+          description="Envie os documentos principais para preenchimento automático via IA." 
           icon={FileText} 
         />
         
         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 min-w-[180px]">
           <div className="flex justify-between text-[10px] font-black uppercase text-slate-400 mb-2">
-            <span>Progresso Total</span>
-            <span className="text-primary">{progressCount} de {blueprint.length}</span>
+            <span>Extração Ativa</span>
+            <span className={ocrData.isExtracting ? "text-primary animate-pulse" : "text-emerald-500"}>
+              {ocrData.isExtracting ? "Processando..." : `${progressCount} de ${blueprint.length}`}
+            </span>
           </div>
           <Progress value={(progressCount / (blueprint.length || 1)) * 100} className="h-1.5 bg-slate-200" />
         </div>
@@ -500,25 +576,16 @@ export function StepDocuments() {
           return (
             <Card key={slot} className={`group overflow-hidden border-2 transition-all duration-300 rounded-3xl ${isUploaded ? 'border-emerald-100 bg-emerald-50/20' : 'border-slate-100 bg-white hover:border-primary/20'}`}>
               <div className="flex flex-col md:flex-row">
-                {/* Info Section */}
                 <div className="flex-1 p-6 md:p-8">
                   <div className="flex flex-wrap items-center gap-2 mb-3">
                     {isUploaded ? (
-                      <Badge className="bg-emerald-500 text-white border-none font-black text-[9px] uppercase px-3 py-1">🟢 Enviado</Badge>
-                    ) : isMandatory ? (
-                      <Badge className="bg-rose-500 text-white border-none font-black text-[9px] uppercase px-3 py-1">🔴 Obrigatório</Badge>
+                      <Badge className="bg-emerald-500 text-white border-none font-black text-[9px] uppercase px-3 py-1">🟢 Analisado</Badge>
                     ) : (
-                      <Badge className="bg-amber-400 text-white border-none font-black text-[9px] uppercase px-3 py-1">🟡 Pendente</Badge>
+                      <Badge className="bg-primary/10 text-primary border-none font-black text-[9px] uppercase px-3 py-1">🔵 Documento Mestre</Badge>
                     )}
                     
-                    {item.requiresOcr && (
-                      <Badge className="bg-blue-50 text-blue-600 border-none font-black text-[9px] uppercase px-3 py-1 flex items-center gap-1">
-                        <Sparkles className="h-3 w-3" /> IA OCR ATIVO
-                      </Badge>
-                    )}
-
-                    <Badge variant="outline" className="text-slate-400 border-slate-200 font-bold text-[9px] uppercase px-2 py-0.5">
-                      {item.countNeeded || 1} {item.countNeeded > 1 ? 'UNIDADES' : 'UNIDADE'}
+                    <Badge className="bg-blue-50 text-blue-600 border-none font-black text-[9px] uppercase px-3 py-1 flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" /> IA OCR ATIVO
                     </Badge>
                   </div>
 
@@ -527,7 +594,7 @@ export function StepDocuments() {
                   </h3>
                   
                   <p className="text-sm text-slate-500 mb-6 leading-relaxed max-w-lg">
-                    {item.description || "Documento essencial para a conformidade deste processo conforme as normas navais vigentes."}
+                    Envie este documento para que a IA preencha automaticamente os dados {item.templateId === 'template-id-card' ? 'do cliente' : 'da embarcação'}.
                   </p>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -537,36 +604,36 @@ export function StepDocuments() {
                         {item.fileTypes?.map((t: string) => <span key={t} className="bg-slate-100 px-2 py-0.5 rounded-md">{t}</span>) || 'PDF, JPG, PNG'}
                       </div>
                     </div>
-                    {item.captureTips && (
+                    {isUploaded && ocrData.confidence > 0 && (
                       <div className="space-y-1">
-                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Dica de Captura</Label>
-                        <div className="text-xs font-medium text-slate-600 italic">"{item.captureTips}"</div>
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Confiança IA</Label>
+                        <div className="text-xs font-black text-emerald-600 uppercase">Excelente ({Math.round(ocrData.confidence * 100)}%)</div>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Actions Section */}
                 <div className="w-full md:w-80 bg-slate-50/50 border-t md:border-t-0 md:border-l border-slate-100 p-6 md:p-8 flex flex-col justify-center gap-3">
                   {isUploaded ? (
-                    <div className="space-y-3">
-                       <Button variant="outline" className="w-full h-14 rounded-2xl bg-white border-slate-200 text-slate-600 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 gap-2">
-                          <Eye className="h-4 w-4" /> Visualizar {files.length} Item
-                       </Button>
+                    <div className="space-y-3 text-center">
+                       <div className="h-14 w-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-sm">
+                          <CheckCircle2 className="h-8 w-8" />
+                       </div>
+                       <p className="text-[10px] font-black text-slate-400 uppercase">Leitura Concluída</p>
                        <Button 
                         variant="ghost" 
                         onClick={() => setData({ uploadedFiles: { ...uploadedFiles, [slot]: [] } })}
                         className="w-full text-rose-500 font-bold text-[10px] uppercase hover:bg-rose-50 gap-2"
                        >
-                          <Trash2 className="h-4 w-4" /> Remover Documento
+                          <Trash2 className="h-4 w-4" /> Substituir
                        </Button>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       <div className="relative">
-                        <Button className="w-full h-16 rounded-2xl bg-navy text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-navy/10 hover:bg-navy/90 gap-3 group/btn overflow-hidden">
+                        <Button className="w-full h-16 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/10 hover:bg-primary/90 gap-3 group/btn overflow-hidden">
                           <Upload className="h-5 w-5 group-hover/btn:-translate-y-1 transition-transform" />
-                          📁 Fazer Upload
+                          📁 Escanear Agora
                           <div className="absolute inset-0 opacity-0 cursor-pointer">
                             <FileUploader 
                               bucket="process-attachments" 
@@ -577,35 +644,30 @@ export function StepDocuments() {
                         </Button>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
-                        <Button variant="outline" className="h-14 rounded-2xl bg-white border-slate-200 text-slate-600 font-bold text-[10px] uppercase tracking-tighter hover:border-primary/30 gap-1 px-2">
-                          <Camera className="h-4 w-4 text-primary" /> Tirar Foto
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          disabled={!item.requiresOcr}
-                          className={`h-14 rounded-2xl bg-white border-slate-200 text-slate-600 font-bold text-[10px] uppercase tracking-tighter hover:border-primary/30 gap-1 px-2 ${!item.requiresOcr ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                          <Sparkles className="h-4 w-4 text-blue-500" /> 🤖 OCR
-                        </Button>
-                      </div>
+                      <Button variant="outline" className="h-14 rounded-2xl bg-white border-slate-200 text-slate-600 font-bold text-[10px] uppercase tracking-tighter hover:border-primary/30 gap-1 px-2">
+                        <Camera className="h-4 w-4 text-primary" /> Tirar Foto
+                      </Button>
                     </div>
-                  )}
-                  
-                  {item.exampleUrl && (
-                    <button className="text-[10px] font-black uppercase text-primary/60 hover:text-primary transition-colors mt-2 flex items-center justify-center gap-1">
-                      <Eye className="h-3 w-3" /> Ver Exemplo Visual
-                    </button>
                   )}
                 </div>
               </div>
             </Card>
           );
         })}
+        
+        {!processTypeName && (
+           <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-center gap-4">
+              <Sparkles className="h-6 w-6 text-primary animate-pulse" />
+              <p className="text-[11px] font-bold text-blue-700 leading-tight">
+                DICA: Você também pode pular esta etapa e preencher manualmente nas próximas telas, mas o uso da IA reduz o tempo de cadastro em 85%.
+              </p>
+           </div>
+        )}
       </div>
     </div>
   );
 }
+
 
 
 // --- Step 6: Review ---

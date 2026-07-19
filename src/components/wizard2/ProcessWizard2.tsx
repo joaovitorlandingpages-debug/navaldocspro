@@ -37,13 +37,14 @@ import { confirmProcessVisible, notifyProcessesChanged } from '@/services/proces
 import { materializeProcessBlueprint } from '@/services/processes/blueprintEngine';
 
 const STEPS = [
+  { id: 'documents', label: 'Docs', icon: FileText },
   { id: 'client', label: 'Cliente', icon: User },
   { id: 'vessel', label: 'Embarcação', icon: Ship },
   { id: 'type', label: 'Tipo', icon: Sparkles },
   { id: 'checklist', label: 'Checklist', icon: ListChecks },
-  { id: 'documents', label: 'Docs', icon: FileText },
   { id: 'review', label: 'Revisão', icon: CheckCircle2 },
 ];
+
 
 export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
   const { step, setStep, reset, companyId, setData, ...state } = useWizardStore();
