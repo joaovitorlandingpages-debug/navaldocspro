@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createActionResult } from "../action-result";
 import { materializeProcessBlueprint } from "@/services/processes/blueprintEngine";
 import { confirmProcessVisible, notifyProcessesChanged } from "@/services/processes/processCreation";
+import { processCreationService } from "@/services/processes/process-creation-service";
 
 export class CreateProcessAction implements AIAction {
   id = "create-process";
