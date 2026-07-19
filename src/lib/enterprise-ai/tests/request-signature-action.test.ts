@@ -259,7 +259,7 @@ describe("RequestSignatureAction (Sprint 5.1)", () => {
           confirmationToken: "conf-123"
         },
         security,
-        "test-session-id"
+        { requestId: "test-request-id" }
       );
 
 
