@@ -160,9 +160,6 @@ export class ActionExecutor {
         ...context, 
         ...confirmationMetadata, 
         _user: { id: authContext.userId }
-      }).catch(e => {
-        console.log('ActionExecutor INNER EXECUTE CATCH:', e.name, e.code, e.errorCode);
-        throw e;
       });
 
       // 6.1 Update Idempotency Record if success
