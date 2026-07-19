@@ -165,6 +165,7 @@ export function SignatureRequestDialog({
       });
       toast.success("Solicitação criada — links gerados");
       onOpenChange(false);
+      qc.invalidateQueries({ queryKey: ["process-center", "detail", processId] });
       onCreated?.();
     } catch (e: any) {
       toast.error(e.message ?? "Falha ao criar");

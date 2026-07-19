@@ -98,6 +98,7 @@ function DocumentCard({ doc, processId, companyId }: { doc: Doc; processId: stri
     onSuccess: async (u) => {
       toast.success("Arquivo anexado");
       qc.invalidateQueries({ queryKey: ["pdu", doc.id] });
+      qc.invalidateQueries({ queryKey: ["process-center", "detail", processId] });
       // Auto OCR
       ocrMut.mutate(u.id);
     },
@@ -226,7 +227,8 @@ function UploadRow({
     onSuccess: () => {
       toast.success("Dados aplicados ao documento");
       qc.invalidateQueries({ queryKey: ["pdu", processDocumentId] });
-      qc.invalidateQueries({ queryKey: ["process_documents"] });
+      qc.invalidateQueries({ queryKey: ["process_documents", upload.process_id] });
+      qc.invalidateQueries({ queryKey: ["process-center", "detail", upload.process_id] });
     },
     onError: (e: any) => toast.error("Falha ao aplicar: " + (e?.message ?? e)),
   });

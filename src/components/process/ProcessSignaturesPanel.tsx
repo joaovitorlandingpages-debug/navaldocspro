@@ -116,6 +116,7 @@ export function ProcessSignaturesPanel({ processId }: Props) {
     if (!confirm("Cancelar esta solicitação?")) return;
     await signaturesService.cancel(id, companyId);
     toast.success("Cancelada");
+    qc.invalidateQueries({ queryKey: ["process-center", "detail", processId] });
     load();
   };
 
