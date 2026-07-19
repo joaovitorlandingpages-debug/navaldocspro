@@ -54,7 +54,6 @@ function AICommandCenterPage() {
     setLoading(true);
     setError(null);
     try {
-      // Get company_id for the context
       const { data: profile } = await supabase
         .from('profiles')
         .select('company_id, role')
@@ -67,7 +66,7 @@ function AICommandCenterPage() {
         userId: user.id,
         companyId: profile.company_id || '',
         role: profile.role || 'user',
-        permissions: ['processes.read'], // Mock permissions
+        permissions: ['processes.read'],
         locale: 'pt-BR'
       };
 
@@ -212,7 +211,7 @@ function AICommandCenterPage() {
               </div>
             </div>
           )}
-        </div>
+        </Card>
 
         <Card className="p-8 border-slate-200 bg-slate-950 text-white overflow-hidden relative">
            <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -222,8 +221,8 @@ function AICommandCenterPage() {
            <div className="bg-black/40 rounded-2xl p-6 font-mono text-[10px] text-emerald-400 overflow-x-auto relative z-10 border border-white/5">
               <pre>{JSON.stringify({
                 featureFlag: isEnabled,
-                agents: AgentRegistry.list().map(a => a.id),
-                tools: ToolRegistry.list().map(t => ({ id: t.id, permissions: t.requiredPermissions })),
+                agentsCount,
+                toolsCount,
                 lastResponse: response ? {
                   executionId: response.executionId,
                   tools: response.executedTools,
