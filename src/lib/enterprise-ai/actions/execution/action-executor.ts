@@ -200,6 +200,7 @@ export class ActionExecutor {
       const finishedAt = new Date();
       let status = error.status || ActionStatus.FAILED;
       let errors = [error.message || 'Unknown execution error'];
+      const errorCode = error.code || error.errorCode || 'ACTION_EXECUTION_ERROR';
 
       if (error instanceof ActionNotFoundError) {
         status = ActionStatus.FAILED;
@@ -209,7 +210,6 @@ export class ActionExecutor {
       } else if (error instanceof ActionPermissionDeniedError) {
         status = ActionStatus.PERMISSION_DENIED;
       } else if (error instanceof BaseConfirmationRequiredError || error.code === 'CHECKLIST_CONFIRMATION_REQUIRED') {
-        // This comes from the action when it needs a confirmation
         status = ActionStatus.FAILED; 
       }
 
