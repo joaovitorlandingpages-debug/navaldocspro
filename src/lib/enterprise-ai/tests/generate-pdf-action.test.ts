@@ -136,6 +136,7 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
     const executor = new ActionExecutor(ActionRegistry, new ActionValidator(), new PermissionGuard());
 
     // Mocks for validation AND execution
+    // Resetting mocks to provide fixed responses for both validation and execution phases
     (supabase as any).single.mockResolvedValue({
       data: { 
         id: mockProcessId, 
@@ -144,6 +145,16 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
         companies: { name: "NavalDocs" }
       },
       error: null
+    });
+
+    // Specific insert response for doc ID
+    (supabase as any).insert.mockReturnValueOnce({
+      select: vi.fn().mockReturnValueOnce({
+        single: vi.fn().mockResolvedValueOnce({
+          data: { id: "doc-999" },
+          error: null
+        })
+      })
     });
 
     const authContext = {
@@ -158,5 +169,6 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
 
     expect(result.success).toBe(true);
     expect(result.actionId).toBe("generate-pdf");
+    expect(result.metadata?.documentId).toBe("doc-999");
   });
 });
