@@ -1,4 +1,4 @@
-import { AIAction, ActionResult, ActionStatus, ConfirmationPolicy } from "../action-types";
+import { AIAction, ActionResult, ActionStatus, ConfirmationPolicy, ActionError } from "../action-types";
 import { createActionResult } from "../action-result";
 import { 
   CreateProcessInput, 
@@ -34,11 +34,10 @@ export class CreateProcessAction implements AIAction {
   async execute(context: any): Promise<ActionResult> {
     const start = Date.now();
     const input = context as CreateProcessInput;
-    const user = (context as any)._user; // ActionExecutor should provide this
+    const user = (context as any)._user;
     
     if (!user) throw new Error("User context missing in execute");
 
-    // 0. AUTH & TENANT CONTEXT
     const { data: profile } = await supabase
       .from("profiles")
       .select("company_id")
@@ -47,12 +46,10 @@ export class CreateProcessAction implements AIAction {
 
     if (!profile) throw new Error("User profile not found");
 
-    // 1. ATOMIC/IDEMPOTENT FLOW: Create or recover base process
     let processId = (context as any).processId;
     let processStatus = 'pending';
 
     if (!processId) {
-      // Map priority
       const priorityMap: Record<string, 'low' | 'medium' | 'high' | 'critical'> = {
         'low': 'low',
         'normal': 'medium',
@@ -76,23 +73,20 @@ export class CreateProcessAction implements AIAction {
     }
 
     try {
-      console.log("[CreateProcessAction] Materializing blueprint for", processId);
       await materializeProcessBlueprint(processId, {
         extraTemplateIds: input.initialChecklist || [],
       });
     } catch (e: any) {
-      console.log("[CreateProcessAction] CATCHING Materialization Error:", e.message);
-      const err = new ProcessCreationError(e.message || "Blueprint materialization failed", 'MATERIALIZATION_FAILED');
+      const err = new ActionError(e.message || "Blueprint materialization failed", 'MATERIALIZATION_FAILED');
       (err as any).processId = processId;
       throw err;
     }
 
-    // 3. Confirm Visibility & Notify
     try {
       const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
       notifyProcessesChanged(visibleProcess);
     } catch (e: any) {
-      const err = new ProcessCreationError(e.message || "Process visibility confirmation failed", 'VISIBILITY_FAILED');
+      const err = new ActionError(e.message || "Process visibility confirmation failed", 'VISIBILITY_FAILED');
       (err as any).processId = processId;
       throw err;
     }
@@ -113,6 +107,5 @@ export class CreateProcessAction implements AIAction {
   }
 
   async rollback(context: any): Promise<void> {
-    // No-op for now
   }
 }
