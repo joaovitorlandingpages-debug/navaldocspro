@@ -176,10 +176,12 @@ export class ActionExecutor {
           code: innerError.code, 
           errorCode: innerError.errorCode, 
           processId: innerError.processId,
-          instanceOfActionError: innerError instanceof ActionError
+          type: innerError.constructor.name,
+          isActionError: innerError.name === 'ActionError' || (innerError.code && innerError.message)
         });
         throw innerError;
       }
+
 
 
       // 6.1 Update Idempotency Record if success
