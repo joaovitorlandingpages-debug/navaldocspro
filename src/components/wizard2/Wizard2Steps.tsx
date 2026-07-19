@@ -711,6 +711,8 @@ export function StepReview() {
   const state = useWizardStore();
   const [customer, setCustomer] = useState<any>(null);
   const [vessel, setVessel] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<ProcessAnalysis | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
 
   useEffect(() => {
     const load = async () => {
