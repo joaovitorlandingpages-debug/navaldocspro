@@ -1,3 +1,7 @@
+import { ActionError } from "./process/process-action-types";
+
+export { ActionError };
+
 export enum ConfirmationPolicy {
   NONE = 'NONE',
   LOW = 'LOW',
@@ -39,11 +43,4 @@ export interface ActionResult {
   warnings?: string[];
   errors?: string[];
   metadata?: Record<string, any>;
-}
-
-export class ActionError extends Error {
-  constructor(public message: string, public code: string) {
-    super(message);
-    this.name = 'ActionError';
-  }
 }

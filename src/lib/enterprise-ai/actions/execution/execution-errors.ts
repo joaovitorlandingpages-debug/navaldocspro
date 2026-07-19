@@ -1,9 +1,24 @@
 export class ActionExecutionError extends Error {
-  constructor(message: string, public code: string = 'ACTION_EXECUTION_ERROR') {
+  public errorCode: string;
+  public processId?: string;
+  public isActionError: boolean = true;
+
+  constructor(message: string, codeOrOptions: string | { errorCode?: string; processId?: string } = 'ACTION_EXECUTION_ERROR') {
     super(message);
     this.name = 'ActionExecutionError';
+    
+    if (typeof codeOrOptions === 'string') {
+      this.errorCode = codeOrOptions;
+    } else {
+      this.errorCode = codeOrOptions.errorCode || 'ACTION_EXECUTION_ERROR';
+      this.processId = codeOrOptions.processId;
+    }
+    
+    // Compatibility with old code using .code
+    (this as any).code = this.errorCode;
   }
 }
+
 
 export class ActionNotFoundError extends ActionExecutionError {
   constructor(actionId: string) {

@@ -8,4 +8,6 @@ export interface ExecutionContext {
   provider?: string;
   startedAt: Date;
   metadata?: Record<string, any>;
+  processId?: string;
+
 }

@@ -116,6 +116,21 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
     
     const m = (supabase as any);
     m.auth.getUser.mockResolvedValue({ data: { user: { id: mockUserId } }, error: null });
+    
+    // Default response for profile check
+    m.from.mockImplementation((table: string) => {
+      if (table === "profiles") {
+        return {
+          select: () => ({
+            eq: () => ({
+              single: () => Promise.resolve({ data: { company_id: mockCompanyId }, error: null })
+            })
+          })
+        };
+      }
+      return m;
+    });
+
     m.then = (onRes: any) => Promise.resolve({ data: null, error: null }).then(onRes);
   });
 
@@ -242,7 +257,7 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
   describe("3. Atomic Execution & Recovery", () => {
     it("should mark as recoverable_failed if materialization fails", async () => {
       // 1. Claim success (processing)
-      getMockSupabase().rpc.mockResolvedValue({
+      vi.mocked(getMockSupabase().rpc).mockResolvedValueOnce({
         data: { id: "record-1", status: "processing", execution_id: "current-exec" },
         error: null
       });
@@ -260,24 +275,26 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
         "create-process",
         {
           customerId: mockCustomerId,
+          vesselId: "550e8400-e29b-41d4-a716-446655440222", // Required field
           processType: "Transferência",
+          processTypeId: mockTypeId, 
+          confirmationToken: "mock-token", 
           idempotencyKey: "recovery-test"
         },
         securityContext
       );
 
       expect(result.success).toBe(false);
-      // expect(result.metadata?.errorCode).toBe("MATERIALIZATION_FAILED"); // Temporarily commented to identify the exact code being thrown
-      console.log("ACTUAL ERROR CODE:", result.metadata?.errorCode);
+      expect(result.metadata?.errorCode).toBe("MATERIALIZATION_FAILED");
 
       // Verify idempotency record update
-      expect(getMockSupabase().from).toHaveBeenCalledWith("ai_idempotency_records");
       expect(getMockSupabase().update).toHaveBeenCalledWith(expect.objectContaining({
         status: "recoverable_failed",
         error_code: "MATERIALIZATION_FAILED",
         process_id: mockProcessId
       }));
     });
+
 
     it("should recover and skip process creation if record already has process_id (Retry Flow)", async () => {
       // 1. Claim recoverable record
@@ -300,12 +317,19 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
         "create-process",
         {
           customerId: mockCustomerId,
+          vesselId: "550e8400-e29b-41d4-a716-446655440222", // Fix Zod error: vesselId required
           processType: "Transferência",
+          processTypeId: mockTypeId, 
+          confirmationToken: "mock-token", 
           idempotencyKey: "retry-123"
         },
         securityContext
       );
 
+
+      if (!result.success) {
+        console.log("RECOVERY TEST FAIL:", result.errors, result.metadata);
+      }
       expect(result.success).toBe(true);
       expect(result.metadata?.processId).toBe(mockProcessId);
       

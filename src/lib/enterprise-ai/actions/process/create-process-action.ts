@@ -1,10 +1,14 @@
-import { AIAction, ActionResult, ActionStatus, ConfirmationPolicy, ActionError } from "../action-types";
-import { createActionResult } from "../action-result";
 import { 
   CreateProcessInput, 
   CreateProcessInputSchema, 
+  ActionError 
 } from "./process-action-types";
+import { AIAction, ActionResult, ActionStatus, ConfirmationPolicy } from "../action-types";
+
+import { createActionResult } from "../action-result";
 import { supabase } from "@/integrations/supabase/client";
+
+
 import { processCreationService } from "@/services/processes/process-creation-service";
 import { materializeProcessBlueprint } from "@/services/processes/blueprintEngine";
 import { confirmProcessVisible, notifyProcessesChanged } from "@/services/processes/processCreation";
@@ -35,17 +39,33 @@ export class CreateProcessAction implements AIAction {
     const input = context as CreateProcessInput;
     const user = (context as any)._user;
     
-    if (!user) throw new Error("User context missing in execute");
+    console.log('CreateProcessAction DEBUG Execute Start:', { 
+      processId: input.processId, 
+      hasUser: !!user,
+      inputKeys: Object.keys(input)
+    });
 
-    const { data: profile } = await supabase
+    if (!user) {
+      console.log('CreateProcessAction ERROR: User context missing', { contextKeys: Object.keys(context) });
+      throw new Error("User context missing in execute");
+    }
+
+
+
+    console.log('CreateProcessAction Start profile check for user:', user.id);
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("company_id")
       .eq("id", user.id)
       .single();
 
-    if (!profile) throw new Error("User profile not found");
+    if (profileError || !profile) {
+      console.log('Profile error or missing:', profileError);
+      throw new Error("User profile not found");
+    }
 
     let processId = (context as any).processId;
+    console.log('CreateProcessAction ID check:', { processId });
     let processStatus = 'pending';
 
     if (!processId) {
@@ -72,21 +92,40 @@ export class CreateProcessAction implements AIAction {
     }
 
     try {
+      console.log('CreateProcessAction Materializing processId:', processId);
       await materializeProcessBlueprint(processId, {
         extraTemplateIds: input.initialChecklist || [],
       });
     } catch (e: any) {
-      const err = new ActionError(e.message || "Blueprint materialization failed", 'MATERIALIZATION_FAILED');
-      Object.assign(err, { processId });
-      throw err;
+      console.log('CreateProcessAction Materialization ERROR catch block:', e.message);
+      
+      // CRITICAL FIX: The ActionExecutor's outer catch block expects properties on the Error object.
+      // We must throw a real Error with properties, not a plain object, to survive some middleware.
+      const recoveryError: any = new Error(e.message || "Blueprint materialization failed");
+      recoveryError.errorCode = 'MATERIALIZATION_FAILED';
+      recoveryError.code = 'MATERIALIZATION_FAILED';
+      recoveryError.processId = processId;
+      recoveryError.isActionError = true;
+      recoveryError.name = 'ActionExecutionError';
+      
+      console.log('CreateProcessAction Materialization ERROR throw (Real Error with props):', {
+        message: recoveryError.message,
+        errorCode: recoveryError.errorCode,
+        processId: recoveryError.processId
+      });
+      throw recoveryError;
     }
+
+
+
 
     try {
       const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
       notifyProcessesChanged(visibleProcess);
     } catch (e: any) {
       const err = new ActionError(e.message || "Process visibility confirmation failed", 'VISIBILITY_FAILED');
-      Object.assign(err, { processId });
+      (err as any).processId = processId;
+      console.log('CreateProcessAction Visibility ERROR throw:', { code: err.code, processId });
       throw err;
     }
 
