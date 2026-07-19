@@ -1,11 +1,7 @@
 import { z } from "zod";
 
-export class ActionError extends Error {
-  constructor(public message: string, public code: string) {
-    super(message);
-    this.name = 'ActionError';
-  }
-}
+import { ActionError } from "../action-types";
+
 
 
 
