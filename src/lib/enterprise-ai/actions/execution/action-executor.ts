@@ -171,6 +171,11 @@ export class ActionExecutor {
         result = await action.execute(inputWithContext);
       } catch (innerError: any) {
         // NORMALIZATION: Capture error details explicitly
+        // If it's already an encoded error from a nested executor, don't double encode
+        if (innerError.message && innerError.message.startsWith('__AE_METADATA__')) {
+          throw innerError;
+        }
+
         const innerErrorCode = innerError.errorCode || innerError.code;
         const innerProcessId = innerError.processId || inputWithContext.processId;
         
@@ -180,13 +185,21 @@ export class ActionExecutor {
           msg: innerError.message 
         });
 
-        // CRITICAL FIX: Encode using a delimiter that is unlikely to be in the JSON
+        // CRITICAL FIX: Encode metadata to survive environment stripping
         const metadata = {
           errorCode: innerErrorCode || 'ACTION_EXECUTION_ERROR',
           processId: innerProcessId,
           isActionError: true,
           _isEncoded: true
         };
+        
+        const metadataJson = JSON.stringify(metadata);
+        const encodedMetadata = btoa(metadataJson);
+        const encodedError: any = new Error(`__AE_METADATA__${encodedMetadata}__${innerError.message || ''}`);
+        
+        throw encodedError;
+      }
+
         
         const metadataJson = JSON.stringify(metadata);
         // Use a very specific marker and base64 to avoid character issues
