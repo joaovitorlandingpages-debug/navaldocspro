@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ const STATUS_META: Record<string, { label: string; color: string; icon: any }> =
 };
 
 export function ProcessSignaturesPanel({ processId }: Props) {
+  const qc = useQueryClient();
   const [requests, setRequests] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
