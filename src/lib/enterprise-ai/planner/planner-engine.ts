@@ -119,7 +119,7 @@ export class PlannerEngine {
       });
     });
 
-    this.validateSteps(steps);
+    this.validateSteps(steps, availableActions);
     this.detectCircularDependencies(steps);
 
     return steps;
