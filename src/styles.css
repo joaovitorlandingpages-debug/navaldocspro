@@ -443,3 +443,7 @@ thead tr.bg-navy\/5 {
 .rounded-full.border-2 {
   border-width: 1px !important;
 }
+
+#lovable-badge {
+  display: none !important;
+}
