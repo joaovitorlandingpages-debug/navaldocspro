@@ -154,7 +154,7 @@ export class CreateProcessAction implements AIAction {
       });
 
     } catch (error: any) {
-      console.error('AI CreateProcessAction: execution failed', error);
+
       return createActionResult({
         success: false,
         status: ActionStatus.FAILED,
