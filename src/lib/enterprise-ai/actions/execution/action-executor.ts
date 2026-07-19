@@ -122,7 +122,7 @@ export class ActionExecutor {
       }
 
 
-      const security = this.guard.validateContext(authContext, action.requiredPermissions, action.requiredRole);
+      const security = this.guard.validateContext(authContext, action.metadata.requiredPermissions);
       if (!security.success) {
         throw new ActionPermissionDeniedError(security.errors?.[0]);
       }
