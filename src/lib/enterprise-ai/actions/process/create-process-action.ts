@@ -159,6 +159,10 @@ export class CreateProcessAction implements AIAction {
       });
 
     } catch (error: any) {
+      // Re-throw if it's already an ActionError so ActionExecutor can catch its code
+      if (error instanceof ProcessCreationError || error instanceof CustomerNotFoundError || error instanceof VesselNotFoundError || error instanceof TenantMismatchError) {
+        throw error;
+      }
 
       return createActionResult({
         success: false,
@@ -167,8 +171,7 @@ export class CreateProcessAction implements AIAction {
         executionId: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'exec-' + Date.now(),
         duration: Date.now() - start,
         metadata: {
-          errorCode: error.code || (error as any).errorCode,
-          processId: (error as any).processId
+          errorCode: 'ACTION_EXECUTION_ERROR'
         }
       });
     }
