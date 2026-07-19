@@ -2,7 +2,7 @@ import { ActionRegistry } from '../action-registry';
 import { ActionValidator } from '../security/action-validator';
 import { PermissionGuard } from '../security/permission-guard';
 import { SecurityContext } from '../security/permission-types';
-import { ActionStatus } from '../action-types';
+import { ActionStatus, ActionError } from '../action-types';
 import { ExecutionContext } from './execution-context';
 import { ExecutionResult } from './execution-result';
 import { auditLogger } from '../audit/audit-logger';
