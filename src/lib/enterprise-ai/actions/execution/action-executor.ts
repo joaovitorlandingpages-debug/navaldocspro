@@ -155,12 +155,14 @@ export class ActionExecutor {
       }
 
       // 6. Execute
-      const result = await action.execute({ 
+      const inputWithContext = { 
         ...input, 
         ...context, 
         ...confirmationMetadata, 
         _user: { id: authContext.userId }
-      });
+      };
+      
+      const result = await action.execute(inputWithContext);
 
       // 6.1 Update Idempotency Record if success
       if (idempotencyRecordId && result.success) {
