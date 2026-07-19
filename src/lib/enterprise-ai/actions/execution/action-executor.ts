@@ -249,19 +249,23 @@ export class ActionExecutor {
       let errorMessage = error.message || 'Unknown execution error';
 
       // Attempt to decode metadata from message string
-      if (errorMessage.startsWith('ACTION_EXECUTION_FAILED_METADATA:')) {
+      if (errorMessage.startsWith('__AE_METADATA__')) {
         try {
-          const parts = errorMessage.split(':');
-          const metadataJson = parts[1];
-          const metadata = JSON.parse(metadataJson);
-          errorCode = metadata.errorCode;
-          processId = metadata.processId;
-          errorMessage = parts.slice(2).join(':'); // Restore original message
-          console.log('ActionExecutor DEBUG - Decoded metadata from string:', { errorCode, processId, errorMessage });
+          const parts = errorMessage.split('__');
+          if (parts.length >= 3) {
+            const encodedMetadata = parts[2];
+            const metadataJson = atob(encodedMetadata);
+            const metadata = JSON.parse(metadataJson);
+            errorCode = metadata.errorCode;
+            processId = metadata.processId;
+            errorMessage = parts.slice(3).join('__'); // Restore original message
+            console.log('ActionExecutor DEBUG - Decoded metadata successfully:', { errorCode, processId, errorMessage });
+          }
         } catch (e) {
           console.warn('ActionExecutor failed to decode error metadata string', e);
         }
       }
+
       
       let status = error.status || ActionStatus.FAILED;
       let errors = [errorMessage];
