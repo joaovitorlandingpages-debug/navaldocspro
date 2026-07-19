@@ -8,14 +8,6 @@ import { PermissionGuard } from "../actions/security/permission-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { ActionExecutionError } from "../actions/execution/execution-errors";
 
-// Valid UUIDs for Zod
-const mockUserId = "550e8400-e29b-41d4-a716-446655440000";
-const mockCompanyId = "550e8400-e29b-41d4-a716-446655440001";
-const mockCustomerId = "550e8400-e29b-41d4-a716-446655440002";
-const mockVesselId = "550e8400-e29b-41d4-a716-446655440003";
-const mockTypeId = "550e8400-e29b-41d4-a716-446655440004";
-const mockProcessId = "550e8400-e29b-41d4-a716-446655440999";
-
 // Mock Supabase
 vi.mock("@/integrations/supabase/client", () => {
   const m = {
@@ -65,7 +57,7 @@ vi.mock("@/services/processes/blueprintEngine", () => ({
 }));
 
 vi.mock("@/services/processes/processCreation", () => ({
-  confirmProcessVisible: vi.fn().mockResolvedValue({ id: mockProcessId, company_id: mockCompanyId }),
+  confirmProcessVisible: vi.fn().mockResolvedValue({ id: "550e8400-e29b-41d4-a716-446655440999", company_id: "550e8400-e29b-41d4-a716-446655440001" }),
   notifyProcessesChanged: vi.fn(),
 }));
 
