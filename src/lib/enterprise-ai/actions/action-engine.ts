@@ -76,13 +76,14 @@ export class BaseStubAction implements AIAction {
 
 // Register stubs
 export const registerStubs = () => {
-  const stubs = [
+  const stubs: AIAction[] = [
     
     // new BaseStubAction("request-signature", "Request Signature", "Requests an electronic signature"),
 
   ];
 
   stubs.forEach(stub => ActionRegistry.register(stub));
+
   
   // Register Real Actions
   ActionRegistry.register(new GeneratePdfAction());
