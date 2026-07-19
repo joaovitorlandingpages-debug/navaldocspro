@@ -83,7 +83,372 @@ function AICommandCenterPage() {
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
       <PageHeader 
         title="Enterprise AI Command Center" 
-        description="Fundação técnica do cérebro operacional NavalDocs Pro."
+        description="ENTERPRISE AI COMMAND CENTER
+SPRINT 2 — CONVERSATIONAL INTELLIGENCE & PLANNING
+
+IMPORTANTE
+
+A fundação do EACC está homologada.
+
+Não alterar:
+
+- Process Center
+- Process Center Detail
+- Health Engine
+- Risk Engine
+- OCR
+- Documentos
+- Assinaturas
+
+Todo o trabalho deve ocorrer dentro do módulo:
+
+src/lib/enterprise-ai/
+
+e da rota:
+
+/admin/ai-command-center
+
+==================================================
+OBJETIVO
+==================================================
+
+Transformar o EACC em um assistente operacional inteligente.
+
+Nesta sprint ele deve:
+
+- manter contexto da conversa;
+- compreender referências (\"esse processo\");
+- escolher automaticamente uma ou mais ferramentas;
+- planejar antes de executar;
+- responder utilizando somente dados reais.
+
+Não integrar LLM externo ainda.
+
+Continuar utilizando o MockProvider.
+
+==================================================
+1. CONVERSATION ENGINE
+==================================================
+
+Implementar:
+
+ConversationEngine
+
+Responsabilidades:
+
+- criar conversa
+- continuar conversa
+- recuperar histórico
+- resumir histórico antigo
+- limitar contexto enviado ao provider
+- controlar mensagens
+
+Criar estruturas:
+
+Conversation
+ConversationMessage
+ConversationSummary
+
+Cada conversa deve possuir:
+
+- id
+- userId
+- companyId
+- createdAt
+- updatedAt
+- summary
+- status
+
+==================================================
+2. CONTEXT ENGINE
+==================================================
+
+Implementar ContextEngine.
+
+Resolver referências como:
+
+- esse processo
+- o anterior
+- o cliente dele
+- a embarcação
+- esse documento
+- o primeiro resultado
+
+O contexto deve armazenar:
+
+- último processo
+- último cliente
+- última embarcação
+- última ferramenta executada
+- último resultado
+
+Jamais utilizar dados de outra empresa.
+
+==================================================
+3. INTENT CLASSIFIER
+==================================================
+
+Criar IntentClassifier.
+
+Intenções iniciais:
+
+PROCESS_SEARCH
+
+PROCESS_DETAILS
+
+PROCESS_HEALTH
+
+PROCESS_RISK
+
+PROCESS_SUMMARY
+
+UNKNOWN
+
+O classificador deve ser separado do Orchestrator.
+
+==================================================
+4. EXECUTION PLANNER
+==================================================
+
+Implementar Planner.
+
+Fluxo:
+
+Pergunta
+
+↓
+
+Intenção
+
+↓
+
+Plano
+
+↓
+
+Ferramentas
+
+↓
+
+Resposta
+
+Exemplo:
+
+\"Mostre os processos críticos.\"
+
+Plano:
+
+1 pesquisar processos
+
+2 calcular risco
+
+3 ordenar
+
+4 responder
+
+==================================================
+5. MULTI TOOL EXECUTION
+==================================================
+
+O Orchestrator deve executar mais de uma ferramenta quando necessário.
+
+Exemplo:
+
+Pergunta:
+
+\"Quais processos possuem risco alto e saúde ruim?\"
+
+Plano:
+
+searchProcesses
+
+↓
+
+getProcessRisk
+
+↓
+
+getProcessHealth
+
+↓
+
+ordenar
+
+↓
+
+responder
+
+==================================================
+6. RESPONSE BUILDER
+==================================================
+
+Criar ResponseBuilder.
+
+Resposta padronizada:
+
+answer
+
+selectedAgent
+
+executedTools
+
+references
+
+warnings
+
+suggestedActions
+
+executionId
+
+durationMs
+
+confidence
+
+==================================================
+7. CONTEXT MEMORY
+==================================================
+
+Após cada resposta armazenar:
+
+último processo
+
+último cliente
+
+última embarcação
+
+últimos documentos
+
+última intenção
+
+últimas ferramentas
+
+Permitir perguntas como:
+
+\"E agora?\"
+
+\"E o anterior?\"
+
+\"Abra esse.\"
+
+==================================================
+8. AUDITORIA
+==================================================
+
+Registrar:
+
+intenção
+
+agente
+
+plano
+
+ferramentas
+
+tempo
+
+erros
+
+referências
+
+confidence
+
+==================================================
+9. INTERFACE
+==================================================
+
+Na rota:
+
+/admin/ai-command-center
+
+Adicionar:
+
+Histórico lateral
+
+Nova conversa
+
+Continuar conversa
+
+Exibição do plano gerado
+
+Ferramentas utilizadas
+
+Timeline de execução
+
+Não transformar ainda no chat definitivo.
+
+==================================================
+10. TESTES
+==================================================
+
+Criar testes para:
+
+ConversationEngine
+
+ContextEngine
+
+IntentClassifier
+
+Planner
+
+Multi Tool Execution
+
+ResponseBuilder
+
+Context Memory
+
+Referências
+
+Intenção desconhecida
+
+Tenant Isolation
+
+Executar:
+
+Vitest
+
+Typecheck
+
+Build
+
+==================================================
+11. NÃO REGRESSÃO
+==================================================
+
+Confirmar que nenhum módulo existente foi alterado.
+
+==================================================
+ENTREGA
+==================================================
+
+Apresentar:
+
+Arquivos criados
+
+Arquivos alterados
+
+Fluxo completo
+
+Resultado dos testes
+
+Resultado do build
+
+Resultado do typecheck
+
+Limitações
+
+Próximo Sprint
+
+STATUS FINAL:
+
+SPRINT 2 HOMOLOGADO
+
+SPRINT 2 PARCIAL
+
+SPRINT 2 BLOQUEADO
+
+Não implementar integração com OpenAI, Gemini ou Claude nesta sprint.
+
+Todo o comportamento deve funcionar utilizando o MockProvider já existente."
       />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
