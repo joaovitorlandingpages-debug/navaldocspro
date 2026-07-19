@@ -224,6 +224,12 @@ export class ActionExecutor {
       };
 
     } catch (error: any) {
+      // NORMALIZATION: If the error looks like an ActionError but lost its prototype
+      if (!error.errorCode && error.code) {
+        error.errorCode = error.code;
+      }
+      
+
       const finishedAt = new Date();
       
       const errorCode = error.code || error.errorCode || 'ACTION_EXECUTION_ERROR';
