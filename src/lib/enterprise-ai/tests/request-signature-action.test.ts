@@ -223,7 +223,7 @@ describe("RequestSignatureAction (Sprint 5.1)", () => {
     it("should run through the full secure pipeline", async () => {
       const validator = new ActionValidator();
       const guard = new PermissionGuard();
-      const executor = new ActionExecutor(validator, guard);
+      const executor = new ActionExecutor(ActionRegistry, validator, guard);
 
       getMockSupabase().single
         .mockResolvedValueOnce({ // Process check in validator
