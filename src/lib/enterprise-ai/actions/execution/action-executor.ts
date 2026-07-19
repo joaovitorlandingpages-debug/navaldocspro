@@ -68,7 +68,7 @@ export class ActionExecutor {
       }
 
       // 5. Execute
-      const result = await action.execute({ ...input, ...context });
+      const result = await action.execute({ ...input, ...context, input });
 
       const finishedAt = new Date();
       return {
