@@ -23,7 +23,7 @@ export class GeneratePdfAction implements AIAction {
     riskLevel: "LOW" as const,
     requiredPermissions: [AIPermission.PROCESS_READ, AIPermission.DOCUMENT_GENERATE],
     confirmationPolicy: ConfirmationPolicy.LOW,
-    dependencies: [],
+    dependencies: ["create-process"],
     retryPolicy: {
       maxRetries: 3,
       backoff: "exponential" as const
