@@ -159,8 +159,7 @@ export class ActionExecutor {
         ...input, 
         ...context, 
         ...confirmationMetadata, 
-        _user: user,
-        ...(idempotencyRecord?.process_id ? { processId: idempotencyRecord.process_id } : {})
+        _user: { id: authContext.userId }
       });
 
       // 6.1 Update Idempotency Record if success
