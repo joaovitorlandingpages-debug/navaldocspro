@@ -79,7 +79,7 @@ describe("Action Security & Validation (Sprint 4.2)", () => {
 
   it("should pass ActionValidator with full compliance", async () => {
     const action = new BaseStubAction("valid-action", "Valid", "Desc");
-    action.requiredPermissions = [AIPermission.PROCESS_READ];
+    action.metadata.requiredPermissions = [AIPermission.PROCESS_READ];
     ActionRegistry.register(action);
 
     const result = await validator.validate("valid-action", validContext);
