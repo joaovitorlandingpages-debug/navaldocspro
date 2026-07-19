@@ -54,7 +54,7 @@ export async function getProcessDocumentStats(processId: string): Promise<Docume
     .eq('process_type', process.process_type)
     .eq('is_active', true);
 
-  const requiredDocTypes = mappings?.map(m => m.document_type) || [];
+  const requiredDocTypes = (mappings as any[])?.map((m: any) => m.document_type) || [];
   const totalRequired = requiredDocTypes.length;
 
   // 2. Get actual uploads/generated docs
@@ -63,16 +63,17 @@ export async function getProcessDocumentStats(processId: string): Promise<Docume
     .select('*')
     .eq('process_id', processId);
 
-  const attachedDocTypes = new Set(uploads?.map(u => u.document_type));
+  const attachedDocTypes = new Set((uploads as any[])?.map((u: any) => u.document_type));
   const totalAttached = attachedDocTypes.size;
 
-  const totalApproved = uploads?.filter(u => u.status === 'approved').length || 0;
-  const totalPending = uploads?.filter(u => u.status === 'pending').length || 0;
+  const totalApproved = (uploads as any[])?.filter((u: any) => u.status === 'approved').length || 0;
+  const totalPending = (uploads as any[])?.filter((u: any) => u.status === 'pending').length || 0;
   
   // A document is blocking if it's required but missing or rejected
-  const totalBlocking = requiredDocTypes.filter(type => !attachedDocTypes.has(type)).length;
+  const totalBlocking = requiredDocTypes.filter((type: string) => !attachedDocTypes.has(type)).length;
 
   const percentage = totalRequired > 0 ? Math.round((totalAttached / totalRequired) * 100) : 0;
+
 
   return {
     totalRequired,
