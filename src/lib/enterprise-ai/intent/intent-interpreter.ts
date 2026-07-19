@@ -9,87 +9,48 @@ export class MockIntentProvider implements IntentProvider {
   async interpret(text: string): Promise<StructuredIntent> {
     const normalized = text.toLowerCase().trim();
     const intentId = crypto.randomUUID();
-    
-    // Basic pattern matching for the mock
-    if (normalized.includes("processo") && normalized.includes("assinatura")) {
-      return {
-        intentId,
-        originalText: text,
-        normalizedText: normalized,
-        intentType: "MULTI_ACTION",
-        entities: this.extractEntities(normalized),
-        confidence: 0.9,
-        requestedActions: ["create-process", "request-signature"],
-        warnings: [],
-        metadata: { provider: "mock" }
-      };
+    const actions = new Set<string>();
+    let intentType: import("./intent-types").IntentType = "UNKNOWN";
+    const warnings: string[] = [];
+
+    // Identification patterns
+    const hasProcess = normalized.includes("processo") || normalized.includes("cri");
+    const hasPdf = normalized.includes("pdf") || normalized.includes("doc");
+    const hasChecklist = normalized.includes("checklist");
+    const hasSignature = normalized.includes("assinatura") || normalized.includes("assina");
+
+    if (hasProcess) actions.add("create-process");
+    if (hasPdf) actions.add("generate-pdf");
+    if (hasChecklist) actions.add("complete-checklist");
+    if (hasSignature) actions.add("request-signature");
+
+    const requestedActions = Array.from(actions);
+
+    if (requestedActions.length > 1) {
+      intentType = "MULTI_ACTION";
+    } else if (hasProcess) {
+      intentType = "CREATE_PROCESS";
+    } else if (hasPdf) {
+      intentType = "GENERATE_PDF";
+    } else if (hasChecklist) {
+      intentType = "COMPLETE_CHECKLIST";
+    } else if (hasSignature) {
+      intentType = "REQUEST_SIGNATURE";
     }
 
-    if (normalized.includes("processo")) {
-      return {
-        intentId,
-        originalText: text,
-        normalizedText: normalized,
-        intentType: "CREATE_PROCESS",
-        entities: this.extractEntities(normalized),
-        confidence: 0.95,
-        requestedActions: ["create-process"],
-        warnings: [],
-        metadata: { provider: "mock" }
-      };
-    }
-
-    if (normalized.includes("pdf")) {
-      return {
-        intentId,
-        originalText: text,
-        normalizedText: normalized,
-        intentType: "GENERATE_PDF",
-        entities: {},
-        confidence: 0.85,
-        requestedActions: ["generate-pdf"],
-        warnings: [],
-        metadata: { provider: "mock" }
-      };
-    }
-
-    if (normalized.includes("checklist")) {
-      return {
-        intentId,
-        originalText: text,
-        normalizedText: normalized,
-        intentType: "COMPLETE_CHECKLIST",
-        entities: {},
-        confidence: 0.9,
-        requestedActions: ["complete-checklist"],
-        warnings: [],
-        metadata: { provider: "mock" }
-      };
-    }
-
-    if (normalized.includes("assinatura")) {
-      return {
-        intentId,
-        originalText: text,
-        normalizedText: normalized,
-        intentType: "REQUEST_SIGNATURE",
-        entities: {},
-        confidence: 0.9,
-        requestedActions: ["request-signature"],
-        warnings: [],
-        metadata: { provider: "mock" }
-      };
+    if (intentType === "UNKNOWN") {
+      warnings.push("Intenção não reconhecida");
     }
 
     return {
       intentId,
       originalText: text,
       normalizedText: normalized,
-      intentType: "UNKNOWN",
-      entities: {},
-      confidence: 0.3,
-      requestedActions: [],
-      warnings: ["Intenção não reconhecida"],
+      intentType,
+      entities: this.extractEntities(normalized),
+      confidence: requestedActions.length > 0 ? 0.9 : 0.3,
+      requestedActions,
+      warnings,
       metadata: { provider: "mock" }
     };
   }
