@@ -23,9 +23,8 @@ export class ActionEngine {
 
     const start = Date.now();
     try {
-      const result = await action.execute(context);
-      console.log(`ActionEngine.execute result for ${actionId}: success=${result?.success}, execId=${result?.executionId}`);
-      return result;
+      return await action.execute(context);
+
     } catch (error: any) {
       console.log(`ActionEngine.execute caught error for ${actionId}: ${error.message}`);
       return createActionResult({
