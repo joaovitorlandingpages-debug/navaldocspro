@@ -76,7 +76,7 @@ export async function getProcessDocumentStats(processId: string): Promise<Docume
   let totalOutdated = 0;
   if (uploads && mappings) {
     uploads.forEach((u: any) => {
-      const mapping = mappings.find(m => m.document_type === u.document_type);
+      const mapping = mappings.find((m: any) => m.document_type === u.document_type);
       if (mapping && mapping.template_version_id && u.template_version_id && u.template_version_id !== mapping.template_version_id) {
         totalOutdated++;
       }
