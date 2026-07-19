@@ -1,5 +1,11 @@
-import { AIResponse, AIRequest } from "../core/ai-types";
+import { AIResponse, AIRequest, AIIntent } from "../core/ai-types";
 import { ExecutionPlan } from "../planning/plan-types";
+
+export interface SuggestedAction {
+  label: string;
+  action: string;
+  path?: string;
+}
 
 export class ResponseBuilder {
   buildSuccess(
@@ -14,17 +20,21 @@ export class ResponseBuilder {
       answer,
       conversationId: request.conversationId || '',
       selectedAgent: 'process-specialist',
-      intent: plan.intent,
+      intent: plan.intent as AIIntent,
       plan: {
         id: plan.planId,
-        steps: plan.steps
+        steps: plan.steps.map(s => ({
+          id: s.id,
+          description: s.description,
+          status: s.status
+        }))
       },
       executedTools,
       references,
-      suggestedActions: this.deriveActions(plan.intent, references),
+      suggestedActions: this.deriveActions(plan.intent as AIIntent, references),
       warnings: plan.warnings,
       executionId: crypto.randomUUID(),
-      durationMs: 0, // Should be calculated
+      durationMs: 0,
       confidence: 1,
       contextUpdates,
       status: 'success'
@@ -49,14 +59,18 @@ export class ResponseBuilder {
     };
   }
 
-  private deriveActions(intent: string, references: any[]): string[] {
-    const actions: string[] = [];
+  private deriveActions(intent: AIIntent, references: any[]): SuggestedAction[] {
+    const actions: SuggestedAction[] = [];
     if (intent.includes('SEARCH') && references.length > 0) {
-      actions.push('Ver detalhes do primeiro');
+      actions.push({
+        label: 'Ver detalhes do primeiro',
+        action: 'PROCESS_DETAILS',
+        path: `/admin/process-center/${references[0].id}`
+      });
     }
     if (intent.includes('DETAILS')) {
-      actions.push('Ver análise de risco');
-      actions.push('Ver análise de saúde');
+      actions.push({ label: 'Ver análise de risco', action: 'PROCESS_RISK' });
+      actions.push({ label: 'Ver análise de saúde', action: 'PROCESS_HEALTH' });
     }
     return actions;
   }
