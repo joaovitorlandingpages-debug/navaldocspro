@@ -90,7 +90,9 @@ export const registerStubs = () => {
   // Register Real Actions
   ActionRegistry.register(new GeneratePdfAction());
   ActionRegistry.register(new RequestSignatureAction());
+  ActionRegistry.register(new CompleteChecklistAction());
   ActionRegistry.register(new CreateProcessAction());
+
 };
 
 
