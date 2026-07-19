@@ -152,6 +152,15 @@ export class ActionExecutor {
       // 6. Execute
       const result = await action.execute({ ...input, ...context, ...confirmationMetadata, input });
 
+      // 6.1 Update Idempotency Record if success
+      if (idempotencyRecordId && result.success) {
+        await idempotencyService.update(idempotencyRecordId, {
+          status: 'completed',
+          result: result.metadata,
+          processId: result.metadata?.processId
+        });
+      }
+
       const finishedAt = new Date();
       const durationMs = finishedAt.getTime() - startedAt.getTime();
 
