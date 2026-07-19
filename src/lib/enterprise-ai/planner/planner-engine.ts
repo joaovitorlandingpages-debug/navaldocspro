@@ -30,6 +30,7 @@ export class PlannerEngine {
     
     // 2. Intent Resolution (Declarative)
     const matchedActionIds = this.resolveIntent(request.intent);
+    const intentActions = actions.filter(a => matchedActionIds.includes(a.id));
     
     // 3. Step Generation
     const steps = this.generateSteps(matchedActionIds, actions);
