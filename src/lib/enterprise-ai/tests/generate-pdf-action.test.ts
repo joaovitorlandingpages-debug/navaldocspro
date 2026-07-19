@@ -47,6 +47,10 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
     const client = await import("@/integrations/supabase/client");
     const supabaseMock = client.supabase;
     supabaseMock.single.mockResolvedValue({ data: null, error: null });
+    
+    // Ensure action is registered for executor tests
+    ActionRegistry.clear();
+    ActionRegistry.register(action);
   });
 
   it("1. Metadata básico da Action", () => {
