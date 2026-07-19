@@ -317,13 +317,15 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
         "create-process",
         {
           customerId: mockCustomerId,
+          vesselId: "550e8400-e29b-41d4-a716-446655440222", // Fix Zod error: vesselId required
           processType: "Transferência",
-          processTypeId: mockTypeId, // Fix Zod error
-          confirmationToken: "mock-token", // Fix Zod error
+          processTypeId: mockTypeId, 
+          confirmationToken: "mock-token", 
           idempotencyKey: "retry-123"
         },
         securityContext
       );
+
 
       if (!result.success) {
         console.log("RECOVERY TEST FAIL:", result.errors, result.metadata);
