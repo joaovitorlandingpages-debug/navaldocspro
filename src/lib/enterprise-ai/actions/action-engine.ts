@@ -23,17 +23,20 @@ export class ActionEngine {
 
     const start = Date.now();
     try {
-      return await action.execute(context);
+      const result = await action.execute(context);
+      console.log(`ActionEngine.execute result for ${actionId}: success=${result?.success}, execId=${result?.executionId}`);
+      return result;
     } catch (error: any) {
+      console.log(`ActionEngine.execute caught error for ${actionId}: ${error.message}`);
       return createActionResult({
         success: false,
         status: ActionStatus.FAILED,
         message: error.message || "Unknown execution error",
         executionId: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'exec-' + Date.now(),
-
         duration: Date.now() - start,
       });
     }
+
   }
 }
 
