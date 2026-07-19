@@ -29,6 +29,8 @@ export interface DocumentStats {
   totalApproved: number;
   totalPending: number;
   totalBlocking: number;
+  totalRejected: number;
+  totalOutdated: number;
   percentage: number;
 }
 
@@ -68,12 +70,27 @@ export async function getProcessDocumentStats(processId: string): Promise<Docume
 
   const totalApproved = (uploads as any[])?.filter((u: any) => u.status === 'approved').length || 0;
   const totalPending = (uploads as any[])?.filter((u: any) => u.status === 'pending').length || 0;
+  const totalRejected = (uploads as any[])?.filter((u: any) => u.status === 'rejected').length || 0;
   
+  // A document is outdated if the upload's template_version_id != current mapping's template_version_id
+  let totalOutdated = 0;
+  if (uploads && mappings) {
+    uploads.forEach((u: any) => {
+      const mapping = mappings.find(m => m.document_type === u.document_type);
+      if (mapping && mapping.template_version_id && u.template_version_id && u.template_version_id !== mapping.template_version_id) {
+        totalOutdated++;
+      }
+    });
+  }
+
   // A document is blocking if it's required but missing or rejected
-  const totalBlocking = requiredDocTypes.filter((type: string) => !attachedDocTypes.has(type)).length;
+  const totalBlocking = requiredDocTypes.filter((type: string) => {
+    const isAttached = attachedDocTypes.has(type);
+    const isRejected = (uploads as any[])?.some((u: any) => u.document_type === type && u.status === 'rejected');
+    return !isAttached || isRejected;
+  }).length;
 
   const percentage = totalRequired > 0 ? Math.round((totalAttached / totalRequired) * 100) : 0;
-
 
   return {
     totalRequired,
@@ -81,6 +98,8 @@ export async function getProcessDocumentStats(processId: string): Promise<Docume
     totalApproved,
     totalPending,
     totalBlocking,
+    totalRejected,
+    totalOutdated,
     percentage
   };
 }

@@ -40,6 +40,38 @@ export class OperationalSuggestionEngine {
       });
     }
 
+    // Rule: Outdated template versions
+    if (stats.totalOutdated > 0) {
+      suggestions.push({
+        id: `outdated-template-${processId}`,
+        type: 'documentation',
+        priority: 'medium',
+        title: 'Modelos Desatualizados Detectados',
+        message: `Existem ${stats.totalOutdated} documentos usando versões antigas de modelos.`,
+        impact: 'Pode gerar exigência por uso de formulário obsoleto.',
+        reason: 'Uma nova versão do modelo foi publicada pelo Admin.',
+        resolutionPath: `/admin/process-center/${processId}?tab=documentos`,
+        dismissible: true,
+        blocker: false
+      });
+    }
+
+    // Rule: Rejected documents
+    if (stats.totalRejected > 0) {
+      suggestions.push({
+        id: `rejected-docs-${processId}`,
+        type: 'documentation',
+        priority: 'high',
+        title: 'Documentos Rejeitados',
+        message: `Existem ${stats.totalRejected} documentos que foram reprovados na revisão.`,
+        impact: 'Impede o avanço do processo.',
+        reason: 'O revisor identificou inconsistências no arquivo.',
+        resolutionPath: `/admin/process-center/${processId}?tab=documentos`,
+        dismissible: false,
+        blocker: true
+      });
+    }
+
     // --- REVIEW RULES ---
     if (stats.totalPending > 0) {
       suggestions.push({
