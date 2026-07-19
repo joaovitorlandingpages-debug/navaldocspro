@@ -112,6 +112,7 @@ import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
 import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
 import { Route as AdminBillingRouteImport } from './routes/admin/billing'
 import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
+import { Route as AdminProcessCenterIndexRouteImport } from './routes/admin/process-center.index'
 import { Route as AdminDocsCentralIndexRouteImport } from './routes/admin/docs-central/index'
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
@@ -649,6 +650,11 @@ const AdminAutomationRoute = AdminAutomationRouteImport.update({
   path: '/automation',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminProcessCenterIndexRoute = AdminProcessCenterIndexRouteImport.update({
+  id: '/process-center/',
+  path: '/process-center/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDocsCentralIndexRoute = AdminDocsCentralIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -863,6 +869,7 @@ export interface FileRoutesByFullPath {
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
+  '/admin/process-center/': typeof AdminProcessCenterIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -981,6 +988,7 @@ export interface FileRoutesByTo {
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/admin/docs-central': typeof AdminDocsCentralIndexRoute
+  '/admin/process-center': typeof AdminProcessCenterIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1104,6 +1112,7 @@ export interface FileRoutesById {
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
+  '/admin/process-center/': typeof AdminProcessCenterIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1228,6 +1237,7 @@ export interface FileRouteTypes {
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/admin/docs-central/'
+    | '/admin/process-center/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1346,6 +1356,7 @@ export interface FileRouteTypes {
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/admin/docs-central'
+    | '/admin/process-center'
   id:
     | '__root__'
     | '/'
@@ -1468,6 +1479,7 @@ export interface FileRouteTypes {
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/admin/docs-central/'
+    | '/admin/process-center/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2254,6 +2266,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/process-center/': {
+      id: '/admin/process-center/'
+      path: '/process-center'
+      fullPath: '/admin/process-center/'
+      preLoaderRoute: typeof AdminProcessCenterIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/docs-central/': {
       id: '/admin/docs-central/'
       path: '/'
@@ -2460,6 +2479,7 @@ interface AdminRouteChildren {
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminProcessCenterIdRoute: typeof AdminProcessCenterIdRoute
+  AdminProcessCenterIndexRoute: typeof AdminProcessCenterIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -2495,6 +2515,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminProcessCenterIdRoute: AdminProcessCenterIdRoute,
+  AdminProcessCenterIndexRoute: AdminProcessCenterIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

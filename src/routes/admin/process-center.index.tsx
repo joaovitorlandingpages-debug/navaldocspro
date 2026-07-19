@@ -63,7 +63,7 @@ function ProcessCenterListPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {processes?.map((process) => (
+          {processes?.map((process: any) => (
             <Card key={process.id} className="p-5 hover:border-slate-300 transition-all group">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-6">
