@@ -75,9 +75,11 @@ export class ActionExecutor {
 
         // Recovery: if record is recoverable_failed and has process_id, inject it into input
         if (record.status === 'recoverable_failed' && record.processId) {
+          console.log('ActionExecutor Recovery: Injecting processId', record.processId);
           input = { ...input, processId: record.processId };
         }
       }
+
 
       // 2. Audit Start (Enterprise Audit Logger Integration)
       try {
