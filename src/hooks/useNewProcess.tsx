@@ -43,7 +43,7 @@ export function NewProcessProvider({ children }: { children: React.ReactNode }) 
       <NewProcessChooserDialog
         isOpen={chooserOpen}
         onClose={() => setChooserOpen(false)}
-        onPickGuided={() => { setChooserOpen(false); setQuickOpen(true); }}
+        onPickGuided={() => { setChooserOpen(false); setWizard2Open(true); }}
         onPickUpload={() => { setChooserOpen(false); setUploadOpen(true); }}
       />
       <NewProcessQuickDialog
