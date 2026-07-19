@@ -261,6 +261,7 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
         {
           customerId: mockCustomerId,
           processType: "Transferência",
+          processTypeId: mockTypeId, // Fix Zod error
           idempotencyKey: "recovery-test"
         },
         securityContext
@@ -301,6 +302,7 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
         {
           customerId: mockCustomerId,
           processType: "Transferência",
+          processTypeId: mockTypeId, // Fix Zod error
           idempotencyKey: "retry-123"
         },
         securityContext

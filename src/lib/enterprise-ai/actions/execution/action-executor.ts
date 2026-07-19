@@ -164,7 +164,16 @@ export class ActionExecutor {
 
       console.log('ActionExecutor Execute Call:', { actionId, processId: inputWithContext.processId });
       
-      const result = await action.execute(inputWithContext);
+      let result;
+      try {
+        result = await action.execute(inputWithContext);
+      } catch (innerError: any) {
+        // RECOVERY: ensure errorCode and processId are correctly formatted for the final catch block
+        if (innerError.code && !innerError.errorCode) {
+          innerError.errorCode = innerError.code;
+        }
+        throw innerError;
+      }
 
       // 6.1 Update Idempotency Record if success
       if (idempotencyRecordId && result.success) {
