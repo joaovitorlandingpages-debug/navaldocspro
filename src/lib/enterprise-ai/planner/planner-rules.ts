@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ActionRiskLevel, ActionRiskLevelSchema, ExecutionStep } from "./planner-types";
+import { ActionRiskLevel, ActionRiskLevelSchema } from "./planner-types";
 import { ConfirmationPolicy } from "../actions/action-types";
 
 /**
@@ -59,8 +59,8 @@ export function calculateOverallRisk(steps: { actionId: string, riskLevel?: Acti
  * Default intent mapping rules
  */
 export const DEFAULT_INTENT_RULES: IntentRule[] = [
-  { intentKeywords: ["processo", "process", "criar processo"], actionId: "create-process" },
-  { intentKeywords: ["pdf", "documento", "gerar pdf"], actionId: "generate-pdf" },
-  { intentKeywords: ["checklist", "concluir checklist"], actionId: "complete-checklist" },
-  { intentKeywords: ["assinatura", "signature", "enviar assinatura"], actionId: "request-signature" },
+  { intentKeywords: ["processo", "process", "criar processo"], actionId: "create-process", priority: 1 },
+  { intentKeywords: ["pdf", "documento", "gerar pdf"], actionId: "generate-pdf", priority: 1 },
+  { intentKeywords: ["checklist", "concluir checklist"], actionId: "complete-checklist", priority: 1 },
+  { intentKeywords: ["assinatura", "signature", "enviar assinatura"], actionId: "request-signature", priority: 1 },
 ];
