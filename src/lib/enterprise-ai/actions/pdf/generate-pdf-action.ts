@@ -48,15 +48,14 @@ export class GeneratePdfAction implements AIAction {
     return { valid: true };
   }
 
-  async execute(context: { 
-    input: GeneratePdfInput; 
+  async execute(context: GeneratePdfInput & { 
     companyId: string; 
     userId: string; 
     executionId: string;
   }): Promise<ActionResult> {
     const startTime = Date.now();
-    const { processId, templateId, options } = context.input;
-    const { companyId, userId, executionId } = context;
+    const { processId, templateId, options, companyId, userId, executionId } = context;
+
 
     try {
       // 1. Buscar dados do processo e cliente para o branding
