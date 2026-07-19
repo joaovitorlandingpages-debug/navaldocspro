@@ -45,8 +45,11 @@ export class PlannerEngine {
     this.validateSteps(steps, request);
     this.detectCircularDependencies(steps);
 
-    const requiresConfirmation = steps.some(s => s.confirmationRequired);
-    const riskLevel = calculateOverallRisk(steps);
+    const requiresConfirmation = steps.some((s: ExecutionStep) => s.confirmationRequired);
+    const riskLevel = calculateOverallRisk(actions.filter(a => matchedActionIds.includes(a.id)).map(a => ({ 
+      actionId: a.id, 
+      riskLevel: a.metadata.riskLevel 
+    })));
 
     const plan: ExecutionPlan = {
       planId: uuidv4(),
@@ -75,76 +78,57 @@ export class PlannerEngine {
     }
   }
 
-  private mapIntentToSteps(request: PlannerRequest): ExecutionStep[] {
-    const steps: ExecutionStep[] = [];
-    const intent = request.intent.toLowerCase();
-
-    // Mock logic for mapping intent to predefined actions
-    // In Fase 2, this will be dynamic.
+  private resolveIntent(intent: string): string[] {
+    const normalized = intent.toLowerCase();
+    const matches = DEFAULT_INTENT_RULES
+      .filter(rule => rule.intentKeywords.some(kw => normalized.includes(kw.toLowerCase())))
+      .sort((a, b) => b.priority - a.priority);
     
-    let lastStepId: string | null = null;
+    return Array.from(new Set(matches.map(m => m.actionId)));
+  }
 
-    if (intent.includes("processo") || intent.includes("process")) {
-      const stepId = uuidv4();
-      steps.push(this.createStep("create-process", stepId, []));
-      lastStepId = stepId;
-    }
+  private generateSteps(matchedActionIds: string[], availableActions: import("../actions/action-types").AIAction[]): ExecutionStep[] {
+    const steps: ExecutionStep[] = [];
+    const stepIdMap = new Map<string, string>(); // actionId -> stepId
+    
+    // 1. Create IDs for all matched actions
+    matchedActionIds.forEach(id => {
+      stepIdMap.set(id, uuidv4());
+    });
 
-    if (intent.includes("pdf") || intent.includes("documento")) {
-      const stepId = uuidv4();
-      steps.push(this.createStep("generate-pdf", stepId, lastStepId ? [lastStepId] : []));
-      lastStepId = stepId;
-    }
+    // 2. Build steps
+    matchedActionIds.forEach(actionId => {
+      const action = availableActions.find(a => a.id === actionId);
+      if (!action) return;
 
-    if (intent.includes("checklist")) {
-      const stepId = uuidv4();
-      steps.push(this.createStep("complete-checklist", stepId, lastStepId ? [lastStepId] : []));
-      lastStepId = stepId;
-    }
+      const stepId = stepIdMap.get(actionId)!;
+      const dependencies = action.metadata.dependencies
+        .map(depActionId => stepIdMap.get(depActionId))
+        .filter((sid): sid is string => !!sid);
 
-    if (intent.includes("assinatura") || intent.includes("signature")) {
-      const stepId = uuidv4();
-      steps.push(this.createStep("request-signature", stepId, lastStepId ? [lastStepId] : []));
-      lastStepId = stepId;
-    }
+      steps.push({
+        stepId,
+        actionId,
+        dependsOn: dependencies,
+        status: "PENDING",
+        requiredPermissions: action.metadata.requiredPermissions,
+        confirmationRequired: action.metadata.confirmationPolicy !== ConfirmationPolicy.NONE,
+        estimatedDuration: action.metadata.estimatedDuration,
+        input: {},
+      });
+    });
+
+    this.validateSteps(steps);
+    this.detectCircularDependencies(steps);
 
     return steps;
   }
 
-  private createStep(actionId: string, stepId: string, dependsOn: string[]): ExecutionStep {
-    const permissions = RequiredPermissions[actionId] || [];
+  private validateSteps(steps: ExecutionStep[]) {
+    const stepIds = new Set(steps.map(s => s.stepId));
     
-    // For simulation, signature and process creation require confirmation
-    const confirmationRequired = ["create-process", "request-signature"].includes(actionId);
-
-    return {
-      stepId,
-      actionId,
-      dependsOn,
-      status: "PENDING",
-      requiredPermissions: permissions,
-      confirmationRequired,
-      estimatedDuration: 30,
-      input: {}, // Will be populated by LLM/mapping in later phases
-    };
-  }
-
-  private validateSteps(steps: ExecutionStep[], request: PlannerRequest) {
-    const userPermissions = new Set(request.context.permissions);
-
     for (const step of steps) {
-      // 1. Validate permissions
-      for (const perm of step.requiredPermissions) {
-        if (!userPermissions.has(perm)) {
-          throw new PlannerError(
-            PlannerErrorCodes.PERMISSION_DENIED,
-            `Missing required permission: ${perm} for action: ${step.actionId}`
-          );
-        }
-      }
-
-      // 2. Validate dependencies exist in the same plan
-      const stepIds = new Set(steps.map(s => s.stepId));
+      // Validate dependencies exist in the same plan
       for (const depId of step.dependsOn) {
         if (!stepIds.has(depId)) {
           throw new PlannerError(
@@ -189,4 +173,5 @@ export class PlannerEngine {
       }
     }
   }
+}
 }
