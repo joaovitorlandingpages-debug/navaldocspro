@@ -16,7 +16,7 @@ describe("Multi-Action Planner - Sprint 5.3.1 (Dynamic Discovery)", () => {
       AIPermission.PROCESS_CREATE, 
       AIPermission.PROCESS_READ,
       AIPermission.DOCUMENT_GENERATE,
-      AIPermission.SIGNATURE_REQUEST,
+      AIPermission.SIGNATURE_CREATE,
       AIPermission.CHECKLIST_UPDATE
     ],
     isAuthenticated: true
