@@ -60,7 +60,7 @@ export class PlannerEngine {
 
     const plan: ExecutionPlan = {
       planId: uuidv4(),
-      intent: request.intent,
+      intent: intentText,
       steps,
       riskLevel,
       estimatedActions: steps.length,
@@ -70,16 +70,22 @@ export class PlannerEngine {
       userId: request.context.userId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      metadata: {},
+      metadata: typeof request.intent === "object" ? { structuredIntent: request.intent } : {},
     };
 
     return ExecutionPlanSchema.parse(plan);
   }
 
   private validateRequest(request: PlannerRequest) {
-    if (!request.intent || request.intent.trim().length === 0) {
+    const intent = request.intent;
+    if (!intent) {
       throw new PlannerError(PlannerErrorCodes.INVALID_INTENT, "Intent is required");
     }
+    
+    if (typeof intent === "string" && intent.trim().length === 0) {
+      throw new PlannerError(PlannerErrorCodes.INVALID_INTENT, "Intent text cannot be empty");
+    }
+    
     if (!request.context.userId || !request.context.companyId) {
       throw new PlannerError(PlannerErrorCodes.INVALID_TENANT, "User and Company context are required");
     }
