@@ -6,8 +6,17 @@ import { ProcessRiskEngine } from "../engines/ProcessRiskEngine";
 
 export const processCenterKeys = {
   all: ['process-center'] as const,
-  detail: (id: string) => [...processCenterKeys.all, 'detail', id] as const,
+  details: () => [...processCenterKeys.all, 'detail'] as const,
+  detail: (id: string) => [...processCenterKeys.details(), id] as const,
   metrics: (id: string) => [...processCenterKeys.all, 'metrics', id] as const,
+  health: (id: string) => [...processCenterKeys.all, 'health', id] as const,
+  risk: (id: string) => [...processCenterKeys.all, 'risk', id] as const,
+  suggestions: (id: string) => [...processCenterKeys.all, 'suggestions', id] as const,
+  timeline: (id: string) => [...processCenterKeys.all, 'timeline', id] as const,
+  documents: (id: string) => [...processCenterKeys.all, 'documents', id] as const,
+  checklist: (id: string) => [...processCenterKeys.all, 'checklist', id] as const,
+  ocr: (id: string) => [...processCenterKeys.all, 'ocr', id] as const,
+  signatures: (id: string) => [...processCenterKeys.all, 'signatures', id] as const,
 };
 
 /**
