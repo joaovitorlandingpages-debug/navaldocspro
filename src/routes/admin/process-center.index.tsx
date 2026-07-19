@@ -162,6 +162,472 @@ function ProcessCenterListPage() {
           ))}
         </div>
       )}
+      <div id="ts-visual-edit-probe-71670d0bd4194615" className="hidden whitespace-pre-wrap">HOMOLOGAÇÃO FINAL — ENTERPRISE PROCESS CENTER v1.1
+
+A arquitetura dos motores foi aprovada.
+
+Não faça outra reconstrução do Process Risk Engine, Process Health Engine ou Operational Suggestion Engine, exceto se os testes encontrarem defeitos reais.
+
+O status atual é:
+
+- PASS técnico da arquitetura;
+- PASS PARCIAL do Gate Final;
+- homologação funcional, segurança, responsividade e performance ainda pendentes.
+
+O objetivo desta etapa é apenas provar, com execução real e evidências permanentes, que o Enterprise Process Center está pronto para produção.
+
+==================================================
+1. NÃO DECLARAR PASS POR EXISTÊNCIA DE ARQUIVOS
+==================================================
+
+Não considerar concluído apenas porque existem:
+
+- engines;
+- hooks;
+- testes;
+- componentes;
+- pasta de evidências.
+
+Executar os fluxos reais.
+
+O relatório final deve diferenciar claramente:
+
+- criado;
+- integrado;
+- executado;
+- aprovado;
+- não executado;
+- bloqueado pelo ambiente.
+
+==================================================
+2. BUILD
+==================================================
+
+Executar o build completo de produção.
+
+Registrar:
+
+- comando utilizado;
+- resultado;
+- duração;
+- warnings;
+- erros;
+- tamanho do bundle da rota do Process Center, quando a ferramenta permitir.
+
+Verificar:
+
+- imports quebrados;
+- rotas inválidas;
+- chunks excessivos;
+- dependências circulares;
+- warnings relevantes.
+
+Build não executado impede PASS definitivo.
+
+==================================================
+3. TESTES UNITÁRIOS
+==================================================
+
+Listar os 15 testes existentes individualmente.
+
+Para cada teste, informar:
+
+- arquivo;
+- nome;
+- cenário;
+- resultado.
+
+Confirmar cobertura real de:
+
+ProcessRiskEngine:
+- not_evaluated;
+- low;
+- medium;
+- high;
+- critical;
+- documento obrigatório futuro;
+- documento aplicável à etapa atual;
+- documento dispensado;
+- ausência de double counting;
+- sinais positivos;
+- fatores explicáveis.
+
+ProcessHealthEngine:
+- pesos somando 100;
+- sete dimensões;
+- dimensão sem dados;
+- score 0;
+- score 100;
+- processo saudável;
+- processo crítico;
+- processo finalizado.
+
+OperationalSuggestionEngine:
+- criação de sugestão;
+- desaparecimento após resolução;
+- ausência de duplicatas;
+- ordenação;
+- blocker;
+- resolutionPath;
+- cliente incompleto;
+- embarcação incompleta;
+- documento rejeitado;
+- documento vencido;
+- template desatualizado.
+
+Caso os 15 testes atuais não cubram esses cenários, ampliar a suíte.
+
+Não aumentar quantidade artificialmente com testes irrelevantes.
+
+==================================================
+4. TESTES DE INTEGRAÇÃO
+==================================================
+
+Executar testes reais provando:
+
+1. Alterar documento atualiza métricas.
+2. Alterar documento atualiza Health Score.
+3. Alterar documento atualiza Risk Report.
+4. Criar pendência gera sugestão.
+5. Resolver pendência remove sugestão.
+6. Criar assinatura atualiza painel.
+7. Finalizar revisão atualiza timeline.
+8. Mutation invalida somente as query keys necessárias.
+9. Falha de mutation não deixa interface em estado falso.
+10. Refresh mantém a tab da URL.
+
+Registrar quais queries foram invalidadas em cada ação.
+
+==================================================
+5. PLAYWRIGHT OBRIGATÓRIO
+==================================================
+
+Executar Playwright sem skip silencioso.
+
+Criar seeds controlados para:
+
+A. processo vazio;
+B. processo inicial;
+C. processo parcial;
+D. processo saudável;
+E. processo crítico;
+F. processo com documento futuro ainda não aplicável;
+G. processo com documento dispensado;
+H. processo com OCR baixo;
+I. processo com assinatura expirada;
+J. processo com checklist bloqueante;
+K. processo pronto para finalizar;
+L. processo finalizado.
+
+Validar:
+
+- abertura do Process Center;
+- métricas;
+- Health Score;
+- risco;
+- causas;
+- sinais positivos;
+- sugestões;
+- resolutionPath;
+- cards;
+- sidebar;
+- tabs;
+- refresh;
+- histórico do navegador;
+- estados vazios;
+- erros;
+- loading;
+- retry;
+- ações principais.
+
+Capturar screenshot de cada cenário relevante.
+
+==================================================
+6. AÇÕES REAIS
+==================================================
+
+Validar, pela interface:
+
+- Editar processo;
+- adicionar documento;
+- abrir documento;
+- solicitar assinatura;
+- enviar para revisão;
+- resolver sugestão;
+- abrir checklist;
+- acessar OCR;
+- abrir timeline;
+- pesquisar dentro do processo.
+
+Para cada ação:
+
+- confirmar que o botão possui comportamento real;
+- confirmar loading;
+- confirmar disabled;
+- confirmar erro;
+- confirmar sucesso;
+- confirmar auditoria;
+- confirmar invalidação.
+
+Nenhum botão decorativo é permitido.
+
+==================================================
+7. RESPONSIVIDADE
+==================================================
+
+Executar Playwright em:
+
+Desktop:
+- 1440×900;
+- 1920×1080.
+
+Tablet:
+- 768×1024.
+
+Mobile:
+- 390×844;
+- 360×800.
+
+Validar:
+
+- sidebar;
+- header;
+- cards;
+- ações rápidas;
+- textos;
+- overflow;
+- modais;
+- tabelas;
+- timeline;
+- área de sugestões.
+
+Não considerar responsivo apenas porque usa classes md/lg.
+
+Verificar funcionamento real em cada viewport.
+
+==================================================
+8. CROSS-TENANT
+==================================================
+
+Executar com JWTs reais de QA A e QA B.
+
+Cenários:
+
+- QA A acessa processo próprio;
+- QA B acessa processo próprio;
+- QA A tenta acessar processId da QA B pela URL;
+- QA A tenta consultar métricas da QA B;
+- QA A tenta consultar Health da QA B;
+- QA A tenta consultar Risk da QA B;
+- QA A tenta consultar sugestões da QA B;
+- QA A tenta consultar timeline da QA B;
+- QA A tenta consultar documentos da QA B;
+- QA A tenta executar mutation na QA B;
+- QA B tenta o equivalente na QA A.
+
+Resultado obrigatório:
+
+- zero vazamento;
+- zero alteração;
+- erro ou resposta segura;
+- nenhuma informação sensível em mensagem de erro.
+
+==================================================
+9. RED TEAM
+==================================================
+
+Executar Red Team ético no ambiente QA.
+
+Testar:
+
+- manipulação direta de processId;
+- manipulação de company_id;
+- alteração do parâmetro tab;
+- chamadas Data API fora da interface;
+- mutation sem papel;
+- acesso anônimo;
+- acesso com token expirado;
+- processo finalizado;
+- tentativa de editar documento finalizado;
+- tentativa de criar assinatura em tenant alheio;
+- tentativa de consultar timeline alheia;
+- tentativa de inferir existência do processo por diferenças de resposta.
+
+Classificar achados:
+
+- P0;
+- P1;
+- P2;
+- P3.
+
+Corrigir qualquer P0/P1 antes de prosseguir.
+
+==================================================
+10. PROCESSO FINALIZADO
+==================================================
+
+Validar que processo finalizado continua imutável.
+
+Testar:
+
+- editar processo;
+- anexar documento;
+- alterar checklist;
+- executar OCR;
+- criar assinatura;
+- adicionar participante;
+- modificar documento gerado;
+- alterar status;
+- usar ação rápida do Process Center;
+- chamar a API diretamente.
+
+O frontend deve bloquear, mas a proteção definitiva deve existir no backend/banco.
+
+==================================================
+11. ANÔNIMO E PERMISSÕES
+==================================================
+
+Sem JWT:
+
+- zero processo;
+- zero métricas;
+- zero Health;
+- zero Risk;
+- zero sugestões;
+- zero timeline;
+- zero documentos.
+
+Usuário autenticado sem papel suficiente:
+
+- pode visualizar somente o que sua função permite;
+- não pode revisar;
+- não pode finalizar;
+- não pode alterar configurações;
+- não pode executar ações administrativas.
+
+Registrar respostas reais.
+
+==================================================
+12. PERFORMANCE
+==================================================
+
+Medir de forma concreta:
+
+- número de requests ao abrir a rota;
+- número de queries únicas;
+- queries duplicadas;
+- tempo até os dados principais;
+- tempo até a tela interativa;
+- quantidade de renders dos componentes principais;
+- bundle da rota;
+- chamadas causadas ao trocar de tab;
+- chamadas após mutation;
+- polling ativo;
+- waterfalls;
+- N+1.
+
+Entregar uma tabela:
+
+Métrica | Resultado | Meta | Status
+
+Exemplos de metas:
+
+- zero N+1;
+- zero query duplicada equivalente;
+- zero refetch global após mutation;
+- lazy loading nas áreas pesadas;
+- sem polling quando não necessário;
+- cards principais carregados sem depender de abas pesadas.
+
+Se EXPLAIN não estiver disponível, declarar a limitação.
+
+Não substituir métricas por expressões como “otimizado” ou “alta performance”.
+
+==================================================
+13. EVIDÊNCIAS PERMANENTES
+==================================================
+
+Salvar em:
+
+tests/evidence/process-center-final/
+
+Estrutura mínima:
+
+/unit
+/integration
+/playwright
+/responsive
+/cross-tenant
+/red-team
+/performance
+/build
+
+Incluir:
+
+- logs;
+- screenshots;
+- resultados;
+- comandos;
+- data da execução;
+- ambiente;
+- limitações.
+
+Não salvar tokens, senhas ou credenciais.
+
+==================================================
+14. RELATÓRIO FINAL
+==================================================
+
+Entregar:
+
+1. Build.
+2. Typecheck.
+3. Lista individual dos testes unitários.
+4. Testes de integração.
+5. Playwright.
+6. Responsividade.
+7. Cross-tenant.
+8. Red Team.
+9. Processo finalizado.
+10. Anônimo e permissões.
+11. Performance.
+12. Vulnerabilidades encontradas.
+13. Correções aplicadas.
+14. Evidências.
+15. Limitações.
+16. Veredito.
+
+==================================================
+15. VEREDITO
+==================================================
+
+PASS DEFINITIVO somente quando:
+
+- Build passar;
+- Typecheck passar;
+- Unit passar;
+- Integração passar;
+- Playwright passar;
+- responsividade for validada;
+- cross-tenant passar;
+- Red Team não possuir P0/P1 aberto;
+- processo finalizado permanecer imutável;
+- métricas de performance forem entregues;
+- não houver dados mockados;
+- não houver botões decorativos.
+
+PASS PARCIAL quando qualquer etapa obrigatória não for executada.
+
+FAIL quando houver:
+
+- vazamento entre tenants;
+- mutation indevida;
+- regressão;
+- dado falso;
+- quebra de imutabilidade;
+- P0/P1 aberto.
+
+Não iniciar outro módulo antes desta homologação.</div>
     </div>
   );
 }
