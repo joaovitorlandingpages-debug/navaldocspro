@@ -132,7 +132,6 @@ export class CreateProcessAction implements AIAction {
       } catch (e: any) {
         throw new ProcessCreationError(e.message || "Blueprint materialization failed", 'MATERIALIZATION_FAILED');
       }
-      }
 
       // 3. Confirm Visibility & Notify
       try {
