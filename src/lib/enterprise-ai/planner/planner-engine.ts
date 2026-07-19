@@ -82,6 +82,23 @@ export class PlannerEngine {
     }
   }
 
+  private expandDependencies(actionIds: string[], availableActions: import("../actions/action-types").AIAction[]): string[] {
+    const result = new Set<string>(actionIds);
+    let size: number;
+    
+    do {
+      size = result.size;
+      for (const id of Array.from(result)) {
+        const action = availableActions.find(a => a.id === id);
+        if (action) {
+          action.metadata.dependencies.forEach(depId => result.add(depId));
+        }
+      }
+    } while (result.size > size);
+    
+    return Array.from(result);
+  }
+
   private resolveIntent(intent: string): string[] {
     const normalized = intent.toLowerCase();
     const matches = DEFAULT_INTENT_RULES
