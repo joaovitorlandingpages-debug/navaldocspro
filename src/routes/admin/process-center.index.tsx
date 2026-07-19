@@ -162,288 +162,624 @@ function ProcessCenterListPage() {
           ))}
         </div>
       )}
-      <div id="ts-visual-edit-probe-50b5e3f5db534859" className="hidden whitespace-pre-wrap">ENTERPRISE AI COMMAND CENTER
+      <div id="ts-visual-edit-probe-2e6aca282bec4b3e" className="hidden whitespace-pre-wrap">EXECUÇÃO REAL OBRIGATÓRIA
+ENTERPRISE AI COMMAND CENTER
 
-SPRINT 2 — ENTERPRISE TOOL INTELLIGENCE
+SPRINTS 1 E 2 — FUNDAÇÃO TÉCNICA E TOOL INTELLIGENCE
 
-A camada de orquestração já existe.
+ATENÇÃO
 
-Agora transformar o EACC em um verdadeiro agente operacional.
+As respostas anteriores apenas alteraram textos visuais do arquivo:
 
-NÃO criar um chatbot simples.
+src/routes/admin/process-center.index.tsx
 
-Criar um sistema de ferramentas inteligentes.
+Isso NÃO representa implementação do Enterprise AI Command Center.
+
+A partir desta mensagem:
+
+- NÃO atualizar textos do probe;
+- NÃO substituir títulos da página;
+- NÃO criar apenas componentes demonstrativos;
+- NÃO apresentar arquitetura fictícia;
+- NÃO declarar funcionalidades sem código executável;
+- NÃO avançar para outro sprint antes de concluir esta implementação.
+
+O objetivo agora é implementar código funcional, integrado à aplicação e aos dados reais.
 
 ==================================================
-OBJETIVO
+ETAPA 0 — AUDITORIA DO QUE EXISTE
 ==================================================
 
-Toda resposta da IA deve ser construída utilizando ferramentas reais.
+Antes de criar arquivos, verificar no projeto se já existem:
 
-A IA nunca deve inventar informações.
+- módulos de IA;
+- providers de LLM;
+- Edge Functions de IA;
+- ferramentas operacionais;
+- tabelas de conversas;
+- logs de IA;
+- sistema de permissões;
+- funções de consulta de processos;
+- mecanismos de auditoria;
+- feature flags relacionadas à IA.
 
-Ela somente responderá utilizando dados obtidos pelas ferramentas.
+Reutilizar estruturas válidas e evitar duplicação.
+
+Entregar no relatório:
+
+- arquivos encontrados;
+- recursos reutilizados;
+- lacunas reais identificadas.
+
+Não parar após esse inventário.
+
+Prosseguir imediatamente para a implementação.
 
 ==================================================
-TOOL REGISTRY
+ETAPA 1 — ESTRUTURA REAL DO EACC
 ==================================================
 
-Criar um Tool Registry Enterprise.
+Criar uma estrutura modular semelhante a:
 
-Cada ferramenta deve possuir:
+src/lib/enterprise-ai/
+  core/
+    ai-orchestrator.ts
+    ai-types.ts
+    ai-errors.ts
+    execution-context.ts
+  agents/
+    agent-registry.ts
+    process-specialist.agent.ts
+    documentation-specialist.agent.ts
+    risk-specialist.agent.ts
+    operations-specialist.agent.ts
+    management-specialist.agent.ts
+  tools/
+    tool-registry.ts
+    tool-executor.ts
+    tool-types.ts
+    tool-permission-guard.ts
+    tool-cache.ts
+    tool-retry.ts
+    process/
+    documents/
+    customers/
+    vessels/
+    ocr/
+    signatures/
+    management/
+  context/
+    conversation-context-engine.ts
+    context-summarizer.ts
+    entity-reference-resolver.ts
+  providers/
+    ai-provider.ts
+    mock-provider.ts
+  prompts/
+    prompt-builder.ts
+  audit/
+    ai-audit-service.ts
+
+A estrutura pode ser ajustada à arquitetura atual, mas precisa manter separação clara de responsabilidades.
+
+==================================================
+ETAPA 2 — AI ORCHESTRATOR FUNCIONAL
+==================================================
+
+Implementar AIOrchestrator real.
+
+Entrada mínima:
+
+- userId
+- companyId
+- role
+- mensagem
+- conversationId opcional
+- idioma
+- contexto de entidade opcional
+
+Fluxo obrigatório:
+
+1. validar autenticação;
+2. resolver tenant;
+3. validar permissões;
+4. classificar intenção;
+5. selecionar agente;
+6. determinar ferramentas necessárias;
+7. executar ferramentas;
+8. montar contexto permitido;
+9. chamar AIProvider;
+10. validar resposta;
+11. registrar auditoria;
+12. retornar resultado estruturado.
+
+O resultado deve conter:
+
+- answer
+- selectedAgent
+- executedTools
+- references
+- suggestedActions
+- warnings
+- executionId
+- durationMs
+
+Não permitir que o frontend forneça um companyId arbitrário sem validação contra a sessão autenticada.
+
+==================================================
+ETAPA 3 — AGENT REGISTRY
+==================================================
+
+Implementar registro extensível de agentes.
+
+Cada agente deve possuir:
 
 - id
-- nome
-- categoria
-- descrição
-- schema
-- parâmetros
-- validação
-- permissões
-- timeout
-- cache
-- auditoria
-- tratamento de erro
-- custo estimado
-- prioridade
+- name
+- description
+- supportedIntents
+- allowedTools
+- requiredPermissions
+- systemInstructions
+- maxToolExecutions
+
+Criar inicialmente:
+
+- process-specialist
+- documentation-specialist
+- risk-specialist
+- operations-specialist
+- management-specialist
+
+Os agentes devem controlar somente seleção, ferramentas permitidas e instruções.
+
+Eles não podem consultar o banco diretamente.
 
 ==================================================
-PROCESS TOOLS
+ETAPA 4 — TOOL REGISTRY E TOOL EXECUTOR
 ==================================================
 
-Criar ferramentas para:
+Implementar Tool Registry real.
 
-searchProcesses()
+Contrato obrigatório de ferramenta:
 
-getProcess()
+- id
+- category
+- description
+- inputSchema
+- outputSchema
+- requiredPermissions
+- cachePolicy
+- timeoutMs
+- retryPolicy
+- execute()
 
-getProcessTimeline()
+Usar validação de schema, preferencialmente Zod se já estiver presente no projeto.
 
-getHealthScore()
+Implementar ToolExecutor with:
 
-getRiskReport()
+- validação dos parâmetros;
+- permission guard;
+- tenant guard;
+- timeout;
+- retry somente em falhas transitórias;
+- cache quando permitido;
+- auditoria;
+- erros tipados;
+- retorno padronizado.
 
-listBlockingIssues()
+Toda ferramenta deve receber companyId derivado do contexto autorizado.
 
-listPendingDocuments()
-
-listExpiredDocuments()
-
-listProcessesByCustomer()
-
-listProcessesByVessel()
-
-listProcessesReadyToFinalize()
-
-==================================================
-DOCUMENT TOOLS
-==================================================
-
-Criar ferramentas:
-
-searchDocuments()
-
-getDocument()
-
-compareDocumentVersions()
-
-findRejectedDocuments()
-
-findExpiredDocuments()
-
-findMissingDocuments()
-
-generateDocument()
+Nunca confiar em companyId informado pelo modelo ou pelo navegador.
 
 ==================================================
-CUSTOMER TOOLS
+ETAPA 5 — FERRAMENTAS REAIS DA PRIMEIRA ENTREGA
 ==================================================
 
-searchCustomers()
+Nesta rodada, implementar e integrar pelo menos estas ferramentas:
 
-getCustomer()
+PROCESSOS
 
-findCustomersWithoutDocumentation()
+1. searchProcesses
+2. getProcess
+3. getProcessTimeline
+4. getProcessHealth
+5. getProcessRisk
+6. listPendingProcessDocuments
+7. listBlockingProcessIssues
+8. listProcessesReadyToFinalize
+9. listStaleProcesses
 
-findInactiveCustomers()
+DOCUMENTOS
 
-==================================================
-VESSEL TOOLS
-==================================================
+10. searchDocuments
+11. getDocument
+12. listExpiredDocuments
+13. listRejectedDocuments
+14. listMissingDocuments
 
-searchVessels()
+CLIENTES E EMBARCAÇÕES
 
-getVessel()
+15. searchCustomers
+16. getCustomer
+17. searchVessels
+18. getVessel
+19. listExpiredVesselCertificates
 
-findExpiredCertificates()
+OCR E ASSINATURAS
 
-findIncompleteVessels()
+20. listPendingOCR
+21. listFailedOCR
+22. listLowConfidenceOCR
+23. listPendingSignatures
+24. listExpiredSignatureRequests
 
-==================================================
-OCR TOOLS
-==================================================
+GESTÃO
 
-listOCRPending()
+25. getCompanyOperationalSummary
+26. getProcessKPIs
+27. getSLAReport
 
-findOCRFailures()
+Não criar respostas mockadas.
 
-findLowConfidenceOCR()
+Cada ferramenta deve consultar tabelas, RPCs ou serviços reais já existentes no NavalDocs Pro.
 
-==================================================
-SIGNATURE TOOLS
-==================================================
+Quando determinado recurso ainda não existir no banco, retornar estado explícito:
 
-listPendingSignatures()
+- unavailable
+- not_configured
+- insufficient_data
 
-findExpiredSignatures()
-
-requestSignature()
-
-==================================================
-MANAGEMENT TOOLS
-==================================================
-
-companyMetrics()
-
-processKPIs()
-
-operatorRanking()
-
-slaReport()
-
-dashboardSummary()
-
-==================================================
-ACTION TOOLS
-==================================================
-
-Todas as ações devem exigir confirmação.
-
-Exemplo:
-
-generateDocument()
-
-createChecklist()
-
-requestSignature()
-
-sendReminder()
-
-openProcess()
-
-createComment()
+Nunca inventar valores.
 
 ==================================================
-TOOL EXECUTION ENGINE
+ETAPA 6 — SEGURANÇA MULTI-TENANT
 ==================================================
 
-Criar um motor responsável por:
+Todas as consultas devem respeitar:
 
-- validar parâmetros
-- validar permissões
-- executar ferramentas
-- combinar resultados
-- tratar erros
-- registrar auditoria
-- retornar contexto para IA
+- autenticação;
+- company_id;
+- RLS;
+- role;
+- permissões;
+- ownership quando aplicável.
 
-==================================================
-MULTI TOOL EXECUTION
-==================================================
+Não utilizar Service Role no navegador.
 
-Permitir execução de várias ferramentas.
+Caso seja necessária uma Edge Function:
 
-Exemplo:
+- validar JWT;
+- resolver usuário no servidor;
+- resolver empresa autorizada no servidor;
+- validar papel/permissão;
+- usar Service Role somente internamente;
+- filtrar obrigatoriamente pelo tenant;
+- não aceitar autorização baseada apenas em campos enviados pelo cliente.
 
-Pergunta:
+Criar testes negativos garantindo que:
 
-"Quais processos críticos vencem amanhã e possuem documentos pendentes?"
-
-A IA poderá utilizar:
-
-searchProcesses()
-
-getRiskReport()
-
-listPendingDocuments()
-
-==================================================
-RETRY
-==================================================
-
-Criar política de retry.
-
-Não repetir chamadas desnecessárias.
-
-Registrar:
-
-- tentativa
-- erro
-- duração
+- usuário da empresa A não leia dados da empresa B;
+- operador sem permissão não acesse métricas gerenciais;
+- usuário desautenticado seja bloqueado;
+- ferramenta fora da allowlist do agente seja bloqueada;
+- parâmetros contendo companyId adulterado sejam ignorados ou rejeitados.
 
 ==================================================
-CACHE
+ETAPA 7 — PROVIDER ABSTRACTION
 ==================================================
 
-Ferramentas devem informar:
+Criar interface AIProvider.
 
-cacheable
+Métodos mínimos:
 
-ttl
+- generateResponse()
+- classifyIntent()
+- healthCheck()
 
-invalidateKeys
+Implementar MockProvider funcional para testes.
 
-==================================================
-AUDITORIA
-==================================================
+Não é obrigatório integrar uma API paga nesta rodada.
 
-Registrar:
+O sistema deve funcionar em modo de teste sem chave externa.
 
-- usuário
-- tenant
-- pergunta
-- ferramentas utilizadas
-- parâmetros
-- duração
-- resultado
-- falhas
+Preparar adapters para providers futuros sem incluir chaves no código.
+
+Segredos devem existir somente no ambiente seguro do backend.
 
 ==================================================
-PERFORMANCE
+ETAPA 8 — CONTEXTO CONVERSACIONAL
 ==================================================
 
-Evitar consultas completas.
+Implementar contexto mínimo funcional:
 
-Usar:
+- conversationId;
+- histórico limitado;
+- resumo de mensagens antigas;
+- referências a processo, cliente, embarcação ou documento;
+- resolução de expressões como:
+  - “o primeiro”
+  - “esse processo”
+  - “o cliente dele”
+  - “abra esse documento”
 
-- paginação
-- filtros
-- lazy execution
-- paralelismo quando seguro
+Não enviar todo o histórico indefinidamente.
+
+Aplicar limite de tamanho e resumo.
 
 ==================================================
-TESTES
+ETAPA 9 — PERSISTÊNCIA E AUDITORIA
 ==================================================
+
+Criar migrations somente se estruturas equivalentes ainda não existirem.
+
+Tabelas sugeridas:
+
+ai_conversations
+
+- id
+- company_id
+- user_id
+- title
+- status
+- created_at
+- updated_at
+
+ai_messages
+
+- id
+- conversation_id
+- company_id
+- user_id
+- role
+- content
+- metadata
+- created_at
+
+ai_executions
+
+- id
+- conversation_id
+- company_id
+- user_id
+- agent_id
+- provider
+- status
+- duration_ms
+- input_tokens
+- output_tokens
+- estimated_cost
+- error_code
+- created_at
+
+ai_tool_executions
+
+- id
+- ai_execution_id
+- company_id
+- tool_id
+- sanitized_parameters
+- status
+- duration_ms
+- cache_hit
+- error_code
+- created_at
 
 Criar:
 
-- Tool Registry tests
-- Tool Execution tests
-- Permission tests
-- Cache tests
-- Retry tests
-- Multi Tool tests
-- Auditoria
+- índices necessários;
+- foreign keys;
+- RLS;
+- políticas de SELECT e INSERT;
+- isolamento por tenant;
+- regras de auditoria;
+- retenção compatível com a aplicação.
+
+Não armazenar documentos completos, tokens, segredos ou dados sensíveis desnecessários nos logs.
+
+Sanitizar parâmetros antes da persistência.
 
 ==================================================
-RESULTADO
+ETAPA 10 — API/EDGE FUNCTION
 ==================================================
 
-Ao final deste Sprint, a IA ainda não precisa responder em linguagem natural.
+Criar um ponto de entrada real, por exemplo:
 
-Ela deve ser capaz de executar corretamente todas as ferramentas e devolver resultados estruturados para o Orchestrator.
+supabase/functions/enterprise-ai-chat/index.ts
 
-Somente depois construiremos o Chat Enterprise.</div>
+ou utilizar estrutura server-side equivalente já existente.
+
+Contrato esperado:
+
+POST /enterprise-ai-chat
+
+Entrada:
+
+{
+  "message": "Quais processos críticos estão parados?",
+  "conversationId": "opcional",
+  "entityContext": {
+    "processId": "opcional",
+    "customerId": "opcional",
+    "vesselId": "opcional"
+  }
+}
+
+Não aceitar userId, role ou companyId como fonte de autorização.
+
+Esses dados devem ser derivados da sessão autenticada.
+
+Saída:
+
+{
+  "answer": "...",
+  "agent": "...",
+  "tools": [],
+  "references": [],
+  "suggestedActions": [],
+  "executionId": "...",
+  "durationMs": 0
+}
+
+Implementar tratamento consistente para:
+
+- 400 entrada inválida;
+- 401 não autenticado;
+- 403 sem permissão;
+- 404 entidade inexistente;
+- 409 conflito;
+- 429 limite atingido;
+- 500 falha interna.
+
+Não expor stack trace ao cliente.
+
+==================================================
+ETAPA 11 — FEATURE FLAG
+==================================================
+
+Criar feature flag:
+
+ENTERPRISE_AI_COMMAND_CENTER_ENABLED
+
+Default:
+
+OFF
+
+Quando desligada:
+
+- o endpoint não executa IA;
+- nenhuma nova interface é exibida aos usuários comuns;
+- os módulos antigos continuam funcionando;
+- nenhum comportamento existente deve ser quebrado.
+
+==================================================
+ETAPA 12 — INTERFACE MÍNIMA DE PROVA REAL
+==================================================
+
+Somente após o backend estar implementado, criar uma interface mínima de teste no painel administrativo.
+
+A interface deve:
+
+- enviar perguntas ao endpoint real;
+- mostrar agente escolhido;
+- mostrar ferramentas executadas;
+- mostrar referências;
+- mostrar duração;
+- apresentar erros reais;
+- permitir iniciar nova conversa.
+
+Não criar ainda o design final do Chat Enterprise.
+
+Não usar respostas hardcoded.
+
+Não transformar novamente a página em um “probe textual”.
+
+==================================================
+ETAPA 13 — TESTES OBRIGATÓRIOS
+==================================================
+
+Criar testes unitários para:
+
+- Agent Registry;
+- Tool Registry;
+- ToolExecutor;
+- permission guard;
+- tenant guard;
+- timeout;
+- retry;
+- cache;
+- PromptBuilder;
+- Context Engine;
+- MockProvider;
+- AIOrchestrator.
+
+Criar testes de integração para:
+
+- pergunta → agente → ferramenta → resposta;
+- usuário sem permissão;
+- ferramenta inválida;
+- entidade inexistente;
+- provider indisponível;
+- timeout de ferramenta;
+- cache hit;
+- auditoria;
+- isolamento multi-tenant.
+
+Criar teste E2E mínimo com Playwright:
+
+1. autenticar usuário autorizado;
+2. abrir interface mínima do EACC;
+3. enviar uma pergunta real;
+4. verificar resposta;
+5. verificar agente;
+6. verificar ferramentas;
+7. iniciar nova conversa;
+8. testar mensagem inválida;
+9. testar usuário sem permissão.
+
+Executar:
+
+- testes unitários;
+- testes de integração;
+- TypeScript typecheck;
+- build;
+- Playwright.
+
+==================================================
+ETAPA 14 — NÃO REGRESSÃO
+==================================================
+
+Validar que não foram quebrados:
+
+- Process Center;
+- processos;
+- documentos;
+- OCR;
+- assinaturas;
+- dossiês;
+- clientes;
+- embarcações;
+- autenticação;
+- Admin Master;
+- Portal do Cliente.
+
+==================================================
+ENTREGA OBRIGATÓRIA
+==================================================
+
+Ao final, apresentar um relatório contendo:
+
+1. Diagnóstico inicial do projeto.
+2. Arquivos criados.
+3. Arquivos alterados.
+4. Migrations criadas.
+5. Tabelas, índices e RLS.
+6. Agentes realmente implementados.
+7. Ferramentas realmente implementadas.
+8. Ferramentas que ainda não puderam ser implementadas e motivo.
+9. Endpoint criado.
+10. Fluxo de autorização.
+11. Feature flag.
+12. Resultados exatos dos testes.
+13. Resultado do typecheck.
+14. Resultado do build.
+15. Resultado do Playwright.
+16. Limitações restantes.
+17. Próxima etapa recomendada.
+
+Não declarar “Sprint concluído” apenas porque arquivos foram criados.
+
+O status final deve ser exatamente um destes:
+
+- IMPLEMENTAÇÃO CONCLUÍDA E VALIDADA
+- IMPLEMENTAÇÃO PARCIAL
+- IMPLEMENTAÇÃO BLOQUEADA
+
+Para usar “IMPLEMENTAÇÃO CONCLUÍDA E VALIDADA”, é obrigatório apresentar evidência de código funcional, testes, typecheck e build.
+
+INICIE A IMPLEMENTAÇÃO AGORA.
+
+NÃO MODIFIQUE NOVAMENTE APENAS O TEXTO DO PROBE.</div>
     </div>
   );
 }
