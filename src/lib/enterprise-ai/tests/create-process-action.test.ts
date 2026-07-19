@@ -1,4 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+
+// Mock Services BEFORE Action/Executor imports
+vi.mock("@/services/processes/process-creation-service", () => ({
+  processCreationService: {
+    createProcess: vi.fn().mockResolvedValue({ id: "550e8400-e29b-41d4-a716-446655440999", status: "pending" }),
+  }
+}));
+
 import { CreateProcessAction } from "../actions/process/create-process-action";
 import { ActionStatus } from "../actions/action-types";
 import { ActionRegistry } from "../actions/action-registry";
@@ -6,6 +14,7 @@ import { ActionExecutor } from "../actions/execution/action-executor";
 import { ActionValidator } from "../actions/security/action-validator";
 import { PermissionGuard } from "../actions/security/permission-guard";
 import { supabase } from "@/integrations/supabase/client";
+import { processCreationService } from "@/services/processes/process-creation-service";
 
 // Valid UUIDs for Zod
 const mockUserId = "550e8400-e29b-41d4-a716-446655440000";
