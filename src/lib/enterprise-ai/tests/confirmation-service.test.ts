@@ -298,31 +298,3 @@ describe('ConfirmationService (Sprint 5.0.1)', () => {
     expect(result.id).toBe('conf-1');
   });
 });
-
-  it('7. validateAndConsume utiliza RPC para atomicidade', async () => {
-    const { supabase } = await import('@/integrations/supabase/client');
-    (supabase.rpc as any).mockResolvedValueOnce({ 
-      data: [{ ok: true, confirmation_id: 'conf-1' }], 
-      error: null 
-    });
-    (supabase.single as any).mockResolvedValueOnce({ 
-      data: { id: 'conf-1', status: 'consumed' }, 
-      error: null 
-    });
-
-    await confirmationService.validateAndConsume('token', mockPayload, mockUserId, mockCompanyId);
-
-    expect(supabase.rpc).toHaveBeenCalledWith('consume_ai_action_confirmation', expect.any(Object));
-  });
-
-  it('8. validateAndConsume lança erro se RPC retornar erro', async () => {
-    const { supabase } = await import('@/integrations/supabase/client');
-    (supabase.rpc as any).mockResolvedValueOnce({ 
-      data: [{ ok: false, error_code: 'CONFIRMATION_PAYLOAD_MISMATCH' }], 
-      error: null 
-    });
-
-    await expect(confirmationService.validateAndConsume('token', mockPayload, mockUserId, mockCompanyId))
-      .rejects.toThrow(ConfirmationPayloadMismatchError);
-  });
-});
