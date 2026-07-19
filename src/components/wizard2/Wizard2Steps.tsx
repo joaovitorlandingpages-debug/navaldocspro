@@ -11,7 +11,8 @@ import {
   Search, User, Ship, Sparkles, ListChecks, 
   FileText, CheckCircle2, Plus, UserPlus, 
   ArrowRight, ShieldCheck, Clock, FileCheck,
-  AlertTriangle, Upload, Eye, Trash2, Camera
+  AlertTriangle, Upload, Eye, Trash2, Camera,
+  Star, ArrowUpRight
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -54,8 +55,8 @@ export function StepClient() {
         .limit(3);
       
       if (data) {
-        const unique = Array.from(new Set(data.map(d => (d as any).customer?.id)))
-          .map(id => data.find(d => (d as any).customer?.id === id))
+        const unique = Array.from(new Set(data.map((d: any) => (d as any).customer?.id)))
+          .map(id => data.find((d: any) => (d as any).customer?.id === id))
           .filter(Boolean)
           .map(d => (d as any).customer);
         setFavorites(unique);
