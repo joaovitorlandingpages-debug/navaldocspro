@@ -1,3 +1,4 @@
+// @ts-ignore
 import { expect, test, describe } from "vitest";
 
 import { calculateTimeInProgress } from "../utils/processMetrics";
