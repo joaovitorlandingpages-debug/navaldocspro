@@ -3,7 +3,6 @@ import { createActionResult } from "../action-result";
 import { 
   CreateProcessInput, 
   CreateProcessInputSchema, 
-  ProcessCreationError,
 } from "./process-action-types";
 import { supabase } from "@/integrations/supabase/client";
 import { processCreationService } from "@/services/processes/process-creation-service";
@@ -37,6 +36,9 @@ export class CreateProcessAction implements AIAction {
     const user = (context as any)._user;
     
     if (!user) throw new Error("User context missing in execute");
+
+    console.log('[CreateProcessAction] START execute');
+
 
     const { data: profile } = await supabase
       .from("profiles")
