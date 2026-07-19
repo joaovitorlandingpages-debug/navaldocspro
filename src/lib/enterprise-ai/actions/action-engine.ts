@@ -1,6 +1,8 @@
 import { AIAction, ActionResult, ActionStatus, ConfirmationPolicy } from "./action-types";
 import { ActionRegistry } from "./action-registry";
 import { createActionResult } from "./action-result";
+import { GeneratePdfAction } from "./pdf/generate-pdf-action";
+
 
 export class ActionEngine {
   async execute(actionId: string, context: any): Promise<ActionResult> {
