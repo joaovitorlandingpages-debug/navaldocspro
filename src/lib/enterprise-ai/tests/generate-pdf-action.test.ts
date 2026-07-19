@@ -7,27 +7,29 @@ import { ActionExecutor } from "../actions/execution/action-executor";
 import { ActionValidator } from "../actions/security/action-validator";
 import { PermissionGuard } from "../actions/security/permission-guard";
 
-// Mock do Supabase
-const supabaseMock = {
-  single: vi.fn(),
-  eq: vi.fn(),
-  select: vi.fn(),
-  insert: vi.fn(),
-  update: vi.fn(),
-  from: vi.fn(),
-};
+// Mock do Supabase - usando o factory do vi.mock para ser hoisted corretamente
+vi.mock("@/integrations/supabase/client", () => {
+  const m = {
+    single: vi.fn(),
+    eq: vi.fn(),
+    select: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    from: vi.fn(),
+  };
+  
+  m.from.mockReturnValue(m);
+  m.select.mockReturnValue(m);
+  m.insert.mockReturnValue(m);
+  m.update.mockReturnValue(m);
+  m.eq.mockReturnValue(m);
+  m.single.mockImplementation(() => Promise.resolve({ data: null, error: null }));
 
-supabaseMock.from.mockReturnValue(supabaseMock);
-supabaseMock.select.mockReturnValue(supabaseMock);
-supabaseMock.insert.mockReturnValue(supabaseMock);
-supabaseMock.update.mockReturnValue(supabaseMock);
-supabaseMock.eq.mockReturnValue(supabaseMock);
-supabaseMock.single.mockImplementation(() => Promise.resolve({ data: null, error: null }));
-
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: supabaseMock,
-  _mocks: supabaseMock
-}));
+  return {
+    supabase: m,
+    _mocks: m
+  };
+});
 
 vi.mock("@/utils/pdf-export", () => ({
   generateAndUploadPdf: vi.fn(() => Promise.resolve({ path: "path/to/pdf", signedUrl: "http://signed-url" })),
@@ -35,13 +37,16 @@ vi.mock("@/utils/pdf-export", () => ({
 
 describe("GeneratePdfAction (Sprint 4.4)", () => {
   let action: GeneratePdfAction;
+  let supabaseMock: any;
   const mockCompanyId = "company-123";
   const mockUserId = "user-456";
   const mockProcessId = "process-789";
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     action = new GeneratePdfAction();
+    const client = await import("@/integrations/supabase/client");
+    supabaseMock = client.supabase;
     supabaseMock.single.mockResolvedValue({ data: null, error: null });
   });
 
