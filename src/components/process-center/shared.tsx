@@ -114,8 +114,9 @@ export function ProcessCenterDashboard({
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6 bg-slate-50/30">
       <Card 
         className="p-5 border-white bg-white shadow-sm hover:shadow-xl transition-all group cursor-pointer border-b-4 border-b-blue-500"
-        onClick={() => navigate({ search: (prev: any) => ({ ...prev, tab: 'documentos' }) })}
+        onClick={() => navigate({ search: { tab: 'documentos' } as any })}
       >
+
         <div className="flex justify-between items-start mb-4">
           <div className="p-2.5 bg-blue-50 rounded-xl group-hover:scale-110 transition-transform">
             <FileText className="h-5 w-5 text-blue-600" />
