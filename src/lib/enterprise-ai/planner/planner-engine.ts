@@ -42,7 +42,7 @@ export class PlannerEngine {
     }
 
 
-    this.validateSteps(steps, request);
+    this.validateSteps(steps);
     this.detectCircularDependencies(steps);
 
     const requiresConfirmation = steps.some((s: ExecutionStep) => s.confirmationRequired);
