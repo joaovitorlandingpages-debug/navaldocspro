@@ -141,9 +141,9 @@ function EnterpriseProcessCenterPage() {
                 </Suspense>
               </TabsContent>
 
-              <TabsContent value="timeline" className="mt-0 animate-in fade-in duration-500">
+              <TabsContent value="timeline" className="mt-0 animate-in fade-in duration-500 px-6 pb-20">
                 <Suspense fallback={<Loader2 className="h-6 w-6 animate-spin mx-auto my-8" />}>
-                  <ProcessTimeline events={[]} />
+                  <Workspace3Timeline />
                 </Suspense>
               </TabsContent>
             </Tabs>
