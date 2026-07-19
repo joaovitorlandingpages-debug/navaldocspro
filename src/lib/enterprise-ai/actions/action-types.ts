@@ -44,5 +44,10 @@ export interface ActionResult {
   metadata?: Record<string, any>;
 }
 
-
+export class ActionError extends Error {
+  constructor(public message: string, public code: string) {
+    super(message);
+    this.name = 'ActionError';
+  }
+}
 
