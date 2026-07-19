@@ -41,9 +41,8 @@ export interface ActionResult {
   metadata?: Record<string, any>;
 }
 
-export class ActionError extends Error {
-  constructor(public message: string, public code: string) {
-    super(message);
-    this.name = 'ActionError';
-  }
-}
+// Forwarding definition from process-action-types to avoid circular dependency
+// In a real project, this would be in a shared base-types file.
+import { ActionError } from "./process/process-action-types";
+export { ActionError };
+
