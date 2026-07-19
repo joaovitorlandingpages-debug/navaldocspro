@@ -30,8 +30,14 @@ export const Route = createFileRoute("/admin/process-center/$id")({
   component: EnterpriseProcessCenterPage,
 });
 
-// Lazy loading existing panels for integration
-const ProcessTimeline = lazy(() => import("@/components/ProcessTimeline").then(m => ({ default: m.ProcessTimeline })));
+// Lazy loading components for Workspace 3.0
+const Workspace3Header = lazy(() => import("@/components/process-center/workspace-3.0/Workspace3Header").then(m => ({ default: m.Workspace3Header })));
+const Workspace3Left = lazy(() => import("@/components/process-center/workspace-3.0/Workspace3Left").then(m => ({ default: m.Workspace3Left })));
+const Workspace3Central = lazy(() => import("@/components/process-center/workspace-3.0/Workspace3Central").then(m => ({ default: m.Workspace3Central })));
+const Workspace3Right = lazy(() => import("@/components/process-center/workspace-3.0/Workspace3Right").then(m => ({ default: m.Workspace3Right })));
+const Workspace3Timeline = lazy(() => import("@/components/process-center/workspace-3.0/Workspace3Timeline").then(m => ({ default: m.Workspace3Timeline })));
+
+// Legacy panels for other tabs
 const ProcessDocumentsPanel = lazy(() => import("@/components/process/ProcessDocumentsPanel").then(m => ({ default: m.ProcessDocumentsPanel })));
 const ProcessSignaturesPanel = lazy(() => import("@/components/process/ProcessSignaturesPanel").then(m => ({ default: m.ProcessSignaturesPanel })));
 
