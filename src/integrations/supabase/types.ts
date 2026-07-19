@@ -3981,6 +3981,72 @@ export type Database = {
         }
         Relationships: []
       }
+      process_analyses: {
+        Row: {
+          approval_probability: number | null
+          company_id: string
+          consistency_check: Json | null
+          created_at: string | null
+          detected_issues: Json | null
+          id: string
+          metadata: Json | null
+          process_id: string
+          recommendations: Json | null
+          risk_level: string | null
+          score: number | null
+          summary: string | null
+          updated_at: string | null
+          wizard_session_id: string | null
+        }
+        Insert: {
+          approval_probability?: number | null
+          company_id: string
+          consistency_check?: Json | null
+          created_at?: string | null
+          detected_issues?: Json | null
+          id?: string
+          metadata?: Json | null
+          process_id: string
+          recommendations?: Json | null
+          risk_level?: string | null
+          score?: number | null
+          summary?: string | null
+          updated_at?: string | null
+          wizard_session_id?: string | null
+        }
+        Update: {
+          approval_probability?: number | null
+          company_id?: string
+          consistency_check?: Json | null
+          created_at?: string | null
+          detected_issues?: Json | null
+          id?: string
+          metadata?: Json | null
+          process_id?: string
+          recommendations?: Json | null
+          risk_level?: string | null
+          score?: number | null
+          summary?: string | null
+          updated_at?: string | null
+          wizard_session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_analyses_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_analyses_wizard_session_id_fkey"
+            columns: ["wizard_session_id"]
+            isOneToOne: false
+            referencedRelation: "wizard_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_assignees: {
         Row: {
           created_at: string | null
@@ -6828,6 +6894,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      wizard_sessions: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          current_step: string | null
+          customer_id: string | null
+          extracted_data: Json | null
+          id: string
+          ocr_job_ids: string[] | null
+          pending_requirements: Json | null
+          process_id: string | null
+          review_status: Json | null
+          selected_blueprint_id: string | null
+          selected_service_id: string | null
+          status: string | null
+          updated_at: string | null
+          uploaded_document_ids: string[] | null
+          user_id: string
+          vessel_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          current_step?: string | null
+          customer_id?: string | null
+          extracted_data?: Json | null
+          id?: string
+          ocr_job_ids?: string[] | null
+          pending_requirements?: Json | null
+          process_id?: string | null
+          review_status?: Json | null
+          selected_blueprint_id?: string | null
+          selected_service_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          uploaded_document_ids?: string[] | null
+          user_id: string
+          vessel_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          current_step?: string | null
+          customer_id?: string | null
+          extracted_data?: Json | null
+          id?: string
+          ocr_job_ids?: string[] | null
+          pending_requirements?: Json | null
+          process_id?: string | null
+          review_status?: Json | null
+          selected_blueprint_id?: string | null
+          selected_service_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          uploaded_document_ids?: string[] | null
+          user_id?: string
+          vessel_id?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {

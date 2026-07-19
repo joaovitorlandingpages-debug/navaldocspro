@@ -36,6 +36,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { confirmProcessVisible, notifyProcessesChanged } from '@/services/processes/processCreation';
 import { materializeProcessBlueprint } from '@/services/processes/blueprintEngine';
 import { createWizardSession, updateWizardSession, mapStateToSession } from '@/services/wizardSessionService';
+import { runProcessAnalysis } from '@/services/processAnalyzerService';
 
 const STEPS = [
   { id: 'documents', label: 'Docs', icon: FileText },
@@ -171,6 +172,17 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
         });
       } catch (e) {
         console.warn("Blueprint materialization failed, but process was created", e);
+      }
+
+      // 5. Smart Process Analyzer: Automatic Technical Analysis
+      try {
+        await runProcessAnalysis({
+          processId,
+          companyId: profile.company_id,
+          wizardSessionId: sessionId || undefined
+        });
+      } catch (e) {
+        console.warn("Smart Process Analysis failed, but process was created", e);
       }
 
       // Confirm visibility and notify
