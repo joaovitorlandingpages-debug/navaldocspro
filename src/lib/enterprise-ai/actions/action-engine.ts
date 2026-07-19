@@ -78,7 +78,7 @@ export class BaseStubAction implements AIAction {
 export const registerStubs = () => {
   const stubs = [
     
-    new BaseStubAction("request-signature", "Request Signature", "Requests an electronic signature"),
+    // new BaseStubAction("request-signature", "Request Signature", "Requests an electronic signature"),
 
   ];
 
