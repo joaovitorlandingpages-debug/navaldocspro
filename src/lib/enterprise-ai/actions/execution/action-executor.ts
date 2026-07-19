@@ -170,18 +170,23 @@ export class ActionExecutor {
       } catch (innerError: any) {
         // NORMALIZATION: Manual re-throwing of a plain object to ensure property preservation
         // Use property names compatible with ActionExecutionError constructor
+        // CRITICAL: Read properties before they might be lost or transformed
+        const innerErrorCode = innerError.errorCode || innerError.code;
+        const innerProcessId = innerError.processId || inputWithContext.processId;
+        
         const err = {
           message: innerError.message || 'Unknown execution error',
-          errorCode: innerError.errorCode || innerError.code || 'ACTION_EXECUTION_ERROR',
-          processId: innerError.processId || inputWithContext.processId,
+          errorCode: innerErrorCode || 'ACTION_EXECUTION_ERROR',
+          processId: innerProcessId,
           name: innerError.name,
           isActionError: true,
           status: ActionStatus.FAILED,
-          code: innerError.code || innerError.errorCode || 'ACTION_EXECUTION_ERROR'
+          code: innerErrorCode || 'ACTION_EXECUTION_ERROR'
         };
         console.log('ActionExecutor Catch Normalization:', err);
         throw err;
       }
+
 
 
 
