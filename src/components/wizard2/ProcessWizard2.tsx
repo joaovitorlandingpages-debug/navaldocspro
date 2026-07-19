@@ -112,10 +112,32 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
   };
 
   const handleFinish = async () => {
-    if (!profile?.company_id || !state.customerId || !state.processTypeName) return;
+    if (!profile?.company_id || !state.customerId || !state.processTypeName) {
+      toast.error("Dados incompletos para criação do processo.");
+      return;
+    }
     
     setSubmitting(true);
     try {
+      // 18. Criação Transacional (Estratégia Compensatória)
+      // 19. Idempotência: Check if already created for this session
+      const { data: existingProcess } = await supabase
+        .from('processes')
+        .select('id')
+        .eq('company_id', profile.company_id)
+        .eq('customer_id', state.customerId)
+        .eq('process_type_id', state.processTypeId)
+        .limit(1)
+        .maybeSingle();
+
+      if (existingProcess) {
+        toast.info("Um processo idêntico já foi detectado. Reutilizando...");
+        navigate({ to: '/processes/$id', params: { id: existingProcess.id } });
+        reset();
+        onClose();
+        return;
+      }
+
       const { data, error } = await supabase
         .from('processes')
         .insert({
@@ -133,6 +155,14 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
 
       if (error) throw error;
       const processId = data.id;
+
+      // Update session status
+      if (sessionId) {
+        await updateWizardSession(sessionId, { 
+          status: 'completed', 
+          process_id: processId 
+        } as any);
+      }
 
       // Materialize documents
       try {
@@ -155,7 +185,6 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
       reset();
       onClose();
       
-      // Animação discreta simulada pelo tempo de redirecionamento
       setTimeout(() => {
         navigate({ to: '/processes/$id', params: { id: processId } });
       }, 300);
@@ -165,6 +194,7 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
       setSubmitting(false);
     }
   };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={(v) => !v && onClose()}>
