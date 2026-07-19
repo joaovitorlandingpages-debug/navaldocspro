@@ -115,6 +115,7 @@ import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
 import { Route as AdminDocsCentralIndexRouteImport } from './routes/admin/docs-central/index'
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
+import { Route as AdminProcessCenterIdRouteImport } from './routes/admin/process-center.$id'
 import { Route as AdminDocsCentralVersionsRouteImport } from './routes/admin/docs-central/versions'
 import { Route as AdminDocsCentralSetupAssistantRouteImport } from './routes/admin/docs-central/setup-assistant'
 import { Route as AdminDocsCentralReviewRouteImport } from './routes/admin/docs-central/review'
@@ -663,6 +664,11 @@ const AdminTemplatesIdRoute = AdminTemplatesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminTemplatesRoute,
 } as any)
+const AdminProcessCenterIdRoute = AdminProcessCenterIdRouteImport.update({
+  id: '/process-center/$id',
+  path: '/process-center/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDocsCentralVersionsRoute =
   AdminDocsCentralVersionsRouteImport.update({
     id: '/versions',
@@ -853,6 +859,7 @@ export interface FileRoutesByFullPath {
   '/admin/docs-central/review': typeof AdminDocsCentralReviewRoute
   '/admin/docs-central/setup-assistant': typeof AdminDocsCentralSetupAssistantRoute
   '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
+  '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
@@ -970,6 +977,7 @@ export interface FileRoutesByTo {
   '/admin/docs-central/review': typeof AdminDocsCentralReviewRoute
   '/admin/docs-central/setup-assistant': typeof AdminDocsCentralSetupAssistantRoute
   '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
+  '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/admin/docs-central': typeof AdminDocsCentralIndexRoute
@@ -1092,6 +1100,7 @@ export interface FileRoutesById {
   '/admin/docs-central/review': typeof AdminDocsCentralReviewRoute
   '/admin/docs-central/setup-assistant': typeof AdminDocsCentralSetupAssistantRoute
   '/admin/docs-central/versions': typeof AdminDocsCentralVersionsRoute
+  '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
@@ -1215,6 +1224,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/review'
     | '/admin/docs-central/setup-assistant'
     | '/admin/docs-central/versions'
+    | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/admin/docs-central/'
@@ -1332,6 +1342,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/review'
     | '/admin/docs-central/setup-assistant'
     | '/admin/docs-central/versions'
+    | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/admin/docs-central'
@@ -1453,6 +1464,7 @@ export interface FileRouteTypes {
     | '/admin/docs-central/review'
     | '/admin/docs-central/setup-assistant'
     | '/admin/docs-central/versions'
+    | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/admin/docs-central/'
@@ -2263,6 +2275,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTemplatesIdRouteImport
       parentRoute: typeof AdminTemplatesRoute
     }
+    '/admin/process-center/$id': {
+      id: '/admin/process-center/$id'
+      path: '/process-center/$id'
+      fullPath: '/admin/process-center/$id'
+      preLoaderRoute: typeof AdminProcessCenterIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/docs-central/versions': {
       id: '/admin/docs-central/versions'
       path: '/versions'
@@ -2440,6 +2459,7 @@ interface AdminRouteChildren {
   AdminTemplatesRoute: typeof AdminTemplatesRouteWithChildren
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminProcessCenterIdRoute: typeof AdminProcessCenterIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -2474,6 +2494,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminTemplatesRoute: AdminTemplatesRouteWithChildren,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminProcessCenterIdRoute: AdminProcessCenterIdRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
