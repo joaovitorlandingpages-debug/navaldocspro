@@ -5,7 +5,9 @@ import {
   CreateProcessInput, 
   CreateProcessInputSchema, 
 } from "./process-action-types";
+import { createActionResult } from "../action-result";
 import { supabase } from "@/integrations/supabase/client";
+
 import { processCreationService } from "@/services/processes/process-creation-service";
 import { materializeProcessBlueprint } from "@/services/processes/blueprintEngine";
 import { confirmProcessVisible, notifyProcessesChanged } from "@/services/processes/processCreation";
