@@ -332,12 +332,21 @@ describe("Enterprise Audit Logger (Sprint 4.5)", () => {
     // Mock action com erro de validação
     class InvalidAction implements AIAction {
       id = "test";
-      name = "Test";
-      description = "Test";
-      requiredPermissions = [];
-      confirmationPolicy = ConfirmationPolicy.NONE;
-      estimatedRisk = "LOW" as const;
-      estimatedDuration = 1;
+      metadata = {
+        actionId: "test",
+        displayName: "Test",
+        description: "Test",
+        category: "TEST",
+        riskLevel: "LOW" as const,
+        requiredPermissions: [],
+        confirmationPolicy: ConfirmationPolicy.NONE,
+        dependencies: [],
+        retryPolicy: { maxRetries: 3, backoff: "fixed" as const },
+        estimatedDuration: 1,
+        enabled: true,
+        supportsRetry: true,
+        supportsPlanner: true
+      };
       async validate() { return { valid: false, errors: ["Invalid"] }; }
       async execute() { return { success: false, status: ActionStatus.FAILED, message: "N/A", executionId: "1", duration: 1 }; }
       async rollback() {}
