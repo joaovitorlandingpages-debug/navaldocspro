@@ -18,7 +18,9 @@ export const CreateProcessInputSchema = z.object({
   initialChecklist: z.array(z.string()).optional(),
   metadata: z.record(z.any()).optional(),
   confirmationToken: z.string(),
+  processId: z.string().uuid().optional(),
 });
+
 
 export type CreateProcessInput = z.infer<typeof CreateProcessInputSchema>;
 
