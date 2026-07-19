@@ -146,7 +146,8 @@ export class PlannerEngine {
       });
     });
 
-    this.validateSteps(steps, availableActions, []); // Initial validation within generateSteps doesn't have permissions context
+    // Internal validation within generateSteps skips permission checks as they are handled in plan()
+    this.validateSteps(steps, availableActions, []); 
     this.detectCircularDependencies(steps);
 
     return steps;
