@@ -134,12 +134,13 @@ export class CompleteChecklistAction implements AIAction {
       const patch = this.preparePatch(input);
       const casResult = await casUpdate("document_checklists", input.checklistItemId, input.expectedVersion, patch);
 
-      if (!casResult.ok) {
-        if (casResult.conflict) {
+      if (!casResult || !casResult.ok) {
+        if (casResult && casResult.conflict) {
           throw new ChecklistVersionConflictError(casResult.currentVersion);
         }
-        throw new ChecklistExecutionError(casResult.error || "Update failed");
+        throw new ChecklistExecutionError(casResult?.error || "Update failed");
       }
+
 
       return createActionResult({
         success: true,
