@@ -180,18 +180,17 @@ export class ActionExecutor {
           msg: innerError.message 
         });
 
-        const normalizedError = new ActionExecutionError(innerError.message || 'Unknown execution error', { 
-          errorCode: innerErrorCode || 'ACTION_EXECUTION_ERROR', 
-          processId: innerProcessId 
-        });
-
-        console.log('ActionExecutor Catch Normalization (Final):', { 
-          errorCode: normalizedError.errorCode, 
-          processId: normalizedError.processId 
-        });
+        // THROWING SPECIALIZED ERROR: Re-constructing with the correct class to preserve metadata
+        if (innerErrorCode === 'MATERIALIZATION_FAILED' || innerErrorCode === 'VISIBILITY_FAILED') {
+          throw new ActionExecutionError(innerError.message || 'Recovery stage failed', { 
+            errorCode: innerErrorCode, 
+            processId: innerProcessId 
+          });
+        }
         
-        throw normalizedError;
+        throw innerError;
       }
+
 
 
 
