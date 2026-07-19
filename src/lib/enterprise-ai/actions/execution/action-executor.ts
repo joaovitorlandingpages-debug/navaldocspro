@@ -234,7 +234,7 @@ export class ActionExecutor {
       const finishedAt = new Date();
       const durationMs = finishedAt.getTime() - startedAt.getTime();
       
-      const errorCode = error.errorCode || error.code || 'ACTION_EXECUTION_ERROR';
+      const errorCode = error.errorCode || error.code || (error._isWrapped ? error.errorCode : 'ACTION_EXECUTION_ERROR');
       let status = error.status || ActionStatus.FAILED;
       let errors = [error.message || 'Unknown execution error'];
 
