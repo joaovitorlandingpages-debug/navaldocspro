@@ -227,25 +227,19 @@ export class ActionExecutor {
       };
 
     } catch (error: any) {
-      // NORMALIZATION: If the error looks like an ActionError but lost its prototype
-      if (!error.errorCode && error.code) {
-        error.errorCode = error.code;
-      }
-      
-
       const finishedAt = new Date();
       
-      const errorCode = error.code || error.errorCode || 'ACTION_EXECUTION_ERROR';
+      const errorCode = error.errorCode || error.code || 'ACTION_EXECUTION_ERROR';
       let status = error.status || ActionStatus.FAILED;
       let errors = [error.message || 'Unknown execution error'];
 
-      console.log('ActionExecutor Catch DEBUG:', { 
+      console.log('ActionExecutor Catch DEBUG (Final):', { 
         name: error.name, 
         code: error.code, 
         errorCode, 
-        type: error.constructor.name,
         processId: error.processId
       });
+
 
       if (error instanceof ActionNotFoundError) {
         status = ActionStatus.FAILED;
