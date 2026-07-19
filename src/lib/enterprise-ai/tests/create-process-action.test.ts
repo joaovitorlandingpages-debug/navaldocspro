@@ -69,6 +69,12 @@ vi.mock("@/services/processes/processCreation", () => ({
   notifyProcessesChanged: vi.fn(),
 }));
 
+vi.mock("@/services/processes/process-creation-service", () => ({
+  processCreationService: {
+    createProcess: vi.fn().mockResolvedValue({ id: "550e8400-e29b-41d4-a716-446655440999", status: "pending" }),
+  }
+}));
+
 // Mock Confirmation Service
 vi.mock("../actions/confirmation/confirmation-service", () => ({
   confirmationService: {
