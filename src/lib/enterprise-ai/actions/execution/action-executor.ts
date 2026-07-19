@@ -251,11 +251,21 @@ export class ActionExecutor {
       try {
         if (idempotencyRecordId) {
           const isRecoverable = errorCode === 'MATERIALIZATION_FAILED' || errorCode === 'VISIBILITY_FAILED';
+          const finalProcessId = (error as any).processId || (context as any).processId;
+          
+          console.log('ActionExecutor Idempotency Update:', {
+            id: idempotencyRecordId,
+            status: isRecoverable ? 'recoverable_failed' : 'failed',
+            errorCode,
+            processId: finalProcessId
+          });
+
           await idempotencyService.update(idempotencyRecordId, {
             status: isRecoverable ? 'recoverable_failed' : 'failed',
             errorCode: errorCode,
-            processId: (error as any).processId
+            processId: finalProcessId
           });
+
         }
 
         await auditLogger.logFailure(executionId, {
