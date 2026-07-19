@@ -112,7 +112,6 @@ import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
 import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
 import { Route as AdminBillingRouteImport } from './routes/admin/billing'
 import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
-import { Route as AdminAiCommandCenterRouteImport } from './routes/admin/ai-command-center'
 import { Route as AdminProcessCenterIndexRouteImport } from './routes/admin/process-center.index'
 import { Route as AdminDocsCentralIndexRouteImport } from './routes/admin/docs-central/index'
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
@@ -651,11 +650,6 @@ const AdminAutomationRoute = AdminAutomationRouteImport.update({
   path: '/automation',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAiCommandCenterRoute = AdminAiCommandCenterRouteImport.update({
-  id: '/ai-command-center',
-  path: '/ai-command-center',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminProcessCenterIndexRoute = AdminProcessCenterIndexRouteImport.update({
   id: '/process-center/',
   path: '/process-center/',
@@ -799,7 +793,6 @@ export interface FileRoutesByFullPath {
   '/system-monitor': typeof SystemMonitorRoute
   '/templates': typeof TemplatesRouteWithChildren
   '/vessels': typeof VesselsRoute
-  '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/commercial': typeof AdminCommercialRoute
@@ -920,7 +913,6 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/system-monitor': typeof SystemMonitorRoute
   '/vessels': typeof VesselsRoute
-  '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/commercial': typeof AdminCommercialRoute
@@ -1044,7 +1036,6 @@ export interface FileRoutesById {
   '/system-monitor': typeof SystemMonitorRoute
   '/templates': typeof TemplatesRouteWithChildren
   '/vessels': typeof VesselsRoute
-  '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/commercial': typeof AdminCommercialRoute
@@ -1170,7 +1161,6 @@ export interface FileRouteTypes {
     | '/system-monitor'
     | '/templates'
     | '/vessels'
-    | '/admin/ai-command-center'
     | '/admin/automation'
     | '/admin/billing'
     | '/admin/commercial'
@@ -1291,7 +1281,6 @@ export interface FileRouteTypes {
     | '/support'
     | '/system-monitor'
     | '/vessels'
-    | '/admin/ai-command-center'
     | '/admin/automation'
     | '/admin/billing'
     | '/admin/commercial'
@@ -1414,7 +1403,6 @@ export interface FileRouteTypes {
     | '/system-monitor'
     | '/templates'
     | '/vessels'
-    | '/admin/ai-command-center'
     | '/admin/automation'
     | '/admin/billing'
     | '/admin/commercial'
@@ -2278,13 +2266,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/ai-command-center': {
-      id: '/admin/ai-command-center'
-      path: '/ai-command-center'
-      fullPath: '/admin/ai-command-center'
-      preLoaderRoute: typeof AdminAiCommandCenterRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/process-center/': {
       id: '/admin/process-center/'
       path: '/process-center'
@@ -2466,7 +2447,6 @@ const AdminTemplatesRouteWithChildren = AdminTemplatesRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
-  AdminAiCommandCenterRoute: typeof AdminAiCommandCenterRoute
   AdminAutomationRoute: typeof AdminAutomationRoute
   AdminBillingRoute: typeof AdminBillingRoute
   AdminCommercialRoute: typeof AdminCommercialRoute
@@ -2503,7 +2483,6 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
-  AdminAiCommandCenterRoute: AdminAiCommandCenterRoute,
   AdminAutomationRoute: AdminAutomationRoute,
   AdminBillingRoute: AdminBillingRoute,
   AdminCommercialRoute: AdminCommercialRoute,
