@@ -91,19 +91,24 @@ export class CreateProcessAction implements AIAction {
       });
     } catch (e: any) {
       console.log('CreateProcessAction Materialization ERROR catch block:', e.message);
-      // RECOVERY: Throw a plain object to ensure property preservation
-      const recoveryError = {
-        message: e.message || "Blueprint materialization failed",
-        errorCode: 'MATERIALIZATION_FAILED',
-        code: 'MATERIALIZATION_FAILED',
-        processId: processId,
-        isActionError: true,
-        name: 'ActionExecutionError'
-      };
-      console.log('CreateProcessAction Materialization ERROR throw (Plain Object):', recoveryError);
+      
+      // CRITICAL FIX: The ActionExecutor's outer catch block expects properties on the Error object.
+      // We must throw a real Error with properties, not a plain object, to survive some middleware.
+      const recoveryError: any = new Error(e.message || "Blueprint materialization failed");
+      recoveryError.errorCode = 'MATERIALIZATION_FAILED';
+      recoveryError.code = 'MATERIALIZATION_FAILED';
+      recoveryError.processId = processId;
+      recoveryError.isActionError = true;
+      recoveryError.name = 'ActionExecutionError';
+      
+      console.log('CreateProcessAction Materialization ERROR throw (Real Error with props):', {
+        message: recoveryError.message,
+        errorCode: recoveryError.errorCode,
+        processId: recoveryError.processId
+      });
       throw recoveryError;
-
     }
+
 
 
 
