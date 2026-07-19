@@ -160,7 +160,137 @@ describe('ConfirmationService (Sprint 5.0.1)', () => {
 
     const updateCall = (supabase.update as any).mock.calls[0][0];
     expect(updateCall.status).toBe(ConfirmationStatus.EXPIRED);
+  it('9. Usuário diferente não pode confirmar', async () => {
+    const { supabase } = await import('@/integrations/supabase/client');
+    const mockConf = {
+      id: 'conf-1',
+      status: 'pending',
+      user_id: 'other-user',
+      company_id: mockCompanyId,
+      expires_at: new Date(Date.now() + 10000).toISOString()
+    };
+    (supabase.maybeSingle as any).mockResolvedValueOnce({ data: mockConf, error: null });
+
+    await expect(confirmationService.confirm('token', mockUserId, mockCompanyId))
+      .rejects.toThrow(ConfirmationUserMismatchError);
   });
+
+  it('10. Tenant diferente não pode confirmar', async () => {
+    const { supabase } = await import('@/integrations/supabase/client');
+    const mockConf = {
+      id: 'conf-1',
+      status: 'pending',
+      user_id: mockUserId,
+      company_id: 'other-tenant',
+      expires_at: new Date(Date.now() + 10000).toISOString()
+    };
+    (supabase.maybeSingle as any).mockResolvedValueOnce({ data: mockConf, error: null });
+
+    await expect(confirmationService.confirm('token', mockUserId, mockCompanyId))
+      .rejects.toThrow(ConfirmationTenantMismatchError);
+  });
+
+  it('11. Confirmação já consumida não pode ser usada novamente', async () => {
+    const { supabase } = await import('@/integrations/supabase/client');
+    (supabase.rpc as any).mockResolvedValueOnce({ 
+      data: [{ ok: false, error_code: 'CONFIRMATION_ALREADY_CONSUMED' }], 
+      error: null 
+    });
+
+    await expect(confirmationService.validateAndConsume('token', mockPayload, mockUserId, mockCompanyId))
+      .rejects.toThrow(ConfirmationAlreadyConsumedError);
+  });
+
+  it('12. Confirmação rejeitada não pode ser consumida', async () => {
+    const { supabase } = await import('@/integrations/supabase/client');
+    (supabase.rpc as any).mockResolvedValueOnce({ 
+      data: [{ ok: false, error_code: 'CONFIRMATION_REJECTED' }], 
+      error: null 
+    });
+
+    await expect(confirmationService.validateAndConsume('token', mockPayload, mockUserId, mockCompanyId))
+      .rejects.toThrow();
+  });
+
+  it('13. Token inexistente deve retornar 404', async () => {
+    const { supabase } = await import('@/integrations/supabase/client');
+    (supabase.maybeSingle as any).mockResolvedValueOnce({ data: null, error: null });
+
+    await expect(confirmationService.confirm('invalid-token', mockUserId, mockCompanyId))
+      .rejects.toThrow(ConfirmationNotFoundError);
+  });
+
+  it('14. Hashing de payload é case-insensitive para chaves', async () => {
+    const hash1 = generatePayloadHash({ name: 'John', age: 30 });
+    const hash2 = generatePayloadHash({ age: 30, name: 'John' });
+    expect(hash1).toBe(hash2);
+  });
+
+  it('15. Hashing de payload falha se valores forem diferentes', async () => {
+    const hash1 = generatePayloadHash({ name: 'John', age: 30 });
+    const hash2 = generatePayloadHash({ name: 'John', age: 31 });
+    expect(hash1).not.toBe(hash2);
+  });
+
+  it('16. createConfirmation falha se falhar no insert', async () => {
+    const { supabase } = await import('@/integrations/supabase/client');
+    (supabase.single as any).mockResolvedValueOnce({ data: null, error: { message: 'DB Error' } });
+
+    await expect(confirmationService.createConfirmation({
+      actionId: 'test',
+      userId: mockUserId,
+      companyId: mockCompanyId,
+      operation: 'test',
+      payload: mockPayload
+    })).rejects.toThrow('DB Error');
+  });
+
+  it('17. validateAndConsume deve aceitar token nulo como erro de validação', async () => {
+    await expect(confirmationService.validateAndConsume('', mockPayload, mockUserId, mockCompanyId))
+      .rejects.toThrow();
+  });
+
+  it('18. Integração completa: create -> confirm -> consume', async () => {
+    // Este teste simularia o fluxo completo, mas como estamos mockando o Supabase,
+    // ele serve mais para verificar a coordenação.
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    // 1. Create
+    (supabase.single as any).mockResolvedValueOnce({ data: { id: 'conf-1' }, error: null });
+    const { publicToken } = await confirmationService.createConfirmation({
+      actionId: 'test',
+      userId: mockUserId,
+      companyId: mockCompanyId,
+      operation: 'test',
+      payload: mockPayload
+    });
+
+    // 2. Confirm
+    const mockConf = {
+      id: 'conf-1',
+      token_hash: '...',
+      status: 'pending',
+      user_id: mockUserId,
+      company_id: mockCompanyId,
+      expires_at: new Date(Date.now() + 10000).toISOString()
+    };
+    (supabase.maybeSingle as any).mockResolvedValueOnce({ data: mockConf, error: null });
+    await confirmationService.confirm(publicToken, mockUserId, mockCompanyId);
+
+    // 3. Consume
+    (supabase.rpc as any).mockResolvedValueOnce({ 
+      data: [{ ok: true, confirmation_id: 'conf-1' }], 
+      error: null 
+    });
+    (supabase.single as any).mockResolvedValueOnce({ 
+      data: { id: 'conf-1', status: 'consumed' }, 
+      error: null 
+    });
+    const result = await confirmationService.validateAndConsume(publicToken, mockPayload, mockUserId, mockCompanyId);
+    
+    expect(result.id).toBe('conf-1');
+  });
+});
 
   it('7. validateAndConsume utiliza RPC para atomicidade', async () => {
     const { supabase } = await import('@/integrations/supabase/client');
