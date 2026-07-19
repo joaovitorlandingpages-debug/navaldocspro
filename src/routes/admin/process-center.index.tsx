@@ -162,324 +162,198 @@ function ProcessCenterListPage() {
           ))}
         </div>
       )}
-      <div id="ts-visual-edit-probe-add92ca86d1e497a" className="hidden whitespace-pre-wrap">PROJETO ENTERPRISE
-NAVALDOCS PRO
+      <div id="ts-visual-edit-probe-8be306f86f424bd3" className="hidden whitespace-pre-wrap">ENTERPRISE AI COMMAND CENTER
+SPRINT 1 — AI ORCHESTRATION LAYER
 
-MÓDULO:
-ENTERPRISE AI COMMAND CENTER (EACC)
+O EACC não deve começar pela interface do chat.
+
+Primeiro construiremos a camada de orquestração da IA.
 
 OBJETIVO
 
-Criar o cérebro do NavalDocs Pro.
-
-Não será apenas um chatbot.
-
-Será um centro de comando baseado em Inteligência Artificial capaz de analisar toda a operação em tempo real.
-
-O usuário deve sentir que possui um especialista naval trabalhando 24 horas por dia.
+Criar toda a infraestrutura que permitirá conectar qualquer LLM (OpenAI, Gemini, Claude ou modelos locais) sem alterar a lógica do sistema.
 
 ==================================================
-MISSÃO
+1. AI ORCHESTRATOR
 ==================================================
 
-A IA deve conhecer absolutamente tudo do sistema.
+Criar um AIOrchestrator central responsável por:
 
-Ela deve possuir acesso (respeitando permissões) a:
+- receber a pergunta do usuário;
+- identificar intenção;
+- selecionar o(s) agente(s);
+- montar contexto;
+- consultar dados reais;
+- executar validações de permissão;
+- enviar ao modelo de IA;
+- receber resposta;
+- registrar auditoria.
 
-• processos
-• clientes
-• embarcações
-• documentos
-• OCR
-• checklists
-• assinaturas
-• certificados
-• dossiês
-• comentários
-• histórico
-• notificações
-• prazos
-• templates
-• usuários
-• empresas
-• métricas
+Nenhum agente conversa diretamente com a IA.
 
-Nunca utilizar respostas genéricas.
-
-Todas as respostas devem ser baseadas em dados reais.
+Tudo passa pelo Orchestrator.
 
 ==================================================
-TIPOS DE IA
+2. AGENT REGISTRY
 ==================================================
 
-Criar uma arquitetura de agentes especializados.
+Criar um registro central dos agentes.
 
-Agent 01
-Process Specialist
+Cada agente deve possuir:
 
-Especialista em processos.
+- id
+- nome
+- descrição
+- responsabilidades
+- ferramentas disponíveis
+- permissões necessárias
+- prioridade
+- contexto suportado
+- limite de execução
 
-Consegue responder:
-
-"Qual processo está mais atrasado?"
-
-"Quais documentos faltam?"
-
-"Qual processo pode ser finalizado hoje?"
-
---------------------------------------------------
-
-Agent 02
-Documentation Specialist
-
-Especialista documental.
-
-Analisa:
-
-• PDFs
-• OCR
-• templates
-• certificados
-
-Detecta:
-
-• documentos vencidos
-• campos inconsistentes
-• anexos incorretos
-
---------------------------------------------------
-
-Agent 03
-Risk Specialist
-
-Especialista em riscos.
-
-Analisa:
-
-• Health Score
-• Risk Score
-• pendências
-• bloqueios
-
-Explica exatamente por que um processo possui risco elevado.
-
---------------------------------------------------
-
-Agent 04
-Operations Specialist
-
-Especialista operacional.
-
-Sugere automaticamente:
-
-• prioridades
-• próximos passos
-• gargalos
-• processos esquecidos
-
---------------------------------------------------
-
-Agent 05
-Management Specialist
-
-Especialista gerencial.
-
-Produz:
-
-• indicadores
-• produtividade
-• tempo médio
-• SLA
-• ranking
-• gráficos
+Os agentes devem poder ser adicionados futuramente sem alterar o núcleo.
 
 ==================================================
-CHAT ENTERPRISE
+3. TOOL SYSTEM
 ==================================================
 
-Criar um chat semelhante ao ChatGPT.
+Criar um sistema de ferramentas.
 
-O usuário poderá perguntar naturalmente:
+Exemplos:
 
-"Quais processos vencem amanhã?"
+searchProcesses()
 
-"Existe algum cliente sem documentação?"
+searchDocuments()
 
-"Qual funcionário finalizou mais processos?"
+searchCustomers()
 
-"Quais certificados vencem este mês?"
+searchVessels()
 
-"Liste apenas processos críticos."
+searchCertificates()
 
-==================================================
-COMANDOS
-==================================================
+searchTimeline()
 
-A IA poderá executar ações somente após confirmação.
+generateDocument()
 
-Exemplo:
+requestSignature()
 
-"Abra o processo 2026-154"
+createChecklist()
 
-"Criar checklist."
+Cada ferramenta deve possuir:
 
-"Gerar documento."
-
-"Solicitar assinatura."
-
-"Abrir OCR."
-
-"Enviar lembrete."
-
-Nunca executar ações destrutivas sem confirmação.
+- schema
+- validação
+- autorização
+- auditoria
+- tratamento de erro
 
 ==================================================
-MEMÓRIA
+4. CONTEXT ENGINE
 ==================================================
 
-A IA deve lembrar o contexto da conversa.
+Criar um motor de contexto.
 
-Exemplo:
+Ele deve:
 
-Usuário:
-
-"Mostre processos críticos."
-
-Depois:
-
-"E quais são do cliente João?"
-
-Depois:
-
-"Abra o primeiro."
-
-Ela deve entender o contexto.
+- manter histórico da conversa;
+- resumir contexto antigo;
+- eliminar contexto irrelevante;
+- manter referências aos processos consultados;
+- permitir perguntas sequenciais.
 
 ==================================================
-RESPOSTAS
+5. PERMISSION ENGINE
 ==================================================
 
-As respostas devem conter:
+Antes de qualquer resposta:
 
-• resumo executivo
+validar:
 
-• explicação
+- tenant
+- role
+- ownership
+- permissões
 
-• dados encontrados
-
-• motivo
-
-• recomendação
-
-• ações rápidas
+A IA nunca poderá receber dados não autorizados.
 
 ==================================================
-AÇÕES RÁPIDAS
+6. PROMPT BUILDER
 ==================================================
 
-Cada resposta poderá gerar botões como:
+Criar um PromptBuilder determinístico.
 
-Abrir Processo
+Ele deve montar o prompt usando:
 
-Abrir Documento
+- contexto
+- pergunta
+- agente
+- dados
+- instruções
+- idioma
+- limitações
 
-Gerar PDF
-
-Abrir OCR
-
-Criar Assinatura
-
-Enviar Lembrete
-
-Abrir Cliente
+Nenhum prompt gigante hardcoded.
 
 ==================================================
-DASHBOARD IA
+7. PROVIDERS
 ==================================================
 
-Criar um painel exclusivo mostrando:
+Criar interface única:
 
-• processos críticos
+AIProvider
 
-• documentos vencidos
+Implementações:
 
-• OCR pendente
+OpenAIProvider
 
-• assinaturas pendentes
+GeminiProvider
 
-• certificados vencendo
+ClaudeProvider
 
-• processos sem movimentação
+MockProvider
 
-• sugestões inteligentes
-
-==================================================
-AUDITORIA
-==================================================
-
-Toda resposta deverá registrar:
-
-• usuário
-
-• horário
-
-• agente utilizado
-
-• dados consultados
-
-• tempo da resposta
+Troca de provider sem alterar regras de negócio.
 
 ==================================================
-PERFORMANCE
+8. AUDITORIA
 ==================================================
 
-A IA nunca deve consultar toda a base sem necessidade.
+Registrar:
 
-Criar arquitetura eficiente com:
-
-• cache
-
-• paginação
-
-• consultas específicas
-
-• lazy loading
-
-==================================================
-SEGURANÇA
-==================================================
-
-A IA deve obedecer exatamente as permissões do usuário.
-
-Nunca responder informações de outro tenant.
-
-Nunca ignorar RLS.
-
-Nunca acessar dados sem autorização.
+- usuário
+- tenant
+- agente
+- provider
+- ferramentas utilizadas
+- duração
+- custo estimado
+- tokens
+- sucesso
+- erro
 
 ==================================================
-TESTES
+9. TESTES
 ==================================================
 
-Criar:
+Criar testes para:
 
-• testes unitários
-
-• integração
-
-• Playwright
-
-• Typecheck
-
-• Build
+- Orchestrator
+- Context Engine
+- Prompt Builder
+- Permission Engine
+- Tool Registry
+- Providers
+- Agent Registry
 
 ==================================================
-OBJETIVO FINAL
+10. RESULTADO ESPERADO
 ==================================================
 
-Quando um usuário entrar no NavalDocs Pro, ele deverá sentir que possui um diretor operacional especializado em documentação naval trabalhando ao seu lado.
+Ao final deste Sprint ainda NÃO deve existir um chat bonito.
 
-Este módulo deve se tornar o principal diferencial competitivo do NavalDocs Pro e ser desenvolvido com qualidade enterprise.</div>
+Deve existir uma infraestrutura enterprise sólida, extensível e desacoplada que servirá de base para toda a IA do NavalDocs Pro.
+
+Somente após essa fundação iniciaremos a interface conversacional.</div>
     </div>
   );
 }
