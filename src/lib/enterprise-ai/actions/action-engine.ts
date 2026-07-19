@@ -1,6 +1,8 @@
 import { AIAction, ActionResult, ActionStatus, ConfirmationPolicy } from "./action-types";
 import { ActionRegistry } from "./action-registry";
 import { createActionResult } from "./action-result";
+import { GeneratePdfAction } from "./pdf/generate-pdf-action";
+
 
 export class ActionEngine {
   async execute(actionId: string, context: any): Promise<ActionResult> {
@@ -62,7 +64,8 @@ export class BaseStubAction implements AIAction {
 export const registerStubs = () => {
   const stubs = [
     new BaseStubAction("create-process", "Create Process", "Creates a new process"),
-    new BaseStubAction("generate-pdf", "Generate PDF", "Generates a PDF document"),
+    new GeneratePdfAction(),
+
     new BaseStubAction("request-signature", "Request Signature", "Requests an electronic signature"),
     new BaseStubAction("complete-checklist", "Complete Checklist", "Marks a checklist as completed"),
   ];
