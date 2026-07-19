@@ -70,7 +70,7 @@ describe("LLM Intent Interpreter (Sprint 5.5)", () => {
     
     const plan = await engine.plan({
       intent,
-      context: { userId, companyId, permissions: ["process.create"] }
+      context: { userId, companyId, permissions: ["PROCESS_CREATE"] }
     });
 
     expect(plan.intent).toBe(text);
