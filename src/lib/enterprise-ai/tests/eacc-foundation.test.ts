@@ -51,6 +51,11 @@ describe('EACC Foundation', () => {
   });
 
   it('should identify search intent and call searchProcesses tool', async () => {
+    (supabase.from('processes').select as any).mockResolvedValueOnce({ 
+      data: [{ process_number: 'P-001', vessel: { name: 'Vessel 1' } }], 
+      error: null 
+    });
+
     const request = { message: 'Listar meus processos' };
     const response = await AIOrchestrator.process(request, mockContext);
 
