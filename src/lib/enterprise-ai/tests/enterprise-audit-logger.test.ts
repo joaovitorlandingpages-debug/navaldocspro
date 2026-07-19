@@ -44,9 +44,9 @@ vi.mock("@/utils/pdf-export", () => ({
 }));
 
 describe("Enterprise Audit Logger (Sprint 4.5)", () => {
-  const mockCompanyId = "company-123";
-  const mockUserId = "user-456";
-  const mockProcessId = "process-789";
+  const mockCompanyId = "77f3e58c-d22a-43f6-932d-c20755f94d9b"; // Real UUID format
+  const mockUserId = "99f3e58c-d22a-43f6-932d-c20755f94d9c"; // Real UUID format
+  const mockProcessId = "88f3e58c-d22a-43f6-932d-c20755f94d9d"; // Real UUID format
 
   const authContext: SecurityContext = {
     userId: mockUserId,
@@ -58,6 +58,7 @@ describe("Enterprise Audit Logger (Sprint 4.5)", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    vi.restoreAllMocks(); // Clear spy overrides like the "Database down" one
     ActionRegistry.clear();
   });
 

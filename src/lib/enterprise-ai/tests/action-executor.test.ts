@@ -41,8 +41,8 @@ describe("ActionExecutor (Sprint 4.3A)", () => {
   const executor = new ActionExecutor(ActionRegistry, validator, guard);
 
   const authContext: SecurityContext = {
-    userId: "user-1",
-    companyId: "company-1",
+    userId: "99f3e58c-d22a-43f6-932d-c20755f94d9c",
+    companyId: "77f3e58c-d22a-43f6-932d-c20755f94d9b",
     role: "user",
     permissions: [AIPermission.PROCESS_READ],
     isAuthenticated: true
