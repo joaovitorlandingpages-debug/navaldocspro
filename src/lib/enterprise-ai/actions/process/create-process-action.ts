@@ -103,7 +103,7 @@ export class CreateProcessAction implements AIAction {
         .insert({
           company_id: profile.company_id,
           process_type: context.processType,
-          process_type_id: context.processTypeId || context.process_type_id,
+          process_type_id: context.processTypeId || (context as any).process_type_id,
           customer_id: context.customerId,
           vessel_id: context.vesselId || null,
           title: context.title || context.processType,
