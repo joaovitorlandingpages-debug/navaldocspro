@@ -179,23 +179,22 @@ export class ActionExecutor {
         });
 
         // CRITICAL: We MUST preserve the error code for the outer catch block
-        const normalizedError = new ActionExecutionError(innerError.message || 'Recovery stage failed', { 
-          errorCode: innerErrorCode || 'ACTION_EXECUTION_ERROR', 
-          processId: innerProcessId 
-        });
-        
-        // RE-ASSIGN: Force properties for non-class property access
+        // Re-throwing as a PLAIN OBJECT to prevent any prototype loss during re-throw
+        const normalizedError: any = new Error(innerError.message || 'Recovery stage failed');
         normalizedError.errorCode = innerErrorCode || 'ACTION_EXECUTION_ERROR';
-        (normalizedError as any).code = normalizedError.errorCode;
+        normalizedError.code = normalizedError.errorCode;
         normalizedError.processId = innerProcessId;
+        normalizedError.isActionError = true;
+        normalizedError.name = 'ActionExecutionError';
 
-        console.log('ActionExecutor Catch Normalization (Normalized):', { 
+        console.log('ActionExecutor Catch Normalization (Normalized Error Object):', { 
           errorCode: normalizedError.errorCode, 
           processId: normalizedError.processId 
         });
 
         throw normalizedError;
       }
+
 
 
 
