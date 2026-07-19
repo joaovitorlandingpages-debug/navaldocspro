@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { PlanExecutionEngine } from "../execution/plan-execution-engine";
 import { ActionExecutor } from "../actions/execution/action-executor";
 import { ExecutionPlan } from "../planner/planner-types";
-import { ActionStatus } from "../action-types";
+import { ActionStatus } from "../actions/action-types";
 import { sessionManager } from "../execution/execution-session";
 
 describe("PlanExecutionEngine", () => {
   let executor: any;
   let engine: PlanExecutionEngine;
-  const authContext = { userId: "user-1", companyId: "comp-1", permissions: ["admin"] };
+  const authContext = { userId: "user-1", companyId: "comp-1", permissions: ["admin"], role: "user", isAuthenticated: true };
 
   beforeEach(() => {
     executor = {

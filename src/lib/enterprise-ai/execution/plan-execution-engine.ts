@@ -4,7 +4,7 @@ import { SecurityContext } from "../actions/security/permission-types";
 import { PlanStatus, ExecutionSession, StepStatus } from "./plan-execution-types";
 import { sessionManager } from "./execution-session";
 import { PlanExecutionError, PlanExecutionErrorCode } from "./plan-execution-errors";
-import { ActionStatus } from "../action-types";
+import { ActionStatus } from "../actions/action-types";
 
 export class PlanExecutionEngine {
   constructor(private executor: ActionExecutor) {}
