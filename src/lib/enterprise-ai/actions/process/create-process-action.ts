@@ -157,6 +157,9 @@ export class CreateProcessAction implements AIAction {
         }
       });
 
+    } catch (e: any) {
+      console.error("[CreateProcessAction] Final Catch:", e.code, e.name);
+      throw e;
     } finally {
       // Cleanup if needed
     }
