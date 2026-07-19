@@ -125,7 +125,7 @@ export class PlannerEngine {
     return steps;
   }
 
-  private validateSteps(steps: ExecutionStep[]) {
+  private validateSteps(steps: ExecutionStep[], availableActions: import("../actions/action-types").AIAction[]) {
     const stepIds = new Set(steps.map(s => s.stepId));
     
     for (const step of steps) {
