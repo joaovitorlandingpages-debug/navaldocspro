@@ -160,8 +160,11 @@ export class CreateProcessAction implements AIAction {
       });
 
     } catch (error: any) {
+      console.error("[CreateProcessAction] Execution error:", error);
+      
       // Re-throw if it's already an ActionError so ActionExecutor can catch its code
-      if (error instanceof ProcessCreationError || error instanceof CustomerNotFoundError || error instanceof VesselNotFoundError || error instanceof TenantMismatchError) {
+      // We check for the 'code' property which is present in our ActionError base class
+      if (error && typeof error === 'object' && 'code' in error) {
         throw error;
       }
 
