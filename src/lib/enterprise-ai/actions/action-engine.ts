@@ -4,6 +4,8 @@ import { createActionResult } from "./action-result";
 import { GeneratePdfAction } from "./pdf/generate-pdf-action";
 import { CompleteChecklistAction } from "./checklist/complete-checklist-action";
 import { RequestSignatureAction } from "./signatures/request-signature-action";
+import { CreateProcessAction } from "./process/create-process-action";
+
 
 
 
@@ -88,6 +90,9 @@ export const registerStubs = () => {
   // Register Real Actions
   ActionRegistry.register(new GeneratePdfAction());
   ActionRegistry.register(new RequestSignatureAction());
+  ActionRegistry.register(new CompleteChecklistAction());
+  ActionRegistry.register(new CreateProcessAction());
+
 };
 
 
