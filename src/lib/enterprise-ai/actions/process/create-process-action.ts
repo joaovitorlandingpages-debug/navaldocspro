@@ -1,8 +1,10 @@
 import { 
   CreateProcessInput, 
   CreateProcessInputSchema, 
+  ActionError 
 } from "./process-action-types";
-import { AIAction, ActionResult, ActionStatus, ConfirmationPolicy, ActionError } from "../action-types";
+import { AIAction, ActionResult, ActionStatus, ConfirmationPolicy } from "../action-types";
+
 import { createActionResult } from "../action-result";
 import { supabase } from "@/integrations/supabase/client";
 
