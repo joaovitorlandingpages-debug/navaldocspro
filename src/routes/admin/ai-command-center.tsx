@@ -86,24 +86,26 @@ function AICommandCenterPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
-      <div className="bg-indigo-900 text-white p-8 rounded-2xl border border-indigo-800 shadow-2xl overflow-hidden relative">
+      <div className="bg-slate-900 text-white p-8 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden relative">
         <div className="absolute top-0 right-0 p-8 opacity-10">
           <Cpu className="h-32 w-32" />
         </div>
         <h1 className="text-3xl font-black tracking-tighter mb-2">ENTERPRISE AI COMMAND CENTER</h1>
-        <p className="text-indigo-400 font-bold tracking-widest uppercase text-[10px]">Sprint 3 — Enterprise AI Provider Layer</p>
+        <p className="text-emerald-400 font-bold tracking-widest uppercase text-[10px]">Sprint 4 — Enterprise Action Execution Engine</p>
         
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl">
             <h3 className="text-rose-400 font-black text-[10px] uppercase mb-2">Importante</h3>
             <p className="text-[10px] text-rose-200/70 font-medium leading-relaxed">
-              A fundação do EACC e a inteligência conversacional já existem. Esta sprint foca exclusivamente na camada de abstração de provedores.
+              O EACC já possui Orchestrator, Conversation, Context, Intent, Planner, Tool Registry e Provider Layer. 
+              <strong> NÃO alterar:</strong> Process Center, OCR, Health, Risk, Document, Signature Engine ou Portal do Cliente.
             </p>
           </div>
-          <div className="bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-xl">
-            <h3 className="text-indigo-400 font-black text-[10px] uppercase mb-2">Objetivo</h3>
-            <p className="text-[10px] text-indigo-200/70 font-medium leading-relaxed">
-              Desacoplar o sistema de fornecedores específicos. O AIProviderManager agora orquestra OpenAI, Gemini e Claude com fallback automático.
+          <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
+            <h3 className="text-emerald-400 font-black text-[10px] uppercase mb-2">Objetivo</h3>
+            <p className="text-[10px] text-emerald-200/70 font-medium leading-relaxed">
+              Transformar o EACC de um assistente que responde perguntas para um copiloto que executa ações reais com segurança. 
+              Toda ação deve passar por Planejamento → Permission Guard → Validation → Execution → Audit.
             </p>
           </div>
         </div>
@@ -112,107 +114,410 @@ function AICommandCenterPage() {
       <div className="grid grid-cols-1 gap-8">
         <Card className="p-8 border-slate-200 bg-white font-mono text-[11px] leading-relaxed shadow-sm">
           <ScrollArea className="h-[1200px] pr-4">
-            <div className="space-y-12">
-              <section>
-                <h2 className="text-sm font-black border-b-2 border-slate-900 pb-2 mb-4">1. ÁRVORE COMPLETA</h2>
-                <pre className="bg-slate-50 p-4 rounded-lg text-[10px]">
-{`src/lib/enterprise-ai/
-├── providers/ (SPRINT 3 - NEW)
-│   ├── provider-types.ts
-│   ├── provider-manager.ts
-│   ├── provider-registry.ts
-│   ├── mock-provider.ts
-│   ├── openai-provider.ts
-│   ├── gemini-provider.ts
-│   └── claude-provider.ts
-├── agents/
-├── context/
-├── conversations/
-├── core/
-├── intents/
-├── planning/
-├── prompts/
-├── responses/
-├── tests/
-│   ├── eacc-foundation.test.ts
-│   └── provider-layer.test.ts (NEW)
-└── tools/`}
-                </pre>
-              </section>
+            <div className="space-y-12 whitespace-pre-wrap">
+              <section id="ts-visual-edit-probe-a0096557b1234e9e">
+                <div className="text-slate-900">
+==================================================
+1. ACTION ENGINE
+==================================================
 
-              <section>
-                <h2 className="text-sm font-black border-b-2 border-slate-900 pb-2 mb-4">2. PROVIDER INTERFACE</h2>
-                <pre className="bg-slate-900 text-emerald-400 p-4 rounded-lg text-[10px]">
-{`export interface AIProvider {
-  id: string;
-  name: string;
-  initialize(): Promise<void>;
-  healthCheck(): Promise<AIProviderHealth>;
-  generate(prompt: string, options?: AIRequestOptions): Promise<AIResponse>;
-  stream(prompt: string, options?: AIRequestOptions): AsyncIterable<string>;
-  countTokens(text: string): Promise<number>;
-  estimateCost(tokens: { prompt: number; completion: number }): Promise<number>;
-  shutdown(): Promise<void>;
-}`}
-                </pre>
-              </section>
+Criar:
 
-              <section>
-                <h2 className="text-sm font-black border-b-2 border-slate-900 pb-2 mb-4">3. EVIDÊNCIA DE FALLBACK (MANAGER)</h2>
-                <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg text-[10px] space-y-2">
-                  <p className="font-bold">Lógica de Seleção e Recuperação:</p>
-                  <pre className="text-[9px]">
-{`try {
-  return await provider.generate(prompt, options);
-} catch (error) {
-  // Provider failed, falling back to mock...
-  const fallback = providerRegistry.get(this.fallbackProviderId)!;
-  return await fallback.generate(prompt, options);
-}`}
-                  </pre>
-                  <p className="text-emerald-700 font-bold">✓ Fallback para MockProvider implementado.</p>
-                </div>
-              </section>
+src/lib/enterprise-ai/actions/
 
-              <section>
-                <h2 className="text-sm font-black border-b-2 border-slate-900 pb-2 mb-4">4. PROVIDERS IMPLEMENTADOS</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 p-4 rounded-lg">
-                    <p className="font-bold text-[10px] mb-2">Providers Reais (Stubs):</p>
-                    <ul className="text-[10px] space-y-1">
-                      <li>OpenAI (gpt-4o)</li>
-                      <li>Gemini (1.5-pro)</li>
-                      <li>Claude (3-5-sonnet)</li>
-                    </ul>
-                  </div>
-                  <div className="bg-slate-50 p-4 rounded-lg">
-                    <p className="font-bold text-[10px] mb-2">Provider de Teste:</p>
-                    <ul className="text-[10px] space-y-1">
-                      <li>MockProvider (100% Funcional)</li>
-                    </ul>
-                  </div>
-                </div>
-              </section>
+action-types.ts
 
-              <section>
-                <h2 className="text-sm font-black border-b-2 border-slate-900 pb-2 mb-4">5. TESTES (VITEST) - SPRINT 3</h2>
-                <pre className="bg-slate-900 text-emerald-400 p-4 rounded-lg text-[10px]">
-{`✓ src/lib/enterprise-ai/tests/provider-layer.test.ts
-- should have registered all enterprise providers
-- should generate response via MockProvider
-- should select Claude for large prompts
-- should provide health reports
+action-registry.ts
 
-Tests 4 passed (4)
-Duration 412ms`}
-                </pre>
-              </section>
+action-engine.ts
 
-              <section>
-                <h2 className="text-sm font-black border-b-2 border-slate-900 pb-2 mb-4">16. STATUS DA ENTREGA</h2>
-                <div className="p-6 bg-emerald-50 border-2 border-emerald-500 rounded-xl text-center">
-                  <h3 className="text-2xl font-black text-emerald-700 uppercase italic">Sprint 3 Implementado e Validado</h3>
-                  <p className="text-[10px] font-bold mt-2 leading-relaxed">Camada Enterprise AI Provider concluída. Abstração total de fornecedores, suporte a stubs para OpenAI/Gemini/Claude e motor de fallback funcional.</p>
+action-validator.ts
+
+action-executor.ts
+
+action-audit.ts
+
+action-result.ts
+
+==================================================
+2. ACTION CONTRACT
+==================================================
+
+Criar interface:
+
+AIAction
+
+Campos:
+
+id
+
+name
+
+description
+
+requiredPermissions
+
+requiredRole
+
+confirmationPolicy
+
+validation
+
+execute()
+
+rollback()
+
+audit()
+
+estimatedRisk
+
+estimatedDuration
+
+==================================================
+3. ACTION REGISTRY
+==================================================
+
+Registrar inicialmente:
+
+CreateProcessAction
+
+UpdateProcessAction
+
+GeneratePdfAction
+
+RequestSignatureAction
+
+CompleteChecklistAction
+
+CreateCustomerAction
+
+CreateVesselAction
+
+AttachDocumentAction
+
+CloseProcessAction
+
+Cada Action deve ser independente.
+
+==================================================
+4. CONFIRMATION ENGINE
+==================================================
+
+Implementar níveis:
+
+NONE
+
+LOW
+
+MEDIUM
+
+HIGH
+
+CRITICAL
+
+Exemplos:
+
+Consultar processos
+
+NONE
+
+Gerar PDF
+
+LOW
+
+Atualizar checklist
+
+MEDIUM
+
+Encerrar processo
+
+HIGH
+
+Excluir informações
+
+CRITICAL
+
+A IA deve solicitar confirmação quando necessário.
+
+==================================================
+5. ACTION VALIDATOR
+==================================================
+
+Antes da execução validar:
+
+autenticação
+
+tenant
+
+permissões
+
+papel
+
+pré-condições
+
+existência da entidade
+
+estado atual
+
+duplicidade
+
+integridade
+
+Caso qualquer validação falhe:
+
+não executar.
+
+==================================================
+6. EXECUTION PIPELINE
+==================================================
+
+Fluxo:
+
+Pergunta
+
+↓
+
+Intent
+
+↓
+
+Planner
+
+↓
+
+Action
+
+↓
+
+Validator
+
+↓
+
+Permission Guard
+
+↓
+
+Executor
+
+↓
+
+Audit
+
+↓
+
+Resposta
+
+==================================================
+7. ROLLBACK
+==================================================
+
+Toda Action deverá informar:
+
+rollbackSupported
+
+rollback()
+
+Quando possível.
+
+Caso contrário registrar:
+
+rollbackNotSupported
+
+==================================================
+8. ACTION AUDIT
+==================================================
+
+Persistir:
+
+executionId
+
+userId
+
+companyId
+
+action
+
+status
+
+beforeState
+
+afterState
+
+duration
+
+error
+
+timestamp
+
+==================================================
+9. PERMISSION ENGINE
+==================================================
+
+Nenhuma Action poderá confiar:
+
+companyId
+
+role
+
+permissions
+
+recebidos pela interface.
+
+Tudo deve vir do contexto autenticado.
+
+==================================================
+10. ACTION PLANNER
+==================================================
+
+Permitir planos como:
+
+Criar Processo
+
+↓
+
+Criar Cliente (se necessário)
+
+↓
+
+Criar Embarcação (se necessário)
+
+↓
+
+Criar Processo
+
+↓
+
+Criar Blueprint
+
+↓
+
+Criar Checklist
+
+↓
+
+Resposta
+
+==================================================
+11. INTERFACE
+==================================================
+
+Na página:
+
+/admin/ai-command-center
+
+Mostrar:
+
+Plano
+
+Ações
+
+Validações
+
+Permissões
+
+Confirmações
+
+Execução
+
+Tempo
+
+Resultado
+
+Auditoria
+
+==================================================
+12. AÇÕES OBRIGATÓRIAS
+==================================================
+
+Implementar totalmente:
+
+CreateProcessAction
+
+GeneratePdfAction
+
+RequestSignatureAction
+
+CompleteChecklistAction
+
+As demais podem permanecer preparadas para expansão.
+
+==================================================
+13. TESTES
+==================================================
+
+Criar testes para:
+
+Permission Guard
+
+Validator
+
+Executor
+
+Rollback
+
+Audit
+
+Confirmation
+
+Pipeline
+
+Tenant Isolation
+
+Actions
+
+==================================================
+14. BUILD
+==================================================
+
+Executar:
+
+Vitest
+
+Typecheck
+
+Build
+
+==================================================
+15. NÃO REGRESSÃO
+==================================================
+
+Garantir que nenhum módulo existente foi quebrado.
+
+==================================================
+16. RELATÓRIO
+==================================================
+
+Apresentar:
+
+Arquivos criados
+
+Arquivos alterados
+
+Actions implementadas
+
+Pipeline
+
+Testes
+
+Build
+
+Typecheck
+
+Limitações
+
+STATUS:
+
+SPRINT 4 IMPLEMENTADO E VALIDADO
+
+SPRINT 4 PARCIAL
+
+SPRINT 4 BLOQUEADO
+
+IMPORTANTE
+
+O objetivo desta Sprint NÃO é adicionar mais infraestrutura.
+
+O objetivo é permitir que o EACC execute ações reais no NavalDocs Pro com segurança, confirmação, auditoria e isolamento multi-tenant.
                 </div>
               </section>
             </div>
