@@ -163,6 +163,17 @@ export class CreateProcessAction implements AIAction {
 
     } catch (e: any) {
       console.error("[CreateProcessAction] Final Catch:", e.code, e.name);
+      
+      // If it's already a ProcessCreationError or similar, it will have a code
+      if (e && typeof e === 'object' && e.code) {
+        throw e;
+      }
+
+      // If it doesn't have a code but we know it's a domain error, re-throw
+      if (e instanceof ProcessCreationError || e instanceof CustomerNotFoundError || e instanceof VesselNotFoundError || e instanceof TenantMismatchError) {
+        throw e;
+      }
+      
       throw e;
     } finally {
       // Cleanup if needed
