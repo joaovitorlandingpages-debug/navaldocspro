@@ -37,9 +37,6 @@ export class CreateProcessAction implements AIAction {
     
     if (!user) throw new Error("User context missing in execute");
 
-    console.log('[CreateProcessAction] START execute');
-
-
     const { data: profile } = await supabase
       .from("profiles")
       .select("company_id")
@@ -80,7 +77,7 @@ export class CreateProcessAction implements AIAction {
       });
     } catch (e: any) {
       const err = new ActionError(e.message || "Blueprint materialization failed", 'MATERIALIZATION_FAILED');
-      (err as any).processId = processId;
+      Object.assign(err, { processId });
       throw err;
     }
 
@@ -89,7 +86,7 @@ export class CreateProcessAction implements AIAction {
       notifyProcessesChanged(visibleProcess);
     } catch (e: any) {
       const err = new ActionError(e.message || "Process visibility confirmation failed", 'VISIBILITY_FAILED');
-      (err as any).processId = processId;
+      Object.assign(err, { processId });
       throw err;
     }
 
