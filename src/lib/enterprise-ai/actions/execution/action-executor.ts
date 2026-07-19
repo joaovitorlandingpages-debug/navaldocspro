@@ -300,8 +300,9 @@ export class ActionExecutor {
         durationMs,
         errors,
         metadata: { 
-          errorCode, 
-          processId: (error as any).processId,
+          errorCode: effectiveErrorCode, 
+          processId: (error as any).processId || (input as any).processId,
+
           confirmationToken: (error as any).publicToken,
           summary: (error as any).summary
         }
