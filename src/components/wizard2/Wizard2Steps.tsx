@@ -531,7 +531,7 @@ export function StepDocuments() {
                     <div className="space-y-1">
                       <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipos Aceitos</Label>
                       <div className="text-xs font-bold text-slate-700 flex gap-2">
-                        {item.fileTypes?.map(t => <span key={t} className="bg-slate-100 px-2 py-0.5 rounded-md">{t}</span>) || 'PDF, JPG, PNG'}
+                        {item.fileTypes?.map((t: string) => <span key={t} className="bg-slate-100 px-2 py-0.5 rounded-md">{t}</span>) || 'PDF, JPG, PNG'}
                       </div>
                     </div>
                     {item.captureTips && (
