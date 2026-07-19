@@ -87,8 +87,35 @@ export class ActionExecutor {
         throw new ActionPermissionDeniedError(security.errors?.[0]);
       }
 
-      // 5. Execute
-      const result = await action.execute({ ...input, ...context, input });
+      // 5. Handle Confirmation Token if present
+      let confirmationMetadata = {};
+      if (input.confirmationToken) {
+        try {
+          // Prepare sensitive payload for hash comparison
+          // We exclude the token itself and other non-functional metadata
+          const { confirmationToken, metadata, executionId: _, ...sensitivePayload } = input;
+          
+          const confirmation = await confirmationService.validateAndConsume(
+            input.confirmationToken,
+            sensitivePayload,
+            authContext.userId,
+            authContext.companyId
+          );
+          
+          confirmationMetadata = {
+            confirmationId: confirmation.id,
+            confirmationValidated: true,
+            confirmationConsumed: true,
+            payloadHashMatched: true
+          };
+        } catch (confError: any) {
+          // Wrap and rethrow as validation error or specific confirmation error
+          throw confError;
+        }
+      }
+
+      // 6. Execute
+      const result = await action.execute({ ...input, ...context, ...confirmationMetadata, input });
 
       const finishedAt = new Date();
       const durationMs = finishedAt.getTime() - startedAt.getTime();
