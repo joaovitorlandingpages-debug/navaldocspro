@@ -442,63 +442,168 @@ export function StepChecklist() {
 // --- Step 5: Documents ---
 
 export function StepDocuments() {
-  const { docPicks, uploadedFiles, setData } = useWizardStore();
+  const { docPicks, uploadedFiles, setData, processTypeName } = useWizardStore();
+  const [blueprint, setBlueprint] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   
+  useEffect(() => {
+    if (!processTypeName) return;
+    const load = async () => {
+      setLoading(true);
+      const data = await previewProcessBlueprint(processTypeName);
+      // Filter to only picked or mandatory items
+      const picked = data.filter(item => 
+        item.templateId && docPicks.includes(item.templateId)
+      );
+      setBlueprint(picked);
+      setLoading(false);
+    };
+    load();
+  }, [processTypeName, docPicks]);
+
   const handleUpload = (slot: string, files: any[]) => {
     setData({
       uploadedFiles: { ...uploadedFiles, [slot]: [...(uploadedFiles[slot] || []), ...files] }
     });
   };
 
-  return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-right-2 duration-300">
-      <StepHeader 
-        title="Documentação Visual" 
-        description="Envie as fotos ou PDFs solicitados." 
-        icon={FileText} 
-      />
+  const progressCount = blueprint.filter(item => item.templateId && (uploadedFiles[item.templateId] || []).length > 0).length;
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {docPicks.map((pick, idx) => (
-          <Card key={pick || idx} className="p-4 rounded-2xl border-slate-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-black text-slate-900 uppercase tracking-tight truncate pr-2">
-                Doc #{idx + 1}
-              </span>
-              {(uploadedFiles[pick] || []).length > 0 ? (
-                <Badge className="bg-emerald-50 text-emerald-600 border-none text-[10px]">Enviado</Badge>
-              ) : (
-                <Badge variant="outline" className="text-slate-400 border-slate-200 text-[10px]">Pendente</Badge>
-              )}
-            </div>
-            
-            <div className="aspect-video rounded-xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 group transition-colors hover:border-primary hover:bg-primary/5 cursor-pointer relative overflow-hidden">
-               {(uploadedFiles[pick] || []).length > 0 ? (
-                 <div className="flex flex-col items-center gap-1">
-                   <FileCheck className="h-8 w-8 text-emerald-500" />
-                   <span className="text-[10px] text-slate-500 font-medium">Ver / Alterar</span>
-                 </div>
-               ) : (
-                 <div className="flex flex-col items-center gap-1">
-                   <Upload className="h-6 w-6 text-slate-300 group-hover:text-primary transition-colors" />
-                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Enviar</span>
-                 </div>
-               )}
-               
-               <div className="absolute inset-0 opacity-0 cursor-pointer">
-                  <FileUploader 
-                    bucket="process-attachments" 
-                    category={pick}
-                    onSuccess={(res: any) => handleUpload(pick, [res])}
-                  />
-               </div>
-            </div>
-          </Card>
-        ))}
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+        <StepHeader 
+          title="Documentação Visual" 
+          description="Envie as fotos ou PDFs solicitados conforme o blueprint." 
+          icon={FileText} 
+        />
+        
+        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 min-w-[180px]">
+          <div className="flex justify-between text-[10px] font-black uppercase text-slate-400 mb-2">
+            <span>Progresso Total</span>
+            <span className="text-primary">{progressCount} de {blueprint.length}</span>
+          </div>
+          <Progress value={(progressCount / (blueprint.length || 1)) * 100} className="h-1.5 bg-slate-200" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        {blueprint.map((item, idx) => {
+          const slot = item.templateId || `temp-${idx}`;
+          const files = uploadedFiles[slot] || [];
+          const isUploaded = files.length > 0;
+          const isMandatory = item.kind === 'mandatory';
+
+          return (
+            <Card key={slot} className={`group overflow-hidden border-2 transition-all duration-300 rounded-3xl ${isUploaded ? 'border-emerald-100 bg-emerald-50/20' : 'border-slate-100 bg-white hover:border-primary/20'}`}>
+              <div className="flex flex-col md:flex-row">
+                {/* Info Section */}
+                <div className="flex-1 p-6 md:p-8">
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    {isUploaded ? (
+                      <Badge className="bg-emerald-500 text-white border-none font-black text-[9px] uppercase px-3 py-1">🟢 Enviado</Badge>
+                    ) : isMandatory ? (
+                      <Badge className="bg-rose-500 text-white border-none font-black text-[9px] uppercase px-3 py-1">🔴 Obrigatório</Badge>
+                    ) : (
+                      <Badge className="bg-amber-400 text-white border-none font-black text-[9px] uppercase px-3 py-1">🟡 Pendente</Badge>
+                    )}
+                    
+                    {item.requiresOcr && (
+                      <Badge className="bg-blue-50 text-blue-600 border-none font-black text-[9px] uppercase px-3 py-1 flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" /> IA OCR ATIVO
+                      </Badge>
+                    )}
+
+                    <Badge variant="outline" className="text-slate-400 border-slate-200 font-bold text-[9px] uppercase px-2 py-0.5">
+                      {item.countNeeded || 1} {item.countNeeded > 1 ? 'UNIDADES' : 'UNIDADE'}
+                    </Badge>
+                  </div>
+
+                  <h3 className="text-xl font-black text-slate-900 mb-2 leading-tight uppercase tracking-tight">
+                    {item.name}
+                  </h3>
+                  
+                  <p className="text-sm text-slate-500 mb-6 leading-relaxed max-w-lg">
+                    {item.description || "Documento essencial para a conformidade deste processo conforme as normas navais vigentes."}
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipos Aceitos</Label>
+                      <div className="text-xs font-bold text-slate-700 flex gap-2">
+                        {item.fileTypes?.map(t => <span key={t} className="bg-slate-100 px-2 py-0.5 rounded-md">{t}</span>) || 'PDF, JPG, PNG'}
+                      </div>
+                    </div>
+                    {item.captureTips && (
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Dica de Captura</Label>
+                        <div className="text-xs font-medium text-slate-600 italic">"{item.captureTips}"</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions Section */}
+                <div className="w-full md:w-80 bg-slate-50/50 border-t md:border-t-0 md:border-l border-slate-100 p-6 md:p-8 flex flex-col justify-center gap-3">
+                  {isUploaded ? (
+                    <div className="space-y-3">
+                       <Button variant="outline" className="w-full h-14 rounded-2xl bg-white border-slate-200 text-slate-600 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 gap-2">
+                          <Eye className="h-4 w-4" /> Visualizar {files.length} Item
+                       </Button>
+                       <Button 
+                        variant="ghost" 
+                        onClick={() => setData({ uploadedFiles: { ...uploadedFiles, [slot]: [] } })}
+                        className="w-full text-rose-500 font-bold text-[10px] uppercase hover:bg-rose-50 gap-2"
+                       >
+                          <Trash2 className="h-4 w-4" /> Remover Documento
+                       </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <Button className="w-full h-16 rounded-2xl bg-navy text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-navy/10 hover:bg-navy/90 gap-3 group/btn overflow-hidden">
+                          <Upload className="h-5 w-5 group-hover/btn:-translate-y-1 transition-transform" />
+                          📁 Fazer Upload
+                          <div className="absolute inset-0 opacity-0 cursor-pointer">
+                            <FileUploader 
+                              bucket="process-attachments" 
+                              category={slot}
+                              onSuccess={(res: any) => handleUpload(slot, [res])}
+                            />
+                          </div>
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <Button variant="outline" className="h-14 rounded-2xl bg-white border-slate-200 text-slate-600 font-bold text-[10px] uppercase tracking-tighter hover:border-primary/30 gap-1 px-2">
+                          <Camera className="h-4 w-4 text-primary" /> Tirar Foto
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          disabled={!item.requiresOcr}
+                          className={`h-14 rounded-2xl bg-white border-slate-200 text-slate-600 font-bold text-[10px] uppercase tracking-tighter hover:border-primary/30 gap-1 px-2 ${!item.requiresOcr ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <Sparkles className="h-4 w-4 text-blue-500" /> 🤖 OCR
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {item.exampleUrl && (
+                    <button className="text-[10px] font-black uppercase text-primary/60 hover:text-primary transition-colors mt-2 flex items-center justify-center gap-1">
+                      <Eye className="h-3 w-3" /> Ver Exemplo Visual
+                    </button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
 }
+
 
 // --- Step 6: Review ---
 
