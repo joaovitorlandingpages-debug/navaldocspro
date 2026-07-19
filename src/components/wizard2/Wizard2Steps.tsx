@@ -777,6 +777,76 @@ export function StepReview() {
   );
 
   return (
+    <div className="space-y-8 animate-in fade-in slide-in-from-right-2 duration-300">
+      <StepHeader 
+        title="Revisão Final" 
+        description="Analise o parecer técnico do 'Engenheiro Digital' antes de confirmar." 
+        icon={CheckCircle2} 
+      />
+
+      {/* 10. Resumo Executivo (Smart Analyzer) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Item label="Cliente" value={customer?.name} icon={User} />
+            <Item label="Embarcação" value={vessel?.name} icon={Ship} />
+            <Item label="Serviço" value={state.processTypeName} icon={Sparkles} />
+            <Item label="Prioridade" value={state.priority} icon={Star} />
+          </div>
+
+          <Card className="p-6 border-slate-100 bg-white overflow-hidden relative">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-black uppercase text-xs tracking-widest text-slate-400 flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-primary" /> Parecer do Engenheiro Digital
+              </h4>
+              {analyzing ? (
+                <Badge className="bg-primary/10 text-primary animate-pulse border-none">Analisando...</Badge>
+              ) : (
+                <Badge className="bg-emerald-500 text-white border-none">Concluído</Badge>
+              )}
+            </div>
+            
+            <div className="space-y-4">
+              <p className="text-sm font-bold text-navy leading-relaxed italic border-l-4 border-primary pl-4">
+                "{analysis?.summary || 'Nenhuma inconsistência grave detectada até o momento.'}"
+              </p>
+              
+              <div className="space-y-2">
+                {analysis?.detected_issues?.map((issue: any, i: number) => (
+                  <div key={i} className="flex items-start gap-3 p-3 bg-red-50 rounded-xl border border-red-100">
+                    <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                    <div className="text-[11px] font-bold text-red-700 leading-tight">
+                      {issue.message}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        <div className="space-y-4">
+          {/* 6 & 7. Score e Probabilidade */}
+          <Card className="p-6 border-slate-100 bg-navy text-white flex flex-col items-center text-center">
+            <div className="h-16 w-16 rounded-full border-4 border-primary flex items-center justify-center mb-3">
+              <span className="text-xl font-black">{analysis?.score || 0}%</span>
+            </div>
+            <h5 className="font-black uppercase text-[10px] tracking-widest text-primary mb-1">Qualidade Documental</h5>
+            <div className="text-[9px] font-bold text-white/60 uppercase">Excelente</div>
+          </Card>
+
+          <Card className="p-6 border-slate-100 bg-white flex flex-col items-center text-center">
+            <div className="text-3xl font-black text-navy mb-1">{analysis?.approval_probability || 0}%</div>
+            <h5 className="font-black uppercase text-[10px] tracking-widest text-slate-400 mb-2">Probabilidade de Aprovação</h5>
+            <p className="text-[8px] font-bold text-slate-400 leading-tight uppercase">
+              Estimativa técnica baseada na conformidade documental
+            </p>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
     <div className="space-y-6 animate-in fade-in zoom-in-95 duration-400">
       <StepHeader 
         title="Revisão Geral" 
