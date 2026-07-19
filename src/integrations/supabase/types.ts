@@ -70,6 +70,91 @@ export type Database = {
           },
         ]
       }
+      ai_action_audits: {
+        Row: {
+          action_id: string
+          action_name: string
+          company_id: string
+          conversation_id: string | null
+          created_at: string
+          document_id: string | null
+          duration_ms: number | null
+          errors: Json | null
+          execution_id: string
+          finished_at: string | null
+          id: string
+          metadata: Json | null
+          process_id: string | null
+          provider: string | null
+          started_at: string
+          status: string
+          user_id: string
+          warnings: Json | null
+        }
+        Insert: {
+          action_id: string
+          action_name: string
+          company_id: string
+          conversation_id?: string | null
+          created_at?: string
+          document_id?: string | null
+          duration_ms?: number | null
+          errors?: Json | null
+          execution_id: string
+          finished_at?: string | null
+          id?: string
+          metadata?: Json | null
+          process_id?: string | null
+          provider?: string | null
+          started_at: string
+          status: string
+          user_id: string
+          warnings?: Json | null
+        }
+        Update: {
+          action_id?: string
+          action_name?: string
+          company_id?: string
+          conversation_id?: string | null
+          created_at?: string
+          document_id?: string | null
+          duration_ms?: number | null
+          errors?: Json | null
+          execution_id?: string
+          finished_at?: string | null
+          id?: string
+          metadata?: Json | null
+          process_id?: string | null
+          provider?: string | null
+          started_at?: string
+          status?: string
+          user_id?: string
+          warnings?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_action_audits_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_action_audits_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "generated_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_action_audits_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_copilot_interactions: {
         Row: {
           company_id: string

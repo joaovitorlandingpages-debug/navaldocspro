@@ -163,7 +163,9 @@ export class GeneratePdfAction implements AIAction {
           processId,
           documentId: genDoc.id,
           pdfUrl: signedUrl,
-          path
+          path,
+          userId,
+          companyId
         }
       };
     } catch (error: any) {

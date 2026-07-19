@@ -7,6 +7,7 @@ export enum ConfirmationPolicy {
 }
 
 export enum ActionStatus {
+  PENDING = 'PENDING',
   SUCCESS = 'SUCCESS',
   FAILED = 'FAILED',
   NOT_IMPLEMENTED = 'NOT_IMPLEMENTED',
