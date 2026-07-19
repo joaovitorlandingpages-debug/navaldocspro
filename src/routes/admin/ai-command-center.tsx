@@ -115,36 +115,58 @@ function AICommandCenterPage() {
         <Card className="p-8 border-slate-200 bg-white font-mono text-[11px] leading-relaxed shadow-sm">
           <ScrollArea className="h-[1200px] pr-4">
             <div className="space-y-12 whitespace-pre-wrap">
-              <section id="ts-visual-edit-probe-ed7ff8f90a4645f3">
+              <section id="ts-visual-edit-probe-bbacb11511f6434d">
                 ENTERPRISE AI CORE
 
-SPRINT 5.5
+SPRINT 5.6
 
-LLM INTENT INTERPRETER
+ENTERPRISE COPILOT
 
 ==================================================
 OBJETIVO
 ==================================================
 
-Implementar a camada oficial de interpretação de linguagem natural do Enterprise AI Core.
+Criar o primeiro Enterprise Copilot oficial do sistema.
 
-IMPORTANTE
+O Copilot será apenas um orquestrador.
 
-O LLM NÃO executa nenhuma Action.
+Ele NÃO executa regras de negócio.
 
-O LLM NÃO cria planos.
+Ele apenas conecta:
 
-O LLM NÃO chama o ActionExecutor.
+Intent Interpreter
 
-Sua única responsabilidade é transformar linguagem natural em uma StructuredIntent.
+↓
 
-O Planner continuará responsável por:
+Planner
 
-- descobrir Actions;
-- validar permissões;
-- montar ExecutionPlan;
-- validar dependências;
-- calcular risco.
+↓
+
+PlanExecutionEngine
+
+↓
+
+ActionExecutor
+
+↓
+
+Business Actions
+
+==================================================
+NÃO ALTERAR
+==================================================
+
+Não modificar:
+
+- Planner
+- PlanExecutionEngine
+- ActionExecutor
+- Actions
+- PermissionGuard
+- ConfirmationService
+- IdempotencyService
+
+Apenas consumir essas camadas.
 
 ==================================================
 ARQUITETURA
@@ -152,236 +174,252 @@ ARQUITETURA
 
 Criar:
 
-src/lib/enterprise-ai/intent/
+src/lib/enterprise-ai/copilot/
 
-intent-interpreter.ts
+enterprise-copilot.ts
 
-intent-parser.ts
+copilot-session.ts
 
-intent-types.ts
+copilot-context.ts
 
-intent-schema.ts
+copilot-types.ts
 
-intent-validator.ts
+copilot-errors.ts
 
-intent-errors.ts
+copilot-response-builder.ts
 
-intent-normalizer.ts
+conversation-memory.ts
+
+conversation-validator.ts
 
 index.ts
 
-Criar:
+Criar testes:
 
-src/lib/enterprise-ai/tests/intent-interpreter.test.ts
-
-==================================================
-ENTRADA
-==================================================
-
-Receber:
-
-texto livre
-
-Exemplos:
-
-"Crie um processo para o cliente João."
-
-"Gere os PDFs."
-
-"Envie os documentos para assinatura."
-
-"Complete o checklist."
-
-"Crie um processo e envie para assinatura."
+src/lib/enterprise-ai/tests/copilot.test.ts
 
 ==================================================
-SAÍDA
+FLUXO
 ==================================================
 
-Retornar apenas:
+Mensagem
+
+↓
+
+IntentInterpreter
+
+↓
 
 StructuredIntent
 
-Campos mínimos:
+↓
 
-intentId
-
-originalText
-
-normalizedText
-
-intentType
-
-entities
-
-confidence
-
-requestedActions
-
-warnings
-
-metadata
-
-==================================================
-ENTIDADES
-==================================================
-
-Extrair quando possível:
-
-customerName
-
-customerId
-
-vesselName
-
-vesselId
-
-documentType
-
-processType
-
-priority
-
-dates
-
-participants
-
-==================================================
-NORMALIZAÇÃO
-==================================================
-
-Normalizar:
-
-acentos
-
-maiúsculas
-
-sinônimos
-
-abreviações
-
-erros simples de digitação
-
-Nunca alterar o significado da frase.
-
-==================================================
-VALIDAÇÃO
-==================================================
-
-Detectar:
-
-intenção ambígua
-
-dados ausentes
-
-entidades conflitantes
-
-ação desconhecida
-
-Quando necessário:
-
-warnings[]
-
-==================================================
-CONFIANÇA
-==================================================
-
-Calcular:
-
-0.0
+Planner
 
 ↓
 
-1.0
+ExecutionPlan
+
+↓
+
+PlanExecutionEngine
+
+↓
+
+Resultado
+
+↓
+
+Resposta ao usuário
+
+==================================================
+CONVERSA
+==================================================
+
+Criar sessões.
+
+Cada sessão deve possuir:
+
+sessionId
+
+userId
+
+companyId
+
+createdAt
+
+updatedAt
+
+conversationHistory
+
+lastIntent
+
+lastExecutionPlan
+
+lastExecutionResult
+
+==================================================
+MEMÓRIA
+==================================================
+
+Implementar memória curta.
+
+Exemplos:
+
+Usuário:
+
+"Crie um processo para João."
+
+Depois:
+
+"Gere o PDF."
+
+O Copilot deve compreender que o PDF pertence ao processo recém-criado.
+
+A memória deve existir apenas durante a sessão.
+
+==================================================
+RESPOSTAS
+==================================================
+
+Criar ResponseBuilder.
+
+Responder de forma natural.
+
+Exemplos:
+
+"Processo criado com sucesso."
+
+"Foram gerados 3 PDFs."
+
+"A assinatura foi enviada."
+
+"Não encontrei o cliente."
+
+"É necessária confirmação antes de continuar."
+
+==================================================
+CONFIRMAÇÃO
+==================================================
+
+Quando o plano entrar em:
+
+WAITING_CONFIRMATION
+
+Responder:
+
+"Confirma a execução desta ação?"
+
+Após confirmação:
+
+resume()
+
+==================================================
+CANCELAMENTO
+==================================================
+
+Permitir:
+
+"Cancelar."
+
+↓
+
+ExecutionEngine.cancel()
+
+==================================================
+ERROS
+==================================================
+
+Traduzir erros técnicos.
 
 Exemplo:
 
-0.95
+MATERIALIZATION_FAILED
 
 ↓
 
-ação muito clara
+"Não foi possível concluir esta etapa. Você pode tentar novamente."
 
-0.40
+Nunca mostrar stacktrace.
 
-↓
+==================================================
+CONTEXTO
+==================================================
 
-ambígua
+Cada mensagem deve possuir:
+
+companyId
+
+userId
+
+permissions
+
+tenant
+
+locale
+
+timezone
 
 ==================================================
 SEGURANÇA
 ==================================================
 
-O Interpreter:
+O Copilot nunca:
 
-NÃO verifica permissões.
-
-NÃO consulta banco.
-
-NÃO cria processos.
-
-NÃO executa Actions.
-
-NÃO monta DAG.
+- concede permissões;
+- ignora PermissionGuard;
+- executa Action diretamente;
+- acessa banco diretamente.
 
 ==================================================
-INTEGRAÇÃO
+AUDITORIA
 ==================================================
 
-PlannerEngine deverá aceitar:
+Registrar:
 
-StructuredIntent
+sessionId
 
-em vez de depender de texto bruto.
+userId
 
-==================================================
-PROMPT INTERNO
-==================================================
+companyId
 
-Criar um PromptBuilder interno para futuros provedores LLM.
+mensagem
 
-Ele deve gerar instruções padronizadas para qualquer modelo.
+intent
 
-Não integrar OpenAI, Gemini ou outro provedor nesta Sprint.
+planId
 
-==================================================
-PROVEDOR
-==================================================
+executionId
 
-Criar interface:
+resultado
 
-IntentProvider
-
-Implementar:
-
-MockIntentProvider
-
-A implementação futura deverá apenas substituir esse provider.
+timestamp
 
 ==================================================
 TESTES
 ==================================================
 
-Criar pelo menos 40 testes cobrindo:
+Criar pelo menos 50 testes cobrindo:
 
-- criar processo;
-- gerar pdf;
-- assinatura;
-- checklist;
-- múltiplas intenções;
-- frases longas;
-- frases curtas;
-- erros ortográficos;
-- sinônimos;
-- ambiguidade;
-- entidades;
-- confidence;
-- warnings;
-- normalização;
-- schema;
-- provider mock;
-- parser;
-- validator.
+- conversa simples;
+- múltiplas mensagens;
+- memória;
+- confirmação;
+- cancelamento;
+- retomada;
+- erro recuperável;
+- erro definitivo;
+- permissões;
+- múltiplos usuários;
+- múltiplos tenants;
+- resposta natural;
+- tradução de erros;
+- auditoria;
+- contexto;
+- sessão encerrada;
+- sessão duplicada;
+- histórico;
+- integração completa.
 
 ==================================================
 TYPECHECK
@@ -396,24 +434,16 @@ BUILD
 Executar.
 
 ==================================================
-PROIBIÇÕES
+PROIBIDO
 ==================================================
 
-Não modificar:
+Não criar IA paralela.
 
-Planner
+Não duplicar Planner.
 
-PlanExecutionEngine
+Não duplicar Executor.
 
-ActionExecutor
-
-ActionRegistry
-
-Actions
-
-ConfirmationService
-
-IdempotencyService
+Não duplicar regras.
 
 ==================================================
 RELATÓRIO
@@ -423,10 +453,11 @@ Apresentar:
 
 - arquivos criados;
 - arquitetura;
-- fluxo;
-- provider;
-- parser;
-- validator;
+- fluxo completo;
+- memória;
+- gerenciamento de sessão;
+- ResponseBuilder;
+- integração;
 - testes;
 - typecheck;
 - build;
@@ -438,18 +469,22 @@ STATUS
 
 Usar apenas:
 
-SPRINT 5.5 IMPLEMENTADA
+SPRINT 5.6 IMPLEMENTADA
 
-SPRINT 5.5 PARCIAL
+SPRINT 5.6 PARCIAL
 
-SPRINT 5.5 BLOQUEADA
+SPRINT 5.6 BLOQUEADA
 
-Somente declarar IMPLEMENTADA se:
+Somente considerar IMPLEMENTADA se:
 
-- o LLM não executar nenhuma Action;
-- retornar apenas StructuredIntent;
-- Planner consumir StructuredIntent;
-- 40+ testes aprovados;
+- utilizar exclusivamente o Intent Interpreter existente;
+- utilizar exclusivamente o Planner existente;
+- utilizar exclusivamente o PlanExecutionEngine existente;
+- utilizar exclusivamente o ActionExecutor existente;
+- memória funcionar;
+- confirmação funcionar;
+- cancelamento funcionar;
+- 50+ testes aprovados;
 - typecheck aprovado;
 - build aprovado.
               </section>
