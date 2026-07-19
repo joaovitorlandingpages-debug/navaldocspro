@@ -6,12 +6,12 @@ import { AIPermission } from '../security/permission-types';
 
 export class RequestSignatureAction implements AIAction {
   id = 'request-signature';
-  metadata: import("../../planner/planner-rules").ActionMetadata = {
+  metadata = {
     actionId: 'request-signature',
     displayName: 'Request Signature',
     description: 'Creates electronic signature requests for generated documents.',
     category: 'signature',
-    riskLevel: 'HIGH',
+    riskLevel: 'HIGH' as const,
     requiredPermissions: [
       AIPermission.DOCUMENT_READ,
       AIPermission.SIGNATURE_CREATE,
@@ -21,7 +21,7 @@ export class RequestSignatureAction implements AIAction {
     dependencies: ['generate-pdf'],
     retryPolicy: {
       maxRetries: 3,
-      backoff: 'exponential'
+      backoff: 'exponential' as const
     },
     estimatedDuration: 3,
     enabled: true,
