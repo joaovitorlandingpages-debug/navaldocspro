@@ -174,21 +174,25 @@ export class ActionExecutor {
         const innerErrorCode = innerError.errorCode || innerError.code;
         const innerProcessId = innerError.processId || inputWithContext.processId;
         
-        const err = {
-          message: innerError.message || 'Unknown execution error',
-          errorCode: innerErrorCode || 'ACTION_EXECUTION_ERROR',
-          processId: innerProcessId,
-          name: innerError.name,
-          isActionError: true,
-          status: ActionStatus.FAILED,
-          code: innerErrorCode || 'ACTION_EXECUTION_ERROR'
-        };
-        console.log('ActionExecutor Catch Normalization:', err);
-        throw new ActionExecutionError(err.message, { 
-          errorCode: err.errorCode, 
-          processId: err.processId 
+        console.log('ActionExecutor Catch Normalization (Read):', { 
+          innerErrorCode, 
+          innerProcessId, 
+          msg: innerError.message 
         });
+
+        const normalizedError = new ActionExecutionError(innerError.message || 'Unknown execution error', { 
+          errorCode: innerErrorCode || 'ACTION_EXECUTION_ERROR', 
+          processId: innerProcessId 
+        });
+
+        console.log('ActionExecutor Catch Normalization (Final):', { 
+          errorCode: normalizedError.errorCode, 
+          processId: normalizedError.processId 
+        });
+        
+        throw normalizedError;
       }
+
 
 
 
