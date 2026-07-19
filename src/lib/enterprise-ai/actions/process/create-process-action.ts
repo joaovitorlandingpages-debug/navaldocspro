@@ -39,7 +39,11 @@ export class CreateProcessAction implements AIAction {
     const input = context as CreateProcessInput;
     const user = (context as any)._user;
     
-    if (!user) throw new Error("User context missing in execute");
+    if (!user) {
+      console.log('CreateProcessAction ERROR: User context missing', { contextKeys: Object.keys(context) });
+      throw new Error("User context missing in execute");
+    }
+
 
     console.log('CreateProcessAction Start profile check for user:', user.id);
     const { data: profile, error: profileError } = await supabase
