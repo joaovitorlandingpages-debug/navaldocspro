@@ -69,7 +69,7 @@ describe("Action Security & Validation (Sprint 4.2)", () => {
 
   it("should integrate security and registry in ActionValidator", async () => {
     const action = new BaseStubAction("secure-action", "Secure", "Desc");
-    action.requiredPermissions = [AIPermission.PROCESS_DELETE];
+    action.metadata.requiredPermissions = [AIPermission.PROCESS_DELETE];
     ActionRegistry.register(action);
 
     const result = await validator.validate("secure-action", validContext);
