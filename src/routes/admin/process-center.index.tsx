@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   Rocket, Search, Filter, Plus, 
   Ship, User, Calendar, ArrowRight,
-  MoreVertical, Loader2
+  MoreVertical, Loader2, Zap, Activity
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -34,83 +34,127 @@ function ProcessCenterListPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-700">
       <PageHeader 
-        title="Enterprise Process Center" 
-        description="O novo centro operacional do NavalDocs Pro v1.0"
+        title="Enterprise Process Center v1.0" 
+        description="O novo coração operacional do NavalDocs Pro."
         actions={
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" /> Novo Processo
-          </Button>
+          <div className="flex gap-3">
+             <Button variant="outline" className="gap-2 font-bold uppercase text-[10px] tracking-widest rounded-xl border-slate-200 shadow-sm">
+                <Activity className="h-4 w-4 text-primary" />
+                Métricas Globais
+             </Button>
+             <Button className="gap-2 bg-slate-900 font-black uppercase text-[10px] tracking-widest rounded-xl px-6 shadow-xl shadow-slate-200 transition-all hover:scale-105 active:scale-95">
+                <Plus className="h-4 w-4" /> Novo Processo
+             </Button>
+          </div>
         }
       />
 
-      <Card className="p-4 border-slate-200">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+         <Card className="p-6 border-slate-200 bg-white shadow-sm border-b-4 border-b-primary">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Processos Ativos</p>
+            <h3 className="text-4xl font-black text-slate-900 tracking-tighter">{processes?.length || 0}</h3>
+            <div className="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+               <div className="h-full bg-primary" style={{ width: '65%' }} />
+            </div>
+         </Card>
+         <Card className="p-6 border-slate-200 bg-white shadow-sm border-b-4 border-b-emerald-500">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Health Score Médio</p>
+            <h3 className="text-4xl font-black text-emerald-600 tracking-tighter">87</h3>
+            <div className="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+               <div className="h-full bg-emerald-500" style={{ width: '87%' }} />
+            </div>
+         </Card>
+         <Card className="p-6 border-slate-200 bg-white shadow-sm border-b-4 border-b-blue-500">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Automação OCR</p>
+            <h3 className="text-4xl font-black text-blue-600 tracking-tighter">98%</h3>
+            <div className="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+               <div className="h-full bg-blue-500" style={{ width: '98%' }} />
+            </div>
+         </Card>
+      </div>
+
+      <Card className="p-4 border-slate-200 bg-slate-50 shadow-inner">
         <div className="flex items-center gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-            <Input className="pl-10" placeholder="Pesquisar processos por número, cliente ou embarcação..." />
+          <div className="relative flex-1 group">
+            <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+            <Input className="pl-11 h-12 bg-white border-slate-200 rounded-xl font-bold uppercase text-[10px] tracking-widest" placeholder="Pesquisar processos por número, cliente ou embarcação..." />
           </div>
-          <Button variant="outline" className="gap-2">
-            <Filter className="h-4 w-4" /> Filtros
+          <Button variant="outline" className="gap-2 h-12 px-6 rounded-xl font-bold uppercase text-[10px] tracking-widest bg-white border-slate-200">
+            <Filter className="h-4 w-4" /> Filtros Avançados
           </Button>
         </div>
       </Card>
 
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-300" />
+        <div className="flex justify-center py-20">
+          <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-6 pb-20">
           {processes?.map((process: any) => (
-            <Card key={process.id} className="p-5 hover:border-slate-300 transition-all group">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-6">
-                  <div className="h-12 w-12 bg-slate-50 rounded-xl flex items-center justify-center border group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors">
-                    <Ship className="h-6 w-6 text-slate-400 group-hover:text-blue-500" />
+            <Card key={process.id} className="p-6 hover:border-primary/20 hover:shadow-2xl transition-all group bg-white border-slate-100 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                <Ship className="h-20 w-20" />
+              </div>
+              <div className="flex items-center justify-between relative z-10">
+                <div className="flex items-center gap-8">
+                  <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center border group-hover:bg-primary/5 group-hover:border-primary/10 transition-all shadow-sm">
+                    <Ship className="h-8 w-8 text-slate-300 group-hover:text-primary group-hover:scale-110 transition-all" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-xl font-black text-slate-900 group-hover:text-primary transition-colors tracking-tight uppercase italic">
                         {process.vessel?.name || "Sem embarcação"}
                       </h3>
-                      <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest bg-slate-50">
+                      <Badge variant="outline" className="text-[10px] uppercase font-black tracking-widest bg-slate-50 px-3 border-slate-200">
                         {process.process_number || `#${process.id.slice(0,8)}`}
                       </Badge>
-                      <Badge className="text-[10px] uppercase font-black bg-emerald-50 text-emerald-600 border-none">
+                      <Badge className="text-[10px] uppercase font-black bg-emerald-50 text-emerald-600 border-none px-3">
                         {process.status}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
-                      <span className="flex items-center gap-1">
-                        <User className="h-3.5 w-3.5" /> {process.customer?.name}
+                    <div className="flex items-center gap-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      <span className="flex items-center gap-2 hover:text-slate-600 transition-colors">
+                        <User className="h-4 w-4 text-primary" /> {process.customer?.name}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3.5 w-3.5" /> Criado em {new Date(process.created_at).toLocaleDateString()}
+                      <div className="h-3 w-px bg-slate-200" />
+                      <span className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" /> {new Date(process.created_at).toLocaleDateString()}
+                      </span>
+                      <div className="h-3 w-px bg-slate-200" />
+                      <span className="flex items-center gap-2 text-blue-600">
+                        <Zap className="h-4 w-4" /> 12 Documentos
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="hidden md:flex flex-col items-end mr-4">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Health Score</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="bg-emerald-500 h-full w-[85%]" />
+                <div className="flex items-center gap-6">
+                  <div className="hidden lg:flex flex-col items-end px-6 border-r border-slate-100">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                       <Activity className="h-3 w-3" />
+                       Health Score
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="bg-emerald-500 h-full w-[87%] transition-all duration-1000" />
                       </div>
-                      <span className="text-xs font-bold text-slate-700">85</span>
+                      <span className="text-sm font-black text-slate-900">87</span>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="text-slate-400">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                  <Button asChild className="gap-2 bg-slate-900">
-                    <Link to="/admin/process-center/$id" params={{ id: process.id }}>
-                      Abrir Centro Operacional <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" className="text-slate-300 hover:text-slate-900 hover:bg-slate-50">
+                      <MoreVertical className="h-5 w-5" />
+                    </Button>
+                    <Button asChild className="gap-3 bg-slate-900 hover:bg-primary px-6 h-12 rounded-xl font-black uppercase text-[10px] tracking-[0.15em] shadow-lg shadow-slate-200 transition-all hover:scale-105 active:scale-95">
+                      <Link to="/admin/process-center/$id" params={{ id: process.id }}>
+                        Abrir Centro Operacional <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </Card>
