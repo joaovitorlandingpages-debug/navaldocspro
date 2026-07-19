@@ -125,3 +125,54 @@ export async function runSmartOcr(args: {
     confidenceByField: finalJob.confidence_by_field as Record<string, number>,
   };
 }
+
+/**
+ * Detecção de Cliente Existente
+ */
+export async function detectExistingCustomer(args: {
+  cpf_cnpj?: string;
+  name?: string;
+  companyId: string;
+}) {
+  if (!args.cpf_cnpj && !args.name) return null;
+
+  let query = supabase.from("customers").select("*").eq("company_id", args.companyId);
+
+  if (args.cpf_cnpj) {
+    const { data } = await query.eq("cpf_cnpj", args.cpf_cnpj).maybeSingle();
+    if (data) return { match: "exact", customer: data };
+  }
+
+  if (args.name) {
+    const { data: list } = await query.ilike("name", `%${args.name}%`).limit(1);
+    if (list && list.length > 0) return { match: "partial", customer: list[0] };
+  }
+
+  return null;
+}
+
+/**
+ * Detecção de Embarcação Existente
+ */
+export async function detectExistingVessel(args: {
+  registration_number?: string;
+  name?: string;
+  companyId: string;
+}) {
+  if (!args.registration_number && !args.name) return null;
+
+  let query = supabase.from("vessels").select("*").eq("company_id", args.companyId);
+
+  if (args.registration_number) {
+    const { data } = await query.eq("registration_number", args.registration_number).maybeSingle();
+    if (data) return { match: "exact", vessel: data };
+  }
+
+  if (args.name) {
+    const { data: list } = await query.ilike("name", `%${args.name}%`).limit(1);
+    if (list && list.length > 0) return { match: "partial", vessel: list[0] };
+  }
+
+  return null;
+}
+
