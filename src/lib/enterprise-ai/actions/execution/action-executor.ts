@@ -184,8 +184,12 @@ export class ActionExecutor {
           code: innerErrorCode || 'ACTION_EXECUTION_ERROR'
         };
         console.log('ActionExecutor Catch Normalization:', err);
-        throw err;
+        throw new ActionExecutionError(err.message, { 
+          errorCode: err.errorCode, 
+          processId: err.processId 
+        });
       }
+
 
 
 
