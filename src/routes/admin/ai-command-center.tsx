@@ -117,9 +117,6 @@ function AICommandCenterPage() {
           <ScrollArea className="h-[1200px] pr-4">
             <div className="space-y-12">
               <section>
-                <h2 className="text-sm font-black border-b-2 border-slate-900 pb-2 mb-4">1. INVENTÁRIO</h2>
-                <div className="space-y-4">
-              <section>
                 <h2 className="text-sm font-black border-b-2 border-slate-900 pb-2 mb-4">1. ÁRVORE COMPLETA</h2>
                 <pre className="bg-slate-50 p-4 rounded-lg text-[10px]">
 {`src/lib/enterprise-ai/
@@ -276,6 +273,5 @@ Duration 567ms`}
         </Card>
       </div>
     </div>
-
   );
 }
