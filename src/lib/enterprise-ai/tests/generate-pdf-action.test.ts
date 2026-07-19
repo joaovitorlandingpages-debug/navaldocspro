@@ -8,25 +8,23 @@ import { ActionValidator } from "../actions/security/action-validator";
 import { PermissionGuard } from "../actions/security/permission-guard";
 
 // Mock do Supabase e serviços externos
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ data: null, error: null })),
-        })),
-      })),
-      insert: vi.fn(() => ({
-        select: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ data: null, error: null })),
-        })),
-      })),
-      update: vi.fn(() => ({
-        eq: vi.fn(() => Promise.resolve({ data: null, error: null })),
-      })),
-    })),
-  },
-}));
+vi.mock("@/integrations/supabase/client", () => {
+  const single = vi.fn(() => Promise.resolve({ data: null, error: null }));
+  const eq = vi.fn(() => ({ single }));
+  const select = vi.fn(() => ({ eq }));
+  const insert = vi.fn(() => ({ select }));
+  const update = vi.fn(() => ({ eq }));
+  const from = vi.fn(() => ({ select, insert, update }));
+
+  return {
+    supabase: {
+      from,
+      // For accessing the mocks in tests
+      _mocks: { from, select, eq, single, insert, update }
+    },
+  };
+});
+
 
 vi.mock("@/utils/pdf-export", () => ({
   generateAndUploadPdf: vi.fn(() => Promise.resolve({ path: "path/to/pdf", signedUrl: "http://signed-url" })),
