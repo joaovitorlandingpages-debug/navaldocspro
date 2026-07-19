@@ -296,11 +296,14 @@ export function StepVessel() {
 // --- Step 3: Process Type ---
 
 const TYPE_CARDS = [
-  { id: 'renovacao', name: 'Renovação', icon: '🟦', color: 'bg-blue-500', desc: 'Renovação de TIE/TIEM ou documentos anuais.', docs: '3 docs', time: '5-10 dias' },
-  { id: 'inspecao', name: 'Inspeção', icon: '🟩', color: 'bg-emerald-500', desc: 'Vistoria técnica para emissão de certificados.', docs: '5 docs', time: '15 dias' },
-  { id: 'registro', name: 'Registro', icon: '🟨', color: 'bg-amber-500', desc: 'Inscrição de nova embarcação ou motores.', docs: '8 docs', time: '30 dias' },
-  { id: 'transferencia', name: 'Transferência', icon: '🟪', color: 'bg-purple-500', desc: 'Mudança de propriedade entre vendedores/compradores.', docs: '6 docs', time: '20 dias' },
-  { id: 'cancelamento', name: 'Cancelamento', icon: '🟥', color: 'bg-rose-500', desc: 'Baixa definitiva de registro ou motor.', docs: '4 docs', time: '15 dias' },
+  { id: 'registro-inicial', name: 'Registro Inicial', icon: '📝', color: 'bg-blue-600', desc: 'Primeiro registro da embarcação.', docs: '8 docs', time: '20 dias' },
+  { id: 'registro-motor', name: 'Registro de Motor', icon: '⚙️', color: 'bg-slate-600', desc: 'Inclusão ou alteração de motor.', docs: '4 docs', time: '10 dias' },
+  { id: 'alteracao-cadastral', name: 'Alteração Cadastral', icon: '👤', color: 'bg-indigo-500', desc: 'Atualização de dados do proprietário.', docs: '3 docs', time: '7 dias' },
+  { id: 'mudanca-proprietario', name: 'Mudança de Proprietário', icon: '🤝', color: 'bg-purple-600', desc: 'Transferência de titularidade.', docs: '6 docs', time: '15 dias' },
+  { id: 'segunda-via', name: 'Segunda Via', icon: '📄', color: 'bg-amber-500', desc: 'Emissão de novo documento por perda.', docs: '2 docs', time: '5 dias' },
+  { id: 'emissao-certificados', name: 'Emissão de Certificados', icon: '📜', color: 'bg-emerald-600', desc: 'Solicitação de certificados diversos.', docs: '4 docs', time: '10 dias' },
+  { id: 'laudo-tecnico', name: 'Laudo Técnico', icon: '📐', color: 'bg-cyan-600', desc: 'Perícia e laudo de engenharia.', docs: '5 docs', time: '12 dias' },
+  { id: 'outros', name: 'Outros', icon: '➕', color: 'bg-slate-400', desc: 'Demais serviços navais.', docs: 'Variável', time: 'Consultar' },
 ];
 
 export function StepType() {

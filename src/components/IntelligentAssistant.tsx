@@ -75,7 +75,7 @@ export function IntelligentAssistant({ processId }: { processId?: string }) {
   if (!isOpen) return (
     <button 
       onClick={() => setIsOpen(true)}
-      className="fixed bottom-8 right-4 md:right-8 z-[80] bg-primary text-navy p-4 rounded-full shadow-2xl hover:bg-primary/90 transition-all group lg:mb-0 mb-safe-area-inset-bottom"
+      className="fixed bottom-24 right-4 md:right-8 z-[80] bg-primary text-navy p-4 rounded-full shadow-2xl hover:bg-primary/90 transition-all group lg:mb-0 mb-safe-area-inset-bottom sm:bottom-8"
     >
       <Bot className="h-6 w-6" />
       <span className="absolute right-full mr-4 bg-navy text-white text-[10px] font-black uppercase tracking-widest py-2 px-4 rounded-xl opacity-0 md:group-hover:opacity-100 transition-all whitespace-nowrap pointer-events-none">
