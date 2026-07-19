@@ -327,7 +327,8 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
         {
           customerId: mockCustomerId,
           processType: "Transferência",
-          companyId: "hacker-company" // Spoofer
+          companyId: "hacker-company", // Spoofer
+          idempotencyKey: "intent-123"
         },
         securityContext
       );
