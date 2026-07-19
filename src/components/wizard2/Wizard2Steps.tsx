@@ -387,8 +387,9 @@ export function StepDocuments() {
                
                <div className="absolute inset-0 opacity-0 cursor-pointer">
                   <FileUploader 
-                    bucket="dossiers" 
-                    onUploadComplete={(res) => handleUpload(pick, [res])}
+                    bucket="process-attachments" 
+                    category={pick}
+                    onSuccess={(res: any) => handleUpload(pick, [res])}
                     className="h-full w-full"
                   />
                </div>
