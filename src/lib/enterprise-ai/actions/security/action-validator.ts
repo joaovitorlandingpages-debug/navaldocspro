@@ -30,7 +30,7 @@ export class ActionValidator {
 
     // 3. Delegate to Action-specific validation
     try {
-      const actionSpecific = await action.validate(payload);
+      const actionSpecific = await action.validate({ ...payload, companyId: context.companyId });
       if (!actionSpecific.valid) {
         return createValidationResult({
           success: false,
