@@ -115,66 +115,320 @@ function AICommandCenterPage() {
         <Card className="p-8 border-slate-200 bg-white font-mono text-[11px] leading-relaxed shadow-sm">
           <ScrollArea className="h-[1200px] pr-4">
             <div className="space-y-12 whitespace-pre-wrap">
-              <section id="ts-visual-edit-probe-a687caa7f9684453">
-                <div className="bg-slate-50 border-2 border-slate-900 p-8 rounded-2xl shadow-xl">
-                  <h2 className="text-2xl font-black text-slate-900 mb-6 border-b-4 border-slate-900 pb-2 uppercase italic">Relatório Técnico - Sprint 4.3A</h2>
-                  <div className="space-y-6 font-mono text-xs leading-relaxed">
-                    <div className="bg-emerald-100 text-emerald-900 p-2 font-bold text-center rounded">SPRINT 4.3A IMPLEMENTADA</div>
-                    
-                    <div className="bg-white p-4 border border-slate-200 rounded shadow-sm">
-                      <p className="font-bold border-b mb-2 uppercase">Arquivos Criados & Alterados</p>
-                      <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-4 mt-1">
-                        <li>• execution/action-executor.ts (Core Engine)</li>
-                        <li>• execution/execution-context.ts (Typed Context)</li>
-                        <li>• execution/execution-result.ts (Unified Result)</li>
-                        <li>• execution/execution-errors.ts (Typed Exceptions)</li>
-                        <li>• execution/index.ts (Public API)</li>
-                        <li>• tests/action-executor.test.ts (12 Unit Tests)</li>
-                      </ul>
-                    </div>
+              <section id="ts-visual-edit-probe-053bd4e2646849ba">
+                ENTERPRISE AI COMMAND CENTER
 
-                    <div className="bg-slate-900 text-amber-400 p-4 rounded font-mono text-[10px]">
-                      <p className="text-white mb-2 font-bold uppercase border-b border-amber-400/30 pb-1">Pipeline de Execução (Ordem Comprovada)</p>
-                      <p>1. <strong>Registry Lookup:</strong> Busca a definição da Action.</p>
-                      <p>2. <strong>Context Building:</strong> Cria ExecutionContext with IDs únicos (Session Auth).</p>
-                      <p>3. <strong>State Validation:</strong> Executa ActionValidator.validate().</p>
-                      <p>4. <strong>Security Guard:</strong> Executa PermissionGuard.validateContext().</p>
-                      <p>5. <strong>Execution:</strong> Chama action.execute() somente se 3 e 4 passarem.</p>
-                      <p>6. <strong>Error Handling:</strong> Captura exceções e normaliza em ExecutionResult.</p>
-                    </div>
+SPRINT 5.3
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-white p-4 border border-slate-200 rounded shadow-sm">
-                        <p className="font-bold border-b mb-2 uppercase">Assinatura Pública</p>
-                        <code className="text-[9px] block bg-slate-50 p-2 rounded mt-1">
-                          execute(actionId: string, input: any, authContext: SecurityContext): Promise&lt;ExecutionResult&gt;
-                        </code>
-                      </div>
-                      <div className="bg-white p-4 border border-slate-200 rounded shadow-sm">
-                        <p className="font-bold border-b mb-2 uppercase">Resultados Vitest</p>
-                        <ul className="space-y-1 text-[10px]">
-                          <li>✓ Action registrada é localizada</li>
-                          <li>✓ Action inexistente é bloqueada</li>
-                          <li>✓ Validator executado antes da Action</li>
-                          <li>✓ PermissionGuard executado pós-Validator</li>
-                          <li>✓ userId/companyId via Auth Context</li>
-                          <li>✓ <strong>TOTAL: 12 tests passed (100%)</strong></li>
-                        </ul>
-                      </div>
-                    </div>
+MULTI-ACTION PLANNER — FASE 1
 
-                    <div className="bg-emerald-900 text-emerald-100 p-4 rounded font-mono text-[10px] space-y-1">
-                      <p>✓ Exit Code Vitest: 0</p>
-                      <p>✓ Exit Code Typecheck: 0</p>
-                      <p>✓ Exit Code Build (Prerender): 0</p>
-                      <p>✓ ai-command-center.tsx: Layout Preservado (Visual Edits Revertidos)</p>
-                    </div>
+==================================================
+OBJETIVO
+==================================================
 
-                    <div className="p-4 bg-emerald-50 border-2 border-emerald-500 rounded-xl text-center">
-                      <h3 className="text-xl font-black text-emerald-700 uppercase italic">SPRINT 4.3A IMPLEMENTADA</h3>
-                    </div>
-                  </div>
-                </div>
+Implementar o primeiro Planner oficial do Enterprise AI Command Center.
+
+O Planner NÃO executa regras de negócio.
+
+O Planner NÃO substitui nenhuma Action existente.
+
+Sua única responsabilidade é:
+
+- interpretar a intenção;
+- montar um plano de execução;
+- decidir a ordem das Actions;
+- verificar dependências;
+- identificar confirmações humanas necessárias;
+- entregar o plano ao ActionExecutor.
+
+==================================================
+ACTIONS DISPONÍVEIS
+==================================================
+
+O Planner deve reutilizar exclusivamente:
+
+- CreateProcessAction
+- GeneratePdfAction
+- CompleteChecklistAction
+- RequestSignatureAction
+
+Não criar novas versões dessas Actions.
+
+==================================================
+ARQUIVOS
+==================================================
+
+Criar:
+
+src/lib/enterprise-ai/planner/
+
+planner.ts
+
+planner-types.ts
+
+planner-engine.ts
+
+planner-rules.ts
+
+planner-errors.ts
+
+index.ts
+
+Criar testes:
+
+src/lib/enterprise-ai/tests/planner.test.ts
+
+==================================================
+PLANO
+==================================================
+
+Criar:
+
+ExecutionPlan
+
+Campos mínimos:
+
+planId
+
+intent
+
+steps[]
+
+riskLevel
+
+estimatedActions
+
+requiresConfirmation
+
+status
+
+metadata
+
+Cada Step deve conter:
+
+stepId
+
+actionId
+
+dependsOn[]
+
+status
+
+requiredPermissions
+
+confirmationRequired
+
+estimatedDuration
+
+retryPolicy
+
+==================================================
+PLANNER ENGINE
+==================================================
+
+Implementar:
+
+PlannerEngine.plan()
+
+Recebe:
+
+- intenção estruturada;
+- contexto do usuário;
+- tenant;
+- permissões.
+
+Retorna:
+
+ExecutionPlan
+
+Não executa nenhuma Action.
+
+==================================================
+DEPENDÊNCIAS
+==================================================
+
+Exemplo:
+
+CreateProcess
+
+↓
+
+GeneratePdf
+
+↓
+
+CompleteChecklist
+
+↓
+
+RequestSignature
+
+O Planner deve impedir:
+
+- ciclos;
+- dependências inválidas;
+- execução antes do pré-requisito.
+
+==================================================
+CONFIRMAÇÃO HUMANA
+==================================================
+
+Se qualquer Step exigir confirmação:
+
+o plano inteiro deve indicar:
+
+requiresConfirmation = true
+
+O Planner não consome tokens.
+
+Apenas informa que serão necessários.
+
+==================================================
+VALIDAÇÃO
+==================================================
+
+Antes de montar o plano validar:
+
+- tenant;
+- permissões;
+- Actions registradas;
+- ações desabilitadas;
+- dependências.
+
+==================================================
+RISCO
+==================================================
+
+Calcular:
+
+LOW
+
+MEDIUM
+
+HIGH
+
+CRITICAL
+
+Exemplo:
+
+CreateProcess + Signature
+
+↓
+
+HIGH
+
+==================================================
+EXECUTOR
+==================================================
+
+Nesta Sprint
+
+o Planner NÃO executa.
+
+Apenas produz o plano.
+
+==================================================
+AUDITORIA
+==================================================
+
+Registrar:
+
+planId
+
+userId
+
+companyId
+
+intent
+
+steps
+
+risk
+
+timestamp
+
+Não registrar dados sensíveis.
+
+==================================================
+TESTES
+==================================================
+
+Criar pelo menos 30 testes cobrindo:
+
+- plano simples;
+- plano com CreateProcess;
+- plano completo;
+- dependências;
+- ordem correta;
+- Action inexistente;
+- Action desabilitada;
+- tenant inválido;
+- permissões ausentes;
+- cálculo de risco;
+- confirmação obrigatória;
+- ciclos;
+- plano vazio;
+- múltiplas Actions;
+- serialização;
+- auditoria.
+
+==================================================
+TYPECHECK
+==================================================
+
+Executar.
+
+==================================================
+BUILD
+==================================================
+
+Executar.
+
+==================================================
+PROIBIÇÕES
+==================================================
+
+Não alterar:
+
+CreateProcessAction
+
+GeneratePdfAction
+
+CompleteChecklistAction
+
+RequestSignatureAction
+
+ConfirmationService
+
+ActionExecutor
+
+IdempotencyService
+
+==================================================
+RELATÓRIO
+==================================================
+
+Apresentar:
+
+- arquivos criados;
+- arquitetura do Planner;
+- fluxo;
+- testes;
+- typecheck;
+- build;
+- limitações.
+
+==================================================
+STATUS
+==================================================
+
+Usar apenas:
+
+SPRINT 5.3 IMPLEMENTADA
+
+SPRINT 5.3 PARCIAL
+
+SPRINT 5.3 BLOQUEADA
               </section>
             </div>
           </ScrollArea>
