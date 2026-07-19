@@ -150,12 +150,21 @@ describe("Enterprise Audit Logger (Sprint 4.5)", () => {
     // Mock action
     class MockAction implements AIAction {
       id = "test";
-      name = "Test";
-      description = "Test";
-      requiredPermissions = [];
-      confirmationPolicy = ConfirmationPolicy.NONE;
-      estimatedRisk = "LOW" as const;
-      estimatedDuration = 1;
+      metadata = {
+        actionId: "test",
+        displayName: "Test",
+        description: "Test",
+        category: "TEST",
+        riskLevel: "LOW" as const,
+        requiredPermissions: [],
+        confirmationPolicy: ConfirmationPolicy.NONE,
+        dependencies: [],
+        retryPolicy: { maxRetries: 3, backoff: "fixed" as const },
+        estimatedDuration: 1,
+        enabled: true,
+        supportsRetry: true,
+        supportsPlanner: true
+      };
       async validate() { return { valid: true }; }
       async execute() { return { success: true, status: ActionStatus.SUCCESS, message: "Ok", executionId: "1", duration: 1 }; }
       async rollback() {}
