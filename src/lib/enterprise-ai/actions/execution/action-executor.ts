@@ -272,7 +272,14 @@ export class ActionExecutor {
 
       
       let status = error.status || ActionStatus.FAILED;
+      
+      // If we decoded a specific error code that indicates a validation/permission failure
+      // that was wrapped, we should map the status correctly.
+      if (errorCode === 'ACTION_PERMISSION_DENIED') status = ActionStatus.FAILED;
+      if (errorCode === 'ACTION_VALIDATION_ERROR') status = ActionStatus.FAILED;
+      
       let errors = [errorMessage];
+
 
       console.log('ActionExecutor Catch DEBUG (Final External):', { 
         name: error.name, 
