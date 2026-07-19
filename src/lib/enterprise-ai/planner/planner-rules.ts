@@ -59,8 +59,8 @@ export function calculateOverallRisk(steps: { actionId: string, riskLevel?: Acti
  * Default intent mapping rules
  */
 export const DEFAULT_INTENT_RULES: IntentRule[] = [
-  { intentKeywords: ["processo", "process", "criar processo"], actionId: "create-process", priority: 1 },
+  { intentKeywords: ["processo", "process", "criar processo", "proc"], actionId: "create-process", priority: 1 },
   { intentKeywords: ["pdf", "documento", "gerar pdf"], actionId: "generate-pdf", priority: 1 },
   { intentKeywords: ["checklist", "concluir checklist"], actionId: "complete-checklist", priority: 1 },
-  { intentKeywords: ["assinatura", "signature", "enviar assinatura"], actionId: "request-signature", priority: 1 },
+  { intentKeywords: ["assinatura", "signature", "enviar assinatura", "assinar", "sign"], actionId: "request-signature", priority: 1 },
 ];
