@@ -51,6 +51,10 @@ export function NewProcessProvider({ children }: { children: React.ReactNode }) 
         onClose={() => setQuickOpen(false)}
         onOpenAdvanced={() => setUploadOpen(true)}
       />
+      <ProcessWizard2
+        isOpen={wizard2Open}
+        onClose={() => setWizard2Open(false)}
+      />
       <NewProcessUploadWizard
         isOpen={uploadOpen}
         onClose={() => setUploadOpen(false)}
