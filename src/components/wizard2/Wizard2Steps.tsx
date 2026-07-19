@@ -36,10 +36,33 @@ function StepHeader({ title, description, icon: Icon }: { title: string, descrip
 // --- Step 1: Client ---
 
 export function StepClient() {
-  const { customerId, setData, companyId } = useWizardStore();
+  const { customerId, setData, companyId, clearStepData } = useWizardStore();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [favorites, setFavorites] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (!companyId) return;
+      // Simulação de favoritos: clientes com processos recentes
+      const { data } = await supabase
+        .from('processes')
+        .select('customer:customers(id, name, cpf_cnpj, phone, city)')
+        .eq('company_id', companyId)
+        .order('created_at', { ascending: false })
+        .limit(3);
+      
+      if (data) {
+        const unique = Array.from(new Set(data.map(d => (d as any).customer?.id)))
+          .map(id => data.find(d => (d as any).customer?.id === id))
+          .filter(Boolean)
+          .map(d => (d as any).customer);
+        setFavorites(unique);
+      }
+    };
+    loadFavorites();
+  }, [companyId]);
 
   useEffect(() => {
     const search = async () => {
@@ -91,28 +114,65 @@ export function StepClient() {
       </div>
 
       <div className="grid gap-3">
+        {query === '' && favorites.length > 0 && (
+          <div className="space-y-3">
+             <div className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+               <Star className="h-3 w-3 fill-primary" /> Favoritos & Recentes
+             </div>
+             {favorites.map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => setData({ customerId: c.id })}
+                  className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all text-left group ${
+                    customerId === c.id ? 'border-primary bg-primary/5 shadow-md' : 'border-slate-100 hover:border-slate-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                      <User className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-900">{c.name}</div>
+                      <div className="text-[10px] text-slate-500 flex gap-2 mt-0.5">
+                        <span className="flex items-center gap-1 font-bold"><Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> Cliente Frequente</span>
+                        {c.city && <span>• {c.city}</span>}
+                      </div>
+                    </div>
+                  </div>
+                  {customerId === c.id ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <ArrowRight className="h-4 w-4 text-slate-200 group-hover:text-primary transition-colors" />}
+                </button>
+             ))}
+             <div className="h-px bg-slate-50 my-4" />
+          </div>
+        )}
+
         {results.map(c => (
           <button
             key={c.id}
             onClick={() => setData({ customerId: c.id })}
-            className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all text-left ${
+            className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all text-left group ${
               customerId === c.id ? 'border-primary bg-primary/5 shadow-md' : 'border-slate-100 hover:border-slate-300 bg-white'
             }`}
           >
-            <div>
-              <div className="font-bold text-slate-900">{c.name}</div>
-              <div className="text-xs text-slate-500 flex gap-3 mt-1">
-                <span>{c.cpf_cnpj || 'Sem CPF/CNPJ'}</span>
-                {c.city && <span>• {c.city}</span>}
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                <User className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="font-bold text-slate-900">{c.name}</div>
+                <div className="text-xs text-slate-500 flex gap-3 mt-1">
+                  <span>{c.cpf_cnpj || 'Sem CPF/CNPJ'}</span>
+                  {c.city && <span>• {c.city}</span>}
+                </div>
               </div>
             </div>
-            {customerId === c.id && <CheckCircle2 className="h-5 w-5 text-primary" />}
+            {customerId === c.id ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <ArrowRight className="h-4 w-4 text-slate-200 group-hover:text-primary transition-colors" />}
           </button>
         ))}
         
         <button
           onClick={handleCreateNew}
-          className="flex items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary hover:text-primary transition-all text-slate-500 font-bold text-sm"
+          className="flex items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary hover:text-primary transition-all text-slate-500 font-bold text-sm bg-slate-50/30"
         >
           <UserPlus className="h-4 w-4" />
           Novo Cliente
@@ -162,22 +222,43 @@ export function StepVessel() {
         icon={Ship} 
       />
 
+      <div className="relative">
+        <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+        <Input 
+          placeholder="Busca Universal de Embarcações..." 
+          className="pl-10 py-6 text-base rounded-xl border-slate-200"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {results.map(v => (
           <button
             key={v.id}
-            onClick={() => setData({ vesselId: v.id })}
-            className={`flex flex-col p-4 rounded-2xl border-2 transition-all text-left ${
-              vesselId === v.id ? 'border-primary bg-primary/5 shadow-md' : 'border-slate-100 hover:border-slate-300 bg-white'
+            onClick={() => onSelect(v)}
+            className={`flex flex-col p-5 rounded-2xl border-2 transition-all text-left relative group ${
+              vesselId === v.id ? 'border-primary bg-primary/5 shadow-lg' : 'border-slate-100 hover:border-slate-300 bg-white'
             }`}
           >
-            <div className="flex items-center justify-between w-full mb-2">
-              <span className="font-bold text-slate-900">{v.name}</span>
-              {vesselId === v.id && <CheckCircle2 className="h-4 w-4 text-primary" />}
+            <div className="flex items-center justify-between w-full mb-3">
+              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                <Ship className="h-5 w-5" />
+              </div>
+              {vesselId === v.id ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <ArrowUpRight className="h-4 w-4 text-slate-200 opacity-0 group-hover:opacity-100 transition-all" />}
             </div>
-            <div className="text-[10px] uppercase tracking-wider font-black text-slate-400">
-              {v.vessel_type || 'Tipo não inf.'} • {v.registration_number || 'Sem reg.'}
+            
+            <div className="font-black text-slate-900 text-lg mb-1 leading-tight">{v.name}</div>
+            <div className="text-[10px] uppercase tracking-wider font-black text-slate-400 flex items-center gap-1.5">
+               <ShieldCheck className="h-3 w-3 text-emerald-500" /> {v.vessel_type || 'Lancha'} • {v.registration_number || 'Sem reg.'}
             </div>
+            
+            {!customerId && v.customer_id && (
+              <div className="mt-4 pt-3 border-t border-slate-50 flex items-center gap-2">
+                <User className="h-3 w-3 text-slate-300" />
+                <span className="text-[10px] font-bold text-slate-400 uppercase truncate">Preencherá Cliente Autom.</span>
+              </div>
+            )}
           </button>
         ))}
         

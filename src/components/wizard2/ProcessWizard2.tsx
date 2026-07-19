@@ -114,10 +114,18 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
       const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
       notifyProcessesChanged(visibleProcess);
 
-      toast.success("Processo criado com sucesso! Redirecionando...");
+      toast.success("Processo criado com sucesso!", {
+        description: "Abrindo o painel completo...",
+        icon: <Rocket className="h-4 w-4 text-emerald-500" />
+      });
+      
       reset();
       onClose();
-      navigate({ to: '/processes/$id', params: { id: processId } });
+      
+      // Animação discreta simulada pelo tempo de redirecionamento
+      setTimeout(() => {
+        navigate({ to: '/processes/$id', params: { id: processId } });
+      }, 300);
     } catch (e: any) {
       toast.error("Erro ao criar processo: " + e.message);
     } finally {

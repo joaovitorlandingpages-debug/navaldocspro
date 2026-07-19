@@ -20,6 +20,7 @@ export interface WizardState {
   setStep: (step: WizardStep) => void;
   setData: (data: Partial<Omit<WizardState, 'setStep' | 'setData' | 'reset'>>) => void;
   reset: () => void;
+  clearStepData: (step: WizardStep) => void;
 }
 
 export const useWizardStore = create<WizardState>()(
@@ -52,6 +53,12 @@ export const useWizardStore = create<WizardState>()(
         docPicks: [],
         uploadedFiles: {},
         brandingMode: 'company',
+      }),
+      clearStepData: (step) => set((state) => {
+        if (step === 'client') return { ...state, customerId: null, vesselId: null, uploadedFiles: {} };
+        if (step === 'vessel') return { ...state, vesselId: null, uploadedFiles: {} };
+        if (step === 'type') return { ...state, processTypeId: null, processTypeName: null, docPicks: [], uploadedFiles: {} };
+        return state;
       }),
     }),
     {
