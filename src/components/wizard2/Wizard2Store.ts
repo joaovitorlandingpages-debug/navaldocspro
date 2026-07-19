@@ -5,6 +5,7 @@ export type WizardStep = 'documents' | 'client' | 'vessel' | 'type' | 'checklist
 
 export interface WizardState {
   step: WizardStep;
+  sessionId: string | null;
   companyId: string | null;
   customerId: string | null;
   secondaryCustomerId: string | null;
