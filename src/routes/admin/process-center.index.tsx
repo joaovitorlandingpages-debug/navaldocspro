@@ -162,339 +162,324 @@ function ProcessCenterListPage() {
           ))}
         </div>
       )}
-      <div id="ts-visual-edit-probe-33dfadec4fa34a21" className="hidden whitespace-pre-wrap">INICIAR EXECUÇÃO — OPERAÇÃO FORTALEZA
-FASE 1 — DIAGNÓSTICO DE AUTENTICAÇÃO E AUTORIZAÇÃO
+      <div id="ts-visual-edit-probe-add92ca86d1e497a" className="hidden whitespace-pre-wrap">PROJETO ENTERPRISE
+NAVALDOCS PRO
 
-O texto do Security Gate já foi consolidado.
+MÓDULO:
+ENTERPRISE AI COMMAND CENTER (EACC)
 
-Agora inicie a execução real da Fase 1.
+OBJETIVO
 
-Nesta primeira rodada, não faça uma refatoração ampla e não declare PASS.
+Criar o cérebro do NavalDocs Pro.
 
-Execute somente o diagnóstico inicial, produza o inventário técnico e identifique vulnerabilidades reais.
+Não será apenas um chatbot.
 
-==================================================
-1. MAPEAR A IMPLEMENTAÇÃO ATUAL
-==================================================
+Será um centro de comando baseado em Inteligência Artificial capaz de analisar toda a operação em tempo real.
 
-Localizar e documentar:
-
-- AuthProvider;
-- hooks de autenticação;
-- listeners onAuthStateChange;
-- guards de rota;
-- fluxo de login;
-- fluxo de cadastro;
-- logout;
-- recuperação de senha;
-- criação de perfil;
-- criação de empresa;
-- associação usuário-empresa;
-- resolução de role;
-- Admin Master;
-- Portal do Cliente;
-- convites;
-- links públicos;
-- troca de tenant, caso exista.
-
-Para cada item, informar:
-
-- arquivo;
-- função ou componente;
-- fonte dos dados;
-- dependências;
-- proteção existente;
-- risco identificado.
+O usuário deve sentir que possui um especialista naval trabalhando 24 horas por dia.
 
 ==================================================
-2. IDENTIFICAR A FONTE CANÔNICA
+MISSÃO
 ==================================================
 
-Descobrir onde atualmente estão armazenados:
+A IA deve conhecer absolutamente tudo do sistema.
 
-- role;
-- company_id;
-- user_id;
-- memberships;
-- permissões;
-- status ativo;
-- status da empresa.
+Ela deve possuir acesso (respeitando permissões) a:
 
-Verificar conflitos entre:
+• processos
+• clientes
+• embarcações
+• documentos
+• OCR
+• checklists
+• assinaturas
+• certificados
+• dossiês
+• comentários
+• histórico
+• notificações
+• prazos
+• templates
+• usuários
+• empresas
+• métricas
 
-- auth metadata;
-- profiles;
-- companies;
-- company_members;
-- user_roles;
-- JWT;
-- localStorage;
-- contexto React.
+Nunca utilizar respostas genéricas.
 
-Não assumir que existe uma fonte única.
-
-Entregar uma conclusão objetiva:
-
-- fonte canônica atual;
-- fontes secundárias;
-- conflitos;
-- risco de dessincronização;
-- risco de escalada de privilégio.
+Todas as respostas devem ser baseadas em dados reais.
 
 ==================================================
-3. INVENTÁRIO DE PAPÉIS REAIS
+TIPOS DE IA
 ==================================================
 
-Listar somente os papéis existentes no código e no banco.
+Criar uma arquitetura de agentes especializados.
 
-Para cada papel, informar:
+Agent 01
+Process Specialist
 
-- onde está definido;
-- quem pode atribuir;
-- quem pode remover;
-- rotas acessíveis;
-- ações permitidas;
-- ações proibidas;
-- proteção frontend;
-- proteção backend;
-- proteção RLS.
+Especialista em processos.
 
-Não criar novos papéis nesta etapa.
+Consegue responder:
 
-==================================================
-4. INVENTÁRIO DE ROTAS
-==================================================
+"Qual processo está mais atrasado?"
 
-Classificar todas as rotas como:
+"Quais documentos faltam?"
 
-- pública;
-- autenticada;
-- tenant;
-- administrativa;
-- Admin Master;
-- Portal do Cliente;
-- acesso por token.
+"Qual processo pode ser finalizado hoje?"
 
-Informar para cada rota:
+--------------------------------------------------
 
-- guard utilizado;
-- condição de autorização;
-- risco de bypass por URL;
-- risco de flash de conteúdo;
-- risco de redirect loop;
-- comportamento em refresh;
-- comportamento sem sessão;
-- comportamento com papel insuficiente.
+Agent 02
+Documentation Specialist
 
-==================================================
-5. INVENTÁRIO DE TABELAS E POLICIES
-==================================================
+Especialista documental.
 
-Auditar inicialmente as tabelas relacionadas diretamente a autenticação e autorização:
+Analisa:
 
-- profiles;
-- companies;
-- company_members;
-- user_roles;
-- invitations;
-- portal users;
-- audit logs;
-- configuração de papéis;
-- qualquer tabela equivalente existente.
+• PDFs
+• OCR
+• templates
+• certificados
 
-Para cada uma, informar:
+Detecta:
 
-- RLS habilitada;
-- SELECT policies;
-- INSERT policies;
-- UPDATE policies;
-- DELETE policies;
-- WITH CHECK;
-- USING;
-- acesso anon;
-- acesso authenticated;
-- dependência de company_id enviado pelo cliente;
-- policies permissivas;
-- USING(true);
-- WITH CHECK(true).
+• documentos vencidos
+• campos inconsistentes
+• anexos incorretos
 
-==================================================
-6. INVENTÁRIO DE RPCs
-==================================================
+--------------------------------------------------
 
-Listar RPCs relacionadas a:
+Agent 03
+Risk Specialist
 
-- usuários;
-- empresas;
-- papéis;
-- convites;
-- Admin Master;
-- memberships;
-- permissões;
-- Portal do Cliente.
+Especialista em riscos.
 
-Para cada RPC, informar:
+Analisa:
 
-- SECURITY DEFINER;
-- search_path;
-- auth.uid() validado;
-- tenant validado;
-- papel validado;
-- EXECUTE permitido para anon;
-- EXECUTE permitido para authenticated;
-- campos retornados;
-- risco de parâmetro adulterado.
+• Health Score
+• Risk Score
+• pendências
+• bloqueios
+
+Explica exatamente por que um processo possui risco elevado.
+
+--------------------------------------------------
+
+Agent 04
+Operations Specialist
+
+Especialista operacional.
+
+Sugere automaticamente:
+
+• prioridades
+• próximos passos
+• gargalos
+• processos esquecidos
+
+--------------------------------------------------
+
+Agent 05
+Management Specialist
+
+Especialista gerencial.
+
+Produz:
+
+• indicadores
+• produtividade
+• tempo médio
+• SLA
+• ranking
+• gráficos
 
 ==================================================
-7. INVENTÁRIO DE EDGE FUNCTIONS
+CHAT ENTERPRISE
 ==================================================
 
-Listar funções relacionadas a:
+Criar um chat semelhante ao ChatGPT.
 
-- cadastro;
-- convite;
-- alteração de papel;
-- Admin Master;
-- recuperação;
-- Portal do Cliente;
-- criação de usuário;
-- suspensão;
-- troca de tenant.
+O usuário poderá perguntar naturalmente:
 
-Para cada função, informar:
+"Quais processos vencem amanhã?"
 
-- JWT obrigatório;
-- validação do usuário;
-- validação do tenant;
-- validação do papel;
-- uso de service role;
-- allowlist de payload;
-- rate limiting;
-- idempotência;
-- CORS;
-- logs;
-- risco de mass assignment.
+"Existe algum cliente sem documentação?"
+
+"Qual funcionário finalizou mais processos?"
+
+"Quais certificados vencem este mês?"
+
+"Liste apenas processos críticos."
 
 ==================================================
-8. TESTES RÁPIDOS DE RED TEAM
+COMANDOS
 ==================================================
 
-Executar testes seguros no ambiente QA:
+A IA poderá executar ações somente após confirmação.
 
-- usuário alterar o próprio role;
-- usuário alterar o próprio company_id;
-- usuário acessar rota Admin Master;
-- usuário chamar RPC administrativa;
-- usuário chamar Edge Function administrativa;
-- QA A consultar profile da QA B;
-- QA A consultar empresa da QA B;
-- acesso anônimo a tabelas sensíveis;
-- manipulação de user_id;
-- manipulação de company_id;
-- token expirado;
-- logout seguido de botão voltar.
+Exemplo:
 
-Não realizar teste destrutivo.
+"Abra o processo 2026-154"
 
-==================================================
-9. CLASSIFICAR ACHADOS
-==================================================
+"Criar checklist."
 
-Classificar cada achado:
+"Gerar documento."
 
-- P0 — crítico;
-- P1 — alto;
-- P2 — médio;
-- P3 — baixo;
-- informativo.
+"Solicitar assinatura."
 
-Para cada achado, incluir:
+"Abrir OCR."
 
-- título;
-- componente;
-- evidência;
-- forma de exploração;
-- impacto;
-- recomendação;
-- arquivo ou policy afetada;
-- status atual.
+"Enviar lembrete."
+
+Nunca executar ações destrutivas sem confirmação.
 
 ==================================================
-10. NÃO CORRIGIR TUDO AUTOMATICAMENTE
+MEMÓRIA
 ==================================================
 
-Nesta rodada:
+A IA deve lembrar o contexto da conversa.
 
-- corrigir somente P0 or P1 óbvios e seguros;
-- não fazer refatoração ampla;
-- não alterar modelo de papéis sem diagnóstico;
-- não apagar policies sem compreender dependências;
-- não modificar fluxos de produção sem teste.
+Exemplo:
 
-Qualquer correção aplicada deve possuir:
+Usuário:
 
-- motivo;
-- diff resumido;
-- teste;
-- evidência;
-- risco de regressão.
+"Mostre processos críticos."
 
-==================================================
-11. EVIDÊNCIAS
-==================================================
+Depois:
 
-Salvar em:
+"E quais são do cliente João?"
 
-tests/evidence/fortress-phase-1-auth/diagnostic/
+Depois:
 
-Incluir:
+"Abra o primeiro."
 
-- architecture-map.md;
-- roles-inventory.md;
-- routes-inventory.md;
-- rls-inventory.md;
-- rpc-inventory.md;
-- edge-functions-inventory.md;
-- red-team-results.md;
-- findings.md;
-- logs;
-- screenshots, quando aplicável.
-
-Não salvar tokens completos, senhas ou secrets.
+Ela deve entender o contexto.
 
 ==================================================
-12. RELATÓRIO DESTA RODADA
+RESPOSTAS
 ==================================================
 
-Entregar:
+As respostas devem conter:
 
-1. Resumo executivo.
-2. Arquitetura atual de autenticação.
-3. Fonte canônica de autorização.
-4. Papéis reais.
-5. Rotas protegidas.
-6. Tabelas e RLS.
-7. RPCs.
-8. Edge Functions.
-9. Resultado do Red Team inicial.
-10. Vulnerabilidades P0/P1/P2/P3.
-11. Correções emergenciais aplicadas.
-12. Limitações do ambiente.
-13. Próxima ação recomendada.
+• resumo executivo
+
+• explicação
+
+• dados encontrados
+
+• motivo
+
+• recomendação
+
+• ações rápidas
 
 ==================================================
-13. VEREDITO
+AÇÕES RÁPIDAS
 ==================================================
 
-Nesta rodada, o único veredito permitido é:
+Cada resposta poderá gerar botões como:
 
-- DIAGNÓSTICO CONCLUÍDO;
-- DIAGNÓSTICO PARCIAL;
-- BLOQUEADO PELO AMBIENTE.
+Abrir Processo
 
-Não declarar PASS da Fase 1 ainda.
+Abrir Documento
 
-Após o relatório diagnóstico, serão definidas as correções da Onda 1.</div>
+Gerar PDF
+
+Abrir OCR
+
+Criar Assinatura
+
+Enviar Lembrete
+
+Abrir Cliente
+
+==================================================
+DASHBOARD IA
+==================================================
+
+Criar um painel exclusivo mostrando:
+
+• processos críticos
+
+• documentos vencidos
+
+• OCR pendente
+
+• assinaturas pendentes
+
+• certificados vencendo
+
+• processos sem movimentação
+
+• sugestões inteligentes
+
+==================================================
+AUDITORIA
+==================================================
+
+Toda resposta deverá registrar:
+
+• usuário
+
+• horário
+
+• agente utilizado
+
+• dados consultados
+
+• tempo da resposta
+
+==================================================
+PERFORMANCE
+==================================================
+
+A IA nunca deve consultar toda a base sem necessidade.
+
+Criar arquitetura eficiente com:
+
+• cache
+
+• paginação
+
+• consultas específicas
+
+• lazy loading
+
+==================================================
+SEGURANÇA
+==================================================
+
+A IA deve obedecer exatamente as permissões do usuário.
+
+Nunca responder informações de outro tenant.
+
+Nunca ignorar RLS.
+
+Nunca acessar dados sem autorização.
+
+==================================================
+TESTES
+==================================================
+
+Criar:
+
+• testes unitários
+
+• integração
+
+• Playwright
+
+• Typecheck
+
+• Build
+
+==================================================
+OBJETIVO FINAL
+==================================================
+
+Quando um usuário entrar no NavalDocs Pro, ele deverá sentir que possui um diretor operacional especializado em documentação naval trabalhando ao seu lado.
+
+Este módulo deve se tornar o principal diferencial competitivo do NavalDocs Pro e ser desenvolvido com qualidade enterprise.</div>
     </div>
   );
 }
