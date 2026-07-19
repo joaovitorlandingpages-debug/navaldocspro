@@ -242,9 +242,9 @@ export class ActionExecutor {
         name: error.name, 
         code: error.code, 
         errorCode, 
-        processId: error.processId
+        processId: error.processId,
+        isActionError: error.isActionError
       });
-
 
       if (error instanceof ActionNotFoundError) {
         status = ActionStatus.FAILED;
@@ -255,7 +255,11 @@ export class ActionExecutor {
         status = ActionStatus.PERMISSION_DENIED;
       } else if (error instanceof BaseConfirmationRequiredError || error.code === 'CHECKLIST_CONFIRMATION_REQUIRED') {
         status = ActionStatus.FAILED; 
+      } else if (error.isActionError || (error.errorCode && error.errorCode !== 'ACTION_EXECUTION_ERROR')) {
+        // Normalized ActionError or specific ActionExecutionError sub-type
+        status = ActionStatus.FAILED;
       }
+
 
       // Audit Failure
       try {
