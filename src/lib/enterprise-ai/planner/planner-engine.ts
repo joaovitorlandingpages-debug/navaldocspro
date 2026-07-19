@@ -35,7 +35,7 @@ export class PlannerEngine {
     const matchedActionIds = this.expandDependencies(resolvedActionIds, actions);
     const intentActions = actions.filter(a => matchedActionIds.includes(a.id));
     
-    // 3. Step Generation
+    // 4. Step Generation
     const steps = this.generateSteps(matchedActionIds, actions);
 
     if (steps.length === 0) {
@@ -45,8 +45,8 @@ export class PlannerEngine {
       );
     }
 
-
-    this.validateSteps(steps, intentActions, request.context.permissions);
+    // 5. Validation with User Permissions
+    this.validateSteps(steps, actions, request.context.permissions);
     this.detectCircularDependencies(steps);
 
     const requiresConfirmation = steps.some((s: ExecutionStep) => s.confirmationRequired);
