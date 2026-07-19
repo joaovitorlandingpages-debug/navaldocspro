@@ -175,7 +175,8 @@ describe("Enterprise Audit Logger (Sprint 4.5)", () => {
     const client = await import("@/integrations/supabase/client");
     const supabaseMock = client.supabase;
 
-    const logSuccessSpy = vi.spyOn(auditLogger, "logSuccess");
+    const logSuccessSpy = vi.spyOn(auditLogger, "logSuccess").mockResolvedValue({ success: true });
+    vi.spyOn(auditLogger, "logStart").mockResolvedValue({ success: true });
 
     // Mock sequence para GeneratePdfAction
     supabaseMock.single
@@ -198,11 +199,9 @@ describe("Enterprise Audit Logger (Sprint 4.5)", () => {
 
     await executor.execute("generate-pdf", { processId: mockProcessId }, authContext);
 
-    expect(logSuccessSpy).toHaveBeenCalled();
-    const lastCall = logSuccessSpy.mock.calls[logSuccessSpy.mock.calls.length - 1];
-    expect(lastCall[1]).toMatchObject({
+    expect(logSuccessSpy).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({
       documentId: "doc-123"
-    });
+    }));
   });
 
   it("6. Robusteza: Erro na auditoria não trava a Action", async () => {
@@ -211,6 +210,9 @@ describe("Enterprise Audit Logger (Sprint 4.5)", () => {
     const supabaseMock = client.supabase;
 
     vi.spyOn(auditLogger, "logStart").mockImplementation(async () => {
+      throw new Error("Database down");
+    });
+    vi.spyOn(auditLogger, "logSuccess").mockImplementation(async () => {
       throw new Error("Database down");
     });
 
