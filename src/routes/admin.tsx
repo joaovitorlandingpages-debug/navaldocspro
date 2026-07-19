@@ -83,6 +83,7 @@ function AdminLayout() {
     { name: "OCR Admin", icon: <Zap className="h-5 w-5" />, path: "/admin/ocr" },
     { name: "Storage Admin", icon: <Database className="h-5 w-5" />, path: "/admin/storage" },
     { name: "Central de Documentação", icon: <FileText className="h-5 w-5" />, path: "/admin/docs-central" },
+    { name: "Process Center", icon: <Rocket className="h-5 w-5" />, path: "/admin/process-center" },
     { name: "Erros de Interface", icon: <Layout className="h-5 w-5" />, path: "/admin/frontend-errors" },
     { name: "Audit Logs", icon: <History className="h-5 w-5" />, path: "/admin/logs" },
     { name: "Implantação & Status", icon: <Activity className="h-5 w-5" />, path: "/admin/system-report" },
