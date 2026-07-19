@@ -155,7 +155,14 @@ export class ActionExecutor {
       }
 
       // 6. Execute
-      const result = await action.execute({ ...input, ...context, ...confirmationMetadata, input });
+      const inputWithContext = { 
+        ...input, 
+        ...context, 
+        ...confirmationMetadata, 
+        _user: { id: authContext.userId }
+      };
+      
+      const result = await action.execute(inputWithContext);
 
       // 6.1 Update Idempotency Record if success
       if (idempotencyRecordId && result.success) {
@@ -198,6 +205,9 @@ export class ActionExecutor {
 
     } catch (error: any) {
       const finishedAt = new Date();
+      console.log('ActionExecutor Catch ERROR:', error.name, error.code, error.errorCode, error.constructor.name);
+      
+      const errorCode = error.code || error.errorCode || 'ACTION_EXECUTION_ERROR';
       let status = error.status || ActionStatus.FAILED;
       let errors = [error.message || 'Unknown execution error'];
 
@@ -209,17 +219,16 @@ export class ActionExecutor {
       } else if (error instanceof ActionPermissionDeniedError) {
         status = ActionStatus.PERMISSION_DENIED;
       } else if (error instanceof BaseConfirmationRequiredError || error.code === 'CHECKLIST_CONFIRMATION_REQUIRED') {
-        // This comes from the action when it needs a confirmation
         status = ActionStatus.FAILED; 
       }
 
       // Audit Failure
       try {
         if (idempotencyRecordId) {
-          const isRecoverable = error.code === 'MATERIALIZATION_FAILED' || error.code === 'VISIBILITY_FAILED';
+          const isRecoverable = errorCode === 'MATERIALIZATION_FAILED' || errorCode === 'VISIBILITY_FAILED';
           await idempotencyService.update(idempotencyRecordId, {
             status: isRecoverable ? 'recoverable_failed' : 'failed',
-            errorCode: error.code || 'UNKNOWN_ERROR',
+            errorCode: errorCode,
             processId: (error as any).processId
           });
         }
@@ -244,7 +253,8 @@ export class ActionExecutor {
         durationMs: finishedAt.getTime() - startedAt.getTime(),
         errors,
         metadata: { 
-          errorCode: error.code,
+          errorCode: errorCode,
+          processId: (error as any).processId,
           confirmationToken: (error as any).publicToken,
           summary: (error as any).summary
         }

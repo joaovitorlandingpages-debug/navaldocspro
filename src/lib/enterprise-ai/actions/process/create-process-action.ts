@@ -1,179 +1,110 @@
-import { AIAction, ActionResult, ActionStatus, ConfirmationPolicy } from "../action-types";
+import { AIAction, ActionResult, ActionStatus, ConfirmationPolicy, ActionError } from "../action-types";
+import { createActionResult } from "../action-result";
 import { 
   CreateProcessInput, 
   CreateProcessInputSchema, 
-  CustomerNotFoundError, 
-  VesselNotFoundError, 
-  ProcessCreationError, 
-  TenantMismatchError 
 } from "./process-action-types";
 import { supabase } from "@/integrations/supabase/client";
-import { createActionResult } from "../action-result";
+import { processCreationService } from "@/services/processes/process-creation-service";
 import { materializeProcessBlueprint } from "@/services/processes/blueprintEngine";
 import { confirmProcessVisible, notifyProcessesChanged } from "@/services/processes/processCreation";
-import { processCreationService } from "@/services/processes/process-creation-service";
 
 export class CreateProcessAction implements AIAction {
   id = "create-process";
   name = "Create Process";
-  description = "Creates a complete NavalDocs process using the existing application workflow.";
-  requiredPermissions = ["PROCESS_CREATE", "CUSTOMER_READ", "VESSEL_READ"];
+  description = "Creates a new process with blueprint materialization and tenant isolation";
+  
+  requiredPermissions = ["PROCESS_CREATE"];
   confirmationPolicy = ConfirmationPolicy.HIGH;
-  estimatedRisk: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" = "HIGH";
-  estimatedDuration = 10;
+  estimatedRisk = 'MEDIUM' as const;
+  estimatedDuration = 5;
 
   async validate(context: any): Promise<{ valid: boolean; errors?: string[] }> {
     const result = CreateProcessInputSchema.safeParse(context);
     if (!result.success) {
-      return {
-        valid: false,
-        errors: result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+      return { 
+        valid: false, 
+        errors: result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`) 
       };
     }
+    return { valid: true };
+  }
 
-    const { customerId, vesselId } = result.data;
-    const { data: { user } } = await supabase.auth.getUser();
+  async execute(context: any): Promise<ActionResult> {
+    const start = Date.now();
+    const input = context as CreateProcessInput;
+    const user = (context as any)._user;
     
-    if (!user) return { valid: false, errors: ["User not authenticated"] };
+    if (!user) throw new Error("User context missing in execute");
 
-    // Fetch user profile for company_id
     const { data: profile } = await supabase
       .from("profiles")
       .select("company_id")
       .eq("id", user.id)
       .single();
 
-    if (!profile) return { valid: false, errors: ["User profile not found"] };
+    if (!profile) throw new Error("User profile not found");
 
-    // Validate Customer
-    const { data: customer, error: customerError } = await supabase
-      .from("customers")
-      .select("company_id")
-      .eq("id", customerId)
-      .maybeSingle();
+    let processId = (context as any).processId;
+    let processStatus = 'pending';
 
-    if (customerError || !customer) {
-      throw new CustomerNotFoundError(customerId);
+    if (!processId) {
+      const priorityMap: Record<string, 'low' | 'medium' | 'high' | 'critical'> = {
+        'low': 'low',
+        'normal': 'medium',
+        'high': 'high',
+        'urgent': 'critical'
+      };
+
+      const process = await processCreationService.createProcess({
+        companyId: profile.company_id,
+        processType: input.processType,
+        processTypeId: input.processTypeId,
+        customerId: input.customerId,
+        vesselId: input.vesselId,
+        title: input.title || input.processType,
+        description: input.description,
+        priority: priorityMap[input.priority] || 'medium',
+        metadata: input.metadata,
+      });
+      processId = process.id;
+      processStatus = process.status;
     }
 
-    if (customer.company_id !== profile.company_id) {
-      throw new TenantMismatchError("customer");
-    }
-
-    // Validate Vessel if provided
-    if (vesselId) {
-      const { data: vessel, error: vesselError } = await supabase
-        .from("vessels")
-        .select("company_id, customer_id")
-        .eq("id", vesselId)
-        .maybeSingle();
-
-      if (vesselError || !vessel) {
-        throw new VesselNotFoundError(vesselId);
-      }
-
-      if (vessel.company_id !== profile.company_id) {
-        throw new TenantMismatchError("vessel");
-      }
-
-      if (vessel.customer_id !== customerId) {
-        return { valid: false, errors: ["Vessel does not belong to the selected customer"] };
-      }
-    }
-
-    return { valid: true };
-  }
-
-  async execute(rawInput: CreateProcessInput): Promise<ActionResult> {
-    const context = (rawInput as any).input || rawInput;
-
-
-
-    const start = Date.now();
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("company_id")
-        .eq("id", user.id)
-        .single();
-
-      if (!profile) throw new Error("User profile not found");
-
-      // 1. ATOMIC/IDEMPOTENT FLOW: Create or recover base process
-      let processId = (rawInput as any).processId;
-      let processStatus = 'pending';
-
-      if (!processId) {
-        const process = await processCreationService.createProcess({
-          companyId: profile.company_id,
-          processType: context.processType,
-          processTypeId: context.processTypeId || (context as any).process_type_id,
-          customerId: context.customerId,
-          vesselId: context.vesselId,
-          title: context.title || context.processType,
-          description: context.description,
-          priority: context.priority,
-          metadata: context.metadata,
-        });
-        processId = process.id;
-        processStatus = process.status;
-      }
-
-
-      // 2. Materialize Blueprint
-      try {
-        await materializeProcessBlueprint(processId, {
-          extraTemplateIds: context.initialChecklist || [],
-        });
-      } catch (e: any) {
-        const error = new ProcessCreationError(e.message || "Blueprint materialization failed", 'MATERIALIZATION_FAILED');
-        (error as any).processId = processId;
-        throw error;
-      }
-
-      // 3. Confirm Visibility & Notify
-      try {
-        const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
-        notifyProcessesChanged(visibleProcess);
-      } catch (e: any) {
-        const error = new ProcessCreationError(e.message || "Process visibility confirmation failed", 'VISIBILITY_FAILED');
-        (error as any).processId = processId;
-        throw error;
-      }
-
-      return createActionResult({
-        success: true,
-        status: ActionStatus.SUCCESS,
-        message: `Process "${context.title || context.processType}" created successfully`,
-        executionId: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'exec-' + Date.now(),
-        duration: Date.now() - start,
-        metadata: {
-          processId,
-          customerId: context.customerId,
-          vesselId: context.vesselId,
-          status: processStatus,
-        }
+      await materializeProcessBlueprint(processId, {
+        extraTemplateIds: input.initialChecklist || [],
       });
-
-    } catch (error: any) {
-
-      return createActionResult({
-        success: false,
-        status: ActionStatus.FAILED,
-        message: error.message || "Unknown error during process creation",
-        executionId: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'exec-' + Date.now(),
-        duration: Date.now() - start,
-      });
+    } catch (e: any) {
+      const err = new ActionError(e.message || "Blueprint materialization failed", 'MATERIALIZATION_FAILED');
+      Object.assign(err, { processId });
+      throw err;
     }
 
+    try {
+      const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
+      notifyProcessesChanged(visibleProcess);
+    } catch (e: any) {
+      const err = new ActionError(e.message || "Process visibility confirmation failed", 'VISIBILITY_FAILED');
+      Object.assign(err, { processId });
+      throw err;
+    }
+
+    return createActionResult({
+      success: true,
+      status: ActionStatus.SUCCESS,
+      message: `Process "${input.title || input.processType}" created successfully`,
+      executionId: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'exec-' + Date.now(),
+      duration: Date.now() - start,
+      metadata: {
+        processId,
+        customerId: input.customerId,
+        vesselId: input.vesselId,
+        status: processStatus,
+      }
+    });
   }
 
   async rollback(context: any): Promise<void> {
-    // Basic rollback: if the process was created but something failed later in a complex flow
-    // In this simple case, we don't necessarily delete the process unless we wanted a strict atomic operation.
-    // For now, no-op or specific deletion logic if needed.
   }
 }
