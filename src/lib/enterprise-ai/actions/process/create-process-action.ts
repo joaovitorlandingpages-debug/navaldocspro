@@ -15,18 +15,18 @@ import { confirmProcessVisible, notifyProcessesChanged } from "@/services/proces
 
 export class CreateProcessAction implements AIAction {
   id = "create-process";
-  metadata: import("../../planner/planner-rules").ActionMetadata = {
+  metadata = {
     actionId: "create-process",
     displayName: "Create Process",
     description: "Creates a new process with blueprint materialization and tenant isolation",
     category: "process",
-    riskLevel: "MEDIUM",
+    riskLevel: "MEDIUM" as const,
     requiredPermissions: ["PROCESS_CREATE"],
     confirmationPolicy: ConfirmationPolicy.HIGH,
     dependencies: [],
     retryPolicy: {
       maxRetries: 3,
-      backoff: "exponential"
+      backoff: "exponential" as const
     },
     estimatedDuration: 5,
     enabled: true,
