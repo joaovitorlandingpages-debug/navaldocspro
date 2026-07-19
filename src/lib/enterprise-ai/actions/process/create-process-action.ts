@@ -77,7 +77,8 @@ export class CreateProcessAction implements AIAction {
       });
     } catch (e: any) {
       const err = new ActionError(e.message || "Blueprint materialization failed", 'MATERIALIZATION_FAILED');
-      Object.assign(err, { processId });
+      (err as any).processId = processId;
+      console.log('CreateProcessAction Materialization ERROR throw:', { code: err.code, processId });
       throw err;
     }
 
@@ -86,7 +87,8 @@ export class CreateProcessAction implements AIAction {
       notifyProcessesChanged(visibleProcess);
     } catch (e: any) {
       const err = new ActionError(e.message || "Process visibility confirmation failed", 'VISIBILITY_FAILED');
-      Object.assign(err, { processId });
+      (err as any).processId = processId;
+      console.log('CreateProcessAction Visibility ERROR throw:', { code: err.code, processId });
       throw err;
     }
 
