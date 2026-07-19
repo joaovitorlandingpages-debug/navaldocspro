@@ -185,7 +185,11 @@ export class ActionExecutor {
         finishedAt,
         durationMs: finishedAt.getTime() - startedAt.getTime(),
         errors,
-        metadata: { errorCode: error.code }
+        metadata: { 
+          errorCode: error.code,
+          confirmationToken: (error as any).publicToken,
+          summary: (error as any).summary
+        }
       };
     }
   }
