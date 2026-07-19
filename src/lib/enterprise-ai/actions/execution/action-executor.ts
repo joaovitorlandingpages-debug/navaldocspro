@@ -292,9 +292,9 @@ export class ActionExecutor {
           error: errors,
           finishedAt,
           durationMs,
-          errorCode,
           metadata: { errorCode, processId: error.processId }
         });
+
       } catch (auditError) {
         console.warn('Audit failure log failed:', auditError);
       }
