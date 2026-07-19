@@ -2,15 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
-  Rocket, Search, Filter, Plus, 
-  Ship, User, Calendar, ArrowRight,
-  MoreVertical, Loader2, Zap, Activity
+  Plus, Ship, User, Calendar, ArrowRight,
+  MoreVertical, Loader2, Zap, Activity, Search, Filter
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/navigation/PageHeader";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export const Route = createFileRoute("/admin/process-center/")({
   component: ProcessCenterListPage,
@@ -61,16 +62,16 @@ function ProcessCenterListPage() {
          </Card>
          <Card className="p-6 border-slate-200 bg-white shadow-sm border-b-4 border-b-emerald-500">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Health Score Médio</p>
-            <h3 className="text-4xl font-black text-emerald-600 tracking-tighter">87</h3>
+            <h3 className="text-4xl font-black text-emerald-600 tracking-tighter">--</h3>
             <div className="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-               <div className="h-full bg-emerald-500" style={{ width: '87%' }} />
+               <div className="h-full bg-emerald-500" style={{ width: '0%' }} />
             </div>
          </Card>
          <Card className="p-6 border-slate-200 bg-white shadow-sm border-b-4 border-b-blue-500">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Automação OCR</p>
-            <h3 className="text-4xl font-black text-blue-600 tracking-tighter">98%</h3>
+            <h3 className="text-4xl font-black text-blue-600 tracking-tighter">--</h3>
             <div className="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-               <div className="h-full bg-blue-500" style={{ width: '98%' }} />
+               <div className="h-full bg-blue-500" style={{ width: '0%' }} />
             </div>
          </Card>
       </div>
@@ -121,11 +122,11 @@ function ProcessCenterListPage() {
                       </span>
                       <div className="h-3 w-px bg-slate-200" />
                       <span className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" /> {new Date(process.created_at).toLocaleDateString()}
+                        <Calendar className="h-4 w-4" /> {format(new Date(process.created_at), "dd/MM/yyyy", { locale: ptBR })}
                       </span>
                       <div className="h-3 w-px bg-slate-200" />
                       <span className="flex items-center gap-2 text-blue-600">
-                        <Zap className="h-4 w-4" /> 12 Documentos
+                        <Zap className="h-4 w-4" /> Documentos não contados
                       </span>
                     </div>
                   </div>
@@ -139,9 +140,9 @@ function ProcessCenterListPage() {
                     </span>
                     <div className="flex items-center gap-3">
                       <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="bg-emerald-500 h-full w-[87%] transition-all duration-1000" />
+                        <div className="bg-emerald-500 h-full w-[0%] transition-all duration-1000" />
                       </div>
-                      <span className="text-sm font-black text-slate-900">87</span>
+                      <span className="text-sm font-black text-slate-900">--</span>
                     </div>
                   </div>
                   
@@ -164,3 +165,4 @@ function ProcessCenterListPage() {
     </div>
   );
 }
+
