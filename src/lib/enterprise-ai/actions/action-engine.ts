@@ -3,6 +3,8 @@ import { ActionRegistry } from "./action-registry";
 import { createActionResult } from "./action-result";
 import { GeneratePdfAction } from "./pdf/generate-pdf-action";
 import { CompleteChecklistAction } from "./checklist/complete-checklist-action";
+import { RequestSignatureAction } from "./signatures/request-signature-action";
+
 
 
 
