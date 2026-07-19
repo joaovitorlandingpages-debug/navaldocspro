@@ -11,7 +11,7 @@ import {
   ActionPermissionDeniedError,
   ActionExecutionError 
 } from './execution-errors';
-import { crypto } from '@/lib/utils/crypto'; // Assuming a crypto helper exists or using a shim
+// ID generation using built-in crypto or fallback
 
 export class ActionExecutor {
   constructor(
