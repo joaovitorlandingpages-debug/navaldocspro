@@ -91,21 +91,21 @@ function AICommandCenterPage() {
           <Cpu className="h-32 w-32" />
         </div>
         <h1 className="text-3xl font-black tracking-tighter mb-2">ENTERPRISE AI COMMAND CENTER</h1>
-        <p className="text-emerald-400 font-bold tracking-widest uppercase text-[10px]">Sprint 4 — Enterprise Action Execution Engine</p>
+        <p className="text-emerald-400 font-bold tracking-widest uppercase text-[10px]">Sprint 4.3 — Action Executor + Audit + Rollback</p>
         
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl">
             <h3 className="text-rose-400 font-black text-[10px] uppercase mb-2">Importante</h3>
             <p className="text-[10px] text-rose-200/70 font-medium leading-relaxed">
-              O EACC já possui Orchestrator, Conversation, Context, Intent, Planner, Tool Registry e Provider Layer. 
-              <strong> NÃO alterar:</strong> Process Center, OCR, Health, Risk, Document, Signature Engine ou Portal do Cliente.
+              O EACC já possui Orchestrator, Provider Layer, Action Engine, Registry, Permission Guard e Validator.
+              <strong> NÃO alterar:</strong> Process Center, OCR, Documents, Signatures, Customer Portal, Health Engine ou Risk Engine.
             </p>
           </div>
           <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
             <h3 className="text-emerald-400 font-black text-[10px] uppercase mb-2">Objetivo</h3>
             <p className="text-[10px] text-emerald-200/70 font-medium leading-relaxed">
-              Transformar o EACC de um assistente que responde perguntas para um copiloto que executa ações reais com segurança. 
-              Toda ação deve passar por Planejamento → Permission Guard → Validation → Execution → Audit.
+              Criar o mecanismo responsável por executar uma Action de forma segura, auditável e preparada para rollback. 
+              Fluxo: Action → Validator → Permission Guard → Executor → Audit → Rollback → ActionResult.
             </p>
           </div>
         </div>
@@ -115,48 +115,76 @@ function AICommandCenterPage() {
         <Card className="p-8 border-slate-200 bg-white font-mono text-[11px] leading-relaxed shadow-sm">
           <ScrollArea className="h-[1200px] pr-4">
             <div className="space-y-12 whitespace-pre-wrap">
-              <section id="ts-visual-edit-probe-aea7dfbbbd9f42ad">
+              <section id="ts-visual-edit-probe-860435879b784a11">
                 <div className="bg-slate-50 border-2 border-slate-900 p-8 rounded-2xl shadow-xl">
-                  <h2 className="text-2xl font-black text-slate-900 mb-6 border-b-4 border-slate-900 pb-2">ENTERPRISE AI COMMAND CENTER</h2>
-                  <div className="space-y-4 font-mono text-xs leading-relaxed">
-                    <div className="bg-amber-100 text-amber-900 p-2 font-bold text-center rounded">SPRINT 4.2 - ACTION VALIDATOR + PERMISSION GUARD</div>
+                  <h2 className="text-2xl font-black text-slate-900 mb-6 border-b-4 border-slate-900 pb-2 uppercase">ENTERPRISE AI COMMAND CENTER</h2>
+                  <div className="space-y-6 font-mono text-xs leading-relaxed">
+                    <div className="bg-amber-100 text-amber-900 p-2 font-bold text-center rounded">SPRINT 4.3 - ACTION EXECUTOR + AUDIT + ROLLBACK</div>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white p-4 border border-slate-200 rounded shadow-sm">
-                        <p className="font-bold border-b mb-2">SEGURANÇA (REAL)</p>
-                        <ul className="list-disc pl-4 space-y-1">
-                          <li>src/lib/enterprise-ai/actions/security/</li>
-                          <li>permission-guard.ts (Auth/Tenant/Role/Perms)</li>
-                          <li>action-validator.ts (Integrity/Pre-checks)</li>
-                          <li>validation-result.ts (Typed Outcomes)</li>
-                          <li>permission-types.ts (10 AIPermissions)</li>
-                        </ul>
+                    <div className="bg-rose-50 p-4 border border-rose-200 rounded text-rose-800 text-[10px]">
+                      <p className="font-bold mb-1 uppercase">IMPORTANTE</p>
+                      <p>Pré-requisitos já implementados: AI Orchestrator, Provider Layer, Action Engine, Registry, Permission Guard, Validator.</p>
+                      <p className="mt-1 font-bold">NÃO alterar: Process Center, OCR, Documents, Signatures, Customer Portal, Health Engine, Risk Engine.</p>
+                      <p className="mt-1 italic">Ainda NÃO implementar lógica real das Actions. O objetivo é construir o pipeline de execução.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <p className="font-black text-slate-900 border-b-2 border-slate-900 mb-2 uppercase">1. ESTRUTURA DE ARQUIVOS (MANDATÓRIO)</p>
+                        <div className="bg-white p-3 border border-slate-200 rounded">
+                          <p className="font-bold text-emerald-600">src/lib/enterprise-ai/actions/execution/</p>
+                          <ul className="grid grid-cols-2 gap-x-4 mt-1">
+                            <li>• action-executor.ts</li>
+                            <li>• execution-context.ts</li>
+                            <li>• execution-result.ts</li>
+                            <li>• rollback-engine.ts</li>
+                            <li>• audit-logger.ts</li>
+                            <li>• audit-types.ts</li>
+                            <li>• execution-errors.ts</li>
+                            <li>• index.ts</li>
+                          </ul>
+                        </div>
                       </div>
-                      <div className="bg-white p-4 border border-slate-200 rounded shadow-sm">
-                        <p className="font-bold border-b mb-2">VALIDAÇÕES IMPLEMENTADAS</p>
-                        <ul className="list-disc pl-4 space-y-1 text-[10px]">
-                          <li>Validação de Autenticação</li>
-                          <li>Isolamento de Tenant (CompanyId)</li>
-                          <li>Verificação de Papéis (Roles)</li>
-                          <li>Checagem de Permissões Granulares</li>
-                          <li>Validação de Estado da Ação</li>
-                        </ul>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white p-4 border border-slate-200 rounded shadow-sm">
+                          <p className="font-bold border-b mb-2">ACTION EXECUTOR</p>
+                          <ul className="space-y-1 text-[10px]">
+                            <li>• Receber Action</li>
+                            <li>• Criar Contexto</li>
+                            <li>• Executar Validação</li>
+                            <li>• Executar Permission Guard</li>
+                            <li>• Executar Action & Capturar Erros</li>
+                            <li>• Medir Duração & Gerar Result</li>
+                          </ul>
+                        </div>
+                        <div className="bg-white p-4 border border-slate-200 rounded shadow-sm">
+                          <p className="font-bold border-b mb-2">AUDIT & ROLLBACK</p>
+                          <ul className="space-y-1 text-[10px]">
+                            <li>• Registrar ID, Status, Tempos</li>
+                            <li>• Registrar Warnings & Errors</li>
+                            <li>• Se suportar: Executar Rollback()</li>
+                            <li>• Registrar Sucesso/Falha Rollback</li>
+                            <li>• Persistência em Audit Log</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="font-black text-slate-900 border-b-2 border-slate-900 mb-2 uppercase">REQUISITOS DE TESTES (MIN. 15)</p>
+                        <div className="bg-slate-900 text-amber-400 p-4 rounded text-[10px] grid grid-cols-2 gap-2">
+                          <p>• Execução Válida/Inválida</p>
+                          <p>• Validator/Guard Bloqueando</p>
+                          <p>• Erro na Execução/Rollback</p>
+                          <p>• Rollback (Suportado/Não)</p>
+                          <p>• Audit Gerado com IDs Únicos</p>
+                          <p>• Pipeline Completo & Duração</p>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="bg-slate-900 text-amber-400 p-4 rounded font-mono text-[10px]">
-                      <p className="text-white mb-2 font-bold uppercase border-b border-amber-400/30 pb-1">AUDITORIA TÉCNICA (REAL)</p>
-                      <p>✓ Vitest: action-security.test.ts (12 PASS)</p>
-                      <p>✓ Vitest: action-engine-core.test.ts (8 PASS)</p>
-                      <p>✓ Typecheck: OK</p>
-                      <p>✓ Multi-tenant: Strict Ownership Validated</p>
-                      <div className="mt-2 text-white/50 italic">
-                        Camada de proteção Enterprise implementada. Nenhuma Action pode ser executada sem passar pelo funil de segurança e validação de estado.
-                      </div>
-                    </div>
-
-                    <div className="p-4 bg-emerald-50 border-2 border-emerald-500 rounded-xl text-center">
-                      <h3 className="text-lg font-black text-emerald-700 uppercase italic">SPRINT 4.2 IMPLEMENTADA</h3>
+                    <div className="p-4 bg-slate-100 border-2 border-slate-400 rounded-xl text-center">
+                      <h3 className="text-lg font-black text-slate-500 uppercase italic">STATUS: AGUARDANDO IMPLEMENTAÇÃO REAL</h3>
                     </div>
                   </div>
                 </div>
