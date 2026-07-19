@@ -17,18 +17,18 @@ import { confirmationService } from "../confirmation/confirmation-service";
 
 export class CompleteChecklistAction implements AIAction {
   id = "complete-checklist";
-  metadata: import("../../planner/planner-rules").ActionMetadata = {
+  metadata = {
     actionId: "complete-checklist",
     displayName: "Complete Checklist Item",
     description: "Completes, waives or updates a checklist item of an existing process.",
     category: "checklist",
-    riskLevel: "MEDIUM",
+    riskLevel: "MEDIUM" as const,
     requiredPermissions: ["PROCESS_READ", "PROCESS_UPDATE", "CHECKLIST_UPDATE"],
     confirmationPolicy: ConfirmationPolicy.MEDIUM,
     dependencies: ["create-process"],
     retryPolicy: {
       maxRetries: 3,
-      backoff: "exponential"
+      backoff: "exponential" as const
     },
     estimatedDuration: 2,
     enabled: true,
