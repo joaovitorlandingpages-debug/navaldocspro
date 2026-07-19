@@ -180,7 +180,9 @@ describe("Enterprise Audit Logger (Sprint 4.5)", () => {
   });
 
   it("5. Integração: GeneratePdfAction gera auditoria com documentId", async () => {
+    ActionRegistry.clear();
     const { auditLogger } = await import("../actions/audit/audit-logger");
+
     const client = await import("@/integrations/supabase/client");
     const supabaseMock = client.supabase;
 
