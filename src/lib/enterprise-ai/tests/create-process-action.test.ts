@@ -6,6 +6,14 @@ import { ActionExecutor } from "../actions/execution/action-executor";
 import { ActionValidator } from "../actions/security/action-validator";
 import { PermissionGuard } from "../actions/security/permission-guard";
 import { supabase } from "@/integrations/supabase/client";
+
+// Valid UUIDs for Zod
+const mockUserId = "550e8400-e29b-41d4-a716-446655440000";
+const mockCompanyId = "550e8400-e29b-41d4-a716-446655440001";
+const mockCustomerId = "550e8400-e29b-41d4-a716-446655440002";
+const mockVesselId = "550e8400-e29b-41d4-a716-446655440003";
+const mockTypeId = "550e8400-e29b-41d4-a716-446655440004";
+const mockProcessId = "550e8400-e29b-41d4-a716-446655440999";
 import { ActionExecutionError } from "../actions/execution/execution-errors";
 
 // Mock Supabase
