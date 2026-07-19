@@ -29,7 +29,10 @@ export class PlannerEngine {
     const actions = ActionRegistry.list().filter(a => a.metadata.supportsPlanner && a.metadata.enabled);
     
     // 2. Intent Resolution (Declarative)
-    const resolvedActionIds = this.resolveIntent(request.intent);
+    const intentText = typeof request.intent === "string" ? request.intent : request.intent.originalText;
+    const resolvedActionIds = typeof request.intent === "string" 
+      ? this.resolveIntent(request.intent)
+      : request.intent.requestedActions;
     
     // 3. Expand with transitive dependencies
     const matchedActionIds = this.expandDependencies(resolvedActionIds, actions);
