@@ -48,15 +48,16 @@ export function calculateOverallRisk(steps: { actionId: string, riskLevel?: Acti
   const highCount = risks.filter(r => r === "HIGH").length;
   if (highCount >= 1) return "HIGH";
   
-  const lowCount = risks.filter(r => r === "LOW").length;
-  if (lowCount > 0 && risks.every(r => r === "LOW")) return "LOW";
-
   const mediumCount = risks.filter(r => r === "MEDIUM").length;
-  if (mediumCount >= 2) return "HIGH"; // Accumulated risk: 2+ MEDIUM = HIGH per requirement
+  if (mediumCount >= 2) return "HIGH"; // 2+ MEDIUM = HIGH
 
   if (mediumCount >= 1) return "MEDIUM";
   
-  return "LOW";
+  // Rule: 2+ LOW risks upgrade to MEDIUM
+  const lowCount = risks.filter(r => r === "LOW").length;
+  if (lowCount >= 2) return "MEDIUM";
+  
+  return lowCount > 0 ? "LOW" : "LOW";
 }
 
 /**
