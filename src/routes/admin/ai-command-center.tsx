@@ -83,7 +83,7 @@ function AICommandCenterPage() {
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
       <PageHeader 
         title="Enterprise AI Command Center" 
-        description="ENTERPRISE AI COMMAND CENTER
+        description={`ENTERPRISE AI COMMAND CENTER
 SPRINT 2 — CONVERSATIONAL INTELLIGENCE & PLANNING
 
 IMPORTANTE
@@ -117,7 +117,7 @@ Transformar o EACC em um assistente operacional inteligente.
 Nesta sprint ele deve:
 
 - manter contexto da conversa;
-- compreender referências (\"esse processo\");
+- compreender referências ("esse processo");
 - escolher automaticamente uma ou mais ferramentas;
 - planejar antes de executar;
 - responder utilizando somente dados reais.
@@ -234,7 +234,7 @@ Resposta
 
 Exemplo:
 
-\"Mostre os processos críticos.\"
+"Mostre os processos críticos."
 
 Plano:
 
@@ -256,7 +256,7 @@ Exemplo:
 
 Pergunta:
 
-\"Quais processos possuem risco alto e saúde ruim?\"
+"Quais processos possuem risco alto e saúde ruim?"
 
 Plano:
 
@@ -324,11 +324,11 @@ Após cada resposta armazenar:
 
 Permitir perguntas como:
 
-\"E agora?\"
+"E agora?"
 
-\"E o anterior?\"
+"E o anterior?"
 
-\"Abra esse.\"
+"Abra esse."
 
 ==================================================
 8. AUDITORIA
@@ -448,7 +448,7 @@ SPRINT 2 BLOQUEADO
 
 Não implementar integração com OpenAI, Gemini ou Claude nesta sprint.
 
-Todo o comportamento deve funcionar utilizando o MockProvider já existente."
+Todo o comportamento deve funcionar utilizando o MockProvider já existente.`}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
