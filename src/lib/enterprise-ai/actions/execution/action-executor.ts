@@ -237,28 +237,36 @@ export class ActionExecutor {
       const finishedAt = new Date();
       const durationMs = finishedAt.getTime() - startedAt.getTime();
       
-      const errorCode = error.errorCode || error.code || (error._isWrapped ? error.errorCode : 'ACTION_EXECUTION_ERROR');
+      let errorCode = error.errorCode || error.code || 'ACTION_EXECUTION_ERROR';
+      let processId = error.processId;
+      let errorMessage = error.message || 'Unknown execution error';
+
+      // Attempt to decode metadata from message string
+      if (errorMessage.startsWith('ACTION_EXECUTION_FAILED_METADATA:')) {
+        try {
+          const parts = errorMessage.split(':');
+          const metadataJson = parts[1];
+          const metadata = JSON.parse(metadataJson);
+          errorCode = metadata.errorCode;
+          processId = metadata.processId;
+          errorMessage = parts.slice(2).join(':'); // Restore original message
+          console.log('ActionExecutor DEBUG - Decoded metadata from string:', { errorCode, processId, errorMessage });
+        } catch (e) {
+          console.warn('ActionExecutor failed to decode error metadata string', e);
+        }
+      }
       
-      console.log('ActionExecutor DEBUG - Raw errorCode extraction:', {
-        fromErrorCode: error.errorCode,
-        fromCode: error.code,
-        isWrapped: error._isWrapped,
-        wrappedErrorCode: error._isWrapped ? error.errorCode : undefined,
-        final: errorCode
-      });
-
       let status = error.status || ActionStatus.FAILED;
-      let errors = [error.message || 'Unknown execution error'];
+      let errors = [errorMessage];
 
-      // DEBUG: Capture ALL properties of the error to understand what's missing
       console.log('ActionExecutor Catch DEBUG (Final External):', { 
         name: error.name, 
-        code: error.code, 
         errorCode, 
-        processId: error.processId,
-        isActionError: error.isActionError,
+        processId,
+        errorMessage,
         allKeys: Object.keys(error)
       });
+
 
 
       if (error instanceof ActionNotFoundError) {
