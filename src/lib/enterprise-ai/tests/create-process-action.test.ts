@@ -139,8 +139,10 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
 
   describe("1. Audit & Service Responsibility", () => {
     it("should use processCreationService instead of direct insert", async () => {
-      const { processCreationService } = await import("@/services/processes/process-creation-service");
-      
+      mockSupabaseSequence([
+        { data: { company_id: mockCompanyId } } // Profile
+      ]);
+
       await action.execute({
         customerId: mockCustomerId,
         processType: "Transferência",
