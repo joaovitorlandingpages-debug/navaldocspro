@@ -1,5 +1,4 @@
-// @ts-ignore
-import { expect, test, describe } from "bun:test";
+import { expect, test, describe } from "vitest";
 
 import { calculateTimeInProgress } from "../utils/processMetrics";
 import { format, subDays } from "date-fns";
