@@ -123,21 +123,28 @@ export class CreateProcessAction implements AIAction {
       }
 
 
-      // REUSE EXISTING LOGIC: Materialize Blueprint
+      // 2. Materialize Blueprint
       try {
         await materializeProcessBlueprint(processId, {
           extraTemplateIds: context.initialChecklist || [],
         });
-      } catch (e) {
-        console.warn("AI CreateProcessAction: blueprint materialization failed", e);
+      } catch (e: any) {
+        const error = new ProcessCreationError(e.message || "Blueprint materialization failed");
+        (error as any).code = 'MATERIALIZATION_FAILED';
+        (error as any).processId = processId;
+        throw error;
       }
 
-      // REUSE EXISTING LOGIC: Confirmation & Notification
-      const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
-      
-      // We check for window to avoid SSR issues if this runs in a worker that mimics browser env partially
-      notifyProcessesChanged(visibleProcess);
-
+      // 3. Confirm Visibility & Notify
+      try {
+        const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
+        notifyProcessesChanged(visibleProcess);
+      } catch (e: any) {
+        const error = new ProcessCreationError(e.message || "Process visibility confirmation failed");
+        (error as any).code = 'VISIBILITY_FAILED';
+        (error as any).processId = processId;
+        throw error;
+      }
 
       return createActionResult({
         success: true,
@@ -149,7 +156,7 @@ export class CreateProcessAction implements AIAction {
           processId,
           customerId: context.customerId,
           vesselId: context.vesselId,
-          status: process.status,
+          status: processStatus,
         }
       });
 
