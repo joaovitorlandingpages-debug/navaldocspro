@@ -203,10 +203,11 @@ export class ActionExecutor {
 
     } catch (error: any) {
       const finishedAt = new Date();
+      console.log('ActionExecutor Catch ERROR:', error.name, error.code, error.errorCode, error.constructor.name);
+      
+      const errorCode = error.code || error.errorCode || 'ACTION_EXECUTION_ERROR';
       let status = error.status || ActionStatus.FAILED;
       let errors = [error.message || 'Unknown execution error'];
-      console.log('ActionExecutor Catch ERROR:', error.name, error.code, error.errorCode, error.constructor.name);
-      const errorCode = error.code || error.errorCode || 'ACTION_EXECUTION_ERROR';
 
       if (error instanceof ActionNotFoundError) {
         status = ActionStatus.FAILED;
