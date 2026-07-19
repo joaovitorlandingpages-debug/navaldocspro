@@ -9,6 +9,8 @@ import { CompleteChecklistAction } from "./checklist/complete-checklist-action";
 export class ActionEngine {
   async execute(actionId: string, context: any): Promise<ActionResult> {
     const action = ActionRegistry.get(actionId);
+    console.log(`ActionEngine.execute: ${actionId}, found: ${!!action}`);
+
     if (!action) {
       return createActionResult({
         success: false,
