@@ -257,18 +257,20 @@ export class ActionExecutor {
       } else if (error instanceof BaseConfirmationRequiredError || error.code === 'CHECKLIST_CONFIRMATION_REQUIRED') {
         status = ActionStatus.FAILED; 
       }
-
       try {
         if (idempotencyRecordId) {
-          const isRecoverable = errorCode === 'MATERIALIZATION_FAILED' || errorCode === 'VISIBILITY_FAILED';
+          // Normalization: Ensure we check both errorCode and code
+          const effectiveErrorCode = errorCode || error.errorCode || error.code;
+          const isRecoverable = effectiveErrorCode === 'MATERIALIZATION_FAILED' || effectiveErrorCode === 'VISIBILITY_FAILED';
           const finalProcessId = (error as any).processId || (input as any).processId;
           
           console.log('ActionExecutor Idempotency Update (Final):', {
             id: idempotencyRecordId,
             status: isRecoverable ? 'recoverable_failed' : 'failed',
-            errorCode,
+            errorCode: effectiveErrorCode,
             processId: finalProcessId
           });
+
 
           await idempotencyService.update(idempotencyRecordId, {
             status: isRecoverable ? 'recoverable_failed' : 'failed',
