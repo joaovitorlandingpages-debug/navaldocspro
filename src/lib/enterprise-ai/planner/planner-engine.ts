@@ -139,7 +139,7 @@ export class PlannerEngine {
       });
     });
 
-    this.validateSteps(steps, availableActions);
+    this.validateSteps(steps, availableActions, []); // Initial validation within generateSteps doesn't have permissions context
     this.detectCircularDependencies(steps);
 
     return steps;
