@@ -84,7 +84,7 @@ export class ActionExecutor {
         await auditLogger.logStart({
           executionId,
           actionId,
-          actionName: action.metadata.displayName,
+          actionName: action.metadata?.displayName || action.id,
           userId: authContext.userId,
           companyId: authContext.companyId,
           processId: input.processId,
