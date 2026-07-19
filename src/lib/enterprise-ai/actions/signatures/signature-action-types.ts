@@ -1,4 +1,4 @@
-import { AIPermission } from '../security/permission-types';
+import { ActionStatus } from '../action-types';
 
 export interface SignatureParticipantInput {
   participantId?: string; // If existing customer/user
@@ -19,20 +19,22 @@ export interface RequestSignatureInput {
   confirmationToken?: string;
 }
 
-export interface RequestSignatureResult {
-  success: boolean;
-  executionId: string;
-  signatureRequestId: string;
-  documentId: string;
-  processId: string;
-  participants: Array<{
-    id: string;
-    name: string;
-    email: string;
-    status: string;
-  }>;
-  expirationDate?: string;
-  status: string;
-  warnings?: string[];
-  metadata?: Record<string, any>;
+export class SignatureActionError extends Error {
+  constructor(public message: string, public code: string = 'SIGNATURE_ACTION_ERROR') {
+    super(message);
+    this.name = 'SignatureActionError';
+  }
 }
+
+export class DocumentNotFoundError extends SignatureActionError {
+  constructor(documentId: string) {
+    super(`Document ${documentId} not found`, 'DOCUMENT_NOT_FOUND');
+  }
+}
+
+export class SignatureExecutionError extends SignatureActionError {
+  constructor(message: string) {
+    super(message, 'SIGNATURE_EXECUTION_ERROR');
+  }
+}
+
