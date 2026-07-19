@@ -236,13 +236,16 @@ export class ActionExecutor {
       let status = error.status || ActionStatus.FAILED;
       let errors = [error.message || 'Unknown execution error'];
 
+      // DEBUG: Capture ALL properties of the error to understand what's missing
       console.log('ActionExecutor Catch DEBUG (Final External):', { 
         name: error.name, 
         code: error.code, 
         errorCode, 
         processId: error.processId,
-        isActionError: error.isActionError
+        isActionError: error.isActionError,
+        allKeys: Object.keys(error)
       });
+
 
       if (error instanceof ActionNotFoundError) {
         status = ActionStatus.FAILED;
