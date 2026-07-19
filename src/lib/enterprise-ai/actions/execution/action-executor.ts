@@ -210,6 +210,15 @@ export class ActionExecutor {
 
       // Audit Failure
       try {
+        if (idempotencyRecordId) {
+          const isRecoverable = error.code === 'MATERIALIZATION_FAILED' || error.code === 'VISIBILITY_FAILED';
+          await idempotencyService.update(idempotencyRecordId, {
+            status: isRecoverable ? 'recoverable_failed' : 'failed',
+            errorCode: error.code || 'UNKNOWN_ERROR',
+            processId: (error as any).processId
+          });
+        }
+
         await auditLogger.logFailure(executionId, {
           error: errors,
           finishedAt,
