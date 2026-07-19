@@ -23,12 +23,17 @@ export class GeneratePdfAction implements AIAction {
     riskLevel: "LOW",
     requiredPermissions: [AIPermission.PROCESS_READ, AIPermission.DOCUMENT_GENERATE],
     confirmationPolicy: ConfirmationPolicy.LOW,
+    dependencies: [],
+    retryPolicy: {
+      maxRetries: 3,
+      backoff: "exponential"
+    },
     estimatedDuration: 5,
     enabled: true,
     supportsRetry: true,
-    supportsPlanner: true,
-    dependencies: [],
+    supportsPlanner: true
   };
+
 
   async validate(context: GeneratePdfInput & { companyId: string }): Promise<{ valid: boolean; errors?: string[] }> {
     const { processId, companyId } = context;
