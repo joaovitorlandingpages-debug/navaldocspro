@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from "react";
 import { NewProcessQuickDialog } from "@/components/processes/NewProcessQuickDialog";
+import { ProcessWizard2 } from "@/components/wizard2/ProcessWizard2";
 import { NewProcessChooserDialog } from "@/components/processes/NewProcessChooserDialog";
 import { NewProcessUploadWizard } from "@/components/processes/NewProcessUploadWizard";
 
