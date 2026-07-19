@@ -1,4 +1,13 @@
+// Forward declaration moved to top to avoid circular dependency
+export class ActionError extends Error {
+  constructor(public message: string, public code: string) {
+    super(message);
+    this.name = 'ActionError';
+  }
+}
+
 export enum ConfirmationPolicy {
+
   NONE = 'NONE',
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
@@ -41,11 +50,5 @@ export interface ActionResult {
   metadata?: Record<string, any>;
 }
 
-export class ActionError extends Error {
-  constructor(public message: string, public code: string) {
-    super(message);
-    this.name = 'ActionError';
-  }
-}
 
 
