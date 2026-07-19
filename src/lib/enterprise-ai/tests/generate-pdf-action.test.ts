@@ -114,11 +114,13 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
       });
 
     const result = await action.execute({
-      input: { processId: mockProcessId, options: { customContent: "Hello PDF" } },
+      processId: mockProcessId, 
+      options: { customContent: "Hello PDF" },
       companyId: mockCompanyId,
       userId: mockUserId,
       executionId: "exec-1"
     });
+
 
     expect(result.success).toBe(true);
     expect(result.status).toBe(ActionStatus.SUCCESS);
