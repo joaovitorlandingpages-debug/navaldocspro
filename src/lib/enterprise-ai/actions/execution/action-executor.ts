@@ -180,8 +180,14 @@ export class ActionExecutor {
         normalizedError.isActionError = true;
         normalizedError.name = 'ActionExecutionError';
 
+        console.log('ActionExecutor Catch Normalization (Normalized Error Object):', { 
+          errorCode: normalizedError.errorCode, 
+          processId: normalizedError.processId 
+        });
+
         throw normalizedError;
       }
+
 
       // 7. Success Finalization
       if (idempotencyRecordId && result.success) {
