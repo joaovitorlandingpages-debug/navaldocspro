@@ -137,7 +137,7 @@ export class GeneratePdfAction implements AIAction {
       // 5. Gerar e fazer upload do PDF
       const { path, signedUrl } = await generateAndUploadPdf({
         name: documentName,
-        content: content.replace(/<[^>]*>?/gm, ''), // Stripping HTML for jsPDF basic text support
+        content: content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' '), // Stripping HTML for jsPDF basic text support
         processId,
         companyId,
         generatedDocumentId: genDoc.id,
