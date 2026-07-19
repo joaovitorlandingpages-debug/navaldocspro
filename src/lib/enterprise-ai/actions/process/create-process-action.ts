@@ -130,9 +130,8 @@ export class CreateProcessAction implements AIAction {
           extraTemplateIds: context.initialChecklist || [],
         });
       } catch (e: any) {
-        const error = new ProcessCreationError(e.message || "Blueprint materialization failed", 'MATERIALIZATION_FAILED');
-        (error as any).processId = processId;
-        throw error;
+        throw new ProcessCreationError(e.message || "Blueprint materialization failed", 'MATERIALIZATION_FAILED');
+      }
       }
 
       // 3. Confirm Visibility & Notify
