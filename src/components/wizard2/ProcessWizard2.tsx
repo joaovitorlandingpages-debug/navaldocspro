@@ -114,10 +114,18 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
       const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
       notifyProcessesChanged(visibleProcess);
 
-      toast.success("Processo criado com sucesso! Redirecionando...");
+      toast.success("Processo criado com sucesso!", {
+        description: "Abrindo o painel completo...",
+        icon: <Rocket className="h-4 w-4 text-emerald-500" />
+      });
+      
       reset();
       onClose();
-      navigate({ to: '/processes/$id', params: { id: processId } });
+      
+      // Animação discreta simulada pelo tempo de redirecionamento
+      setTimeout(() => {
+        navigate({ to: '/processes/$id', params: { id: processId } });
+      }, 300);
     } catch (e: any) {
       toast.error("Erro ao criar processo: " + e.message);
     } finally {
@@ -143,8 +151,8 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
                   <Rocket className="h-6 w-6 text-primary" />
                   WIZARD <span className="text-primary">2.0</span>
                 </DialogTitle>
-                <DialogDescription className="text-xs font-bold uppercase tracking-widest text-slate-400 mt-1">
-                   Process Creation Experience
+                <DialogDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1 flex items-center gap-2">
+                   Zero Friction Experience <div className="h-1 w-1 rounded-full bg-slate-300" /> <span className="text-primary">Sprint UX 2</span>
                 </DialogDescription>
               </div>
               
