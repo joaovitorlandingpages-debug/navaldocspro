@@ -145,11 +145,24 @@ export class PlannerEngine {
     return steps;
   }
 
-  private validateSteps(steps: ExecutionStep[], availableActions: import("../actions/action-types").AIAction[]) {
+  private validateSteps(steps: ExecutionStep[], availableActions: import("../actions/action-types").AIAction[], userPermissions: string[]) {
     const stepIds = new Set(steps.map(s => s.stepId));
+    const permissionsSet = new Set(userPermissions);
     
     for (const step of steps) {
-      // 1. Validate dependencies exist in the same plan
+      // 1. Validate permissions (only if userPermissions are provided)
+      if (userPermissions.length > 0) {
+        for (const perm of step.requiredPermissions) {
+          if (!permissionsSet.has(perm)) {
+             throw new PlannerError(
+              PlannerErrorCodes.PERMISSION_DENIED,
+              `Missing required permission: ${perm} for action: ${step.actionId}`
+            );
+          }
+        }
+      }
+
+      // 2. Validate dependencies exist in the same plan
       for (const depId of step.dependsOn) {
         if (!stepIds.has(depId)) {
           throw new PlannerError(
@@ -159,7 +172,7 @@ export class PlannerEngine {
         }
       }
 
-      // 2. Validate action existence and dependencies in metadata
+      // 3. Validate action existence and dependencies in metadata
       const action = availableActions.find(a => a.id === step.actionId);
       if (action) {
         for (const depActionId of action.metadata.dependencies) {
