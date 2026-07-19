@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from "react";
 import { NewProcessQuickDialog } from "@/components/processes/NewProcessQuickDialog";
+import { ProcessWizard2 } from "@/components/wizard2/ProcessWizard2";
 import { NewProcessChooserDialog } from "@/components/processes/NewProcessChooserDialog";
 import { NewProcessUploadWizard } from "@/components/processes/NewProcessUploadWizard";
 
@@ -24,6 +25,7 @@ const NewProcessContext = createContext<Ctx | undefined>(undefined);
 export function NewProcessProvider({ children }: { children: React.ReactNode }) {
   const [chooserOpen, setChooserOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
+  const [wizard2Open, setWizard2Open] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
 
   const openUpload = (open: boolean) => setUploadOpen(open);
@@ -34,20 +36,24 @@ export function NewProcessProvider({ children }: { children: React.ReactNode }) 
       // Compat: qualquer chamada antiga cai no fluxo oficial de Upload.
       setIsAdvancedProcessOpen: openUpload,
       setIsAssembleProcessOpen: openUpload,
-      openGuidedProcess: () => setQuickOpen(true),
+      openGuidedProcess: () => setWizard2Open(true),
       openUploadProcess: () => setUploadOpen(true),
     }}>
       {children}
       <NewProcessChooserDialog
         isOpen={chooserOpen}
         onClose={() => setChooserOpen(false)}
-        onPickGuided={() => { setChooserOpen(false); setQuickOpen(true); }}
+        onPickGuided={() => { setChooserOpen(false); setWizard2Open(true); }}
         onPickUpload={() => { setChooserOpen(false); setUploadOpen(true); }}
       />
       <NewProcessQuickDialog
         isOpen={quickOpen}
         onClose={() => setQuickOpen(false)}
         onOpenAdvanced={() => setUploadOpen(true)}
+      />
+      <ProcessWizard2
+        isOpen={wizard2Open}
+        onClose={() => setWizard2Open(false)}
       />
       <NewProcessUploadWizard
         isOpen={uploadOpen}
