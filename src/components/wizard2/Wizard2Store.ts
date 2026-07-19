@@ -33,7 +33,7 @@ export interface WizardState {
 export const useWizardStore = create<WizardState>()(
   persist(
     (set) => ({
-      step: 'client',
+      step: 'documents',
       companyId: null,
       customerId: null,
       secondaryCustomerId: null,
@@ -45,11 +45,16 @@ export const useWizardStore = create<WizardState>()(
       docPicks: [],
       uploadedFiles: {},
       brandingMode: 'company',
+      ocrData: {
+        isExtracting: false,
+        confidence: 0,
+        extractedFields: {},
+      },
 
       setStep: (step) => set({ step }),
       setData: (data) => set((state) => ({ ...state, ...data })),
       reset: () => set({
-        step: 'client',
+        step: 'documents',
         customerId: null,
         secondaryCustomerId: null,
         vesselId: null,
@@ -60,13 +65,20 @@ export const useWizardStore = create<WizardState>()(
         docPicks: [],
         uploadedFiles: {},
         brandingMode: 'company',
+        ocrData: {
+          isExtracting: false,
+          confidence: 0,
+          extractedFields: {},
+        },
       }),
       clearStepData: (step) => set((state) => {
-        if (step === 'client') return { ...state, customerId: null, vesselId: null, uploadedFiles: {} };
-        if (step === 'vessel') return { ...state, vesselId: null, uploadedFiles: {} };
+        if (step === 'documents') return { ...state, uploadedFiles: {}, ocrData: { isExtracting: false, confidence: 0, extractedFields: {} } };
+        if (step === 'client') return { ...state, customerId: null, vesselId: null };
+        if (step === 'vessel') return { ...state, vesselId: null };
         if (step === 'type') return { ...state, processTypeId: null, processTypeName: null, docPicks: [], uploadedFiles: {} };
         return state;
       }),
+
     }),
     {
       name: 'navaldocs-wizard-v2',
