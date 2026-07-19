@@ -180,10 +180,15 @@ export class ProcessRiskEngine {
 
     // Classification
     let level: RiskLevel = 'low';
-    if (score >= PROCESS_RISK_CONFIG.THRESHOLDS.CRITICAL) level = 'critical';
-    else if (score >= PROCESS_RISK_CONFIG.THRESHOLDS.HIGH) level = 'high';
-    else if (score >= PROCESS_RISK_CONFIG.THRESHOLDS.MEDIUM) level = 'medium';
-    else level = 'low';
+    if (score >= PROCESS_RISK_CONFIG.THRESHOLDS.CRITICAL || context.documentation.blocking > 0) {
+      level = 'critical';
+    } else if (score >= PROCESS_RISK_CONFIG.THRESHOLDS.HIGH) {
+      level = 'high';
+    } else if (score >= PROCESS_RISK_CONFIG.THRESHOLDS.MEDIUM) {
+      level = 'medium';
+    } else {
+      level = 'low';
+    }
 
     const status = level === 'critical' || level === 'high' ? 'risk' : level === 'medium' ? 'attention' : 'healthy';
 
