@@ -342,10 +342,10 @@ export function ProcessCenterSidebar({
           </div>
           <div className="flex items-center gap-2 mb-2">
             <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sincronização Real</span>
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sincronização Ativa</span>
           </div>
           <p className="text-[10px] font-bold text-slate-600 leading-relaxed uppercase tracking-tight">
-            Última atualização agora.
+            Monitorando eventos em tempo real.
           </p>
         </div>
       </div>
