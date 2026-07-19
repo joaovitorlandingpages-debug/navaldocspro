@@ -21,14 +21,8 @@ export enum ActionStatus {
 
 export interface AIAction {
   id: string;
-  name: string;
-  description: string;
-  requiredPermissions: string[];
-  requiredRole?: string;
-  confirmationPolicy: ConfirmationPolicy;
-  estimatedRisk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  estimatedDuration: number; // in seconds
-
+  metadata: import("../planner/planner-rules").ActionMetadata;
+  
   validate(context: any): Promise<{ valid: boolean; errors?: string[] }>;
   execute(context: any): Promise<ActionResult>;
   rollback(context: any): Promise<void>;
