@@ -64,7 +64,8 @@ export class BaseStubAction implements AIAction {
 export const registerStubs = () => {
   const stubs = [
     new BaseStubAction("create-process", "Create Process", "Creates a new process"),
-    new BaseStubAction("generate-pdf", "Generate PDF", "Generates a PDF document"),
+    new GeneratePdfAction(),
+
     new BaseStubAction("request-signature", "Request Signature", "Requests an electronic signature"),
     new BaseStubAction("complete-checklist", "Complete Checklist", "Marks a checklist as completed"),
   ];
