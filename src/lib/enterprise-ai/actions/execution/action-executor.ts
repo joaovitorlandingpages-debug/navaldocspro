@@ -172,8 +172,7 @@ export class ActionExecutor {
           msg: innerError.message 
         });
 
-        // CRITICAL FIX: To avoid Vitest/Environment property stripping,
-        // we encode the metadata directly into the error message as a JSON string
+        // CRITICAL FIX: Encode using a delimiter that is unlikely to be in the JSON
         const metadata = {
           errorCode: innerErrorCode || 'ACTION_EXECUTION_ERROR',
           processId: innerProcessId,
@@ -181,15 +180,23 @@ export class ActionExecutor {
           _isEncoded: true
         };
         
-        const encodedError: any = new Error(`ACTION_EXECUTION_FAILED_METADATA:${JSON.stringify(metadata)}:${innerError.message || ''}`);
-        // Keep properties for local access just in case
+        const metadataJson = JSON.stringify(metadata);
+        // Use a very specific marker and base64 to avoid character issues
+        const encodedMetadata = btoa(metadataJson);
+        const encodedError: any = new Error(`__AE_METADATA__${encodedMetadata}__${innerError.message || ''}`);
+        
+        // Keep properties for local access
         encodedError.errorCode = metadata.errorCode;
         encodedError.processId = metadata.processId;
         
-        console.log('ActionExecutor Catch Normalization (Encoded String):', encodedError.message);
+        console.log('ActionExecutor Catch Normalization (Encoded):', { 
+          json: metadataJson,
+          encoded: encodedMetadata 
+        });
 
         throw encodedError;
       }
+
 
 
 
