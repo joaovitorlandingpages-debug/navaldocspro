@@ -112,11 +112,13 @@ export class ActionExecutor {
       // 4. Validation & Permissions
       const validation = await this.validator.validate(actionId, authContext, input);
       if (!validation.success) {
+        console.log('ActionExecutor Validation Failure:', { status: validation.status, errors: validation.errors });
         if (validation.status === 'PERMISSION_DENIED' || validation.status === 'ROLE_DENIED' || validation.status === 'AUTH_REQUIRED') {
           throw new ActionPermissionDeniedError(validation.errors?.[0] || 'Unauthorized');
         }
         throw new ActionValidationError(validation.errors || ['Validation failed']);
       }
+
 
       const security = this.guard.validateContext(authContext, action.requiredPermissions, action.requiredRole);
       if (!security.success) {
