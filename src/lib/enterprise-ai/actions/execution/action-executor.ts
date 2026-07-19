@@ -279,8 +279,8 @@ export class ActionExecutor {
       } else if (error instanceof BaseConfirmationRequiredError || error.code === 'CHECKLIST_CONFIRMATION_REQUIRED') {
         status = ActionStatus.FAILED; 
       }
-      // Define effectiveErrorCode at the scope of the catch block
-      const effectiveErrorCode = errorCode || error.errorCode || error.code || 'ACTION_EXECUTION_ERROR';
+      const effectiveErrorCode = errorCode;
+
 
       try {
         if (idempotencyRecordId) {
