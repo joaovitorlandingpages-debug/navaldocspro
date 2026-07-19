@@ -161,6 +161,8 @@ export class ActionExecutor {
         ...confirmationMetadata, 
         _user: { id: authContext.userId }
       };
+
+      console.log('ActionExecutor Execute Call:', { actionId, processId: inputWithContext.processId });
       
       const result = await action.execute(inputWithContext);
 

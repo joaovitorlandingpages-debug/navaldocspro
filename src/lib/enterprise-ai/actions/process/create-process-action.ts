@@ -46,6 +46,7 @@ export class CreateProcessAction implements AIAction {
     if (!profile) throw new Error("User profile not found");
 
     let processId = (context as any).processId;
+    console.log('CreateProcessAction ID check:', { processId });
     let processStatus = 'pending';
 
     if (!processId) {

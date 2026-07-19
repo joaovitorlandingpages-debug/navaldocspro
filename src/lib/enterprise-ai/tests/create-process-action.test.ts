@@ -306,6 +306,9 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
         securityContext
       );
 
+      if (!result.success) {
+        console.log("RECOVERY TEST FAIL:", result.errors, result.metadata);
+      }
       expect(result.success).toBe(true);
       expect(result.metadata?.processId).toBe(mockProcessId);
       
