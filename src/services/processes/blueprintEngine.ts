@@ -31,13 +31,19 @@ export interface MaterializeOptions {
 export interface BlueprintPreviewItem {
   templateId: string | null;
   name: string;
+  description?: string | null;
   role: string | null;
   kind: "mandatory" | "optional" | "conditional";
   included: boolean;      // avaliação da regra condicional (default true)
   requiresSignature: boolean;
   requiresOcr: boolean;
   ruleSummary: string | null;
+  fileTypes?: string[] | null;
+  countNeeded?: number;
+  captureTips?: string | null;
+  exampleUrl?: string | null;
 }
+
 
 /**
  * Pré-visualiza os itens do pacote sem gravar nada. Usada pelo Quick Dialog
@@ -60,13 +66,19 @@ export async function previewProcessBlueprint(
     return {
       templateId: item.document_template_id ?? null,
       name: item.template?.name || item.document_role || "Documento",
+      description: (item as any).description || (item as any).template?.description || null,
       role: item.document_role ?? null,
       kind,
       included,
       requiresSignature: !!item.requires_signature,
       requiresOcr: !!item.requires_ocr,
       ruleSummary: rule ? (typeof rule === "string" ? rule : JSON.stringify(rule)) : null,
+      fileTypes: (item as any).file_types || ['PDF', 'Imagem'],
+      countNeeded: (item as any).count_needed || 1,
+      captureTips: (item as any).capture_tips || null,
+      exampleUrl: (item as any).example_url || null,
     };
+
   });
 }
 
