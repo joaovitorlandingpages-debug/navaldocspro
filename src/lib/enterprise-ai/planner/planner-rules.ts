@@ -10,7 +10,7 @@ export interface PlanningRule {
 export const ActionRisks: Record<string, ActionRiskLevel> = {
   "create-process": "MEDIUM",
   "generate-pdf": "LOW",
-  "complete-checklist": "LOW",
+  "complete-checklist": "MEDIUM",
   "request-signature": "HIGH",
 };
 
