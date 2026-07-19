@@ -1,4 +1,3 @@
-// Forward declaration moved to top to avoid circular dependency
 export class ActionError extends Error {
   constructor(public message: string, public code: string) {
     super(message);
@@ -7,6 +6,7 @@ export class ActionError extends Error {
 }
 
 export enum ConfirmationPolicy {
+
 
   NONE = 'NONE',
   LOW = 'LOW',
