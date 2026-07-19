@@ -390,7 +390,6 @@ export function StepDocuments() {
                     bucket="process-attachments" 
                     category={pick}
                     onSuccess={(res: any) => handleUpload(pick, [res])}
-                    className="h-full w-full"
                   />
                </div>
             </div>
