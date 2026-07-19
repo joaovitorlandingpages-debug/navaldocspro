@@ -1,5 +1,5 @@
-import { AgentDefinition } from "./ai-types";
-import { AgentNotFoundError } from "./ai-errors";
+import { AgentDefinition } from "../core/ai-types";
+import { AgentNotFoundError } from "../core/ai-errors";
 
 export class AgentRegistry {
   private static agents: Map<string, AgentDefinition> = new Map();
