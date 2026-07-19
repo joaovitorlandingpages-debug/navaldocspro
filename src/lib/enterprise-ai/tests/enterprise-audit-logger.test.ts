@@ -22,20 +22,25 @@ vi.mock("@/integrations/supabase/client", () => {
     order: vi.fn(),
   };
   
-  m.from.mockReturnValue(m);
-  m.select.mockReturnValue(m);
-  m.insert.mockReturnValue(m);
-  m.update.mockReturnValue(m);
-  m.eq.mockReturnValue(m);
-  m.gte.mockReturnValue(m);
-  m.lte.mockReturnValue(m);
-  m.order.mockReturnValue(m);
-  m.single.mockImplementation(() => Promise.resolve({ data: null, error: null }));
-  m.maybeSingle.mockImplementation(() => Promise.resolve({ data: null, error: null }));
+  const setupMock = () => {
+    m.from.mockReturnValue(m);
+    m.select.mockReturnValue(m);
+    m.insert.mockReturnValue(m);
+    m.update.mockReturnValue(m);
+    m.eq.mockReturnValue(m);
+    m.gte.mockReturnValue(m);
+    m.lte.mockReturnValue(m);
+    m.order.mockReturnValue(m);
+    m.single.mockImplementation(() => Promise.resolve({ data: { id: 'mock-id' }, error: null }));
+    m.maybeSingle.mockImplementation(() => Promise.resolve({ data: null, error: null }));
+  };
+
+  setupMock();
 
   return {
     supabase: m,
-    _mocks: m
+    _mocks: m,
+    _resetMocks: setupMock
   };
 });
 
@@ -58,7 +63,9 @@ describe("Enterprise Audit Logger (Sprint 4.5)", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    vi.restoreAllMocks(); // Clear spy overrides like the "Database down" one
+    vi.restoreAllMocks();
+    const { _resetMocks } = await import("@/integrations/supabase/client") as any;
+    _resetMocks();
     ActionRegistry.clear();
   });
 
