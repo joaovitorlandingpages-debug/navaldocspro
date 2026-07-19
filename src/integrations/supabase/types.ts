@@ -155,6 +155,66 @@ export type Database = {
           },
         ]
       }
+      ai_action_confirmations: {
+        Row: {
+          action_id: string
+          company_id: string
+          confirmed_at: string | null
+          consumed_at: string | null
+          created_at: string
+          execution_id: string | null
+          expires_at: string
+          id: string
+          metadata: Json
+          operation: string
+          payload_hash: string
+          process_id: string | null
+          rejected_at: string | null
+          resource_id: string | null
+          status: string
+          token_hash: string
+          user_id: string
+        }
+        Insert: {
+          action_id: string
+          company_id: string
+          confirmed_at?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          execution_id?: string | null
+          expires_at: string
+          id?: string
+          metadata?: Json
+          operation: string
+          payload_hash: string
+          process_id?: string | null
+          rejected_at?: string | null
+          resource_id?: string | null
+          status: string
+          token_hash: string
+          user_id: string
+        }
+        Update: {
+          action_id?: string
+          company_id?: string
+          confirmed_at?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          execution_id?: string | null
+          expires_at?: string
+          id?: string
+          metadata?: Json
+          operation?: string
+          payload_hash?: string
+          process_id?: string | null
+          rejected_at?: string | null
+          resource_id?: string | null
+          status?: string
+          token_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_copilot_interactions: {
         Row: {
           company_id: string
@@ -6821,6 +6881,19 @@ export type Database = {
       company_can_perform: {
         Args: { p_action: string; p_company_id: string }
         Returns: Json
+      }
+      consume_ai_action_confirmation: {
+        Args: {
+          p_company_id: string
+          p_payload_hash: string
+          p_token_hash: string
+          p_user_id: string
+        }
+        Returns: {
+          confirmation_id: string
+          error_code: string
+          ok: boolean
+        }[]
       }
       current_company_id: { Args: never; Returns: string }
       current_user_company_id: { Args: never; Returns: string }
