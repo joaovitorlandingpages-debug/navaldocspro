@@ -166,6 +166,10 @@ export class CreateProcessAction implements AIAction {
         message: error.message || "Unknown error during process creation",
         executionId: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'exec-' + Date.now(),
         duration: Date.now() - start,
+        metadata: {
+          errorCode: error.code || (error as any).errorCode,
+          processId: (error as any).processId
+        }
       });
     }
 
