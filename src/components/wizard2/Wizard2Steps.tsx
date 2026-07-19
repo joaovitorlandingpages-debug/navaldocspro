@@ -188,18 +188,36 @@ export function StepClient() {
 export function StepVessel() {
   const { customerId, vesselId, setData, companyId } = useWizardStore();
   const [results, setResults] = useState<any[]>([]);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
-    if (!customerId) return;
+    if (!companyId) return;
     const load = async () => {
-      const { data } = await supabase
+      let q = supabase
         .from('vessels')
         .select('*')
-        .eq('customer_id', customerId);
+        .eq('company_id', companyId);
+      
+      if (customerId) {
+        q = q.eq('customer_id', customerId);
+      }
+
+      if (query) {
+        q = q.ilike('name', `%${query}%`);
+      }
+
+      const { data } = await q.limit(10);
       setResults(data || []);
     };
     load();
-  }, [customerId]);
+  }, [customerId, companyId, query]);
+
+  const onSelect = (v: any) => {
+    setData({ 
+      vesselId: v.id, 
+      customerId: v.customer_id || customerId 
+    });
+  };
 
   const handleCreateNew = async () => {
     const name = window.prompt("Nome da embarcação:");
