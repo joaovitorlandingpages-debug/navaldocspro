@@ -1,11 +1,5 @@
-export class ActionError extends Error {
-  constructor(public message: string, public code: string) {
-    super(message);
-    this.name = 'ActionError';
-  }
-}
-
 export enum ConfirmationPolicy {
+
 
 
   NONE = 'NONE',
