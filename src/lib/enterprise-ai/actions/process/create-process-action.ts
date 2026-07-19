@@ -75,12 +75,13 @@ export class CreateProcessAction implements AIAction {
       processStatus = process.status;
     }
 
-    // 2. Materialize Blueprint
     try {
+      console.log("[CreateProcessAction] Materializing blueprint for", processId);
       await materializeProcessBlueprint(processId, {
         extraTemplateIds: input.initialChecklist || [],
       });
     } catch (e: any) {
+      console.log("[CreateProcessAction] CATCHING Materialization Error:", e.message);
       const err = new ProcessCreationError(e.message || "Blueprint materialization failed", 'MATERIALIZATION_FAILED');
       (err as any).processId = processId;
       throw err;
