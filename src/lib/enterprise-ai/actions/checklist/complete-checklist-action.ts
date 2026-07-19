@@ -109,10 +109,36 @@ export class CompleteChecklistAction implements AIAction {
         });
       }
 
-      if (requiresConfirmation) {
-        // In a real implementation, we would check if a valid confirmation exists in a table
-        // For this sprint, we return the specific status if token is missing
-        throw new ChecklistConfirmationRequiredError(`Operation ${input.operation} on item ${item.title || item.id} requires confirmation.`);
+      if (requiresConfirmation && !isConfirmed) {
+        // Create a real persistent confirmation request
+        const sensitivePayload = {
+          processId: input.processId,
+          checklistItemId: input.checklistItemId,
+          operation: input.operation,
+          expectedVersion: input.expectedVersion,
+          reason: input.reason,
+          notes: input.notes,
+          evidenceDocumentId: input.evidenceDocumentId
+        };
+
+        const { publicToken } = await confirmationService.createConfirmation({
+          actionId: this.id,
+          userId: input.userId,
+          companyId: input.companyId,
+          processId: input.processId,
+          resourceId: input.checklistItemId,
+          operation: input.operation,
+          payload: sensitivePayload,
+          metadata: {
+            title: item.title || item.id,
+            summary: `Operation ${input.operation} on item ${item.title || item.id}`
+          }
+        });
+
+        throw new ChecklistConfirmationRequiredError(
+          `Operation ${input.operation} on item ${item.title || item.id} requires confirmation.`,
+          publicToken
+        );
       }
 
       // 4. Validate Transitions
