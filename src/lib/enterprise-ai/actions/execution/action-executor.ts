@@ -172,22 +172,25 @@ export class ActionExecutor {
           msg: innerError.message 
         });
 
-        // RE-THROWING AS A WRAPPED ERROR to bypass Vitest/Environment property stripping
-        // We use a custom name 'ActionExecutionWrappedError' to distinguish it
-        const wrappedError: any = new Error(innerError.message || 'Action execution failed');
-        wrappedError.errorCode = innerErrorCode || 'ACTION_EXECUTION_ERROR';
-        wrappedError.code = wrappedError.errorCode;
-        wrappedError.processId = innerProcessId;
-        wrappedError.isActionError = true;
-        wrappedError._isWrapped = true; // Flag for outer catch
+        // CRITICAL FIX: To avoid Vitest/Environment property stripping,
+        // we encode the metadata directly into the error message as a JSON string
+        const metadata = {
+          errorCode: innerErrorCode || 'ACTION_EXECUTION_ERROR',
+          processId: innerProcessId,
+          isActionError: true,
+          _isEncoded: true
+        };
+        
+        const encodedError: any = new Error(`ACTION_EXECUTION_FAILED_METADATA:${JSON.stringify(metadata)}:${innerError.message || ''}`);
+        // Keep properties for local access just in case
+        encodedError.errorCode = metadata.errorCode;
+        encodedError.processId = metadata.processId;
+        
+        console.log('ActionExecutor Catch Normalization (Encoded String):', encodedError.message);
 
-        console.log('ActionExecutor Catch Normalization (Wrapped Object):', { 
-          errorCode: wrappedError.errorCode, 
-          processId: wrappedError.processId 
-        });
-
-        throw wrappedError;
+        throw encodedError;
       }
+
 
 
 
