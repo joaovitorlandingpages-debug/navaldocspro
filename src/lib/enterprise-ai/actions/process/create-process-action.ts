@@ -163,6 +163,8 @@ export class CreateProcessAction implements AIAction {
       // Re-throw if it's already an ActionError so ActionExecutor can catch its code
       // We check for the 'code' property which is present in our ActionError base class
       if (error && typeof error === 'object' && ('code' in error || error.constructor.name === 'ProcessCreationError' || error.constructor.name === 'ActionError')) {
+        // Log the error detail for debugging
+        console.error(`[CreateProcessAction] Re-throwing known error: ${error.constructor.name} (Code: ${error.code})`);
         throw error;
       }
 
