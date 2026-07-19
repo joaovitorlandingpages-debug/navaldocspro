@@ -1,32 +1,23 @@
 import { AIOrchestrator } from "./core/ai-orchestrator";
 import { AgentRegistry } from "./agents/agent-registry";
 import { ToolRegistry } from "./tools/tool-registry";
-import { ToolExecutor } from "./tools/tool-executor";
-import { MockProvider } from "./providers/mock-provider";
 import { processSpecialistAgent } from "./agents/process-specialist.agent";
-import { initializeToolRegistry } from "./tools/tool-registry-init";
 
 export { AIOrchestrator } from "./core/ai-orchestrator";
 export * from "./core/ai-types";
 export * from "./core/ai-errors";
+export { AgentRegistry } from "./agents/agent-registry";
+export { ToolRegistry } from "./tools/tool-registry";
 
-// Initialization helper
+// Initialization helper (Side effect registration)
 export function initializeEACC() {
-  const agentRegistry = AgentRegistry.getInstance();
-  const toolRegistry = ToolRegistry.getInstance();
-  
   // Register agents
-  agentRegistry.registerAgent(processSpecialistAgent);
+  AgentRegistry.register(processSpecialistAgent);
   
-  // Register tools
-  initializeToolRegistry();
+  // Tools are usually registered in their own files or a central init
+  // For now, we assume they are registered via side effects or a registry-init file
   
   return {
-    orchestrator: new AIOrchestrator(
-      agentRegistry,
-      toolRegistry,
-      new ToolExecutor(toolRegistry),
-      new MockProvider()
-    )
+    orchestrator: new AIOrchestrator()
   };
 }
