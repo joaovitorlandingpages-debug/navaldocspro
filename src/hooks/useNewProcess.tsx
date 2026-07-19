@@ -36,7 +36,7 @@ export function NewProcessProvider({ children }: { children: React.ReactNode }) 
       // Compat: qualquer chamada antiga cai no fluxo oficial de Upload.
       setIsAdvancedProcessOpen: openUpload,
       setIsAssembleProcessOpen: openUpload,
-      openGuidedProcess: () => setQuickOpen(true),
+      openGuidedProcess: () => setWizard2Open(true),
       openUploadProcess: () => setUploadOpen(true),
     }}>
       {children}
