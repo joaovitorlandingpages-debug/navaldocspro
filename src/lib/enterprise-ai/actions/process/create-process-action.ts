@@ -158,24 +158,8 @@ export class CreateProcessAction implements AIAction {
       });
 
     } catch (error: any) {
-      console.error("[CreateProcessAction] Execution error type:", typeof error, error?.constructor?.name, error?.code);
-      
-      // Re-throw if it's already an ActionError so ActionExecutor can catch its code
-      // Check for 'code' directly since our custom errors have it
-      if (error && typeof error === 'object' && error.code) {
-        throw error;
-      }
-
-      return createActionResult({
-        success: false,
-        status: ActionStatus.FAILED,
-        message: error.message || "Unknown error during process creation",
-        executionId: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'exec-' + Date.now(),
-        duration: Date.now() - start,
-        metadata: {
-          errorCode: 'ACTION_EXECUTION_ERROR'
-        }
-      });
+      console.error("[CreateProcessAction] Final Catch:", error);
+      throw error;
     }
 
   }
