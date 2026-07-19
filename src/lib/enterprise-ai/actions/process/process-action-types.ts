@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { ActionError } from "../action-types";
+import type { ActionError as ActionErrorType } from "../action-types";
+const ActionError = class { 
+  constructor(public message: string, public code: string) {} 
+} as any as typeof ActionErrorType;
+
 
 
 
