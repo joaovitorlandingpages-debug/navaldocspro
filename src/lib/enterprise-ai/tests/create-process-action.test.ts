@@ -245,10 +245,11 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
       mockSupabaseSequence([
         { data: { company_id: mockCompanyId } }, // Profile in validate
         { data: { company_id: mockCompanyId } }, // Customer in validate
+        { data: { company_id: mockCompanyId } }, // Vessel (optional check if validator does it)
         { data: { company_id: mockCompanyId } }, // Profile in execute
         { data: { id: "550e8400-e29b-41d4-a716-446655440999", status: "pending" } } // Process insertion
       ]);
-      console.log('Test: mockSupabaseSequence initialized for integration test');
+
 
 
 
