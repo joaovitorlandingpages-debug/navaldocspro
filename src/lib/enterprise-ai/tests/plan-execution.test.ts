@@ -15,6 +15,8 @@ describe("PlanExecutionEngine", () => {
       execute: vi.fn()
     };
     engine = new PlanExecutionEngine(executor as any);
+    // Clear sessions between tests
+    (sessionManager as any).sessions.clear();
   });
 
   const createMockPlan = (steps: any[]): ExecutionPlan => ({
