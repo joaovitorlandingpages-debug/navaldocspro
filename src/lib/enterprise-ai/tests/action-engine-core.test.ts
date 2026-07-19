@@ -26,13 +26,14 @@ describe("Action Engine Core (Sprint 4.1)", () => {
     expect(ActionRegistry.list().length).toBe(2);
   });
 
-  it("should register stubs correctly", () => {
+  it("should register stubs or actions correctly", () => {
     registerStubs();
+    // request-signature is now a real action, but it's still registered
     expect(ActionRegistry.exists("request-signature")).toBe(true);
     expect(ActionRegistry.exists("generate-pdf")).toBe(true);
-    expect(ActionRegistry.exists("request-signature")).toBe(true);
     expect(ActionRegistry.exists("complete-checklist")).toBe(true);
   });
+
 
   it("should return failure or success for implemented action execution", async () => {
     const engine = new ActionEngine();
