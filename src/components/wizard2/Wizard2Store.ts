@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-export type WizardStep = 'client' | 'vessel' | 'type' | 'checklist' | 'documents' | 'review';
+export type WizardStep = 'documents' | 'client' | 'vessel' | 'type' | 'checklist' | 'review';
 
 export interface WizardState {
   step: WizardStep;
@@ -15,6 +15,13 @@ export interface WizardState {
   priority: 'low' | 'normal' | 'high' | 'urgent';
   docPicks: string[]; 
   uploadedFiles: Record<string, any[]>; 
+  ocrData: {
+    isExtracting: boolean;
+    confidence: number;
+    extractedFields: Record<string, any>;
+    lastExtractionType?: string;
+  };
+
   brandingMode: 'none' | 'company' | 'customer' | 'exclusive';
   
   setStep: (step: WizardStep) => void;
