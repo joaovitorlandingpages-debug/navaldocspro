@@ -15,18 +15,18 @@ export interface GeneratePdfInput {
 
 export class GeneratePdfAction implements AIAction {
   id = "generate-pdf";
-  metadata: import("../../planner/planner-rules").ActionMetadata = {
+  metadata = {
     actionId: "generate-pdf",
     displayName: "Generate PDF",
     description: "Generate PDF for an existing process.",
     category: "document",
-    riskLevel: "LOW",
+    riskLevel: "LOW" as const,
     requiredPermissions: [AIPermission.PROCESS_READ, AIPermission.DOCUMENT_GENERATE],
     confirmationPolicy: ConfirmationPolicy.LOW,
     dependencies: [],
     retryPolicy: {
       maxRetries: 3,
-      backoff: "exponential"
+      backoff: "exponential" as const
     },
     estimatedDuration: 5,
     enabled: true,
