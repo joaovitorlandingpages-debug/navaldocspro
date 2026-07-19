@@ -112,7 +112,15 @@ export class PlannerEngine {
       .filter(rule => rule.intentKeywords.some(kw => normalized.includes(kw.toLowerCase())))
       .sort((a, b) => b.priority - a.priority);
     
-    return Array.from(new Set(matches.map(m => m.actionId)));
+    const actionIds = new Set<string>();
+    matches.forEach(m => {
+      actionIds.add(m.actionId);
+      if (m.requiresActions) {
+        m.requiresActions.forEach(id => actionIds.add(id));
+      }
+    });
+    
+    return Array.from(actionIds);
   }
 
   private generateSteps(matchedActionIds: string[], availableActions: import("../actions/action-types").AIAction[]): ExecutionStep[] {
