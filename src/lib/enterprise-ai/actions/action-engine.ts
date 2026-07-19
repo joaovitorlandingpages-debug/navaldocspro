@@ -49,16 +49,30 @@ export const actionEngine = new ActionEngine();
 
 // Stubs for Sprint 4.1
 export class BaseStubAction implements AIAction {
+  metadata: import("../planner/planner-rules").ActionMetadata;
   constructor(
     public id: string,
     public name: string,
     public description: string,
     public confirmationPolicy: ConfirmationPolicy = ConfirmationPolicy.MEDIUM
-  ) {}
+  ) {
+    this.metadata = {
+      actionId: id,
+      displayName: name,
+      description: description,
+      category: "stub",
+      riskLevel: "MEDIUM",
+      requiredPermissions: [],
+      confirmationPolicy: confirmationPolicy,
+      dependencies: [],
+      retryPolicy: { maxRetries: 3, backoff: "exponential" },
+      estimatedDuration: 5,
+      enabled: true,
+      supportsRetry: true,
+      supportsPlanner: true
+    };
+  }
 
-  requiredPermissions: string[] = [];
-  estimatedRisk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'MEDIUM';
-  estimatedDuration: number = 5;
 
   async validate(): Promise<{ valid: boolean }> {
     return { valid: true };
