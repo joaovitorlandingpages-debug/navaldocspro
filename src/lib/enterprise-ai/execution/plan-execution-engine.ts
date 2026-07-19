@@ -81,6 +81,7 @@ export class PlanExecutionEngine {
         const newState: PlanStatus = isRecoverable ? "RECOVERABLE_FAILED" : "FAILED";
 
 
+
         
         return sessionManager.updateSession(sessionId, {
           state: newState,
