@@ -141,7 +141,7 @@ export class PlannerEngine {
       
       // Check if all declared dependencies are present in the plan
       action.metadata.dependencies.forEach(depId => {
-        if (!stepIdMap.has(depId)) {
+        if (!stepIdMap.has(depId) && !matchedActionIds.includes(depId)) {
           throw new PlannerError(
             PlannerErrorCodes.INVALID_DEPENDENCY,
             `Action '${actionId}' depends on '${depId}', but '${depId}' is not in the ExecutionPlan and could not be resolved.`
