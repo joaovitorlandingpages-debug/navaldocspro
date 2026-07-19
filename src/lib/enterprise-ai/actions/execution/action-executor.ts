@@ -198,7 +198,7 @@ export class ActionExecutor {
 
     } catch (error: any) {
       const finishedAt = new Date();
-      let status = ActionStatus.FAILED;
+      let status = error.status || ActionStatus.FAILED;
       let errors = [error.message || 'Unknown execution error'];
 
       if (error instanceof ActionNotFoundError) {
