@@ -26,7 +26,7 @@ export class PlannerEngine {
     this.validateRequest(request);
 
     // 1. Discovery from ActionRegistry
-    const actions = ActionRegistry.list().filter(a => a.metadata.supportsPlanner && a.metadata.enabled);
+    const actions = ActionRegistry.list().filter(a => a && a.metadata && a.metadata.supportsPlanner && a.metadata.enabled);
     
     // 2. Intent Resolution (Declarative)
     const intentText = typeof request.intent === "string" ? request.intent : request.intent.originalText;
