@@ -115,7 +115,7 @@ function AICommandCenterPage() {
         <Card className="p-8 border-slate-200 bg-white font-mono text-[11px] leading-relaxed shadow-sm">
           <ScrollArea className="h-[1200px] pr-4">
             <div className="space-y-12 whitespace-pre-wrap">
-              <section id="ts-visual-edit-probe-05092b8c15954117">
+              <section id="ts-visual-edit-probe-ed7ff8f90a4645f3">
                 ENTERPRISE AI CORE
 
 SPRINT 5.5
@@ -448,7 +448,7 @@ Somente declarar IMPLEMENTADA se:
 
 - o LLM não executar nenhuma Action;
 - retornar apenas StructuredIntent;
-- Planner consumes StructuredIntent;
+- Planner consumir StructuredIntent;
 - 40+ testes aprovados;
 - typecheck aprovado;
 - build aprovado.
