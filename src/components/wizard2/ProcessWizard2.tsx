@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
 import { confirmProcessVisible, notifyProcessesChanged } from '@/services/processes/processCreation';
 import { materializeProcessBlueprint } from '@/services/processes/blueprintEngine';
+import { createWizardSession, updateWizardSession, mapStateToSession } from '@/services/wizardSessionService';
 
 const STEPS = [
   { id: 'documents', label: 'Docs', icon: FileText },
