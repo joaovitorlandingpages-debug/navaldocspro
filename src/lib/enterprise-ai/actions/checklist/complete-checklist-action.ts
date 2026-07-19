@@ -85,8 +85,9 @@ export class CompleteChecklistAction implements AIAction {
         throw new ChecklistTenantMismatchError();
       }
 
-      // 3. Human Confirmation Check (Stub for now, according to requirement 14)
+      // 3. Human Confirmation Check
       const requiresConfirmation = (input.operation === "complete" || input.operation === "waive") && !input.confirmationToken;
+      const isConfirmed = (context as any).confirmationValidated === true;
       
       // 6. Idempotency Check (Check before confirmation to avoid unnecessary prompts)
       const isIdempotent = this.checkIdempotency(item, input);
