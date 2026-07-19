@@ -38,17 +38,21 @@ export class ActionExecutor {
       }
 
       // 2. Audit Start (Enterprise Audit Logger Integration)
-      await auditLogger.logStart({
-        executionId,
-        actionId,
-        actionName: action.name,
-        userId: authContext.userId,
-        companyId: authContext.companyId,
-        processId: input.processId,
-        conversationId: options.conversationId,
-        provider: options.provider,
-        metadata: input.metadata
-      });
+      try {
+        await auditLogger.logStart({
+          executionId,
+          actionId,
+          actionName: action.name,
+          userId: authContext.userId,
+          companyId: authContext.companyId,
+          processId: input.processId,
+          conversationId: options.conversationId,
+          provider: options.provider,
+          metadata: input.metadata
+        });
+      } catch (auditError) {
+        console.warn('Audit start failed, continuing action execution:', auditError);
+      }
 
       // 3. Build Context (Strictly using authContext for identity/tenant)
       const context: ExecutionContext = {
