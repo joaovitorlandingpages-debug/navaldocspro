@@ -48,7 +48,7 @@ export class MockIntentProvider implements IntentProvider {
       normalizedText: normalized,
       intentType,
       entities: this.extractEntities(normalized),
-      confidence: requestedActions.length > 0 ? 0.9 : 0.3,
+      confidence: requestedActions.length > 0 ? 0.95 : 0.3,
       requestedActions,
       warnings,
       metadata: { provider: "mock" }
