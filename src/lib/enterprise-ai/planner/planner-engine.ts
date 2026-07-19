@@ -25,9 +25,14 @@ export class PlannerEngine {
   public async plan(request: PlannerRequest): Promise<ExecutionPlan> {
     this.validateRequest(request);
 
-    // In a real scenario, this would involve LLM or complex logic to map intent to actions.
-    // For Fase 1, we implement the architectural logic and a mock mapping.
-    const steps = this.mapIntentToSteps(request);
+    // 1. Discovery from ActionRegistry
+    const actions = ActionRegistry.list().filter(a => a.metadata.supportsPlanner && a.metadata.enabled);
+    
+    // 2. Intent Resolution (Declarative)
+    const matchedActionIds = this.resolveIntent(request.intent);
+    
+    // 3. Step Generation
+    const steps = this.generateSteps(matchedActionIds, actions);
 
     if (steps.length === 0) {
       throw new PlannerError(
@@ -35,6 +40,7 @@ export class PlannerEngine {
         "No actions could be determined from the provided intent."
       );
     }
+
 
     this.validateSteps(steps, request);
     this.detectCircularDependencies(steps);
