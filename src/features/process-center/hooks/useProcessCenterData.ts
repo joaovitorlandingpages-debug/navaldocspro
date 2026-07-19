@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getProcessDocumentStats, calculateTimeInProgress } from "../utils/processMetrics";
 import { ProcessHealthEngine } from "../engines/ProcessHealthEngine";
 import { OperationalSuggestionEngine } from "../engines/OperationalSuggestionEngine";
+import { ProcessRiskEngine } from "../engines/ProcessRiskEngine";
 
 export const processCenterKeys = {
   all: ['process-center'] as const,
@@ -14,7 +15,7 @@ export const processCenterKeys = {
  */
 export function useProcessCenterData(processId: string) {
   return {
-    queryKey: processCenterKeys.metrics(processId),
+    queryKey: processCenterKeys.detail(processId),
     queryFn: async () => {
       const { data: process, error: pError } = await supabase
         .from('processes')
@@ -31,13 +32,15 @@ export function useProcessCenterData(processId: string) {
 
       const docStats = await getProcessDocumentStats(processId);
       const healthReport = await ProcessHealthEngine.calculate(processId, docStats);
-      const suggestions = OperationalSuggestionEngine.generate(processId, docStats);
+      const riskReport = ProcessRiskEngine.evaluate(processId, docStats, healthReport.overallScore);
+      const suggestions = OperationalSuggestionEngine.generate(processId, docStats, process);
       const timeInProgress = calculateTimeInProgress(process.created_at, process.finalized_at);
 
       return {
         process,
         docStats,
         healthReport,
+        riskReport,
         suggestions,
         timeInProgress
       };
