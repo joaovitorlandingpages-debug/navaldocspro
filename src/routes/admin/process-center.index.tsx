@@ -356,7 +356,7 @@ Contrato obrigatório de ferramenta:
 
 Usar validação de schema, preferencialmente Zod se já estiver presente no projeto.
 
-Implementar ToolExecutor with:
+Implementar ToolExecutor com:
 
 - validação dos parâmetros;
 - permission guard;
