@@ -86,31 +86,29 @@ function AICommandCenterPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
-      <div className="bg-slate-900 text-white p-8 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden relative">
+      <div className="bg-indigo-900 text-white p-8 rounded-2xl border border-indigo-800 shadow-2xl overflow-hidden relative">
         <div className="absolute top-0 right-0 p-8 opacity-10">
-          <Bot className="h-32 w-32" />
+          <Cpu className="h-32 w-32" />
         </div>
-        <h1 className="text-3xl font-black tracking-tighter mb-2">HOMOLOGAÇÃO TÉCNICA — ENTERPRISE AI COMMAND CENTER</h1>
-        <p className="text-slate-400 font-bold tracking-widest uppercase text-[10px]">Sprint 2 — Conversational Intelligence & Planning</p>
+        <h1 className="text-3xl font-black tracking-tighter mb-2">ENTERPRISE AI COMMAND CENTER</h1>
+        <p className="text-indigo-400 font-bold tracking-widest uppercase text-[10px]">Sprint 3 — Enterprise AI Provider Layer</p>
         
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl">
             <h3 className="text-rose-400 font-black text-[10px] uppercase mb-2">Importante</h3>
-            <ul className="text-[10px] text-rose-200/70 font-medium space-y-1 list-disc list-inside">
-              <li>NÃO ALTERAR O CÓDIGO.</li>
-              <li>NÃO IMPLEMENTAR NOVAS FUNCIONALIDADES.</li>
-              <li>NÃO EDITAR PROBES.</li>
-              <li>NÃO MODIFICAR A INTERFACE.</li>
-            </ul>
+            <p className="text-[10px] text-rose-200/70 font-medium leading-relaxed">
+              A fundação do EACC e a inteligência conversacional já existem. Esta sprint foca exclusivamente na camada de abstração de provedores.
+            </p>
           </div>
-          <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl">
-            <h3 className="text-blue-400 font-black text-[10px] uppercase mb-2">Objetivo</h3>
-            <p className="text-[10px] text-blue-200/70 font-medium leading-relaxed">
-              Auditoria completa da implementação existente da Sprint 2, validando persistência, contexto, intenções, planejamento e segurança.
+          <div className="bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-xl">
+            <h3 className="text-indigo-400 font-black text-[10px] uppercase mb-2">Objetivo</h3>
+            <p className="text-[10px] text-indigo-200/70 font-medium leading-relaxed">
+              Desacoplar o sistema de fornecedores específicos. O AIProviderManager agora orquestra OpenAI, Gemini e Claude com fallback automático.
             </p>
           </div>
         </div>
       </div>
+
 
       <div className="grid grid-cols-1 gap-8">
         <Card className="p-8 border-slate-200 bg-white font-mono text-[11px] leading-relaxed shadow-sm">
