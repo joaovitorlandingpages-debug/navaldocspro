@@ -102,26 +102,25 @@ export class CreateProcessAction implements AIAction {
 
       if (!profile) throw new Error("User profile not found");
 
-      // REUSE EXISTING LOGIC: Insert into processes
-      const { data: process, error: processError } = await supabase
-        .from("processes")
-        .insert({
-          company_id: profile.company_id,
-          process_type: context.processType,
-          process_type_id: context.processTypeId || (context as any).process_type_id,
-          customer_id: context.customerId,
-          vessel_id: context.vesselId || null,
-          title: context.title || context.processType,
-          description: context.description || null,
-          priority: context.priority,
-          status: "pending",
-          is_draft: false,
-          metadata: context.metadata || {},
-        } as any)
-        .select("id, status").single();
+      // 1. ATOMIC/IDEMPOTENT FLOW: Create or recover base process
+      let processId = (rawInput as any).processId;
+      let processStatus = 'pending';
 
-      if (processError || !process) throw new ProcessCreationError(processError?.message || "Process insertion failed");
-      const processId = process.id;
+      if (!processId) {
+        const process = await processCreationService.createProcess({
+          companyId: profile.company_id,
+          processType: context.processType,
+          processTypeId: context.processTypeId || (context as any).process_type_id,
+          customerId: context.customerId,
+          vesselId: context.vesselId,
+          title: context.title || context.processType,
+          description: context.description,
+          priority: context.priority,
+          metadata: context.metadata,
+        });
+        processId = process.id;
+        processStatus = process.status;
+      }
 
 
       // REUSE EXISTING LOGIC: Materialize Blueprint
