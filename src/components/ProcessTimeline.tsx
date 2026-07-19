@@ -1,4 +1,4 @@
-import { Clock, User, Edit3, CheckCircle2, FileText, Anchor, ShieldCheck, AlertCircle, Zap, Cpu, FilePlus, Sparkles, Filter, Search } from "lucide-react";
+import { Clock, User, Edit3, CheckCircle2, FileText, Anchor, ShieldCheck, AlertCircle, Zap, Cpu, FilePlus, Sparkles, Filter, Search, History as HistoryIcon } from "lucide-react";
 import { format, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState, useMemo } from "react";
@@ -14,6 +14,7 @@ export interface TimelineEvent {
   category?: string;
   metadata?: any;
 }
+
 
 export function ProcessTimeline({ events }: { events: TimelineEvent[] }) {
   const [filter, setFilter] = useState<string>("");
