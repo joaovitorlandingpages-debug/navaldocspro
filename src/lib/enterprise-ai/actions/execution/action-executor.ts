@@ -72,6 +72,11 @@ export class ActionExecutor {
         if (record.status === 'processing' && record.executionId !== executionId) {
           throw new ActionExecutionError('Concurrent execution in progress for this idempotency key');
         }
+
+        // Recovery: if record is recoverable_failed and has process_id, inject it into input
+        if (record.status === 'recoverable_failed' && record.processId) {
+          input = { ...input, processId: record.processId };
+        }
       }
 
       // 2. Audit Start (Enterprise Audit Logger Integration)
