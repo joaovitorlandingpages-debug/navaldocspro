@@ -31,7 +31,7 @@ vi.mock("@/integrations/supabase/client", () => {
     m.gte.mockReturnValue(m);
     m.lte.mockReturnValue(m);
     m.order.mockReturnValue(m);
-    m.single.mockImplementation(() => Promise.resolve({ data: { id: 'mock-id' }, error: null }));
+    m.single.mockImplementation(() => Promise.resolve({ data: { id: 'mock-id', company_id: '77f3e58c-d22a-43f6-932d-c20755f94d9b' }, error: null }));
     m.maybeSingle.mockImplementation(() => Promise.resolve({ data: null, error: null }));
   };
 
@@ -210,6 +210,9 @@ describe("Enterprise Audit Logger (Sprint 4.5)", () => {
     const supabaseMock = client.supabase;
 
     vi.spyOn(auditLogger, "logStart").mockImplementation(async () => {
+      throw new Error("Database down");
+    });
+    vi.spyOn(auditLogger, "logSuccess").mockImplementation(async () => {
       throw new Error("Database down");
     });
     vi.spyOn(auditLogger, "logSuccess").mockImplementation(async () => {
