@@ -115,262 +115,273 @@ function AICommandCenterPage() {
         <Card className="p-8 border-slate-200 bg-white font-mono text-[11px] leading-relaxed shadow-sm">
           <ScrollArea className="h-[1200px] pr-4">
             <div className="space-y-12 whitespace-pre-wrap">
-              <section id="ts-visual-edit-probe-053bd4e2646849ba">
-                ENTERPRISE AI COMMAND CENTER
+              <section id="ts-visual-edit-probe-05092b8c15954117">
+                ENTERPRISE AI CORE
 
-SPRINT 5.3
+SPRINT 5.5
 
-MULTI-ACTION PLANNER — FASE 1
+LLM INTENT INTERPRETER
 
 ==================================================
 OBJETIVO
 ==================================================
 
-Implementar o primeiro Planner oficial do Enterprise AI Command Center.
+Implementar a camada oficial de interpretação de linguagem natural do Enterprise AI Core.
 
-O Planner NÃO executa regras de negócio.
+IMPORTANTE
 
-O Planner NÃO substitui nenhuma Action existente.
+O LLM NÃO executa nenhuma Action.
 
-Sua única responsabilidade é:
+O LLM NÃO cria planos.
 
-- interpretar a intenção;
-- montar um plano de execução;
-- decidir a ordem das Actions;
-- verificar dependências;
-- identificar confirmações humanas necessárias;
-- entregar o plano ao ActionExecutor.
+O LLM NÃO chama o ActionExecutor.
 
-==================================================
-ACTIONS DISPONÍVEIS
-==================================================
+Sua única responsabilidade é transformar linguagem natural em uma StructuredIntent.
 
-O Planner deve reutilizar exclusivamente:
+O Planner continuará responsável por:
 
-- CreateProcessAction
-- GeneratePdfAction
-- CompleteChecklistAction
-- RequestSignatureAction
-
-Não criar novas versões dessas Actions.
+- descobrir Actions;
+- validar permissões;
+- montar ExecutionPlan;
+- validar dependências;
+- calcular risco.
 
 ==================================================
-ARQUIVOS
+ARQUITETURA
 ==================================================
 
 Criar:
 
-src/lib/enterprise-ai/planner/
+src/lib/enterprise-ai/intent/
 
-planner.ts
+intent-interpreter.ts
 
-planner-types.ts
+intent-parser.ts
 
-planner-engine.ts
+intent-types.ts
 
-planner-rules.ts
+intent-schema.ts
 
-planner-errors.ts
+intent-validator.ts
+
+intent-errors.ts
+
+intent-normalizer.ts
 
 index.ts
 
-Criar testes:
-
-src/lib/enterprise-ai/tests/planner.test.ts
-
-==================================================
-PLANO
-==================================================
-
 Criar:
 
-ExecutionPlan
+src/lib/enterprise-ai/tests/intent-interpreter.test.ts
+
+==================================================
+ENTRADA
+==================================================
+
+Receber:
+
+texto livre
+
+Exemplos:
+
+"Crie um processo para o cliente João."
+
+"Gere os PDFs."
+
+"Envie os documentos para assinatura."
+
+"Complete o checklist."
+
+"Crie um processo e envie para assinatura."
+
+==================================================
+SAÍDA
+==================================================
+
+Retornar apenas:
+
+StructuredIntent
 
 Campos mínimos:
 
-planId
+intentId
 
-intent
+originalText
 
-steps[]
+normalizedText
 
-riskLevel
+intentType
 
-estimatedActions
+entities
 
-requiresConfirmation
+confidence
 
-status
+requestedActions
+
+warnings
 
 metadata
 
-Cada Step deve conter:
-
-stepId
-
-actionId
-
-dependsOn[]
-
-status
-
-requiredPermissions
-
-confirmationRequired
-
-estimatedDuration
-
-retryPolicy
-
 ==================================================
-PLANNER ENGINE
+ENTIDADES
 ==================================================
 
-Implementar:
+Extrair quando possível:
 
-PlannerEngine.plan()
+customerName
 
-Recebe:
+customerId
 
-- intenção estruturada;
-- contexto do usuário;
-- tenant;
-- permissões.
+vesselName
 
-Retorna:
+vesselId
 
-ExecutionPlan
+documentType
 
-Não executa nenhuma Action.
+processType
 
-==================================================
-DEPENDÊNCIAS
-==================================================
+priority
 
-Exemplo:
+dates
 
-CreateProcess
-
-↓
-
-GeneratePdf
-
-↓
-
-CompleteChecklist
-
-↓
-
-RequestSignature
-
-O Planner deve impedir:
-
-- ciclos;
-- dependências inválidas;
-- execução antes do pré-requisito.
+participants
 
 ==================================================
-CONFIRMAÇÃO HUMANA
+NORMALIZAÇÃO
 ==================================================
 
-Se qualquer Step exigir confirmação:
+Normalizar:
 
-o plano inteiro deve indicar:
+acentos
 
-requiresConfirmation = true
+maiúsculas
 
-O Planner não consome tokens.
+sinônimos
 
-Apenas informa que serão necessários.
+abreviações
+
+erros simples de digitação
+
+Nunca alterar o significado da frase.
 
 ==================================================
 VALIDAÇÃO
 ==================================================
 
-Antes de montar o plano validar:
+Detectar:
 
-- tenant;
-- permissões;
-- Actions registradas;
-- ações desabilitadas;
-- dependências.
+intenção ambígua
+
+dados ausentes
+
+entidades conflitantes
+
+ação desconhecida
+
+Quando necessário:
+
+warnings[]
 
 ==================================================
-RISCO
+CONFIANÇA
 ==================================================
 
 Calcular:
 
-LOW
-
-MEDIUM
-
-HIGH
-
-CRITICAL
-
-Exemplo:
-
-CreateProcess + Signature
+0.0
 
 ↓
 
-HIGH
+1.0
+
+Exemplo:
+
+0.95
+
+↓
+
+ação muito clara
+
+0.40
+
+↓
+
+ambígua
 
 ==================================================
-EXECUTOR
+SEGURANÇA
 ==================================================
 
-Nesta Sprint
+O Interpreter:
 
-o Planner NÃO executa.
+NÃO verifica permissões.
 
-Apenas produz o plano.
+NÃO consulta banco.
+
+NÃO cria processos.
+
+NÃO executa Actions.
+
+NÃO monta DAG.
 
 ==================================================
-AUDITORIA
+INTEGRAÇÃO
 ==================================================
 
-Registrar:
+PlannerEngine deverá aceitar:
 
-planId
+StructuredIntent
 
-userId
+em vez de depender de texto bruto.
 
-companyId
+==================================================
+PROMPT INTERNO
+==================================================
 
-intent
+Criar um PromptBuilder interno para futuros provedores LLM.
 
-steps
+Ele deve gerar instruções padronizadas para qualquer modelo.
 
-risk
+Não integrar OpenAI, Gemini ou outro provedor nesta Sprint.
 
-timestamp
+==================================================
+PROVEDOR
+==================================================
 
-Não registrar dados sensíveis.
+Criar interface:
+
+IntentProvider
+
+Implementar:
+
+MockIntentProvider
+
+A implementação futura deverá apenas substituir esse provider.
 
 ==================================================
 TESTES
 ==================================================
 
-Criar pelo menos 30 testes cobrindo:
+Criar pelo menos 40 testes cobrindo:
 
-- plano simples;
-- plano com CreateProcess;
-- plano completo;
-- dependências;
-- ordem correta;
-- Action inexistente;
-- Action desabilitada;
-- tenant inválido;
-- permissões ausentes;
-- cálculo de risco;
-- confirmação obrigatória;
-- ciclos;
-- plano vazio;
-- múltiplas Actions;
-- serialização;
-- auditoria.
+- criar processo;
+- gerar pdf;
+- assinatura;
+- checklist;
+- múltiplas intenções;
+- frases longas;
+- frases curtas;
+- erros ortográficos;
+- sinônimos;
+- ambiguidade;
+- entidades;
+- confidence;
+- warnings;
+- normalização;
+- schema;
+- provider mock;
+- parser;
+- validator.
 
 ==================================================
 TYPECHECK
@@ -388,19 +399,19 @@ Executar.
 PROIBIÇÕES
 ==================================================
 
-Não alterar:
+Não modificar:
 
-CreateProcessAction
+Planner
 
-GeneratePdfAction
-
-CompleteChecklistAction
-
-RequestSignatureAction
-
-ConfirmationService
+PlanExecutionEngine
 
 ActionExecutor
+
+ActionRegistry
+
+Actions
+
+ConfirmationService
 
 IdempotencyService
 
@@ -411,8 +422,11 @@ RELATÓRIO
 Apresentar:
 
 - arquivos criados;
-- arquitetura do Planner;
+- arquitetura;
 - fluxo;
+- provider;
+- parser;
+- validator;
 - testes;
 - typecheck;
 - build;
@@ -424,11 +438,20 @@ STATUS
 
 Usar apenas:
 
-SPRINT 5.3 IMPLEMENTADA
+SPRINT 5.5 IMPLEMENTADA
 
-SPRINT 5.3 PARCIAL
+SPRINT 5.5 PARCIAL
 
-SPRINT 5.3 BLOQUEADA
+SPRINT 5.5 BLOQUEADA
+
+Somente declarar IMPLEMENTADA se:
+
+- o LLM não executar nenhuma Action;
+- retornar apenas StructuredIntent;
+- Planner consumes StructuredIntent;
+- 40+ testes aprovados;
+- typecheck aprovado;
+- build aprovado.
               </section>
             </div>
           </ScrollArea>
