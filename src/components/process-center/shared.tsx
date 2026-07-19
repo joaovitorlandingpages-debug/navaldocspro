@@ -188,7 +188,7 @@ export function ProcessCenterDashboard({
             ) : (
               <CheckCircle2 className="h-3 w-3 text-emerald-500" />
             )}
-            {riskReport?.causes?.[0] || "Operação Estável"}
+            {riskReport?.factors?.[0]?.cause || "Operação Estável"}
           </p>
         </div>
       </Card>

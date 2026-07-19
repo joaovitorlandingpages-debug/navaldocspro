@@ -1,0 +1,580 @@
+$ vite build
+vite v7.3.2 building client environment for production...
+transforming...
+✓ 4461 modules transformed.
+rendering chunks...
+[plugin vite:reporter] 
+(!) /dev-server/src/lib/storage.ts is dynamically imported by /dev-server/src/components/ocr/OCRReview.tsx, /dev-server/src/hooks/useDocuments.tsx, /dev-server/src/hooks/useDocuments.tsx, /dev-server/src/services/processes/batchChecklistActions.ts but also statically imported by /dev-server/src/components/processes/NewProcessUploadWizard.tsx, /dev-server/src/hooks/useFiles.tsx, dynamic import will not move module into another chunk.
+
+computing gzip size...
+dist/client/assets/pdf.worker.min-iDqQPrd3.mjs             1,232.30 kB
+dist/client/assets/styles-CwDLx71g.css                       233.22 kB │ gzip:  34.29 kB
+dist/client/assets/pdf.worker.min-B7BB9YL5.js                  0.07 kB │ gzip:   0.09 kB
+dist/client/assets/index-DAYjXjcy.js                           0.08 kB │ gzip:   0.09 kB
+dist/client/assets/automation-Dd6XgFyb.js                      0.11 kB │ gzip:   0.12 kB
+dist/client/assets/documentos.biblioteca-CTrtbWxq.js           0.14 kB │ gzip:   0.15 kB
+dist/client/assets/generateDocumentEvent-DV76gO2F.js           0.16 kB │ gzip:   0.16 kB
+dist/client/assets/index-ClO-FAte.js                           0.17 kB │ gzip:   0.16 kB
+dist/client/assets/gauge-D8BcTD8D.js                           0.18 kB │ gzip:   0.17 kB
+dist/client/assets/skeleton-C7RDfIwf.js                        0.18 kB │ gzip:   0.17 kB
+dist/client/assets/templates-DkhdS6vm.js                       0.18 kB │ gzip:   0.18 kB
+dist/client/assets/templates._id-BB-ba6eF.js                   0.18 kB │ gzip:   0.18 kB
+dist/client/assets/trending-down-DZdXo0dp.js                   0.18 kB │ gzip:   0.17 kB
+dist/client/assets/templates.pfw-Cf-AvoY5.js                   0.18 kB │ gzip:   0.18 kB
+dist/client/assets/ban-fZksx_zu.js                             0.18 kB │ gzip:   0.17 kB
+dist/client/assets/menu-5wIE1ag3.js                            0.19 kB │ gzip:   0.16 kB
+dist/client/assets/circle-check-big-CsMbXQmz.js                0.20 kB │ gzip:   0.18 kB
+dist/client/assets/smartphone-BhE3-1Wx.js                      0.20 kB │ gzip:   0.18 kB
+dist/client/assets/isBefore-CGiB0I2h.js                        0.20 kB │ gzip:   0.17 kB
+dist/client/assets/info-DmNlgtzD.js                            0.21 kB │ gzip:   0.18 kB
+dist/client/assets/lock-CCSn-biR.js                            0.21 kB │ gzip:   0.19 kB
+dist/client/assets/circle-x-CyEq_MJh.js                        0.21 kB │ gzip:   0.18 kB
+dist/client/assets/mail-B-nZqKsS.js                            0.21 kB │ gzip:   0.20 kB
+dist/client/assets/circle-arrow-up-CiNiz2nW.js                 0.22 kB │ gzip:   0.19 kB
+dist/client/assets/dollar-sign-tYm4-1Jb.js                     0.22 kB │ gzip:   0.19 kB
+dist/client/assets/briefcase-CoSB0nbT.js                       0.22 kB │ gzip:   0.20 kB
+dist/client/assets/type-Busf6R01.js                            0.22 kB │ gzip:   0.18 kB
+dist/client/assets/ellipsis-DItjscpl.js                        0.23 kB │ gzip:   0.16 kB
+dist/client/assets/target-C8uKKqbK.js                          0.23 kB │ gzip:   0.16 kB
+dist/client/assets/panels-top-left-cvOV6hwg.js                 0.23 kB │ gzip:   0.20 kB
+dist/client/assets/square-check-big-3lpxCNgW.js                0.23 kB │ gzip:   0.20 kB
+dist/client/assets/log-out-By2yAj8p.js                         0.23 kB │ gzip:   0.19 kB
+dist/client/assets/library-C1HhUg46.js                         0.23 kB │ gzip:   0.18 kB
+dist/client/assets/download-Ddvi80Et.js                        0.23 kB │ gzip:   0.19 kB
+dist/client/assets/pen-CYYKaU4F.js                             0.24 kB │ gzip:   0.20 kB
+dist/client/assets/copy-Dtx6pKId.js                            0.24 kB │ gzip:   0.21 kB
+dist/client/assets/timer-BB9b1V6H.js                           0.24 kB │ gzip:   0.19 kB
+dist/client/assets/message-circle-DdfCi4Ge.js                  0.24 kB │ gzip:   0.21 kB
+dist/client/assets/database-CAYjAmGB.js                        0.24 kB │ gzip:   0.20 kB
+dist/client/assets/circle-question-mark-TVbIrSF9.js            0.25 kB │ gzip:   0.21 kB
+dist/client/assets/settings-2-BuTN4rAU.js                      0.25 kB │ gzip:   0.19 kB
+dist/client/assets/archive-Ci2RA3qu.js                         0.25 kB │ gzip:   0.21 kB
+dist/client/assets/users-round-CC70dvb6.js                     0.25 kB │ gzip:   0.22 kB
+dist/client/assets/circle-play-BGQJAI4K.js                     0.26 kB │ gzip:   0.21 kB
+dist/client/assets/calendar-C7_VOlyW.js                        0.26 kB │ gzip:   0.20 kB
+dist/client/assets/anchor-B3y37AuX.js                          0.26 kB │ gzip:   0.21 kB
+dist/client/assets/monitor-DQMTcTqj.js                         0.26 kB │ gzip:   0.20 kB
+dist/client/assets/workflow-D2yrX3RH.js                        0.27 kB │ gzip:   0.20 kB
+dist/client/assets/shield-BizGe8-T.js                          0.27 kB │ gzip:   0.23 kB
+dist/client/assets/chart-pie-BjWq7mK5.js                       0.27 kB │ gzip:   0.22 kB
+dist/client/assets/award-CVH23u_W.js                           0.28 kB │ gzip:   0.23 kB
+dist/client/assets/pen-line-CPjU4pRY.js                        0.28 kB │ gzip:   0.23 kB
+dist/client/assets/book-open-DtNc1grJ.js                       0.28 kB │ gzip:   0.21 kB
+dist/client/assets/eraser-CrUr5wex.js                          0.28 kB │ gzip:   0.22 kB
+dist/client/assets/lightbulb-CLSFdXID.js                       0.29 kB │ gzip:   0.23 kB
+dist/client/assets/layout-template-s7W8sqXe.js                 0.29 kB │ gzip:   0.19 kB
+dist/client/assets/send-Dt810OrR.js                            0.29 kB │ gzip:   0.23 kB
+dist/client/assets/bell-s9HQIO88.js                            0.29 kB │ gzip:   0.24 kB
+dist/client/assets/folder-open-BT1sW-5y.js                     0.29 kB │ gzip:   0.22 kB
+dist/client/assets/shopping-cart-CTbUbL7J.js                   0.29 kB │ gzip:   0.23 kB
+dist/client/assets/list-Csw5tQ-c.js                            0.30 kB │ gzip:   0.19 kB
+dist/client/assets/health-Cu8FvOxD.js                          0.30 kB │ gzip:   0.24 kB
+dist/client/assets/coverage-rcLbawlp.js                        0.31 kB │ gzip:   0.24 kB
+dist/client/assets/file-exclamation-point-BoEJ9NEX.js          0.31 kB │ gzip:   0.23 kB
+dist/client/assets/badge-check-B65lqfA-.js                     0.32 kB │ gzip:   0.21 kB
+dist/client/assets/file-check-D3Zrb1oc.js                      0.32 kB │ gzip:   0.24 kB
+dist/client/assets/pencil-line-CMn68gw0.js                     0.32 kB │ gzip:   0.24 kB
+dist/client/assets/printer-Bc1Esb-m.js                         0.32 kB │ gzip:   0.24 kB
+dist/client/assets/refresh-cw-DjDaDxCd.js                      0.32 kB │ gzip:   0.22 kB
+dist/client/assets/stamp-B07PYPZM.js                           0.32 kB │ gzip:   0.24 kB
+dist/client/assets/refresh-ccw-Crl0GHt1.js                     0.32 kB │ gzip:   0.22 kB
+dist/client/assets/phone-DGB52XQ7.js                           0.32 kB │ gzip:   0.23 kB
+dist/client/assets/save-CauJ_QqD.js                            0.33 kB │ gzip:   0.23 kB
+dist/client/assets/bot-ByherTzw.js                             0.33 kB │ gzip:   0.23 kB
+dist/client/assets/scale-BzfzvvA8.js                           0.33 kB │ gzip:   0.22 kB
+dist/client/assets/camera-D2kj-I6x.js                          0.34 kB │ gzip:   0.25 kB
+dist/client/assets/server-BnjBDLr4.js                          0.34 kB │ gzip:   0.21 kB
+dist/client/assets/documentos.biblioteca-8JZ118db.js           0.35 kB │ gzip:   0.26 kB
+dist/client/assets/gift-BuIkRREi.js                            0.35 kB │ gzip:   0.25 kB
+dist/client/assets/file-plus-FC6XujOA.js                       0.35 kB │ gzip:   0.24 kB
+dist/client/assets/layout-dashboard-Dd0qSLKU.js                0.35 kB │ gzip:   0.21 kB
+dist/client/assets/share-2-DekyQYBJ.js                         0.36 kB │ gzip:   0.23 kB
+dist/client/assets/crown-NEZoSpN4.js                           0.36 kB │ gzip:   0.26 kB
+dist/client/assets/package-CkqX65yM.js                         0.37 kB │ gzip:   0.26 kB
+dist/client/assets/life-buoy-BhEp9_pW.js                       0.38 kB │ gzip:   0.23 kB
+dist/client/assets/building-2-cdJwGubL.js                      0.38 kB │ gzip:   0.24 kB
+dist/client/assets/hard-drive-qso2GYvL.js                      0.39 kB │ gzip:   0.26 kB
+dist/client/assets/truck-hP1rVlQS.js                           0.41 kB │ gzip:   0.27 kB
+dist/client/assets/clipboard-list-5jdbaHEI.js                  0.41 kB │ gzip:   0.26 kB
+dist/client/assets/health-NaH2J_J-.js                          0.42 kB │ gzip:   0.29 kB
+dist/client/assets/coverage-DN6kSsmt.js                        0.42 kB │ gzip:   0.29 kB
+dist/client/assets/layers-Cnvt7Phr.js                          0.42 kB │ gzip:   0.24 kB
+dist/client/assets/templates._id-D3TNxdEm.js                   0.44 kB │ gzip:   0.29 kB
+dist/client/assets/rocket-yUj1Th-p.js                          0.45 kB │ gzip:   0.31 kB
+dist/client/assets/file-pen-line-xuRC7VAC.js                   0.47 kB │ gzip:   0.30 kB
+dist/client/assets/pen-tool-C7JSj4o5.js                        0.47 kB │ gzip:   0.30 kB
+dist/client/assets/differenceInDays-C0T_79WB.js                0.47 kB │ gzip:   0.28 kB
+dist/client/assets/star-BoAhPuxX.js                            0.47 kB │ gzip:   0.29 kB
+dist/client/assets/settings-BqyayJGO.js                        0.49 kB │ gzip:   0.26 kB
+dist/client/assets/store-o6BrDhtR.js                           0.50 kB │ gzip:   0.29 kB
+dist/client/assets/zoom-out-B-j2IAwJ.js                        0.50 kB │ gzip:   0.23 kB
+dist/client/assets/templates-CcEeMZmd.js                       0.51 kB │ gzip:   0.33 kB
+dist/client/assets/templates.pfw-VBTJGbbh.js                   0.51 kB │ gzip:   0.33 kB
+dist/client/assets/palette-DLYQvl-V.js                         0.51 kB │ gzip:   0.28 kB
+dist/client/assets/textarea-Horiuok1.js                        0.53 kB │ gzip:   0.33 kB
+dist/client/assets/saas-metrics-DuMcB638.js                    0.53 kB │ gzip:   0.34 kB
+dist/client/assets/docs-central-CLZB5TVx.js                    0.56 kB │ gzip:   0.36 kB
+dist/client/assets/system-report-EyF0fLcz.js                   0.57 kB │ gzip:   0.36 kB
+dist/client/assets/ProtectedRoute-CRgf_CKz.js                  0.58 kB │ gzip:   0.39 kB
+dist/client/assets/brain-COiGLrCb.js                           0.58 kB │ gzip:   0.31 kB
+dist/client/assets/bug-ClFG6wtQ.js                             0.63 kB │ gzip:   0.33 kB
+dist/client/assets/cpu-BzY7mWnT.js                             0.64 kB │ gzip:   0.29 kB
+dist/client/assets/EmptyState-Dsyw4NV9.js                      0.70 kB │ gzip:   0.39 kB
+dist/client/assets/companyPdfTemplates-Q0y1zfnC.js             0.73 kB │ gzip:   0.40 kB
+dist/client/assets/index-72xADM_V.js                           0.79 kB │ gzip:   0.50 kB
+dist/client/assets/brain-circuit-zO0L636p.js                   0.80 kB │ gzip:   0.40 kB
+dist/client/assets/useProcessPackages-ZoCy6ZL3.js              0.90 kB │ gzip:   0.37 kB
+dist/client/assets/optimisticLock-BNtrRqGl.js                  1.02 kB │ gzip:   0.57 kB
+dist/client/assets/mappings-BbMF50iR.js                        1.04 kB │ gzip:   0.62 kB
+dist/client/assets/clientPortal.functions-BUpg0109.js          1.14 kB │ gzip:   0.59 kB
+dist/client/assets/naval-terms-Dkv_ic2D.js                     1.17 kB │ gzip:   0.64 kB
+dist/client/assets/library-TsTAqpes.js                         1.21 kB │ gzip:   0.62 kB
+dist/client/assets/marketplace-x-dB2gN0.js                     1.22 kB │ gzip:   0.64 kB
+dist/client/assets/billing.success-CSMw-MAk.js                 1.22 kB │ gzip:   0.63 kB
+dist/client/assets/signatureAnchors-WFLk1C54.js                1.28 kB │ gzip:   0.62 kB
+dist/client/assets/calendar-CTzqNEaa.js                        1.34 kB │ gzip:   0.56 kB
+dist/client/assets/billing.failure-BLDKBeBV.js                 1.34 kB │ gzip:   0.67 kB
+dist/client/assets/templates-WoW0VfOT.js                       1.42 kB │ gzip:   0.80 kB
+dist/client/assets/workspace-recovery-v89jDxlR.js              1.45 kB │ gzip:   0.65 kB
+dist/client/assets/password-input-nkhTGYON.js                  1.53 kB │ gzip:   0.84 kB
+dist/client/assets/skeletons-Dcyh_hsL.js                       1.53 kB │ gzip:   0.56 kB
+dist/client/assets/generationErrorHandler-C6XImAvP.js          1.54 kB │ gzip:   0.81 kB
+dist/client/assets/ModalLayout-Dei8SDdJ.js                     1.61 kB │ gzip:   0.81 kB
+dist/client/assets/file-preview-B-kPCaoW.js                    1.64 kB │ gzip:   0.69 kB
+dist/client/assets/audit-B7UQeK83.js                           2.04 kB │ gzip:   0.92 kB
+dist/client/assets/publishing-DYJOwbYM.js                      2.04 kB │ gzip:   1.04 kB
+dist/client/assets/ReadinessBanner-DGm1Z2F-.js                 2.17 kB │ gzip:   0.96 kB
+dist/client/assets/formatDistanceToNow-CdtbCyjB.js             2.31 kB │ gzip:   0.94 kB
+dist/client/assets/sheet-CCNQpord.js                           2.32 kB │ gzip:   0.91 kB
+dist/client/assets/versions-B3epNa4d.js                        2.46 kB │ gzip:   1.17 kB
+dist/client/assets/parseISO-C5o-_Z0u.js                        2.70 kB │ gzip:   1.23 kB
+dist/client/assets/process-types-CTBeSAxh.js                   2.75 kB │ gzip:   1.22 kB
+dist/client/assets/ProcessEditSheet-CFUAN-qv.js                2.75 kB │ gzip:   1.36 kB
+dist/client/assets/status-S9pgC96M.js                          2.76 kB │ gzip:   1.10 kB
+dist/client/assets/processes.trash-BQY9-ZNf.js                 2.77 kB │ gzip:   1.27 kB
+dist/client/assets/pdf-export-gdZRHpRz.js                      2.87 kB │ gzip:   1.48 kB
+dist/client/assets/plans-pcSa4vXc.js                           3.01 kB │ gzip:   1.45 kB
+dist/client/assets/admin.diagnostico-BAycobv6.js               3.02 kB │ gzip:   1.46 kB
+dist/client/assets/processes.archived-WC5jieKq.js              3.17 kB │ gzip:   1.39 kB
+dist/client/assets/analytics.ocr-l7ynbCO7.js                   3.21 kB │ gzip:   1.23 kB
+dist/client/assets/tabs-BBbN1hUm.js                            3.22 kB │ gzip:   1.36 kB
+dist/client/assets/templates.gratuitos-DDZHv-YP.js             3.29 kB │ gzip:   1.64 kB
+dist/client/assets/fields-Ww07Brot.js                          3.30 kB │ gzip:   1.41 kB
+dist/client/assets/TemplateCard-BP5NX2OW.js                    3.42 kB │ gzip:   1.37 kB
+dist/client/assets/index-BXr-cWcm.js                           3.46 kB │ gzip:   1.58 kB
+dist/client/assets/roadmap-BXG8FHoS.js                         3.48 kB │ gzip:   1.50 kB
+dist/client/assets/index-BwJreL1V.js                           3.51 kB │ gzip:   1.35 kB
+dist/client/assets/shared-DSnR9RvZ.js                          3.51 kB │ gzip:   1.39 kB
+dist/client/assets/models-eREMuAaF.js                          3.74 kB │ gzip:   1.68 kB
+dist/client/assets/analytics.operations-B0jTpCrD.js            3.74 kB │ gzip:   1.37 kB
+dist/client/assets/logs-BNtD3thk.js                            3.89 kB │ gzip:   1.53 kB
+dist/client/assets/reset-BykmzePB.js                           4.08 kB │ gzip:   1.51 kB
+dist/client/assets/setup-assistant-DcdDWVqY.js                 4.08 kB │ gzip:   1.62 kB
+dist/client/assets/support-BgqaCfzO.js                         4.11 kB │ gzip:   1.53 kB
+dist/client/assets/settings-BdR1AgTM.js                        4.11 kB │ gzip:   1.27 kB
+dist/client/assets/consumo-D_t7B867.js                         4.24 kB │ gzip:   1.75 kB
+dist/client/assets/coverage-DkEgum0z.js                        4.36 kB │ gzip:   1.53 kB
+dist/client/assets/compliance-ai-Cph1slD8.js                   4.38 kB │ gzip:   1.68 kB
+dist/client/assets/performance-center-CRzVVbNl.js              4.46 kB │ gzip:   1.69 kB
+dist/client/assets/piloto-Dy0b89nJ.js                          4.56 kB │ gzip:   2.15 kB
+dist/client/assets/auth-middleware-3Dj9TEV3.js                 4.59 kB │ gzip:   1.98 kB
+dist/client/assets/templates.meus-CWWgjhdh.js                  4.60 kB │ gzip:   2.11 kB
+dist/client/assets/ocr-review-center-BRq7pQJA.js               4.63 kB │ gzip:   1.76 kB
+dist/client/assets/ProcessTimeline-B1-IJXFR.js                 4.70 kB │ gzip:   1.75 kB
+dist/client/assets/UpgradeModal-BcfifDBF.js                    4.71 kB │ gzip:   1.58 kB
+dist/client/assets/IntelligencePanel-BCYfaaKT.js               4.75 kB │ gzip:   1.76 kB
+dist/client/assets/verificar-assinatura._code-B8TUrNUR.js      4.75 kB │ gzip:   1.74 kB
+dist/client/assets/ocr-DmSuqHAs.js                             4.77 kB │ gzip:   1.61 kB
+dist/client/assets/foco--eJIFG_4.js                            4.79 kB │ gzip:   1.88 kB
+dist/client/assets/IntelligentAssistant-BbYfDRAc.js            4.80 kB │ gzip:   1.85 kB
+dist/client/assets/companyBranding-DzHYcmpD.js                 4.81 kB │ gzip:   1.79 kB
+dist/client/assets/executive-BnejyrsE.js                       4.88 kB │ gzip:   1.85 kB
+dist/client/assets/login-CJIgEYBY.js                           4.95 kB │ gzip:   1.92 kB
+dist/client/assets/documentPlaceholders-72vVScQj.js            4.97 kB │ gzip:   1.25 kB
+dist/client/assets/benchmark-YBNpsJTu.js                       5.01 kB │ gzip:   1.85 kB
+dist/client/assets/FeedbackButton-DhvTSmPS.js                  5.08 kB │ gzip:   1.78 kB
+dist/client/assets/parceria-DphQfBKm.js                        5.10 kB │ gzip:   1.79 kB
+dist/client/assets/exigencias-uXOoqsOG.js                      5.10 kB │ gzip:   1.74 kB
+dist/client/assets/ClientPortalPanel-CYdv9q_8.js               5.16 kB │ gzip:   1.96 kB
+dist/client/assets/predictions-O-hupaFn.js                     5.19 kB │ gzip:   2.01 kB
+dist/client/assets/SignatureModal-BpT6VzYC.js                  5.32 kB │ gzip:   2.22 kB
+dist/client/assets/executive-overview-BPkygnRj.js              5.65 kB │ gzip:   1.99 kB
+dist/client/assets/ai-center-C4DeJgDt.js                       5.78 kB │ gzip:   2.18 kB
+dist/client/assets/changelog-d_aIQa-i.js                       5.94 kB │ gzip:   2.28 kB
+dist/client/assets/users-tzkLsxCy.js                           6.11 kB │ gzip:   2.03 kB
+dist/client/assets/SaaSMetrics-CjYtber2.js                     6.13 kB │ gzip:   1.83 kB
+dist/client/assets/companies-zS8EaKZO.js                       6.17 kB │ gzip:   2.21 kB
+dist/client/assets/system-monitor-rM8CLggo.js                  6.24 kB │ gzip:   2.24 kB
+dist/client/assets/signup-DHkMYtcu.js                          6.29 kB │ gzip:   2.35 kB
+dist/client/assets/review-CcRsTwbX.js                          6.39 kB │ gzip:   2.42 kB
+dist/client/assets/storage-CfZ2RNsl.js                         6.62 kB │ gzip:   2.00 kB
+dist/client/assets/admin-hub-CxIP-FtE.js                       6.68 kB │ gzip:   2.51 kB
+dist/client/assets/automation-JmrFV11z.js                      6.82 kB │ gzip:   2.19 kB
+dist/client/assets/operations-center-D5UDZqMb.js               6.94 kB │ gzip:   2.39 kB
+dist/client/assets/process-center.index-DBF8yhTj.js            6.98 kB │ gzip:   1.96 kB
+dist/client/assets/getting-started-Drt2R1bV.js                 7.03 kB │ gzip:   2.21 kB
+dist/client/assets/ProcessIdentityPanel-D5IB2lWZ.js            7.05 kB │ gzip:   2.62 kB
+dist/client/assets/sales-center-9ngdYOFs.js                    7.18 kB │ gzip:   2.40 kB
+dist/client/assets/admin.signature-anchors-DQcce5kU.js         7.25 kB │ gzip:   2.57 kB
+dist/client/assets/logs-BsPnLKxv.js                            7.42 kB │ gzip:   2.30 kB
+dist/client/assets/dashboard.ecosystem-DsgZAHJ9.js             7.49 kB │ gzip:   2.25 kB
+dist/client/assets/SmartOCR-BtDuTa8v.js                        7.84 kB │ gzip:   2.46 kB
+dist/client/assets/useDocuments-na6q1v_H.js                    7.89 kB │ gzip:   2.46 kB
+dist/client/assets/analytics-iveVvP8C.js                       7.92 kB │ gzip:   2.24 kB
+dist/client/assets/frontend-errors-kbSwD-HV.js                 8.05 kB │ gzip:   2.63 kB
+dist/client/assets/automation-center-CD68lC2f.js               8.11 kB │ gzip:   2.58 kB
+dist/client/assets/ProcessItemFocusDialog-DhOWf-Bb.js          8.20 kB │ gzip:   2.96 kB
+dist/client/assets/SignatureRequestDialog-XfkstOuU.js          8.40 kB │ gzip:   2.89 kB
+dist/client/assets/demo-YCBo0nin.js                            8.55 kB │ gzip:   3.22 kB
+dist/client/assets/qa-checklist-DwjxEltu.js                    8.77 kB │ gzip:   3.59 kB
+dist/client/assets/security-Kw0h1KN-.js                        8.91 kB │ gzip:   3.10 kB
+dist/client/assets/SystemReportPage-DAwjEMpq.js                8.93 kB │ gzip:   2.48 kB
+dist/client/assets/health-BzJy6N91.js                          8.98 kB │ gzip:   3.14 kB
+dist/client/assets/commercial-zZWSxjEi.js                      9.05 kB │ gzip:   3.08 kB
+dist/client/assets/signatures-BGdRvpEX.js                      9.13 kB │ gzip:   2.82 kB
+dist/client/assets/support-h-_G971b.js                         9.18 kB │ gzip:   2.90 kB
+dist/client/assets/system-health-81LI0sUb.js                   9.54 kB │ gzip:   3.46 kB
+dist/client/assets/useDocumentationCoverage-DVlrLr4N.js        9.64 kB │ gzip:   3.36 kB
+dist/client/assets/portal._token-BXGEZxYK.js                   9.70 kB │ gzip:   3.11 kB
+dist/client/assets/billing-Wm5X_AXN.js                        10.20 kB │ gzip:   3.00 kB
+dist/client/assets/global-D4orDf2S.js                         10.62 kB │ gzip:   3.17 kB
+dist/client/assets/ProcessSignaturesPanel-BuruR7eY.js         10.84 kB │ gzip:   3.58 kB
+dist/client/assets/admin-CflQiTk8.js                          11.08 kB │ gzip:   3.34 kB
+dist/client/assets/dashboard.deadlines-e_q2cJl3.js            11.14 kB │ gzip:   2.84 kB
+dist/client/assets/billing.subscription-D1yweSpO.js           11.21 kB │ gzip:   3.29 kB
+dist/client/assets/OCRUpload-EJoMVs4E.js                      11.64 kB │ gzip:   3.91 kB
+dist/client/assets/ProcessActionsMenu-B5dgLnBb.js             12.16 kB │ gzip:   4.25 kB
+dist/client/assets/templates.pfw-CNmMzxUg.js                  12.26 kB │ gzip:   4.03 kB
+dist/client/assets/scroll-area-BqqHpy8S.js                    12.39 kB │ gzip:   3.91 kB
+dist/client/assets/templates._id-DPoUD-y9.js                  12.74 kB │ gzip:   4.45 kB
+dist/client/assets/document-generator-DueqW_qs.js             12.99 kB │ gzip:   4.35 kB
+dist/client/assets/compliance-center-Bl_2AI0K.js              13.52 kB │ gzip:   3.63 kB
+dist/client/assets/documentos.biblioteca-B2OutGQk.js          13.54 kB │ gzip:   4.17 kB
+dist/client/assets/ocr-center-Dx3Iwhcg.js                     13.65 kB │ gzip:   3.84 kB
+dist/client/assets/ProcessDocumentsPanel-Ni3O8IyN.js          14.02 kB │ gzip:   4.64 kB
+dist/client/assets/onboarding-DREqf7MR.js                     16.10 kB │ gzip:   3.89 kB
+dist/client/assets/templates-aLHGCDMQ.js                      16.39 kB │ gzip:   4.81 kB
+dist/client/assets/assinar._token-CDOnnLuI.js                 18.00 kB │ gzip:   5.96 kB
+dist/client/assets/templates.marketplace-BH8mdqYr.js          18.17 kB │ gzip:   5.62 kB
+dist/client/assets/home-mlFKpMtu.js                           18.17 kB │ gzip:   4.88 kB
+dist/client/assets/client-portal-D-aPUlzc.js                  18.22 kB │ gzip:   4.95 kB
+dist/client/assets/dashboard.document-center-BdlstCkh.js      19.55 kB │ gzip:   5.83 kB
+dist/client/assets/DocumentPreviewEditor-CpPyqTXQ.js          19.58 kB │ gzip:   6.04 kB
+dist/client/assets/ProcessFinalDossierTab-DAcjk-W0.js         19.99 kB │ gzip:   6.69 kB
+dist/client/assets/assinaturas-DX2vJjFk.js                    20.03 kB │ gzip:   6.63 kB
+dist/client/assets/settings-Cvtl6nc4.js                       20.09 kB │ gzip:   5.11 kB
+dist/client/assets/full-qa-report-DtHjbKCh.js                 20.33 kB │ gzip:   5.57 kB
+dist/client/assets/production-readiness-D1sO3pOM.js           20.42 kB │ gzip:   5.44 kB
+dist/client/assets/documents-BPRGHHr7.js                      21.70 kB │ gzip:   6.08 kB
+dist/client/assets/dropdown-menu-X0Delaty.js                  21.92 kB │ gzip:   6.51 kB
+dist/client/assets/ProcessChecklist-C18nC5kz.js               22.72 kB │ gzip:   7.16 kB
+dist/client/assets/identidade-CJcAb8Qj.js                     24.96 kB │ gzip:   5.80 kB
+dist/client/assets/dashboard.security-DFLPartW.js             25.09 kB │ gzip:   5.35 kB
+dist/client/assets/purify.es-Cw43jA4y.js                      25.13 kB │ gzip:   9.45 kB
+dist/client/assets/processes.index-DNKCfjc2.js                26.15 kB │ gzip:   7.03 kB
+dist/client/assets/documents-base-LZr-JXQd.js                 26.37 kB │ gzip:   6.42 kB
+dist/client/assets/OCRReview-DZ645lOD.js                      28.61 kB │ gzip:   6.08 kB
+dist/client/assets/vessels-CTC5jkZ5.js                        29.06 kB │ gzip:   6.08 kB
+dist/client/assets/OperationalCharts-B_BQRYxr.js              29.42 kB │ gzip:   8.13 kB
+dist/client/assets/templates._id-D1iOiET-.js                  30.18 kB │ gzip:   9.25 kB
+dist/client/assets/process-center._id-DtopK9rW.js             32.66 kB │ gzip:   8.76 kB
+dist/client/assets/admin-master-BY6pq1Cf.js                   32.96 kB │ gzip:   8.28 kB
+dist/client/assets/signedDocumentBuilder-DpLWnXbF.js          34.81 kB │ gzip:  13.16 kB
+dist/client/assets/TemplateCover-C9vobQRQ.js                  42.86 kB │ gzip:  11.65 kB
+dist/client/assets/customers-Yv8v8Dcm.js                      43.97 kB │ gzip:  10.26 kB
+dist/client/assets/ProcessBlueprintWorkspace-BL7Ml0Tu.js      68.89 kB │ gzip:  18.26 kB
+dist/client/assets/ProcessEditForm-CgrnzPTr.js                73.46 kB │ gzip:  20.74 kB
+dist/client/assets/dashboard-BHBMXI7P.js                      76.30 kB │ gzip:  17.27 kB
+dist/client/assets/jszip.min-C3hpdDrs.js                      97.16 kB │ gzip:  29.96 kB
+dist/client/assets/index.es-D1GTN91e.js                      159.70 kB │ gzip:  53.36 kB
+dist/client/assets/AreaChart-Db5zy4T0.js                     393.70 kB │ gzip: 107.46 kB
+dist/client/assets/pdf-B75MOh95.js                           415.93 kB │ gzip: 123.14 kB
+dist/client/assets/index-BcVfviOT.js                         434.83 kB │ gzip: 180.11 kB
+dist/client/assets/processes._id-CF2PY1Yy.js                 654.38 kB │ gzip: 191.34 kB
+dist/client/assets/index-fd3P0XHl.js                       1,124.10 kB │ gzip: 331.84 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 30.38s
+vite v7.3.2 building ssr environment for production...
+transforming...
+"createRequestHandler", "defineHandlerCallback", "transformPipeableStreamWithRouter" and "transformReadableStreamWithRouter" are imported from external module "@tanstack/router-core/ssr/server" but never used in "node_modules/@tanstack/start-server-core/dist/esm/index.js".
+"RawStream" is imported from external module "@tanstack/router-core" but never used in "node_modules/@tanstack/start-client-core/dist/esm/index.js".
+"hydrate" and "json" are imported from external module "@tanstack/router-core/ssr/client" but never used in "node_modules/@tanstack/start-client-core/dist/esm/index.js".
+✓ 516 modules transformed.
+rendering chunks...
+[plugin vite:reporter] 
+(!) /dev-server/src/lib/storage.ts is dynamically imported by /dev-server/src/components/ocr/OCRReview.tsx, /dev-server/src/hooks/useDocuments.tsx, /dev-server/src/hooks/useDocuments.tsx, /dev-server/src/services/processes/batchChecklistActions.ts but also statically imported by /dev-server/src/components/processes/NewProcessUploadWizard.tsx, /dev-server/src/hooks/useFiles.tsx, dynamic import will not move module into another chunk.
+
+node_modules/.nitro/vite/services/ssr/assets/pdf.worker.min-iDqQPrd3.mjs                     1,232.30 kB
+node_modules/.nitro/vite/services/ssr/assets/styles-CwDLx71g.css                               233.22 kB
+node_modules/.nitro/vite/services/ssr/assets/pdf.worker.min-dwAkBuWR.js                          0.10 kB
+node_modules/.nitro/vite/services/ssr/assets/__23tanstack-start-plugin-adapters-Cwee5PKy.js      0.14 kB
+node_modules/.nitro/vite/services/ssr/assets/documentos.biblioteca-Cjd53PQf.js                   0.22 kB
+node_modules/.nitro/vite/services/ssr/assets/templates-CwlCFvmb.js                               0.25 kB
+node_modules/.nitro/vite/services/ssr/assets/templates._id-CwlCFvmb.js                           0.25 kB
+node_modules/.nitro/vite/services/ssr/assets/generateDocumentEvent-D_Mamwhw.js                   0.25 kB
+node_modules/.nitro/vite/services/ssr/assets/templates.pfw-BCctDZeE.js                           0.25 kB
+node_modules/.nitro/vite/services/ssr/assets/skeleton-L9_cErKS.js                                0.28 kB
+node_modules/.nitro/vite/services/ssr/assets/createServerRpc-BHKu-y2r.js                         0.31 kB
+node_modules/.nitro/vite/services/ssr/assets/documentos.biblioteca-B1MHk_NO.js                   0.50 kB
+node_modules/.nitro/vite/services/ssr/assets/system-report-OjLk_nDe.js                           0.54 kB
+node_modules/.nitro/vite/services/ssr/assets/saas-metrics-BNPmXD9m.js                            0.54 kB
+node_modules/.nitro/vite/services/ssr/assets/createMiddleware-BvN2ghIY.js                        0.69 kB
+node_modules/.nitro/vite/services/ssr/assets/index-C3gM4LuV.js                                   0.76 kB
+node_modules/.nitro/vite/services/ssr/assets/textarea-DVwH_uKi.js                                0.77 kB
+node_modules/.nitro/vite/services/ssr/assets/automation-Btvs4Vxf.js                              0.80 kB
+node_modules/.nitro/vite/services/ssr/assets/client-BZEvLaEu.js                                  0.84 kB
+node_modules/.nitro/vite/services/ssr/assets/health-gwJWpyOR.js                                  0.87 kB
+node_modules/.nitro/vite/services/ssr/assets/coverage-BbrZV04m.js                                0.87 kB
+node_modules/.nitro/vite/services/ssr/assets/index-BYNo3qQN.js                                   0.95 kB
+node_modules/.nitro/vite/services/ssr/assets/companyPdfTemplates-d1iB4gVs.js                     0.96 kB
+node_modules/.nitro/vite/services/ssr/assets/EmptyState-C3SgEGCd.js                              0.98 kB
+node_modules/.nitro/vite/services/ssr/assets/createSsrRpc-BTdzCiwE.js                            1.01 kB
+node_modules/.nitro/vite/services/ssr/assets/client.server-D5ro3rAQ.js                           1.04 kB
+node_modules/.nitro/vite/services/ssr/assets/ProtectedRoute-DqG2psm5.js                          1.06 kB
+node_modules/.nitro/vite/services/ssr/assets/health-CsXyHuRt.js                                  1.09 kB
+node_modules/.nitro/vite/services/ssr/assets/coverage-BEM7NzyF.js                                1.09 kB
+node_modules/.nitro/vite/services/ssr/assets/docs-central-DJtVoIy2.js                            1.11 kB
+node_modules/.nitro/vite/services/ssr/assets/templates._id-XJroz_8I.js                           1.28 kB
+node_modules/.nitro/vite/services/ssr/assets/useProcessPackages-DF72VCce.js                      1.29 kB
+node_modules/.nitro/vite/services/ssr/assets/index-CAtvi8FC.js                                   1.36 kB
+node_modules/.nitro/vite/services/ssr/assets/ai-gateway.server-DLECuq4h.js                       1.39 kB
+node_modules/.nitro/vite/services/ssr/assets/templates-DHAU23yu.js                               1.44 kB
+node_modules/.nitro/vite/services/ssr/assets/templates.pfw-CMenOgVo.js                           1.45 kB
+node_modules/.nitro/vite/services/ssr/assets/scroll-area-CvFYfBZD.js                             1.45 kB
+node_modules/.nitro/vite/services/ssr/assets/naval-terms-DSyItVQm.js                             1.52 kB
+node_modules/.nitro/vite/services/ssr/assets/optimisticLock-CanomtPH.js                          1.53 kB
+node_modules/.nitro/vite/services/ssr/assets/tabs-DSEf8QSi.js                                    1.67 kB
+node_modules/.nitro/vite/services/ssr/assets/mappings-D27ZjgxW.js                                1.68 kB
+node_modules/.nitro/vite/services/ssr/assets/start-CbyB-hjS.js                                   1.84 kB
+node_modules/.nitro/vite/services/ssr/assets/calendar-DsuHkAHE.js                                1.86 kB
+node_modules/.nitro/vite/services/ssr/assets/password-input-CvNZJ3wJ.js                          1.95 kB
+node_modules/.nitro/vite/services/ssr/assets/library-BZuXssiu.js                                 1.96 kB
+node_modules/.nitro/vite/services/ssr/assets/marketplace-Qw0uUtUh.js                             1.98 kB
+node_modules/.nitro/vite/services/ssr/assets/signatureAnchors-ODMkMfmI.js                        2.03 kB
+node_modules/.nitro/vite/services/ssr/assets/auth-middleware-BoXINbS6.js                         2.16 kB
+node_modules/.nitro/vite/services/ssr/assets/exigencias.functions-CNoHGjlA.js                    2.20 kB
+node_modules/.nitro/vite/services/ssr/assets/clientPortal.functions-DiI2jeEq.js                  2.21 kB
+node_modules/.nitro/vite/services/ssr/assets/templates-WfJPWOv7.js                               2.26 kB
+node_modules/.nitro/vite/services/ssr/assets/generationErrorHandler-BbpNLSAg.js                  2.36 kB
+node_modules/.nitro/vite/services/ssr/assets/workspace-recovery-B2uLqWuV.js                      2.37 kB
+node_modules/.nitro/vite/services/ssr/assets/billing.success-IS4Ov-_n.js                         2.41 kB
+node_modules/.nitro/vite/services/ssr/assets/file-preview-C-pZ7-cB.js                            2.45 kB
+node_modules/.nitro/vite/services/ssr/assets/ModalLayout-B7cT8jU-.js                             2.50 kB
+node_modules/.nitro/vite/services/ssr/assets/billing.failure-sY69MRKT.js                         2.50 kB
+node_modules/.nitro/vite/services/ssr/assets/skeletons-BCtC1Ang.js                               2.59 kB
+node_modules/.nitro/vite/services/ssr/assets/compliance.functions-BORK1ign.js                    2.99 kB
+node_modules/.nitro/vite/services/ssr/assets/audit-CwBLo6dd.js                                   3.18 kB
+node_modules/.nitro/vite/services/ssr/assets/ReadinessBanner-aDffOC75.js                         3.22 kB
+node_modules/.nitro/vite/services/ssr/assets/pdf-export-rlRzJEfy.js                              3.24 kB
+node_modules/.nitro/vite/services/ssr/assets/publishing-CjTpa2MD.js                              3.28 kB
+node_modules/.nitro/vite/services/ssr/assets/sheet-B-MDpHkd.js                                   3.65 kB
+node_modules/.nitro/vite/services/ssr/assets/versions-Dvj2ZNkc.js                                3.70 kB
+node_modules/.nitro/vite/services/ssr/index.js                                                   3.86 kB
+node_modules/.nitro/vite/services/ssr/assets/status-B3NjYhMH.js                                  4.15 kB
+node_modules/.nitro/vite/services/ssr/assets/process-types-DaZp5tmR.js                           4.36 kB
+node_modules/.nitro/vite/services/ssr/assets/processes.trash-Sxsvrrlx.js                         4.45 kB
+node_modules/.nitro/vite/services/ssr/assets/ProcessEditSheet-DygLWAos.js                        4.46 kB
+node_modules/.nitro/vite/services/ssr/assets/TemplateCard-BHZjTc7w.js                            4.63 kB
+node_modules/.nitro/vite/services/ssr/assets/shared-Burgn6mt.js                                  4.65 kB
+node_modules/.nitro/vite/services/ssr/assets/processes.archived-B7Wa44Ix.js                      5.02 kB
+node_modules/.nitro/vite/services/ssr/assets/templates.gratuitos-D5VdPLhD.js                     5.11 kB
+node_modules/.nitro/vite/services/ssr/assets/roadmap-vr2jURyZ.js                                 5.17 kB
+node_modules/.nitro/vite/services/ssr/assets/analytics.ocr-CfF7qnFb.js                           5.23 kB
+node_modules/.nitro/vite/services/ssr/assets/fields-9Ic6Rdiw.js                                  5.27 kB
+node_modules/.nitro/vite/services/ssr/assets/admin.diagnostico-ldPtpczS.js                       5.31 kB
+node_modules/.nitro/vite/services/ssr/assets/plans-FhUyqc5L.js                                   5.64 kB
+node_modules/.nitro/vite/services/ssr/assets/companyBranding-JNAUmBY9.js                         5.64 kB
+node_modules/.nitro/vite/services/ssr/assets/models-CwMDTVdx.js                                  5.74 kB
+node_modules/.nitro/vite/services/ssr/assets/index-DN-hBdIX.js                                   5.75 kB
+node_modules/.nitro/vite/services/ssr/assets/logs-Dwfz1gsd.js                                    5.89 kB
+node_modules/.nitro/vite/services/ssr/assets/dropdown-menu-BFdUHDnc.js                           5.90 kB
+node_modules/.nitro/vite/services/ssr/assets/analytics.operations-DEKFzmNY.js                    5.96 kB
+node_modules/.nitro/vite/services/ssr/assets/OperationalCharts-CeMO_g17.js                       6.13 kB
+node_modules/.nitro/vite/services/ssr/assets/settings-De3SE4qZ.js                                6.31 kB
+node_modules/.nitro/vite/services/ssr/assets/setup-assistant-BrZW1J3p.js                         6.44 kB
+node_modules/.nitro/vite/services/ssr/assets/templates.meus-VtDtXCcc.js                          6.48 kB
+node_modules/.nitro/vite/services/ssr/assets/documentPlaceholders-Dnj6s-NJ.js                    6.58 kB
+node_modules/.nitro/vite/services/ssr/assets/support-8jUsSKTz.js                                 6.72 kB
+node_modules/.nitro/vite/services/ssr/assets/performance-center-CoWlLXhJ.js                      6.79 kB
+node_modules/.nitro/vite/services/ssr/assets/ocr-review-center-De8Gx0wf.js                       6.94 kB
+node_modules/.nitro/vite/services/ssr/assets/reset-1WyGxtM9.js                                   6.96 kB
+node_modules/.nitro/vite/services/ssr/assets/UpgradeModal-CETllavZ.js                            7.01 kB
+node_modules/.nitro/vite/services/ssr/assets/consumo-ByCn46-L.js                                 7.07 kB
+node_modules/.nitro/vite/services/ssr/assets/IntelligencePanel-y5vqb5KG.js                       7.13 kB
+node_modules/.nitro/vite/services/ssr/assets/coverage-BjXPOwBL.js                                7.13 kB
+node_modules/.nitro/vite/services/ssr/assets/ProcessTimeline-D9n9fw26.js                         7.42 kB
+node_modules/.nitro/vite/services/ssr/assets/piloto-BYEJcUDX.js                                  7.49 kB
+node_modules/.nitro/vite/services/ssr/assets/predictions-C77GtP5L.js                             7.51 kB
+node_modules/.nitro/vite/services/ssr/assets/executive-C11nOA-x.js                               7.64 kB
+node_modules/.nitro/vite/services/ssr/assets/ocr-DF3mMjQ9.js                                     7.68 kB
+node_modules/.nitro/vite/services/ssr/assets/verificar-assinatura._code-MdpgiDnH.js              7.70 kB
+node_modules/.nitro/vite/services/ssr/assets/foco-C25OO2iS.js                                    7.70 kB
+node_modules/.nitro/vite/services/ssr/assets/IntelligentAssistant-BBQBebBy.js                    7.71 kB
+node_modules/.nitro/vite/services/ssr/assets/compliance-ai-DYhlj2eh.js                           7.77 kB
+node_modules/.nitro/vite/services/ssr/assets/changelog-DUsUv9jd.js                               7.96 kB
+node_modules/.nitro/vite/services/ssr/assets/executive-overview-CUhqa4c4.js                      8.33 kB
+node_modules/.nitro/vite/services/ssr/assets/login-BJosw4WQ.js                                   8.33 kB
+node_modules/.nitro/vite/services/ssr/assets/benchmark-BuZ6ukqH.js                               8.34 kB
+node_modules/.nitro/vite/services/ssr/assets/exigencias-znDWnu-G.js                              8.40 kB
+node_modules/.nitro/vite/services/ssr/assets/ai-center-DdFcfa77.js                               8.51 kB
+node_modules/.nitro/vite/services/ssr/assets/FeedbackButton-BOesm6zG.js                          8.53 kB
+node_modules/.nitro/vite/services/ssr/assets/ClientPortalPanel-B-i1e_kY.js                       8.70 kB
+node_modules/.nitro/vite/services/ssr/assets/parceria-D79RSDiY.js                                8.93 kB
+node_modules/.nitro/vite/services/ssr/assets/users-k0PvOR3b.js                                   9.07 kB
+node_modules/.nitro/vite/services/ssr/assets/system-monitor-AOQ9vWb8.js                          9.38 kB
+node_modules/.nitro/vite/services/ssr/assets/SaaSMetrics-3_1qFmPm.js                             9.44 kB
+node_modules/.nitro/vite/services/ssr/assets/SignatureModal-D5b7Hqv7.js                          9.47 kB
+node_modules/.nitro/vite/services/ssr/assets/admin-hub-Cpbc6TZU.js                               9.79 kB
+node_modules/.nitro/vite/services/ssr/assets/companies-BYTqcZaE.js                               9.94 kB
+node_modules/.nitro/vite/services/ssr/assets/automation-D-1FsHB_.js                             10.08 kB
+node_modules/.nitro/vite/services/ssr/assets/sales-center-C1Wrt2UU.js                           10.12 kB
+node_modules/.nitro/vite/services/ssr/assets/operations-center-BcKEdKg9.js                      10.19 kB
+node_modules/.nitro/vite/services/ssr/assets/storage-D1ZVCyQK.js                                10.23 kB
+node_modules/.nitro/vite/services/ssr/assets/signup-yPJgWazV.js                                 10.28 kB
+node_modules/.nitro/vite/services/ssr/assets/review-QSkD5nX5.js                                 10.41 kB
+node_modules/.nitro/vite/services/ssr/assets/getting-started-CBLWnC-o.js                        10.49 kB
+node_modules/.nitro/vite/services/ssr/assets/process-center.index-CcEseCZj.js                   10.52 kB
+node_modules/.nitro/vite/services/ssr/assets/ProcessIdentityPanel-CB4y0G6E.js                   10.77 kB
+node_modules/.nitro/vite/services/ssr/assets/dashboard.ecosystem-C1HizlUe.js                    11.25 kB
+node_modules/.nitro/vite/services/ssr/assets/logs-rda0EiCB.js                                   11.28 kB
+node_modules/.nitro/vite/services/ssr/assets/SmartOCR-DOG1LVEy.js                               11.48 kB
+node_modules/.nitro/vite/services/ssr/assets/qa-checklist-BcJSI-0H.js                           11.61 kB
+node_modules/.nitro/vite/services/ssr/assets/useDocuments-C9GO6TIc.js                           11.90 kB
+node_modules/.nitro/vite/services/ssr/assets/automation-center-BeC18aI8.js                      12.17 kB
+node_modules/.nitro/vite/services/ssr/assets/analytics-CXT4fgAl.js                              12.32 kB
+node_modules/.nitro/vite/services/ssr/assets/demo-0WVl9mYP.js                                   12.48 kB
+node_modules/.nitro/vite/services/ssr/assets/health-BiS2b0Yt.js                                 12.96 kB
+node_modules/.nitro/vite/services/ssr/assets/signatures-DtkA2g0-.js                             13.13 kB
+node_modules/.nitro/vite/services/ssr/assets/ProcessItemFocusDialog-CW2Xt10r.js                 13.30 kB
+node_modules/.nitro/vite/services/ssr/assets/security-B5jO659L.js                               13.32 kB
+node_modules/.nitro/vite/services/ssr/assets/SystemReportPage-C-6xrugX.js                       13.55 kB
+node_modules/.nitro/vite/services/ssr/assets/frontend-errors-Cp3XpwKO.js                        13.62 kB
+node_modules/.nitro/vite/services/ssr/assets/support-Ba6HWY9y.js                                13.99 kB
+node_modules/.nitro/vite/services/ssr/assets/admin.signature-anchors-D9ngXQRh.js                14.23 kB
+node_modules/.nitro/vite/services/ssr/assets/commercial-Biroj7w6.js                             14.42 kB
+node_modules/.nitro/vite/services/ssr/assets/system-health-CUIBVyuC.js                          14.56 kB
+node_modules/.nitro/vite/services/ssr/assets/signedDocumentBuilder-B1pWTTBk.js                  14.95 kB
+node_modules/.nitro/vite/services/ssr/assets/billing-B_OA-pJa.js                                14.97 kB
+node_modules/.nitro/vite/services/ssr/assets/SignatureRequestDialog-DdN4mZdW.js                 15.94 kB
+node_modules/.nitro/vite/services/ssr/assets/global-CJ7dZ7Uw.js                                 16.00 kB
+node_modules/.nitro/vite/services/ssr/assets/portal._token-DzoByE6N.js                          16.79 kB
+node_modules/.nitro/vite/services/ssr/assets/dashboard.deadlines-BnaVb3z_.js                    16.82 kB
+node_modules/.nitro/vite/services/ssr/assets/billing.subscription-TNbVhgfi.js                   16.85 kB
+node_modules/.nitro/vite/services/ssr/assets/ProcessActionsMenu-B2kYnuVH.js                     17.07 kB
+node_modules/.nitro/vite/services/ssr/assets/useDocumentationCoverage-CKA7C5L3.js               17.19 kB
+node_modules/.nitro/vite/services/ssr/assets/admin-CY4Y2Q2m.js                                  17.36 kB
+node_modules/.nitro/vite/services/ssr/assets/ProcessSignaturesPanel-DvqkLdc8.js                 17.62 kB
+node_modules/.nitro/vite/services/ssr/assets/clientPortal.functions-LPt9QXr2.js                 17.86 kB
+node_modules/.nitro/vite/services/ssr/assets/OCRUpload-BDd3zBF-.js                              18.95 kB
+node_modules/.nitro/vite/services/ssr/assets/templates._id-BnhXd1ci.js                          19.29 kB
+node_modules/.nitro/vite/services/ssr/assets/ocr-center-LVYHaYxz.js                             19.39 kB
+node_modules/.nitro/vite/services/ssr/assets/templates.pfw--3tvmLRt.js                          19.69 kB
+node_modules/.nitro/vite/services/ssr/assets/documentos.biblioteca-AMvxncai.js                  20.06 kB
+node_modules/.nitro/vite/services/ssr/assets/compliance-center-CshtdY01.js                      20.55 kB
+node_modules/.nitro/vite/services/ssr/assets/ProcessDocumentsPanel-BIg9F3Iq.js                  21.93 kB
+node_modules/.nitro/vite/services/ssr/assets/ProcessChecklist-jwRXetgV.js                       23.00 kB
+node_modules/.nitro/vite/services/ssr/assets/document-generator-vqh79XR0.js                     23.01 kB
+node_modules/.nitro/vite/services/ssr/assets/onboarding-DyPPDXih.js                             25.32 kB
+node_modules/.nitro/vite/services/ssr/assets/home-FQk_FYci.js                                   25.56 kB
+node_modules/.nitro/vite/services/ssr/assets/templates.marketplace-JH5t2-MA.js                  26.08 kB
+node_modules/.nitro/vite/services/ssr/assets/full-qa-report-CkpO8X9h.js                         27.16 kB
+node_modules/.nitro/vite/services/ssr/assets/production-readiness-BqJ2Wb84.js                   27.51 kB
+node_modules/.nitro/vite/services/ssr/assets/templates-CrvG5Bo_.js                              27.53 kB
+node_modules/.nitro/vite/services/ssr/assets/client-portal-C_lgojAj.js                          27.77 kB
+node_modules/.nitro/vite/services/ssr/assets/assinar._token-BqENQEV2.js                         29.60 kB
+node_modules/.nitro/vite/services/ssr/assets/settings-CGo8gj4o.js                               30.08 kB
+node_modules/.nitro/vite/services/ssr/assets/dashboard.document-center-BTGHudt4.js              30.56 kB
+node_modules/.nitro/vite/services/ssr/assets/assinaturas-BUaSFN7m.js                            30.60 kB
+node_modules/.nitro/vite/services/ssr/assets/ProcessFinalDossierTab-BEfrkmUz.js                 30.87 kB
+node_modules/.nitro/vite/services/ssr/assets/documents-DRpnHXd-.js                              33.44 kB
+node_modules/.nitro/vite/services/ssr/assets/DocumentPreviewEditor-DRCZ5wAd.js                  33.46 kB
+node_modules/.nitro/vite/services/ssr/assets/dashboard.security-DCDlk45e.js                     36.27 kB
+node_modules/.nitro/vite/services/ssr/assets/processes.index-C6rWbNTF.js                        38.49 kB
+node_modules/.nitro/vite/services/ssr/assets/identidade-Bav0DyNk.js                             39.61 kB
+node_modules/.nitro/vite/services/ssr/assets/documents-base-D3FEud-Y.js                         40.22 kB
+node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-CvL30CQ1.js             41.54 kB
+node_modules/.nitro/vite/services/ssr/assets/vessels-Czn92NAm.js                                43.67 kB
+node_modules/.nitro/vite/services/ssr/assets/OCRReview-DgaIlFzg.js                              45.52 kB
+node_modules/.nitro/vite/services/ssr/assets/server-BRlJs5xe.js                                 47.84 kB
+node_modules/.nitro/vite/services/ssr/assets/templates._id-4M1OgR8E.js                          49.05 kB
+node_modules/.nitro/vite/services/ssr/assets/process-center._id-UMWyBnz0.js                     49.22 kB
+node_modules/.nitro/vite/services/ssr/assets/admin-master-xt7fF6d8.js                           53.10 kB
+node_modules/.nitro/vite/services/ssr/assets/TemplateCover-2UQ4_gbL.js                          64.90 kB
+node_modules/.nitro/vite/services/ssr/assets/customers-CnM7s0mF.js                              68.65 kB
+node_modules/.nitro/vite/services/ssr/assets/ProcessEditForm-C9oTnKv_.js                        94.50 kB
+node_modules/.nitro/vite/services/ssr/assets/processes._id-C7j5l3TM.js                          95.96 kB
+node_modules/.nitro/vite/services/ssr/assets/ProcessBlueprintWorkspace-BtCgYuXc.js             101.42 kB
+node_modules/.nitro/vite/services/ssr/assets/dashboard-WnAgkytV.js                             111.78 kB
+node_modules/.nitro/vite/services/ssr/assets/router-BtReKk7G.js                                344.23 kB
+✓ built in 11.96s
+
+[nitro] ◐ Building [Nitro] (preset: cloudflare-module, compatibility: 2026-07-19)
+[nitro] ✔ Generated public dist/client
+vite v7.3.2 building nitro environment for production...
+Unknown input options: platform. Allowed options: cache, context, experimentalCacheExpiry, experimentalLogSideEffects, external, fs, input, jsx, logLevel, makeAbsoluteExternalsRelative, maxParallelFileOps, moduleContext, onLog, onwarn, perf, plugins, preserveEntrySignatures, preserveSymlinks, shimMissingExports, strictDeprecations, treeshake, watch
+transforming...
+node_modules/@tanstack/react-router/dist/esm/index.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/index.js" was ignored.
+node_modules/@radix-ui/react-dialog/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-dialog/dist/index.mjs" was ignored.
+node_modules/sonner/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/sonner/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-progress/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-progress/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-label/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-label/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-select/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-select/dist/index.mjs" was ignored.
+node_modules/@tanstack/react-router/dist/esm/Match.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/Match.js" was ignored.
+node_modules/@radix-ui/react-checkbox/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-checkbox/dist/index.mjs" was ignored.
+node_modules/@tanstack/react-router/dist/esm/ClientOnly.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/ClientOnly.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/useNavigate.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/useNavigate.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/useRouterState.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/useRouterState.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/useBlocker.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/useBlocker.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/useLocation.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/useLocation.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/RouterProvider.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/RouterProvider.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/HeadContent.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/HeadContent.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/CatchBoundary.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/CatchBoundary.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/useMatch.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/useMatch.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/useRouter.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/useRouter.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/Asset.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/Asset.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/link.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/link.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/Matches.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/Matches.js" was ignored.
+node_modules/@radix-ui/react-tabs/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-tabs/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-scroll-area/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-scroll-area/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-dropdown-menu/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-dropdown-menu/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-alert-dialog/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-alert-dialog/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-popover/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-popover/dist/index.mjs" was ignored.
+node_modules/cmdk/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/cmdk/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-dismissable-layer/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-dismissable-layer/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-portal/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-portal/dist/index.mjs" was ignored.
+node_modules/@tanstack/react-query/build/modern/useQueries.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/useQueries.js" was ignored.
+node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js" was ignored.
+node_modules/@tanstack/react-query/build/modern/useIsFetching.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/useIsFetching.js" was ignored.
+node_modules/@tanstack/react-query/build/modern/HydrationBoundary.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/HydrationBoundary.js" was ignored.
+node_modules/@tanstack/react-query/build/modern/QueryErrorResetBoundary.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/QueryErrorResetBoundary.js" was ignored.
+node_modules/@tanstack/react-query/build/modern/useInfiniteQuery.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/useInfiniteQuery.js" was ignored.
+node_modules/@tanstack/react-query/build/modern/useMutationState.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/useMutationState.js" was ignored.
+node_modules/@tanstack/react-query/build/modern/IsRestoringProvider.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/IsRestoringProvider.js" was ignored.
+node_modules/@tanstack/react-query/build/modern/useQuery.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/useQuery.js" was ignored.
+node_modules/@tanstack/react-query/build/modern/useMutation.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/useMutation.js" was ignored.
+node_modules/@radix-ui/react-focus-scope/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-focus-scope/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-focus-guards/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-focus-guards/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-collection/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-collection/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-popper/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-popper/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-presence/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-presence/dist/index.mjs" was ignored.
+node_modules/@tanstack/react-query/build/modern/useSuspenseQueries.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/useSuspenseQueries.js" was ignored.
+node_modules/@tanstack/react-query/build/modern/useSuspenseQuery.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/useSuspenseQuery.js" was ignored.
+node_modules/@tanstack/react-query/build/modern/useSuspenseInfiniteQuery.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/useSuspenseInfiniteQuery.js" was ignored.
+node_modules/lucide-react/dist/esm/context.mjs (2:0): Module level directives cause errors when bundled, "use client" in "node_modules/lucide-react/dist/esm/context.mjs" was ignored.
+node_modules/lucide-react/dist/esm/Icon.mjs (2:0): Module level directives cause errors when bundled, "use client" in "node_modules/lucide-react/dist/esm/Icon.mjs" was ignored.
+node_modules/@tanstack/react-router/dist/esm/matchContext.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/matchContext.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/utils.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/utils.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/routerContext.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/routerContext.js" was ignored.
+node_modules/@tanstack/react-router/dist/esm/Transitioner.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-router/dist/esm/Transitioner.js" was ignored.
+node_modules/@radix-ui/react-radio-group/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-radio-group/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-collapsible/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-collapsible/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-tooltip/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-tooltip/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-roving-focus/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-roving-focus/dist/index.mjs" was ignored.
+node_modules/@radix-ui/react-menu/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@radix-ui/react-menu/dist/index.mjs" was ignored.
+node_modules/@tanstack/react-query/build/modern/errorBoundaryUtils.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/errorBoundaryUtils.js" was ignored.
+node_modules/@tanstack/react-query/build/modern/useBaseQuery.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/useBaseQuery.js" was ignored.
+error: script "build" was terminated by signal SIGTERM (Polite quit request)
