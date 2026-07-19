@@ -39,10 +39,17 @@ export class CreateProcessAction implements AIAction {
     const input = context as CreateProcessInput;
     const user = (context as any)._user;
     
+    console.log('CreateProcessAction DEBUG Execute Start:', { 
+      processId: input.processId, 
+      hasUser: !!user,
+      inputKeys: Object.keys(input)
+    });
+
     if (!user) {
       console.log('CreateProcessAction ERROR: User context missing', { contextKeys: Object.keys(context) });
       throw new Error("User context missing in execute");
     }
+
 
 
     console.log('CreateProcessAction Start profile check for user:', user.id);
