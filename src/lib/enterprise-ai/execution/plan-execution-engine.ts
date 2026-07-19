@@ -80,6 +80,9 @@ export class PlanExecutionEngine {
         const isRecoverable = result.metadata?.errorCode === 'MATERIALIZATION_FAILED' || result.metadata?.errorCode === 'VISIBILITY_FAILED';
         const newState: PlanStatus = isRecoverable ? "RECOVERABLE_FAILED" : "FAILED";
         
+        console.log(`PlanExecutionEngine: Step ${nextStep.stepId} failed. Recoverable: ${isRecoverable}. New state: ${newState}`);
+
+        
         return sessionManager.updateSession(sessionId, {
           state: newState,
           failedSteps: [...session.failedSteps, nextStep.stepId],
