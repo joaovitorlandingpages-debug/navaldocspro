@@ -2,7 +2,7 @@ import { ActionRegistry } from '../action-registry';
 import { ActionValidator } from '../security/action-validator';
 import { PermissionGuard } from '../security/permission-guard';
 import { SecurityContext } from '../security/permission-types';
-import { ActionStatus, ActionError } from '../action-types';
+import { ActionStatus } from '../action-types';
 import { ExecutionContext } from './execution-context';
 import { ExecutionResult } from './execution-result';
 import { auditLogger } from '../audit/audit-logger';
@@ -15,7 +15,6 @@ import {
   ActionPermissionDeniedError,
   ActionExecutionError 
 } from './execution-errors';
-// ID generation using built-in crypto or fallback
 
 export class ActionExecutor {
   constructor(
@@ -80,8 +79,7 @@ export class ActionExecutor {
         }
       }
 
-
-      // 2. Audit Start (Enterprise Audit Logger Integration)
+      // 2. Audit Start
       try {
         await auditLogger.logStart({
           executionId,
@@ -98,7 +96,7 @@ export class ActionExecutor {
         console.warn('Audit start failed, continuing action execution:', auditError);
       }
 
-      // 3. Build Context (Strictly using authContext for identity/tenant)
+      // 3. Build Context
       const context: ExecutionContext = {
         executionId,
         requestId: options.requestId || this.generateId(),
@@ -111,8 +109,7 @@ export class ActionExecutor {
         metadata: input.metadata
       };
 
-      // 3. ActionValidator (Coordinates everything including security check internally if implemented that way)
-      // Note: In Sprint 4.2 ActionValidator calls PermissionGuard.
+      // 4. Validation & Permissions
       const validation = await this.validator.validate(actionId, authContext, input);
       if (!validation.success) {
         if (validation.status === 'PERMISSION_DENIED' || validation.status === 'ROLE_DENIED' || validation.status === 'AUTH_REQUIRED') {
@@ -121,22 +118,16 @@ export class ActionExecutor {
         throw new ActionValidationError(validation.errors || ['Validation failed']);
       }
 
-      // 4. Double check PermissionGuard explicitly if needed by requirements
-      // Requirement: "PermissionGuard is executed after the Validator."
-      // In Sprint 4.2 ActionValidator already does this, but for strict pipeline adherence:
       const security = this.guard.validateContext(authContext, action.requiredPermissions, action.requiredRole);
       if (!security.success) {
         throw new ActionPermissionDeniedError(security.errors?.[0]);
       }
 
-      // 5. Handle Confirmation Token if present
+      // 5. Handle Confirmation Token
       let confirmationMetadata = {};
       if (input.confirmationToken) {
         try {
-          // Prepare sensitive payload for hash comparison
-          // We exclude the token itself and other non-functional metadata
           const { confirmationToken, metadata, executionId: _, ...sensitivePayload } = input;
-          
           const confirmation = await confirmationService.validateAndConsume(
             input.confirmationToken,
             sensitivePayload,
@@ -151,7 +142,6 @@ export class ActionExecutor {
             payloadHashMatched: true
           };
         } catch (confError: any) {
-          // Wrap and rethrow as validation error or specific confirmation error
           throw confError;
         }
       }
@@ -180,8 +170,7 @@ export class ActionExecutor {
           msg: innerError.message 
         });
 
-        // CRITICAL: We MUST preserve the error code for the outer catch block
-        // Re-throwing as a PLAIN OBJECT to prevent any prototype loss during re-throw
+        // RE-THROWING AS PLAIN ERROR with forced properties
         const normalizedError: any = new Error(innerError.message || 'Recovery stage failed');
         normalizedError.errorCode = innerErrorCode || 'ACTION_EXECUTION_ERROR';
         normalizedError.code = normalizedError.errorCode;
@@ -189,27 +178,10 @@ export class ActionExecutor {
         normalizedError.isActionError = true;
         normalizedError.name = 'ActionExecutionError';
 
-        console.log('ActionExecutor Catch Normalization (Normalized Error Object):', { 
-          errorCode: normalizedError.errorCode, 
-          processId: normalizedError.processId 
-        });
-
         throw normalizedError;
       }
 
-
-
-
-
-
-
-
-
-
-
-
-
-      // 6.1 Update Idempotency Record if success
+      // 7. Success Finalization
       if (idempotencyRecordId && result.success) {
         await idempotencyService.update(idempotencyRecordId, {
           status: 'completed',
@@ -221,7 +193,6 @@ export class ActionExecutor {
       const finishedAt = new Date();
       const durationMs = finishedAt.getTime() - startedAt.getTime();
 
-      // Audit Success
       try {
         await auditLogger.logSuccess(executionId, {
           finishedAt,
@@ -242,7 +213,7 @@ export class ActionExecutor {
         startedAt,
         finishedAt,
         durationMs,
-        data: result.metadata, // Following ActionResult pattern
+        data: result.metadata,
         warnings: result.warnings,
         errors: result.errors,
         metadata: result.metadata
@@ -264,7 +235,6 @@ export class ActionExecutor {
         isActionError: error.isActionError
       });
 
-
       if (error instanceof ActionNotFoundError) {
         status = ActionStatus.FAILED;
       } else if (error instanceof ActionValidationError) {
@@ -274,11 +244,8 @@ export class ActionExecutor {
         status = ActionStatus.PERMISSION_DENIED;
       } else if (error instanceof BaseConfirmationRequiredError || error.code === 'CHECKLIST_CONFIRMATION_REQUIRED') {
         status = ActionStatus.FAILED; 
-      } else if (error.isActionError || (error.errorCode && error.errorCode !== 'ACTION_EXECUTION_ERROR')) {
-        status = ActionStatus.FAILED;
       }
 
-      // Audit Failure & Idempotency Update
       try {
         if (idempotencyRecordId) {
           const isRecoverable = errorCode === 'MATERIALIZATION_FAILED' || errorCode === 'VISIBILITY_FAILED';
@@ -304,7 +271,6 @@ export class ActionExecutor {
           durationMs,
           metadata: { errorCode, processId: error.processId }
         });
-
       } catch (auditError) {
         console.warn('Audit failure log failed:', auditError);
       }
@@ -327,7 +293,6 @@ export class ActionExecutor {
       };
     }
   }
-
 
   private generateId(): string {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
