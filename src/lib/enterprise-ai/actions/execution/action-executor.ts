@@ -235,6 +235,15 @@ export class ActionExecutor {
       const durationMs = finishedAt.getTime() - startedAt.getTime();
       
       const errorCode = error.errorCode || error.code || (error._isWrapped ? error.errorCode : 'ACTION_EXECUTION_ERROR');
+      
+      console.log('ActionExecutor DEBUG - Raw errorCode extraction:', {
+        fromErrorCode: error.errorCode,
+        fromCode: error.code,
+        isWrapped: error._isWrapped,
+        wrappedErrorCode: error._isWrapped ? error.errorCode : undefined,
+        final: errorCode
+      });
+
       let status = error.status || ActionStatus.FAILED;
       let errors = [error.message || 'Unknown execution error'];
 
