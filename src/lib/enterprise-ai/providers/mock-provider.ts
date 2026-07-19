@@ -1,4 +1,5 @@
 import { AIExecutionContext, AIResponse, AgentDefinition, ToolExecutionResult } from "../core/ai-types";
+import { PromptBuilder } from "../prompts/prompt-builder";
 
 export interface AIProvider {
   generateResponse(
@@ -18,6 +19,10 @@ export class MockProvider implements AIProvider {
   ): Promise<AIResponse> {
     const start = Date.now();
     
+    // Build prompt (for audit/telemetry simulation)
+    const prompt = PromptBuilder.build(agent, context, message, toolResults);
+    // console.log("[EACC-Prompt]", prompt); // Silent for now
+
     // Deterministic mock logic based on tool results
     let answer = "Entendido. ";
     const executedTools = toolResults.map(tr => ({
