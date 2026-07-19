@@ -611,7 +611,7 @@ Esses dados devem ser derivados da sessão autenticada.
 
 Saída:
 
-{
+{`{
   "answer": "...",
   "agent": "...",
   "tools": [],
@@ -619,7 +619,7 @@ Saída:
   "suggestedActions": [],
   "executionId": "...",
   "durationMs": 0
-}
+}`}
 
 Implementar tratamento consistente para:
 
