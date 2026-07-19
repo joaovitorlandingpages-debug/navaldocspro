@@ -119,8 +119,9 @@ export class CreateProcessAction implements AIAction {
         } as any)
         .select("id, status").single();
 
-      if (processError) throw new ProcessCreationError(processError.message);
+      if (processError || !process) throw new ProcessCreationError(processError?.message || "Process insertion failed");
       const processId = process.id;
+
 
       // REUSE EXISTING LOGIC: Materialize Blueprint
       try {
