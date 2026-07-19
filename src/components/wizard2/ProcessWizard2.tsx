@@ -174,6 +174,17 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
         console.warn("Blueprint materialization failed, but process was created", e);
       }
 
+      // 5. Smart Process Analyzer: Automatic Technical Analysis
+      try {
+        await runProcessAnalysis({
+          processId,
+          companyId: profile.company_id,
+          wizardSessionId: sessionId || undefined
+        });
+      } catch (e) {
+        console.warn("Smart Process Analysis failed, but process was created", e);
+      }
+
       // Confirm visibility and notify
       const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
       notifyProcessesChanged(visibleProcess);
