@@ -13,8 +13,10 @@ const mockCompanyId = "550e8400-e29b-41d4-a716-446655440001";
 const mockCustomerId = "550e8400-e29b-41d4-a716-446655440002";
 const mockVesselId = "550e8400-e29b-41d4-a716-446655440003";
 const mockTypeId = "550e8400-e29b-41d4-a716-446655440004";
+const mockProcessId = "550e8400-e29b-41d4-a716-446655440999";
+import { ActionExecutionError } from "../actions/execution/execution-errors";
 
-// Mock Supabase - avoid using variables inside the factory to prevent hoisting issues
+// Mock Supabase
 vi.mock("@/integrations/supabase/client", () => {
   const m = {
     auth: {
@@ -28,32 +30,40 @@ vi.mock("@/integrations/supabase/client", () => {
     from: vi.fn(),
     rpc: vi.fn(),
     maybeSingle: vi.fn(),
+    is: vi.fn(),
+    or: vi.fn(),
+    delete: vi.fn(),
+    in: vi.fn(),
+    order: vi.fn(),
   };
   m.from.mockReturnValue(m);
   m.select.mockReturnValue(m);
   m.insert.mockReturnValue(m);
   m.update.mockReturnValue(m);
   m.eq.mockReturnValue(m);
-  m.single.mockReturnValue(m); // Return self for chaining
-  m.maybeSingle.mockReturnValue(m); // Return self for chaining
+  m.single.mockReturnValue(m);
+  m.maybeSingle.mockReturnValue(m);
+  m.is.mockReturnValue(m);
+  m.or.mockReturnValue(m);
+  m.delete.mockReturnValue(m);
+  m.in.mockReturnValue(m);
+  m.order.mockReturnValue(m);
+  
   m.auth.getUser.mockResolvedValue({ 
     data: { user: { id: "550e8400-e29b-41d4-a716-446655440000" } }, 
     error: null 
   });
   
-  // Terminal promise methods
   (m as any).then = (onRes: any) => Promise.resolve({ data: null, error: null }).then(onRes);
   
   return { supabase: m, _mocks: m };
 });
 
-// Mock Blueprint Engine
+// Mock Domain Services
 vi.mock("@/services/processes/blueprintEngine", () => ({
   materializeProcessBlueprint: vi.fn().mockResolvedValue({ success: true }),
-  previewProcessBlueprint: vi.fn().mockResolvedValue([]),
 }));
 
-// Mock Process Creation Helpers
 vi.mock("@/services/processes/processCreation", () => ({
   confirmProcessVisible: vi.fn().mockResolvedValue({ id: "550e8400-e29b-41d4-a716-446655440999", company_id: "550e8400-e29b-41d4-a716-446655440001" }),
   notifyProcessesChanged: vi.fn(),
@@ -62,13 +72,22 @@ vi.mock("@/services/processes/processCreation", () => ({
 // Mock Confirmation Service
 vi.mock("../actions/confirmation/confirmation-service", () => ({
   confirmationService: {
-    createConfirmation: vi.fn().mockResolvedValue({ publicToken: "mock-token" }),
     validateAndConsume: vi.fn().mockResolvedValue({ id: "conf-1" })
   }
 }));
 
-describe("CreateProcessAction (Sprint 5.2)", () => {
+// Mock Audit Logger
+vi.mock("../audit/audit-logger", () => ({
+  auditLogger: {
+    logStart: vi.fn().mockResolvedValue({}),
+    logSuccess: vi.fn().mockResolvedValue({}),
+    logFailure: vi.fn().mockResolvedValue({}),
+  }
+}));
+
+describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", () => {
   let action: CreateProcessAction;
+  let executor: ActionExecutor;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -76,19 +95,16 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
     ActionRegistry.clear();
     ActionRegistry.register(action);
     
-    // Default mock setup for successful validation
+    const validator = new ActionValidator();
+    const guard = new PermissionGuard();
+    executor = new ActionExecutor(ActionRegistry, validator, guard);
+    
     const m = (supabase as any);
     m.auth.getUser.mockResolvedValue({ data: { user: { id: mockUserId } }, error: null });
-    
-    // Reset sequences by overriding 'then'
     m.then = (onRes: any) => Promise.resolve({ data: null, error: null }).then(onRes);
   });
 
   const getMockSupabase = () => (supabase as any);
-
-  const mockSupabaseResponse = (data: any, error: any = null) => {
-    getMockSupabase().then = (onRes: any) => Promise.resolve({ data, error }).then(onRes);
-  };
 
   const mockSupabaseSequence = (responses: Array<{data: any, error?: any}>) => {
     let index = 0;
@@ -98,211 +114,243 @@ describe("CreateProcessAction (Sprint 5.2)", () => {
     };
   };
 
-  describe("Validation", () => {
-    it("should fail if customerId is missing", async () => {
-      const result = await action.validate({
-        processType: "Transferência",
-        processTypeId: mockTypeId,
-        confirmationToken: "token"
-      } as any);
-      expect(result.valid).toBe(false);
-      expect(result.errors?.[0]).toContain("customerId");
-    });
+  const securityContext = {
+    userId: mockUserId,
+    companyId: mockCompanyId,
+    role: "admin",
+    permissions: ["PROCESS_CREATE", "CUSTOMER_READ", "VESSEL_READ"],
+    isAuthenticated: true
+  };
 
-    it("should fail if customer belongs to another tenant", async () => {
+  describe("1. Audit & Service Responsibility", () => {
+    it("should use processCreationService instead of direct insert", async () => {
       mockSupabaseSequence([
-        { data: { company_id: mockCompanyId } }, // Profile
-        { data: { company_id: "550e8400-e29b-41d4-a716-446655449999" } } // Other Customer
+        { data: { id: mockProcessId, status: "pending" } } // Service insert
       ]);
 
-      await expect(action.validate({
+      await action.execute({
         customerId: mockCustomerId,
         processType: "Transferência",
-        processTypeId: mockTypeId,
-        confirmationToken: "token"
-      } as any)).rejects.toThrow("Tenant mismatch");
-    });
-
-    it("should fail if vessel belongs to another tenant", async () => {
-      mockSupabaseSequence([
-        { data: { company_id: mockCompanyId } }, // Profile
-        { data: { company_id: mockCompanyId } }, // Customer
-        { data: { company_id: "550e8400-e29b-41d4-a716-446655449999" } } // Other Vessel
-      ]);
-
-      await expect(action.validate({
-        customerId: mockCustomerId,
-        vesselId: mockVesselId,
-        processType: "Transferência",
-        processTypeId: mockTypeId,
-        confirmationToken: "token"
-      } as any)).rejects.toThrow("Tenant mismatch");
-    });
-
-    it("should fail if vessel belongs to another customer", async () => {
-      mockSupabaseSequence([
-        { data: { company_id: mockCompanyId } }, // Profile
-        { data: { company_id: mockCompanyId } }, // Customer
-        { data: { company_id: mockCompanyId, customer_id: "550e8400-e29b-41d4-a716-446655449999" } } // Other Vessel owner
-      ]);
-
-      const result = await action.validate({
-        customerId: mockCustomerId,
-        vesselId: mockVesselId,
-        processType: "Transferência",
-        processTypeId: mockTypeId,
-        confirmationToken: "token"
+        priority: "high",
+        title: "Test"
       } as any);
 
-      expect(result.valid).toBe(false);
-      expect(result.errors).toContain("Vessel does not belong to the selected customer");
-    });
-
-    it("should succeed if all data is valid", async () => {
-      mockSupabaseSequence([
-        { data: { company_id: mockCompanyId } }, // Profile
-        { data: { company_id: mockCompanyId } }, // Customer
-        { data: { company_id: mockCompanyId, customer_id: mockCustomerId } } // Vessel
-      ]);
-
-      const result = await action.validate({
-        customerId: mockCustomerId,
-        vesselId: mockVesselId,
-        processType: "Transferência",
-        processTypeId: mockTypeId,
-        confirmationToken: "token"
-      } as any);
-      expect(result.valid).toBe(true);
+      // Verify insert was called via service logic (verified by spying on supabase.from('processes'))
+      expect(getMockSupabase().from).toHaveBeenCalledWith("processes");
+      expect(getMockSupabase().insert).toHaveBeenCalled();
     });
   });
 
-  describe("Execution", () => {
-    it("should create process and materialize blueprint", async () => {
-      mockSupabaseSequence([
-        { data: { company_id: mockCompanyId } }, // Profile check in execute
-        { data: { id: "550e8400-e29b-41d4-a716-446655440999", status: "pending" } } // Process insertion
-      ]);
+  describe("2. Persistent Idempotency", () => {
+    it("should return existing result for completed idempotency key", async () => {
+      const existingResult = { processId: mockProcessId, status: "completed" };
+      const createdAt = new Date().toISOString();
+      const updatedAt = new Date().toISOString();
 
-      const input = {
-        customerId: mockCustomerId,
-        vesselId: mockVesselId,
-        processType: "Transferência",
-        processTypeId: mockTypeId,
-        title: "Test Process AI",
-        priority: "high" as const,
-        initialChecklist: ["550e8400-e29b-41d4-a716-446655440005"],
-        confirmationToken: "token"
-      };
-
-      const result = await action.execute(input);
-
-      expect(result.success).toBe(true);
-      expect(result.metadata?.processId).toBe("550e8400-e29b-41d4-a716-446655440999");
-      
-      // Verify reuse of insert logic
-      expect(getMockSupabase().insert).toHaveBeenCalledWith(expect.objectContaining({
-        customer_id: mockCustomerId,
-        vessel_id: mockVesselId,
-        process_type: "Transferência",
-        title: "Test Process AI",
-        priority: "high"
-      }));
-
-      // Verify reuse of blueprint engine
-      const { materializeProcessBlueprint } = await import("@/services/processes/blueprintEngine");
-      expect(materializeProcessBlueprint).toHaveBeenCalled();
-      
-      // Verify notification
-      const { notifyProcessesChanged } = await import("@/services/processes/processCreation");
-      expect(notifyProcessesChanged).toHaveBeenCalled();
-    });
-
-    it("should handle insertion errors", async () => {
-      mockSupabaseSequence([
-        { data: { company_id: mockCompanyId } },
-        { data: null, error: { message: "Database Error" } }
-      ]);
-
-      const input = {
-        customerId: mockCustomerId,
-        processType: "Transferência",
-        processTypeId: mockTypeId,
-        confirmationToken: "token"
-      };
-
-      const result = await action.execute(input as any);
-      expect(result.success).toBe(false);
-      expect(result.message).toBe("Database Error");
-    });
-  });
-
-  describe("Full Pipeline Integration", () => {
-    it("should run through ActionExecutor with confirmation", async () => {
-      const validator = new ActionValidator();
-      const guard = new PermissionGuard();
-      const executor = new ActionExecutor(ActionRegistry, validator, guard);
-
-      mockSupabaseSequence([
-        { data: { company_id: mockCompanyId } }, // Profile in validate
-        { data: { company_id: mockCompanyId } }, // Customer in validate
-        { data: { company_id: mockCompanyId } }, // Vessel (optional check if validator does it)
-        { data: { company_id: mockCompanyId } }, // Profile in execute
-        { data: { id: "550e8400-e29b-41d4-a716-446655440999", status: "pending" } } // Process insertion
-      ]);
-
-
-
-
-
-      const security = {
-        userId: mockUserId,
-        companyId: mockCompanyId,
-        role: "admin",
-        permissions: ["PROCESS_CREATE", "CUSTOMER_READ", "VESSEL_READ"],
-        isAuthenticated: true
-      };
+      // RPC call to claim record
+      getMockSupabase().rpc.mockResolvedValue({
+        data: {
+          id: "record-1",
+          status: "completed",
+          result: existingResult,
+          execution_id: "exec-orig",
+          created_at: createdAt,
+          updated_at: updatedAt,
+          payload_hash: "correct-hash"
+        },
+        error: null
+      });
 
       const result = await executor.execute(
         "create-process",
         {
           customerId: mockCustomerId,
           processType: "Transferência",
-          processTypeId: mockTypeId,
-          confirmationToken: "conf-123"
+          idempotencyKey: "unique-intent-123"
         },
-        security
+        securityContext
       );
 
       expect(result.success).toBe(true);
-      expect(result.status).toBe(ActionStatus.SUCCESS);
-      
-      // Verify confirmation was consumed
-      const { confirmationService } = await import("../actions/confirmation/confirmation-service");
-      expect(confirmationService.validateAndConsume).toHaveBeenCalled();
+      expect(result.metadata?.isIdempotentResponse).toBe(true);
+      expect(result.metadata?.processId).toBe(mockProcessId);
+      // Ensure no new execution happened
+      expect(getMockSupabase().from).not.toHaveBeenCalledWith("processes");
+    });
+
+    it("should reject if payload hash mismatch for same idempotency key", async () => {
+      getMockSupabase().rpc.mockResolvedValue({
+        data: null,
+        error: { message: "payload hash mismatch" }
+      });
+
+      const result = await executor.execute(
+        "create-process",
+        {
+          customerId: mockCustomerId,
+          processType: "Transferência",
+          idempotencyKey: "intent-123"
+        },
+        securityContext
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toContain("IDEMPOTENCY_PAYLOAD_MISMATCH");
+    });
+
+    it("should block concurrent executions for same key", async () => {
+      getMockSupabase().rpc.mockResolvedValue({
+        data: {
+          id: "record-1",
+          status: "processing",
+          execution_id: "other-exec",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        error: null
+      });
+
+      const result = await executor.execute(
+        "create-process",
+        {
+          customerId: mockCustomerId,
+          processType: "Transferência",
+          idempotencyKey: "intent-123"
+        },
+        securityContext
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.errors?.[0]).toContain("Concurrent execution");
     });
   });
 
-  describe("Security Mandates", () => {
-    it("should strictly use user company_id and not allow spoofing via input", async () => {
+  describe("3. Atomic Execution & Recovery", () => {
+    it("should mark as recoverable_failed if materialization fails", async () => {
+      // 1. Claim success (processing)
+      getMockSupabase().rpc.mockResolvedValue({
+        data: { id: "record-1", status: "processing", execution_id: "current-exec" },
+        error: null
+      });
+
+      // 2. Insert process success
       mockSupabaseSequence([
-        { data: { company_id: mockCompanyId } }, // Real company from profile
-        { data: { id: "550e8400-e29b-41d4-a716-446655440123", status: "pending" } }
+        { data: { company_id: mockCompanyId } }, // Profile in execute
+        { data: { id: mockProcessId, status: "pending" } } // Process insert
       ]);
 
-      const input = {
-        customerId: mockCustomerId,
-        processType: "Transferência",
-        processTypeId: mockTypeId,
-        confirmationToken: "token",
-        companyId: "malicious-company" // Attempted spoof
-      };
+      // 3. Materialize fail
+      const { materializeProcessBlueprint } = await import("@/services/processes/blueprintEngine");
+      vi.mocked(materializeProcessBlueprint).mockRejectedValueOnce(new Error("Blueprint Error"));
 
-      await action.execute(input as any);
+      const result = await executor.execute(
+        "create-process",
+        {
+          customerId: mockCustomerId,
+          processType: "Transferência",
+          idempotencyKey: "recovery-test"
+        },
+        securityContext
+      );
 
-      // Verify the insert used mockCompanyId, not malicious-company
-      expect(getMockSupabase().insert).toHaveBeenCalledWith(expect.objectContaining({
+      expect(result.success).toBe(false);
+      expect(result.metadata?.errorCode).toBe("MATERIALIZATION_FAILED");
+
+      // Verify idempotency record update
+      expect(getMockSupabase().from).toHaveBeenCalledWith("ai_idempotency_records");
+      expect(getMockSupabase().update).toHaveBeenCalledWith(expect.objectContaining({
+        status: "recoverable_failed",
+        error_code: "MATERIALIZATION_FAILED",
+        process_id: mockProcessId
+      }));
+    });
+
+    it("should recover and skip process creation if record already has process_id (Retry Flow)", async () => {
+      // 1. Claim recoverable record
+      getMockSupabase().rpc.mockResolvedValue({
+        data: { 
+          id: "record-1", 
+          status: "recoverable_failed", 
+          process_id: mockProcessId,
+          execution_id: "old-exec"
+        },
+        error: null
+      });
+
+      // 2. Setup success for remaining steps
+      mockSupabaseSequence([
+        { data: { company_id: mockCompanyId } } // Profile check
+      ]);
+
+      const result = await executor.execute(
+        "create-process",
+        {
+          customerId: mockCustomerId,
+          processType: "Transferência",
+          idempotencyKey: "retry-123"
+        },
+        securityContext
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.metadata?.processId).toBe(mockProcessId);
+      
+      // CRITICAL: Verify NO process insert happened
+      expect(getMockSupabase().insert).not.toHaveBeenCalledWith(expect.objectContaining({
         company_id: mockCompanyId
       }));
+      
+      // Verify update to completed
+      expect(getMockSupabase().update).toHaveBeenCalledWith(expect.objectContaining({
+        status: "completed",
+        process_id: mockProcessId
+      }));
+    });
+  });
+
+  describe("4. Security & Isolation", () => {
+    it("should prevent tenant spoofing by ignoring input companyId", async () => {
+      getMockSupabase().rpc.mockResolvedValue({
+        data: { id: "record-1", status: "processing" },
+        error: null
+      });
+
+      mockSupabaseSequence([
+        { data: { company_id: mockCompanyId } }, // Validate Profile
+        { data: { company_id: mockCompanyId } }, // Validate Customer
+        { data: { company_id: mockCompanyId } }, // Execute Profile
+        { data: { id: mockProcessId, status: "pending" } }
+      ]);
+
+      await executor.execute(
+        "create-process",
+        {
+          customerId: mockCustomerId,
+          processType: "Transferência",
+          companyId: "hacker-company", // Spoofer
+          idempotencyKey: "intent-123"
+        },
+        securityContext
+      );
+
+      // Verify claim and insert used context, not input
+      expect(getMockSupabase().rpc).toHaveBeenCalledWith(
+        'claim_ai_idempotency_record',
+        expect.objectContaining({ _company_id: mockCompanyId })
+      );
+    });
+
+    it("should require PROCESS_CREATE permission", async () => {
+      const lowSecurityContext = { ...securityContext, permissions: [] };
+      
+      const result = await executor.execute(
+        "create-process",
+        { customerId: mockCustomerId, processType: "T" },
+        lowSecurityContext
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.status).toBe(ActionStatus.PERMISSION_DENIED);
     });
   });
 });

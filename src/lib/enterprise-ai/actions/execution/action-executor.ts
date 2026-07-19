@@ -7,6 +7,7 @@ import { ExecutionContext } from './execution-context';
 import { ExecutionResult } from './execution-result';
 import { auditLogger } from '../audit/audit-logger';
 import { confirmationService } from '../confirmation/confirmation-service';
+import { idempotencyService } from './idempotency-service';
 import { ConfirmationRequiredError as BaseConfirmationRequiredError } from '../confirmation/confirmation-errors';
 import { 
   ActionNotFoundError, 
@@ -31,12 +32,51 @@ export class ActionExecutor {
   ): Promise<ExecutionResult> {
     const startedAt = new Date();
     const executionId = this.generateId();
+    let idempotencyRecordId: string | undefined;
     
     try {
       // 1. Fetch action
       const action = this.registry.get(actionId);
       if (!action) {
         throw new ActionNotFoundError(actionId);
+      }
+
+      // 1.1 Handle Idempotency
+      if (input.idempotencyKey) {
+        const { idempotencyKey, ...payload } = input;
+        const record = await idempotencyService.claim({
+          idempotencyKey,
+          payload,
+          executionId,
+          actionId,
+          companyId: authContext.companyId,
+          userId: authContext.userId
+        });
+
+        idempotencyRecordId = record.id;
+
+        if (record.status === 'completed') {
+          return {
+            success: true,
+            status: ActionStatus.SUCCESS,
+            executionId: record.executionId,
+            actionId,
+            startedAt: new Date(record.createdAt),
+            finishedAt: new Date(record.updatedAt),
+            durationMs: new Date(record.updatedAt).getTime() - new Date(record.createdAt).getTime(),
+            data: record.result,
+            metadata: { ...record.result, isIdempotentResponse: true }
+          };
+        }
+
+        if (record.status === 'processing' && record.executionId !== executionId) {
+          throw new ActionExecutionError('Concurrent execution in progress for this idempotency key');
+        }
+
+        // Recovery: if record is recoverable_failed and has process_id, inject it into input
+        if (record.status === 'recoverable_failed' && record.processId) {
+          input = { ...input, processId: record.processId };
+        }
       }
 
       // 2. Audit Start (Enterprise Audit Logger Integration)
@@ -117,6 +157,15 @@ export class ActionExecutor {
       // 6. Execute
       const result = await action.execute({ ...input, ...context, ...confirmationMetadata, input });
 
+      // 6.1 Update Idempotency Record if success
+      if (idempotencyRecordId && result.success) {
+        await idempotencyService.update(idempotencyRecordId, {
+          status: 'completed',
+          result: result.metadata,
+          processId: result.metadata?.processId
+        });
+      }
+
       const finishedAt = new Date();
       const durationMs = finishedAt.getTime() - startedAt.getTime();
 
@@ -149,7 +198,7 @@ export class ActionExecutor {
 
     } catch (error: any) {
       const finishedAt = new Date();
-      let status = ActionStatus.FAILED;
+      let status = error.status || ActionStatus.FAILED;
       let errors = [error.message || 'Unknown execution error'];
 
       if (error instanceof ActionNotFoundError) {
@@ -166,6 +215,15 @@ export class ActionExecutor {
 
       // Audit Failure
       try {
+        if (idempotencyRecordId) {
+          const isRecoverable = error.code === 'MATERIALIZATION_FAILED' || error.code === 'VISIBILITY_FAILED';
+          await idempotencyService.update(idempotencyRecordId, {
+            status: isRecoverable ? 'recoverable_failed' : 'failed',
+            errorCode: error.code || 'UNKNOWN_ERROR',
+            processId: (error as any).processId
+          });
+        }
+
         await auditLogger.logFailure(executionId, {
           error: errors,
           finishedAt,
