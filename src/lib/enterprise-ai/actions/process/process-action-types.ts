@@ -1,5 +1,13 @@
 import { z } from "zod";
-import { ActionError } from "../action-types";
+// import { ActionError } from "../action-types";
+
+export class ActionError extends Error {
+  constructor(public message: string, public code: string) {
+    super(message);
+    this.name = 'ActionError';
+  }
+}
+
 
 export const CreateProcessInputSchema = z.object({
   customerId: z.string().uuid(),
