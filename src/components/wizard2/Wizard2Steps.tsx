@@ -34,19 +34,28 @@ function StepHeader({ title, description, icon: Icon }: { title: string, descrip
   );
 }
 
-// --- Step 1: Client ---
+// --- Step 2: Client (Previously Step 1) ---
 
 export function StepClient() {
-  const { customerId, setData, companyId, clearStepData } = useWizardStore();
+  const { customerId, setData, companyId, ocrData } = useWizardStore();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [favorites, setFavorites] = useState<any[]>([]);
 
+  // Auto-populate from OCR if available
+  useEffect(() => {
+    if (ocrData.extractedFields?.customerName && !customerId && !query) {
+      setQuery(ocrData.extractedFields.customerName);
+      toast.info(`Busca sugerida pela IA: ${ocrData.extractedFields.customerName}`, {
+        description: "Encontramos este nome nos documentos enviados."
+      });
+    }
+  }, [ocrData.extractedFields?.customerName]);
+
   useEffect(() => {
     const loadFavorites = async () => {
       if (!companyId) return;
-      // Simulação de favoritos: clientes com processos recentes
       const { data } = await supabase
         .from('processes')
         .select('customer:customers(id, name, cpf_cnpj, phone, city)')
@@ -83,11 +92,15 @@ export function StepClient() {
   }, [query, companyId]);
 
   const handleCreateNew = async () => {
-    const name = window.prompt("Nome do novo cliente:");
+    const name = window.prompt("Nome do novo cliente:", ocrData.extractedFields?.customerName || "");
     if (!name || !companyId) return;
     const { data, error } = await supabase
       .from('customers')
-      .insert({ name, company_id: companyId })
+      .insert({ 
+        name, 
+        company_id: companyId,
+        cpf_cnpj: ocrData.extractedFields?.customerCpfCnpj || null
+      })
       .select().single();
     if (error) toast.error("Erro ao criar cliente");
     else {
@@ -98,11 +111,18 @@ export function StepClient() {
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <StepHeader 
-        title="Cliente" 
-        description="Quem é o responsável ou solicitante deste processo?" 
-        icon={User} 
-      />
+      <div className="flex justify-between items-start">
+        <StepHeader 
+          title="Revisão de Cliente" 
+          description="Confirme o responsável ou solicitante deste processo." 
+          icon={User} 
+        />
+        {ocrData.confidence > 0 && (
+          <Badge className="bg-blue-50 text-blue-600 border-none px-3 py-1 flex items-center gap-1 font-black text-[9px] uppercase">
+            <Sparkles className="h-3 w-3" /> IA Confiança: {Math.round(ocrData.confidence * 100)}%
+          </Badge>
+        )}
+      </div>
       
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
@@ -176,12 +196,13 @@ export function StepClient() {
           className="flex items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary hover:text-primary transition-all text-slate-500 font-bold text-sm bg-slate-50/30"
         >
           <UserPlus className="h-4 w-4" />
-          Novo Cliente
+          {ocrData.extractedFields?.customerName ? `Confirmar Novo: ${ocrData.extractedFields.customerName}` : 'Novo Cliente'}
         </button>
       </div>
     </div>
   );
 }
+
 
 // --- Step 2: Vessel ---
 
