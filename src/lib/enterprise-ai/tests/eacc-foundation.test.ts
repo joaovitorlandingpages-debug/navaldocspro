@@ -8,7 +8,12 @@ vi.mock('../tools/tool-registry', async (importOriginal) => {
   return {
     ...actual,
     ToolExecutor: {
-      execute: vi.fn()
+      execute: vi.fn().mockResolvedValue({
+        toolId: 'mock-tool',
+        success: true,
+        data: {},
+        durationMs: 1
+      })
     }
   };
 });
@@ -52,6 +57,13 @@ describe('EACC Foundation', () => {
   });
 
   it('should isolate tenants', async () => {
+     (ToolExecutor.execute as any).mockResolvedValue({
+        toolId: 'searchProcesses',
+        success: true,
+        data: [],
+        durationMs: 1
+     });
+
      await orchestrator.process(mockRequest);
      
      expect(ToolExecutor.execute).toHaveBeenCalledWith(
