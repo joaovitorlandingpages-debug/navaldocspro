@@ -235,10 +235,9 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
         error: null
       });
 
-      // 2. Insert process success
+      // 2. Setup profile success
       mockSupabaseSequence([
-        { data: { company_id: mockCompanyId } }, // Profile in execute
-        { data: { id: mockProcessId, status: "pending" } } // Process insert
+        { data: { company_id: mockCompanyId } } // Profile in execute
       ]);
 
       // 3. Materialize fail
