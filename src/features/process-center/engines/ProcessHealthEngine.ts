@@ -1,5 +1,4 @@
-import { computeHealthScore } from "@/services/documentation/healthEngine";
-import { getProcessDocumentStats, DocumentStats } from "../utils/processMetrics";
+import { DocumentStats } from "../utils/processMetrics";
 
 export interface HealthDimension {
   score: number;
@@ -23,62 +22,80 @@ export interface ProcessHealthReport {
   };
 }
 
+const HEALTH_CONFIG = {
+  WEIGHTS: {
+    DOCUMENTATION: 25,
+    CHECKLIST: 20,
+    OCR: 10,
+    SIGNATURES: 15,
+    DEADLINES: 10,
+    DATA_INTEGRITY: 10,
+    REVIEW: 10
+  }
+};
+
 /**
- * ProcessHealthEngine - Centralized logic for process health
+ * ProcessHealthEngine - Deterministic logic for process health v1.1
  */
 export class ProcessHealthEngine {
-  static async calculate(processId: string, stats: DocumentStats): Promise<ProcessHealthReport> {
+  static async calculate(processId: string, stats: DocumentStats, additionalData: any = {}): Promise<ProcessHealthReport> {
     const dimensions = {
       documentation: {
         score: stats.percentage,
-        weight: 25,
+        weight: HEALTH_CONFIG.WEIGHTS.DOCUMENTATION,
         status: (stats.percentage > 85 ? 'healthy' : stats.percentage > 60 ? 'attention' : 'risk') as any,
         causes: stats.totalBlocking > 0 ? [`${stats.totalBlocking} documentos obrigatórios ausentes`] : [],
         recommendedActions: stats.totalBlocking > 0 ? ["Anexe os documentos obrigatórios pendentes."] : []
       },
       checklist: {
-        score: 100, // TODO: Connect to real checklist status
-        weight: 20,
-        status: 'healthy' as any,
-        causes: [],
-        recommendedActions: []
+        score: additionalData.checklistScore ?? 100,
+        weight: HEALTH_CONFIG.WEIGHTS.CHECKLIST,
+        status: (additionalData.checklistScore > 85 ? 'healthy' : 'attention') as any,
+        causes: additionalData.checklistPending > 0 ? [`${additionalData.checklistPending} itens pendentes`] : [],
+        recommendedActions: additionalData.checklistPending > 0 ? ["Concluir itens obrigatórios"] : []
       },
       ocr: {
-        score: 100, // TODO: Connect to real ocr_extractions
-        weight: 10,
+        score: additionalData.ocrScore ?? 100,
+        weight: HEALTH_CONFIG.WEIGHTS.OCR,
         status: 'healthy' as any,
         causes: [],
         recommendedActions: []
       },
       signatures: {
-        score: 100, // TODO: Connect to real signature_requests
-        weight: 15,
+        score: additionalData.signaturesScore ?? 100,
+        weight: HEALTH_CONFIG.WEIGHTS.SIGNATURES,
         status: 'healthy' as any,
         causes: [],
         recommendedActions: []
       },
       deadlines: {
-        score: 100,
-        weight: 10,
+        score: additionalData.deadlinesScore ?? 100,
+        weight: HEALTH_CONFIG.WEIGHTS.DEADLINES,
         status: 'healthy' as any,
         causes: [],
         recommendedActions: []
       },
       dataIntegrity: {
-        score: 100,
-        weight: 10,
+        score: additionalData.integrityScore ?? 100,
+        weight: HEALTH_CONFIG.WEIGHTS.DATA_INTEGRITY,
         status: 'healthy' as any,
         causes: [],
         recommendedActions: []
       },
       review: {
         score: stats.totalPending > 0 ? 70 : 100,
-        weight: 10,
+        weight: HEALTH_CONFIG.WEIGHTS.REVIEW,
         status: (stats.totalPending > 0 ? 'attention' : 'healthy') as any,
         causes: stats.totalPending > 0 ? [`${stats.totalPending} documentos aguardando revisão`] : [],
         recommendedActions: stats.totalPending > 0 ? ["Revisar documentos pendentes"] : []
       }
     };
+
+    // Verify weight sum
+    const totalWeight = Object.values(dimensions).reduce((acc, d) => acc + d.weight, 0);
+    if (totalWeight !== 100) {
+        console.warn(`Health weight sum is ${totalWeight}, expected 100`);
+    }
 
     const overallScore = Math.round(
       Object.values(dimensions).reduce((acc, d) => acc + (d.score * d.weight / 100), 0)
@@ -87,7 +104,7 @@ export class ProcessHealthEngine {
     const status = overallScore > 85 ? 'healthy' : overallScore > 60 ? 'attention' : 'risk';
 
     return {
-      overallScore,
+      overallScore: Math.min(100, Math.max(0, overallScore)),
       status,
       dimensions
     };
