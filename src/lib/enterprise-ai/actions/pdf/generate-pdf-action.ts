@@ -22,9 +22,9 @@ export class GeneratePdfAction implements AIAction {
   estimatedRisk: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" = "LOW";
   estimatedDuration = 5;
 
-  async validate(context: { input: GeneratePdfInput; companyId: string }): Promise<{ valid: boolean; errors?: string[] }> {
-    const { processId } = context.input;
-    const { companyId } = context;
+  async validate(context: GeneratePdfInput & { companyId: string }): Promise<{ valid: boolean; errors?: string[] }> {
+    const { processId, companyId } = context;
+
 
     if (!processId) {
       return { valid: false, errors: ["processId is required"] };
