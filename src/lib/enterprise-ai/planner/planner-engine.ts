@@ -26,10 +26,13 @@ export class PlannerEngine {
     this.validateRequest(request);
 
     // 1. Discovery from ActionRegistry
-    const actions = ActionRegistry.list().filter(a => a.metadata.supportsPlanner && a.metadata.enabled);
+    const actions = ActionRegistry.list().filter(a => a && a.metadata && a.metadata.supportsPlanner && a.metadata.enabled);
     
     // 2. Intent Resolution (Declarative)
-    const resolvedActionIds = this.resolveIntent(request.intent);
+    const intentText = typeof request.intent === "string" ? request.intent : request.intent.originalText;
+    const resolvedActionIds = typeof request.intent === "string" 
+      ? this.resolveIntent(request.intent)
+      : request.intent.requestedActions;
     
     // 3. Expand with transitive dependencies
     const matchedActionIds = this.expandDependencies(resolvedActionIds, actions);
@@ -57,7 +60,7 @@ export class PlannerEngine {
 
     const plan: ExecutionPlan = {
       planId: uuidv4(),
-      intent: request.intent,
+      intent: intentText,
       steps,
       riskLevel,
       estimatedActions: steps.length,
@@ -67,16 +70,22 @@ export class PlannerEngine {
       userId: request.context.userId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      metadata: {},
+      metadata: typeof request.intent === "object" ? { structuredIntent: request.intent } : {},
     };
 
     return ExecutionPlanSchema.parse(plan);
   }
 
   private validateRequest(request: PlannerRequest) {
-    if (!request.intent || request.intent.trim().length === 0) {
+    const intent = request.intent;
+    if (!intent) {
       throw new PlannerError(PlannerErrorCodes.INVALID_INTENT, "Intent is required");
     }
+    
+    if (typeof intent === "string" && intent.trim().length === 0) {
+      throw new PlannerError(PlannerErrorCodes.INVALID_INTENT, "Intent text cannot be empty");
+    }
+    
     if (!request.context.userId || !request.context.companyId) {
       throw new PlannerError(PlannerErrorCodes.INVALID_TENANT, "User and Company context are required");
     }
