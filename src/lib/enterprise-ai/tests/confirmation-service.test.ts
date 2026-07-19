@@ -28,11 +28,25 @@ vi.mock('@/integrations/supabase/client', () => {
   m.insert.mockReturnValue(m);
   m.update.mockReturnValue(m);
   m.eq.mockReturnValue(m);
-  m.single.mockReturnValue(m); // Default to chaining
-  m.maybeSingle.mockReturnValue(m); // Default to chaining
+  m.single.mockReturnValue(m);
+  m.maybeSingle.mockReturnValue(m);
   
-  // Terminal methods return promises
-  (m as any).then = (onFullfilled: any) => Promise.resolve({ data: null, error: null }).then(onFullfilled);
+  // Terminal methods return promises - we use a getter to return a new promise each time
+  // but allow tests to override the final result via single/maybeSingle mocks
+  Object.defineProperty(m, 'then', {
+    get: () => (onFullfilled: any) => {
+      const result = m.single.mock.results.length > 0 
+        ? m.single.mock.results[m.single.mock.results.length - 1].value 
+        : Promise.resolve({ data: { id: 'default-id' }, error: null });
+      
+      // If result is 'm' (chaining), resolve with a default
+      if (result === m) {
+        return Promise.resolve({ data: { id: 'default-id' }, error: null }).then(onFullfilled);
+      }
+      return Promise.resolve(result).then(onFullfilled);
+    },
+    configurable: true
+  });
   
   return { supabase: m };
 });
