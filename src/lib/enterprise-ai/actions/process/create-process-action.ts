@@ -3,11 +3,7 @@ import { createActionResult } from "../action-result";
 import { 
   CreateProcessInput, 
   CreateProcessInputSchema, 
-  CustomerNotFoundError, 
-  VesselNotFoundError, 
-  ProcessCreationError, 
-  TenantMismatchError,
-  ActionError
+  ProcessCreationError,
 } from "./process-action-types";
 import { supabase } from "@/integrations/supabase/client";
 import { processCreationService } from "@/services/processes/process-creation-service";
@@ -19,14 +15,29 @@ export class CreateProcessAction implements AIAction {
   name = "Create Process";
   description = "Creates a new process with blueprint materialization and tenant isolation";
   
-  confirmationPolicy = ConfirmationPolicy.REQUIRED;
-  inputSchema = CreateProcessInputSchema;
+  requiredPermissions = ["PROCESS_CREATE"];
+  confirmationPolicy = ConfirmationPolicy.HIGH;
+  estimatedRisk = 'MEDIUM' as const;
+  estimatedDuration = 5;
 
-  async execute(input: CreateProcessInput, user: any): Promise<ActionResult> {
+  async validate(context: any): Promise<{ valid: boolean; errors?: string[] }> {
+    const result = CreateProcessInputSchema.safeParse(context);
+    if (!result.success) {
+      return { 
+        valid: false, 
+        errors: result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`) 
+      };
+    }
+    return { valid: true };
+  }
+
+  async execute(context: any): Promise<ActionResult> {
     const start = Date.now();
-    const { confirmationToken, ...context } = input;
-    const rawInput = input as any;
+    const input = context as CreateProcessInput;
+    const user = (context as any)._user; // ActionExecutor should provide this
     
+    if (!user) throw new Error("User context missing in execute");
+
     // 0. AUTH & TENANT CONTEXT
     const { data: profile } = await supabase
       .from("profiles")
@@ -37,20 +48,28 @@ export class CreateProcessAction implements AIAction {
     if (!profile) throw new Error("User profile not found");
 
     // 1. ATOMIC/IDEMPOTENT FLOW: Create or recover base process
-    let processId = (rawInput as any).processId;
+    let processId = (context as any).processId;
     let processStatus = 'pending';
 
     if (!processId) {
+      // Map priority
+      const priorityMap: Record<string, 'low' | 'medium' | 'high' | 'critical'> = {
+        'low': 'low',
+        'normal': 'medium',
+        'high': 'high',
+        'urgent': 'critical'
+      };
+
       const process = await processCreationService.createProcess({
         companyId: profile.company_id,
-        processType: context.processType,
-        processTypeId: context.processTypeId || (context as any).process_type_id,
-        customerId: context.customerId,
-        vesselId: context.vesselId,
-        title: context.title || context.processType,
-        description: context.description,
-        priority: context.priority,
-        metadata: context.metadata,
+        processType: input.processType,
+        processTypeId: input.processTypeId,
+        customerId: input.customerId,
+        vesselId: input.vesselId,
+        title: input.title || input.processType,
+        description: input.description,
+        priority: priorityMap[input.priority] || 'medium',
+        metadata: input.metadata,
       });
       processId = process.id;
       processStatus = process.status;
@@ -59,7 +78,7 @@ export class CreateProcessAction implements AIAction {
     // 2. Materialize Blueprint
     try {
       await materializeProcessBlueprint(processId, {
-        extraTemplateIds: context.initialChecklist || [],
+        extraTemplateIds: input.initialChecklist || [],
       });
     } catch (e: any) {
       const err = new ProcessCreationError(e.message || "Blueprint materialization failed", 'MATERIALIZATION_FAILED');
@@ -80,13 +99,13 @@ export class CreateProcessAction implements AIAction {
     return createActionResult({
       success: true,
       status: ActionStatus.SUCCESS,
-      message: `Process "${context.title || context.processType}" created successfully`,
+      message: `Process "${input.title || input.processType}" created successfully`,
       executionId: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'exec-' + Date.now(),
       duration: Date.now() - start,
       metadata: {
         processId,
-        customerId: context.customerId,
-        vesselId: context.vesselId,
+        customerId: input.customerId,
+        vesselId: input.vesselId,
         status: processStatus,
       }
     });
