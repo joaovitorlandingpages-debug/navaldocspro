@@ -62,7 +62,6 @@ export interface PlannerContext {
 }
 
 export interface PlannerRequest {
-  intent: string;
+  intent: string | import("../intent").StructuredIntent;
   context: PlannerContext;
-  structuredIntent?: any;
 }
