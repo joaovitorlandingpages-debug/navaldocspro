@@ -120,13 +120,13 @@ function EnterpriseProcessCenterPage() {
 
               <TabsContent value="assinaturas" className="mt-0">
                 <Suspense fallback={<Loader2 className="h-6 w-6 animate-spin mx-auto my-8" />}>
-                  <ProcessSignaturesPanel processId={id} companyId={process.company_id} />
+                  <ProcessSignaturesPanel processId={id} />
                 </Suspense>
               </TabsContent>
 
               <TabsContent value="timeline" className="mt-0">
                 <Suspense fallback={<Loader2 className="h-6 w-6 animate-spin mx-auto my-8" />}>
-                  <ProcessTimeline processId={id} />
+                  <ProcessTimeline events={[]} />
                 </Suspense>
               </TabsContent>
             </Tabs>
