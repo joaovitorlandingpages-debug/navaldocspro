@@ -24,7 +24,7 @@ export function calculateOverallRisk(steps: { actionId: string }[]): ActionRiskL
     return "HIGH";
   }
   if (risks.includes("MEDIUM")) {
-    if (risks.filter(r => r === "MEDIUM").length >= 3) return "HIGH";
+    if (risks.filter(r => r === "MEDIUM").length >= 2) return "HIGH";
     return "MEDIUM";
   }
   return "LOW";
