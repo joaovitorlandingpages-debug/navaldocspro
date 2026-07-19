@@ -175,7 +175,7 @@ export class CompleteChecklistAction implements AIAction {
           success: false,
           status: ActionStatus.FAILED,
           message: error.message,
-          executionId: input.executionId,
+          executionId: input.executionId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'exec-' + Date.now()),
           duration,
           errors: [error.message],
           metadata: { 
@@ -184,6 +184,7 @@ export class CompleteChecklistAction implements AIAction {
             summary: error.summary
           }
         });
+
       }
 
       return createActionResult({
