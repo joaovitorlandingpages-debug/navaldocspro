@@ -11,7 +11,12 @@ export function FeedbackButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
+  
+  // Exibir apenas em ambiente DEV ou para administradores
+  const isDev = import.meta.env.DEV;
+  const shouldShow = isDev || isAdmin;
+
   
   const [feedback, setFeedback] = useState({
     type: 'bug' as 'bug' | 'suggestion' | 'ux' | 'ocr_poor',
@@ -53,10 +58,10 @@ export function FeedbackButton() {
 
   return (
     <>
-      {!profile || window.location.pathname.startsWith('/auth') ? null : (
+      {!shouldShow || !profile || window.location.pathname.startsWith('/auth') ? null : (
         <button 
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-8 left-4 md:left-8 z-[80] bg-navy text-white p-4 rounded-full shadow-2xl hover:bg-navy/90 transition-all group"
+          className="fixed bottom-24 left-4 md:left-8 z-[80] bg-navy text-white p-4 rounded-full shadow-2xl hover:bg-navy/90 transition-all group lg:mb-0 mb-safe-area-inset-bottom"
         >
           <MessageSquare className="h-6 w-6" />
           <span className="absolute left-full ml-4 bg-navy text-white text-[10px] font-black uppercase tracking-widest py-2 px-4 rounded-xl opacity-0 md:group-hover:opacity-100 pointer-events-none transition-all whitespace-nowrap">
