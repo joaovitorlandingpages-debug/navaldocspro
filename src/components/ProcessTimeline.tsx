@@ -77,10 +77,11 @@ export function ProcessTimeline({ events }: { events: TimelineEvent[] }) {
       <div className="space-y-12 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-px before:bg-slate-200">
         {groupedEvents.length === 0 && (
           <div className="p-20 text-center border-2 border-dashed border-slate-100 rounded-[3rem]">
-            <History className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+            <HistoryIcon className="h-12 w-12 text-slate-200 mx-auto mb-4" />
             <p className="text-xs font-black text-slate-300 uppercase tracking-[0.2em]">Nenhum registro operacional encontrado</p>
           </div>
         )}
+
 
         {groupedEvents.map((group, groupIdx) => (
           <div key={groupIdx} className="space-y-8">
