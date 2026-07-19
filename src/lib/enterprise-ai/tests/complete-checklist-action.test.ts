@@ -38,8 +38,6 @@ vi.mock("../actions/confirmation/confirmation-service", () => ({
     validateAndConsume: vi.fn().mockResolvedValue({ id: "conf-1" })
   }
 }));
-  casUpdate: vi.fn(),
-}));
 
 describe("CompleteChecklistAction (Sprint 5.0)", () => {
   let action: CompleteChecklistAction;
