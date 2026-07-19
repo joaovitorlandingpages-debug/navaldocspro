@@ -257,7 +257,6 @@ export class ActionExecutor {
       } else if (error instanceof BaseConfirmationRequiredError || error.code === 'CHECKLIST_CONFIRMATION_REQUIRED') {
         status = ActionStatus.FAILED; 
       }
-      try {
       // Define effectiveErrorCode at the scope of the catch block
       const effectiveErrorCode = errorCode || error.errorCode || error.code || 'ACTION_EXECUTION_ERROR';
 
@@ -280,12 +279,11 @@ export class ActionExecutor {
           });
         }
 
-
         await auditLogger.logFailure(executionId, {
           error: errors,
           finishedAt,
           durationMs,
-          metadata: { errorCode, processId: error.processId }
+          metadata: { errorCode: effectiveErrorCode, processId: error.processId }
         });
       } catch (auditError) {
         console.warn('Audit failure log failed:', auditError);
@@ -303,13 +301,12 @@ export class ActionExecutor {
         metadata: { 
           errorCode: effectiveErrorCode, 
           processId: (error as any).processId || (input as any).processId,
-
           confirmationToken: (error as any).publicToken,
           summary: (error as any).summary
         }
       };
     }
-  }
+
 
   private generateId(): string {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
