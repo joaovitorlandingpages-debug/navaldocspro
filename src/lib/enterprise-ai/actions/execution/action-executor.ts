@@ -159,8 +159,12 @@ export class ActionExecutor {
         processId: input.processId || context.processId
       };
 
+      console.log('ActionExecutor Execute Call (Final Input):', { 
+        actionId, 
+        processId: inputWithContext.processId,
+        inputKeys: Object.keys(inputWithContext)
+      });
 
-      console.log('ActionExecutor Execute Call:', { actionId, processId: inputWithContext.processId });
       
       let result;
       try {
