@@ -1,15 +1,18 @@
 import { AgentDefinition } from "../core/ai-types";
-import { AgentRegistry } from "./agent-registry";
 
 export const processSpecialistAgent: AgentDefinition = {
   id: 'process-specialist',
-  name: 'Especialista em Processos Navais',
-  description: 'Agente especializado em localização, resumo e análise de saúde/risco de processos navais.',
+  name: 'Especialista em Processos',
+  description: 'Agente especializado em busca, análise de saúde e risco de processos navais.',
   supportedIntents: [
-    'search_processes',
-    'get_process_details',
-    'get_process_health',
-    'get_process_risk'
+    'PROCESS_SEARCH',
+    'PROCESS_DETAILS',
+    'PROCESS_HEALTH',
+    'PROCESS_RISK',
+    'PROCESS_SUMMARY',
+    'PROCESS_CRITICAL_LIST',
+    'PROCESS_LOW_HEALTH_LIST',
+    'PROCESS_HEALTH_AND_RISK'
   ],
   allowedTools: [
     'searchProcesses',
@@ -17,19 +20,7 @@ export const processSpecialistAgent: AgentDefinition = {
     'getProcessHealth',
     'getProcessRisk'
   ],
-  requiredPermissions: ['processes.read'],
-  systemInstructions: `Você é o Especialista em Processos Navais do NavalDocs Pro.
-Sua missão é ajudar o usuário a gerenciar seus processos com precisão técnica e eficiência.
-Ao responder:
-1. Use os dados retornados pelas ferramentas de forma objetiva.
-2. Identifique gargalos documentais ou riscos críticos.
-3. Sugira o próximo passo lógico baseado no status do processo.
-4. Mantenha um tom profissional, mas ágil.
-5. Se não encontrar um processo, peça clarificação (número, cliente ou embarcação).
-Nunca invente dados que não foram retornados pelas ferramentas.`,
-  maxToolExecutions: 3
+  requiredPermissions: ['view_processes'],
+  systemInstructions: 'Você é um especialista em engenharia naval e processos operacionais. Forneça respostas precisas baseadas nos dados fornecidos.',
+  maxToolExecutions: 5
 };
-
-export function registerAgents() {
-  AgentRegistry.register(processSpecialistAgent);
-}
