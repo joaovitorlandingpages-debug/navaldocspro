@@ -6,7 +6,9 @@ import {
   ExecutionPlanSchema 
 } from "./planner-types";
 import { PlannerError, PlannerErrorCodes } from "./planner-errors";
-import { calculateOverallRisk, RequiredPermissions } from "./planner-rules";
+import { calculateOverallRisk, ActionMetadata, DEFAULT_INTENT_RULES } from "./planner-rules";
+import { ActionRegistry } from "../actions/action-registry";
+import { ConfirmationPolicy } from "../actions/action-types";
 
 export class PlannerEngine {
   private static instance: PlannerEngine;
