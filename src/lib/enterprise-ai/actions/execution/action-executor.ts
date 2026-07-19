@@ -200,23 +200,6 @@ export class ActionExecutor {
         throw encodedError;
       }
 
-        
-        const metadataJson = JSON.stringify(metadata);
-        // Use a very specific marker and base64 to avoid character issues
-        const encodedMetadata = btoa(metadataJson);
-        const encodedError: any = new Error(`__AE_METADATA__${encodedMetadata}__${innerError.message || ''}`);
-        
-        // Keep properties for local access
-        encodedError.errorCode = metadata.errorCode;
-        encodedError.processId = metadata.processId;
-        
-        console.log('ActionExecutor Catch Normalization (Encoded):', { 
-          json: metadataJson,
-          encoded: encodedMetadata 
-        });
-
-        throw encodedError;
-      }
 
 
 
