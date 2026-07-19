@@ -106,8 +106,10 @@ export class ActionExecutor {
         conversationId: options.conversationId,
         provider: options.provider,
         startedAt,
-        metadata: input.metadata
+        metadata: input.metadata,
+        processId: input.processId
       };
+
 
       // 4. Validation & Permissions
       const validation = await this.validator.validate(actionId, authContext, input);
