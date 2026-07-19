@@ -176,8 +176,12 @@ describe("GeneratePdfAction (Sprint 4.4)", () => {
 
     const result = await executor.execute("generate-pdf", { processId: mockProcessId }, authContext);
 
+    if (!result.success) {
+      console.log("EXECUTION_ERROR:", JSON.stringify(result, null, 2));
+    }
     expect(result.success).toBe(true);
     expect(result.actionId).toBe("generate-pdf");
     expect(result.metadata?.documentId).toBe("doc-999");
+
   });
 });
