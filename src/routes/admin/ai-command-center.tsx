@@ -115,378 +115,381 @@ function AICommandCenterPage() {
         <Card className="p-8 border-slate-200 bg-white font-mono text-[11px] leading-relaxed shadow-sm">
           <ScrollArea className="h-[1200px] pr-4">
             <div className="space-y-12 whitespace-pre-wrap">
-              <section id="ts-visual-edit-probe-bbacb11511f6434d">
-                ENTERPRISE AI CORE
+              <section id="ts-visual-edit-probe-32a79a9ec5ca4364">
+                =========================================================
+NAVALDOCS PRO
+FASE 2
+SPRINT UX 1
 
-SPRINT 5.6
+PROCESS CREATION EXPERIENCE 2.0
 
-ENTERPRISE COPILOT
+"O MELHOR FLUXO DE ABERTURA DE PROCESSOS DO MUNDO"
+=========================================================
 
-==================================================
-OBJETIVO
-==================================================
+A partir desta Sprint o foco NÃO é criar funcionalidades novas.
 
-Criar o primeiro Enterprise Copilot oficial do sistema.
+O foco é transformar toda a experiência de criação de processos.
 
-O Copilot será apenas um orquestrador.
+Quero que qualquer engenheiro consiga abrir um processo completo em menos de 2 minutos.
 
-Ele NÃO executa regras de negócio.
+O sistema deve transmitir velocidade, organização, inteligência e simplicidade.
 
-Ele apenas conecta:
+=========================================================
+NÃO REMOVER NENHUMA FUNCIONALIDADE EXISTENTE
+=========================================================
 
-Intent Interpreter
+Todo o sistema atual deve continuar funcionando.
 
-↓
+Apenas reorganizar a experiência.
 
-Planner
+Não remover regras.
 
-↓
+Não remover validações.
 
-PlanExecutionEngine
+Não remover segurança.
 
-↓
+=========================================================
+NOVA EXPERIÊNCIA
+=========================================================
 
-ActionExecutor
+Toda criação de processo passa a acontecer em um Wizard moderno.
 
-↓
+Interface limpa.
 
-Business Actions
+Poucos campos por tela.
 
-==================================================
-NÃO ALTERAR
-==================================================
+Responsiva.
 
-Não modificar:
+Desktop e Mobile.
 
-- Planner
-- PlanExecutionEngine
-- ActionExecutor
-- Actions
-- PermissionGuard
-- ConfirmationService
-- IdempotencyService
+Salvar automaticamente o progresso.
 
-Apenas consumir essas camadas.
+=========================================================
+ETAPA 1
+CLIENTE
+=========================================================
 
-==================================================
-ARQUITETURA
-==================================================
+Pesquisar cliente em tempo real.
 
-Criar:
+Resultados instantâneos.
 
-src/lib/enterprise-ai/copilot/
+Mostrar:
 
-enterprise-copilot.ts
+• Nome
 
-copilot-session.ts
+• CPF/CNPJ
 
-copilot-context.ts
+• Telefone
 
-copilot-types.ts
+• Cidade
 
-copilot-errors.ts
+• Último processo
 
-copilot-response-builder.ts
+Botão:
 
-conversation-memory.ts
+➕ Novo Cliente
 
-conversation-validator.ts
+Sem sair do Wizard.
 
-index.ts
+Ao cadastrar:
 
-Criar testes:
+selecionar automaticamente.
 
-src/lib/enterprise-ai/tests/copilot.test.ts
+=========================================================
+ETAPA 2
+EMBARCAÇÃO
+=========================================================
 
-==================================================
-FLUXO
-==================================================
+Mostrar apenas embarcações daquele cliente.
 
-Mensagem
+Exibir:
 
-↓
+• Nome
 
-IntentInterpreter
+• Tipo
 
-↓
+• Número
 
-StructuredIntent
+• Última inspeção
 
-↓
+• Status
 
-Planner
+Botão:
 
-↓
+➕ Nova embarcação
 
-ExecutionPlan
+Cadastro rápido.
 
-↓
+Sem sair da tela.
 
-PlanExecutionEngine
+=========================================================
+ETAPA 3
+TIPO DE PROCESSO
+=========================================================
 
-↓
-
-Resultado
-
-↓
-
-Resposta ao usuário
-
-==================================================
-CONVERSA
-==================================================
-
-Criar sessões.
-
-Cada sessão deve possuir:
-
-sessionId
-
-userId
-
-companyId
-
-createdAt
-
-updatedAt
-
-conversationHistory
-
-lastIntent
-
-lastExecutionPlan
-
-lastExecutionResult
-
-==================================================
-MEMÓRIA
-==================================================
-
-Implementar memória curta.
-
-Exemplos:
-
-Usuário:
-
-"Crie um processo para João."
-
-Depois:
-
-"Gere o PDF."
-
-O Copilot deve compreender que o PDF pertence ao processo recém-criado.
-
-A memória deve existir apenas durante a sessão.
-
-==================================================
-RESPOSTAS
-==================================================
-
-Criar ResponseBuilder.
-
-Responder de forma natural.
-
-Exemplos:
-
-"Processo criado com sucesso."
-
-"Foram gerados 3 PDFs."
-
-"A assinatura foi enviada."
-
-"Não encontrei o cliente."
-
-"É necessária confirmação antes de continuar."
-
-==================================================
-CONFIRMAÇÃO
-==================================================
-
-Quando o plano entrar em:
-
-WAITING_CONFIRMATION
-
-Responder:
-
-"Confirma a execução desta ação?"
-
-Após confirmação:
-
-resume()
-
-==================================================
-CANCELAMENTO
-==================================================
-
-Permitir:
-
-"Cancelar."
-
-↓
-
-ExecutionEngine.cancel()
-
-==================================================
-ERROS
-==================================================
-
-Traduzir erros técnicos.
+Interface em cartões.
 
 Exemplo:
 
-MATERIALIZATION_FAILED
+🟦 Renovação
 
-↓
+🟩 Inspeção
 
-"Não foi possível concluir esta etapa. Você pode tentar novamente."
+🟨 Registro
 
-Nunca mostrar stacktrace.
+🟪 Transferência
 
-==================================================
-CONTEXTO
-==================================================
+🟥 Cancelamento
 
-Cada mensagem deve possuir:
+Cada cartão mostra:
 
-companyId
+• descrição
 
-userId
+• documentos necessários
 
-permissions
+• tempo estimado
 
-tenant
+=========================================================
+ETAPA 4
+CHECKLIST
+=========================================================
 
-locale
+Carregar automaticamente.
 
-timezone
+Mostrar progresso.
 
-==================================================
-SEGURANÇA
-==================================================
+Cada item deve indicar:
 
-O Copilot nunca:
+✔ concluído
 
-- concede permissões;
-- ignora PermissionGuard;
-- executa Action diretamente;
-- acessa banco diretamente.
+📷 precisa foto
 
-==================================================
-AUDITORIA
-==================================================
+📄 precisa PDF
 
-Registrar:
+🤖 pode usar OCR
 
-sessionId
+Permitir concluir rapidamente.
 
-userId
+=========================================================
+ETAPA 5
+DOCUMENTOS
+=========================================================
 
-companyId
+Interface extremamente visual.
 
-mensagem
+Cada documento como um card.
 
-intent
+Exibir:
 
-planId
+Status
 
-executionId
+Botão Fotografar
 
-resultado
+Botão Upload
 
-timestamp
+Botão OCR
 
-==================================================
+Preview
+
+=========================================================
+ETAPA 6
+REVISÃO
+=========================================================
+
+Mostrar tudo em uma única tela.
+
+Cliente
+
+Embarcação
+
+Processo
+
+Checklist
+
+Documentos
+
+Assinaturas
+
+PDFs
+
+Botão:
+
+CRIAR PROCESSO
+
+=========================================================
+BARRA DE PROGRESSO
+=========================================================
+
+Sempre visível.
+
+Exemplo:
+
+Cliente ✓
+
+Embarcação ✓
+
+Tipo ✓
+
+Checklist ✓
+
+Documentos 60%
+
+Revisão
+
+=========================================================
+PAINEL DO PROCESSO
+=========================================================
+
+Após criar.
+
+Abrir imediatamente.
+
+Layout moderno.
+
+Sem trocar de páginas.
+
+Tudo organizado em Cards.
+
+Cards:
+
+Resumo
+
+Cliente
+
+Embarcação
+
+Checklist
+
+OCR
+
+Documentos
+
+PDFs
+
+Assinaturas
+
+Timeline
+
+Comentários
+
+Histórico
+
+Auditoria
+
+=========================================================
+TIMELINE
+=========================================================
+
+Mostrar toda movimentação.
+
+Processo criado
+
+Documento enviado
+
+OCR concluído
+
+PDF gerado
+
+Assinatura enviada
+
+Assinatura concluída
+
+Finalização
+
+Tudo cronológico.
+
+=========================================================
+INTELIGÊNCIA
+=========================================================
+
+Sempre sugerir.
+
+Nunca executar automaticamente.
+
+Exemplos:
+
+"Falta o documento X."
+
+"Este certificado venceu."
+
+"Posso preencher estes dados?"
+
+=========================================================
+MOBILE
+=========================================================
+
+Toda experiência otimizada.
+
+Botões grandes.
+
+Poucos cliques.
+
+Uso com apenas uma mão.
+
+=========================================================
+PERFORMANCE
+=========================================================
+
+Transições rápidas.
+
+Pré-carregar dados.
+
+Evitar telas de carregamento.
+
+=========================================================
+ACESSIBILIDADE
+=========================================================
+
+Contraste adequado.
+
+Fontes legíveis.
+
+Ícones claros.
+
+=========================================================
 TESTES
-==================================================
+=========================================================
 
-Criar pelo menos 50 testes cobrindo:
+Validar:
 
-- conversa simples;
-- múltiplas mensagens;
-- memória;
-- confirmação;
-- cancelamento;
-- retomada;
-- erro recuperável;
-- erro definitivo;
-- permissões;
-- múltiplos usuários;
-- múltiplos tenants;
-- resposta natural;
-- tradução de erros;
-- auditoria;
-- contexto;
-- sessão encerrada;
-- sessão duplicada;
-- histórico;
-- integração completa.
+Desktop.
 
-==================================================
-TYPECHECK
-==================================================
+Tablet.
 
-Executar.
+Celular.
 
-==================================================
-BUILD
-==================================================
+Fluxo completo.
 
-Executar.
+Novo cliente.
 
-==================================================
-PROIBIDO
-==================================================
+Nova embarcação.
 
-Não criar IA paralela.
+Processo completo.
 
-Não duplicar Planner.
+Autosave.
 
-Não duplicar Executor.
+OCR.
 
-Não duplicar regras.
+Checklist.
 
-==================================================
-RELATÓRIO
-==================================================
+=========================================================
+IMPORTANTE
+=========================================================
 
-Apresentar:
+Não criar uma interface comum.
 
-- arquivos criados;
-- arquitetura;
-- fluxo completo;
-- memória;
-- gerenciamento de sessão;
-- ResponseBuilder;
-- integração;
-- testes;
-- typecheck;
-- build;
-- limitações.
+Criar uma experiência premium.
 
-==================================================
-STATUS
-==================================================
+Quero que um engenheiro abra o NavalDocs Pro pela primeira vez e consiga criar um processo intuitivamente, sem treinamento.
 
-Usar apenas:
+Toda decisão de UX deve priorizar:
 
-SPRINT 5.6 IMPLEMENTADA
-
-SPRINT 5.6 PARCIAL
-
-SPRINT 5.6 BLOQUEADA
-
-Somente considerar IMPLEMENTADA se:
-
-- utilizar exclusivamente o Intent Interpreter existente;
-- utilizar exclusivamente o Planner existente;
-- utilizar exclusivamente o PlanExecutionEngine existente;
-- utilizar exclusivamente o ActionExecutor existente;
-- memória funcionar;
-- confirmação funcionar;
-- cancelamento funcionar;
-- 50+ testes aprovados;
-- typecheck aprovado;
-- build aprovado.
+• menos cliques;
+• menos digitação;
+• mais velocidade;
+• mais clareza;
+• aparência premium;
+• sensação de software de última geração.
               </section>
             </div>
           </ScrollArea>
