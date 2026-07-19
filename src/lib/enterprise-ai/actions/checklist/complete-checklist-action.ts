@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { casUpdate } from "@/lib/optimisticLock";
 import { createActionResult } from "../action-result";
+import { confirmationService } from "../confirmation/confirmation-service";
 
 export class CompleteChecklistAction implements AIAction {
   id = "complete-checklist";
