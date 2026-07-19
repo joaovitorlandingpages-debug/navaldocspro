@@ -87,15 +87,19 @@ export class CreateProcessAction implements AIAction {
       });
     } catch (e: any) {
       console.log('CreateProcessAction Materialization ERROR catch block:', e.message);
-      const err = new ActionError(e.message || "Blueprint materialization failed", 'MATERIALIZATION_FAILED');
-      (err as any).processId = processId;
-      console.log('CreateProcessAction Materialization ERROR throw (ActionError):', { 
+      // RECOVERY: Throw a plain object to avoid prototype loss during Vite transform
+      const err: any = new Error(e.message || "Blueprint materialization failed");
+      err.errorCode = 'MATERIALIZATION_FAILED';
+      err.code = 'MATERIALIZATION_FAILED';
+      err.processId = processId;
+      err.isActionError = true;
+      console.log('CreateProcessAction Materialization ERROR throw (Normalized):', { 
         code: err.code, 
-        processId: (err as any).processId,
-        instanceOfActionError: err instanceof ActionError 
+        processId: err.processId 
       });
       throw err;
     }
+
 
 
     try {
