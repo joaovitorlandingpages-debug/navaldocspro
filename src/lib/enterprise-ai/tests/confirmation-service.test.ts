@@ -28,7 +28,12 @@ vi.mock('@/integrations/supabase/client', () => {
   m.insert.mockReturnValue(m);
   m.update.mockReturnValue(m);
   m.eq.mockReturnValue(m);
-  m.maybeSingle.mockReturnValue(Promise.resolve({ data: null, error: null }));
+  m.single.mockReturnValue(m); // Default to chaining
+  m.maybeSingle.mockReturnValue(m); // Default to chaining
+  
+  // Terminal methods return promises
+  (m as any).then = (onFullfilled: any) => Promise.resolve({ data: null, error: null }).then(onFullfilled);
+  
   return { supabase: m };
 });
 
