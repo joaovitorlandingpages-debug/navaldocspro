@@ -33,6 +33,7 @@ export const IntentRuleSchema = z.object({
   intentKeywords: z.array(z.string()),
   actionId: z.string(),
   priority: z.number().default(1),
+  requiresActions: z.array(z.string()).optional(), // Optional list of actions this intent *must* include
 });
 
 export type IntentRule = z.infer<typeof IntentRuleSchema>;
