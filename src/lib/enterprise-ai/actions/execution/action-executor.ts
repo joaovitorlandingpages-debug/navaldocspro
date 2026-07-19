@@ -258,9 +258,11 @@ export class ActionExecutor {
         status = ActionStatus.FAILED; 
       }
       try {
+      // Define effectiveErrorCode at the scope of the catch block
+      const effectiveErrorCode = errorCode || error.errorCode || error.code || 'ACTION_EXECUTION_ERROR';
+
+      try {
         if (idempotencyRecordId) {
-          // Normalization: Ensure we check both errorCode and code
-          const effectiveErrorCode = errorCode || error.errorCode || error.code;
           const isRecoverable = effectiveErrorCode === 'MATERIALIZATION_FAILED' || effectiveErrorCode === 'VISIBILITY_FAILED';
           const finalProcessId = (error as any).processId || (input as any).processId;
           
@@ -271,14 +273,13 @@ export class ActionExecutor {
             processId: finalProcessId
           });
 
-
           await idempotencyService.update(idempotencyRecordId, {
             status: isRecoverable ? 'recoverable_failed' : 'failed',
             errorCode: effectiveErrorCode,
             processId: finalProcessId
-
           });
         }
+
 
         await auditLogger.logFailure(executionId, {
           error: errors,
