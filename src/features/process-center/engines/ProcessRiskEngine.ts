@@ -22,7 +22,7 @@ export class ProcessRiskEngine {
 
     // Rule 1: Missing critical/blocking documents
     if (docStats.totalBlocking > 0) {
-      score += 40;
+      score += 70; // Guaranteed critical
       causes.push(`${docStats.totalBlocking} documentos obrigatórios ausentes`);
       impacts.push("Impedimento de protocolo na Capitania/DPC");
       recommendedActions.push("Anexar documentos obrigatórios imediatamente");
@@ -30,12 +30,20 @@ export class ProcessRiskEngine {
 
     // Rule 2: Low health score
     if (healthScore < 50) {
-      score += 30;
+      score += 50; // High risk at least
       causes.push(`Health Score crítico (${healthScore}%)`);
       impacts.push("Alta probabilidade de indeferimento");
       recommendedActions.push("Revisar integridade dos dados e documentos");
     } else if (healthScore < 80) {
-      score += 15;
+      score += 20;
+    }
+
+    // Rule 3: Rejected documents
+    if (docStats.totalRejected > 0) {
+        score += 30;
+        causes.push(`${docStats.totalRejected} documentos rejeitados`);
+        impacts.push("Atrasa a finalização do processo");
+        recommendedActions.push("Corrigir e reenviar documentos rejeitados");
     }
 
     // Determine Level
@@ -44,9 +52,8 @@ export class ProcessRiskEngine {
     else if (score >= 50) level = 'high';
     else if (score >= 20) level = 'medium';
     else if (score > 0) level = 'low';
-    else level = 'low';
 
-    // If we have no data at all (not even the process?), return not_evaluated
+    // If we have no data at all
     if (docStats.totalRequired === 0 && docStats.totalAttached === 0) {
         return {
             level: 'not_evaluated',
@@ -59,7 +66,7 @@ export class ProcessRiskEngine {
 
     return {
       level,
-      score,
+      score: Math.min(100, score),
       causes,
       impacts,
       recommendedActions
