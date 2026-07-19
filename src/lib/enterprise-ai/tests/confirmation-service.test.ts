@@ -165,6 +165,8 @@ describe('ConfirmationService (Sprint 5.0.1)', () => {
 
     const updateCall = (supabase.update as any).mock.calls[0][0];
     expect(updateCall.status).toBe(ConfirmationStatus.EXPIRED);
+  });
+
   it('9. Usuário diferente não pode confirmar', async () => {
     const { supabase } = await import('@/integrations/supabase/client');
     const mockConf = {
