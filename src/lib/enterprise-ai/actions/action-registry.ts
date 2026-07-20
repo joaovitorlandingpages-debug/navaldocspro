@@ -1,9 +1,10 @@
 import { NormalizeCustomerContactAction } from "./process/normalize-customer-contact";
+import { AssociateDocumentAction } from "./process/associate-document";
 import { AIAction } from "./action-types";
 
 class ActionRegistryImpl {
   private actions = new Map<string, AIAction>();
-  constructor() { this.register(new NormalizeCustomerContactAction()); }
+  constructor() { this.register(new NormalizeCustomerContactAction()); this.register(new AssociateDocumentAction()); }
 
   register(action: AIAction): void {
     this.actions.set(action.id, action);
