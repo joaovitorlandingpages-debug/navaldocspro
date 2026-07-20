@@ -7,137 +7,390 @@ export const Route = createFileRoute("/admin/ai-command-center")({
   component: AICommandCenter,
 });
 
-function AuditReport() {
-  const auditData = {
-    environment: {
-      framework: "TanStack Start v1",
-      react: "^19.2.0",
-      typescript: "v5.9.3",
-      database: "Supabase (Lovable Cloud)",
-      runtime: "Cloudflare Worker (nodejs_compat)",
-      date: "2026-07-20",
-    },
-    build: {
-      status: "SUCCESS",
-      duration: "42s",
-      warnings: 12,
-      errors: 0,
-      bundleSize: "1.4MB (main)",
-    },
-    metrics: {
-      rlsTables: 148,
-      grantStatements: 219,
-      indexes: 98,
-      foreignKeys: 1, 
-      tests: 21,
-    },
-    achados: [
-      { id: "P0-01", module: "Tenant Isolation", description: "GRANTs aplicados em 26 tabelas core e auxiliares", impact: "RESOLVIDO", correction: "Migration executada com sucesso em 2026-07-20" },
-      { id: "P1-01", module: "Action Engine", description: "Persistência real implementada em 'ai_action_audits' e 'ai_idempotency_records'", impact: "RESOLVIDO", correction: "Service layer atualizado para persistência real" },
-      { id: "P2-01", module: "Database", description: "Baixo número de Foreign Keys explícitas", impact: "INFO", correction: "Revisar schema em sprints futuras" },
-    ],
-  };
+function SprintP2Requirements() {
+  const requirements = `=========================================================
+NAVALDOCS PRO
+
+FASE 3
+
+SPRINT P2
+
+REGRESSÃO COMPLETA E CERTIFICAÇÃO PARA PILOTO
+
+"SE NÃO FOR TESTADO, NÃO EXISTE."
+
+=========================================================
+
+Os bloqueadores P0 e P1 foram considerados resolvidos.
+
+Esta Sprint NÃO deve criar novas funcionalidades.
+
+O objetivo é provar, com evidências, que todo o sistema funciona de ponta a ponta e está pronto para um piloto com clientes reais.
+
+=========================================================
+OBJETIVO
+
+Executar uma regressão completa do sistema.
+
+Validar todos os fluxos críticos.
+
+Detectar regressões.
+
+Emitir um parecer técnico baseado em evidências.
+
+=========================================================
+1. FLUXO COMPLETO
+
+Executar exatamente este fluxo:
+
+Login
+
+↓
+
+Criar cliente via OCR
+
+↓
+
+Criar embarcação via OCR
+
+↓
+
+Selecionar serviço
+
+↓
+
+Criar processo
+
+↓
+
+Workspace
+
+↓
+
+Smart Process Analyzer
+
+↓
+
+Resolver Action Engine
+
+↓
+
+Checklist
+
+↓
+
+Blueprint
+
+↓
+
+Gerar documentos
+
+↓
+
+Solicitar assinatura
+
+↓
+
+Assinar
+
+↓
+
+Gerar certificado
+
+↓
+
+Gerar dossiê
+
+↓
+
+Finalizar processo
+
+↓
+
+Confirmar imutabilidade
+
+Todos os passos devem funcionar sem intervenção manual fora do fluxo previsto.
+
+=========================================================
+2. TESTES NEGATIVOS
+
+Validar:
+
+✓ acesso entre tenants
+
+✓ usuário sem permissão
+
+✓ processo finalizado
+
+✓ clique duplo
+
+✓ retry
+
+✓ timeout
+
+✓ OCR interrompido
+
+✓ Edge Function indisponível
+
+✓ refresh durante OCR
+
+✓ refresh durante Action Engine
+
+✓ perda de internet
+
+✓ duas abas
+
+✓ dois operadores
+
+✓ upload duplicado
+
+✓ documento duplicado
+
+✓ customer duplicado
+
+✓ vessel duplicada
+
+=========================================================
+3. CONCORRÊNCIA
+
+Executar testes simultâneos.
+
+Validar:
+
+- CAS
+
+- optimistic locking
+
+- idempotência
+
+- Action Engine
+
+- OCR
+
+- uploads
+
+- assinatura
+
+Nenhuma operação pode gerar duplicidade.
+
+=========================================================
+4. PERFORMANCE
+
+Medir:
+
+Tempo login
+
+Tempo dashboard
+
+Tempo abrir Workspace
+
+Tempo OCR
+
+Tempo Analyzer
+
+Tempo Action Engine
+
+Tempo geração PDF
+
+Tempo assinatura
+
+Tempo dossiê
+
+Tempo finalização
+
+Comparar com baseline.
+
+=========================================================
+5. PLAYWRIGHT
+
+Executar novamente toda a suíte.
+
+Registrar:
+
+Total
+
+Passou
+
+Falhou
+
+Ignorados
+
+Tempo
+
+Screenshots
+
+Trace
+
+Vídeos
+
+=========================================================
+6. BUILD
+
+Executar:
+
+Build
+
+Typecheck
+
+Lint
+
+Testes unitários
+
+Integração
+
+Smoke
+
+Todos devem permanecer verdes.
+
+=========================================================
+7. SEGURANÇA
+
+Validar novamente:
+
+RLS
+
+Storage
+
+RPCs
+
+GRANTs
+
+Tenant Isolation
+
+Service Role
+
+Policies
+
+Nenhuma regressão.
+
+=========================================================
+8. OBSERVABILIDADE
+
+Confirmar:
+
+Logs
+
+Correlation ID
+
+Action Audits
+
+Idempotency Records
+
+OCR Jobs
+
+Analyzer
+
+Timeline
+
+Todos registrando corretamente.
+
+=========================================================
+9. PROCESSO FINALIZADO
+
+Após finalizar:
+
+Tentar:
+
+editar
+
+upload
+
+OCR
+
+Action Engine
+
+Checklist
+
+Blueprint
+
+Documentos
+
+Assinaturas
+
+Timeline
+
+Tudo deve obedecer às regras de imutabilidade.
+
+=========================================================
+10. RELATÓRIO FINAL
+
+Entregar:
+
+Arquivos alterados
+
+Testes executados
+
+Resultados
+
+Performance
+
+Regressões encontradas
+
+Problemas restantes
+
+Riscos conhecidos
+
+Limitações
+
+=========================================================
+11. CERTIFICAÇÃO
+
+Responder objetivamente:
+
+✓ Fluxo principal aprovado?
+
+✓ OCR aprovado?
+
+✓ Analyzer aprovado?
+
+✓ Action Engine aprovado?
+
+✓ Assinaturas aprovadas?
+
+✓ Dossiê aprovado?
+
+✓ Finalização aprovada?
+
+✓ Segurança aprovada?
+
+✓ Multi-tenant aprovado?
+
+✓ Performance aprovada?
+
+✓ Regressão zero?
+
+=========================================================
+12. PARECER FINAL
+
+Emitir apenas uma das opções:
+
+GO
+
+GO COM RESTRIÇÕES
+
+NO-GO
+
+A decisão deve ser baseada exclusivamente nos testes executados e nas evidências coletadas.
+
+Não declarar sucesso sem comprovação.
+
+=========================================================
+RESULTADO ESPERADO
+
+Ao final desta Sprint, o NavalDocs Pro deverá estar certificado para iniciar um piloto controlado com clientes reais, ou deverá apresentar claramente os pontos que ainda impedem essa liberação.
+=========================================================`;
 
   return (
-    <div className="space-y-12">
-      <Card className="p-8 border-slate-200 bg-slate-50 shadow-inner font-mono text-sm leading-relaxed">
-        <div className="flex justify-between items-start mb-6 border-b border-slate-200 pb-4">
-          <h2 className="text-lg font-black text-navy uppercase">RELATÓRIO DE AUDITORIA TÉCNICA — SPRINT P1</h2>
-          <Badge variant="outline" className="border-navy text-navy font-bold uppercase">BASELINE v1.0.0</Badge>
+    <div className="max-w-4xl mx-auto py-12 px-6">
+      <Card className="p-8 border-slate-200 bg-slate-50 shadow-inner font-mono text-sm leading-relaxed whitespace-pre-wrap">
+        <div id="ts-visual-edit-probe-291d40491cfb4d7b">
+          {requirements}
         </div>
-
-        <section className="mb-8">
-          <h3 className="font-black text-primary mb-2 uppercase">1. AMBIENTE & BUILD</h3>
-          <div className="grid grid-cols-2 gap-x-12 gap-y-1">
-            <p><span className="text-slate-500">Framework:</span> {auditData.environment.framework}</p>
-            <p><span className="text-slate-500">React:</span> {auditData.environment.react}</p>
-            <p><span className="text-slate-500">Build Status:</span> <span className="text-emerald-600 font-bold">✓ {auditData.build.status}</span></p>
-            <p><span className="text-slate-500">Build Duration:</span> {auditData.build.duration}</p>
-            <p><span className="text-slate-500">TS Version:</span> {auditData.environment.typescript}</p>
-            <p><span className="text-slate-500">Main Bundle:</span> {auditData.build.bundleSize}</p>
-          </div>
-        </section>
-
-        <section className="mb-8">
-          <h3 className="font-black text-primary mb-2 uppercase">2. SEGURANÇA & INFRA</h3>
-          <div className="grid grid-cols-2 gap-x-12 gap-y-1">
-            <p><span className="text-slate-500">RLS Active Tables:</span> {auditData.metrics.rlsTables}</p>
-            <p><span className="text-slate-500">Grant Statements:</span> {auditData.metrics.grantStatements}</p>
-            <p><span className="text-slate-500">DB Indexes:</span> {auditData.metrics.indexes}</p>
-            <p><span className="text-slate-500">Foreign Keys:</span> <span className="text-amber-600 font-bold">{auditData.metrics.foreignKeys}</span></p>
-          </div>
-        </section>
-
-        <section className="mb-8">
-          <h3 className="font-black text-primary mb-4 uppercase">3. TABELA DE ACHADOS (P0-P3)</h3>
-          <div className="border border-slate-200 rounded overflow-hidden">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead className="bg-slate-100 border-b border-slate-200 uppercase font-bold text-[10px]">
-                <tr>
-                  <th className="p-2 border-r border-slate-200">ID</th>
-                  <th className="p-2 border-r border-slate-200">Módulo</th>
-                  <th className="p-2 border-r border-slate-200">Descrição</th>
-                  <th className="p-2 border-r border-slate-200 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {auditData.achados.map((item) => (
-                  <tr key={item.id} className="border-b border-slate-200 hover:bg-white transition-colors">
-                    <td className="p-2 border-r border-slate-200 font-bold whitespace-nowrap">{item.id}</td>
-                    <td className="p-2 border-r border-slate-200">{item.module}</td>
-                    <td className="p-2 border-r border-slate-200">{item.description}</td>
-                    <td className={`p-2 font-bold text-center ${item.impact === 'RESOLVIDO' ? 'text-emerald-600' : 'text-slate-600'}`}>
-                      {item.impact}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section>
-          <h3 className="font-black text-primary mb-2 uppercase">4. PARECER TÉCNICO GO / NO-GO</h3>
-          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded">
-            <p className="font-bold text-emerald-800 uppercase mb-1">Status: GO</p>
-            <p className="text-emerald-700">
-              Bloqueadores P0 e P1 sanados. A persistência do Action Engine está operacional e as permissões de API (GRANTs) foram normalizadas para todas as tabelas do sistema.
-            </p>
-          </div>
-        </section>
       </Card>
-      
-      <div className="flex justify-center gap-4">
-        <div className="text-center p-6 border-2 border-dashed border-slate-300 rounded-xl max-w-md">
-          <CheckCircle2 className="h-8 w-8 text-emerald-400 mx-auto mb-2" />
-          <p className="text-slate-500 font-bold uppercase tracking-tighter">Lote A — Homologado</p>
-          <p className="text-xs text-slate-400 mt-1">Saneamento validado por Lovable Agent v3.0</p>
-        </div>
-      </div>
     </div>
   );
 }
 
 export function AICommandCenter() {
-  return (
-    <div className="max-w-7xl mx-auto py-12 px-6">
-      <div className="mb-12">
-        <div className="flex items-center gap-4 mb-3">
-          <div className="h-14 w-14 bg-navy rounded-2xl flex items-center justify-center shadow-2xl border border-white/10">
-            <Terminal className="h-8 w-8 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-black text-navy tracking-tighter uppercase italic">
-              Audit <span className="text-primary">Terminal</span>
-            </h1>
-            <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-widest px-4 py-1">
-              Sprint P1 — Production Hardening
-            </Badge>
-          </div>
-        </div>
-      </div>
-
-      <AuditReport />
-    </div>
-  );
+  return <SprintP2Requirements />;
 }
