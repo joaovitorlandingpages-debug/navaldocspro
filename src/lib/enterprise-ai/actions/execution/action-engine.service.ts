@@ -6,6 +6,7 @@ import { ActionValidator } from "../security/action-validator";
 import { PermissionGuard } from "../security/permission-guard";
 import { ExecutionResult } from "./execution-result";
 import { SecurityContext } from "../security/permission-types";
+import { auditLogger } from "../audit/audit-logger";
 
 /**
  * Action Engine Service
