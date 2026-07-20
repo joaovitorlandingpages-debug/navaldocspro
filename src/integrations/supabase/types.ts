@@ -273,6 +273,62 @@ export type Database = {
           },
         ]
       }
+      ai_idempotency_records: {
+        Row: {
+          action_id: string
+          company_id: string | null
+          created_at: string
+          error_code: string | null
+          execution_id: string
+          id: string
+          idempotency_key_hash: string
+          payload_hash: string
+          process_id: string | null
+          result: Json | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          action_id: string
+          company_id?: string | null
+          created_at?: string
+          error_code?: string | null
+          execution_id: string
+          id?: string
+          idempotency_key_hash: string
+          payload_hash: string
+          process_id?: string | null
+          result?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          action_id?: string
+          company_id?: string | null
+          created_at?: string
+          error_code?: string | null
+          execution_id?: string
+          id?: string
+          idempotency_key_hash?: string
+          payload_hash?: string
+          process_id?: string | null
+          result?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_idempotency_records_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_jobs_queue: {
         Row: {
           attempts: number | null
@@ -7003,6 +7059,37 @@ export type Database = {
           p_vessel_name?: string
         }
         Returns: Json
+      }
+      claim_ai_idempotency_record: {
+        Args: {
+          _action_id: string
+          _company_id: string
+          _execution_id: string
+          _idempotency_key_hash: string
+          _payload_hash: string
+          _user_id: string
+        }
+        Returns: {
+          action_id: string
+          company_id: string | null
+          created_at: string
+          error_code: string | null
+          execution_id: string
+          id: string
+          idempotency_key_hash: string
+          payload_hash: string
+          process_id: string | null
+          result: Json | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ai_idempotency_records"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       company_can_perform: {
         Args: { p_action: string; p_company_id: string }
