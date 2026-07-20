@@ -89,7 +89,12 @@ export function AICommandCenter() {
     <div className="max-w-7xl mx-auto py-12 px-6">
       <CommandCenterHeader />
       <CommandCenterStats />
-      <AuditRequirements />
+      <div className="mb-8">
+        <h2 className="text-xl font-black text-navy uppercase tracking-tighter mb-6 flex items-center gap-2">
+          <ShieldCheck className="h-6 w-6 text-primary" /> Core Engine Health
+        </h2>
+        <SystemHealthDetails />
+      </div>
     </div>
   );
 }
