@@ -9,57 +9,61 @@ export const Route = createFileRoute("/admin/ai-command-center")({
 
 function SprintP2Requirements() {
   const requirements = `=========================================================
-NAVALDOCS PRO
+SPRINT P2 REJEITADA
 
-FASE 3
+A atualização do terminal de auditoria não faz parte da Sprint P2.
 
-SPRINT P2
+A Sprint P2 é uma Sprint de EXECUÇÃO DE TESTES.
 
-REGRESSÃO COMPLETA E CERTIFICAÇÃO PARA PILOTO
+Não quero que o terminal seja atualizado.
 
-"SE NÃO FOR TESTADO, NÃO EXISTE."
+Não quero novos dashboards.
+
+Não quero novas telas.
+
+Não quero checklists.
+
+Não quero documentação adicional.
+
+=========================================================
+
+EXECUTE OS TESTES.
+
+Não descreva como serão feitos.
+
+Faça-os.
 
 =========================================================
 
-Os bloqueadores P0 e P1 foram considerados resolvidos.
+ENTREGUE SOMENTE:
 
-Esta Sprint NÃO deve criar novas funcionalidades.
+1. Resultado do Build
 
-O objetivo é provar, com evidências, que todo o sistema funciona de ponta a ponta e está pronto para um piloto com clientes reais.
+2. Resultado do TypeScript
 
-=========================================================
-OBJETIVO
+3. Resultado do Lint
 
-Executar uma regressão completa do sistema.
+4. Resultado dos testes unitários
 
-Validar todos os fluxos críticos.
+5. Resultado dos testes de integração
 
-Detectar regressões.
+6. Resultado do Playwright
 
-Emitir um parecer técnico baseado em evidências.
-
-=========================================================
-1. FLUXO COMPLETO
-
-Executar exatamente este fluxo:
+7. Resultado do fluxo completo:
 
 Login
 
 ↓
 
-Criar cliente via OCR
+OCR Cliente
 
 ↓
 
-Criar embarcação via OCR
+OCR Embarcação
 
 ↓
 
-Selecionar serviço
-
-↓
-
-Criar processo
+Criar Processo
 
 ↓
 
@@ -67,317 +71,104 @@ Workspace
 
 ↓
 
-Smart Process Analyzer
-
-↓
-
-Resolver Action Engine
-
-↓
-
-Checklist
-
-↓
-
-Blueprint
-
-↓
-
-Gerar documentos
-
-↓
-
-Solicitar assinatura
-
-↓
-
-Assinar
-
-↓
-
-Gerar certificado
-
-↓
-
-Gerar dossiê
-
-↓
-
-Finalizar processo
-
-↓
-
-Confirmar imutabilidade
-
-Todos os passos devem funcionar sem intervenção manual fora do fluxo previsto.
-
-=========================================================
-2. TESTES NEGATIVOS
-
-Validar:
-
-✓ acesso entre tenants
-
-✓ usuário sem permissão
-
-✓ processo finalizado
-
-✓ clique duplo
-
-✓ retry
-
-✓ timeout
-
-✓ OCR interrompido
-
-✓ Edge Function indisponível
-
-✓ refresh durante OCR
-
-✓ refresh durante Action Engine
-
-✓ perda de internet
-
-✓ duas abas
-
-✓ dois operadores
-
-✓ upload duplicado
-
-✓ documento duplicado
-
-✓ customer duplicado
-
-✓ vessel duplicada
-
-=========================================================
-3. CONCORRÊNCIA
-
-Executar testes simultâneos.
-
-Validar:
-
-- CAS
-
-- optimistic locking
-
-- idempotência
-
-- Action Engine
-
-- OCR
-
-- uploads
-
-- assinatura
-
-Nenhuma operação pode gerar duplicidade.
-
-=========================================================
-4. PERFORMANCE
-
-Medir:
-
-Tempo login
-
-Tempo dashboard
-
-Tempo abrir Workspace
-
-Tempo OCR
-
-Tempo Analyzer
-
-Tempo Action Engine
-
-Tempo geração PDF
-
-Tempo assinatura
-
-Tempo dossiê
-
-Tempo finalização
-
-Comparar com baseline.
-
-=========================================================
-5. PLAYWRIGHT
-
-Executar novamente toda a suíte.
-
-Registrar:
-
-Total
-
-Passou
-
-Falhou
-
-Ignorados
-
-Tempo
-
-Screenshots
-
-Trace
-
-Vídeos
-
-=========================================================
-6. BUILD
-
-Executar:
-
-Build
-
-Typecheck
-
-Lint
-
-Testes unitários
-
-Integração
-
-Smoke
-
-Todos devem permanecer verdes.
-
-=========================================================
-7. SEGURANÇA
-
-Validar novamente:
-
-RLS
-
-Storage
-
-RPCs
-
-GRANTs
-
-Tenant Isolation
-
-Service Role
-
-Policies
-
-Nenhuma regressão.
-
-=========================================================
-8. OBSERVABILIDADE
-
-Confirmar:
-
-Logs
-
-Correlation ID
-
-Action Audits
-
-Idempotency Records
-
-OCR Jobs
-
 Analyzer
 
-Timeline
-
-Todos registrando corretamente.
-
-=========================================================
-9. PROCESSO FINALIZADO
-
-Após finalizar:
-
-Tentar:
-
-editar
-
-upload
-
-OCR
+↓
 
 Action Engine
 
+↓
+
 Checklist
+
+↓
 
 Blueprint
 
+↓
+
 Documentos
 
-Assinaturas
+↓
 
-Timeline
+Assinatura
 
-Tudo deve obedecer às regras de imutabilidade.
+↓
 
-=========================================================
-10. RELATÓRIO FINAL
+Certificado
 
-Entregar:
+↓
 
-Arquivos alterados
+Dossiê
 
-Testes executados
+↓
 
-Resultados
+Finalização
 
-Performance
+↓
 
-Regressões encontradas
-
-Problemas restantes
-
-Riscos conhecidos
-
-Limitações
+Imutabilidade
 
 =========================================================
-11. CERTIFICAÇÃO
 
-Responder objetivamente:
+Executar também:
 
-✓ Fluxo principal aprovado?
+- testes negativos
 
-✓ OCR aprovado?
+- concorrência
 
-✓ Analyzer aprovado?
+- clique duplo
 
-✓ Action Engine aprovado?
+- retry
 
-✓ Assinaturas aprovadas?
+- timeout
 
-✓ Dossiê aprovado?
+- refresh
 
-✓ Finalização aprovada?
+- offline
 
-✓ Segurança aprovada?
+- dois operadores
 
-✓ Multi-tenant aprovado?
-
-✓ Performance aprovada?
-
-✓ Regressão zero?
+- isolamento entre tenants
 
 =========================================================
-12. PARECER FINAL
 
-Emitir apenas uma das opções:
+Ao final informar:
 
-GO
+PASSOU
 
-GO COM RESTRIÇÕES
+ou
 
-NO-GO
+FALHOU
 
-A decisão deve ser baseada exclusivamente nos testes executados e nas evidências coletadas.
-
-Não declarar sucesso sem comprovação.
+para cada fluxo.
 
 =========================================================
-RESULTADO ESPERADO
 
-Ao final desta Sprint, o NavalDocs Pro deverá estar certificado para iniciar um piloto controlado com clientes reais, ou deverá apresentar claramente os pontos que ainda impedem essa liberação.
+Se algum teste falhar:
+
+informar:
+
+- qual teste;
+
+- qual erro;
+
+- qual arquivo;
+
+- provável causa.
+
+=========================================================
+
+NÃO ALTERE O SISTEMA.
+
+NÃO CRIE NOVAS TELAS.
+
+NÃO MODIFIQUE O TERMINAL.
+
+NÃO DOCUMENTE A SPRINT.
+
+A Sprint P2 consiste exclusivamente em EXECUTAR E REPORTAR OS TESTES.
+
 =========================================================`;
 
   return (
