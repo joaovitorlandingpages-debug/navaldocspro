@@ -49,16 +49,16 @@ function AuditRequirements() {
           </h2>
           <div className="flex items-center gap-2">
             <Badge className="bg-navy text-white text-[10px] font-black tracking-widest uppercase">FASE 2</Badge>
-            <Badge className="bg-primary text-white text-[10px] font-black tracking-widest uppercase">SPRINT UX 4</Badge>
+            <Badge className="bg-primary text-white text-[10px] font-black tracking-widest uppercase">SPRINT UX 6</Badge>
           </div>
         </div>
 
         <div className="space-y-4">
           <h3 className="text-2xl font-black text-primary uppercase italic flex items-center gap-3">
-            <Zap className="h-6 w-6" /> SMART DOCUMENT ONBOARDING
+            <Zap className="h-6 w-6" /> ACTION ENGINE
           </h3>
           <p className="text-navy font-black text-lg leading-tight uppercase italic border-l-4 border-primary pl-4">
-            "O PROCESSO COMEÇA PELOS DOCUMENTOS"
+            "O ENGENHEIRO DIGITAL QUE RESOLVE"
           </p>
         </div>
 
@@ -68,13 +68,24 @@ function AuditRequirements() {
               <h4 className="font-black text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-emerald-500" /> OBJETIVO DA SPRINT
               </h4>
+              <p className="text-xs font-bold leading-relaxed mb-4">
+                Hoje o Smart Process Analyzer identifica problemas. Agora ele deve resolver automaticamente tudo aquilo que puder e pedir confirmação apenas quando houver uma decisão importante. O objetivo é eliminar o máximo possível de trabalho manual. O sistema deixa de apenas informar. Ele passa a EXECUTAR.
+              </p>
+              <h5 className="font-black text-[10px] uppercase tracking-widest text-primary mb-3">PRINCÍPIO</h5>
+              <p className="text-xs font-black text-navy italic mb-4 italic">"O que posso resolver automaticamente para você?"</p>
+              
               <ul className="space-y-3">
                 {[
-                  "Eliminar o cadastro manual como fluxo principal.",
-                  "O usuário não deve começar digitando nome, CPF ou dados da embarcação.",
-                  "O fluxo principal deve iniciar pelo envio dos documentos.",
-                  "A IA/OCR fará a leitura e o sistema preencherá automaticamente os cadastros.",
-                  "O usuário apenas revisa e confirma."
+                  "Catálogo de Ações Automáticas (Normalização, Atualização, Geração de Docs)",
+                  "Ações Sugeridas para Inconsistências (ex: Motor Divergente)",
+                  "Execução Guiada (Resolver agora / depois / não se aplica)",
+                  "Modo Um Clique: 'GERAR TODO O PROCESSO' quando tudo estiver correto",
+                  "Resolução em Lote de pendências",
+                  "Assistente Lateral no Workspace (Copilot Ativo)",
+                  "Ações Seguras: Garantir confirmação para alterações técnicas críticas",
+                  "Histórico de Execução (Audit Trail completa)",
+                  "Funcionalidade de Desfazer (Undo System)",
+                  "Performance em Background e Mobile Polish"
                 ].map((text, i) => (
                   <li key={i} className="flex gap-3 text-xs font-bold leading-relaxed">
                     <span className="text-primary">[{i + 1}]</span> {text}
@@ -85,26 +96,26 @@ function AuditRequirements() {
 
             <div className="bg-navy p-6 rounded-2xl border border-white/10 text-white">
               <h4 className="font-black text-sm uppercase tracking-widest mb-4 flex items-center gap-2 text-primary">
-                <Terminal className="h-4 w-4" /> REQUISITOS TÉCNICOS DE IMPLEMENTAÇÃO
+                <Terminal className="h-4 w-4" /> REQUISITOS TÉCNICOS
               </h4>
               <div className="grid md:grid-cols-2 gap-4 text-[10px] font-bold uppercase tracking-wider leading-relaxed opacity-90">
                 <div className="space-y-2">
-                  <p>1. OCR Extraction Engine Integration</p>
-                  <p>2. Confidence Levels & Fallback UI</p>
-                  <p>3. Duplicate checking against existing registry</p>
+                  <p>1. Action Registry & Dispatcher Pattern</p>
+                  <p>2. Transactional Rollback for Batch Operations</p>
+                  <p>3. Audit Log Persistence (Action History)</p>
                 </div>
                 <div className="space-y-2">
-                  <p>4. Automatic process creation from document metadata</p>
-                  <p>5. UI: Swap Wizard Step 1 (Documents) and Step 2 (Data)</p>
-                  <p>6. Real-time extraction status feedback</p>
+                  <p>4. Dynamic Suggestion Engine (Heuristics to Action mapping)</p>
+                  <p>5. UI: One-Click Materialization Logic</p>
+                  <p>6. Background Worker for non-blocking execution</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="pt-4 flex items-center gap-3 text-[10px] font-black text-primary uppercase animate-pulse">
-          <AlertTriangle className="h-4 w-4" /> AGUARDANDO EVIDÊNCIAS DE INTEGRAÇÃO OCR-FIRST
+        <div className="pt-4 flex items-center gap-3 text-[10px] font-black text-primary uppercase animate-pulse text-center w-full justify-center border-t border-primary/10">
+          <Zap className="h-4 w-4" /> A SENSAÇÃO FINAL: "QUANTO MENOS EU PRECISO CLICAR, MELHOR O NAVALDOCS TRABALHA PARA MIM."
         </div>
       </div>
     </Card>
