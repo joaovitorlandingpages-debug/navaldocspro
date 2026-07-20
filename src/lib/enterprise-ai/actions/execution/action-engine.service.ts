@@ -45,9 +45,22 @@ export class ActionEngineService {
   }): Promise<ExecutionResult> {
     const { actionId, input, authContext, findingId, analysisId, processId, requestId, conversationId } = args;
 
-    // 1. Initial State Persistence (DRAFT/QUEUED)
-    // In a real implementation, we would create a record in action_executions here.
-    // For now, the ActionExecutor handles auditing via auditLogger.
+    // 1. Initial State Persistence (PENDING)
+    const startedAt = new Date().toISOString();
+    try {
+      await auditLogger.logStart({
+        executionId: requestId || Math.random().toString(36).substring(7),
+        actionId,
+        actionName: actionId, // Registry will handle display name
+        userId: authContext.userId,
+        companyId: authContext.companyId,
+        processId,
+        conversationId,
+        metadata: input
+      });
+    } catch (auditError) {
+      console.warn('Audit start failed, continuing action execution:', auditError);
+    }
 
     // 2. Execute via ActionExecutor
     const result = await this.executor.execute(actionId, input, authContext, {
@@ -55,10 +68,9 @@ export class ActionEngineService {
       conversationId
     });
 
-    // 3. Post-execution logic
+    // 3. Post-execution logic (Persistence handled by ActionExecutor)
     if (result.success && result.data?.processId) {
-      // Logic to trigger re-analysis or update finding status
-      console.log(`Action ${actionId} succeeded. Triggering post-execution updates for process ${result.data.processId}`);
+      console.log(`Action ${actionId} succeeded for process ${result.data.processId}`);
     }
 
     return result;
