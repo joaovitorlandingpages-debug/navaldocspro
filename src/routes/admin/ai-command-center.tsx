@@ -42,80 +42,49 @@ function AuditRequirements() {
         <ShieldCheck className="h-32 w-32 text-primary" />
       </div>
       
-      <div className="relative z-10 space-y-6">
-        <div className="space-y-2">
-          <h2 className="text-3xl font-black text-navy leading-none uppercase italic">
-            NAVALDOCS PRO
-          </h2>
-          <div className="flex items-center gap-2">
-            <Badge className="bg-navy text-white text-[10px] font-black tracking-widest uppercase">FASE 2</Badge>
-            <Badge className="bg-primary text-white text-[10px] font-black tracking-widest uppercase">SPRINT UX 6</Badge>
+      <div className="relative z-10 space-y-6 text-navy">
+        <h2 className="text-3xl font-black uppercase italic leading-none">
+          Audit: <span className="text-primary">Action Engine</span>
+        </h2>
+        
+        <div className="space-y-4 font-bold text-xs">
+          <div className="p-4 bg-white/50 rounded-xl border border-primary/20">
+            <h3 className="font-black uppercase tracking-widest text-primary mb-2">Estrutura Enterprise AI Core</h3>
+            <p className="opacity-70">Detectada em: src/lib/enterprise-ai/</p>
+            <ul className="mt-2 space-y-1 opacity-90">
+              <li>✔ Planner Engine (src/lib/enterprise-ai/planner)</li>
+              <li>✔ Action Registry (src/lib/enterprise-ai/actions/action-registry.ts)</li>
+              <li>✔ Action Executor (src/lib/enterprise-ai/actions/execution/action-executor.ts)</li>
+              <li>✔ Idempotency Service (src/lib/enterprise-ai/actions/execution/idempotency-service.ts)</li>
+              <li>✔ Confirmation Service (src/lib/enterprise-ai/actions/confirmation/confirmation-service.ts)</li>
+            </ul>
+          </div>
+
+          <div className="p-4 bg-white/50 rounded-xl border border-primary/20">
+            <h3 className="font-black uppercase tracking-widest text-primary mb-2">Smart Process Analyzer</h3>
+            <p className="opacity-70">Ativo em: src/services/processAnalyzerService.ts</p>
+            <ul className="mt-2 space-y-1 opacity-90">
+              <li>✔ Tabela public.process_analyses persistida</li>
+              <li>✔ Detecção de OWNER_MISMATCH</li>
+              <li>✔ Verificação de validade de documentos</li>
+              <li>✔ Cálculo de Score de Qualidade</li>
+            </ul>
+          </div>
+
+          <div className="p-4 bg-navy text-white rounded-xl shadow-lg">
+            <h3 className="font-black uppercase tracking-widest text-primary mb-2">STATUS: SPRINT UX 6 EM ANDAMENTO</h3>
+            <p className="text-[10px] opacity-70 mb-2 italic">Implementando arquitura real do "Engenheiro Digital que Resolve"</p>
+            <ul className="space-y-1 text-[10px]">
+              <li>✔ ActionEngineService criado (Persistence & Orchestration)</li>
+              <li>✔ Action Registry populado com NormalizeContact e AssociateDocument</li>
+              <li>✔ ActionEngine Types definidos (Status, Risk, ExecutionRecords)</li>
+              <li>[ ] Integração com Workspace 3.0 (Próxima etapa)</li>
+            </ul>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="text-2xl font-black text-primary uppercase italic flex items-center gap-3">
-            <Zap className="h-6 w-6" /> ACTION ENGINE
-          </h3>
-          <p className="text-navy font-black text-lg leading-tight uppercase italic border-l-4 border-primary pl-4">
-            "O ENGENHEIRO DIGITAL QUE RESOLVE"
-          </p>
-        </div>
-
-        <div className="grid gap-6 text-navy/80">
-          <div className="space-y-4">
-            <div className="bg-white/50 p-6 rounded-2xl border border-primary/20">
-              <h4 className="font-black text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" /> OBJETIVO DA SPRINT
-              </h4>
-              <p className="text-xs font-bold leading-relaxed mb-4">
-                Hoje o Smart Process Analyzer identifica problemas. Agora ele deve resolver automaticamente tudo aquilo que puder e pedir confirmação apenas quando houver uma decisão importante. O objetivo é eliminar o máximo possível de trabalho manual. O sistema deixa de apenas informar. Ele passa a EXECUTAR.
-              </p>
-              <h5 className="font-black text-[10px] uppercase tracking-widest text-primary mb-3">PRINCÍPIO</h5>
-              <p className="text-xs font-black text-navy italic mb-4 italic">"O que posso resolver automaticamente para você?"</p>
-              
-              <ul className="space-y-3">
-                {[
-                  "Catálogo de Ações Automáticas (Normalização, Atualização, Geração de Docs)",
-                  "Ações Sugeridas para Inconsistências (ex: Motor Divergente)",
-                  "Execução Guiada (Resolver agora / depois / não se aplica)",
-                  "Modo Um Clique: 'GERAR TODO O PROCESSO' quando tudo estiver correto",
-                  "Resolução em Lote de pendências",
-                  "Assistente Lateral no Workspace (Copilot Ativo)",
-                  "Ações Seguras: Garantir confirmação para alterações técnicas críticas",
-                  "Histórico de Execução (Audit Trail completa)",
-                  "Funcionalidade de Desfazer (Undo System)",
-                  "Performance em Background e Mobile Polish"
-                ].map((text, i) => (
-                  <li key={i} className="flex gap-3 text-xs font-bold leading-relaxed">
-                    <span className="text-primary">[{i + 1}]</span> {text}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="bg-navy p-6 rounded-2xl border border-white/10 text-white">
-              <h4 className="font-black text-sm uppercase tracking-widest mb-4 flex items-center gap-2 text-primary">
-                <Terminal className="h-4 w-4" /> REQUISITOS TÉCNICOS
-              </h4>
-              <div className="grid md:grid-cols-2 gap-4 text-[10px] font-bold uppercase tracking-wider leading-relaxed opacity-90">
-                <div className="space-y-2">
-                  <p>1. Action Registry & Dispatcher Pattern</p>
-                  <p>2. Transactional Rollback for Batch Operations</p>
-                  <p>3. Audit Log Persistence (Action History)</p>
-                </div>
-                <div className="space-y-2">
-                  <p>4. Dynamic Suggestion Engine (Heuristics to Action mapping)</p>
-                  <p>5. UI: One-Click Materialization Logic</p>
-                  <p>6. Background Worker for non-blocking execution</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="pt-4 flex items-center gap-3 text-[10px] font-black text-primary uppercase animate-pulse text-center w-full justify-center border-t border-primary/10">
-          <Zap className="h-4 w-4" /> A SENSAÇÃO FINAL: "QUANTO MENOS EU PRECISO CLICAR, MELHOR O NAVALDOCS TRABALHA PARA MIM."
+        <div className="pt-4 border-t border-primary/10 text-center">
+          <Badge className="bg-primary text-white font-black px-4 italic">SPRINT UX 6: ACTION ENGINE FOUNDATION</Badge>
         </div>
       </div>
     </Card>
