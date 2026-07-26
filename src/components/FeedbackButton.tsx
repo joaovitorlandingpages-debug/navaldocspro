@@ -1,26 +1,47 @@
 import { useState } from 'react';
-import { 
-  MessageSquare, Bug, Lightbulb, 
-  X, Send, CheckCircle2, Activity 
+import {
+  MessageSquare, Bug, Lightbulb,
+  X, Send, CheckCircle2, Activity, HelpCircle, Heart
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { isPilotMode } from '@/lib/pilot-mode';
+
+type FeedbackType = 'bug' | 'suggestion' | 'question' | 'praise' | 'ux' | 'ocr_poor';
+type Priority = 'p0' | 'p1' | 'p2' | 'p3';
+
+const TYPES: { key: FeedbackType; label: string; icon: typeof Bug; active: string }[] = [
+  { key: 'bug', label: 'Bug', icon: Bug, active: 'bg-red-50 border-red-200 text-red-600' },
+  { key: 'suggestion', label: 'Sugestão', icon: Lightbulb, active: 'bg-amber-50 border-amber-200 text-amber-600' },
+  { key: 'question', label: 'Dúvida', icon: HelpCircle, active: 'bg-blue-50 border-blue-200 text-blue-600' },
+  { key: 'praise', label: 'Elogio', icon: Heart, active: 'bg-emerald-50 border-emerald-200 text-emerald-600' },
+  { key: 'ux', label: 'UX/UI', icon: Activity, active: 'bg-indigo-50 border-indigo-200 text-indigo-600' },
+  { key: 'ocr_poor', label: 'OCR Ruim', icon: Activity, active: 'bg-purple-50 border-purple-200 text-purple-600' },
+];
+
+const PRIORITIES: { key: Priority; label: string }[] = [
+  { key: 'p0', label: 'P0 · Crítico' },
+  { key: 'p1', label: 'P1 · Alto' },
+  { key: 'p2', label: 'P2 · Médio' },
+  { key: 'p3', label: 'P3 · Baixo' },
+];
 
 export function FeedbackButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const { profile, isAdmin } = useAuth();
-  
-  // Exibir apenas em ambiente DEV ou para administradores
-  const isDev = import.meta.env.DEV;
-  const shouldShow = isDev || isAdmin;
 
-  
-  const [feedback, setFeedback] = useState({
-    type: 'bug' as 'bug' | 'suggestion' | 'ux' | 'ocr_poor',
+  // Durante a RC1 (piloto) todos os participantes podem enviar feedback.
+  // Fora do piloto: apenas ambiente DEV ou administradores.
+  const isDev = import.meta.env.DEV;
+  const shouldShow = isDev || isAdmin || isPilotMode();
+
+  const [feedback, setFeedback] = useState<{ type: FeedbackType; description: string; priority: Priority }>({
+    type: 'bug',
     description: '',
+    priority: 'p2',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,19 +55,21 @@ export function FeedbackButton() {
     try {
       const { error } = await supabase.from('operational_feedback').insert({
         user_id: profile.id,
+        company_id: (profile as any).company_id ?? null,
         type: feedback.type,
+        priority: feedback.priority,
         description: feedback.description,
         context_url: window.location.href,
         status: 'pending'
       });
 
       if (error) throw error;
-      
+
       setSubmitted(true);
       setTimeout(() => {
         setIsOpen(false);
         setSubmitted(false);
-        setFeedback({ type: 'bug', description: '' });
+        setFeedback({ type: 'bug', description: '', priority: 'p2' });
       }, 3000);
     } catch (error) {
       console.error(error);
@@ -72,7 +95,7 @@ export function FeedbackButton() {
 
       {isOpen && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-navy/20 backdrop-blur-sm transition-opacity duration-300">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transition-transform duration-300">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transition-transform duration-300 max-h-[90vh] overflow-y-auto">
             <div className="bg-navy p-8 text-white relative">
               <button 
                 onClick={() => setIsOpen(false)}
@@ -96,38 +119,33 @@ export function FeedbackButton() {
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-3 gap-3">
-                    <button 
-                      type="button"
-                      onClick={() => setFeedback({ ...feedback, type: 'bug' })}
-                      className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${feedback.type === 'bug' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-slate-50 border-transparent text-slate-400'}`}
-                    >
-                      <Bug className="h-5 w-5" />
-                      <span className="text-[10px] font-black uppercase">Bug</span>
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => setFeedback({ ...feedback, type: 'suggestion' })}
-                      className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${feedback.type === 'suggestion' ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-slate-50 border-transparent text-slate-400'}`}
-                    >
-                      <Lightbulb className="h-5 w-5" />
-                      <span className="text-[10px] font-black uppercase">Sugestão</span>
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => setFeedback({ ...feedback, type: 'ux' })}
-                      className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${feedback.type === 'ux' ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-slate-50 border-transparent text-slate-400'}`}
-                    >
-                      <Activity className="h-5 w-5" />
-                      <span className="text-[10px] font-black uppercase">UX/UI</span>
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => setFeedback({ ...feedback, type: 'ocr_poor' })}
-                      className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${feedback.type === 'ocr_poor' ? 'bg-purple-50 border-purple-200 text-purple-600' : 'bg-slate-50 border-transparent text-slate-400'}`}
-                    >
-                      <Activity className="h-5 w-5" />
-                      <span className="text-[10px] font-black uppercase">OCR Ruim</span>
-                    </button>
+                    {TYPES.map(({ key, label, icon: Icon, active }) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setFeedback({ ...feedback, type: key })}
+                        className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${feedback.type === key ? active : 'bg-slate-50 border-transparent text-slate-400'}`}
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="text-[10px] font-black uppercase">{label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Prioridade</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {PRIORITIES.map(({ key, label }) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setFeedback({ ...feedback, priority: key })}
+                          className={`py-3 rounded-xl border text-[9px] font-black uppercase transition-all ${feedback.priority === key ? 'bg-navy text-white border-navy' : 'bg-slate-50 border-transparent text-slate-400'}`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="space-y-2">
