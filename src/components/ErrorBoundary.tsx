@@ -19,8 +19,10 @@ class ErrorBoundary extends React.Component<
   }
 
   async componentDidMount() {
+    registerGlobalErrorMonitor();
     try {
       const { data: { user } } = await supabase.auth.getUser();
+
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
