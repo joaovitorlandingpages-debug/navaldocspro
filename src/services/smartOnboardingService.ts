@@ -1,3 +1,4 @@
+import { trackOperation } from '@/lib/observability/operations';
 import { supabase } from "@/integrations/supabase/client";
 import { WizardState, WizardStep } from "@/components/wizard2/Wizard2Store";
 
@@ -58,6 +59,19 @@ export async function getWizardSession(sessionId: string) {
  * Pipeline Real de OCR para o Onboarding 
  */
 export async function runSmartOcr(args: {
+  file: File;
+  companyId: string;
+  userId: string;
+  sessionId: string;
+}) {
+  return trackOperation('ocr', 'runSmartOcr', () => runSmartOcrInternal(args), {
+    fileName: args.file.name,
+    fileSize: args.file.size,
+    sessionId: args.sessionId,
+  });
+}
+
+async function runSmartOcrInternal(args: {
   file: File;
   companyId: string;
   userId: string;
