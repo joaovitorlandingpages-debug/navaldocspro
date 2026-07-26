@@ -94,6 +94,7 @@ import { Route as AdminSecurityRouteImport } from './routes/admin/security'
 import { Route as AdminSaasMetricsRouteImport } from './routes/admin/saas-metrics'
 import { Route as AdminRoadmapRouteImport } from './routes/admin/roadmap'
 import { Route as AdminProductionReadinessRouteImport } from './routes/admin/production-readiness'
+import { Route as AdminPilotDashboardRouteImport } from './routes/admin/pilot-dashboard'
 import { Route as AdminOperationalFeedbackRouteImport } from './routes/admin/operational-feedback'
 import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
 import { Route as AdminModelosProcessoRouteImport } from './routes/admin/modelos-processo'
@@ -559,6 +560,11 @@ const AdminProductionReadinessRoute =
     path: '/production-readiness',
     getParentRoute: () => AdminRoute,
   } as any)
+const AdminPilotDashboardRoute = AdminPilotDashboardRouteImport.update({
+  id: '/pilot-dashboard',
+  path: '/pilot-dashboard',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminOperationalFeedbackRoute =
   AdminOperationalFeedbackRouteImport.update({
     id: '/operational-feedback',
@@ -818,6 +824,7 @@ export interface FileRoutesByFullPath {
   '/admin/modelos-processo': typeof AdminModelosProcessoRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
+  '/admin/pilot-dashboard': typeof AdminPilotDashboardRoute
   '/admin/production-readiness': typeof AdminProductionReadinessRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
@@ -938,6 +945,7 @@ export interface FileRoutesByTo {
   '/admin/modelos-processo': typeof AdminModelosProcessoRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
+  '/admin/pilot-dashboard': typeof AdminPilotDashboardRoute
   '/admin/production-readiness': typeof AdminProductionReadinessRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
@@ -1063,6 +1071,7 @@ export interface FileRoutesById {
   '/admin/modelos-processo': typeof AdminModelosProcessoRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
+  '/admin/pilot-dashboard': typeof AdminPilotDashboardRoute
   '/admin/production-readiness': typeof AdminProductionReadinessRoute
   '/admin/roadmap': typeof AdminRoadmapRoute
   '/admin/saas-metrics': typeof AdminSaasMetricsRoute
@@ -1189,6 +1198,7 @@ export interface FileRouteTypes {
     | '/admin/modelos-processo'
     | '/admin/ocr'
     | '/admin/operational-feedback'
+    | '/admin/pilot-dashboard'
     | '/admin/production-readiness'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
@@ -1309,6 +1319,7 @@ export interface FileRouteTypes {
     | '/admin/modelos-processo'
     | '/admin/ocr'
     | '/admin/operational-feedback'
+    | '/admin/pilot-dashboard'
     | '/admin/production-readiness'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
@@ -1433,6 +1444,7 @@ export interface FileRouteTypes {
     | '/admin/modelos-processo'
     | '/admin/ocr'
     | '/admin/operational-feedback'
+    | '/admin/pilot-dashboard'
     | '/admin/production-readiness'
     | '/admin/roadmap'
     | '/admin/saas-metrics'
@@ -2152,6 +2164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductionReadinessRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/pilot-dashboard': {
+      id: '/admin/pilot-dashboard'
+      path: '/pilot-dashboard'
+      fullPath: '/admin/pilot-dashboard'
+      preLoaderRoute: typeof AdminPilotDashboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/operational-feedback': {
       id: '/admin/operational-feedback'
       path: '/operational-feedback'
@@ -2485,6 +2504,7 @@ interface AdminRouteChildren {
   AdminModelosProcessoRoute: typeof AdminModelosProcessoRoute
   AdminOcrRoute: typeof AdminOcrRoute
   AdminOperationalFeedbackRoute: typeof AdminOperationalFeedbackRoute
+  AdminPilotDashboardRoute: typeof AdminPilotDashboardRoute
   AdminProductionReadinessRoute: typeof AdminProductionReadinessRoute
   AdminRoadmapRoute: typeof AdminRoadmapRoute
   AdminSaasMetricsRoute: typeof AdminSaasMetricsRoute
@@ -2522,6 +2542,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminModelosProcessoRoute: AdminModelosProcessoRoute,
   AdminOcrRoute: AdminOcrRoute,
   AdminOperationalFeedbackRoute: AdminOperationalFeedbackRoute,
+  AdminPilotDashboardRoute: AdminPilotDashboardRoute,
   AdminProductionReadinessRoute: AdminProductionReadinessRoute,
   AdminRoadmapRoute: AdminRoadmapRoute,
   AdminSaasMetricsRoute: AdminSaasMetricsRoute,
