@@ -1,7 +1,9 @@
 import React from 'react';
 import { telemetry } from '@/utils/telemetry';
 import { supabase } from '@/integrations/supabase/client';
+import { captureException, registerGlobalErrorMonitor } from '@/lib/observability/error-monitor';
 import { AlertTriangle, RotateCcw, ChevronLeft, Terminal, ShieldAlert } from 'lucide-react';
+
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -17,8 +19,10 @@ class ErrorBoundary extends React.Component<
   }
 
   async componentDidMount() {
+    registerGlobalErrorMonitor();
     try {
       const { data: { user } } = await supabase.auth.getUser();
+
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -41,11 +45,13 @@ class ErrorBoundary extends React.Component<
     // Registrar log técnico
     console.log("STACK_TRACE_RECORDED");
     
-    // Tracking profundo
-    telemetry.trackFrontendError(error, errorInfo.componentStack || undefined, {
-      timestamp: new Date().toISOString(),
-      viewport: `${window.innerWidth}x${window.innerHeight}`
+    // Tracking profundo (contexto completo: módulo, rota, tenant, usuário)
+    void captureException(error, {
+      module: 'ui_boundary',
+      componentStack: errorInfo.componentStack || undefined,
+      viewport: `${window.innerWidth}x${window.innerHeight}`,
     });
+
 
     if (error.message?.includes('removeChild') || error.message?.includes('appendChild')) {
       console.warn("ERROR_ROOT_CAUSE_IDENTIFIED", "DOM_RECONCILIATION_ISSUE");

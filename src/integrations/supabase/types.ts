@@ -3549,10 +3549,12 @@ export type Database = {
       }
       operational_feedback: {
         Row: {
+          company_id: string | null
           context_url: string | null
           created_at: string | null
           description: string
           id: string
+          priority: string
           severity: string | null
           status: string | null
           subject: string | null
@@ -3560,10 +3562,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          company_id?: string | null
           context_url?: string | null
           created_at?: string | null
           description: string
           id?: string
+          priority?: string
           severity?: string | null
           status?: string | null
           subject?: string | null
@@ -3571,17 +3575,27 @@ export type Database = {
           user_id: string
         }
         Update: {
+          company_id?: string | null
           context_url?: string | null
           created_at?: string | null
           description?: string
           id?: string
+          priority?: string
           severity?: string | null
           status?: string | null
           subject?: string | null
           type?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "operational_feedback_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       operational_insights: {
         Row: {
@@ -6043,12 +6057,16 @@ export type Database = {
       }
       system_incidents: {
         Row: {
+          closed_at: string | null
           created_at: string | null
           description: string | null
           ends_at: string | null
           id: string
           impact_score: number | null
           is_maintenance: boolean | null
+          module: string | null
+          owner: string | null
+          priority: string
           recovery_steps: string | null
           root_cause: string | null
           severity: string | null
@@ -6057,12 +6075,16 @@ export type Database = {
           title: string
         }
         Insert: {
+          closed_at?: string | null
           created_at?: string | null
           description?: string | null
           ends_at?: string | null
           id?: string
           impact_score?: number | null
           is_maintenance?: boolean | null
+          module?: string | null
+          owner?: string | null
+          priority?: string
           recovery_steps?: string | null
           root_cause?: string | null
           severity?: string | null
@@ -6071,12 +6093,16 @@ export type Database = {
           title: string
         }
         Update: {
+          closed_at?: string | null
           created_at?: string | null
           description?: string | null
           ends_at?: string | null
           id?: string
           impact_score?: number | null
           is_maintenance?: boolean | null
+          module?: string | null
+          owner?: string | null
+          priority?: string
           recovery_steps?: string | null
           root_cause?: string | null
           severity?: string | null

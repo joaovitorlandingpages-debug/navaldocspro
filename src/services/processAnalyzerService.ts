@@ -1,3 +1,4 @@
+import { trackOperation } from '@/lib/observability/operations';
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ProcessAnalysis {
@@ -22,6 +23,17 @@ export interface ProcessAnalysis {
  * Orchestrates real analysis of process data.
  */
 export async function runProcessAnalysis(args: {
+  processId: string;
+  companyId: string;
+  wizardSessionId?: string;
+}) {
+  return trackOperation('process_analyzer', 'runProcessAnalysis', () => runProcessAnalysisInternal(args), {
+    processId: args.processId,
+    companyId: args.companyId,
+  });
+}
+
+async function runProcessAnalysisInternal(args: {
   processId: string;
   companyId: string;
   wizardSessionId?: string;
