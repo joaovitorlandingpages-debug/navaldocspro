@@ -1,7 +1,9 @@
 import React from 'react';
 import { telemetry } from '@/utils/telemetry';
 import { supabase } from '@/integrations/supabase/client';
+import { captureException, registerGlobalErrorMonitor } from '@/lib/observability/error-monitor';
 import { AlertTriangle, RotateCcw, ChevronLeft, Terminal, ShieldAlert } from 'lucide-react';
+
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
