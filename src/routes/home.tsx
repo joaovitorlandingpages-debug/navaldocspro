@@ -74,34 +74,33 @@ function Index() {
 
       <main className="flex-grow">
         {/* Hero Section Premium */}
-        <section className="relative overflow-hidden pt-32 pb-20 lg:pt-48 lg:pb-32 bg-[#000B18]">
-          <div className="absolute top-0 right-0 w-full h-full opacity-20 pointer-events-none">
-            <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-primary/40 rounded-full blur-[120px]" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[100px]" />
+        <section className="relative overflow-hidden pt-32 pb-20 lg:pt-48 lg:pb-32 bg-white">
+          <div className="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none">
+            <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/20 rounded-full blur-[120px]" />
           </div>
           
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="text-center space-y-10 max-w-5xl mx-auto">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] animate-fade-in">
+            <div className="text-center space-y-12 max-w-6xl mx-auto">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-black uppercase tracking-[0.2em] animate-fade-in">
                 <Globe className="h-3 w-3" />
                 Plataforma Enterprise de Gestão Naval
               </div>
               
-              <h1 className="text-6xl lg:text-[100px] font-semibold text-white leading-[0.9]">
-                AUTOMAÇÃO <span className="text-primary">TOTAL</span><br />
-                PARA ENGENHARIA NAVAL.
+              <h1 className="text-6xl lg:text-[110px] font-black text-navy leading-[0.85] tracking-tighter uppercase">
+                A GESTÃO DOS SEUS PROCESSOS ACEITA <span className="text-emerald-500">ERRO?</span>
               </h1>
               
-              <p className="text-xl lg:text-2xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-medium">
-                O NavalDocs Pro centraliza toda sua operação: desde a extração OCR de documentos até a geração automática de memoriais técnicos e protocolos DPC.
+              <p className="text-xl lg:text-3xl text-slate-500 max-w-4xl mx-auto leading-tight font-bold">
+                O barato sai caro. Automatize tudo com zero atrito e máxima precisão técnica.
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-6 justify-center pt-4">
-                <Link to="/auth/signup" className="bg-primary text-white px-10 py-5 rounded-2xl text-xl font-black hover:scale-105 hover:shadow-[0_0_40px_rgba(37,99,235,0.4)] transition-all flex items-center justify-center gap-3">
-                  TESTAR AGORA <ArrowRight className="h-6 w-6" />
+              <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8">
+                <Link to="/auth/signup" className="group relative bg-emerald-500 text-white px-12 py-6 rounded-2xl text-2xl font-black hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden shadow-2xl shadow-emerald-500/20">
+                  <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
+                  AGENDAR DEMONSTRAÇÃO <ArrowRight className="h-7 w-7" />
                 </Link>
-                <Link to="/demo" className="bg-white/5 border-2 border-white/10 text-white px-10 py-5 rounded-2xl text-xl font-black hover:bg-white/10 transition-all flex items-center justify-center gap-3">
-                  VER DEMO <Zap className="h-6 w-6 text-primary" />
+                <Link to="/demo" className="bg-white border-4 border-emerald-500 text-emerald-500 px-12 py-6 rounded-2xl text-2xl font-black hover:bg-emerald-50 transition-all flex items-center justify-center gap-3 shadow-xl">
+                  VER EM AÇÃO <Zap className="h-7 w-7" />
                 </Link>
               </div>
 
