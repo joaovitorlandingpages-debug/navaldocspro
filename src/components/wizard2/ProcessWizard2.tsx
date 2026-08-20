@@ -141,15 +141,23 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
 
       // ========== DOMAIN SERVICE: PROCESS CREATION ==========
       // Invokes the authorized ProcessCreationService (single source of truth)
+      // Map wizard priority ('low'|'normal'|'high'|'urgent') to service priority ('low'|'medium'|'high'|'critical')
+      const priorityMap: Record<string, 'low' | 'medium' | 'high' | 'critical'> = {
+        'low': 'low',
+        'normal': 'medium',
+        'high': 'high',
+        'urgent': 'critical',
+      };
+
       const processData = await processCreationService.createProcess({
         companyId: profile.company_id,
         processType: state.processTypeName,
         processTypeId: state.processTypeId,
         customerId: state.customerId,
-        vesselId: state.vesselId || null,
+        vesselId: state.vesselId,
         title: state.title || state.processTypeName,
-        description: null,
-        priority: state.priority || 'medium',
+        description: undefined,
+        priority: priorityMap[state.priority] || 'medium',
         metadata: {
           branding_mode: state.brandingMode,
           wizard_session_id: sessionId,
