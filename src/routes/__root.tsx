@@ -15,6 +15,7 @@ import { NewProcessProvider } from "@/hooks/useNewProcess";
 import { PlanLimitProvider } from "@/hooks/usePlanLimits";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 // Onda 3C.3 — floating widgets são lazy: só entram no bundle quando o usuário
 // interage após idle. Removem ~15KB + deps (sonner/supabase call sites) do main.
@@ -146,6 +147,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
                 <NewProcessProvider>
                   {children}
                   <SafeFloatingWidgets />
+                  <div className="hidden">
+                    <GlobalSearch />
+                  </div>
                   <Toaster />
                 </NewProcessProvider>
               </PlanLimitProvider>
