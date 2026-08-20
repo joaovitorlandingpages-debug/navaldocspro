@@ -133,9 +133,9 @@ function Index() {
         <section id="fluxo" className="py-32 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-24 space-y-4">
-              <span className="text-primary font-black uppercase tracking-[0.3em] text-xs">A Jornada Digital</span>
-              <h2 className="text-5xl font-semibold text-navy">Fluxo Operacional 360°</h2>
-              <p className="text-slate-500 text-lg max-w-2xl mx-auto">Sua operação em uma linha contínua de produtividade, do cliente ao protocolo final.</p>
+              <span className="text-emerald-500 font-black uppercase tracking-[0.3em] text-xs">A Jornada Digital</span>
+              <h2 className="text-5xl font-black text-navy uppercase tracking-tighter">Fluxo Operacional 360°</h2>
+              <p className="text-slate-500 text-lg font-bold max-w-2xl mx-auto uppercase tracking-widest text-[10px]">Sua operação em uma linha contínua de produtividade, do cliente ao protocolo final.</p>
             </div>
 
             <div className="relative mt-20">
