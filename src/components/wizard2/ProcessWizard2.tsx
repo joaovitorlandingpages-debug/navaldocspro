@@ -30,10 +30,10 @@ import {
   FileText
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
 import { confirmProcessVisible, notifyProcessesChanged } from '@/services/processes/processCreation';
+import { processCreationService } from '@/services/processes/process-creation-service';
 import { materializeProcessBlueprint } from '@/services/processes/blueprintEngine';
 import { createWizardSession, updateWizardSession, mapStateToSession } from '@/services/wizardSessionService';
 import { runProcessAnalysis } from '@/services/processAnalyzerService';
