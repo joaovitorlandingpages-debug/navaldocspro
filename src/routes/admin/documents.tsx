@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { 
-  FileText, Search, Grid, List, Filter, Eye, Download, 
-  Signature, ExternalLink, MoreVertical, LayoutGrid, ListFilter,
+  FileText, Search, List, Filter, Eye, Download, 
+  Signature, ExternalLink, MoreVertical, LayoutGrid,
   FileDown, ArrowRight, Loader2, Calendar, User, Ship
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,27 @@ export const Route = createFileRoute("/admin/documents")({
   }),
 });
 
+interface DocumentWithRelations {
+  id: string;
+  name: string;
+  status: string;
+  created_at: string;
+  process_id: string | null;
+  customer_id: string | null;
+  processes: {
+    id: string;
+    title: string;
+    vessels: {
+      id: string;
+      name: string;
+    } | null;
+  } | null;
+  profiles: {
+    id: string;
+    full_name: string | null;
+  } | null;
+}
+
 function DocumentVault() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,7 +78,12 @@ function DocumentVault() {
       const { data, error } = await supabase
         .from("generated_documents")
         .select(`
-          *,
+          id,
+          name,
+          status,
+          created_at,
+          process_id,
+          customer_id,
           processes (
             id,
             title,
@@ -74,13 +100,13 @@ function DocumentVault() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return (data as unknown) as DocumentWithRelations[];
     },
   });
 
-  const filteredDocs = documents?.filter(doc => {
+  const filteredDocs = documents?.filter((doc: DocumentWithRelations) => {
     const matchesSearch = 
-      doc.document_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.processes?.title?.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -90,7 +116,11 @@ function DocumentVault() {
     return matchesSearch && matchesStatus && matchesClient;
   });
 
-  const uniqueClients = Array.from(new Set(documents?.map(d => d.profiles).filter(Boolean).map(p => JSON.stringify(p)))).map(s => JSON.parse(s));
+  const uniqueClients = documents 
+    ? Array.from(new Set(documents.map(d => d.profiles?.id).filter(Boolean))).map(id => {
+        return documents.find(d => d.profiles?.id === id)?.profiles;
+      }).filter(Boolean)
+    : [];
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, string> = {
@@ -117,19 +147,19 @@ function DocumentVault() {
           </div>
           <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
             <Button 
-              variant={viewMode === "grid" ? "white" : "ghost"} 
+              variant={viewMode === "grid" ? "outline" : "ghost"} 
               size="sm" 
               onClick={() => setViewMode("grid")}
-              className={viewMode === "grid" ? "shadow-sm" : ""}
+              className={viewMode === "grid" ? "bg-white shadow-sm" : ""}
             >
               <LayoutGrid className="h-4 w-4 mr-2" />
               Cards
             </Button>
             <Button 
-              variant={viewMode === "list" ? "white" : "ghost"} 
+              variant={viewMode === "list" ? "outline" : "ghost"} 
               size="sm" 
               onClick={() => setViewMode("list")}
-              className={viewMode === "list" ? "shadow-sm" : ""}
+              className={viewMode === "list" ? "bg-white shadow-sm" : ""}
             >
               <List className="h-4 w-4 mr-2" />
               Lista
@@ -159,7 +189,7 @@ function DocumentVault() {
                 <SelectContent>
                   <SelectItem value="all">Todos Clientes</SelectItem>
                   {uniqueClients.map(client => (
-                    <SelectItem key={client.id} value={client.id}>{client.full_name}</SelectItem>
+                    <SelectItem key={client?.id} value={client?.id || ""}>{client?.full_name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -193,7 +223,7 @@ function DocumentVault() {
           </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredDocs?.map((doc) => (
+            {filteredDocs?.map((doc: DocumentWithRelations) => (
               <Card key={doc.id} className="group border-slate-200 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-md overflow-hidden bg-white">
                 <div className="aspect-[4/3] bg-slate-50 flex items-center justify-center relative border-b border-slate-100">
                   <FileText className="h-16 w-16 text-slate-300 group-hover:text-emerald-500/20 transition-colors" />
@@ -210,8 +240,8 @@ function DocumentVault() {
                   </div>
                 </div>
                 <CardContent className="p-4 space-y-3">
-                  <h3 className="font-semibold text-slate-900 truncate" title={doc.document_name}>
-                    {doc.document_name}
+                  <h3 className="font-semibold text-slate-900 truncate" title={doc.name}>
+                    {doc.name}
                   </h3>
                   <div className="space-y-1.5 text-xs text-slate-500">
                     <div className="flex items-center gap-2">
@@ -229,7 +259,8 @@ function DocumentVault() {
                   </div>
                   <div className="pt-2 border-t border-slate-50 flex items-center justify-between">
                     <Link 
-                      to={`/admin/process-center/${doc.process_id}`}
+                      to="/admin/process-center/$id"
+                      params={{ id: doc.process_id || "" }}
                       className="text-xs font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
                     >
                       Ver Processo
@@ -242,11 +273,11 @@ function DocumentVault() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem className="gap-2">
-                          <Signature className="h-4 w-4" /> Assinatura
+                        <DropdownMenuItem className="gap-2 text-xs">
+                          <Signature className="h-3 w-3" /> Assinatura
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2">
-                          <FileDown className="h-4 w-4" /> Exportar
+                        <DropdownMenuItem className="gap-2 text-xs">
+                          <FileDown className="h-3 w-3" /> Exportar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -269,14 +300,14 @@ function DocumentVault() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredDocs?.map((doc) => (
+                {filteredDocs?.map((doc: DocumentWithRelations) => (
                   <TableRow key={doc.id} className="group hover:bg-emerald-50/30 transition-colors">
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
                           <FileText className="h-4 w-4" />
                         </div>
-                        <span className="truncate max-w-[300px]">{doc.document_name}</span>
+                        <span className="truncate max-w-[300px]">{doc.name}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-slate-600 text-sm">
@@ -309,12 +340,12 @@ function DocumentVault() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="gap-2">
-                              <Signature className="h-4 w-4" /> Solicitar Assinatura
+                            <DropdownMenuItem className="gap-2 text-xs">
+                              <Signature className="h-3 w-3" /> Solicitar Assinatura
                             </DropdownMenuItem>
-                            <DropdownMenuItem asChild className="gap-2">
-                              <Link to={`/admin/process-center/${doc.process_id}`}>
-                                <ExternalLink className="h-4 w-4" /> Ver Processo
+                            <DropdownMenuItem asChild className="gap-2 text-xs">
+                              <Link to="/admin/process-center/$id" params={{ id: doc.process_id || "" }}>
+                                <ExternalLink className="h-3 w-3" /> Ver Processo
                               </Link>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
