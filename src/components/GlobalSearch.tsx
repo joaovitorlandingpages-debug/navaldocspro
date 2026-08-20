@@ -69,9 +69,9 @@ export function GlobalSearch() {
           .ilike("name", `%${search}%`)
           .limit(5),
         supabase
-          .from("documents")
-          .select("id, document_type, file_url")
-          .ilike("document_type", `%${search}%`)
+          .from("generated_documents")
+          .select("id, name")
+          .ilike("name", `%${search}%`)
           .limit(5),
       ]);
 
@@ -122,7 +122,7 @@ export function GlobalSearch() {
               {results.processes.map((p: any) => (
                 <CommandItem
                   key={p.id}
-                  onSelect={() => runCommand(() => navigate({ to: `/admin/process-center/${p.id}` as any }))}
+                  onSelect={() => runCommand(() => navigate({ to: `/admin/process-center/$id` as any, params: { id: p.id } }))}
                   className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
                 >
                   <FileBox className="mr-2 h-4 w-4" />
@@ -140,7 +140,7 @@ export function GlobalSearch() {
               {results.vessels.map((v: any) => (
                 <CommandItem
                   key={v.id}
-                  onSelect={() => runCommand(() => navigate({ to: `/admin/vessels/${v.id}` as any }))}
+                  onSelect={() => runCommand(() => navigate({ to: `/vessels` as any }))}
                   className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
                 >
                   <Ship className="mr-2 h-4 w-4" />
@@ -158,7 +158,7 @@ export function GlobalSearch() {
               {results.customers.map((c: any) => (
                 <CommandItem
                   key={c.id}
-                  onSelect={() => runCommand(() => navigate({ to: `/admin/customers/${c.id}` as any }))}
+                  onSelect={() => runCommand(() => navigate({ to: `/customers` as any }))}
                   className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
                 >
                   <Users className="mr-2 h-4 w-4" />
@@ -176,14 +176,12 @@ export function GlobalSearch() {
               {results.documents.map((d: any) => (
                 <CommandItem
                   key={d.id}
-                  onSelect={() => runCommand(() => {
-                    if (d.file_url) window.open(d.file_url, '_blank');
-                  })}
+                  onSelect={() => runCommand(() => navigate({ to: `/admin/documents` as any }))}
                   className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
                 >
                   <FileText className="mr-2 h-4 w-4" />
                   <div className="flex flex-col">
-                    <span className="font-bold">{d.document_type}</span>
+                    <span className="font-bold">{d.name}</span>
                     <span className="text-[10px] uppercase tracking-widest opacity-50">Documento gerado</span>
                   </div>
                 </CommandItem>
