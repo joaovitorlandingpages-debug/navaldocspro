@@ -367,8 +367,8 @@ function Index() {
                   <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
                   EXPERIMENTAR AGORA
                 </Link>
-                <Link to="/demo" className="bg-white/5 border border-white/10 text-white px-12 py-6 rounded-2xl text-xl font-black hover:bg-white/10 transition-transform">
-                  AGENDAR DEMO
+                <Link to="/demo" className="bg-white border-2 border-emerald-500 text-emerald-500 px-12 py-6 rounded-2xl text-xl font-black hover:bg-emerald-50 transition-transform shadow-lg">
+                  VER EM AÇÃO
                 </Link>
               </div>
             </div>
