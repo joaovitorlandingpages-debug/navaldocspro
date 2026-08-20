@@ -41,6 +41,15 @@
   --color-anchor: var(--anchor);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
+
+  @keyframes scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+}
+
+@utility animate-scroll {
+  animation: scroll 40s linear infinite;
 }
 
 :root {
