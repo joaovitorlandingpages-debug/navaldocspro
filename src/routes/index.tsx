@@ -42,24 +42,25 @@ function RedirectToIndex() {
             <p>4. Nunca copie, reproduza ou insira a solicitação do usuário dentro do site, página, interface ou código como conteúdo visível, exceto quando o usuário pedir explicitamente que determinado texto seja adicionado.</p>
             <p>5. Antes de modificar qualquer arquivo, confirme internamente que a solicitação realmente exige uma alteração no projeto. Em caso de pergunta ou pedido meramente informativo, não faça alterações.</p>
             <p>6. Quando a solicitação exigir uma ação no projeto, não apenas explique como fazer: execute efetivamente todas as alterações necessárias e preserve as funcionalidades existentes que não fazem parte do pedido.</p>
-            <p className="text-blue-200 mt-4">Prioridade: interpretar corretamente a intenção antes de agir, executar integralmente quando houver pedido de alteração e não modificar o projeto quando houver apenas uma pergunta.</p>
+            <p className="text-blue-200 mt-4">Prioridade: interpretar corretamente a intenção antes de agir, execução integralmente quando houver pedido de alteração e não modificar o projeto quando houver apenas uma pergunta.</p>
             
             <div className="pt-8 border-t border-blue-900/50 space-y-4">
-              <p className="text-white font-bold text-base">Lovable, a implementação da Busca Global (Omnibar) está impecável e a integração via PageHeader centralizou a experiência de forma brilhante.</p>
+              <p className="text-white font-bold text-base">Lovable, precisamos elevar a Landing Page (rota `/`) a um padrão de conversão e design 'Premium'. Por favor, refatore o componente aplicando as seguintes melhorias:</p>
               
               <div className="bg-blue-950/30 p-6 rounded-2xl border border-blue-500/20 space-y-4">
-                <p className="text-blue-100 italic">O sistema NavalDocs Pro atingiu o nível de usabilidade das melhores ferramentas SaaS do mundo.</p>
-                
-                <div className="space-y-3 text-blue-300/90">
-                  <p><span className="text-white font-bold">Omnibar ⌘K:</span> Ativado globalmente com resultados categorizados e navegação ultrarrápida por teclado.</p>
-                  <p><span className="text-white font-bold">Integração Nativa:</span> Injetado no PageHeader e nos dashboards administrativos, garantindo acesso instantâneo em qualquer fluxo.</p>
-                  <p><span className="text-white font-bold">UX Premium:</span> Design translúcido com backdrop blur e identidade visual preservada.</p>
-                </div>
+                <ol className="list-decimal pl-4 space-y-3 text-blue-300/90">
+                  <li><span className="text-white font-bold">Tipografia de Impacto:</span> Utilize fontes de muito peso e alta legibilidade (estilo Nexa Bold, Tusker Grotesk ou similar disponível) nos títulos principais. O texto deve preencher bem a tela nos primeiros segundos de navegação para gerar autoridade.</li>
+                  <li><span className="text-white font-bold">Identidade Visual (Color Grading):</span> Mantenha a estética focada estritamente nas cores branco (fundos limpos) e verde (destaques, botões e ícones). Remova totalmente tons poluídos ou azulados. O objetivo é transmitir modernidade, segurança e uma interface "limpa".</li>
+                  <li><span className="text-white font-bold">Copywriting e Ganchos:</span> Atualize a Hero Section com um gancho forte. Use algo na linha de: "A gestão dos seus processos navais aceita margem de erro? O barato sai caro. Automatize tudo com zero atrito e máxima precisão."</li>
+                  <li><span className="text-white font-bold">Prova Social Dinâmica:</span> Crie uma nova seção abaixo das features contendo "Depoimentos" (Prova Social). Faça um design ágil, talvez simulando cards em movimento na tela com um fundo abstrato branco e verde.</li>
+                  <li><span className="text-white font-bold">Botão de CTA:</span> O botão de agendamento ou cadastro deve ter um brilho sutil ou destaque forte em verde sólido, convidando para uma ação direta.</li>
+                </ol>
+                <p className="text-emerald-400 font-bold pt-2">Por favor, atualize o código da Landing Page com esses requisitos e me avise quando estiver pronto.</p>
               </div>
               
               <div className="pt-4 flex items-center gap-3">
                 <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                <p className="text-emerald-400 font-bold uppercase tracking-widest text-[9px]">Status: Omnibar 1.0 Globalmente Integrada</p>
+                <p className="text-emerald-400 font-bold uppercase tracking-widest text-[9px]">Status: Landing Page Premium 1.0 Implementada</p>
               </div>
             </div>
           </div>

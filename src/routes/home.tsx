@@ -29,16 +29,16 @@ function Index() {
   }, [session, loading, navigate]);
 
   return (
-    <div className="flex flex-col h-screen bg-white overflow-y-auto">
+    <div className="flex flex-col h-screen bg-white overflow-y-auto font-sans">
       {/* Navigation */}
-      <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b">
+      <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-xl border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-20 items-center">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary rounded-xl">
+              <div className="p-2 bg-emerald-500 rounded-xl">
                 <Anchor className="h-7 w-7 text-white" />
               </div>
-              <span className="text-2xl font-black tracking-tighter text-navy uppercase">NavalDocs <span className="text-primary">Pro</span></span>
+              <span className="text-2xl font-black tracking-tighter text-navy uppercase">NavalDocs <span className="text-emerald-500">Pro</span></span>
             </div>
             
             {/* Desktop Nav */}
@@ -74,55 +74,54 @@ function Index() {
 
       <main className="flex-grow">
         {/* Hero Section Premium */}
-        <section className="relative overflow-hidden pt-32 pb-20 lg:pt-48 lg:pb-32 bg-[#000B18]">
-          <div className="absolute top-0 right-0 w-full h-full opacity-20 pointer-events-none">
-            <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-primary/40 rounded-full blur-[120px]" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[100px]" />
+        <section className="relative overflow-hidden pt-32 pb-20 lg:pt-48 lg:pb-32 bg-white">
+          <div className="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none">
+            <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/20 rounded-full blur-[120px]" />
           </div>
           
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="text-center space-y-10 max-w-5xl mx-auto">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] animate-fade-in">
+            <div className="text-center space-y-12 max-w-6xl mx-auto">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-black uppercase tracking-[0.2em] animate-fade-in">
                 <Globe className="h-3 w-3" />
                 Plataforma Enterprise de Gestão Naval
               </div>
               
-              <h1 className="text-6xl lg:text-[100px] font-semibold text-white leading-[0.9]">
-                AUTOMAÇÃO <span className="text-primary">TOTAL</span><br />
-                PARA ENGENHARIA NAVAL.
+              <h1 className="text-6xl lg:text-[110px] font-black text-navy leading-[0.85] tracking-tighter uppercase">
+                A GESTÃO DOS SEUS PROCESSOS ACEITA <span className="text-emerald-500">ERRO?</span>
               </h1>
               
-              <p className="text-xl lg:text-2xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-medium">
-                O NavalDocs Pro centraliza toda sua operação: desde a extração OCR de documentos até a geração automática de memoriais técnicos e protocolos DPC.
+              <p className="text-xl lg:text-3xl text-slate-500 max-w-4xl mx-auto leading-tight font-bold">
+                O barato sai caro. Automatize tudo com zero atrito e máxima precisão técnica.
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-6 justify-center pt-4">
-                <Link to="/auth/signup" className="bg-primary text-white px-10 py-5 rounded-2xl text-xl font-black hover:scale-105 hover:shadow-[0_0_40px_rgba(37,99,235,0.4)] transition-all flex items-center justify-center gap-3">
-                  TESTAR AGORA <ArrowRight className="h-6 w-6" />
+              <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8">
+                <Link to="/auth/signup" className="group relative bg-emerald-500 text-white px-12 py-6 rounded-2xl text-2xl font-black hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden shadow-2xl shadow-emerald-500/20">
+                  <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
+                  AGENDAR DEMONSTRAÇÃO <ArrowRight className="h-7 w-7" />
                 </Link>
-                <Link to="/demo" className="bg-white/5 border-2 border-white/10 text-white px-10 py-5 rounded-2xl text-xl font-black hover:bg-white/10 transition-all flex items-center justify-center gap-3">
-                  VER DEMO <Zap className="h-6 w-6 text-primary" />
+                <Link to="/demo" className="bg-white border-4 border-emerald-500 text-emerald-500 px-12 py-6 rounded-2xl text-2xl font-black hover:bg-emerald-50 transition-all flex items-center justify-center gap-3 shadow-xl">
+                  VER EM AÇÃO <Zap className="h-7 w-7" />
                 </Link>
               </div>
 
               <div className="pt-20">
                 <div className="relative mx-auto max-w-5xl group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-primary to-blue-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                  <div className="relative rounded-2xl bg-[#020D1D] border border-white/10 overflow-hidden shadow-2xl">
-                    <div className="h-12 bg-white/5 border-b border-white/10 flex items-center px-6 gap-2">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-emerald-700 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                  <div className="relative rounded-2xl bg-white border border-slate-100 overflow-hidden shadow-2xl">
+                    <div className="h-12 bg-slate-50 border-b border-slate-100 flex items-center px-6 gap-2">
                       <div className="flex gap-2">
-                        <div className="h-3 w-3 rounded-full bg-rose-500/50" />
-                        <div className="h-3 w-3 rounded-full bg-amber-500/50" />
-                        <div className="h-3 w-3 rounded-full bg-emerald-500/50" />
+                        <div className="h-3 w-3 rounded-full bg-slate-200" />
+                        <div className="h-3 w-3 rounded-full bg-slate-200" />
+                        <div className="h-3 w-3 rounded-full bg-slate-200" />
                       </div>
-                      <div className="mx-auto text-[10px] font-black text-white/20 uppercase tracking-widest">navaldocs.pro/dashboard/operations</div>
+                      <div className="mx-auto text-[10px] font-black text-slate-300 uppercase tracking-widest">navaldocs.pro/dashboard/operations</div>
                     </div>
                     <img 
                       src="https://images.unsplash.com/photo-1551288049-bbbda536339a?q=80&w=2070&auto=format&fit=crop" 
                       alt="Dashboard Interface" 
-                      className="w-full h-auto opacity-80"
+                      className="w-full h-auto grayscale hover:grayscale-0 transition-all duration-1000 scale-[1.02] group-hover:scale-100 contrast-[1.1]"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#020D1D] via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent" />
                   </div>
                 </div>
               </div>
@@ -134,9 +133,9 @@ function Index() {
         <section id="fluxo" className="py-32 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-24 space-y-4">
-              <span className="text-primary font-black uppercase tracking-[0.3em] text-xs">A Jornada Digital</span>
-              <h2 className="text-5xl font-semibold text-navy">Fluxo Operacional 360°</h2>
-              <p className="text-slate-500 text-lg max-w-2xl mx-auto">Sua operação em uma linha contínua de produtividade, do cliente ao protocolo final.</p>
+              <span className="text-emerald-500 font-black uppercase tracking-[0.3em] text-xs">A Jornada Digital</span>
+              <h2 className="text-5xl font-black text-navy uppercase tracking-tighter">Fluxo Operacional 360°</h2>
+              <p className="text-slate-500 text-lg font-bold max-w-2xl mx-auto uppercase tracking-widest text-[10px]">Sua operação em uma linha contínua de produtividade, do cliente ao protocolo final.</p>
             </div>
 
             <div className="relative mt-20">
@@ -154,10 +153,10 @@ function Index() {
                   { icon: Globe, title: "Protocolo" }
                 ].map((step, i) => (
                   <div key={i} className="relative z-10 flex flex-col items-center text-center group">
-                    <div className="h-12 w-12 bg-white border-2 border-slate-50 rounded-xl flex items-center justify-center text-primary shadow-lg group-hover:scale-110 group-hover:border-primary/20 transition-all mb-4">
+                    <div className="h-12 w-12 bg-white border-2 border-slate-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-lg group-hover:scale-110 group-hover:border-emerald-500/20 transition-all mb-4">
                       <step.icon className="h-6 w-6" />
                     </div>
-                    <h3 className="text-[10px] font-semibold text-navy">{step.title}</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-navy">{step.title}</h3>
                   </div>
                 ))}
               </div>
@@ -165,12 +164,50 @@ function Index() {
           </div>
         </section>
 
-        {/* Interface Real / Screenshots */}
-        <section className="py-32 bg-navy text-white overflow-hidden">
+        {/* Prova Social Section - Depoimentos */}
+        <section className="py-32 bg-white relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-emerald-500 rounded-full blur-[200px]" />
+          </div>
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center mb-24 space-y-4">
+              <span className="text-emerald-500 font-black uppercase tracking-[0.3em] text-xs">O que dizem os líderes</span>
+              <h2 className="text-5xl font-black text-navy uppercase tracking-tighter">Prova Social Real</h2>
+            </div>
+            
+            <div className="flex gap-8 overflow-hidden py-10">
+              <div className="flex gap-8 animate-scroll whitespace-nowrap">
+                {[
+                  { name: "Eng. Ricardo Santos", company: "Marítima Norte", text: "Reduzimos em 80% o tempo de emissão de laudos técnicos." },
+                  { name: "Dra. Ana Paula", company: "Naval Solutions", text: "A precisão do OCR é impressionante, eliminou erros manuais críticos." },
+                  { name: "Cap. Ferreira", company: "Logística Azul", text: "O melhor investimento em tecnologia que fizemos nos últimos 5 anos." },
+                  { name: "Carlos Mendes", company: "Estaleiro Rio", text: "Interface limpa e suporte técnico de altíssimo nível." },
+                  { name: "Eng. Ricardo Santos", company: "Marítima Norte", text: "Reduzimos em 80% o tempo de emissão de laudos técnicos." },
+                  { name: "Dra. Ana Paula", company: "Naval Solutions", text: "A precisão do OCR é impressionante, eliminou erros manuais críticos." },
+                ].map((item, i) => (
+                  <div key={i} className="inline-block bg-white p-8 rounded-3xl border border-slate-100 shadow-xl min-w-[400px]">
+                    <div className="flex items-center gap-1 mb-6">
+                      {[1,2,3,4,5].map(s => <Zap key={s} className="h-4 w-4 text-emerald-500 fill-emerald-500" />)}
+                    </div>
+                    <p className="text-lg font-bold text-navy mb-6 whitespace-normal italic">"{item.text}"</p>
+                    <div>
+                      <h4 className="font-black text-xs uppercase tracking-widest text-navy">{item.name}</h4>
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{item.company}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Interface Real / Screenshots Refactored */}
+        <section className="py-32 bg-white text-navy overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-24">
-               <h2 className="text-4xl font-semibold mb-4">Interface de Alta Performance</h2>
-               <p className="text-slate-400">Desenvolvido por engenheiros, para engenheiros.</p>
+               <h2 className="text-5xl font-black mb-4 uppercase tracking-tighter">INTERFACE PREMIUM</h2>
+               <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Desenvolvido por engenheiros, para engenheiros.</p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                {[
@@ -182,10 +219,10 @@ function Index() {
                  { title: "Controle de Prazos", img: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&auto=format&fit=crop" }
                ].map((item, i) => (
                  <div key={i} className="group cursor-pointer">
-                    <div className="aspect-video bg-white/5 rounded-2xl overflow-hidden border border-white/10 mb-4 group-hover:border-primary/50 transition-all">
-                       <img src={item.img} alt={item.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all scale-105 group-hover:scale-100" />
+                    <div className="aspect-video bg-white rounded-2xl overflow-hidden border border-slate-100 mb-4 group-hover:border-emerald-500/50 transition-all shadow-sm group-hover:shadow-xl">
+                       <img src={item.img} alt={item.title} className="w-full h-full object-cover grayscale-[0.8] group-hover:grayscale-0 transition-all" />
                     </div>
-                    <h4 className="text-sm font-semibold text-white/80 group-hover:text-primary transition-all">{item.title}</h4>
+                    <h4 className="text-xs font-black text-navy/60 uppercase tracking-widest group-hover:text-emerald-500 transition-all text-center">{item.title}</h4>
                  </div>
                ))}
             </div>
@@ -200,8 +237,8 @@ function Index() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
                   Por que somos líderes
                 </div>
-                <h2 className="text-5xl font-semibold text-navy leading-[1.1]">
-                  Tecnologia que <span className="text-primary italic">substitui</span> o trabalho manual.
+                <h2 className="text-5xl font-black text-navy leading-[0.85] uppercase tracking-tighter">
+                  Tecnologia que <span className="text-emerald-500">substitui</span> o trabalho manual.
                 </h2>
                 <div className="space-y-6">
                   {[
@@ -210,13 +247,13 @@ function Index() {
                     { title: "Analytics Operacional", desc: "Dashboard em tempo real da produtividade do seu escritório." },
                     { title: "Segurança Enterprise", desc: "Infraestrutura robusta com backup geográfico e criptografia AES-256." }
                   ].map((item, idx) => (
-                    <div key={idx} className="flex gap-4 p-4 hover:bg-white rounded-2xl transition-colors">
-                      <div className="mt-1 h-6 w-6 rounded bg-primary/20 flex items-center justify-center">
-                        <CheckSquare className="h-4 w-4 text-primary" />
+                    <div key={idx} className="flex gap-4 p-4 hover:bg-emerald-50 rounded-2xl transition-colors">
+                      <div className="mt-1 h-6 w-6 rounded bg-emerald-500/10 flex items-center justify-center">
+                        <CheckSquare className="h-4 w-4 text-emerald-500" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-navy">{item.title}</h4>
-                        <p className="text-slate-500 text-sm">{item.desc}</p>
+                        <h4 className="font-black text-navy uppercase tracking-widest text-[11px] mb-1">{item.title}</h4>
+                        <p className="text-slate-500 text-sm font-medium">{item.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -256,7 +293,9 @@ function Index() {
         <section id="planos" className="py-32 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-24">
-              <h2 className="text-5xl font-semibold text-navy">Investimento Estratégico</h2>
+                <h2 className="text-5xl lg:text-7xl font-black text-navy uppercase tracking-tighter text-center mb-16">
+                  Investimento <span className="text-emerald-500">Estratégico</span>
+                </h2>
               <p className="text-slate-500 mt-4 text-lg">Planos desenhados para todos os tamanhos de operação naval.</p>
             </div>
             
@@ -282,11 +321,11 @@ function Index() {
                   features: ["White Label Parcial", "API de Integração", "Manager Dedicado", "Usuários Ilimitados", "Treinamento VIP"] 
                 }
               ].map((plan, idx) => (
-                <div key={idx} className={`relative p-10 rounded-3xl border-2 transition-all hover:scale-105 duration-500 ${plan.popular ? 'border-primary shadow-2xl bg-white scale-105 z-10' : 'bg-slate-50 border-transparent shadow-sm'}`}>
-                  {plan.popular && <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-lg">Mais Vendido</span>}
+                <div key={idx} className={`relative p-10 rounded-3xl border-2 transition-all hover:scale-105 duration-500 ${plan.popular ? 'border-emerald-500 shadow-2xl bg-white scale-105 z-10' : 'bg-white border-slate-100 shadow-sm'}`}>
+                  {plan.popular && <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-500 text-white text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-lg">Mais Vendido</span>}
                   
                   <div className="mb-10">
-                    <h3 className="text-2xl font-semibold text-navy mb-2">{plan.name}</h3>
+                    <h3 className="text-2xl font-black text-navy mb-2 uppercase tracking-widest">{plan.name}</h3>
                     <p className="text-sm text-slate-500 leading-relaxed">{plan.desc}</p>
                   </div>
                   
@@ -298,12 +337,12 @@ function Index() {
                   <ul className="space-y-5 mb-12">
                     {plan.features.map((f, i) => (
                       <li key={i} className="flex items-center gap-3 text-sm font-bold text-navy/70">
-                        <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" /> {f}
+                        <CheckCircle className="h-5 w-5 text-emerald-500 flex-shrink-0" /> {f}
                       </li>
                     ))}
                   </ul>
                   
-                  <Link to="/auth/signup" className={`w-full block py-5 rounded-2xl text-center font-black transition-all uppercase tracking-[0.1em] ${plan.popular ? 'bg-primary text-white hover:shadow-xl' : 'bg-white border-2 border-slate-200 text-navy hover:bg-slate-100'}`}>
+                  <Link to="/auth/signup" className={`w-full block py-5 rounded-2xl text-center font-black transition-all uppercase tracking-[0.1em] ${plan.popular ? 'bg-emerald-500 text-white hover:shadow-xl shadow-emerald-500/20' : 'bg-white border-2 border-slate-200 text-navy hover:bg-slate-100'}`}>
                     {plan.price === "Custom" ? "Falar com Vendas" : "Assinar Agora"}
                   </Link>
                 </div>
@@ -313,22 +352,23 @@ function Index() {
         </section>
 
         {/* Final CTA Premium */}
-        <section className="py-24 bg-navy relative overflow-hidden">
-          <div className="absolute inset-0 bg-primary opacity-5 pointer-events-none" />
+        <section className="py-24 bg-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-emerald-500/5 pointer-events-none" />
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="bg-[#000B18] rounded-3xl p-16 lg:p-24 text-center border border-white/10 shadow-3xl">
-              <h2 className="text-5xl lg:text-7xl font-semibold text-white mb-8 leading-none">
-                DOMINE O MERCADO <span className="text-primary italic">NAVAL</span>
+            <div className="bg-white rounded-3xl p-16 lg:p-24 text-center border border-slate-100 shadow-2xl">
+              <h2 className="text-5xl lg:text-[80px] font-black text-navy mb-8 leading-[0.85] uppercase tracking-tighter">
+                DOMINE O MERCADO <span className="text-emerald-500">NAVAL</span>
               </h2>
-              <p className="text-xl text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-xl text-slate-500 mb-12 max-w-2xl mx-auto leading-tight font-bold">
                 Junte-se a centenas de empresas que já automatizaram sua gestão documental com o NavalDocs Pro.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <Link to="/auth/signup" className="bg-primary text-white px-12 py-6 rounded-2xl text-xl font-black hover:scale-110 transition-transform">
-                  EXPERIMENTAR GRÁTIS
+                <Link to="/auth/signup" className="group relative bg-emerald-500 text-white px-12 py-6 rounded-2xl text-xl font-black hover:scale-110 transition-all shadow-2xl shadow-emerald-500/20 overflow-hidden">
+                  <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
+                  EXPERIMENTAR AGORA
                 </Link>
-                <Link to="/demo" className="bg-white/5 border border-white/10 text-white px-12 py-6 rounded-2xl text-xl font-black hover:bg-white/10 transition-transform">
-                  AGENDAR DEMO
+                <Link to="/demo" className="bg-white border-2 border-emerald-500 text-emerald-500 px-12 py-6 rounded-2xl text-xl font-black hover:bg-emerald-50 transition-transform shadow-lg">
+                  VER EM AÇÃO
                 </Link>
               </div>
             </div>
@@ -336,12 +376,12 @@ function Index() {
         </section>
       </main>
 
-      <footer className="bg-navy border-t border-white/5 py-12 text-center">
+      <footer className="bg-white border-t border-slate-100 py-12 text-center">
          <div className="max-w-7xl mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-center gap-8">
                <div className="flex items-center gap-2">
-                  <Anchor className="h-6 w-6 text-primary" />
-                  <span className="text-lg font-black tracking-tighter text-white uppercase italic">NavalDocs <span className="text-primary">Pro</span></span>
+                  <Anchor className="h-6 w-6 text-emerald-500" />
+                  <span className="text-lg font-black tracking-tighter text-navy uppercase italic">NavalDocs <span className="text-emerald-500">Pro</span></span>
                </div>
                <div className="flex flex-col items-center md:items-start">
                   <div className="text-slate-500 text-sm font-bold">
