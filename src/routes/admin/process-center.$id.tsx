@@ -79,7 +79,7 @@ function EnterpriseProcessCenterPage() {
       
       <div className="flex-1 flex flex-col min-w-0">
         <Suspense fallback={<div className="h-20 bg-white animate-pulse" />}>
-          <Workspace3Header process={process} timeInProgress={timeInProgress} />
+          <Workspace3Header process={process} timeInProgress={timeInProgress} healthReport={healthReport} />
         </Suspense>
         
         <ScrollArea className="flex-1">

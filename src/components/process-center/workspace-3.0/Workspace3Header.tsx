@@ -18,10 +18,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function Workspace3Header({ process, timeInProgress }: any) {
+export function Workspace3Header({ process, timeInProgress, healthReport }: any) {
   if (!process) return null;
 
-  const progress = 72; // Mock progress
+  const progress = healthReport?.overall_score || 0;
 
   return (
     <div className="bg-white border-b sticky top-0 z-50 px-6 py-4 backdrop-blur-md bg-white/90">
