@@ -1,10 +1,21 @@
 import { NormalizeCustomerContactAction } from "./process/normalize-customer-contact";
 import { AssociateDocumentAction } from "./process/associate-document";
+import { CreateProcessAction } from "./process/create-process-action";
+import { GeneratePdfAction } from "./pdf/generate-pdf-action";
+import { CompleteChecklistAction } from "./checklist/complete-checklist-action";
+import { RequestSignatureAction } from "./signatures/request-signature-action";
 import { AIAction } from "./action-types";
 
 class ActionRegistryImpl {
   private actions = new Map<string, AIAction>();
-  constructor() { this.register(new NormalizeCustomerContactAction()); this.register(new AssociateDocumentAction()); }
+  constructor() { 
+    this.register(new NormalizeCustomerContactAction()); 
+    this.register(new AssociateDocumentAction()); 
+    this.register(new CreateProcessAction());
+    this.register(new GeneratePdfAction());
+    this.register(new CompleteChecklistAction());
+    this.register(new RequestSignatureAction());
+  }
 
   register(action: AIAction): void {
     this.actions.set(action.id, action);
