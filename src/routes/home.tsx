@@ -247,13 +247,13 @@ function Index() {
                     { title: "Analytics Operacional", desc: "Dashboard em tempo real da produtividade do seu escritório." },
                     { title: "Segurança Enterprise", desc: "Infraestrutura robusta com backup geográfico e criptografia AES-256." }
                   ].map((item, idx) => (
-                    <div key={idx} className="flex gap-4 p-4 hover:bg-white rounded-2xl transition-colors">
-                      <div className="mt-1 h-6 w-6 rounded bg-primary/20 flex items-center justify-center">
-                        <CheckSquare className="h-4 w-4 text-primary" />
+                    <div key={idx} className="flex gap-4 p-4 hover:bg-emerald-50 rounded-2xl transition-colors">
+                      <div className="mt-1 h-6 w-6 rounded bg-emerald-500/10 flex items-center justify-center">
+                        <CheckSquare className="h-4 w-4 text-emerald-500" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-navy">{item.title}</h4>
-                        <p className="text-slate-500 text-sm">{item.desc}</p>
+                        <h4 className="font-black text-navy uppercase tracking-widest text-[11px] mb-1">{item.title}</h4>
+                        <p className="text-slate-500 text-sm font-medium">{item.desc}</p>
                       </div>
                     </div>
                   ))}
