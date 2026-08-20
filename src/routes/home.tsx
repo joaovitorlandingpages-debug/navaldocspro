@@ -319,8 +319,8 @@ function Index() {
                   features: ["White Label Parcial", "API de Integração", "Manager Dedicado", "Usuários Ilimitados", "Treinamento VIP"] 
                 }
               ].map((plan, idx) => (
-                <div key={idx} className={`relative p-10 rounded-3xl border-2 transition-all hover:scale-105 duration-500 ${plan.popular ? 'border-primary shadow-2xl bg-white scale-105 z-10' : 'bg-slate-50 border-transparent shadow-sm'}`}>
-                  {plan.popular && <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-lg">Mais Vendido</span>}
+                <div key={idx} className={`relative p-10 rounded-3xl border-2 transition-all hover:scale-105 duration-500 ${plan.popular ? 'border-emerald-500 shadow-2xl bg-white scale-105 z-10' : 'bg-white border-slate-100 shadow-sm'}`}>
+                  {plan.popular && <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-500 text-white text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-lg">Mais Vendido</span>}
                   
                   <div className="mb-10">
                     <h3 className="text-2xl font-semibold text-navy mb-2">{plan.name}</h3>
