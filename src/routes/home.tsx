@@ -106,7 +106,7 @@ function Index() {
 
               <div className="pt-20">
                 <div className="relative mx-auto max-w-5xl group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-primary to-blue-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-emerald-700 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
                   <div className="relative rounded-2xl bg-white border border-slate-100 overflow-hidden shadow-2xl">
                     <div className="h-12 bg-slate-50 border-b border-slate-100 flex items-center px-6 gap-2">
                       <div className="flex gap-2">
