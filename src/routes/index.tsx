@@ -59,6 +59,10 @@ function RedirectToIndex() {
                 
                 <p className="text-emerald-400 font-bold pt-2">Escreva o código deste componente e garanta que ele traga essa experiência de uso ultrarrápida e moderna.</p>
               </div>
+              <div className="pt-4 flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-emerald-400 font-bold uppercase tracking-widest text-[9px]">Status: Busca Global (Omnibar) Implementada</p>
+              </div>
             </div>
           </div>
         </div>
