@@ -293,7 +293,9 @@ function Index() {
         <section id="planos" className="py-32 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-24">
-              <h2 className="text-5xl font-semibold text-navy">Investimento Estratégico</h2>
+                <h2 className="text-5xl lg:text-7xl font-black text-navy uppercase tracking-tighter text-center mb-16">
+                  Investimento <span className="text-emerald-500">Estratégico</span>
+                </h2>
               <p className="text-slate-500 mt-4 text-lg">Planos desenhados para todos os tamanhos de operação naval.</p>
             </div>
             
