@@ -121,8 +121,7 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
     
     setSubmitting(true);
     try {
-      // 18. Criação Transacional (Estratégia Compensatória)
-      // 19. Idempotência: Check if already created for this session
+      // Idempotency Check: Verify if identical process already exists
       const { data: existingProcess } = await supabase
         .from('processes')
         .select('id')
@@ -140,23 +139,24 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
         return;
       }
 
-      const { data, error } = await supabase
-        .from('processes')
-        .insert({
-          company_id: profile.company_id,
-          process_type: state.processTypeName,
-          process_type_id: state.processTypeId,
-          customer_id: state.customerId,
-          vessel_id: state.vesselId,
-          title: state.title || state.processTypeName,
-          priority: state.priority,
-          status: 'pending',
+      // ========== DOMAIN SERVICE: PROCESS CREATION ==========
+      // Invokes the authorized ProcessCreationService (single source of truth)
+      const processData = await processCreationService.createProcess({
+        companyId: profile.company_id,
+        processType: state.processTypeName,
+        processTypeId: state.processTypeId,
+        customerId: state.customerId,
+        vesselId: state.vesselId || null,
+        title: state.title || state.processTypeName,
+        description: null,
+        priority: state.priority || 'medium',
+        metadata: {
           branding_mode: state.brandingMode,
-        } as any)
-        .select('id').single();
+          wizard_session_id: sessionId,
+        },
+      });
 
-      if (error) throw error;
-      const processId = data.id;
+      const processId = processData.id;
 
       // Update session status
       if (sessionId) {
@@ -166,7 +166,7 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
         } as any);
       }
 
-      // Materialize documents
+      // Materialize documents from blueprint
       try {
         await materializeProcessBlueprint(processId, {
           extraTemplateIds: state.docPicks,
@@ -175,7 +175,7 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
         console.warn("Blueprint materialization failed, but process was created", e);
       }
 
-      // 5. Smart Process Analyzer: Automatic Technical Analysis
+      // Run Smart Process Analyzer
       try {
         await runProcessAnalysis({
           processId,
@@ -186,7 +186,7 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
         console.warn("Smart Process Analysis failed, but process was created", e);
       }
 
-      // Confirm visibility and notify
+      // Confirm visibility and notify subscribers
       const visibleProcess = await confirmProcessVisible(processId, profile.company_id);
       notifyProcessesChanged(visibleProcess);
 
