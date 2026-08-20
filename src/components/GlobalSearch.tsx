@@ -122,7 +122,7 @@ export function GlobalSearch() {
               {results.processes.map((p: any) => (
                 <CommandItem
                   key={p.id}
-                  onSelect={() => runCommand(() => navigate({ to: `/admin/process-center/$id` as any, params: { id: p.id } }))}
+                  onSelect={() => runCommand(() => navigate({ to: `/admin/process-center/${p.id}` as any }))}
                   className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
                 >
                   <FileBox className="mr-2 h-4 w-4" />
