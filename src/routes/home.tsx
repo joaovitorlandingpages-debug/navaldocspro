@@ -340,7 +340,7 @@ function Index() {
                     ))}
                   </ul>
                   
-                  <Link to="/auth/signup" className={`w-full block py-5 rounded-2xl text-center font-black transition-all uppercase tracking-[0.1em] ${plan.popular ? 'bg-primary text-white hover:shadow-xl' : 'bg-white border-2 border-slate-200 text-navy hover:bg-slate-100'}`}>
+                  <Link to="/auth/signup" className={`w-full block py-5 rounded-2xl text-center font-black transition-all uppercase tracking-[0.1em] ${plan.popular ? 'bg-emerald-500 text-white hover:shadow-xl shadow-emerald-500/20' : 'bg-white border-2 border-slate-200 text-navy hover:bg-slate-100'}`}>
                     {plan.price === "Custom" ? "Falar com Vendas" : "Assinar Agora"}
                   </Link>
                 </div>
