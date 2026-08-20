@@ -2,6 +2,7 @@ import React from "react";
 import { BackNavigation } from "./BackNavigation";
 import { Breadcrumbs } from "../Breadcrumbs";
 import { cn } from "@/lib/utils";
+import { GlobalSearch } from "../GlobalSearch";
 
 interface PageHeaderProps {
   title: string;
@@ -53,11 +54,14 @@ export function PageHeader({
           </div>
         </div>
         
-        {actions && (
-          <div className="flex flex-wrap gap-2 sm:gap-3 w-full lg:w-auto justify-start lg:justify-end mt-2 lg:mt-0">
-            {actions}
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto justify-start lg:justify-end mt-2 lg:mt-0">
+          <GlobalSearch />
+          {actions && (
+            <div className="flex flex-wrap gap-2 sm:gap-3 w-full lg:w-auto justify-start lg:justify-end">
+              {actions}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

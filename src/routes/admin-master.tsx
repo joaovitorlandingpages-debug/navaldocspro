@@ -22,6 +22,7 @@ import {
   DollarSign, Activity, Search, Loader2, Eye, Power, PowerOff, CreditCard,
   ArrowLeft, AlertTriangle,
 } from "lucide-react";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 export const Route = createFileRoute("/admin-master")({
   component: AdminMasterPage,
@@ -116,11 +117,14 @@ function AdminMasterPage() {
               <p className="text-xs text-white/60 uppercase tracking-widest">Controle global SaaS</p>
             </div>
           </div>
-          <Link to="/dashboard">
-            <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
-              <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
-            </Button>
-          </Link>
+          <div className="flex items-center gap-4">
+            <GlobalSearch />
+            <Link to="/dashboard">
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+              </Button>
+            </Link>
+          </div>
         </div>
       </header>
 

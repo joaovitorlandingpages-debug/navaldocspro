@@ -31,6 +31,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 export const Route = createFileRoute("/admin/global")({
   component: AdminGlobalAICenter,
@@ -88,9 +89,12 @@ function AdminGlobalAICenter() {
           </p>
         </div>
         
-        <Badge variant="secondary" className="h-10 px-6 rounded-2xl border-slate-200 bg-white text-navy font-black uppercase text-[10px] tracking-widest flex items-center gap-3 shadow-sm">
-          <Globe className="h-4 w-4 text-emerald-500" /> Multi-Tenant AI Ready
-        </Badge>
+        <div className="flex items-center gap-4">
+          <GlobalSearch />
+          <Badge variant="secondary" className="h-10 px-6 rounded-2xl border-slate-200 bg-white text-navy font-black uppercase text-[10px] tracking-widest flex items-center gap-3 shadow-sm">
+            <Globe className="h-4 w-4 text-emerald-500" /> Multi-Tenant AI Ready
+          </Badge>
+        </div>
       </div>
 
       {/* Metrics */}

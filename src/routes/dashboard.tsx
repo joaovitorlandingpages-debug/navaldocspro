@@ -38,6 +38,7 @@ import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { MobileNavigation } from "@/components/navigation/MobileNavigation";
 import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidgets";
 import { ConsumptionPanel } from "@/components/billing/ConsumptionPanel";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 
 
@@ -331,12 +332,8 @@ function DashboardLayout() {
                     <span className="text-[10px] font-black text-primary uppercase tracking-widest">Production Hardened</span>
                   </div>
 
-                 <div className="relative max-w-sm w-full hidden 2xl:block group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-                    <input 
-                      placeholder="Busca Global Inteligente..." 
-                      className="w-full pl-12 pr-6 py-3 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase tracking-widest focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all"
-                    />
+                 <div className="hidden 2xl:flex items-center gap-2">
+                    <GlobalSearch />
                  </div>
 
                   <div className="flex gap-2">
