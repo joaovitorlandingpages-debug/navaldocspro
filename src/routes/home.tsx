@@ -29,9 +29,9 @@ function Index() {
   }, [session, loading, navigate]);
 
   return (
-    <div className="flex flex-col h-screen bg-white overflow-y-auto">
+    <div className="flex flex-col h-screen bg-white overflow-y-auto font-sans">
       {/* Navigation */}
-      <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b">
+      <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-xl border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-20 items-center">
             <div className="flex items-center gap-3">
