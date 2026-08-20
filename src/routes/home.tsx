@@ -164,12 +164,50 @@ function Index() {
           </div>
         </section>
 
-        {/* Interface Real / Screenshots */}
-        <section className="py-32 bg-navy text-white overflow-hidden">
+        {/* Prova Social Section - Depoimentos */}
+        <section className="py-32 bg-white relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-emerald-500 rounded-full blur-[200px]" />
+          </div>
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center mb-24 space-y-4">
+              <span className="text-emerald-500 font-black uppercase tracking-[0.3em] text-xs">O que dizem os líderes</span>
+              <h2 className="text-5xl font-black text-navy uppercase tracking-tighter">Prova Social Real</h2>
+            </div>
+            
+            <div className="flex gap-8 overflow-hidden py-10">
+              <div className="flex gap-8 animate-scroll whitespace-nowrap">
+                {[
+                  { name: "Eng. Ricardo Santos", company: "Marítima Norte", text: "Reduzimos em 80% o tempo de emissão de laudos técnicos." },
+                  { name: "Dra. Ana Paula", company: "Naval Solutions", text: "A precisão do OCR é impressionante, eliminou erros manuais críticos." },
+                  { name: "Cap. Ferreira", company: "Logística Azul", text: "O melhor investimento em tecnologia que fizemos nos últimos 5 anos." },
+                  { name: "Carlos Mendes", company: "Estaleiro Rio", text: "Interface limpa e suporte técnico de altíssimo nível." },
+                  { name: "Eng. Ricardo Santos", company: "Marítima Norte", text: "Reduzimos em 80% o tempo de emissão de laudos técnicos." },
+                  { name: "Dra. Ana Paula", company: "Naval Solutions", text: "A precisão do OCR é impressionante, eliminou erros manuais críticos." },
+                ].map((item, i) => (
+                  <div key={i} className="inline-block bg-white p-8 rounded-3xl border border-slate-100 shadow-xl min-w-[400px]">
+                    <div className="flex items-center gap-1 mb-6">
+                      {[1,2,3,4,5].map(s => <Zap key={s} className="h-4 w-4 text-emerald-500 fill-emerald-500" />)}
+                    </div>
+                    <p className="text-lg font-bold text-navy mb-6 whitespace-normal italic">"{item.text}"</p>
+                    <div>
+                      <h4 className="font-black text-xs uppercase tracking-widest text-navy">{item.name}</h4>
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{item.company}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Interface Real / Screenshots Refactored */}
+        <section className="py-32 bg-white text-navy overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-24">
-               <h2 className="text-4xl font-semibold mb-4">Interface de Alta Performance</h2>
-               <p className="text-slate-400">Desenvolvido por engenheiros, para engenheiros.</p>
+               <h2 className="text-5xl font-black mb-4 uppercase tracking-tighter">INTERFACE PREMIUM</h2>
+               <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Desenvolvido por engenheiros, para engenheiros.</p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                {[
@@ -181,10 +219,10 @@ function Index() {
                  { title: "Controle de Prazos", img: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&auto=format&fit=crop" }
                ].map((item, i) => (
                  <div key={i} className="group cursor-pointer">
-                    <div className="aspect-video bg-white/5 rounded-2xl overflow-hidden border border-white/10 mb-4 group-hover:border-primary/50 transition-all">
-                       <img src={item.img} alt={item.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all scale-105 group-hover:scale-100" />
+                    <div className="aspect-video bg-white rounded-2xl overflow-hidden border border-slate-100 mb-4 group-hover:border-emerald-500/50 transition-all shadow-sm group-hover:shadow-xl">
+                       <img src={item.img} alt={item.title} className="w-full h-full object-cover grayscale-[0.8] group-hover:grayscale-0 transition-all" />
                     </div>
-                    <h4 className="text-sm font-semibold text-white/80 group-hover:text-primary transition-all">{item.title}</h4>
+                    <h4 className="text-xs font-black text-navy/60 uppercase tracking-widest group-hover:text-emerald-500 transition-all text-center">{item.title}</h4>
                  </div>
                ))}
             </div>
