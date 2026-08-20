@@ -102,7 +102,7 @@ function AdminMasterPage() {
       </div>
     );
   }
-  if (!profile) return <Navigate to="/auth/login" />;
+  if (!profile) return <Navigate to="/auth/login" search={{ redirect: "/admin-master" }} />;
   if (profile.role !== "admin_master_global") return <Navigate to="/dashboard" />;
 
   return (

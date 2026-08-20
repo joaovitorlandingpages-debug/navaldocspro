@@ -152,7 +152,7 @@ function AdminTemplatesPage() {
         <ShieldAlert className="h-10 w-10 text-amber-500 mx-auto mb-3" />
         <p className="font-semibold">Autenticação necessária</p>
         <p className="text-sm text-slate-500 mt-1">Entre para gerenciar modelos.</p>
-        <Button className="mt-4" asChild><Link to="/auth">Entrar</Link></Button>
+        <Button className="mt-4" asChild><Link to="/auth/login" search={{ redirect: "/admin/templates" }}>Entrar</Link></Button>
       </div>
     );
   }

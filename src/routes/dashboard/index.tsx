@@ -12,7 +12,7 @@ function DashboardRedirect() {
   if (loading) return null;
 
   if (!profile) {
-    return <Navigate to="/auth/login" />;
+    return <Navigate to="/auth/login" search={{ redirect: "/dashboard" }} />;
   }
 
   // Content is handled by the parent /dashboard layout's Outlet

@@ -134,7 +134,7 @@ function ProcessCenterListPage() {
                       <MoreVertical className="h-5 w-5" />
                     </Button>
                     <Button asChild className="gap-3 bg-slate-900 hover:bg-primary px-6 h-12 rounded-xl font-black uppercase text-[10px] tracking-[0.15em] shadow-lg shadow-slate-200 transition-all hover:scale-105 active:scale-95">
-                      <Link to="/admin/process-center/$id" params={{ id: process.id }}>
+                      <Link to="/admin/process-center/$id" params={{ id: process.id }} search={{ tab: 'workspace' }}>
                         Abrir Centro Operacional <ArrowRight className="h-4 w-4" />
                       </Link>
                     </Button>

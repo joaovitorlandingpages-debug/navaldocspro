@@ -46,7 +46,7 @@ function Index() {
               <a href="#solucao" className="text-sm font-bold text-navy hover:text-primary transition-colors uppercase tracking-widest">Solução</a>
               <a href="#fluxo" className="text-sm font-bold text-navy hover:text-primary transition-colors uppercase tracking-widest">Como Funciona</a>
               <a href="#planos" className="text-sm font-bold text-navy hover:text-primary transition-colors uppercase tracking-widest">Planos</a>
-              <Link to="/auth/login" className="text-sm font-bold text-slate-500 hover:text-primary transition-colors uppercase tracking-widest">Entrar</Link>
+              <Link to="/auth/login" search={{ redirect: "/dashboard" }} className="text-sm font-bold text-slate-500 hover:text-primary transition-colors uppercase tracking-widest">Entrar</Link>
               <Link to="/auth/signup" className="bg-primary text-white px-6 py-3 rounded-xl text-sm font-black hover:shadow-lg hover:shadow-primary/30 transition-all uppercase tracking-widest">Solicitar Demo</Link>
             </div>
 
@@ -66,7 +66,7 @@ function Index() {
             <a href="#fluxo" className="text-lg font-bold text-navy py-2">Como Funciona</a>
             <a href="#planos" className="text-lg font-bold text-navy py-2">Planos</a>
             <hr />
-            <Link to="/auth/login" className="text-lg font-bold text-navy py-2">Entrar</Link>
+            <Link to="/auth/login" search={{ redirect: "/dashboard" }} className="text-lg font-bold text-navy py-2">Entrar</Link>
             <Link to="/auth/signup" className="bg-primary text-white px-4 py-4 rounded-xl text-center font-black uppercase tracking-widest">Solicitar Demo</Link>
           </div>
         )}

@@ -102,7 +102,7 @@ function AdminHub() {
       </div>
     );
   }
-  if (!profile) return <Navigate to="/auth/login" />;
+  if (!profile) return <Navigate to="/auth/login" search={{ redirect: "/admin-hub" }} />;
   const isGlobal = profile.role === 'admin_master_global';
   const isMaster = isGlobal || profile.role === 'admin_master';
   if (!isMaster && profile.role !== 'admin') return <Navigate to="/dashboard" />;
