@@ -122,7 +122,7 @@ export function GlobalSearch() {
               {results.processes.map((p: any) => (
                 <CommandItem
                   key={p.id}
-                  onSelect={() => runCommand(() => navigate({ to: "/admin/process-center/$id", params: { id: p.id } } as any))}
+                  onSelect={() => runCommand(() => navigate({ to: "/admin/process-center/$id", params: { id: p.id }, search: { tab: 'workspace' } } as any))}
                   className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
                 >
                   <FileBox className="mr-2 h-4 w-4" />
@@ -140,7 +140,7 @@ export function GlobalSearch() {
               {results.vessels.map((v: any) => (
                 <CommandItem
                   key={v.id}
-                  onSelect={() => runCommand(() => navigate({ to: `/vessels` as any }))}
+                  onSelect={() => runCommand(() => navigate({ to: "/vessels" } as any))}
                   className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
                 >
                   <Ship className="mr-2 h-4 w-4" />
@@ -158,7 +158,7 @@ export function GlobalSearch() {
               {results.customers.map((c: any) => (
                 <CommandItem
                   key={c.id}
-                  onSelect={() => runCommand(() => navigate({ to: `/customers` as any }))}
+                  onSelect={() => runCommand(() => navigate({ to: "/customers" } as any))}
                   className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
                 >
                   <Users className="mr-2 h-4 w-4" />
@@ -176,7 +176,7 @@ export function GlobalSearch() {
               {results.documents.map((d: any) => (
                 <CommandItem
                   key={d.id}
-                  onSelect={() => runCommand(() => navigate({ to: `/admin/documents` as any }))}
+                  onSelect={() => runCommand(() => navigate({ to: "/admin/documents" } as any))}
                   className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
                 >
                   <FileText className="mr-2 h-4 w-4" />
@@ -193,7 +193,7 @@ export function GlobalSearch() {
           
           <CommandGroup heading="Ações Rápidas" className="text-white/40">
             <CommandItem 
-              onSelect={() => runCommand(() => navigate({ to: "/dashboard" as any }))}
+              onSelect={() => runCommand(() => navigate({ to: "/dashboard" } as any))}
               className="aria-selected:bg-primary/10 aria-selected:text-primary text-white/80 cursor-pointer"
             >
               <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -201,7 +201,7 @@ export function GlobalSearch() {
               <CommandShortcut>⌘H</CommandShortcut>
             </CommandItem>
             <CommandItem 
-              onSelect={() => runCommand(() => navigate({ to: "/admin/documents" as any }))}
+              onSelect={() => runCommand(() => navigate({ to: "/admin/documents" } as any))}
               className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
             >
               <FileBox className="mr-2 h-4 w-4" />
@@ -209,7 +209,7 @@ export function GlobalSearch() {
               <CommandShortcut>⌘D</CommandShortcut>
             </CommandItem>
             <CommandItem 
-              onSelect={() => runCommand(() => navigate({ to: "/admin-hub" as any }))}
+              onSelect={() => runCommand(() => navigate({ to: "/admin-hub" } as any))}
               className="aria-selected:bg-primary/10 aria-selected:text-primary text-white/80 cursor-pointer"
             >
               <Settings className="mr-2 h-4 w-4" />
