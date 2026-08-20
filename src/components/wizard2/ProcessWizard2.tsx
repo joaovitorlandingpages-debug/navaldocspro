@@ -152,11 +152,11 @@ export function ProcessWizard2({ isOpen, onClose }: { isOpen: boolean, onClose: 
       const processData = await processCreationService.createProcess({
         companyId: profile.company_id,
         processType: state.processTypeName,
-        processTypeId: state.processTypeId,
+        processTypeId: state.processTypeId || undefined,
         customerId: state.customerId,
-        vesselId: state.vesselId,
+        vesselId: state.vesselId || null,
         title: state.title || state.processTypeName,
-        description: undefined,
+        description: null,
         priority: priorityMap[state.priority] || 'medium',
         metadata: {
           branding_mode: state.brandingMode,
