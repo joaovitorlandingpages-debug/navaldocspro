@@ -325,7 +325,7 @@ function Index() {
                   {plan.popular && <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-500 text-white text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-lg">Mais Vendido</span>}
                   
                   <div className="mb-10">
-                    <h3 className="text-2xl font-semibold text-navy mb-2">{plan.name}</h3>
+                    <h3 className="text-2xl font-black text-navy mb-2 uppercase tracking-widest">{plan.name}</h3>
                     <p className="text-sm text-slate-500 leading-relaxed">{plan.desc}</p>
                   </div>
                   
