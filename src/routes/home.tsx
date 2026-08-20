@@ -237,8 +237,8 @@ function Index() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
                   Por que somos líderes
                 </div>
-                <h2 className="text-5xl font-semibold text-navy leading-[1.1]">
-                  Tecnologia que <span className="text-primary italic">substitui</span> o trabalho manual.
+                <h2 className="text-5xl font-black text-navy leading-[0.85] uppercase tracking-tighter">
+                  Tecnologia que <span className="text-emerald-500">substitui</span> o trabalho manual.
                 </h2>
                 <div className="space-y-6">
                   {[
