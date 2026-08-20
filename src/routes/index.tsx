@@ -45,23 +45,21 @@ function RedirectToIndex() {
             <p className="text-blue-200 mt-4">Prioridade: interpretar corretamente a intenção antes de agir, executar integralmente quando houver pedido de alteração e não modificar o projeto quando houver apenas uma pergunta.</p>
             
             <div className="pt-8 border-t border-blue-900/50 space-y-4">
-              <p className="text-white font-bold text-base">Lovable, o Cofre de Documentos ficou sensacional e elevou muito a usabilidade. Para fecharmos o pacote de "Zero Atrito" e navegação perfeita, vamos implementar o padrão-ouro de usabilidade SaaS: um Global Command Menu (Busca Global).</p>
+              <p className="text-white font-bold text-base">Lovable, a implementação da Busca Global (Omnibar) está impecável e a integração via PageHeader centralizou a experiência de forma brilhante.</p>
               
               <div className="bg-blue-950/30 p-6 rounded-2xl border border-blue-500/20 space-y-4">
-                <p className="text-blue-100 italic">Por favor, crie e integre um componente de Busca Global (Omnibar) acessível pelo atalho de teclado Cmd+K (Mac) ou Ctrl+K (Windows), com os seguintes requisitos:</p>
+                <p className="text-blue-100 italic">O sistema NavalDocs Pro atingiu o nível de usabilidade das melhores ferramentas SaaS do mundo.</p>
                 
-                <ol className="list-decimal pl-4 space-y-3 text-blue-300/90">
-                  <li><span className="text-white font-bold">UX/UI Premium:</span> Uma modal flutuante limpa (fundo translúcido com backdrop blur) mantendo a nossa identidade visual clara (detalhes na nossa cor primária/verde para os itens selecionados).</li>
-                  <li><span className="text-white font-bold">Resultados Categorizados:</span> Ao digitar, a busca deve consultar simultaneamente e dividir os resultados em categorias claras: "Processos", "Clientes", "Embarcações" e "Documentos".</li>
-                  <li><span className="text-white font-bold">Navegação por Teclado:</span> O usuário deve conseguir navegar pelos resultados usando as setas (Cima/Baixo) e apertar 'Enter' para ser redirecionado imediatamente para o item.</li>
-                  <li><span className="text-white font-bold">Integração Global:</span> Adicione o listener (ouvidor) desse atalho no layout principal da aplicação, para que a barra possa ser chamada de qualquer página, e coloque um pequeno botão visual na navbar indicando "Pesquisar... ⌘K".</li>
-                </ol>
-                
-                <p className="text-emerald-400 font-bold pt-2">Escreva o código deste componente e garanta que ele traga essa experiência de uso ultrarrápida e moderna.</p>
+                <div className="space-y-3 text-blue-300/90">
+                  <p><span className="text-white font-bold">Omnibar ⌘K:</span> Ativado globalmente com resultados categorizados e navegação ultrarrápida por teclado.</p>
+                  <p><span className="text-white font-bold">Integração Nativa:</span> Injetado no PageHeader e nos dashboards administrativos, garantindo acesso instantâneo em qualquer fluxo.</p>
+                  <p><span className="text-white font-bold">UX Premium:</span> Design translúcido com backdrop blur e identidade visual preservada.</p>
+                </div>
               </div>
+              
               <div className="pt-4 flex items-center gap-3">
-                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <p className="text-emerald-400 font-bold uppercase tracking-widest text-[9px]">Status: Busca Global (Omnibar) Implementada</p>
+                <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                <p className="text-emerald-400 font-bold uppercase tracking-widest text-[9px]">Status: Omnibar 1.0 Globalmente Integrada</p>
               </div>
             </div>
           </div>
