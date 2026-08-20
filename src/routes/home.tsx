@@ -335,7 +335,7 @@ function Index() {
                   <ul className="space-y-5 mb-12">
                     {plan.features.map((f, i) => (
                       <li key={i} className="flex items-center gap-3 text-sm font-bold text-navy/70">
-                        <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" /> {f}
+                        <CheckCircle className="h-5 w-5 text-emerald-500 flex-shrink-0" /> {f}
                       </li>
                     ))}
                   </ul>
