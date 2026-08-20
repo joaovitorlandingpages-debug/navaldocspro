@@ -153,10 +153,10 @@ function Index() {
                   { icon: Globe, title: "Protocolo" }
                 ].map((step, i) => (
                   <div key={i} className="relative z-10 flex flex-col items-center text-center group">
-                    <div className="h-12 w-12 bg-white border-2 border-slate-50 rounded-xl flex items-center justify-center text-primary shadow-lg group-hover:scale-110 group-hover:border-primary/20 transition-all mb-4">
+                    <div className="h-12 w-12 bg-white border-2 border-slate-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-lg group-hover:scale-110 group-hover:border-emerald-500/20 transition-all mb-4">
                       <step.icon className="h-6 w-6" />
                     </div>
-                    <h3 className="text-[10px] font-semibold text-navy">{step.title}</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-navy">{step.title}</h3>
                   </div>
                 ))}
               </div>
