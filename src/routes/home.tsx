@@ -350,19 +350,20 @@ function Index() {
         </section>
 
         {/* Final CTA Premium */}
-        <section className="py-24 bg-navy relative overflow-hidden">
-          <div className="absolute inset-0 bg-primary opacity-5 pointer-events-none" />
+        <section className="py-24 bg-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-emerald-500/5 pointer-events-none" />
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="bg-[#000B18] rounded-3xl p-16 lg:p-24 text-center border border-white/10 shadow-3xl">
-              <h2 className="text-5xl lg:text-7xl font-semibold text-white mb-8 leading-none">
-                DOMINE O MERCADO <span className="text-primary italic">NAVAL</span>
+            <div className="bg-white rounded-3xl p-16 lg:p-24 text-center border border-slate-100 shadow-2xl">
+              <h2 className="text-5xl lg:text-[80px] font-black text-navy mb-8 leading-[0.85] uppercase tracking-tighter">
+                DOMINE O MERCADO <span className="text-emerald-500">NAVAL</span>
               </h2>
-              <p className="text-xl text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-xl text-slate-500 mb-12 max-w-2xl mx-auto leading-tight font-bold">
                 Junte-se a centenas de empresas que já automatizaram sua gestão documental com o NavalDocs Pro.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <Link to="/auth/signup" className="bg-primary text-white px-12 py-6 rounded-2xl text-xl font-black hover:scale-110 transition-transform">
-                  EXPERIMENTAR GRÁTIS
+                <Link to="/auth/signup" className="group relative bg-emerald-500 text-white px-12 py-6 rounded-2xl text-xl font-black hover:scale-110 transition-all shadow-2xl shadow-emerald-500/20 overflow-hidden">
+                  <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
+                  EXPERIMENTAR AGORA
                 </Link>
                 <Link to="/demo" className="bg-white/5 border border-white/10 text-white px-12 py-6 rounded-2xl text-xl font-black hover:bg-white/10 transition-transform">
                   AGENDAR DEMO
