@@ -48,9 +48,9 @@ export async function runOCRFireTest() {
 
   try {
     // STEP 1: OCR Processing Simulation
-    console.log("=" * 60);
+    console.log("============================================================");
     console.log("ETAPA 1: Processamento OCR");
-    console.log("=" * 60);
+    console.log("============================================================");
     
     console.log(`✓ Arquivo recebido: ${mockIdentityDocument.fileName}`);
     console.log(`✓ Tipo: ${mockIdentityDocument.documentType}`);
@@ -66,9 +66,9 @@ export async function runOCRFireTest() {
     console.log(`🎯 Confiança geral: ${(mockOcrExtraction.confidence * 100).toFixed(1)}%\n`);
 
     // STEP 2: Data Extraction
-    console.log("=" * 60);
+    console.log("============================================================");
     console.log("ETAPA 2: Extração de Dados Estruturados");
-    console.log("=" * 60);
+    console.log("============================================================");
 
     const extracted = mockOcrExtraction.extractedFields;
     
@@ -87,9 +87,9 @@ export async function runOCRFireTest() {
     console.log();
 
     // STEP 3: Duplicate Detection
-    console.log("=" * 60);
+    console.log("============================================================");
     console.log("ETAPA 3: Prevenção de Duplicidade (detectExistingCustomer)");
-    console.log("=" * 60);
+    console.log("============================================================");
 
     const cpfNormalized = extracted.cpf.replace(/\D/g, '');
     console.log(`🔍 Procurando cliente com CPF: ${extracted.cpf} (normalizado: ${cpfNormalized})`);
@@ -122,9 +122,9 @@ export async function runOCRFireTest() {
     }
 
     // STEP 4: Wizard2Store Update
-    console.log("=" * 60);
+    console.log("============================================================");
     console.log("ETAPA 4: Atualização do Estado Zustand (Wizard2Store)");
-    console.log("=" * 60);
+    console.log("============================================================");
 
     const storeUpdatePayload = {
       step: "documents", // Stay on Step 1
@@ -175,9 +175,9 @@ export async function runOCRFireTest() {
     console.log(`✅ Estado Zustand atualizado com sucesso!\n`);
 
     // STEP 5: Readiness Assessment
-    console.log("=" * 60);
+    console.log("============================================================");
     console.log("ETAPA 5: Validação de Prontidão para Step 2");
-    console.log("=" * 60);
+    console.log("============================================================");
 
     const readinessChecks = {
       extractionComplete: mockOcrExtraction.confidence >= 0.85,
@@ -201,9 +201,9 @@ export async function runOCRFireTest() {
     }
 
     // Summary Report
-    console.log("=" * 60);
+    console.log("============================================================");
     console.log("RESUMO DO TESTE DE FOGO — STEP 1");
-    console.log("=" * 60);
+    console.log("============================================================");
 
     const report = {
       testDuration: "~2.6 segundos",
@@ -222,9 +222,9 @@ export async function runOCRFireTest() {
       console.log(`   ${formattedKey.padEnd(30)} : ${value}`);
     });
 
-    console.log(`\n${"=" * 60}`);
+    console.log(`\n${"============================================================"}`);
     console.log(`🔥 [FIRE TEST] ${allChecksPassed ? "✅ PASSOU" : "❌ FALHOU"}`);
-    console.log(`${"=" * 60}\n`);
+    console.log(`${"============================================================"}\n`);
 
     return {
       success: allChecksPassed,
