@@ -67,7 +67,7 @@ function ResetPasswordPage() {
     }
     toast.success("Senha atualizada com sucesso.");
     await supabase.auth.signOut();
-    navigate({ to: "/auth/login" });
+    navigate({ to: "/auth/login", search: { redirect: "/dashboard" } });
   }
 
   return (
@@ -90,7 +90,7 @@ function ResetPasswordPage() {
               <p className="text-sm text-white/80">
                 Se este e-mail estiver cadastrado, você receberá um link de recuperação em instantes.
               </p>
-              <Link to="/auth/login" className="text-sm text-blue-400 hover:text-blue-300 inline-flex items-center gap-1">
+              <Link to="/auth/login" search={{ redirect: "/dashboard" }} className="text-sm text-blue-400 hover:text-blue-300 inline-flex items-center gap-1">
                 <ArrowLeft className="h-3 w-3" /> Voltar ao login
               </Link>
             </div>
@@ -114,7 +114,7 @@ function ResetPasswordPage() {
               <Button type="submit" disabled={loading} className="w-full">
                 {loading ? "Enviando..." : "Enviar link de recuperação"}
               </Button>
-              <Link to="/auth/login" className="text-sm text-blue-400 hover:text-blue-300 inline-flex items-center gap-1">
+              <Link to="/auth/login" search={{ redirect: "/dashboard" }} className="text-sm text-blue-400 hover:text-blue-300 inline-flex items-center gap-1">
                 <ArrowLeft className="h-3 w-3" /> Voltar ao login
               </Link>
             </form>

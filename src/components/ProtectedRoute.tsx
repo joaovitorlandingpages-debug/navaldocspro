@@ -14,7 +14,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     if (!loading) {
       if (!session) {
         console.log("PROTECTED_ROUTE_NO_SESSION");
-        navigate({ to: "/auth/login" });
+        navigate({ to: "/auth/login", search: { redirect: window.location.pathname } });
       } else {
         console.log("PROTECTED_ROUTE_SESSION_OK");
       }

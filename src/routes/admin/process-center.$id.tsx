@@ -63,7 +63,7 @@ function EnterpriseProcessCenterPage() {
         <h2 className="text-xl font-bold text-slate-900 mb-2">Processo não encontrado</h2>
         <p className="text-slate-500 mb-6">Não foi possível carregar os detalhes deste processo.</p>
         <Button asChild variant="outline">
-          <Link to="/admin/processes">
+          <Link to="/admin/process-center">
             <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para lista
           </Link>
         </Button>

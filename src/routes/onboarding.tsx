@@ -32,7 +32,7 @@ function OnboardingFlow() {
 
   useEffect(() => {
     if (!loading && !profile) {
-      navigate({ to: "/auth/login" });
+      navigate({ to: "/auth/login", search: { redirect: "/onboarding" } });
     }
     if (profile?.companies?.onboarding_status === 'completed') {
       navigate({ to: "/dashboard" });
