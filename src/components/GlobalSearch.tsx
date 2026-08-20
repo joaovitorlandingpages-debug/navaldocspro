@@ -6,7 +6,8 @@ import {
   Ship,
   FileBox,
   Users,
-  Settings
+  Settings,
+  LayoutDashboard
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -93,36 +94,41 @@ export function GlobalSearch() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-400 bg-slate-900/50 border border-slate-800 rounded-lg hover:bg-slate-800/80 hover:text-white transition-all group"
+        className="flex items-center gap-2 px-3 py-2 text-xs font-black uppercase tracking-widest text-slate-400 bg-white/5 border border-slate-200/10 rounded-xl hover:bg-white/10 hover:text-white transition-all group shrink-0"
       >
         <Search className="h-3.5 w-3.5" />
-        <span>Pesquisar...</span>
-        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-slate-700 bg-slate-800 px-1.5 font-mono text-[10px] font-medium text-slate-500 opacity-100 group-hover:border-slate-600 transition-colors">
+        <span className="hidden sm:inline">Pesquisar...</span>
+        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-white/10 bg-white/5 px-1.5 font-mono text-[10px] font-medium text-slate-500 opacity-100 group-hover:border-white/20 transition-colors">
           <span className="text-xs">⌘</span>K
         </kbd>
       </button>
 
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput 
-          placeholder="O que você procura? (ex: Niterói, Laudo, Fulano...)" 
-          value={search}
-          onValueChange={setSearch}
-        />
-        <CommandList className="max-h-[450px]">
-          <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
+        <div className="bg-[#000B18] border-b border-white/5">
+          <CommandInput 
+            placeholder="O que você procura? (ex: Niterói, Laudo, Fulano...)" 
+            value={search}
+            onValueChange={setSearch}
+            className="text-white placeholder:text-white/20 border-none focus:ring-0"
+          />
+        </div>
+        <CommandList className="max-h-[450px] bg-[#000B18] text-white custom-scrollbar">
+          <CommandEmpty className="py-12 text-center text-white/40 font-mono text-[10px] uppercase tracking-widest">
+            Nenhum resultado encontrado para "{search}"
+          </CommandEmpty>
           
           {results?.processes && results.processes.length > 0 && (
-            <CommandGroup heading="Processos">
+            <CommandGroup heading="Processos" className="text-white/40">
               {results.processes.map((p: any) => (
                 <CommandItem
                   key={p.id}
                   onSelect={() => runCommand(() => navigate({ to: `/admin/process-center/${p.id}` as any }))}
-                  className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400"
+                  className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
                 >
                   <FileBox className="mr-2 h-4 w-4" />
                   <div className="flex flex-col">
-                    <span>{p.title || "Sem título"}</span>
-                    <span className="text-[10px] text-slate-500">{p.process_type} • {p.status}</span>
+                    <span className="font-bold">{p.title || "Sem título"}</span>
+                    <span className="text-[10px] uppercase tracking-widest opacity-50">{p.process_type} • {p.status}</span>
                   </div>
                 </CommandItem>
               ))}
@@ -130,17 +136,17 @@ export function GlobalSearch() {
           )}
 
           {results?.vessels && results.vessels.length > 0 && (
-            <CommandGroup heading="Embarcações">
+            <CommandGroup heading="Embarcações" className="text-white/40">
               {results.vessels.map((v: any) => (
                 <CommandItem
                   key={v.id}
                   onSelect={() => runCommand(() => navigate({ to: `/admin/vessels/${v.id}` as any }))}
-                  className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400"
+                  className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
                 >
                   <Ship className="mr-2 h-4 w-4" />
                   <div className="flex flex-col">
-                    <span>{v.name}</span>
-                    <span className="text-[10px] text-slate-500">{v.registration_number || "Sem registro"}</span>
+                    <span className="font-bold">{v.name}</span>
+                    <span className="text-[10px] uppercase tracking-widest opacity-50">{v.registration_number || "Sem registro"}</span>
                   </div>
                 </CommandItem>
               ))}
@@ -148,17 +154,17 @@ export function GlobalSearch() {
           )}
 
           {results?.customers && results.customers.length > 0 && (
-            <CommandGroup heading="Clientes">
+            <CommandGroup heading="Clientes" className="text-white/40">
               {results.customers.map((c: any) => (
                 <CommandItem
                   key={c.id}
                   onSelect={() => runCommand(() => navigate({ to: `/admin/customers/${c.id}` as any }))}
-                  className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400"
+                  className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
                 >
                   <Users className="mr-2 h-4 w-4" />
                   <div className="flex flex-col">
-                    <span>{c.name}</span>
-                    <span className="text-[10px] text-slate-500">{c.cpf_cnpj || "Sem documento"}</span>
+                    <span className="font-bold">{c.name}</span>
+                    <span className="text-[10px] uppercase tracking-widest opacity-50">{c.cpf_cnpj || "Sem documento"}</span>
                   </div>
                 </CommandItem>
               ))}
@@ -166,42 +172,50 @@ export function GlobalSearch() {
           )}
 
           {results?.documents && results.documents.length > 0 && (
-            <CommandGroup heading="Documentos">
+            <CommandGroup heading="Documentos" className="text-white/40">
               {results.documents.map((d: any) => (
                 <CommandItem
                   key={d.id}
                   onSelect={() => runCommand(() => {
                     if (d.file_url) window.open(d.file_url, '_blank');
                   })}
-                  className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400"
+                  className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
                 >
                   <FileText className="mr-2 h-4 w-4" />
                   <div className="flex flex-col">
-                    <span>{d.document_type}</span>
-                    <span className="text-[10px] text-slate-500">Documento gerado</span>
+                    <span className="font-bold">{d.document_type}</span>
+                    <span className="text-[10px] uppercase tracking-widest opacity-50">Documento gerado</span>
                   </div>
                 </CommandItem>
               ))}
             </CommandGroup>
           )}
 
-          <CommandSeparator />
+          <CommandSeparator className="bg-white/5" />
           
-          <CommandGroup heading="Ações Rápidas">
+          <CommandGroup heading="Ações Rápidas" className="text-white/40">
+            <CommandItem 
+              onSelect={() => runCommand(() => navigate({ to: "/dashboard" as any }))}
+              className="aria-selected:bg-primary/10 aria-selected:text-primary text-white/80 cursor-pointer"
+            >
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              <span className="font-bold">Ir para Dashboard</span>
+              <CommandShortcut>⌘H</CommandShortcut>
+            </CommandItem>
             <CommandItem 
               onSelect={() => runCommand(() => navigate({ to: "/admin/documents" as any }))}
-              className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400"
+              className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400 text-white/80 cursor-pointer"
             >
               <FileBox className="mr-2 h-4 w-4" />
-              <span>Ver Cofre de Documentos</span>
+              <span className="font-bold">Cofre de Documentos</span>
               <CommandShortcut>⌘D</CommandShortcut>
             </CommandItem>
             <CommandItem 
               onSelect={() => runCommand(() => navigate({ to: "/admin-hub" as any }))}
-              className="aria-selected:bg-emerald-500/10 aria-selected:text-emerald-400"
+              className="aria-selected:bg-primary/10 aria-selected:text-primary text-white/80 cursor-pointer"
             >
               <Settings className="mr-2 h-4 w-4" />
-              <span>Admin Hub</span>
+              <span className="font-bold">Painel de Controle (Admin Hub)</span>
             </CommandItem>
           </CommandGroup>
         </CommandList>
