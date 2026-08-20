@@ -119,7 +119,7 @@ function Index() {
                     <img 
                       src="https://images.unsplash.com/photo-1551288049-bbbda536339a?q=80&w=2070&auto=format&fit=crop" 
                       alt="Dashboard Interface" 
-                      className="w-full h-auto grayscale-[0.5] contrast-[1.1]"
+                      className="w-full h-auto grayscale hover:grayscale-0 transition-all duration-1000 scale-[1.02] group-hover:scale-100 contrast-[1.1]"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent" />
                   </div>
