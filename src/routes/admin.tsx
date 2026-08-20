@@ -36,6 +36,7 @@ import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { PageHeader } from "@/components/navigation/PageHeader";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { useTelemetry } from "@/hooks/useTelemetry";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -136,7 +137,8 @@ function AdminLayout() {
                     </div>
                  </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-6">
+                 <GlobalSearch />
                  <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
                     <ShieldCheck className="h-4 w-4 text-slate-400" />
                  </div>
