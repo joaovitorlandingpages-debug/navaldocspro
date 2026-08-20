@@ -376,12 +376,12 @@ function Index() {
         </section>
       </main>
 
-      <footer className="bg-navy border-t border-white/5 py-12 text-center">
+      <footer className="bg-white border-t border-slate-100 py-12 text-center">
          <div className="max-w-7xl mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-center gap-8">
                <div className="flex items-center gap-2">
-                  <Anchor className="h-6 w-6 text-primary" />
-                  <span className="text-lg font-black tracking-tighter text-white uppercase italic">NavalDocs <span className="text-primary">Pro</span></span>
+                  <Anchor className="h-6 w-6 text-emerald-500" />
+                  <span className="text-lg font-black tracking-tighter text-navy uppercase italic">NavalDocs <span className="text-emerald-500">Pro</span></span>
                </div>
                <div className="flex flex-col items-center md:items-start">
                   <div className="text-slate-500 text-sm font-bold">
