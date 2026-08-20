@@ -1,17 +1,12 @@
 import * as React from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { 
-  Calculator, 
-  Calendar, 
-  CreditCard, 
-  Settings, 
-  Smile, 
-  User,
   Search,
   FileText,
   Ship,
   FileBox,
-  Users
+  Users,
+  Settings
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +21,13 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
+
+interface SearchResult {
+  processes: any[];
+  vessels: any[];
+  customers: any[];
+  documents: any[];
+}
 
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -44,7 +46,7 @@ export function GlobalSearch() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  const { data: results, isLoading } = useQuery({
+  const { data: results } = useQuery<SearchResult | null>({
     queryKey: ["global-search", search],
     queryFn: async () => {
       if (!search || search.length < 2) return null;
@@ -109,9 +111,9 @@ export function GlobalSearch() {
         <CommandList className="max-h-[450px]">
           <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
           
-          {results?.processes.length ? (
+          {results?.processes && results.processes.length > 0 && (
             <CommandGroup heading="Processos">
-              {results.processes.map((p) => (
+              {results.processes.map((p: any) => (
                 <CommandItem
                   key={p.id}
                   onSelect={() => runCommand(() => navigate({ to: `/admin/process-center/${p.id}` as any }))}
@@ -125,11 +127,11 @@ export function GlobalSearch() {
                 </CommandItem>
               ))}
             </CommandGroup>
-          ) : null}
+          )}
 
-          {results?.vessels.length ? (
+          {results?.vessels && results.vessels.length > 0 && (
             <CommandGroup heading="Embarcações">
-              {results.vessels.map((v) => (
+              {results.vessels.map((v: any) => (
                 <CommandItem
                   key={v.id}
                   onSelect={() => runCommand(() => navigate({ to: `/admin/vessels/${v.id}` as any }))}
@@ -143,11 +145,11 @@ export function GlobalSearch() {
                 </CommandItem>
               ))}
             </CommandGroup>
-          ) : null}
+          )}
 
-          {results?.customers.length ? (
+          {results?.customers && results.customers.length > 0 && (
             <CommandGroup heading="Clientes">
-              {results.customers.map((c) => (
+              {results.customers.map((c: any) => (
                 <CommandItem
                   key={c.id}
                   onSelect={() => runCommand(() => navigate({ to: `/admin/customers/${c.id}` as any }))}
@@ -161,11 +163,11 @@ export function GlobalSearch() {
                 </CommandItem>
               ))}
             </CommandGroup>
-          ) : null}
+          )}
 
-          {results?.documents.length ? (
+          {results?.documents && results.documents.length > 0 && (
             <CommandGroup heading="Documentos">
-              {results.documents.map((d) => (
+              {results.documents.map((d: any) => (
                 <CommandItem
                   key={d.id}
                   onSelect={() => runCommand(() => {
@@ -181,7 +183,7 @@ export function GlobalSearch() {
                 </CommandItem>
               ))}
             </CommandGroup>
-          ) : null}
+          )}
 
           <CommandSeparator />
           
