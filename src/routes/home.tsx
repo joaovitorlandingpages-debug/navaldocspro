@@ -35,10 +35,10 @@ function Index() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-20 items-center">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary rounded-xl">
+              <div className="p-2 bg-emerald-500 rounded-xl">
                 <Anchor className="h-7 w-7 text-white" />
               </div>
-              <span className="text-2xl font-black tracking-tighter text-navy uppercase">NavalDocs <span className="text-primary">Pro</span></span>
+              <span className="text-2xl font-black tracking-tighter text-navy uppercase">NavalDocs <span className="text-emerald-500">Pro</span></span>
             </div>
             
             {/* Desktop Nav */}
