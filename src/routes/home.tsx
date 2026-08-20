@@ -107,21 +107,21 @@ function Index() {
               <div className="pt-20">
                 <div className="relative mx-auto max-w-5xl group">
                   <div className="absolute -inset-1 bg-gradient-to-r from-primary to-blue-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                  <div className="relative rounded-2xl bg-[#020D1D] border border-white/10 overflow-hidden shadow-2xl">
-                    <div className="h-12 bg-white/5 border-b border-white/10 flex items-center px-6 gap-2">
+                  <div className="relative rounded-2xl bg-white border border-slate-100 overflow-hidden shadow-2xl">
+                    <div className="h-12 bg-slate-50 border-b border-slate-100 flex items-center px-6 gap-2">
                       <div className="flex gap-2">
-                        <div className="h-3 w-3 rounded-full bg-rose-500/50" />
-                        <div className="h-3 w-3 rounded-full bg-amber-500/50" />
-                        <div className="h-3 w-3 rounded-full bg-emerald-500/50" />
+                        <div className="h-3 w-3 rounded-full bg-slate-200" />
+                        <div className="h-3 w-3 rounded-full bg-slate-200" />
+                        <div className="h-3 w-3 rounded-full bg-slate-200" />
                       </div>
-                      <div className="mx-auto text-[10px] font-black text-white/20 uppercase tracking-widest">navaldocs.pro/dashboard/operations</div>
+                      <div className="mx-auto text-[10px] font-black text-slate-300 uppercase tracking-widest">navaldocs.pro/dashboard/operations</div>
                     </div>
                     <img 
                       src="https://images.unsplash.com/photo-1551288049-bbbda536339a?q=80&w=2070&auto=format&fit=crop" 
                       alt="Dashboard Interface" 
-                      className="w-full h-auto opacity-80"
+                      className="w-full h-auto grayscale-[0.5] contrast-[1.1]"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#020D1D] via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent" />
                   </div>
                 </div>
               </div>
