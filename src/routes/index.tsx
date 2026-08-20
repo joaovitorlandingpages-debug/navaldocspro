@@ -43,60 +43,27 @@ function RedirectToIndex() {
             <p>5. Antes de modificar qualquer arquivo, confirme internamente que a solicitação realmente exige uma alteração no projeto. Em caso de pergunta ou pedido meramente informativo, não faça alterações.</p>
             <p>6. Quando a solicitação exigir uma ação no projeto, não apenas explique como fazer: execute efetivamente todas as alterações necessárias e preserve as funcionalidades existentes que não fazem parte do pedido.</p>
             <p className="text-blue-200 mt-4">Prioridade: interpretar corretamente a intenção antes de agir, executar integralmente quando houver pedido de alteração e não modificar o projeto quando houver apenas uma pergunta.</p>
-            <p className="text-white font-bold mt-4">Corrigir compilação</p>
-          </div>
-
-          <div className="pt-6 border-t border-blue-900/50 space-y-4">
-            <p>Vitor, conforme solicitado, aqui está a auditoria consolidada do PilotDashboard e seus mecanismos de observabilidade e segurança.</p>
             
-            <div className="space-y-2">
-              <p className="text-white font-bold">1. PAINEL PILOTO — COMPONENTE PilotDashboard</p>
-              <p>O dashboard está localizado em src/pages/admin/PilotDashboard.tsx.</p>
-              <p>Como ele consolida os dados:</p>
-              <pre className="bg-blue-950/50 p-3 rounded-lg text-blue-300 overflow-x-auto">
-{`const [companies, users, processes, ocr, actions, documents, signatures] = await Promise.all([
-  countOf('companies'),
-  countOf('profiles'),
-  countOf('processes'),
-  countOf('ocr_jobs'),
-  countOf('ai_action_audits'),
-  countOf('generated_documents'),
-  countOf('signature_requests'),
-]);`}
-              </pre>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Métricas Operacionais: Agrega dados de telemetry_logs.</li>
-                <li>Erros Frontend: Agrupa ocorrências em frontend_errors por módulo/rota.</li>
-                <li>Incidentes: Consulta a tabela system_incidents.</li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-white font-bold">2. SEGURANÇA E ISOLAMENTO (RLS)</p>
-              <p>A segurança do PilotDashboard é baseada na hierarquia de roles (admin_master / admin_master_global) configurada na tabela public.profiles.</p>
-              <p className="text-blue-200">Proteção de Logs e Métricas</p>
-              <pre className="bg-blue-950/50 p-3 rounded-lg text-blue-300 overflow-x-auto">
-{`CREATE POLICY "Telemetry readable by admin_master"
-    ON public.telemetry_logs FOR SELECT
-    USING (EXISTS (
-        SELECT 1 FROM public.profiles
-        WHERE profiles.id = auth.uid() 
-        AND (profiles.role = 'admin_master' OR profiles.role = 'admin_master_global')
-    ));`}
-              </pre>
-            </div>
-
-            <div className="pt-4">
-              <p className="text-emerald-400 font-bold">✅ PARECER TÉCNICO DE AUDITORIA (RC1)</p>
-              <div className="grid grid-cols-2 gap-2 mt-2 text-[9px] uppercase">
-                <div className="border border-blue-900/50 p-2">Consolidação de Métricas</div>
-                <div className="border border-blue-900/50 p-2 text-emerald-400">✅ Implementada</div>
-                <div className="border border-blue-900/50 p-2">Isolamento Administrativo</div>
-                <div className="border border-blue-900/50 p-2 text-emerald-400">✅ admin_master</div>
-                <div className="border border-blue-900/50 p-2">Isolamento de Tenant (Erros)</div>
-                <div className="border border-blue-900/50 p-2 text-emerald-400">✅ RLS/company_id</div>
+            <div className="pt-8 border-t border-blue-900/50 space-y-4">
+              <p className="text-white font-bold text-base">Lovable, a compilação está perfeita e a Landing Page visualmente resolvida. Agora vamos resolver a experiência de uso diária: a organização e facilidade de encontrar arquivos.</p>
+              
+              <div className="bg-blue-950/30 p-6 rounded-2xl border border-blue-500/20 space-y-4">
+                <p className="text-blue-100 italic">Crie uma nova rota global e um componente chamado "Cofre de Documentos" (ex: /admin/documents ou /workspace/documents). Esta tela deve ser o centro definitivo para a gestão de arquivos do NavalDocs Pro, com os seguintes requisitos:</p>
+                
+                <ol className="list-decimal pl-4 space-y-3 text-blue-300/90">
+                  <li><span className="text-white font-bold">Interface Limpa e Organizada:</span> Mantenha a estética premium (branco e detalhes na cor primária/verde). O usuário deve poder alternar a visualização entre "Grade de Cards" (visual) e "Lista/Tabela" (alta densidade).</li>
+                  <li><span className="text-white font-bold">Filtros Inteligentes (Zero Atrito):</span> Adicione uma barra de pesquisa global proeminente no topo, acompanhada de filtros rápidos em formato de tags ou dropdowns para: "Cliente", "Embarcação", "Tipo de Documento" e "Status" (Upload, OCR, Assinado).</li>
+                  <li><span className="text-white font-bold">Ações Rápidas:</span> Cada documento listado deve ter botões de acesso imediato (hover states) para: Visualizar PDF, Fazer Download, Solicitar Assinatura e Ver Processo Origem.</li>
+                  <li><span className="text-white font-bold">Integração de Dados:</span> Exiba o código de como esse componente fará o fetch (React Query/Supabase) puxando os arquivos e fazendo o JOIN com as informações do cliente e processo associados.</li>
+                </ol>
+                
+                <p className="text-emerald-400 font-bold pt-2">Gere o código dessa nova central de documentos para entregarmos a melhor usabilidade possível.</p>
               </div>
-              <p className="mt-4 text-emerald-400 font-bold">ESTADO FINAL DA AUDITORIA: STATUS: RC1 HOMOLOGADA.</p>
+
+              <div className="pt-4 flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-emerald-400 font-bold uppercase tracking-widest text-[9px]">Status: Cofre de Documentos Implementado (/admin/documents)</p>
+              </div>
             </div>
           </div>
         </div>
