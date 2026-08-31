@@ -39,6 +39,7 @@ import { MobileNavigation } from "@/components/navigation/MobileNavigation";
 import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidgets";
 import { ConsumptionPanel } from "@/components/billing/ConsumptionPanel";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { TrialBanner } from "@/components/dashboard/TrialBanner";
 
 
 
@@ -294,6 +295,7 @@ function DashboardLayout() {
       <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
         <header className="relative h-auto min-h-16 bg-white border-b flex flex-col z-40 shrink-0">
+           <TrialBanner />
            {quotaWarnings.length > 0 && (
              <div className="bg-amber-50 border-b border-amber-100 px-4 md:px-8 py-2 flex items-center justify-between animate-in slide-in-from-top duration-500">
                 <div className="flex items-center gap-3">

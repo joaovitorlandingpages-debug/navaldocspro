@@ -100,7 +100,12 @@ export function TemplateStudio({
           content: SAMPLE.body,
           branding: effective,
         });
-        const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+        const pdf = await pdfjsLib.getDocument({
+          data: bytes,
+          enableScripting: false,
+          isEvalSupported: false,
+          disableAutoFetch: true,
+        } as any).promise;
         const page = await pdf.getPage(1);
         const viewport = page.getViewport({ scale: 1.2 });
         const canvas = canvasRef.current;

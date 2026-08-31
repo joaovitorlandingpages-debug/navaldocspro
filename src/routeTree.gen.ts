@@ -9,338 +9,133 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VesselsRouteImport } from './routes/vessels'
-import { Route as TemplatesRouteImport } from './routes/templates'
-import { Route as SystemMonitorRouteImport } from './routes/system-monitor'
-import { Route as SupportRouteImport } from './routes/support'
-import { Route as StatusRouteImport } from './routes/status'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as SalesCenterRouteImport } from './routes/sales-center'
-import { Route as QaChecklistRouteImport } from './routes/qa-checklist'
-import { Route as PredictionsRouteImport } from './routes/predictions'
-import { Route as PlansRouteImport } from './routes/plans'
-import { Route as PilotoRouteImport } from './routes/piloto'
-import { Route as PerformanceCenterRouteImport } from './routes/performance-center'
-import { Route as ParceriaRouteImport } from './routes/parceria'
-import { Route as OperationsCenterRouteImport } from './routes/operations-center'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as OcrReviewCenterRouteImport } from './routes/ocr-review-center'
-import { Route as OcrCenterRouteImport } from './routes/ocr-center'
-import { Route as LogsRouteImport } from './routes/logs'
-import { Route as IdentidadeRouteImport } from './routes/identidade'
-import { Route as HomeRouteImport } from './routes/home'
-import { Route as GettingStartedRouteImport } from './routes/getting-started'
-import { Route as FocoRouteImport } from './routes/foco'
-import { Route as ExigenciasRouteImport } from './routes/exigencias'
-import { Route as ExecutiveRouteImport } from './routes/executive'
-import { Route as DocumentsRouteImport } from './routes/documents'
-import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
-import { Route as DemoRouteImport } from './routes/demo'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as CustomersRouteImport } from './routes/customers'
-import { Route as ConsumoRouteImport } from './routes/consumo'
-import { Route as ComplianceAiRouteImport } from './routes/compliance-ai'
-import { Route as ClientPortalRouteImport } from './routes/client-portal'
-import { Route as ChangelogRouteImport } from './routes/changelog'
-import { Route as CalendarRouteImport } from './routes/calendar'
-import { Route as BenchmarkRouteImport } from './routes/benchmark'
-import { Route as AutomationCenterRouteImport } from './routes/automation-center'
-import { Route as AutomationRouteImport } from './routes/automation'
-import { Route as AssinaturasRouteImport } from './routes/assinaturas'
-import { Route as AnalyticsRouteImport } from './routes/analytics'
-import { Route as AiCenterRouteImport } from './routes/ai-center'
-import { Route as AdminMasterRouteImport } from './routes/admin-master'
-import { Route as AdminHubRouteImport } from './routes/admin-hub'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
-import { Route as ProcessesIndexRouteImport } from './routes/processes.index'
-import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AdminHubRouteImport } from './routes/admin-hub'
+import { Route as AdminMasterRouteImport } from './routes/admin-master'
+import { Route as AiCenterRouteImport } from './routes/ai-center'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
+import { Route as AssinaturasRouteImport } from './routes/assinaturas'
+import { Route as AutomationRouteImport } from './routes/automation'
+import { Route as AutomationCenterRouteImport } from './routes/automation-center'
+import { Route as BenchmarkRouteImport } from './routes/benchmark'
+import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as ChangelogRouteImport } from './routes/changelog'
+import { Route as ClientPortalRouteImport } from './routes/client-portal'
+import { Route as ComplianceAiRouteImport } from './routes/compliance-ai'
+import { Route as ConsumoRouteImport } from './routes/consumo'
+import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DemoRouteImport } from './routes/demo'
+import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
+import { Route as DocumentsRouteImport } from './routes/documents'
+import { Route as ExecutiveRouteImport } from './routes/executive'
+import { Route as ExigenciasRouteImport } from './routes/exigencias'
+import { Route as FocoRouteImport } from './routes/foco'
+import { Route as GettingStartedRouteImport } from './routes/getting-started'
+import { Route as HomeRouteImport } from './routes/home'
+import { Route as IdentidadeRouteImport } from './routes/identidade'
+import { Route as LogsRouteImport } from './routes/logs'
+import { Route as OcrCenterRouteImport } from './routes/ocr-center'
+import { Route as OcrReviewCenterRouteImport } from './routes/ocr-review-center'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as OperationsCenterRouteImport } from './routes/operations-center'
+import { Route as ParceriaRouteImport } from './routes/parceria'
+import { Route as PerformanceCenterRouteImport } from './routes/performance-center'
+import { Route as PilotoRouteImport } from './routes/piloto'
+import { Route as PlansRouteImport } from './routes/plans'
+import { Route as PredictionsRouteImport } from './routes/predictions'
+import { Route as QaChecklistRouteImport } from './routes/qa-checklist'
+import { Route as SalesCenterRouteImport } from './routes/sales-center'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as StatusRouteImport } from './routes/status'
+import { Route as SupportRouteImport } from './routes/support'
+import { Route as SystemMonitorRouteImport } from './routes/system-monitor'
+import { Route as TemplatesRouteImport } from './routes/templates'
+import { Route as VesselsRouteImport } from './routes/vessels'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as VerificarAssinaturaCodeRouteImport } from './routes/verificar-assinatura.$code'
-import { Route as TemplatesMeusRouteImport } from './routes/templates.meus'
-import { Route as TemplatesMarketplaceRouteImport } from './routes/templates.marketplace'
-import { Route as TemplatesGratuitosRouteImport } from './routes/templates.gratuitos'
-import { Route as TemplatesIdRouteImport } from './routes/templates.$id'
-import { Route as ProcessesTrashRouteImport } from './routes/processes.trash'
-import { Route as ProcessesArchivedRouteImport } from './routes/processes.archived'
-import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
-import { Route as PortalTokenRouteImport } from './routes/portal.$token'
-import { Route as DocumentosBibliotecaRouteImport } from './routes/documentos.biblioteca'
-import { Route as DashboardSecurityRouteImport } from './routes/dashboard.security'
-import { Route as DashboardEcosystemRouteImport } from './routes/dashboard.ecosystem'
-import { Route as DashboardDocumentsBaseRouteImport } from './routes/dashboard/documents-base'
-import { Route as DashboardDocumentCenterRouteImport } from './routes/dashboard.document-center'
-import { Route as DashboardDeadlinesRouteImport } from './routes/dashboard.deadlines'
-import { Route as DashboardComplianceCenterRouteImport } from './routes/dashboard/compliance-center'
-import { Route as BillingSuccessRouteImport } from './routes/billing.success'
-import { Route as BillingSubscriptionRouteImport } from './routes/billing.subscription'
-import { Route as BillingFailureRouteImport } from './routes/billing.failure'
-import { Route as AuthSignupRouteImport } from './routes/auth/signup'
-import { Route as AuthResetRouteImport } from './routes/auth/reset'
-import { Route as AuthLoginRouteImport } from './routes/auth/login'
-import { Route as AssinarTokenRouteImport } from './routes/assinar.$token'
-import { Route as AnalyticsOperationsRouteImport } from './routes/analytics.operations'
-import { Route as AnalyticsOcrRouteImport } from './routes/analytics.ocr'
-import { Route as AdminUsersRouteImport } from './routes/admin/users'
-import { Route as AdminTemplatesRouteImport } from './routes/admin/templates'
-import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
-import { Route as AdminSystemHealthRouteImport } from './routes/admin/system-health'
-import { Route as AdminSupportRouteImport } from './routes/admin/support'
-import { Route as AdminStorageRouteImport } from './routes/admin/storage'
-import { Route as AdminSignatureAnchorsRouteImport } from './routes/admin.signature-anchors'
-import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
-import { Route as AdminSecurityRouteImport } from './routes/admin/security'
-import { Route as AdminSaasMetricsRouteImport } from './routes/admin/saas-metrics'
-import { Route as AdminRoadmapRouteImport } from './routes/admin/roadmap'
-import { Route as AdminProductionReadinessRouteImport } from './routes/admin/production-readiness'
-import { Route as AdminPilotDashboardRouteImport } from './routes/admin/pilot-dashboard'
-import { Route as AdminOperationalFeedbackRouteImport } from './routes/admin/operational-feedback'
-import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
-import { Route as AdminModelosProcessoRouteImport } from './routes/admin/modelos-processo'
-import { Route as AdminLogsRouteImport } from './routes/admin/logs'
-import { Route as AdminGlobalRouteImport } from './routes/admin/global'
-import { Route as AdminFullQaReportRouteImport } from './routes/admin/full-qa-report'
-import { Route as AdminFrontendErrorsRouteImport } from './routes/admin/frontend-errors'
-import { Route as AdminFieldValidationReportRouteImport } from './routes/admin/field-validation-report'
-import { Route as AdminExecutiveOverviewRouteImport } from './routes/admin/executive-overview'
-import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
-import { Route as AdminDocumentosRouteImport } from './routes/admin/documentos'
-import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
-import { Route as AdminDocsCentralRouteImport } from './routes/admin/docs-central'
-import { Route as AdminDiagnosticoRouteImport } from './routes/admin.diagnostico'
-import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
-import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
-import { Route as AdminBillingRouteImport } from './routes/admin/billing'
-import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
 import { Route as AdminAiCommandCenterRouteImport } from './routes/admin/ai-command-center'
-import { Route as AdminProcessCenterIndexRouteImport } from './routes/admin/process-center.index'
+import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
+import { Route as AdminBillingRouteImport } from './routes/admin/billing'
+import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
+import { Route as AdminCompaniesRouteImport } from './routes/admin/companies'
+import { Route as AdminDiagnosticoRouteImport } from './routes/admin.diagnostico'
+import { Route as AdminDocsCentralRouteImport } from './routes/admin/docs-central'
+import { Route as AdminDocumentLibraryRouteImport } from './routes/admin/document-library'
+import { Route as AdminDocumentosRouteImport } from './routes/admin/documentos'
+import { Route as AdminDocumentsRouteImport } from './routes/admin/documents'
+import { Route as AdminExecutiveOverviewRouteImport } from './routes/admin/executive-overview'
+import { Route as AdminFieldValidationReportRouteImport } from './routes/admin/field-validation-report'
+import { Route as AdminFrontendErrorsRouteImport } from './routes/admin/frontend-errors'
+import { Route as AdminFullQaReportRouteImport } from './routes/admin/full-qa-report'
+import { Route as AdminGlobalRouteImport } from './routes/admin/global'
+import { Route as AdminLogsRouteImport } from './routes/admin/logs'
+import { Route as AdminModelosProcessoRouteImport } from './routes/admin/modelos-processo'
+import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
+import { Route as AdminOperationalFeedbackRouteImport } from './routes/admin/operational-feedback'
+import { Route as AdminPilotDashboardRouteImport } from './routes/admin/pilot-dashboard'
+import { Route as AdminProductionReadinessRouteImport } from './routes/admin/production-readiness'
+import { Route as AdminRoadmapRouteImport } from './routes/admin/roadmap'
+import { Route as AdminSaasMetricsRouteImport } from './routes/admin/saas-metrics'
+import { Route as AdminSecurityRouteImport } from './routes/admin/security'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminSignatureAnchorsRouteImport } from './routes/admin.signature-anchors'
+import { Route as AdminStorageRouteImport } from './routes/admin/storage'
+import { Route as AdminSupportRouteImport } from './routes/admin/support'
+import { Route as AdminSystemHealthRouteImport } from './routes/admin/system-health'
+import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
+import { Route as AdminTemplatesRouteImport } from './routes/admin/templates'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AnalyticsOcrRouteImport } from './routes/analytics.ocr'
+import { Route as AnalyticsOperationsRouteImport } from './routes/analytics.operations'
+import { Route as AssinarTokenRouteImport } from './routes/assinar.$token'
+import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AuthResetRouteImport } from './routes/auth/reset'
+import { Route as AuthSignupRouteImport } from './routes/auth/signup'
+import { Route as BillingFailureRouteImport } from './routes/billing.failure'
+import { Route as BillingSubscriptionRouteImport } from './routes/billing.subscription'
+import { Route as BillingSuccessRouteImport } from './routes/billing.success'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardComplianceCenterRouteImport } from './routes/dashboard/compliance-center'
+import { Route as DashboardDeadlinesRouteImport } from './routes/dashboard.deadlines'
+import { Route as DashboardDocumentCenterRouteImport } from './routes/dashboard.document-center'
+import { Route as DashboardDocumentsBaseRouteImport } from './routes/dashboard/documents-base'
+import { Route as DashboardEcosystemRouteImport } from './routes/dashboard.ecosystem'
+import { Route as DashboardSecurityRouteImport } from './routes/dashboard.security'
+import { Route as DocumentosBibliotecaRouteImport } from './routes/documentos.biblioteca'
+import { Route as PortalTokenRouteImport } from './routes/portal.$token'
+import { Route as ProcessesIndexRouteImport } from './routes/processes.index'
+import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
+import { Route as ProcessesArchivedRouteImport } from './routes/processes.archived'
+import { Route as ProcessesTrashRouteImport } from './routes/processes.trash'
+import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
+import { Route as TemplatesIdRouteImport } from './routes/templates.$id'
+import { Route as TemplatesGratuitosRouteImport } from './routes/templates.gratuitos'
+import { Route as TemplatesMarketplaceRouteImport } from './routes/templates.marketplace'
+import { Route as TemplatesMeusRouteImport } from './routes/templates.meus'
+import { Route as VerificarAssinaturaCodeRouteImport } from './routes/verificar-assinatura.$code'
 import { Route as AdminDocsCentralIndexRouteImport } from './routes/admin/docs-central/index'
-import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
-import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
-import { Route as AdminProcessCenterIdRouteImport } from './routes/admin/process-center.$id'
-import { Route as AdminDocsCentralVersionsRouteImport } from './routes/admin/docs-central/versions'
-import { Route as AdminDocsCentralSetupAssistantRouteImport } from './routes/admin/docs-central/setup-assistant'
-import { Route as AdminDocsCentralReviewRouteImport } from './routes/admin/docs-central/review'
-import { Route as AdminDocsCentralPublishingRouteImport } from './routes/admin/docs-central/publishing'
-import { Route as AdminDocsCentralProcessTypesRouteImport } from './routes/admin/docs-central/process-types'
-import { Route as AdminDocsCentralModelsRouteImport } from './routes/admin/docs-central/models'
-import { Route as AdminDocsCentralMarketplaceRouteImport } from './routes/admin/docs-central/marketplace'
-import { Route as AdminDocsCentralMappingsRouteImport } from './routes/admin/docs-central/mappings'
-import { Route as AdminDocsCentralLibraryRouteImport } from './routes/admin/docs-central/library'
-import { Route as AdminDocsCentralHealthRouteImport } from './routes/admin/docs-central/health'
-import { Route as AdminDocsCentralFieldsRouteImport } from './routes/admin/docs-central/fields'
-import { Route as AdminDocsCentralCoverageRouteImport } from './routes/admin/docs-central/coverage'
 import { Route as AdminDocsCentralAuditRouteImport } from './routes/admin/docs-central/audit'
+import { Route as AdminDocsCentralCoverageRouteImport } from './routes/admin/docs-central/coverage'
+import { Route as AdminDocsCentralFieldsRouteImport } from './routes/admin/docs-central/fields'
+import { Route as AdminDocsCentralHealthRouteImport } from './routes/admin/docs-central/health'
+import { Route as AdminDocsCentralLibraryRouteImport } from './routes/admin/docs-central/library'
+import { Route as AdminDocsCentralMappingsRouteImport } from './routes/admin/docs-central/mappings'
+import { Route as AdminDocsCentralMarketplaceRouteImport } from './routes/admin/docs-central/marketplace'
+import { Route as AdminDocsCentralModelsRouteImport } from './routes/admin/docs-central/models'
+import { Route as AdminDocsCentralProcessTypesRouteImport } from './routes/admin/docs-central/process-types'
+import { Route as AdminDocsCentralPublishingRouteImport } from './routes/admin/docs-central/publishing'
+import { Route as AdminDocsCentralReviewRouteImport } from './routes/admin/docs-central/review'
+import { Route as AdminDocsCentralSetupAssistantRouteImport } from './routes/admin/docs-central/setup-assistant'
+import { Route as AdminDocsCentralVersionsRouteImport } from './routes/admin/docs-central/versions'
+import { Route as AdminProcessCenterIndexRouteImport } from './routes/admin/process-center.index'
+import { Route as AdminProcessCenterIdRouteImport } from './routes/admin/process-center.$id'
+import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
+import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
 
-const VesselsRoute = VesselsRouteImport.update({
-  id: '/vessels',
-  path: '/vessels',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TemplatesRoute = TemplatesRouteImport.update({
-  id: '/templates',
-  path: '/templates',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SystemMonitorRoute = SystemMonitorRouteImport.update({
-  id: '/system-monitor',
-  path: '/system-monitor',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SupportRoute = SupportRouteImport.update({
-  id: '/support',
-  path: '/support',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StatusRoute = StatusRouteImport.update({
-  id: '/status',
-  path: '/status',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SalesCenterRoute = SalesCenterRouteImport.update({
-  id: '/sales-center',
-  path: '/sales-center',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const QaChecklistRoute = QaChecklistRouteImport.update({
-  id: '/qa-checklist',
-  path: '/qa-checklist',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PredictionsRoute = PredictionsRouteImport.update({
-  id: '/predictions',
-  path: '/predictions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlansRoute = PlansRouteImport.update({
-  id: '/plans',
-  path: '/plans',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PilotoRoute = PilotoRouteImport.update({
-  id: '/piloto',
-  path: '/piloto',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PerformanceCenterRoute = PerformanceCenterRouteImport.update({
-  id: '/performance-center',
-  path: '/performance-center',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ParceriaRoute = ParceriaRouteImport.update({
-  id: '/parceria',
-  path: '/parceria',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OperationsCenterRoute = OperationsCenterRouteImport.update({
-  id: '/operations-center',
-  path: '/operations-center',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OcrReviewCenterRoute = OcrReviewCenterRouteImport.update({
-  id: '/ocr-review-center',
-  path: '/ocr-review-center',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OcrCenterRoute = OcrCenterRouteImport.update({
-  id: '/ocr-center',
-  path: '/ocr-center',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LogsRoute = LogsRouteImport.update({
-  id: '/logs',
-  path: '/logs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IdentidadeRoute = IdentidadeRouteImport.update({
-  id: '/identidade',
-  path: '/identidade',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GettingStartedRoute = GettingStartedRouteImport.update({
-  id: '/getting-started',
-  path: '/getting-started',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FocoRoute = FocoRouteImport.update({
-  id: '/foco',
-  path: '/foco',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExigenciasRoute = ExigenciasRouteImport.update({
-  id: '/exigencias',
-  path: '/exigencias',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExecutiveRoute = ExecutiveRouteImport.update({
-  id: '/executive',
-  path: '/executive',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocumentsRoute = DocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocumentGeneratorRoute = DocumentGeneratorRouteImport.update({
-  id: '/document-generator',
-  path: '/document-generator',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DemoRoute = DemoRouteImport.update({
-  id: '/demo',
-  path: '/demo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CustomersRoute = CustomersRouteImport.update({
-  id: '/customers',
-  path: '/customers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConsumoRoute = ConsumoRouteImport.update({
-  id: '/consumo',
-  path: '/consumo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComplianceAiRoute = ComplianceAiRouteImport.update({
-  id: '/compliance-ai',
-  path: '/compliance-ai',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ClientPortalRoute = ClientPortalRouteImport.update({
-  id: '/client-portal',
-  path: '/client-portal',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChangelogRoute = ChangelogRouteImport.update({
-  id: '/changelog',
-  path: '/changelog',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CalendarRoute = CalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BenchmarkRoute = BenchmarkRouteImport.update({
-  id: '/benchmark',
-  path: '/benchmark',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AutomationCenterRoute = AutomationCenterRouteImport.update({
-  id: '/automation-center',
-  path: '/automation-center',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AutomationRoute = AutomationRouteImport.update({
-  id: '/automation',
-  path: '/automation',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AssinaturasRoute = AssinaturasRouteImport.update({
-  id: '/assinaturas',
-  path: '/assinaturas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AnalyticsRoute = AnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AiCenterRoute = AiCenterRouteImport.update({
-  id: '/ai-center',
-  path: '/ai-center',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminMasterRoute = AdminMasterRouteImport.update({
-  id: '/admin-master',
-  path: '/admin-master',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminHubRoute = AdminHubRouteImport.update({
-  id: '/admin-hub',
-  path: '/admin-hub',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -348,257 +143,274 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AdminHubRoute = AdminHubRouteImport.update({
+  id: '/admin-hub',
+  path: '/admin-hub',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => TemplatesRoute,
-} as any)
-const ProcessesIndexRoute = ProcessesIndexRouteImport.update({
-  id: '/processes/',
-  path: '/processes/',
+const AdminMasterRoute = AdminMasterRouteImport.update({
+  id: '/admin-master',
+  path: '/admin-master',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardRoute,
+const AiCenterRoute = AiCenterRouteImport.update({
+  id: '/ai-center',
+  path: '/ai-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssinaturasRoute = AssinaturasRouteImport.update({
+  id: '/assinaturas',
+  path: '/assinaturas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AutomationRoute = AutomationRouteImport.update({
+  id: '/automation',
+  path: '/automation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AutomationCenterRoute = AutomationCenterRouteImport.update({
+  id: '/automation-center',
+  path: '/automation-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BenchmarkRoute = BenchmarkRouteImport.update({
+  id: '/benchmark',
+  path: '/benchmark',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientPortalRoute = ClientPortalRouteImport.update({
+  id: '/client-portal',
+  path: '/client-portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComplianceAiRoute = ComplianceAiRouteImport.update({
+  id: '/compliance-ai',
+  path: '/compliance-ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsumoRoute = ConsumoRouteImport.update({
+  id: '/consumo',
+  path: '/consumo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomersRoute = CustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentGeneratorRoute = DocumentGeneratorRouteImport.update({
+  id: '/document-generator',
+  path: '/document-generator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentsRoute = DocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExecutiveRoute = ExecutiveRouteImport.update({
+  id: '/executive',
+  path: '/executive',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExigenciasRoute = ExigenciasRouteImport.update({
+  id: '/exigencias',
+  path: '/exigencias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FocoRoute = FocoRouteImport.update({
+  id: '/foco',
+  path: '/foco',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GettingStartedRoute = GettingStartedRouteImport.update({
+  id: '/getting-started',
+  path: '/getting-started',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IdentidadeRoute = IdentidadeRouteImport.update({
+  id: '/identidade',
+  path: '/identidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LogsRoute = LogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OcrCenterRoute = OcrCenterRouteImport.update({
+  id: '/ocr-center',
+  path: '/ocr-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OcrReviewCenterRoute = OcrReviewCenterRouteImport.update({
+  id: '/ocr-review-center',
+  path: '/ocr-review-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OperationsCenterRoute = OperationsCenterRouteImport.update({
+  id: '/operations-center',
+  path: '/operations-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParceriaRoute = ParceriaRouteImport.update({
+  id: '/parceria',
+  path: '/parceria',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerformanceCenterRoute = PerformanceCenterRouteImport.update({
+  id: '/performance-center',
+  path: '/performance-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PilotoRoute = PilotoRouteImport.update({
+  id: '/piloto',
+  path: '/piloto',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlansRoute = PlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PredictionsRoute = PredictionsRouteImport.update({
+  id: '/predictions',
+  path: '/predictions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QaChecklistRoute = QaChecklistRouteImport.update({
+  id: '/qa-checklist',
+  path: '/qa-checklist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalesCenterRoute = SalesCenterRouteImport.update({
+  id: '/sales-center',
+  path: '/sales-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SystemMonitorRoute = SystemMonitorRouteImport.update({
+  id: '/system-monitor',
+  path: '/system-monitor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplatesRoute = TemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VesselsRoute = VesselsRouteImport.update({
+  id: '/vessels',
+  path: '/vessels',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const VerificarAssinaturaCodeRoute = VerificarAssinaturaCodeRouteImport.update({
-  id: '/verificar-assinatura/$code',
-  path: '/verificar-assinatura/$code',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TemplatesMeusRoute = TemplatesMeusRouteImport.update({
-  id: '/meus',
-  path: '/meus',
-  getParentRoute: () => TemplatesRoute,
-} as any)
-const TemplatesMarketplaceRoute = TemplatesMarketplaceRouteImport.update({
-  id: '/marketplace',
-  path: '/marketplace',
-  getParentRoute: () => TemplatesRoute,
-} as any)
-const TemplatesGratuitosRoute = TemplatesGratuitosRouteImport.update({
-  id: '/gratuitos',
-  path: '/gratuitos',
-  getParentRoute: () => TemplatesRoute,
-} as any)
-const TemplatesIdRoute = TemplatesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => TemplatesRoute,
-} as any)
-const ProcessesTrashRoute = ProcessesTrashRouteImport.update({
-  id: '/processes/trash',
-  path: '/processes/trash',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProcessesArchivedRoute = ProcessesArchivedRouteImport.update({
-  id: '/processes/archived',
-  path: '/processes/archived',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProcessesIdRoute = ProcessesIdRouteImport.update({
-  id: '/processes/$id',
-  path: '/processes/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PortalTokenRoute = PortalTokenRouteImport.update({
-  id: '/portal/$token',
-  path: '/portal/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocumentosBibliotecaRoute = DocumentosBibliotecaRouteImport.update({
-  id: '/documentos/biblioteca',
-  path: '/documentos/biblioteca',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardSecurityRoute = DashboardSecurityRouteImport.update({
-  id: '/security',
-  path: '/security',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardEcosystemRoute = DashboardEcosystemRouteImport.update({
-  id: '/ecosystem',
-  path: '/ecosystem',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardDocumentsBaseRoute = DashboardDocumentsBaseRouteImport.update({
-  id: '/documents-base',
-  path: '/documents-base',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardDocumentCenterRoute = DashboardDocumentCenterRouteImport.update({
-  id: '/document-center',
-  path: '/document-center',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardDeadlinesRoute = DashboardDeadlinesRouteImport.update({
-  id: '/deadlines',
-  path: '/deadlines',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardComplianceCenterRoute =
-  DashboardComplianceCenterRouteImport.update({
-    id: '/compliance-center',
-    path: '/compliance-center',
-    getParentRoute: () => DashboardRoute,
-  } as any)
-const BillingSuccessRoute = BillingSuccessRouteImport.update({
-  id: '/billing/success',
-  path: '/billing/success',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BillingSubscriptionRoute = BillingSubscriptionRouteImport.update({
-  id: '/billing/subscription',
-  path: '/billing/subscription',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BillingFailureRoute = BillingFailureRouteImport.update({
-  id: '/billing/failure',
-  path: '/billing/failure',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthSignupRoute = AuthSignupRouteImport.update({
-  id: '/auth/signup',
-  path: '/auth/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthResetRoute = AuthResetRouteImport.update({
-  id: '/auth/reset',
-  path: '/auth/reset',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/auth/login',
-  path: '/auth/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AssinarTokenRoute = AssinarTokenRouteImport.update({
-  id: '/assinar/$token',
-  path: '/assinar/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AnalyticsOperationsRoute = AnalyticsOperationsRouteImport.update({
-  id: '/operations',
-  path: '/operations',
-  getParentRoute: () => AnalyticsRoute,
-} as any)
-const AnalyticsOcrRoute = AnalyticsOcrRouteImport.update({
-  id: '/ocr',
-  path: '/ocr',
-  getParentRoute: () => AnalyticsRoute,
-} as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
+const AdminAiCommandCenterRoute = AdminAiCommandCenterRouteImport.update({
+  id: '/ai-command-center',
+  path: '/ai-command-center',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminTemplatesRoute = AdminTemplatesRouteImport.update({
-  id: '/templates',
-  path: '/templates',
+const AdminAutomationRoute = AdminAutomationRouteImport.update({
+  id: '/automation',
+  path: '/automation',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSystemReportRoute = AdminSystemReportRouteImport.update({
-  id: '/system-report',
-  path: '/system-report',
+const AdminBillingRoute = AdminBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSystemHealthRoute = AdminSystemHealthRouteImport.update({
-  id: '/system-health',
-  path: '/system-health',
+const AdminCommercialRoute = AdminCommercialRouteImport.update({
+  id: '/commercial',
+  path: '/commercial',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSupportRoute = AdminSupportRouteImport.update({
-  id: '/support',
-  path: '/support',
+const AdminCompaniesRoute = AdminCompaniesRouteImport.update({
+  id: '/companies',
+  path: '/companies',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminStorageRoute = AdminStorageRouteImport.update({
-  id: '/storage',
-  path: '/storage',
+const AdminDiagnosticoRoute = AdminDiagnosticoRouteImport.update({
+  id: '/diagnostico',
+  path: '/diagnostico',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSignatureAnchorsRoute = AdminSignatureAnchorsRouteImport.update({
-  id: '/signature-anchors',
-  path: '/signature-anchors',
+const AdminDocsCentralRoute = AdminDocsCentralRouteImport.update({
+  id: '/docs-central',
+  path: '/docs-central',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSettingsRoute = AdminSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+const AdminDocumentLibraryRoute = AdminDocumentLibraryRouteImport.update({
+  id: '/document-library',
+  path: '/document-library',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSecurityRoute = AdminSecurityRouteImport.update({
-  id: '/security',
-  path: '/security',
+const AdminDocumentosRoute = AdminDocumentosRouteImport.update({
+  id: '/documentos',
+  path: '/documentos',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSaasMetricsRoute = AdminSaasMetricsRouteImport.update({
-  id: '/saas-metrics',
-  path: '/saas-metrics',
+const AdminDocumentsRoute = AdminDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminRoadmapRoute = AdminRoadmapRouteImport.update({
-  id: '/roadmap',
-  path: '/roadmap',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminProductionReadinessRoute =
-  AdminProductionReadinessRouteImport.update({
-    id: '/production-readiness',
-    path: '/production-readiness',
-    getParentRoute: () => AdminRoute,
-  } as any)
-const AdminPilotDashboardRoute = AdminPilotDashboardRouteImport.update({
-  id: '/pilot-dashboard',
-  path: '/pilot-dashboard',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminOperationalFeedbackRoute =
-  AdminOperationalFeedbackRouteImport.update({
-    id: '/operational-feedback',
-    path: '/operational-feedback',
-    getParentRoute: () => AdminRoute,
-  } as any)
-const AdminOcrRoute = AdminOcrRouteImport.update({
-  id: '/ocr',
-  path: '/ocr',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminModelosProcessoRoute = AdminModelosProcessoRouteImport.update({
-  id: '/modelos-processo',
-  path: '/modelos-processo',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminLogsRoute = AdminLogsRouteImport.update({
-  id: '/logs',
-  path: '/logs',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminGlobalRoute = AdminGlobalRouteImport.update({
-  id: '/global',
-  path: '/global',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFullQaReportRoute = AdminFullQaReportRouteImport.update({
-  id: '/full-qa-report',
-  path: '/full-qa-report',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFrontendErrorsRoute = AdminFrontendErrorsRouteImport.update({
-  id: '/frontend-errors',
-  path: '/frontend-errors',
+const AdminExecutiveOverviewRoute = AdminExecutiveOverviewRouteImport.update({
+  id: '/executive-overview',
+  path: '/executive-overview',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFieldValidationReportRoute =
@@ -607,145 +419,257 @@ const AdminFieldValidationReportRoute =
     path: '/field-validation-report',
     getParentRoute: () => AdminRoute,
   } as any)
-const AdminExecutiveOverviewRoute = AdminExecutiveOverviewRouteImport.update({
-  id: '/executive-overview',
-  path: '/executive-overview',
+const AdminFrontendErrorsRoute = AdminFrontendErrorsRouteImport.update({
+  id: '/frontend-errors',
+  path: '/frontend-errors',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminDocumentsRoute = AdminDocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
+const AdminFullQaReportRoute = AdminFullQaReportRouteImport.update({
+  id: '/full-qa-report',
+  path: '/full-qa-report',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminDocumentosRoute = AdminDocumentosRouteImport.update({
-  id: '/documentos',
-  path: '/documentos',
+const AdminGlobalRoute = AdminGlobalRouteImport.update({
+  id: '/global',
+  path: '/global',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminDocumentLibraryRoute = AdminDocumentLibraryRouteImport.update({
-  id: '/document-library',
-  path: '/document-library',
+const AdminLogsRoute = AdminLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminDocsCentralRoute = AdminDocsCentralRouteImport.update({
-  id: '/docs-central',
-  path: '/docs-central',
+const AdminModelosProcessoRoute = AdminModelosProcessoRouteImport.update({
+  id: '/modelos-processo',
+  path: '/modelos-processo',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminDiagnosticoRoute = AdminDiagnosticoRouteImport.update({
-  id: '/diagnostico',
-  path: '/diagnostico',
+const AdminOcrRoute = AdminOcrRouteImport.update({
+  id: '/ocr',
+  path: '/ocr',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminCompaniesRoute = AdminCompaniesRouteImport.update({
-  id: '/companies',
-  path: '/companies',
+const AdminOperationalFeedbackRoute =
+  AdminOperationalFeedbackRouteImport.update({
+    id: '/operational-feedback',
+    path: '/operational-feedback',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminPilotDashboardRoute = AdminPilotDashboardRouteImport.update({
+  id: '/pilot-dashboard',
+  path: '/pilot-dashboard',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminCommercialRoute = AdminCommercialRouteImport.update({
-  id: '/commercial',
-  path: '/commercial',
+const AdminProductionReadinessRoute =
+  AdminProductionReadinessRouteImport.update({
+    id: '/production-readiness',
+    path: '/production-readiness',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminRoadmapRoute = AdminRoadmapRouteImport.update({
+  id: '/roadmap',
+  path: '/roadmap',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminBillingRoute = AdminBillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
+const AdminSaasMetricsRoute = AdminSaasMetricsRouteImport.update({
+  id: '/saas-metrics',
+  path: '/saas-metrics',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAutomationRoute = AdminAutomationRouteImport.update({
-  id: '/automation',
-  path: '/automation',
+const AdminSecurityRoute = AdminSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAiCommandCenterRoute = AdminAiCommandCenterRouteImport.update({
-  id: '/ai-command-center',
-  path: '/ai-command-center',
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminProcessCenterIndexRoute = AdminProcessCenterIndexRouteImport.update({
-  id: '/process-center/',
-  path: '/process-center/',
+const AdminSignatureAnchorsRoute = AdminSignatureAnchorsRouteImport.update({
+  id: '/signature-anchors',
+  path: '/signature-anchors',
   getParentRoute: () => AdminRoute,
+} as any)
+const AdminStorageRoute = AdminStorageRouteImport.update({
+  id: '/storage',
+  path: '/storage',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSystemHealthRoute = AdminSystemHealthRouteImport.update({
+  id: '/system-health',
+  path: '/system-health',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSystemReportRoute = AdminSystemReportRouteImport.update({
+  id: '/system-report',
+  path: '/system-report',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTemplatesRoute = AdminTemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AnalyticsOcrRoute = AnalyticsOcrRouteImport.update({
+  id: '/ocr',
+  path: '/ocr',
+  getParentRoute: () => AnalyticsRoute,
+} as any)
+const AnalyticsOperationsRoute = AnalyticsOperationsRouteImport.update({
+  id: '/operations',
+  path: '/operations',
+  getParentRoute: () => AnalyticsRoute,
+} as any)
+const AssinarTokenRoute = AssinarTokenRouteImport.update({
+  id: '/assinar/$token',
+  path: '/assinar/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthResetRoute = AuthResetRouteImport.update({
+  id: '/auth/reset',
+  path: '/auth/reset',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/auth/signup',
+  path: '/auth/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillingFailureRoute = BillingFailureRouteImport.update({
+  id: '/billing/failure',
+  path: '/billing/failure',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillingSubscriptionRoute = BillingSubscriptionRouteImport.update({
+  id: '/billing/subscription',
+  path: '/billing/subscription',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillingSuccessRoute = BillingSuccessRouteImport.update({
+  id: '/billing/success',
+  path: '/billing/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardComplianceCenterRoute =
+  DashboardComplianceCenterRouteImport.update({
+    id: '/compliance-center',
+    path: '/compliance-center',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardDeadlinesRoute = DashboardDeadlinesRouteImport.update({
+  id: '/deadlines',
+  path: '/deadlines',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardDocumentCenterRoute = DashboardDocumentCenterRouteImport.update({
+  id: '/document-center',
+  path: '/document-center',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardDocumentsBaseRoute = DashboardDocumentsBaseRouteImport.update({
+  id: '/documents-base',
+  path: '/documents-base',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardEcosystemRoute = DashboardEcosystemRouteImport.update({
+  id: '/ecosystem',
+  path: '/ecosystem',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSecurityRoute = DashboardSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DocumentosBibliotecaRoute = DocumentosBibliotecaRouteImport.update({
+  id: '/documentos/biblioteca',
+  path: '/documentos/biblioteca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalTokenRoute = PortalTokenRouteImport.update({
+  id: '/portal/$token',
+  path: '/portal/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProcessesIndexRoute = ProcessesIndexRouteImport.update({
+  id: '/processes/',
+  path: '/processes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProcessesIdRoute = ProcessesIdRouteImport.update({
+  id: '/processes/$id',
+  path: '/processes/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProcessesArchivedRoute = ProcessesArchivedRouteImport.update({
+  id: '/processes/archived',
+  path: '/processes/archived',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProcessesTrashRoute = ProcessesTrashRouteImport.update({
+  id: '/processes/trash',
+  path: '/processes/trash',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TemplatesRoute,
+} as any)
+const TemplatesIdRoute = TemplatesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => TemplatesRoute,
+} as any)
+const TemplatesGratuitosRoute = TemplatesGratuitosRouteImport.update({
+  id: '/gratuitos',
+  path: '/gratuitos',
+  getParentRoute: () => TemplatesRoute,
+} as any)
+const TemplatesMarketplaceRoute = TemplatesMarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
+  getParentRoute: () => TemplatesRoute,
+} as any)
+const TemplatesMeusRoute = TemplatesMeusRouteImport.update({
+  id: '/meus',
+  path: '/meus',
+  getParentRoute: () => TemplatesRoute,
+} as any)
+const VerificarAssinaturaCodeRoute = VerificarAssinaturaCodeRouteImport.update({
+  id: '/verificar-assinatura/$code',
+  path: '/verificar-assinatura/$code',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminDocsCentralIndexRoute = AdminDocsCentralIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminDocsCentralRoute,
 } as any)
-const AdminTemplatesPfwRoute = AdminTemplatesPfwRouteImport.update({
-  id: '/pfw',
-  path: '/pfw',
-  getParentRoute: () => AdminTemplatesRoute,
-} as any)
-const AdminTemplatesIdRoute = AdminTemplatesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AdminTemplatesRoute,
-} as any)
-const AdminProcessCenterIdRoute = AdminProcessCenterIdRouteImport.update({
-  id: '/process-center/$id',
-  path: '/process-center/$id',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminDocsCentralVersionsRoute =
-  AdminDocsCentralVersionsRouteImport.update({
-    id: '/versions',
-    path: '/versions',
-    getParentRoute: () => AdminDocsCentralRoute,
-  } as any)
-const AdminDocsCentralSetupAssistantRoute =
-  AdminDocsCentralSetupAssistantRouteImport.update({
-    id: '/setup-assistant',
-    path: '/setup-assistant',
-    getParentRoute: () => AdminDocsCentralRoute,
-  } as any)
-const AdminDocsCentralReviewRoute = AdminDocsCentralReviewRouteImport.update({
-  id: '/review',
-  path: '/review',
-  getParentRoute: () => AdminDocsCentralRoute,
-} as any)
-const AdminDocsCentralPublishingRoute =
-  AdminDocsCentralPublishingRouteImport.update({
-    id: '/publishing',
-    path: '/publishing',
-    getParentRoute: () => AdminDocsCentralRoute,
-  } as any)
-const AdminDocsCentralProcessTypesRoute =
-  AdminDocsCentralProcessTypesRouteImport.update({
-    id: '/process-types',
-    path: '/process-types',
-    getParentRoute: () => AdminDocsCentralRoute,
-  } as any)
-const AdminDocsCentralModelsRoute = AdminDocsCentralModelsRouteImport.update({
-  id: '/models',
-  path: '/models',
-  getParentRoute: () => AdminDocsCentralRoute,
-} as any)
-const AdminDocsCentralMarketplaceRoute =
-  AdminDocsCentralMarketplaceRouteImport.update({
-    id: '/marketplace',
-    path: '/marketplace',
-    getParentRoute: () => AdminDocsCentralRoute,
-  } as any)
-const AdminDocsCentralMappingsRoute =
-  AdminDocsCentralMappingsRouteImport.update({
-    id: '/mappings',
-    path: '/mappings',
-    getParentRoute: () => AdminDocsCentralRoute,
-  } as any)
-const AdminDocsCentralLibraryRoute = AdminDocsCentralLibraryRouteImport.update({
-  id: '/library',
-  path: '/library',
-  getParentRoute: () => AdminDocsCentralRoute,
-} as any)
-const AdminDocsCentralHealthRoute = AdminDocsCentralHealthRouteImport.update({
-  id: '/health',
-  path: '/health',
-  getParentRoute: () => AdminDocsCentralRoute,
-} as any)
-const AdminDocsCentralFieldsRoute = AdminDocsCentralFieldsRouteImport.update({
-  id: '/fields',
-  path: '/fields',
+const AdminDocsCentralAuditRoute = AdminDocsCentralAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
   getParentRoute: () => AdminDocsCentralRoute,
 } as any)
 const AdminDocsCentralCoverageRoute =
@@ -754,10 +678,86 @@ const AdminDocsCentralCoverageRoute =
     path: '/coverage',
     getParentRoute: () => AdminDocsCentralRoute,
   } as any)
-const AdminDocsCentralAuditRoute = AdminDocsCentralAuditRouteImport.update({
-  id: '/audit',
-  path: '/audit',
+const AdminDocsCentralFieldsRoute = AdminDocsCentralFieldsRouteImport.update({
+  id: '/fields',
+  path: '/fields',
   getParentRoute: () => AdminDocsCentralRoute,
+} as any)
+const AdminDocsCentralHealthRoute = AdminDocsCentralHealthRouteImport.update({
+  id: '/health',
+  path: '/health',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
+const AdminDocsCentralLibraryRoute = AdminDocsCentralLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
+const AdminDocsCentralMappingsRoute =
+  AdminDocsCentralMappingsRouteImport.update({
+    id: '/mappings',
+    path: '/mappings',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
+const AdminDocsCentralMarketplaceRoute =
+  AdminDocsCentralMarketplaceRouteImport.update({
+    id: '/marketplace',
+    path: '/marketplace',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
+const AdminDocsCentralModelsRoute = AdminDocsCentralModelsRouteImport.update({
+  id: '/models',
+  path: '/models',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
+const AdminDocsCentralProcessTypesRoute =
+  AdminDocsCentralProcessTypesRouteImport.update({
+    id: '/process-types',
+    path: '/process-types',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
+const AdminDocsCentralPublishingRoute =
+  AdminDocsCentralPublishingRouteImport.update({
+    id: '/publishing',
+    path: '/publishing',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
+const AdminDocsCentralReviewRoute = AdminDocsCentralReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => AdminDocsCentralRoute,
+} as any)
+const AdminDocsCentralSetupAssistantRoute =
+  AdminDocsCentralSetupAssistantRouteImport.update({
+    id: '/setup-assistant',
+    path: '/setup-assistant',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
+const AdminDocsCentralVersionsRoute =
+  AdminDocsCentralVersionsRouteImport.update({
+    id: '/versions',
+    path: '/versions',
+    getParentRoute: () => AdminDocsCentralRoute,
+  } as any)
+const AdminProcessCenterIndexRoute = AdminProcessCenterIndexRouteImport.update({
+  id: '/process-center/',
+  path: '/process-center/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProcessCenterIdRoute = AdminProcessCenterIdRouteImport.update({
+  id: '/process-center/$id',
+  path: '/process-center/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTemplatesIdRoute = AdminTemplatesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminTemplatesRoute,
+} as any)
+const AdminTemplatesPfwRoute = AdminTemplatesPfwRouteImport.update({
+  id: '/pfw',
+  path: '/pfw',
+  getParentRoute: () => AdminTemplatesRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -1569,298 +1569,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/vessels': {
-      id: '/vessels'
-      path: '/vessels'
-      fullPath: '/vessels'
-      preLoaderRoute: typeof VesselsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/templates': {
-      id: '/templates'
-      path: '/templates'
-      fullPath: '/templates'
-      preLoaderRoute: typeof TemplatesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/system-monitor': {
-      id: '/system-monitor'
-      path: '/system-monitor'
-      fullPath: '/system-monitor'
-      preLoaderRoute: typeof SystemMonitorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/support': {
-      id: '/support'
-      path: '/support'
-      fullPath: '/support'
-      preLoaderRoute: typeof SupportRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/status': {
-      id: '/status'
-      path: '/status'
-      fullPath: '/status'
-      preLoaderRoute: typeof StatusRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sales-center': {
-      id: '/sales-center'
-      path: '/sales-center'
-      fullPath: '/sales-center'
-      preLoaderRoute: typeof SalesCenterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/qa-checklist': {
-      id: '/qa-checklist'
-      path: '/qa-checklist'
-      fullPath: '/qa-checklist'
-      preLoaderRoute: typeof QaChecklistRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/predictions': {
-      id: '/predictions'
-      path: '/predictions'
-      fullPath: '/predictions'
-      preLoaderRoute: typeof PredictionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/plans': {
-      id: '/plans'
-      path: '/plans'
-      fullPath: '/plans'
-      preLoaderRoute: typeof PlansRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/piloto': {
-      id: '/piloto'
-      path: '/piloto'
-      fullPath: '/piloto'
-      preLoaderRoute: typeof PilotoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/performance-center': {
-      id: '/performance-center'
-      path: '/performance-center'
-      fullPath: '/performance-center'
-      preLoaderRoute: typeof PerformanceCenterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/parceria': {
-      id: '/parceria'
-      path: '/parceria'
-      fullPath: '/parceria'
-      preLoaderRoute: typeof ParceriaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/operations-center': {
-      id: '/operations-center'
-      path: '/operations-center'
-      fullPath: '/operations-center'
-      preLoaderRoute: typeof OperationsCenterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ocr-review-center': {
-      id: '/ocr-review-center'
-      path: '/ocr-review-center'
-      fullPath: '/ocr-review-center'
-      preLoaderRoute: typeof OcrReviewCenterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ocr-center': {
-      id: '/ocr-center'
-      path: '/ocr-center'
-      fullPath: '/ocr-center'
-      preLoaderRoute: typeof OcrCenterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/logs': {
-      id: '/logs'
-      path: '/logs'
-      fullPath: '/logs'
-      preLoaderRoute: typeof LogsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/identidade': {
-      id: '/identidade'
-      path: '/identidade'
-      fullPath: '/identidade'
-      preLoaderRoute: typeof IdentidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/getting-started': {
-      id: '/getting-started'
-      path: '/getting-started'
-      fullPath: '/getting-started'
-      preLoaderRoute: typeof GettingStartedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/foco': {
-      id: '/foco'
-      path: '/foco'
-      fullPath: '/foco'
-      preLoaderRoute: typeof FocoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/exigencias': {
-      id: '/exigencias'
-      path: '/exigencias'
-      fullPath: '/exigencias'
-      preLoaderRoute: typeof ExigenciasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/executive': {
-      id: '/executive'
-      path: '/executive'
-      fullPath: '/executive'
-      preLoaderRoute: typeof ExecutiveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/documents': {
-      id: '/documents'
-      path: '/documents'
-      fullPath: '/documents'
-      preLoaderRoute: typeof DocumentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/document-generator': {
-      id: '/document-generator'
-      path: '/document-generator'
-      fullPath: '/document-generator'
-      preLoaderRoute: typeof DocumentGeneratorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/demo': {
-      id: '/demo'
-      path: '/demo'
-      fullPath: '/demo'
-      preLoaderRoute: typeof DemoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/customers': {
-      id: '/customers'
-      path: '/customers'
-      fullPath: '/customers'
-      preLoaderRoute: typeof CustomersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/consumo': {
-      id: '/consumo'
-      path: '/consumo'
-      fullPath: '/consumo'
-      preLoaderRoute: typeof ConsumoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/compliance-ai': {
-      id: '/compliance-ai'
-      path: '/compliance-ai'
-      fullPath: '/compliance-ai'
-      preLoaderRoute: typeof ComplianceAiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/client-portal': {
-      id: '/client-portal'
-      path: '/client-portal'
-      fullPath: '/client-portal'
-      preLoaderRoute: typeof ClientPortalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/changelog': {
-      id: '/changelog'
-      path: '/changelog'
-      fullPath: '/changelog'
-      preLoaderRoute: typeof ChangelogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/calendar': {
-      id: '/calendar'
-      path: '/calendar'
-      fullPath: '/calendar'
-      preLoaderRoute: typeof CalendarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/benchmark': {
-      id: '/benchmark'
-      path: '/benchmark'
-      fullPath: '/benchmark'
-      preLoaderRoute: typeof BenchmarkRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/automation-center': {
-      id: '/automation-center'
-      path: '/automation-center'
-      fullPath: '/automation-center'
-      preLoaderRoute: typeof AutomationCenterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/automation': {
-      id: '/automation'
-      path: '/automation'
-      fullPath: '/automation'
-      preLoaderRoute: typeof AutomationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/assinaturas': {
-      id: '/assinaturas'
-      path: '/assinaturas'
-      fullPath: '/assinaturas'
-      preLoaderRoute: typeof AssinaturasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/analytics': {
-      id: '/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof AnalyticsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ai-center': {
-      id: '/ai-center'
-      path: '/ai-center'
-      fullPath: '/ai-center'
-      preLoaderRoute: typeof AiCenterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin-master': {
-      id: '/admin-master'
-      path: '/admin-master'
-      fullPath: '/admin-master'
-      preLoaderRoute: typeof AdminMasterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin-hub': {
-      id: '/admin-hub'
-      path: '/admin-hub'
-      fullPath: '/admin-hub'
-      preLoaderRoute: typeof AdminHubRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -1870,431 +1583,305 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/admin-hub': {
+      id: '/admin-hub'
+      path: '/admin-hub'
+      fullPath: '/admin-hub'
+      preLoaderRoute: typeof AdminHubRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/templates/': {
-      id: '/templates/'
-      path: '/'
-      fullPath: '/templates/'
-      preLoaderRoute: typeof TemplatesIndexRouteImport
-      parentRoute: typeof TemplatesRoute
-    }
-    '/processes/': {
-      id: '/processes/'
-      path: '/processes'
-      fullPath: '/processes/'
-      preLoaderRoute: typeof ProcessesIndexRouteImport
+    '/admin-master': {
+      id: '/admin-master'
+      path: '/admin-master'
+      fullPath: '/admin-master'
+      preLoaderRoute: typeof AdminMasterRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/': {
-      id: '/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof DashboardRoute
+    '/ai-center': {
+      id: '/ai-center'
+      path: '/ai-center'
+      fullPath: '/ai-center'
+      preLoaderRoute: typeof AiCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assinaturas': {
+      id: '/assinaturas'
+      path: '/assinaturas'
+      fullPath: '/assinaturas'
+      preLoaderRoute: typeof AssinaturasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/automation': {
+      id: '/automation'
+      path: '/automation'
+      fullPath: '/automation'
+      preLoaderRoute: typeof AutomationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/automation-center': {
+      id: '/automation-center'
+      path: '/automation-center'
+      fullPath: '/automation-center'
+      preLoaderRoute: typeof AutomationCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/benchmark': {
+      id: '/benchmark'
+      path: '/benchmark'
+      fullPath: '/benchmark'
+      preLoaderRoute: typeof BenchmarkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/client-portal': {
+      id: '/client-portal'
+      path: '/client-portal'
+      fullPath: '/client-portal'
+      preLoaderRoute: typeof ClientPortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compliance-ai': {
+      id: '/compliance-ai'
+      path: '/compliance-ai'
+      fullPath: '/compliance-ai'
+      preLoaderRoute: typeof ComplianceAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consumo': {
+      id: '/consumo'
+      path: '/consumo'
+      fullPath: '/consumo'
+      preLoaderRoute: typeof ConsumoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customers': {
+      id: '/customers'
+      path: '/customers'
+      fullPath: '/customers'
+      preLoaderRoute: typeof CustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/document-generator': {
+      id: '/document-generator'
+      path: '/document-generator'
+      fullPath: '/document-generator'
+      preLoaderRoute: typeof DocumentGeneratorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/documents': {
+      id: '/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof DocumentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/executive': {
+      id: '/executive'
+      path: '/executive'
+      fullPath: '/executive'
+      preLoaderRoute: typeof ExecutiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exigencias': {
+      id: '/exigencias'
+      path: '/exigencias'
+      fullPath: '/exigencias'
+      preLoaderRoute: typeof ExigenciasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/foco': {
+      id: '/foco'
+      path: '/foco'
+      fullPath: '/foco'
+      preLoaderRoute: typeof FocoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/getting-started': {
+      id: '/getting-started'
+      path: '/getting-started'
+      fullPath: '/getting-started'
+      preLoaderRoute: typeof GettingStartedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/identidade': {
+      id: '/identidade'
+      path: '/identidade'
+      fullPath: '/identidade'
+      preLoaderRoute: typeof IdentidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logs': {
+      id: '/logs'
+      path: '/logs'
+      fullPath: '/logs'
+      preLoaderRoute: typeof LogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ocr-center': {
+      id: '/ocr-center'
+      path: '/ocr-center'
+      fullPath: '/ocr-center'
+      preLoaderRoute: typeof OcrCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ocr-review-center': {
+      id: '/ocr-review-center'
+      path: '/ocr-review-center'
+      fullPath: '/ocr-review-center'
+      preLoaderRoute: typeof OcrReviewCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/operations-center': {
+      id: '/operations-center'
+      path: '/operations-center'
+      fullPath: '/operations-center'
+      preLoaderRoute: typeof OperationsCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parceria': {
+      id: '/parceria'
+      path: '/parceria'
+      fullPath: '/parceria'
+      preLoaderRoute: typeof ParceriaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/performance-center': {
+      id: '/performance-center'
+      path: '/performance-center'
+      fullPath: '/performance-center'
+      preLoaderRoute: typeof PerformanceCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/piloto': {
+      id: '/piloto'
+      path: '/piloto'
+      fullPath: '/piloto'
+      preLoaderRoute: typeof PilotoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plans': {
+      id: '/plans'
+      path: '/plans'
+      fullPath: '/plans'
+      preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/predictions': {
+      id: '/predictions'
+      path: '/predictions'
+      fullPath: '/predictions'
+      preLoaderRoute: typeof PredictionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qa-checklist': {
+      id: '/qa-checklist'
+      path: '/qa-checklist'
+      fullPath: '/qa-checklist'
+      preLoaderRoute: typeof QaChecklistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sales-center': {
+      id: '/sales-center'
+      path: '/sales-center'
+      fullPath: '/sales-center'
+      preLoaderRoute: typeof SalesCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/system-monitor': {
+      id: '/system-monitor'
+      path: '/system-monitor'
+      fullPath: '/system-monitor'
+      preLoaderRoute: typeof SystemMonitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/templates': {
+      id: '/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof TemplatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vessels': {
+      id: '/vessels'
+      path: '/vessels'
+      fullPath: '/vessels'
+      preLoaderRoute: typeof VesselsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/verificar-assinatura/$code': {
-      id: '/verificar-assinatura/$code'
-      path: '/verificar-assinatura/$code'
-      fullPath: '/verificar-assinatura/$code'
-      preLoaderRoute: typeof VerificarAssinaturaCodeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/templates/meus': {
-      id: '/templates/meus'
-      path: '/meus'
-      fullPath: '/templates/meus'
-      preLoaderRoute: typeof TemplatesMeusRouteImport
-      parentRoute: typeof TemplatesRoute
-    }
-    '/templates/marketplace': {
-      id: '/templates/marketplace'
-      path: '/marketplace'
-      fullPath: '/templates/marketplace'
-      preLoaderRoute: typeof TemplatesMarketplaceRouteImport
-      parentRoute: typeof TemplatesRoute
-    }
-    '/templates/gratuitos': {
-      id: '/templates/gratuitos'
-      path: '/gratuitos'
-      fullPath: '/templates/gratuitos'
-      preLoaderRoute: typeof TemplatesGratuitosRouteImport
-      parentRoute: typeof TemplatesRoute
-    }
-    '/templates/$id': {
-      id: '/templates/$id'
-      path: '/$id'
-      fullPath: '/templates/$id'
-      preLoaderRoute: typeof TemplatesIdRouteImport
-      parentRoute: typeof TemplatesRoute
-    }
-    '/processes/trash': {
-      id: '/processes/trash'
-      path: '/processes/trash'
-      fullPath: '/processes/trash'
-      preLoaderRoute: typeof ProcessesTrashRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/processes/archived': {
-      id: '/processes/archived'
-      path: '/processes/archived'
-      fullPath: '/processes/archived'
-      preLoaderRoute: typeof ProcessesArchivedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/processes/$id': {
-      id: '/processes/$id'
-      path: '/processes/$id'
-      fullPath: '/processes/$id'
-      preLoaderRoute: typeof ProcessesIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/portal/$token': {
-      id: '/portal/$token'
-      path: '/portal/$token'
-      fullPath: '/portal/$token'
-      preLoaderRoute: typeof PortalTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/documentos/biblioteca': {
-      id: '/documentos/biblioteca'
-      path: '/documentos/biblioteca'
-      fullPath: '/documentos/biblioteca'
-      preLoaderRoute: typeof DocumentosBibliotecaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard/security': {
-      id: '/dashboard/security'
-      path: '/security'
-      fullPath: '/dashboard/security'
-      preLoaderRoute: typeof DashboardSecurityRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/ecosystem': {
-      id: '/dashboard/ecosystem'
-      path: '/ecosystem'
-      fullPath: '/dashboard/ecosystem'
-      preLoaderRoute: typeof DashboardEcosystemRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/documents-base': {
-      id: '/dashboard/documents-base'
-      path: '/documents-base'
-      fullPath: '/dashboard/documents-base'
-      preLoaderRoute: typeof DashboardDocumentsBaseRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/document-center': {
-      id: '/dashboard/document-center'
-      path: '/document-center'
-      fullPath: '/dashboard/document-center'
-      preLoaderRoute: typeof DashboardDocumentCenterRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/deadlines': {
-      id: '/dashboard/deadlines'
-      path: '/deadlines'
-      fullPath: '/dashboard/deadlines'
-      preLoaderRoute: typeof DashboardDeadlinesRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/compliance-center': {
-      id: '/dashboard/compliance-center'
-      path: '/compliance-center'
-      fullPath: '/dashboard/compliance-center'
-      preLoaderRoute: typeof DashboardComplianceCenterRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/billing/success': {
-      id: '/billing/success'
-      path: '/billing/success'
-      fullPath: '/billing/success'
-      preLoaderRoute: typeof BillingSuccessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/billing/subscription': {
-      id: '/billing/subscription'
-      path: '/billing/subscription'
-      fullPath: '/billing/subscription'
-      preLoaderRoute: typeof BillingSubscriptionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/billing/failure': {
-      id: '/billing/failure'
-      path: '/billing/failure'
-      fullPath: '/billing/failure'
-      preLoaderRoute: typeof BillingFailureRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/signup': {
-      id: '/auth/signup'
-      path: '/auth/signup'
-      fullPath: '/auth/signup'
-      preLoaderRoute: typeof AuthSignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/reset': {
-      id: '/auth/reset'
-      path: '/auth/reset'
-      fullPath: '/auth/reset'
-      preLoaderRoute: typeof AuthResetRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/login': {
-      id: '/auth/login'
-      path: '/auth/login'
-      fullPath: '/auth/login'
-      preLoaderRoute: typeof AuthLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/assinar/$token': {
-      id: '/assinar/$token'
-      path: '/assinar/$token'
-      fullPath: '/assinar/$token'
-      preLoaderRoute: typeof AssinarTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/analytics/operations': {
-      id: '/analytics/operations'
-      path: '/operations'
-      fullPath: '/analytics/operations'
-      preLoaderRoute: typeof AnalyticsOperationsRouteImport
-      parentRoute: typeof AnalyticsRoute
-    }
-    '/analytics/ocr': {
-      id: '/analytics/ocr'
-      path: '/ocr'
-      fullPath: '/analytics/ocr'
-      preLoaderRoute: typeof AnalyticsOcrRouteImport
-      parentRoute: typeof AnalyticsRoute
-    }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/templates': {
-      id: '/admin/templates'
-      path: '/templates'
-      fullPath: '/admin/templates'
-      preLoaderRoute: typeof AdminTemplatesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/system-report': {
-      id: '/admin/system-report'
-      path: '/system-report'
-      fullPath: '/admin/system-report'
-      preLoaderRoute: typeof AdminSystemReportRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/system-health': {
-      id: '/admin/system-health'
-      path: '/system-health'
-      fullPath: '/admin/system-health'
-      preLoaderRoute: typeof AdminSystemHealthRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/support': {
-      id: '/admin/support'
-      path: '/support'
-      fullPath: '/admin/support'
-      preLoaderRoute: typeof AdminSupportRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/storage': {
-      id: '/admin/storage'
-      path: '/storage'
-      fullPath: '/admin/storage'
-      preLoaderRoute: typeof AdminStorageRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/signature-anchors': {
-      id: '/admin/signature-anchors'
-      path: '/signature-anchors'
-      fullPath: '/admin/signature-anchors'
-      preLoaderRoute: typeof AdminSignatureAnchorsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/settings': {
-      id: '/admin/settings'
-      path: '/settings'
-      fullPath: '/admin/settings'
-      preLoaderRoute: typeof AdminSettingsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/security': {
-      id: '/admin/security'
-      path: '/security'
-      fullPath: '/admin/security'
-      preLoaderRoute: typeof AdminSecurityRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/saas-metrics': {
-      id: '/admin/saas-metrics'
-      path: '/saas-metrics'
-      fullPath: '/admin/saas-metrics'
-      preLoaderRoute: typeof AdminSaasMetricsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/roadmap': {
-      id: '/admin/roadmap'
-      path: '/roadmap'
-      fullPath: '/admin/roadmap'
-      preLoaderRoute: typeof AdminRoadmapRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/production-readiness': {
-      id: '/admin/production-readiness'
-      path: '/production-readiness'
-      fullPath: '/admin/production-readiness'
-      preLoaderRoute: typeof AdminProductionReadinessRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/pilot-dashboard': {
-      id: '/admin/pilot-dashboard'
-      path: '/pilot-dashboard'
-      fullPath: '/admin/pilot-dashboard'
-      preLoaderRoute: typeof AdminPilotDashboardRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/operational-feedback': {
-      id: '/admin/operational-feedback'
-      path: '/operational-feedback'
-      fullPath: '/admin/operational-feedback'
-      preLoaderRoute: typeof AdminOperationalFeedbackRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/ocr': {
-      id: '/admin/ocr'
-      path: '/ocr'
-      fullPath: '/admin/ocr'
-      preLoaderRoute: typeof AdminOcrRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/modelos-processo': {
-      id: '/admin/modelos-processo'
-      path: '/modelos-processo'
-      fullPath: '/admin/modelos-processo'
-      preLoaderRoute: typeof AdminModelosProcessoRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/logs': {
-      id: '/admin/logs'
-      path: '/logs'
-      fullPath: '/admin/logs'
-      preLoaderRoute: typeof AdminLogsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/global': {
-      id: '/admin/global'
-      path: '/global'
-      fullPath: '/admin/global'
-      preLoaderRoute: typeof AdminGlobalRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/full-qa-report': {
-      id: '/admin/full-qa-report'
-      path: '/full-qa-report'
-      fullPath: '/admin/full-qa-report'
-      preLoaderRoute: typeof AdminFullQaReportRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/frontend-errors': {
-      id: '/admin/frontend-errors'
-      path: '/frontend-errors'
-      fullPath: '/admin/frontend-errors'
-      preLoaderRoute: typeof AdminFrontendErrorsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/field-validation-report': {
-      id: '/admin/field-validation-report'
-      path: '/field-validation-report'
-      fullPath: '/admin/field-validation-report'
-      preLoaderRoute: typeof AdminFieldValidationReportRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/executive-overview': {
-      id: '/admin/executive-overview'
-      path: '/executive-overview'
-      fullPath: '/admin/executive-overview'
-      preLoaderRoute: typeof AdminExecutiveOverviewRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/documents': {
-      id: '/admin/documents'
-      path: '/documents'
-      fullPath: '/admin/documents'
-      preLoaderRoute: typeof AdminDocumentsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/documentos': {
-      id: '/admin/documentos'
-      path: '/documentos'
-      fullPath: '/admin/documentos'
-      preLoaderRoute: typeof AdminDocumentosRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/document-library': {
-      id: '/admin/document-library'
-      path: '/document-library'
-      fullPath: '/admin/document-library'
-      preLoaderRoute: typeof AdminDocumentLibraryRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/docs-central': {
-      id: '/admin/docs-central'
-      path: '/docs-central'
-      fullPath: '/admin/docs-central'
-      preLoaderRoute: typeof AdminDocsCentralRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/diagnostico': {
-      id: '/admin/diagnostico'
-      path: '/diagnostico'
-      fullPath: '/admin/diagnostico'
-      preLoaderRoute: typeof AdminDiagnosticoRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/companies': {
-      id: '/admin/companies'
-      path: '/companies'
-      fullPath: '/admin/companies'
-      preLoaderRoute: typeof AdminCompaniesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/commercial': {
-      id: '/admin/commercial'
-      path: '/commercial'
-      fullPath: '/admin/commercial'
-      preLoaderRoute: typeof AdminCommercialRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/billing': {
-      id: '/admin/billing'
-      path: '/billing'
-      fullPath: '/admin/billing'
-      preLoaderRoute: typeof AdminBillingRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/automation': {
-      id: '/admin/automation'
-      path: '/automation'
-      fullPath: '/admin/automation'
-      preLoaderRoute: typeof AdminAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/ai-command-center': {
@@ -2304,12 +1891,418 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAiCommandCenterRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/process-center/': {
-      id: '/admin/process-center/'
-      path: '/process-center'
-      fullPath: '/admin/process-center/'
-      preLoaderRoute: typeof AdminProcessCenterIndexRouteImport
+    '/admin/automation': {
+      id: '/admin/automation'
+      path: '/automation'
+      fullPath: '/admin/automation'
+      preLoaderRoute: typeof AdminAutomationRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/admin/billing': {
+      id: '/admin/billing'
+      path: '/billing'
+      fullPath: '/admin/billing'
+      preLoaderRoute: typeof AdminBillingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/commercial': {
+      id: '/admin/commercial'
+      path: '/commercial'
+      fullPath: '/admin/commercial'
+      preLoaderRoute: typeof AdminCommercialRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/companies': {
+      id: '/admin/companies'
+      path: '/companies'
+      fullPath: '/admin/companies'
+      preLoaderRoute: typeof AdminCompaniesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/diagnostico': {
+      id: '/admin/diagnostico'
+      path: '/diagnostico'
+      fullPath: '/admin/diagnostico'
+      preLoaderRoute: typeof AdminDiagnosticoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/docs-central': {
+      id: '/admin/docs-central'
+      path: '/docs-central'
+      fullPath: '/admin/docs-central'
+      preLoaderRoute: typeof AdminDocsCentralRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/document-library': {
+      id: '/admin/document-library'
+      path: '/document-library'
+      fullPath: '/admin/document-library'
+      preLoaderRoute: typeof AdminDocumentLibraryRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/documentos': {
+      id: '/admin/documentos'
+      path: '/documentos'
+      fullPath: '/admin/documentos'
+      preLoaderRoute: typeof AdminDocumentosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/documents': {
+      id: '/admin/documents'
+      path: '/documents'
+      fullPath: '/admin/documents'
+      preLoaderRoute: typeof AdminDocumentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/executive-overview': {
+      id: '/admin/executive-overview'
+      path: '/executive-overview'
+      fullPath: '/admin/executive-overview'
+      preLoaderRoute: typeof AdminExecutiveOverviewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/field-validation-report': {
+      id: '/admin/field-validation-report'
+      path: '/field-validation-report'
+      fullPath: '/admin/field-validation-report'
+      preLoaderRoute: typeof AdminFieldValidationReportRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/frontend-errors': {
+      id: '/admin/frontend-errors'
+      path: '/frontend-errors'
+      fullPath: '/admin/frontend-errors'
+      preLoaderRoute: typeof AdminFrontendErrorsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/full-qa-report': {
+      id: '/admin/full-qa-report'
+      path: '/full-qa-report'
+      fullPath: '/admin/full-qa-report'
+      preLoaderRoute: typeof AdminFullQaReportRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/global': {
+      id: '/admin/global'
+      path: '/global'
+      fullPath: '/admin/global'
+      preLoaderRoute: typeof AdminGlobalRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/logs': {
+      id: '/admin/logs'
+      path: '/logs'
+      fullPath: '/admin/logs'
+      preLoaderRoute: typeof AdminLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/modelos-processo': {
+      id: '/admin/modelos-processo'
+      path: '/modelos-processo'
+      fullPath: '/admin/modelos-processo'
+      preLoaderRoute: typeof AdminModelosProcessoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ocr': {
+      id: '/admin/ocr'
+      path: '/ocr'
+      fullPath: '/admin/ocr'
+      preLoaderRoute: typeof AdminOcrRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/operational-feedback': {
+      id: '/admin/operational-feedback'
+      path: '/operational-feedback'
+      fullPath: '/admin/operational-feedback'
+      preLoaderRoute: typeof AdminOperationalFeedbackRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/pilot-dashboard': {
+      id: '/admin/pilot-dashboard'
+      path: '/pilot-dashboard'
+      fullPath: '/admin/pilot-dashboard'
+      preLoaderRoute: typeof AdminPilotDashboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/production-readiness': {
+      id: '/admin/production-readiness'
+      path: '/production-readiness'
+      fullPath: '/admin/production-readiness'
+      preLoaderRoute: typeof AdminProductionReadinessRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/roadmap': {
+      id: '/admin/roadmap'
+      path: '/roadmap'
+      fullPath: '/admin/roadmap'
+      preLoaderRoute: typeof AdminRoadmapRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/saas-metrics': {
+      id: '/admin/saas-metrics'
+      path: '/saas-metrics'
+      fullPath: '/admin/saas-metrics'
+      preLoaderRoute: typeof AdminSaasMetricsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/security': {
+      id: '/admin/security'
+      path: '/security'
+      fullPath: '/admin/security'
+      preLoaderRoute: typeof AdminSecurityRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/signature-anchors': {
+      id: '/admin/signature-anchors'
+      path: '/signature-anchors'
+      fullPath: '/admin/signature-anchors'
+      preLoaderRoute: typeof AdminSignatureAnchorsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/storage': {
+      id: '/admin/storage'
+      path: '/storage'
+      fullPath: '/admin/storage'
+      preLoaderRoute: typeof AdminStorageRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/system-health': {
+      id: '/admin/system-health'
+      path: '/system-health'
+      fullPath: '/admin/system-health'
+      preLoaderRoute: typeof AdminSystemHealthRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/system-report': {
+      id: '/admin/system-report'
+      path: '/system-report'
+      fullPath: '/admin/system-report'
+      preLoaderRoute: typeof AdminSystemReportRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/templates': {
+      id: '/admin/templates'
+      path: '/templates'
+      fullPath: '/admin/templates'
+      preLoaderRoute: typeof AdminTemplatesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/analytics/ocr': {
+      id: '/analytics/ocr'
+      path: '/ocr'
+      fullPath: '/analytics/ocr'
+      preLoaderRoute: typeof AnalyticsOcrRouteImport
+      parentRoute: typeof AnalyticsRoute
+    }
+    '/analytics/operations': {
+      id: '/analytics/operations'
+      path: '/operations'
+      fullPath: '/analytics/operations'
+      preLoaderRoute: typeof AnalyticsOperationsRouteImport
+      parentRoute: typeof AnalyticsRoute
+    }
+    '/assinar/$token': {
+      id: '/assinar/$token'
+      path: '/assinar/$token'
+      fullPath: '/assinar/$token'
+      preLoaderRoute: typeof AssinarTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/reset': {
+      id: '/auth/reset'
+      path: '/auth/reset'
+      fullPath: '/auth/reset'
+      preLoaderRoute: typeof AuthResetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/signup': {
+      id: '/auth/signup'
+      path: '/auth/signup'
+      fullPath: '/auth/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/billing/failure': {
+      id: '/billing/failure'
+      path: '/billing/failure'
+      fullPath: '/billing/failure'
+      preLoaderRoute: typeof BillingFailureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/billing/subscription': {
+      id: '/billing/subscription'
+      path: '/billing/subscription'
+      fullPath: '/billing/subscription'
+      preLoaderRoute: typeof BillingSubscriptionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/billing/success': {
+      id: '/billing/success'
+      path: '/billing/success'
+      fullPath: '/billing/success'
+      preLoaderRoute: typeof BillingSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/compliance-center': {
+      id: '/dashboard/compliance-center'
+      path: '/compliance-center'
+      fullPath: '/dashboard/compliance-center'
+      preLoaderRoute: typeof DashboardComplianceCenterRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/deadlines': {
+      id: '/dashboard/deadlines'
+      path: '/deadlines'
+      fullPath: '/dashboard/deadlines'
+      preLoaderRoute: typeof DashboardDeadlinesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/document-center': {
+      id: '/dashboard/document-center'
+      path: '/document-center'
+      fullPath: '/dashboard/document-center'
+      preLoaderRoute: typeof DashboardDocumentCenterRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/documents-base': {
+      id: '/dashboard/documents-base'
+      path: '/documents-base'
+      fullPath: '/dashboard/documents-base'
+      preLoaderRoute: typeof DashboardDocumentsBaseRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/ecosystem': {
+      id: '/dashboard/ecosystem'
+      path: '/ecosystem'
+      fullPath: '/dashboard/ecosystem'
+      preLoaderRoute: typeof DashboardEcosystemRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/security': {
+      id: '/dashboard/security'
+      path: '/security'
+      fullPath: '/dashboard/security'
+      preLoaderRoute: typeof DashboardSecurityRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/documentos/biblioteca': {
+      id: '/documentos/biblioteca'
+      path: '/documentos/biblioteca'
+      fullPath: '/documentos/biblioteca'
+      preLoaderRoute: typeof DocumentosBibliotecaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/$token': {
+      id: '/portal/$token'
+      path: '/portal/$token'
+      fullPath: '/portal/$token'
+      preLoaderRoute: typeof PortalTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/processes/': {
+      id: '/processes/'
+      path: '/processes'
+      fullPath: '/processes/'
+      preLoaderRoute: typeof ProcessesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/processes/$id': {
+      id: '/processes/$id'
+      path: '/processes/$id'
+      fullPath: '/processes/$id'
+      preLoaderRoute: typeof ProcessesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/processes/archived': {
+      id: '/processes/archived'
+      path: '/processes/archived'
+      fullPath: '/processes/archived'
+      preLoaderRoute: typeof ProcessesArchivedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/processes/trash': {
+      id: '/processes/trash'
+      path: '/processes/trash'
+      fullPath: '/processes/trash'
+      preLoaderRoute: typeof ProcessesTrashRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/templates/': {
+      id: '/templates/'
+      path: '/'
+      fullPath: '/templates/'
+      preLoaderRoute: typeof TemplatesIndexRouteImport
+      parentRoute: typeof TemplatesRoute
+    }
+    '/templates/$id': {
+      id: '/templates/$id'
+      path: '/$id'
+      fullPath: '/templates/$id'
+      preLoaderRoute: typeof TemplatesIdRouteImport
+      parentRoute: typeof TemplatesRoute
+    }
+    '/templates/gratuitos': {
+      id: '/templates/gratuitos'
+      path: '/gratuitos'
+      fullPath: '/templates/gratuitos'
+      preLoaderRoute: typeof TemplatesGratuitosRouteImport
+      parentRoute: typeof TemplatesRoute
+    }
+    '/templates/marketplace': {
+      id: '/templates/marketplace'
+      path: '/marketplace'
+      fullPath: '/templates/marketplace'
+      preLoaderRoute: typeof TemplatesMarketplaceRouteImport
+      parentRoute: typeof TemplatesRoute
+    }
+    '/templates/meus': {
+      id: '/templates/meus'
+      path: '/meus'
+      fullPath: '/templates/meus'
+      preLoaderRoute: typeof TemplatesMeusRouteImport
+      parentRoute: typeof TemplatesRoute
+    }
+    '/verificar-assinatura/$code': {
+      id: '/verificar-assinatura/$code'
+      path: '/verificar-assinatura/$code'
+      fullPath: '/verificar-assinatura/$code'
+      preLoaderRoute: typeof VerificarAssinaturaCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/docs-central/': {
       id: '/admin/docs-central/'
@@ -2318,102 +2311,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocsCentralIndexRouteImport
       parentRoute: typeof AdminDocsCentralRoute
     }
-    '/admin/templates/pfw': {
-      id: '/admin/templates/pfw'
-      path: '/pfw'
-      fullPath: '/admin/templates/pfw'
-      preLoaderRoute: typeof AdminTemplatesPfwRouteImport
-      parentRoute: typeof AdminTemplatesRoute
-    }
-    '/admin/templates/$id': {
-      id: '/admin/templates/$id'
-      path: '/$id'
-      fullPath: '/admin/templates/$id'
-      preLoaderRoute: typeof AdminTemplatesIdRouteImport
-      parentRoute: typeof AdminTemplatesRoute
-    }
-    '/admin/process-center/$id': {
-      id: '/admin/process-center/$id'
-      path: '/process-center/$id'
-      fullPath: '/admin/process-center/$id'
-      preLoaderRoute: typeof AdminProcessCenterIdRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/docs-central/versions': {
-      id: '/admin/docs-central/versions'
-      path: '/versions'
-      fullPath: '/admin/docs-central/versions'
-      preLoaderRoute: typeof AdminDocsCentralVersionsRouteImport
-      parentRoute: typeof AdminDocsCentralRoute
-    }
-    '/admin/docs-central/setup-assistant': {
-      id: '/admin/docs-central/setup-assistant'
-      path: '/setup-assistant'
-      fullPath: '/admin/docs-central/setup-assistant'
-      preLoaderRoute: typeof AdminDocsCentralSetupAssistantRouteImport
-      parentRoute: typeof AdminDocsCentralRoute
-    }
-    '/admin/docs-central/review': {
-      id: '/admin/docs-central/review'
-      path: '/review'
-      fullPath: '/admin/docs-central/review'
-      preLoaderRoute: typeof AdminDocsCentralReviewRouteImport
-      parentRoute: typeof AdminDocsCentralRoute
-    }
-    '/admin/docs-central/publishing': {
-      id: '/admin/docs-central/publishing'
-      path: '/publishing'
-      fullPath: '/admin/docs-central/publishing'
-      preLoaderRoute: typeof AdminDocsCentralPublishingRouteImport
-      parentRoute: typeof AdminDocsCentralRoute
-    }
-    '/admin/docs-central/process-types': {
-      id: '/admin/docs-central/process-types'
-      path: '/process-types'
-      fullPath: '/admin/docs-central/process-types'
-      preLoaderRoute: typeof AdminDocsCentralProcessTypesRouteImport
-      parentRoute: typeof AdminDocsCentralRoute
-    }
-    '/admin/docs-central/models': {
-      id: '/admin/docs-central/models'
-      path: '/models'
-      fullPath: '/admin/docs-central/models'
-      preLoaderRoute: typeof AdminDocsCentralModelsRouteImport
-      parentRoute: typeof AdminDocsCentralRoute
-    }
-    '/admin/docs-central/marketplace': {
-      id: '/admin/docs-central/marketplace'
-      path: '/marketplace'
-      fullPath: '/admin/docs-central/marketplace'
-      preLoaderRoute: typeof AdminDocsCentralMarketplaceRouteImport
-      parentRoute: typeof AdminDocsCentralRoute
-    }
-    '/admin/docs-central/mappings': {
-      id: '/admin/docs-central/mappings'
-      path: '/mappings'
-      fullPath: '/admin/docs-central/mappings'
-      preLoaderRoute: typeof AdminDocsCentralMappingsRouteImport
-      parentRoute: typeof AdminDocsCentralRoute
-    }
-    '/admin/docs-central/library': {
-      id: '/admin/docs-central/library'
-      path: '/library'
-      fullPath: '/admin/docs-central/library'
-      preLoaderRoute: typeof AdminDocsCentralLibraryRouteImport
-      parentRoute: typeof AdminDocsCentralRoute
-    }
-    '/admin/docs-central/health': {
-      id: '/admin/docs-central/health'
-      path: '/health'
-      fullPath: '/admin/docs-central/health'
-      preLoaderRoute: typeof AdminDocsCentralHealthRouteImport
-      parentRoute: typeof AdminDocsCentralRoute
-    }
-    '/admin/docs-central/fields': {
-      id: '/admin/docs-central/fields'
-      path: '/fields'
-      fullPath: '/admin/docs-central/fields'
-      preLoaderRoute: typeof AdminDocsCentralFieldsRouteImport
+    '/admin/docs-central/audit': {
+      id: '/admin/docs-central/audit'
+      path: '/audit'
+      fullPath: '/admin/docs-central/audit'
+      preLoaderRoute: typeof AdminDocsCentralAuditRouteImport
       parentRoute: typeof AdminDocsCentralRoute
     }
     '/admin/docs-central/coverage': {
@@ -2423,12 +2325,110 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDocsCentralCoverageRouteImport
       parentRoute: typeof AdminDocsCentralRoute
     }
-    '/admin/docs-central/audit': {
-      id: '/admin/docs-central/audit'
-      path: '/audit'
-      fullPath: '/admin/docs-central/audit'
-      preLoaderRoute: typeof AdminDocsCentralAuditRouteImport
+    '/admin/docs-central/fields': {
+      id: '/admin/docs-central/fields'
+      path: '/fields'
+      fullPath: '/admin/docs-central/fields'
+      preLoaderRoute: typeof AdminDocsCentralFieldsRouteImport
       parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/health': {
+      id: '/admin/docs-central/health'
+      path: '/health'
+      fullPath: '/admin/docs-central/health'
+      preLoaderRoute: typeof AdminDocsCentralHealthRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/library': {
+      id: '/admin/docs-central/library'
+      path: '/library'
+      fullPath: '/admin/docs-central/library'
+      preLoaderRoute: typeof AdminDocsCentralLibraryRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/mappings': {
+      id: '/admin/docs-central/mappings'
+      path: '/mappings'
+      fullPath: '/admin/docs-central/mappings'
+      preLoaderRoute: typeof AdminDocsCentralMappingsRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/marketplace': {
+      id: '/admin/docs-central/marketplace'
+      path: '/marketplace'
+      fullPath: '/admin/docs-central/marketplace'
+      preLoaderRoute: typeof AdminDocsCentralMarketplaceRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/models': {
+      id: '/admin/docs-central/models'
+      path: '/models'
+      fullPath: '/admin/docs-central/models'
+      preLoaderRoute: typeof AdminDocsCentralModelsRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/process-types': {
+      id: '/admin/docs-central/process-types'
+      path: '/process-types'
+      fullPath: '/admin/docs-central/process-types'
+      preLoaderRoute: typeof AdminDocsCentralProcessTypesRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/publishing': {
+      id: '/admin/docs-central/publishing'
+      path: '/publishing'
+      fullPath: '/admin/docs-central/publishing'
+      preLoaderRoute: typeof AdminDocsCentralPublishingRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/review': {
+      id: '/admin/docs-central/review'
+      path: '/review'
+      fullPath: '/admin/docs-central/review'
+      preLoaderRoute: typeof AdminDocsCentralReviewRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/setup-assistant': {
+      id: '/admin/docs-central/setup-assistant'
+      path: '/setup-assistant'
+      fullPath: '/admin/docs-central/setup-assistant'
+      preLoaderRoute: typeof AdminDocsCentralSetupAssistantRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/docs-central/versions': {
+      id: '/admin/docs-central/versions'
+      path: '/versions'
+      fullPath: '/admin/docs-central/versions'
+      preLoaderRoute: typeof AdminDocsCentralVersionsRouteImport
+      parentRoute: typeof AdminDocsCentralRoute
+    }
+    '/admin/process-center/': {
+      id: '/admin/process-center/'
+      path: '/process-center'
+      fullPath: '/admin/process-center/'
+      preLoaderRoute: typeof AdminProcessCenterIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/process-center/$id': {
+      id: '/admin/process-center/$id'
+      path: '/process-center/$id'
+      fullPath: '/admin/process-center/$id'
+      preLoaderRoute: typeof AdminProcessCenterIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/templates/$id': {
+      id: '/admin/templates/$id'
+      path: '/$id'
+      fullPath: '/admin/templates/$id'
+      preLoaderRoute: typeof AdminTemplatesIdRouteImport
+      parentRoute: typeof AdminTemplatesRoute
+    }
+    '/admin/templates/pfw': {
+      id: '/admin/templates/pfw'
+      path: '/pfw'
+      fullPath: '/admin/templates/pfw'
+      preLoaderRoute: typeof AdminTemplatesPfwRouteImport
+      parentRoute: typeof AdminTemplatesRoute
     }
   }
 }

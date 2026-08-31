@@ -257,9 +257,11 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
   describe("3. Atomic Execution & Recovery", () => {
     it("should mark as recoverable_failed if materialization fails", async () => {
       // 1. Claim success (processing)
-      vi.mocked(getMockSupabase().rpc).mockResolvedValueOnce({
-        data: { id: "record-1", status: "processing", execution_id: "current-exec" },
-        error: null
+      vi.mocked(getMockSupabase().rpc).mockImplementationOnce((fn: string, args: any) => {
+        return Promise.resolve({
+          data: { id: "record-1", status: "processing", execution_id: args?._execution_id || "current-exec" },
+          error: null
+        }) as any;
       });
 
       // 2. Setup profile success
@@ -297,15 +299,20 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
 
 
     it("should recover and skip process creation if record already has process_id (Retry Flow)", async () => {
+      const { materializeProcessBlueprint } = await import("@/services/processes/blueprintEngine");
+      vi.mocked(materializeProcessBlueprint).mockResolvedValue({ success: true });
+
       // 1. Claim recoverable record
-      getMockSupabase().rpc.mockResolvedValue({
-        data: { 
-          id: "record-1", 
-          status: "recoverable_failed", 
-          process_id: mockProcessId,
-          execution_id: "old-exec"
-        },
-        error: null
+      getMockSupabase().rpc.mockImplementationOnce((fn: string, args: any) => {
+        return Promise.resolve({
+          data: { 
+            id: "record-1", 
+            status: "recoverable_failed", 
+            process_id: mockProcessId,
+            execution_id: args?._execution_id || "old-exec"
+          },
+          error: null
+        }) as any;
       });
 
       // 2. Setup success for remaining steps
@@ -333,10 +340,8 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
       expect(result.success).toBe(true);
       expect(result.metadata?.processId).toBe(mockProcessId);
       
-      // CRITICAL: Verify NO process insert happened
-      expect(getMockSupabase().insert).not.toHaveBeenCalledWith(expect.objectContaining({
-        company_id: mockCompanyId
-      }));
+      // CRITICAL: Verify NO process creation happened
+      expect(processCreationService.createProcess).not.toHaveBeenCalled();
       
       // Verify update to completed
       expect(getMockSupabase().update).toHaveBeenCalledWith(expect.objectContaining({

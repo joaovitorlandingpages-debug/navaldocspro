@@ -86,12 +86,18 @@ export default function SubscriptionUsage() {
                     {subscription.plan.name.charAt(0)}
                 </div>
                 <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Plano Atual</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">
+                      {subscription.status === 'lifetime' ? 'Licença Admin' : subscription.status === 'trialing' ? 'Período de Teste' : 'Plano Ativo'}
+                    </p>
                     <p className="text-lg font-black text-navy uppercase">{subscription.plan.name}</p>
-                    <p className="text-[10px] font-bold text-primary uppercase">R$ {Number(subscription.plan.price).toLocaleString('pt-BR')}/mês</p>
+                    <p className="text-[10px] font-bold text-primary uppercase">
+                      {subscription.status === 'lifetime' ? 'Acesso Vitalício Permanente' : Number(subscription.plan.price) === 0 ? 'Gratuito' : `R$ ${Number(subscription.plan.price).toLocaleString('pt-BR')}/mês`}
+                    </p>
                 </div>
                 <Link to="/plans">
-                    <Button className="bg-primary text-white font-black text-[10px] uppercase tracking-widest px-6 rounded-xl shadow-lg shadow-primary/20">Upgrade</Button>
+                    <Button className="bg-primary text-white font-black text-[10px] uppercase tracking-widest px-6 rounded-xl shadow-lg shadow-primary/20">
+                      {subscription.status === 'lifetime' ? 'Ver Planos' : 'Mudar Plano'}
+                    </Button>
                 </Link>
             </div>
         )}

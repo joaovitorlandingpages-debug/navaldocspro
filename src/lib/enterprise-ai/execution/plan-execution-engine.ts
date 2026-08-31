@@ -35,7 +35,10 @@ export class PlanExecutionEngine {
     const session = sessionManager.getSession(sessionId);
     if (!session) throw new PlanExecutionError(PlanExecutionErrorCode.SESSION_NOT_FOUND, "Session not found");
 
-    sessionManager.updateSession(sessionId, { state: "RUNNING" });
+    sessionManager.updateSession(sessionId, { 
+      state: "RUNNING",
+      failedSteps: []
+    });
     return await this.runExecutionLoop(sessionId, plan, authContext);
   }
 

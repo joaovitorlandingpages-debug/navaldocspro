@@ -55,7 +55,12 @@ export function TemplatePreviewModal(p: Props) {
         });
         const pdfjs: any = await import("pdfjs-dist");
         pdfjs.GlobalWorkerOptions.workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
-        const doc = await pdfjs.getDocument({ data: bytes }).promise;
+        const doc = await pdfjs.getDocument({
+          data: bytes,
+          enableScripting: false,
+          isEvalSupported: false,
+          disableAutoFetch: true,
+        }).promise;
         const out: string[] = [];
         for (let i = 1; i <= doc.numPages; i++) {
           const pg = await doc.getPage(i);
