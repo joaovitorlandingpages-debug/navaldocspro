@@ -41,8 +41,9 @@ import {
   Lock,
   Unlock,
   Webhook,
-  ArrowUpRight,
   DollarSign,
+  AlertOctagon,
+  Calendar,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -56,7 +57,6 @@ import {
   Cell,
   CartesianGrid,
 } from "recharts";
-import { NAVAL_PLANS } from "@/services/billing/plansConfig";
 
 type CompanyItem = {
   id: string;
@@ -64,6 +64,7 @@ type CompanyItem = {
   cnpj?: string | null;
   email?: string | null;
   phone?: string | null;
+  responsible_name?: string | null;
   plan?: string | null;
   plan_id?: string | null;
   is_demo?: boolean;
@@ -89,10 +90,11 @@ function SuperAdminDashboard() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<CompanyItem | null>(null);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [newPlanId, setNewPlanId] = useState("");
   const [newStatus, setNewStatus] = useState("");
+  const [extendTrialDays, setExtendTrialDays] = useState<number>(0);
 
   // 1. Consulta de Oficinas / Tenants
   const { data: companies = [], isLoading: isLoadingCompanies } = useQuery<CompanyItem[]>({
@@ -106,6 +108,7 @@ function SuperAdminDashboard() {
           cnpj,
           email,
           phone,
+          responsible_name,
           plan,
           plan_id,
           is_demo,
@@ -117,11 +120,11 @@ function SuperAdminDashboard() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as CompanyItem[];
     },
   });
 
-  // 2. Consulta de Processos / OS emitidas para contagem
+  // 2. Consulta de Processos / OS emitidas para contagem mensal
   const { data: processes = [] } = useQuery({
     queryKey: ["super-admin-process-stats"],
     queryFn: async () => {
@@ -133,51 +136,90 @@ function SuperAdminDashboard() {
     },
   });
 
-  // 3. Consulta de Webhooks do Mercado Pago / Logs de Auditoria
-  const { data: webhookLogs = [] } = useQuery({
+  // 3. Consulta de Webhooks recebidos do Mercado Pago
+  const { data: webhookLogs = [], isLoading: isLoadingWebhooks } = useQuery({
     queryKey: ["super-admin-webhook-logs"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      try {
+        const { data, error } = await supabase
+          .from("payment_logs" as any)
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if (!error && data && data.length > 0) return data;
+      } catch (e) {
+        console.warn("Tabela payment_logs indisponível, usando fallback de activity_logs", e);
+      }
+
+      // Fallback para activity_logs
+      const { data: fallbackData } = await supabase
         .from("activity_logs")
         .select("*")
         .eq("module", "billing")
         .order("created_at", { ascending: false })
         .limit(50);
-      if (error) return [];
-      return data || [];
+      return fallbackData || [];
     },
   });
 
-  // 4. Mapeamento de contagem de OS por empresa
+  // 4. Consulta de Logs de Erros e Sincronização (frontend_errors)
+  const { data: errorLogs = [], isLoading: isLoadingErrors } = useQuery({
+    queryKey: ["super-admin-error-logs"],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from("frontend_errors" as any)
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if (!error && data) return data;
+      } catch (e) {
+        console.warn("Tabela frontend_errors indisponível:", e);
+      }
+      return [];
+    },
+  });
+
+  // 5. Mapeamento de contagem de OS emitidas no mês atual por oficina
   const processCountByCompany = useMemo(() => {
     const map: Record<string, number> = {};
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
     for (const p of processes) {
       if (p.company_id) {
-        map[p.company_id] = (map[p.company_id] || 0) + 1;
+        const pDate = p.created_at ? new Date(p.created_at) : null;
+        if (pDate && pDate.getMonth() === currentMonth && pDate.getFullYear() === currentYear) {
+          map[p.company_id] = (map[p.company_id] || 0) + 1;
+        }
       }
     }
     return map;
   }, [processes]);
 
-  // 5. Métricas da Plataforma em Tempo Real
+  // 6. Métricas da Plataforma em Tempo Real
   const metrics = useMemo(() => {
     const total = companies.length;
     const active = companies.filter(
       (c) => c.billing_status === "active" || c.plan === "enterprise" || c.is_pilot
     ).length;
     const trialing = companies.filter(
-      (c) => c.billing_status === "trial" || c.billing_status === "trialing" || (!c.billing_status && !c.is_pilot)
+      (c) =>
+        c.billing_status === "trial" ||
+        c.billing_status === "trialing" ||
+        (!c.billing_status && !c.is_pilot)
     ).length;
     const blocked = companies.filter(
       (c) => c.billing_status === "suspended" || c.billing_status === "cancelled"
     ).length;
 
-    // Estimativa de MRR e ARR com base nos planos oficiais
+    // Cálculo estimado de MRR e ARR oficial
     let calculatedMrr = 0;
     companies.forEach((c) => {
       if (c.billing_status === "active" || c.is_pilot) {
         if (c.plan?.includes("anual") || c.plan_id?.includes("annual")) {
-          calculatedMrr += 890 / 12; // diluído
+          calculatedMrr += 890 / 12; // R$ 74,16/mês diluído
         } else if (c.plan?.includes("mensal") || c.plan_id?.includes("monthly") || c.plan === "pro") {
           calculatedMrr += 89;
         } else if (c.plan === "enterprise") {
@@ -196,7 +238,7 @@ function SuperAdminDashboard() {
     };
   }, [companies]);
 
-  // 6. Dados para gráfico Recharts de Planos
+  // 7. Dados para gráfico Recharts de Planos e Adesão
   const planDistribution = useMemo(() => {
     const counts: Record<string, number> = {
       Trial: 0,
@@ -221,26 +263,29 @@ function SuperAdminDashboard() {
     ];
   }, [companies]);
 
-  // 7. Filtragem de oficinas
+  // 8. Filtragem de oficinas
   const filteredCompanies = useMemo(() => {
     return companies.filter((c) => {
       const matchesSearch =
         !searchTerm ||
         c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.cnpj?.includes(searchTerm);
+        c.responsible_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.cnpj && c.cnpj.includes(searchTerm));
 
       const matchesStatus =
         statusFilter === "all" ||
         (statusFilter === "active" && (c.billing_status === "active" || c.is_pilot)) ||
-        (statusFilter === "trial" && (c.billing_status === "trial" || (!c.billing_status && !c.is_pilot))) ||
-        (statusFilter === "blocked" && (c.billing_status === "suspended" || c.billing_status === "cancelled"));
+        (statusFilter === "trial" &&
+          (c.billing_status === "trial" || (!c.billing_status && !c.is_pilot))) ||
+        (statusFilter === "blocked" &&
+          (c.billing_status === "suspended" || c.billing_status === "cancelled"));
 
       return matchesSearch && matchesStatus;
     });
   }, [companies, searchTerm, statusFilter]);
 
-  // 8. Mutation para atualizar plano/status da oficina (Ação Rápida Super Admin)
+  // 9. Mutation para Ações Rápidas do Super Admin
   const updateCompanyMutation = useMutation({
     mutationFn: async () => {
       if (!selectedCompany) return;
@@ -261,6 +306,21 @@ function SuperAdminDashboard() {
         }
       }
 
+      // Se estendeu período de trial, atualizar subscriptions
+      if (extendTrialDays > 0) {
+        const newEnd = new Date();
+        newEnd.setDate(newEnd.getDate() + extendTrialDays);
+
+        await supabase
+          .from("subscriptions")
+          .update({
+            current_period_end: newEnd.toISOString(),
+            status: "trialing",
+            updated_at: new Date().toISOString(),
+          } as any)
+          .eq("company_id", selectedCompany.id);
+      }
+
       const { error } = await supabase
         .from("companies")
         .update(updates)
@@ -271,17 +331,28 @@ function SuperAdminDashboard() {
     onSuccess: () => {
       toast.success("Oficina atualizada com sucesso!");
       setIsActionModalOpen(false);
+      setExtendTrialDays(0);
       queryClient.invalidateQueries({ queryKey: ["super-admin-companies"] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-webhook-logs"] });
     },
     onError: (err: any) => {
       toast.error(`Erro ao atualizar oficina: ${err.message}`);
     },
   });
 
-  const handleOpenActionModal = (company: any) => {
+  const handleOpenActionModal = (company: CompanyItem) => {
     setSelectedCompany(company);
     setNewPlanId(company.plan_id || company.plan || "naval-starter-monthly");
     setNewStatus(company.billing_status || (company.is_pilot ? "active" : "trial"));
+    setExtendTrialDays(0);
+    setIsActionModalOpen(true);
+  };
+
+  const handleQuickHomologation = (company: CompanyItem) => {
+    setSelectedCompany(company);
+    setNewPlanId("enterprise");
+    setNewStatus("active");
+    setExtendTrialDays(365);
     setIsActionModalOpen(true);
   };
 
@@ -297,11 +368,11 @@ function SuperAdminDashboard() {
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-black tracking-tight text-white">PAINEL SUPER ADMIN</h1>
               <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-xs">
-                Global SaaS
+                Controle Global SaaS
               </Badge>
             </div>
             <p className="text-xs text-slate-400">
-              Controle central, métricas em tempo real e auditoria de todas as oficinas clientes.
+              Isolado dos dados operacionais: controle, métricas, webhooks e suporte a mecânicos.
             </p>
           </div>
         </div>
@@ -310,11 +381,15 @@ function SuperAdminDashboard() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => queryClient.invalidateQueries({ queryKey: ["super-admin-companies"] })}
+            onClick={() => {
+              queryClient.invalidateQueries({ queryKey: ["super-admin-companies"] });
+              queryClient.invalidateQueries({ queryKey: ["super-admin-webhook-logs"] });
+              queryClient.invalidateQueries({ queryKey: ["super-admin-error-logs"] });
+            }}
             className="border-slate-800 hover:bg-slate-900 text-slate-300"
           >
             <RefreshCw className="w-4 h-4 mr-1.5" />
-            Atualizar
+            Atualizar Dados
           </Button>
           <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-white">
             <Link to="/dashboard">Voltar ao App</Link>
@@ -323,7 +398,7 @@ function SuperAdminDashboard() {
       </div>
 
       {/* Cards de Métricas em Tempo Real */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="bg-slate-900 border-slate-800 text-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -333,17 +408,40 @@ function SuperAdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-extrabold text-white">{metrics.total}</div>
-            <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-              <span className="text-emerald-400 font-semibold">{metrics.active} ativas</span> ·{" "}
-              <span className="text-sky-400 font-semibold">{metrics.trialing} em trial</span>
-            </p>
+            <p className="text-xs text-slate-400 mt-1">Oficinas cadastradas</p>
           </CardContent>
         </Card>
 
         <Card className="bg-slate-900 border-slate-800 text-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              MRR (Recorrente Mensal)
+              Oficinas Ativas
+            </CardTitle>
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-extrabold text-emerald-400">{metrics.active}</div>
+            <p className="text-xs text-slate-400 mt-1">Assinantes pagantes/piloto</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-slate-900 border-slate-800 text-white">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              Em Trial / Teste
+            </CardTitle>
+            <Clock className="w-4 h-4 text-sky-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-extrabold text-sky-400">{metrics.trialing}</div>
+            <p className="text-xs text-slate-400 mt-1">Período de validação</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-slate-900 border-slate-800 text-white">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              MRR Mensal
             </CardTitle>
             <DollarSign className="w-4 h-4 text-emerald-400" />
           </CardHeader>
@@ -351,49 +449,36 @@ function SuperAdminDashboard() {
             <div className="text-3xl font-extrabold text-emerald-400">
               R$ {metrics.mrr.toLocaleString("pt-BR")}
             </div>
-            <p className="text-xs text-slate-400 mt-1">ARR projetado: R$ {metrics.arr.toLocaleString("pt-BR")}</p>
+            <p className="text-xs text-slate-400 mt-1">Receita Mensal Recorrente</p>
           </CardContent>
         </Card>
 
         <Card className="bg-slate-900 border-slate-800 text-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Ordens de Serviço
+              ARR Anual
             </CardTitle>
-            <Activity className="w-4 h-4 text-amber-400" />
+            <TrendingUp className="w-4 h-4 text-amber-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-extrabold text-white">{processes.length}</div>
-            <p className="text-xs text-slate-400 mt-1">Total acumulado na plataforma</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900 border-slate-800 text-white">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Taxa de Conversão
-            </CardTitle>
-            <TrendingUp className="w-4 h-4 text-purple-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-extrabold text-white">
-              {metrics.total > 0 ? Math.round((metrics.active / metrics.total) * 100) : 0}%
+            <div className="text-3xl font-extrabold text-amber-400">
+              R$ {metrics.arr.toLocaleString("pt-BR")}
             </div>
-            <p className="text-xs text-slate-400 mt-1">Oficinas convertidas / ativas</p>
+            <p className="text-xs text-slate-400 mt-1">Receita Anual Projetada</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Gráficos e Visão Geral */}
+      {/* Gráficos Recharts de Adesão & Conversão */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 bg-slate-900 border-slate-800 text-white">
           <CardHeader>
             <CardTitle className="text-base font-bold flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" />
-              Distribuição de Planos & Adesão
+              Adesão e Conversão de Planos
             </CardTitle>
             <CardDescription className="text-xs text-slate-400">
-              Proporção de assinaturas ativas entre Trial, Mensal, Anual e Enterprise
+              Distribuição da base de oficinas por modalidade de plano (Trial, Mensal, Anual, Enterprise)
             </CardDescription>
           </CardHeader>
           <CardContent className="h-64">
@@ -419,10 +504,10 @@ function SuperAdminDashboard() {
           <CardHeader>
             <CardTitle className="text-base font-bold flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-amber-400" />
-              Composição de Clientes
+              Proporção da Base de Clientes
             </CardTitle>
             <CardDescription className="text-xs text-slate-400">
-              Status da base instalada de oficinas
+              Conversão e retenção das oficinas
             </CardDescription>
           </CardHeader>
           <CardContent className="h-64 flex flex-col items-center justify-center">
@@ -458,7 +543,7 @@ function SuperAdminDashboard() {
         </Card>
       </div>
 
-      {/* Abas: Gestão de Oficinas vs. Webhooks & Logs */}
+      {/* Abas: Gestão de Oficinas, Webhooks MP e Logs de Erro */}
       <Tabs defaultValue="tenants" className="w-full space-y-4">
         <TabsList className="bg-slate-900 border border-slate-800">
           <TabsTrigger value="tenants" className="data-[state=active]:bg-primary">
@@ -467,17 +552,21 @@ function SuperAdminDashboard() {
           </TabsTrigger>
           <TabsTrigger value="webhooks" className="data-[state=active]:bg-primary">
             <Webhook className="w-4 h-4 mr-2" />
-            Webhooks & Auditoria
+            Webhooks do Mercado Pago ({webhookLogs.length})
+          </TabsTrigger>
+          <TabsTrigger value="errors" className="data-[state=active]:bg-primary">
+            <AlertOctagon className="w-4 h-4 mr-2" />
+            Erros & Sincronização ({errorLogs.length})
           </TabsTrigger>
         </TabsList>
 
-        {/* Tabela de Oficinas */}
+        {/* 1. Tabela de Gestão de Oficinas / Tenants */}
         <TabsContent value="tenants" className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
               <Input
-                placeholder="Buscar por oficina, e-mail ou CNPJ..."
+                placeholder="Buscar por oficina, responsável, e-mail ou CNPJ..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 bg-slate-900 border-slate-800 text-white"
@@ -501,12 +590,12 @@ function SuperAdminDashboard() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-950/70 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
                   <tr>
-                    <th className="p-3">Oficina / Nome</th>
-                    <th className="p-3">Contato / E-mail</th>
+                    <th className="p-3">Oficina / Razão Social</th>
+                    <th className="p-3">E-mail / Dono</th>
                     <th className="p-3">Plano Atual</th>
                     <th className="p-3">Status</th>
-                    <th className="p-3 text-center">OS Emitidas</th>
-                    <th className="p-3 text-right">Ações</th>
+                    <th className="p-3 text-center">OS emitidas (Mês)</th>
+                    <th className="p-3 text-right">Ações Rápidas</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
@@ -524,9 +613,17 @@ function SuperAdminDashboard() {
                     </tr>
                   ) : (
                     filteredCompanies.map((c) => {
-                      const count = processCountByCompany[c.id] || 0;
+                      const countMonth = processCountByCompany[c.id] || 0;
                       const isPilot = c.is_pilot;
                       const status = c.billing_status || (isPilot ? "active" : "trial");
+
+                      const planDisplay = c.plan?.includes("anual") || c.plan_id?.includes("annual")
+                        ? "Plano Anual"
+                        : c.plan?.includes("mensal") || c.plan_id?.includes("monthly") || c.plan === "pro"
+                        ? "Plano Mensal"
+                        : isPilot || c.plan === "enterprise"
+                        ? "Enterprise / Homologação"
+                        : "Trial Grátis";
 
                       return (
                         <tr key={c.id} className="hover:bg-slate-800/50 transition-colors">
@@ -539,14 +636,14 @@ function SuperAdminDashboard() {
                             )}
                           </td>
                           <td className="p-3">
-                            <div className="text-slate-300">{c.email || "Sem e-mail"}</div>
-                            {c.phone && (
-                              <span className="text-[11px] text-slate-500">{c.phone}</span>
-                            )}
+                            <div className="text-slate-300 font-medium">
+                              {c.responsible_name || "Responsável não informado"}
+                            </div>
+                            <span className="text-[11px] text-slate-400">{c.email || "Sem e-mail"}</span>
                           </td>
                           <td className="p-3">
                             <Badge variant="outline" className="border-slate-700 bg-slate-800 text-slate-200">
-                              {c.plan || "Free / Trial"}
+                              {planDisplay}
                             </Badge>
                           </td>
                           <td className="p-3">
@@ -562,6 +659,10 @@ function SuperAdminDashboard() {
                               <Badge className="bg-red-500/20 text-red-400 border-red-500/40">
                                 Bloqueado
                               </Badge>
+                            ) : status === "cancelled" ? (
+                              <Badge className="bg-zinc-500/20 text-zinc-400 border-zinc-500/40">
+                                Cancelado
+                              </Badge>
                             ) : (
                               <Badge variant="outline" className="border-slate-700 text-slate-400">
                                 {status}
@@ -569,17 +670,30 @@ function SuperAdminDashboard() {
                             )}
                           </td>
                           <td className="p-3 text-center">
-                            <span className="font-mono font-bold text-white">{count}</span>
+                            <span className="font-mono font-bold text-white text-base">
+                              {countMonth}
+                            </span>
                           </td>
                           <td className="p-3 text-right">
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => handleOpenActionModal(c)}
-                              className="bg-slate-800 hover:bg-slate-700 text-xs"
-                            >
-                              Gerenciar
-                            </Button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleQuickHomologation(c)}
+                                className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10 text-xs h-8"
+                                title="Ativar para Homologação Ilimitada"
+                              >
+                                Homologar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => handleOpenActionModal(c)}
+                                className="bg-slate-800 hover:bg-slate-700 text-xs h-8"
+                              >
+                                Gerenciar
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -591,47 +705,129 @@ function SuperAdminDashboard() {
           </Card>
         </TabsContent>
 
-        {/* Auditoria & Webhooks */}
+        {/* 2. Webhooks do Mercado Pago */}
         <TabsContent value="webhooks" className="space-y-4">
           <Card className="bg-slate-900 border-slate-800 text-white">
             <CardHeader>
               <CardTitle className="text-base font-bold flex items-center gap-2">
                 <Webhook className="w-4 h-4 text-emerald-400" />
-                Histórico de Eventos do Mercado Pago e Auditoria
+                Histórico de Webhooks e Transações do Mercado Pago
               </CardTitle>
               <CardDescription className="text-xs text-slate-400">
-                Log dos últimos disparos de pagamentos, notificações e alterações de assinatura.
+                Notificações de pagamento e sincronização automática de assinaturas
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                {webhookLogs.length === 0 ? (
-                  <p className="text-xs text-slate-500 py-4 text-center">
-                    Nenhum log de webhook registrado recentemente.
-                  </p>
-                ) : (
-                  webhookLogs.map((log: any) => (
-                    <div
-                      key={log.id}
-                      className="p-3 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between text-xs"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="border-slate-700 text-slate-300">
-                            {log.action}
-                          </Badge>
-                          <span className="font-semibold text-slate-200">
-                            Empresa ID: {log.company_id || "Global"}
-                          </span>
-                        </div>
-                        <p className="text-slate-400 text-[11px]">
-                          {new Date(log.created_at).toLocaleString("pt-BR")}
-                        </p>
-                      </div>
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    </div>
-                  ))
-                )}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-950/70 text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                    <tr>
+                      <th className="p-3">ID Transação / Evento</th>
+                      <th className="p-3">Status</th>
+                      <th className="p-3">Empresa / Oficina</th>
+                      <th className="p-3">Payload Resumido</th>
+                      <th className="p-3 text-right">Data e Hora</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {isLoadingWebhooks ? (
+                      <tr>
+                        <td colSpan={5} className="text-center p-6 text-slate-500">
+                          Carregando webhooks...
+                        </td>
+                      </tr>
+                    ) : webhookLogs.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center p-6 text-slate-500">
+                          Nenhum webhook recebido ainda.
+                        </td>
+                      </tr>
+                    ) : (
+                      webhookLogs.map((log: any) => (
+                        <tr key={log.id} className="hover:bg-slate-800/40">
+                          <td className="p-3 font-mono font-semibold text-slate-200">
+                            {log.payload?.payment_id || log.id?.slice(0, 12)}
+                          </td>
+                          <td className="p-3">
+                            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/40">
+                              {log.status || log.event_type || "approved"}
+                            </Badge>
+                          </td>
+                          <td className="p-3 font-mono text-slate-400">
+                            {log.company_id?.slice(0, 8) || "Global"}
+                          </td>
+                          <td className="p-3 text-slate-300 max-w-xs truncate font-mono text-[11px]">
+                            {log.message || JSON.stringify(log.payload || {})}
+                          </td>
+                          <td className="p-3 text-right text-slate-400">
+                            {new Date(log.created_at).toLocaleString("pt-BR")}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 3. Log de Erros de Sincronização e Autenticação */}
+        <TabsContent value="errors" className="space-y-4">
+          <Card className="bg-slate-900 border-slate-800 text-white">
+            <CardHeader>
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <AlertOctagon className="w-4 h-4 text-red-400" />
+                Erros de Sincronização e Suporte Rápido aos Mecânicos
+              </CardTitle>
+              <CardDescription className="text-xs text-slate-400">
+                Monitoramento de falhas de tela, erros de rede e problemas de autenticação
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-950/70 text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                    <tr>
+                      <th className="p-3">Erro Identificado</th>
+                      <th className="p-3">Rota / Tela</th>
+                      <th className="p-3">Empresa ID</th>
+                      <th className="p-3 text-right">Data</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {isLoadingErrors ? (
+                      <tr>
+                        <td colSpan={4} className="text-center p-6 text-slate-500">
+                          Carregando erros...
+                        </td>
+                      </tr>
+                    ) : errorLogs.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="text-center p-6 text-emerald-400">
+                          Nenhum erro de sincronização registrado! Sistema operando normalmente.
+                        </td>
+                      </tr>
+                    ) : (
+                      errorLogs.map((err: any) => (
+                        <tr key={err.id} className="hover:bg-slate-800/40">
+                          <td className="p-3 font-semibold text-red-300 max-w-sm truncate">
+                            {err.error_message || "Erro de execução"}
+                          </td>
+                          <td className="p-3 font-mono text-slate-400">
+                            {err.route || "/"}
+                          </td>
+                          <td className="p-3 font-mono text-slate-400">
+                            {err.company_id ? err.company_id.slice(0, 8) : "Anônimo"}
+                          </td>
+                          <td className="p-3 text-right text-slate-400">
+                            {new Date(err.created_at).toLocaleString("pt-BR")}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </CardContent>
           </Card>
@@ -646,13 +842,13 @@ function SuperAdminDashboard() {
               Gerenciar Oficina: {selectedCompany?.name}
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-400">
-              Ações manuais imediatas para renovação, alteração de plano ou bloqueio temporário.
+              Ações manuais para alterar plano, renovar períodos de teste ou aplicar bloqueio.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-3">
             <div className="space-y-2">
-              <Label className="text-xs text-slate-300">Plano Selecionado</Label>
+              <Label className="text-xs text-slate-300">Alterar Plano</Label>
               <Select value={newPlanId} onValueChange={setNewPlanId}>
                 <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
                   <SelectValue placeholder="Selecione o plano" />
@@ -668,7 +864,7 @@ function SuperAdminDashboard() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs text-slate-300">Status da Assinatura</Label>
+              <Label className="text-xs text-slate-300">Status Operacional</Label>
               <Select value={newStatus} onValueChange={setNewStatus}>
                 <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
                   <SelectValue placeholder="Selecione o status" />
@@ -676,10 +872,43 @@ function SuperAdminDashboard() {
                 <SelectContent className="bg-slate-900 border-slate-800 text-white">
                   <SelectItem value="active">Ativo (Acesso Completo)</SelectItem>
                   <SelectItem value="trial">Trial (Período de Testes)</SelectItem>
-                  <SelectItem value="suspended">Suspenso / Bloqueado</SelectItem>
+                  <SelectItem value="suspended">Suspenso / Bloqueio Temporário</SelectItem>
                   <SelectItem value="cancelled">Cancelado</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-300">Renovar Período de Teste</Label>
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  type="button"
+                  variant={extendTrialDays === 7 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setExtendTrialDays(7)}
+                  className="text-xs border-slate-800"
+                >
+                  +7 Dias
+                </Button>
+                <Button
+                  type="button"
+                  variant={extendTrialDays === 15 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setExtendTrialDays(15)}
+                  className="text-xs border-slate-800"
+                >
+                  +15 Dias
+                </Button>
+                <Button
+                  type="button"
+                  variant={extendTrialDays === 30 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setExtendTrialDays(30)}
+                  className="text-xs border-slate-800"
+                >
+                  +30 Dias
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -696,9 +925,9 @@ function SuperAdminDashboard() {
               size="sm"
               disabled={updateCompanyMutation.isPending}
               onClick={() => updateCompanyMutation.mutate()}
-              className="bg-primary hover:bg-primary/90 text-white"
+              className="bg-primary hover:bg-primary/90 text-white font-medium"
             >
-              {updateCompanyMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+              {updateCompanyMutation.isPending ? "Salvando..." : "Confirmar Alteração"}
             </Button>
           </DialogFooter>
         </DialogContent>
