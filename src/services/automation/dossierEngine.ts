@@ -284,7 +284,10 @@ export const dossierEngine = {
 
   async exportPdf(elementId: string, filename: string) {
     const element = document.getElementById(elementId);
-    if (!element) return;
+    if (!element) {
+      toast.error("Elemento de visualização não encontrado.");
+      return;
+    }
 
     toast.info("Processando PDF de alta fidelidade...");
     
@@ -293,17 +296,37 @@ export const dossierEngine = {
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
       });
       
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth(); // ~210 mm
+      const pageHeight = pdf.internal.pageSize.getHeight(); // ~297 mm
       const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(filename);
+      const totalPdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      let heightLeft = totalPdfHeight;
+      let position = 0;
+
+      // Primeira página
+      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, totalPdfHeight, undefined, "FAST");
+      heightLeft -= pageHeight;
+
+      // Páginas subsequentes com quebra limpa
+      while (heightLeft > 2) {
+        position -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, totalPdfHeight, undefined, "FAST");
+        heightLeft -= pageHeight;
+      }
+
+      // Gatilho universal (compatível com Safari iOS e Chrome Android/Desktop)
+      const { downloadOrOpenPdf } = await import("@/utils/pdf-export");
+      downloadOrOpenPdf(pdf, filename);
+
       console.log("DOSSIER_PDF_OK");
       toast.success("Exportação PDF concluída!");
     } catch (error) {

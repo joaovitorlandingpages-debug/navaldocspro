@@ -93,6 +93,25 @@ serve(async (req) => {
     const [companyId, planId] = String(paymentData.external_reference || "").split(":");
     if (!companyId || !planId) return jsonResponse({ received: true });
 
+    // Prevenção de chave órfã: valida se a empresa realmente existe no Supabase
+    const { data: company } = await admin
+      .from("companies")
+      .select("id")
+      .eq("id", companyId)
+      .maybeSingle();
+
+    if (!company) {
+      console.error("[MP_WEBHOOK] Chave órfã evitada! Empresa não encontrada no Supabase:", companyId);
+      await admin.from("payment_logs").insert({
+        company_id: companyId,
+        event_type: "orphan_payment_prevented",
+        status: "error",
+        payload: { payment_id: paymentData.id, external_reference: paymentData.external_reference },
+        message: `Pagamento ${paymentData.id} com company_id inexistente: ${companyId}`,
+      });
+      return jsonResponse({ received: true, warning: "orphan_company_prevented" });
+    }
+
     // Idempotency — same payment id processed once
     const { data: existing } = await admin
       .from("payments")
@@ -102,13 +121,21 @@ serve(async (req) => {
     if (existing) return jsonResponse({ received: true, deduplicated: true });
 
     if (paymentData.status === "approved") {
-      const { data: plan } = await admin.from("plans").select("*").eq("id", planId).maybeSingle();
-      if (!plan) return jsonResponse({ error: "plan_not_found" }, 404);
+      let { data: plan } = await admin.from("plans").select("*").eq("id", planId).maybeSingle();
+      if (!plan) {
+        // Tenta buscar por slug caso planId seja o slug
+        const { data: planBySlug } = await admin.from("plans").select("*").eq("slug", planId).maybeSingle();
+        if (planBySlug) plan = planBySlug;
+      }
 
-      const periodEnd = new Date(); periodEnd.setMonth(periodEnd.getMonth() + 1);
+      const effectivePlanId = plan?.id || planId;
+      const periodEnd = new Date(); 
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
 
       await admin.from("subscriptions").upsert({
-        company_id: companyId, plan_id: planId, status: "active",
+        company_id: companyId, 
+        plan_id: effectivePlanId, 
+        status: "active",
         mercado_pago_subscription_id: String(paymentData.id),
         current_period_start: new Date().toISOString(),
         current_period_end: periodEnd.toISOString(),

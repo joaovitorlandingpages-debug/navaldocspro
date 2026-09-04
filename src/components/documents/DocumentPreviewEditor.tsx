@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { 
   FileText, Save, CheckCircle2, AlertTriangle, 
   ChevronLeft, ArrowRight, Download, Edit3, 
-  Eye, RefreshCw, Printer, FileCheck, Zap
+  Eye, RefreshCw, Printer, FileCheck, Zap, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,7 @@ interface DocumentPreviewEditorProps {
 export function DocumentPreviewEditor({ template, processData, onSave, onCancel }: DocumentPreviewEditorProps) {
   const [content, setContent] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [status, setStatus] = useState<'rascunho' | 'auto_preenchido' | 'em_revisao' | 'aprovado'>('rascunho');
   const [procuracaoType, setProcuracaoType] = useState("Procuração Geral para Processo Naval");
   const [memorialType, setMemorialType] = useState("Memorial Técnico de Embarcação");
@@ -359,40 +360,45 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
                  <h4 className="text-lg font-bold mb-4">Gerar PDF Oficial</h4>
                  <p className="text-[11px] text-slate-400 mb-6 leading-relaxed">Este documento será registrado na timeline do processo como uma versão finalizada e imutável.</p>
                   <Button 
-                    onClick={() => {
-                       console.log("PDF_OPERATIONAL_READY");
-                       if (template.name === 'Requerimento DPC-2211') {
-                         console.log("DPC2211_PDF_OK");
-                       }
-                       if (template.name.includes("Procuração")) {
-                         console.log("PROCURACAO_PDF_OK");
-                       }
-                       if (template.name.includes("Memorial")) {
-                         console.log("MEMORIAL_PDF_OK");
-                       }
-                       if (template.name.includes("Declaração")) {
-                         console.log("DECLARACAO_PDF_OK");
-                       }
-                       if (template.name.includes("Termo de Responsabilidade")) {
-                         console.log("TERMO_TECNICO_PDF_OK");
-                       }
-                       if (template.name.includes("Transferência")) {
-                         console.log("TRANSFERENCIA_PDF_OK");
-                       }
-                       if (template.name.includes("Alteração de Motor")) {
-                         console.log("MOTOR_CHANGE_PDF_OK");
-                       }
-                       handleApprove();
-
-
-
-
-
-
+                    onClick={async () => {
+                      if (isExporting) return;
+                      setIsExporting(true);
+                      try {
+                        console.log("PDF_OPERATIONAL_READY");
+                        if (template.name === 'Requerimento DPC-2211') {
+                          console.log("DPC2211_PDF_OK");
+                        }
+                        if (template.name.includes("Procuração")) {
+                          console.log("PROCURACAO_PDF_OK");
+                        }
+                        if (template.name.includes("Memorial")) {
+                          console.log("MEMORIAL_PDF_OK");
+                        }
+                        if (template.name.includes("Declaração")) {
+                          console.log("DECLARACAO_PDF_OK");
+                        }
+                        if (template.name.includes("Termo de Responsabilidade")) {
+                          console.log("TERMO_TECNICO_PDF_OK");
+                        }
+                        if (template.name.includes("Transferência")) {
+                          console.log("TRANSFERENCIA_PDF_OK");
+                        }
+                        if (template.name.includes("Alteração de Motor")) {
+                          console.log("MOTOR_CHANGE_PDF_OK");
+                        }
+                        await handleApprove();
+                      } finally {
+                        setIsExporting(false);
+                      }
                     }}
+                    disabled={isExporting}
                     className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all gap-2"
-                 >
-                    <Download className="h-4 w-4" /> Exportar PDF
+                  >
+                    {isExporting ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Gerando PDF...</>
+                    ) : (
+                      <><Download className="h-4 w-4" /> Exportar PDF</>
+                    )}
                  </Button>
               </div>
            </div>

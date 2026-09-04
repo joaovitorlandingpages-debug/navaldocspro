@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface Props {
   processId: string;
@@ -37,6 +38,8 @@ export function ProcessSignaturesPanel({ processId }: Props) {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [defaultDoc, setDefaultDoc] = useState<{ id?: string; title?: string }>({});
+  const [requestToCancel, setRequestToCancel] = useState<{ id: string; companyId: string; title?: string } | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -114,12 +117,20 @@ export function ProcessSignaturesPanel({ processId }: Props) {
     setDialogOpen(true);
   };
 
-  const onCancel = async (id: string, companyId: string) => {
-    if (!confirm("Cancelar esta solicitação?")) return;
-    await signaturesService.cancel(id, companyId);
-    toast.success("Cancelada");
-    qc.invalidateQueries({ queryKey: ["process-center", "detail", processId] });
-    load();
+  const handleConfirmCancel = async () => {
+    if (!requestToCancel) return;
+    setCancelling(true);
+    try {
+      await signaturesService.cancel(requestToCancel.id, requestToCancel.companyId);
+      toast.success("Solicitação cancelada");
+      setRequestToCancel(null);
+      qc.invalidateQueries({ queryKey: ["process-center", "detail", processId] });
+      load();
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao cancelar solicitação");
+    } finally {
+      setCancelling(false);
+    }
   };
 
   const copyLink = (token: string) => {
@@ -163,7 +174,7 @@ export function ProcessSignaturesPanel({ processId }: Props) {
               <p className="text-sm text-slate-600 mt-1">{overallStatus.detail}</p>
             </div>
           </div>
-          <Button onClick={() => openNewForDoc()} className="gap-2">
+          <Button onClick={() => openNewForDoc()} className="gap-2 min-h-[44px]">
             <Plus className="w-4 h-4" /> Nova solicitação
           </Button>
         </div>
@@ -187,7 +198,7 @@ export function ProcessSignaturesPanel({ processId }: Props) {
                   {hasRequest ? (
                     <Badge variant="secondary" className="text-[10px]">Já solicitado</Badge>
                   ) : (
-                    <Button size="sm" variant="outline" onClick={() => openNewForDoc({ id: d.id, name: d.name })} className="gap-1">
+                    <Button size="sm" variant="outline" onClick={() => openNewForDoc({ id: d.id, name: d.name })} className="gap-1 min-h-[44px]">
                       <Signature className="w-3 h-3" /> Solicitar assinatura
                     </Button>
                   )}
@@ -230,22 +241,22 @@ export function ProcessSignaturesPanel({ processId }: Props) {
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {r.final_signed_pdf_url && (
-                        <Button size="sm" variant="outline" onClick={() => downloadFile(r.final_signed_pdf_url)} className="gap-1">
+                        <Button size="sm" variant="outline" onClick={() => downloadFile(r.final_signed_pdf_url)} className="gap-1 min-h-[44px]">
                           <Download className="w-3 h-3" /> PDF
                         </Button>
                       )}
                       {r.evidence_certificate_url && (
-                        <Button size="sm" variant="outline" onClick={() => downloadFile(r.evidence_certificate_url)} className="gap-1">
+                        <Button size="sm" variant="outline" onClick={() => downloadFile(r.evidence_certificate_url)} className="gap-1 min-h-[44px]">
                           <Download className="w-3 h-3" /> Certificado
                         </Button>
                       )}
                       {r.status === "completed" && (
-                        <Button size="sm" variant="outline" onClick={() => copyVerifyLink(r.id)} className="gap-1">
+                        <Button size="sm" variant="outline" onClick={() => copyVerifyLink(r.id)} className="gap-1 min-h-[44px]">
                           <Link2 className="w-3 h-3" /> Verificar
                         </Button>
                       )}
                       {!["completed", "cancelled"].includes(r.status) && (
-                        <Button size="sm" variant="outline" onClick={() => onCancel(r.id, r.company_id)} className="gap-1 text-rose-600">
+                        <Button size="sm" variant="outline" onClick={() => setRequestToCancel({ id: r.id, companyId: r.company_id, title: r.title })} className="gap-1 min-h-[44px] text-destructive hover:bg-destructive/10">
                           <X className="w-3 h-3" /> Cancelar
                         </Button>
                       )}
@@ -336,6 +347,18 @@ export function ProcessSignaturesPanel({ processId }: Props) {
         defaultTitle={defaultDoc.title}
         defaultCustomerId={process?.customer_id}
         onCreated={load}
+      />
+
+      <ConfirmDialog
+        open={!!requestToCancel}
+        onOpenChange={(open) => !open && setRequestToCancel(null)}
+        title="Cancelar Solicitação de Assinatura"
+        description={`Tem certeza que deseja cancelar a solicitação "${requestToCancel?.title || "desta assinatura"}"? Esta ação não poderá ser desfeita.`}
+        confirmText="Confirmar Cancelamento"
+        cancelText="Voltar"
+        variant="destructive"
+        loading={cancelling}
+        onConfirm={handleConfirmCancel}
       />
     </div>
   );

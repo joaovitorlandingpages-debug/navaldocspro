@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Download, RotateCcw } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export const Route = createFileRoute("/piloto")({
   head: () => ({
@@ -49,6 +50,7 @@ function defaultState(): State {
 
 function PilotoPage() {
   const [state, setState] = useState<State>(defaultState);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   useEffect(() => {
     try {
@@ -90,8 +92,9 @@ function PilotoPage() {
     URL.revokeObjectURL(url);
   };
 
-  const reset = () => {
-    if (confirm("Reiniciar checklist? Notas serão apagadas.")) setState(defaultState());
+  const handleConfirmReset = () => {
+    setState(defaultState());
+    setShowResetConfirm(false);
   };
 
   return (
@@ -104,10 +107,10 @@ function PilotoPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={reset}>
+          <Button variant="outline" size="sm" onClick={() => setShowResetConfirm(true)} className="min-h-[44px] text-destructive hover:bg-destructive/10">
             <RotateCcw className="h-4 w-4 mr-2" /> Reiniciar
           </Button>
-          <Button size="sm" onClick={exportMd}>
+          <Button size="sm" onClick={exportMd} className="min-h-[44px]">
             <Download className="h-4 w-4 mr-2" /> Exportar .md
           </Button>
         </div>
@@ -163,6 +166,17 @@ function PilotoPage() {
           );
         })}
       </div>
+
+      <ConfirmDialog
+        open={showResetConfirm}
+        onOpenChange={setShowResetConfirm}
+        title="Reiniciar Checklist do Piloto"
+        description="Tem certeza que deseja reiniciar todo o checklist? Todas as notas e marcações preenchidas serão apagadas permanentemente."
+        confirmText="Confirmar Reinício"
+        cancelText="Voltar"
+        variant="destructive"
+        onConfirm={handleConfirmReset}
+      />
     </div>
   );
 }

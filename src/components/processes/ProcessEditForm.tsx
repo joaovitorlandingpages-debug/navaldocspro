@@ -27,6 +27,14 @@ import { ProcessParticipantsTab } from "./ProcessParticipantsTab";
 import { casUpdate, notifyConflict } from "@/lib/optimisticLock";
 import { useAutosave } from "@/hooks/useAutosave";
 import { AutosaveIndicator } from "@/components/AutosaveIndicator";
+import { 
+  validateUpload, 
+  MAX_LOGO_BYTES, 
+  LOGO_ALLOWED_EXTENSIONS, 
+  removeFromBucket, 
+  parseStorageError 
+} from "@/lib/storage";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface Props {
   process: any;
@@ -150,6 +158,9 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose, initialTa
   const [customerPickerOpen, setCustomerPickerOpen] = useState(false);
   const [vesselPickerOpen, setVesselPickerOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<null | "archive" | "trash">(null);
+  const [isConfirmRunning, setIsConfirmRunning] = useState(false);
+  const [showRemoveLogoConfirm, setShowRemoveLogoConfirm] = useState(false);
+  const [isRemovingLogo, setIsRemovingLogo] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setForm(initial); }, [initial]);
@@ -293,18 +304,40 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose, initialTa
   // -------- Branding logo upload
   async function uploadLogo(file: File) {
     if (!companyId) return;
+
+    const validation = validateUpload(file, {
+      maxSize: MAX_LOGO_BYTES,
+      allowedExtensions: LOGO_ALLOWED_EXTENSIONS,
+    });
+    if (!validation.isValid) {
+      toast.error(validation.error || "Formato de imagem inválido.");
+      return;
+    }
+
     setUploading(true);
+    const prevLogo = form.branding_logo_url;
     try {
-      const ext = file.name.split(".").pop() || "png";
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
       const path = `${companyId}/${process.id}/logo-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("company-branding").upload(path, file, { upsert: true });
+      const { error: upErr } = await supabase.storage.from("company-branding").upload(path, file, { 
+        upsert: true,
+        contentType: file.type
+      });
       if (upErr) throw upErr;
+
+      // Clean up previous logo to avoid orphan files
+      if (prevLogo) {
+        await removeFromBucket("company-branding", prevLogo);
+      }
+
       const { data: signed } = await supabase.storage.from("company-branding").createSignedUrl(path, 60 * 60 * 24 * 365);
       setForm((f) => ({ ...f, branding_mode: "process", branding_logo_url: signed?.signedUrl || "" }));
-      toast.success("Logo enviado.");
+      toast.success("Logo exclusivo atualizado.");
     } catch (e: any) {
-      toast.error(e.message || "Falha no upload.");
-    } finally { setUploading(false); }
+      toast.error(parseStorageError(e));
+    } finally { 
+      setUploading(false); 
+    }
   }
 
   // -------- Save
@@ -847,16 +880,38 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose, initialTa
 
               {form.branding_mode === "process" && (
                 <div className="space-y-3">
-                  <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadLogo(f); }} />
+                  <input 
+                    ref={logoInputRef} 
+                    type="file" 
+                    accept="image/png,image/jpeg,image/webp" 
+                    className="hidden"
+                    onChange={(e) => { 
+                      const f = e.target.files?.[0]; 
+                      e.target.value = "";
+                      if (f) uploadLogo(f); 
+                    }} 
+                  />
                   <Button type="button" variant="outline" className="rounded-xl gap-2" onClick={() => logoInputRef.current?.click()} disabled={uploading}>
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    Enviar logo exclusivo
+                    {form.branding_logo_url ? "Trocar logo exclusivo" : "Enviar logo exclusivo"}
                   </Button>
                   {form.branding_logo_url && (
-                    <div className="p-4 rounded-xl border bg-white">
-                      <div className="text-[10px] uppercase tracking-widest font-black text-slate-500 mb-2">Preview</div>
-                      <img src={form.branding_logo_url} alt="Logo" className="max-h-24 object-contain" />
+                    <div className="p-4 rounded-xl border bg-white flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] uppercase tracking-widest font-black text-slate-500 mb-2">Preview (proporção preservada)</div>
+                        <img src={form.branding_logo_url} alt="Logo" className="max-h-24 max-w-full object-contain" />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 gap-1.5 min-h-[44px] px-3"
+                        onClick={() => setShowRemoveLogoConfirm(true)}
+                        disabled={isRemovingLogo}
+                      >
+                        {isRemovingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        Remover
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -968,15 +1023,15 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose, initialTa
               Cancelar
             </Button>
           )}
-          <Button type="submit" disabled={saving || !isDirty} className="h-11 rounded-xl gap-2 bg-primary text-white">
+          <Button type="submit" disabled={saving || !isDirty} className="h-11 rounded-xl gap-2 bg-primary text-white min-h-[44px]">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Salvar alterações
+            {saving ? "Salvando..." : "Salvar alterações"}
           </Button>
         </div>
       </div>
 
       {/* ============ Confirm AlertDialog ============ */}
-      <AlertDialog open={confirmAction !== null} onOpenChange={(o) => { if (!o) setConfirmAction(null); }}>
+      <AlertDialog open={confirmAction !== null} onOpenChange={(o) => { if (!o && !isConfirmRunning) setConfirmAction(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -989,20 +1044,53 @@ export function ProcessEditForm({ process, onSaved, onCancel, onClose, initialTa
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isConfirmRunning} className="min-h-[44px]">Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              className={confirmAction === "trash" ? "bg-red-600 hover:bg-red-700 text-white" : ""}
-              onClick={async () => {
-                const a = confirmAction; setConfirmAction(null);
-                if (a === "archive") await runArchive();
-                if (a === "trash") await runTrash();
+              disabled={isConfirmRunning}
+              className={confirmAction === "trash" ? "bg-red-600 hover:bg-red-700 text-white min-h-[44px] flex items-center justify-center gap-2" : "min-h-[44px] flex items-center justify-center gap-2"}
+              onClick={async (e) => {
+                e.preventDefault();
+                setIsConfirmRunning(true);
+                try {
+                  const a = confirmAction;
+                  if (a === "archive") await runArchive();
+                  if (a === "trash") await runTrash();
+                  setConfirmAction(null);
+                } finally {
+                  setIsConfirmRunning(false);
+                }
               }}
             >
-              {confirmAction === "archive" ? "Arquivar" : "Mover para Lixeira"}
+              {isConfirmRunning && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isConfirmRunning ? "Processando..." : (confirmAction === "archive" ? "Arquivar" : "Mover para Lixeira")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ConfirmDialog
+        open={showRemoveLogoConfirm}
+        onOpenChange={setShowRemoveLogoConfirm}
+        title="Remover Logotipo Exclusivo"
+        description="Tem certeza que deseja remover o logotipo exclusivo deste processo?"
+        confirmText="Remover"
+        cancelText="Cancelar"
+        variant="destructive"
+        loading={isRemovingLogo}
+        onConfirm={async () => {
+          setIsRemovingLogo(true);
+          try {
+            if (form.branding_logo_url) {
+              await removeFromBucket("company-branding", form.branding_logo_url);
+            }
+            setForm((f) => ({ ...f, branding_logo_url: "" }));
+            toast.success("Logo removido.");
+            setShowRemoveLogoConfirm(false);
+          } finally {
+            setIsRemovingLogo(false);
+          }
+        }}
+      />
 
       {/* ============ Customer Dialogs ============ */}
       {[

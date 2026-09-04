@@ -222,9 +222,23 @@ export default function SubscriptionUsage() {
                 <div className="flex justify-between items-center py-3 border-b border-slate-200 text-xs">
                     <span className="text-slate-500 font-bold uppercase">Status Global</span>
                     <Badge className={`${
-                        subscription?.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'
+                        subscription?.status === 'active' || subscription?.status === 'lifetime' 
+                          ? 'bg-emerald-500' 
+                          : subscription?.status === 'past_due' 
+                            ? 'bg-rose-500' 
+                            : 'bg-amber-500'
                     } text-white font-black uppercase text-[8px] tracking-widest`}>
-                        {subscription?.status || 'Pendente'}
+                        {subscription?.status === 'lifetime' 
+                          ? 'Vitalício / Homologação' 
+                          : subscription?.status === 'active' 
+                            ? 'Ativo' 
+                            : subscription?.status === 'trialing' 
+                              ? 'Período de Teste' 
+                              : subscription?.status === 'past_due' 
+                                ? 'Pagamento Pendente' 
+                                : subscription?.status === 'canceled' 
+                                  ? 'Cancelado' 
+                                  : (subscription?.status || 'Pendente')}
                     </Badge>
                 </div>
                 <div className="flex justify-between items-center py-3 border-b border-slate-200 text-xs">

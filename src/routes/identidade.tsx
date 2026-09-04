@@ -20,6 +20,8 @@ import {
   type CompanyPdfTemplate,
   type DocumentType,
 } from "@/services/companyPdfTemplates";
+import { validateUpload, parseStorageError, removeFromBucket } from "@/lib/storage";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export const Route = createFileRoute("/identidade")({
   component: () => (
@@ -99,6 +101,10 @@ function IdentidadePage() {
   const [brandingForStudio, setBrandingForStudio] = useState<CompanyBranding | null>(null);
   const [docTypeMap, setDocTypeMap] = useState<Record<string, string>>({});
   const [newDialogOpen, setNewDialogOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
+  const [isDeletingTemplate, setIsDeletingTemplate] = useState(false);
+  const [fieldToClear, setFieldToClear] = useState<keyof BrandingFields | null>(null);
+  const [isClearingField, setIsClearingField] = useState(false);
 
   const loadMyTemplates = async () => {
     if (!companyId) return;
@@ -128,9 +134,17 @@ function IdentidadePage() {
   };
   const onTemplateSaved = (_t: CompanyPdfTemplate) => { loadMyTemplates(); };
   const removeTemplate = async (id: string) => {
-    if (!confirm("Excluir este template?")) return;
-    try { await deleteCompanyTemplate(id); toast.success("Removido"); loadMyTemplates(); }
-    catch (e: any) { toast.error(e.message ?? "Falha"); }
+    setIsDeletingTemplate(true);
+    try {
+      await deleteCompanyTemplate(id);
+      toast.success("Removido");
+      setTemplateToDelete(null);
+      loadMyTemplates();
+    } catch (e: any) {
+      toast.error(e.message ?? "Falha");
+    } finally {
+      setIsDeletingTemplate(false);
+    }
   };
   const duplicateTemplate = async (t: CompanyPdfTemplate) => {
     if (!companyId) return;
@@ -204,44 +218,86 @@ function IdentidadePage() {
     })();
   }, [companyId]);
 
-  const ACCEPTED = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
-  const MAX_BYTES = 5 * 1024 * 1024;
-
   const upload = async (field: keyof BrandingFields, file: File) => {
     if (!companyId) {
-      toast.error("Empresa não identificada");
+      toast.error("Empresa não identificada.");
       return;
     }
-    if (!ACCEPTED.includes(file.type)) {
-      toast.error("Formato inválido. Use PNG, JPG, WEBP ou SVG.");
+
+    const isLogoField = field === "logo_primary_url" || field === "logo_secondary_url";
+
+    try {
+      validateUpload(file, {
+        purpose: isLogoField ? "logo" : "attachment",
+        maxBytes: 5 * 1024 * 1024,
+      });
+    } catch (valErr: any) {
+      toast.error(valErr.message || "Arquivo inválido para upload.");
       return;
     }
-    if (file.size > MAX_BYTES) {
-      toast.error("Arquivo muito grande. Máximo 5 MB.");
-      return;
-    }
+
+    const previousUrl = data[field];
+    const previewObjectUrl = URL.createObjectURL(file);
+
+    // 1. Preview imediato na tela com proporção correta
+    setData((d) => ({ ...d, [field]: previewObjectUrl }));
     setUploadingField(field);
+
+    const loadingToast = toast.loading(`Enviando ${file.name}...`);
+
     try {
       const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      // Logos ficam em 'company-logos' (bucket público e persistente), outros assets em 'company-branding'
+      const bucket = isLogoField ? "company-logos" : "company-branding";
       const path = `${companyId}/${field}-${Date.now()}.${ext}`;
+
       const { error: upErr } = await supabase.storage
-        .from("company-branding")
+        .from(bucket)
         .upload(path, file, { upsert: true, contentType: file.type });
+
       if (upErr) throw upErr;
-      const { data: signed, error: signErr } = await supabase.storage
-        .from("company-branding")
-        .createSignedUrl(path, 60 * 60 * 24 * 365);
-      if (signErr) throw signErr;
-      const url = signed?.signedUrl || path;
+
+      // 2. URL persistente pública para logos ou URL assinada para branding privado
+      let finalUrl = "";
+      if (bucket === "company-logos") {
+        const { data: pub } = supabase.storage.from("company-logos").getPublicUrl(path);
+        finalUrl = pub.publicUrl;
+      } else {
+        const { data: signed, error: signErr } = await supabase.storage
+          .from("company-branding")
+          .createSignedUrl(path, 60 * 60 * 24 * 365);
+        if (signErr) throw signErr;
+        finalUrl = signed?.signedUrl || path;
+      }
+
+      // 3. Atualizar no banco: para logo principal, atualiza logo_primary_url e logo_url
+      const updatePayload: Record<string, any> = { [field]: finalUrl };
+      if (field === "logo_primary_url") {
+        updatePayload.logo_url = finalUrl;
+      }
+
       const { error: dbErr } = await supabase
         .from("companies")
-        .update({ [field]: url } as any)
+        .update(updatePayload as any)
         .eq("id", companyId);
+
       if (dbErr) throw dbErr;
-      setData((d) => ({ ...d, [field]: url }));
-      toast.success("Arquivo enviado e salvo");
+
+      // 4. Limpeza de arquivo anterior no Storage para não deixar lixo órfão
+      if (previousUrl && previousUrl !== finalUrl) {
+        await removeFromBucket("company-logos", previousUrl);
+        await removeFromBucket("company-branding", previousUrl);
+      }
+
+      setData((d) => ({ ...d, [field]: finalUrl }));
+      toast.dismiss(loadingToast);
+      toast.success("Imagem enviada e salva com sucesso!");
     } catch (e: any) {
-      toast.error(e.message || "Falha no upload");
+      console.error("[LOGO_UPLOAD_FAILED]", e);
+      toast.dismiss(loadingToast);
+      toast.error(`Falha no upload: ${parseStorageError(e)}`);
+      // Reverte preview para a URL anterior em caso de erro
+      setData((d) => ({ ...d, [field]: previousUrl }));
     } finally {
       setUploadingField(null);
     }
@@ -249,17 +305,39 @@ function IdentidadePage() {
 
   const clearField = async (field: keyof BrandingFields) => {
     if (!companyId) return;
-    if (!confirm("Remover este arquivo?")) return;
-    const { error } = await supabase
-      .from("companies")
-      .update({ [field]: null } as any)
-      .eq("id", companyId);
-    if (error) {
-      toast.error("Erro ao remover: " + error.message);
-      return;
+    setIsClearingField(true);
+
+    const previousUrl = data[field];
+    const updatePayload: Record<string, any> = { [field]: null };
+    if (field === "logo_primary_url") {
+      updatePayload.logo_url = null;
     }
-    setData((d) => ({ ...d, [field]: null }));
-    toast.success("Removido");
+
+    try {
+      const { error } = await supabase
+        .from("companies")
+        .update(updatePayload as any)
+        .eq("id", companyId);
+
+      if (error) {
+        toast.error("Erro ao remover: " + parseStorageError(error));
+        return;
+      }
+
+      // Limpeza de lixo órfão no Storage
+      if (previousUrl) {
+        await removeFromBucket("company-logos", previousUrl);
+        await removeFromBucket("company-branding", previousUrl);
+      }
+
+      setData((d) => ({ ...d, [field]: null }));
+      toast.success("Arquivo removido.");
+      setFieldToClear(null);
+    } catch (err: any) {
+      toast.error("Erro ao remover: " + parseStorageError(err));
+    } finally {
+      setIsClearingField(false);
+    }
   };
 
   const save = async () => {
@@ -290,9 +368,9 @@ function IdentidadePage() {
           title="Identidade Corporativa"
           description="Logos, cores, contatos e elementos que aparecerão nos PDFs gerados pela sua empresa."
           actions={
-            <Button onClick={save} disabled={saving}>
+            <Button onClick={save} disabled={saving} className="min-h-[44px]">
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Salvar alterações
+              {saving ? "Salvando..." : "Salvar alterações"}
             </Button>
           }
         />
@@ -306,7 +384,7 @@ function IdentidadePage() {
               value={data.logo_primary_url}
               busy={uploadingField === "logo_primary_url"}
               onFile={(f) => upload("logo_primary_url", f)}
-              onClear={() => clearField("logo_primary_url")}
+              onClear={() => setFieldToClear("logo_primary_url")}
             />
             <UploadField
               inputId="logo-secondary-upload"
@@ -315,7 +393,7 @@ function IdentidadePage() {
               value={data.logo_secondary_url}
               busy={uploadingField === "logo_secondary_url"}
               onFile={(f) => upload("logo_secondary_url", f)}
-              onClear={() => clearField("logo_secondary_url")}
+              onClear={() => setFieldToClear("logo_secondary_url")}
             />
           </div>
         </Section>
@@ -431,7 +509,7 @@ function IdentidadePage() {
               value={data.signature_url}
               busy={uploadingField === "signature_url"}
               onFile={(f) => upload("signature_url", f)}
-              onClear={() => clearField("signature_url")}
+              onClear={() => setFieldToClear("signature_url")}
             />
             <UploadField
               inputId="stamp-upload"
@@ -440,7 +518,7 @@ function IdentidadePage() {
               value={data.stamp_url}
               busy={uploadingField === "stamp_url"}
               onFile={(f) => upload("stamp_url", f)}
-              onClear={() => clearField("stamp_url")}
+              onClear={() => setFieldToClear("stamp_url")}
             />
             <UploadField
               inputId="watermark-upload"
@@ -449,7 +527,7 @@ function IdentidadePage() {
               value={data.watermark_url}
               busy={uploadingField === "watermark_url"}
               onFile={(f) => upload("watermark_url", f)}
-              onClear={() => clearField("watermark_url")}
+              onClear={() => setFieldToClear("watermark_url")}
             />
           </div>
         </Section>
@@ -466,16 +544,43 @@ function IdentidadePage() {
         </Section>
 
         <div className="flex justify-end">
-          <Button onClick={save} disabled={saving} size="lg">
+          <Button onClick={save} disabled={saving} size="lg" className="min-h-[44px]">
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Salvar identidade corporativa
+            {saving ? "Salvando..." : "Salvar identidade corporativa"}
           </Button>
           </div>
         </div>
       </div>
 
+      <ConfirmDialog
+        open={fieldToClear !== null}
+        onOpenChange={(open) => { if (!open) setFieldToClear(null); }}
+        title="Remover Arquivo"
+        description="Tem certeza que deseja remover este arquivo de identidade visual? Esta ação é imediata."
+        confirmText="Remover"
+        cancelText="Cancelar"
+        variant="destructive"
+        loading={isClearingField}
+        onConfirm={async () => {
+          if (!fieldToClear) return;
+          await clearField(fieldToClear);
+        }}
+      />
 
-
+      <ConfirmDialog
+        open={templateToDelete !== null}
+        onOpenChange={(open) => { if (!open) setTemplateToDelete(null); }}
+        title="Excluir Template"
+        description="Tem certeza que deseja excluir este modelo de template?"
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="destructive"
+        loading={isDeletingTemplate}
+        onConfirm={async () => {
+          if (!templateToDelete) return;
+          await removeTemplate(templateToDelete);
+        }}
+      />
     </>
   );
 }
@@ -866,12 +971,12 @@ function UploadField({
             type="button"
             disabled={busy}
             onClick={() => console.log("[UPLOAD]", inputId, "button click registered")}
-            className={`inline-flex h-9 items-center justify-center rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/80 ${
+            className={`inline-flex min-h-[44px] items-center justify-center rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/80 ${
               busy ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
             }`}
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
-            {value ? "Trocar arquivo" : actionLabel}
+            {busy ? "Enviando..." : (value ? "Trocar arquivo" : actionLabel)}
           </button>
           <input
             id={inputId}
@@ -887,7 +992,7 @@ function UploadField({
           />
         </div>
         {value ? (
-          <Button size="sm" variant="ghost" onClick={onClear} disabled={busy} type="button">
+          <Button size="sm" variant="ghost" onClick={onClear} disabled={busy} type="button" className="min-h-[44px] text-red-500 hover:text-red-700 hover:bg-red-50">
             Remover
           </Button>
         ) : null}

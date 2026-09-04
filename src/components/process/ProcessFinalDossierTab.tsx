@@ -29,6 +29,7 @@ import {
   Ship,
   User as UserIcon,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface Props {
   processId: string;
@@ -415,6 +416,7 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
   const [busy, setBusy] = useState<null | "generate" | "deliver" | "cancel" | "pdf" | "zip">(null);
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [dossier, setDossier] = useState<any>(null);
+  const [showCancelDossierConfirm, setShowCancelDossierConfirm] = useState(false);
   const [signaturesSummary, setSignaturesSummary] = useState<{ total: number; completed: number; certificates: number }>({ total: 0, completed: 0, certificates: 0 });
 
   const reload = async () => {
@@ -679,50 +681,52 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={reload} className="gap-2">
+            <Button variant="outline" size="sm" onClick={reload} className="gap-2 min-h-[44px]">
               <RefreshCcw className="h-4 w-4" /> Atualizar
             </Button>
             <Button
               onClick={handleGenerate}
               disabled={busy !== null || !canGenerate || status === "cancelado"}
-              className="gap-2 bg-primary text-white"
+              className="gap-2 bg-primary text-white min-h-[44px]"
             >
               {busy === "generate" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-              Gerar dossiê
+              {busy === "generate" ? "Gerando dossiê..." : "Gerar dossiê"}
             </Button>
             <Button
               variant="outline"
               disabled={!dossier?.final_pdf_url || busy !== null}
               onClick={() => handleDownload("pdf")}
-              className="gap-2"
+              className="gap-2 min-h-[44px]"
             >
               {busy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              PDF consolidado
+              {busy === "pdf" ? "Baixando PDF..." : "PDF consolidado"}
             </Button>
             <Button
               variant="outline"
               disabled={!dossier?.zip_url || busy !== null}
               onClick={() => handleDownload("zip")}
-              className="gap-2"
+              className="gap-2 min-h-[44px]"
             >
               {busy === "zip" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Package className="h-4 w-4" />}
-              ZIP completo
+              {busy === "zip" ? "Baixando ZIP..." : "ZIP completo"}
             </Button>
             <Button
               variant="outline"
               disabled={!dossier?.id || status === "entregue" || status === "cancelado" || busy !== null}
               onClick={handleDeliver}
-              className="gap-2"
+              className="gap-2 min-h-[44px]"
             >
-              <Truck className="h-4 w-4" /> Marcar como entregue
+              {busy === "deliver" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Truck className="h-4 w-4" />}
+              {busy === "deliver" ? "Entregando..." : "Marcar como entregue"}
             </Button>
             <Button
               variant="ghost"
               disabled={!dossier?.id || status === "cancelado" || busy !== null}
-              onClick={handleCancel}
-              className="gap-2 text-red-600"
+              onClick={() => setShowCancelDossierConfirm(true)}
+              className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 min-h-[44px]"
             >
-              <Ban className="h-4 w-4" /> Cancelar
+              {busy === "cancel" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+              {busy === "cancel" ? "Cancelando..." : "Cancelar"}
             </Button>
           </div>
         </div>
@@ -812,6 +816,21 @@ export default function ProcessFinalDossierTab({ processId }: Props) {
           </ul>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={showCancelDossierConfirm}
+        onOpenChange={setShowCancelDossierConfirm}
+        title="Cancelar Dossiê"
+        description="Tem certeza que deseja cancelar este dossiê final? O status será alterado para cancelado."
+        confirmText="Cancelar Dossiê"
+        cancelText="Voltar"
+        variant="destructive"
+        loading={busy === "cancel"}
+        onConfirm={async () => {
+          await handleCancel();
+          setShowCancelDossierConfirm(false);
+        }}
+      />
     </div>
   );
 }

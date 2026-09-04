@@ -20,14 +20,23 @@ import { useFiles } from "@/hooks/useFiles";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { Badge } from "@/components/ui/badge";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
-import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { PageHeader } from "@/components/navigation/PageHeader";
+import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { ModalLayout } from "@/components/ui/ModalLayout";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { safeString } from "@/utils/safe-string";
 import { openStoredFile } from "@/utils/file-preview";
+import { 
+  validateUpload, 
+  MAX_LOGO_BYTES, 
+  MAX_ATTACHMENT_BYTES, 
+  LOGO_ALLOWED_EXTENSIONS, 
+  removeFromBucket, 
+  parseStorageError 
+} from "@/lib/storage";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 
 export const Route = createFileRoute("/customers")({
@@ -35,6 +44,10 @@ export const Route = createFileRoute("/customers")({
 });
 
 function Customers() {
+  const [showDeleteCustomerConfirm, setShowDeleteCustomerConfirm] = useState(false);
+  const [showRemoveLogoConfirm, setShowRemoveLogoConfirm] = useState(false);
+  const [isRemovingLogo, setIsRemovingLogo] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<{ id: string; name: string } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -51,6 +64,7 @@ function Customers() {
   const pageSize = 12;
   const [searchTerm, setSearchTerm] = useState("");
   const [companyId, setCompanyId] = useState<string | null>(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
   const [upgradeModal, setUpgradeModal] = useState<{ isOpen: boolean; current: number; limit: number | null }>({
     isOpen: false,
     current: 0,
@@ -76,6 +90,7 @@ function Customers() {
 
   const handleOpenDetails = (customer: any) => {
     setSelectedCustomer(customer);
+    setLogoPreviewUrl(null);
     setIsDetailsOpen(true);
     setIsEditing(false);
     setFormData({
@@ -293,17 +308,22 @@ function Customers() {
   const [logoUploading, setLogoUploading] = useState(false);
   const handleCustomerLogoUpload = async (file: File) => {
     if (!selectedCustomer || !companyId) return;
-    const okTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
-    if (!okTypes.includes(file.type)) {
-      toast.error("Use PNG, JPG, WEBP ou SVG.");
+
+    const validation = validateUpload(file, {
+      maxSize: MAX_LOGO_BYTES,
+      allowedExtensions: LOGO_ALLOWED_EXTENSIONS,
+    });
+    if (!validation.isValid) {
+      toast.error(validation.error || "Arquivo de imagem inválido.");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Máximo 5MB.");
-      return;
-    }
+
+    const previousLogo = selectedCustomer.logo_url;
+    const objectUrl = URL.createObjectURL(file);
+    setLogoPreviewUrl(objectUrl);
     setLogoUploading(true);
-    const loadingToast = toast.loading("Enviando logo...");
+    const loadingToast = toast.loading("Enviando logo do cliente...");
+
     try {
       const ext = file.name.split(".").pop()?.toLowerCase() || "png";
       const path = `${companyId}/customers/${selectedCustomer.id}-${Date.now()}.${ext}`;
@@ -311,20 +331,29 @@ function Customers() {
         .from("company-logos")
         .upload(path, file, { upsert: true, contentType: file.type });
       if (upErr) throw upErr;
+
       const { data: pub } = supabase.storage.from("company-logos").getPublicUrl(path);
       const publicUrl = pub.publicUrl;
+
+      // Clean up previous logo from storage to avoid orphan files
+      if (previousLogo && previousLogo !== publicUrl) {
+        await removeFromBucket("company-logos", previousLogo);
+      }
+
       const { error: updErr } = await supabase
         .from("customers")
         .update({ logo_url: publicUrl } as any)
         .eq("id", selectedCustomer.id);
       if (updErr) throw updErr;
+
       setSelectedCustomer({ ...selectedCustomer, logo_url: publicUrl });
       setCustomers((prev) => prev.map((c) => (c.id === selectedCustomer.id ? { ...c, logo_url: publicUrl } : c)));
       toast.dismiss(loadingToast);
       toast.success("Logo do cliente atualizado.");
     } catch (err: any) {
       toast.dismiss(loadingToast);
-      toast.error(err?.message || "Falha ao enviar logo.");
+      toast.error(parseStorageError(err));
+      setLogoPreviewUrl(null);
     } finally {
       setLogoUploading(false);
     }
@@ -332,25 +361,31 @@ function Customers() {
 
   const handleCustomerLogoRemove = async () => {
     if (!selectedCustomer) return;
-    if (!confirm("Remover o logo deste cliente?")) return;
+    setIsRemovingLogo(true);
+    const previousLogo = selectedCustomer.logo_url;
     try {
+      if (previousLogo) {
+        await removeFromBucket("company-logos", previousLogo);
+      }
       const { error } = await supabase
         .from("customers")
         .update({ logo_url: null } as any)
         .eq("id", selectedCustomer.id);
       if (error) throw error;
+      setLogoPreviewUrl(null);
       setSelectedCustomer({ ...selectedCustomer, logo_url: null });
       setCustomers((prev) => prev.map((c) => (c.id === selectedCustomer.id ? { ...c, logo_url: null } : c)));
       toast.success("Logo removido.");
+      setShowRemoveLogoConfirm(false);
     } catch (err: any) {
-      toast.error(err?.message || "Falha ao remover logo.");
+      toast.error(parseStorageError(err));
+    } finally {
+      setIsRemovingLogo(false);
     }
   };
 
-
   const handleDeleteCustomer = async () => {
     if (!selectedCustomer) return;
-    if (!confirm(`Tem certeza que deseja excluir o cliente "${selectedCustomer.name}"? Esta ação não pode ser desfeita.`)) return;
 
     setIsDeleting(true);
     const loadingToast = toast.loading("Excluindo cliente...");
@@ -364,6 +399,7 @@ function Customers() {
       if (error) throw error;
 
       setCustomers(prev => prev.filter(c => c.id !== selectedCustomer.id));
+      setShowDeleteCustomerConfirm(false);
       setIsDetailsOpen(false);
       setSelectedCustomer(null);
       toast.dismiss(loadingToast);
@@ -379,17 +415,30 @@ function Customers() {
 
   const handleOcrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = ""; // Reset input so same file can be re-selected
     if (!file || !companyId) return;
+
+    const validation = validateUpload(file, {
+      maxSize: MAX_ATTACHMENT_BYTES,
+      allowedExtensions: [...LOGO_ALLOWED_EXTENSIONS, "pdf"],
+    });
+    if (!validation.isValid) {
+      toast.error(validation.error || "Arquivo inválido para OCR.");
+      return;
+    }
 
     setIsOcrProcessing(true);
     const loadingToast = toast.loading("Processando documento...");
 
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || "pdf";
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = `${companyId}/ocr/${fileName}`;
 
-      await supabase.storage.from('ocr-documents').upload(filePath, file);
+      const { error: upErr } = await supabase.storage.from('ocr-documents').upload(filePath, file, {
+        contentType: file.type
+      });
+      if (upErr) throw upErr;
 
       const { data: fileData, error: dbError } = await supabase
         .from('uploaded_files')
@@ -424,12 +473,12 @@ function Customers() {
           const p = job.extracted_data?.person || job.extracted_data;
           setFormData(prev => ({
             ...prev,
-            name: p.nome || p.name || prev.name,
-            cpf_cnpj: p.cpf || p.doc_number || prev.cpf_cnpj,
-            rg: p.rg || prev.rg,
-            address: p.address || p.endereco || prev.address,
-            city: p.city || p.cidade || prev.city,
-            state: p.state || p.uf || p.estado || prev.state
+            name: p?.nome || p?.name || prev.name,
+            cpf_cnpj: p?.cpf || p?.doc_number || prev.cpf_cnpj,
+            rg: p?.rg || prev.rg,
+            address: p?.address || p?.endereco || prev.address,
+            city: p?.city || p?.cidade || prev.city,
+            state: p?.state || p?.uf || p?.estado || prev.state
           }));
           setIsOcrProcessing(false);
           toast.dismiss(loadingToast);
@@ -445,13 +494,14 @@ function Customers() {
       console.error("OCR_ERROR", error);
       setIsOcrProcessing(false);
       toast.dismiss(loadingToast);
-      toast.error("Erro no processamento OCR.");
+      toast.error(parseStorageError(error));
     }
   };
 
 
   return (
     <div className="animate-in fade-in duration-500 pb-20">
+      <TrialBanner onlyAlerts={true} />
       <PageHeader 
         title="Clientes"
         description="Gerencie sua base de clientes e contatos."
@@ -560,7 +610,7 @@ function Customers() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-300 transition-colors">
+                    <button className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 hover:bg-slate-100 rounded-lg text-slate-300 transition-colors">
                       <MoreHorizontal className="h-5 w-5" />
                     </button>
                   </td>
@@ -664,10 +714,10 @@ function Customers() {
               form="create-customer-form"
               type="submit" 
               disabled={isSubmitting}
-              className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-primary/20 transition-all flex items-center gap-2"
+              className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-primary/20 transition-all flex items-center gap-2 min-h-[44px]"
             >
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Salvar Cliente
+              {isSubmitting ? "Salvando..." : "Salvar Cliente"}
             </button>
           </>
         }
@@ -788,11 +838,12 @@ function Customers() {
             <div className="flex gap-3">
               <button 
                 type="button" 
-                onClick={handleDeleteCustomer}
+                onClick={() => setShowDeleteCustomerConfirm(true)}
                 disabled={isDeleting}
-                className="px-6 py-2.5 bg-rose-50 text-rose-600 rounded-xl font-black uppercase text-[9px] tracking-widest hover:bg-rose-100 transition-all flex items-center gap-2"
+                className="px-6 py-2.5 bg-rose-50 text-rose-600 rounded-xl font-black uppercase text-[9px] tracking-widest hover:bg-rose-100 transition-all flex items-center gap-2 min-h-[44px] min-w-[44px]"
               >
-                <Trash2 className="h-3.5 w-3.5" /> Excluir Cliente
+                {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                {isDeleting ? "Excluindo..." : "Excluir Cliente"}
               </button>
             </div>
             <div className="flex gap-3">
@@ -802,7 +853,7 @@ function Customers() {
                   setIsDetailsOpen(false);
                   setIsEditing(false);
                 }} 
-                className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all"
+                className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all min-h-[44px]"
               >
                 Fechar
               </button>
@@ -811,16 +862,16 @@ function Customers() {
                   type="submit"
                   form="edit-customer-form"
                   disabled={isSubmitting}
-                  className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-primary/20 transition-all flex items-center gap-2"
+                  className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-primary/20 transition-all flex items-center gap-2 min-h-[44px]"
                 >
                   {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  Salvar Alterações
+                  {isSubmitting ? "Salvando..." : "Salvar Alterações"}
                 </button>
               ) : (
                 <button 
                   type="button" 
                   onClick={() => setIsEditing(true)}
-                  className="px-10 py-3 bg-navy text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 transition-all flex items-center gap-2"
+                  className="px-10 py-3 bg-navy text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 transition-all flex items-center gap-2 min-h-[44px]"
                 >
                   <Edit2 className="h-4 w-4" /> Editar Cliente
                 </button>
@@ -831,8 +882,12 @@ function Customers() {
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div className="flex gap-6">
-            <div className="h-16 w-16 bg-navy text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-xl shrink-0">
-              {selectedCustomer?.name?.charAt(0)}
+            <div className="h-16 w-16 bg-white border border-slate-200 rounded-2xl flex items-center justify-center text-2xl font-black shadow-xl shrink-0 overflow-hidden">
+              {selectedCustomer?.logo_url ? (
+                <img src={selectedCustomer.logo_url} alt={selectedCustomer.name} className="h-full w-full object-contain p-1" />
+              ) : (
+                <span className="text-white bg-navy h-full w-full flex items-center justify-center">{selectedCustomer?.name?.charAt(0)}</span>
+              )}
             </div>
             <div>
               <h3 className="text-2xl font-semibold text-navy">{selectedCustomer?.name}</h3>
@@ -871,33 +926,43 @@ function Customers() {
                     <div className="grid md:grid-cols-2 gap-6">
                       <div className="md:col-span-2 p-4 rounded-2xl border border-slate-200 bg-slate-50/60 flex items-center gap-4">
                         <div className="h-20 w-20 rounded-xl bg-white border border-slate-200 grid place-items-center overflow-hidden shrink-0">
-                          {selectedCustomer?.logo_url ? (
-                            <img src={selectedCustomer.logo_url} alt="Logo do cliente" className="max-h-full max-w-full object-contain" />
+                          {logoPreviewUrl || selectedCustomer?.logo_url ? (
+                            <img 
+                              src={logoPreviewUrl || selectedCustomer.logo_url} 
+                              alt="Logo do cliente" 
+                              className="max-h-full max-w-full object-contain" 
+                            />
                           ) : (
                             <ImageIcon className="h-7 w-7 text-slate-300" />
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Logo do Cliente</p>
-                          <p className="text-xs text-slate-500 mt-1">PNG, JPG, WEBP ou SVG (até 5MB). Usado quando o processo escolher "Logo do cliente".</p>
+                          <p className="text-xs text-slate-500 mt-1">PNG, JPG ou WEBP (até 5MB). Proporção mantida automaticamente sem distorção.</p>
                           <div className="flex gap-2 mt-3">
                             <label className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest cursor-pointer hover:opacity-90 ${logoUploading ? "opacity-60 pointer-events-none" : ""}`}>
                               {logoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImageIcon className="h-3.5 w-3.5" />}
-                              {selectedCustomer?.logo_url ? "Substituir" : "Enviar logo"}
+                              {logoPreviewUrl || selectedCustomer?.logo_url ? "Substituir" : "Enviar logo"}
                               <input
                                 type="file"
-                                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                                accept="image/png,image/jpeg,image/webp"
                                 className="hidden"
-                                onChange={(e) => e.target.files?.[0] && handleCustomerLogoUpload(e.target.files[0])}
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0];
+                                  e.target.value = "";
+                                  if (f) handleCustomerLogoUpload(f);
+                                }}
                               />
                             </label>
-                            {selectedCustomer?.logo_url && (
+                            {(logoPreviewUrl || selectedCustomer?.logo_url) && (
                               <button
                                 type="button"
-                                onClick={handleCustomerLogoRemove}
-                                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-navy text-[10px] font-black uppercase tracking-widest hover:bg-slate-50"
+                                onClick={() => setShowRemoveLogoConfirm(true)}
+                                disabled={logoUploading || isRemovingLogo}
+                                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-navy text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 disabled:opacity-50 min-h-[44px]"
                               >
-                                <Trash2 className="h-3.5 w-3.5" /> Remover
+                                {isRemovingLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                                Remover
                               </button>
                             )}
                           </div>
@@ -1046,8 +1111,22 @@ function Customers() {
                                 </div>
                             </div>
                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                               <button onClick={() => openStoredFile(file)} className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></button>
-                               <button onClick={() => deleteFile.mutate(file.id)} className="p-2 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
+                               <button 
+                                 type="button"
+                                 onClick={() => openStoredFile(file)} 
+                                 aria-label="Visualizar arquivo"
+                                 className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 text-slate-400 hover:text-navy rounded-lg transition-colors"
+                               >
+                                 <Eye className="h-4 w-4" />
+                               </button>
+                               <button 
+                                 type="button"
+                                 onClick={() => setFileToDelete({ id: file.id, name: file.file_name })} 
+                                 aria-label="Excluir arquivo"
+                                 className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
+                               >
+                                 <Trash2 className="h-4 w-4" />
+                               </button>
                             </div>
                          </div>
                        ))}
@@ -1133,6 +1212,46 @@ function Customers() {
         resource="customers"
         limit={upgradeModal.limit}
         current={upgradeModal.current}
+      />
+
+      <ConfirmDialog
+        open={showDeleteCustomerConfirm}
+        onOpenChange={setShowDeleteCustomerConfirm}
+        title="Excluir Cliente"
+        description={`Tem certeza que deseja excluir o cliente "${selectedCustomer?.name}"? Esta ação não pode ser desfeita e removerá os dados vinculados.`}
+        confirmText="Excluir Cliente"
+        cancelText="Cancelar"
+        variant="destructive"
+        loading={isDeleting}
+        onConfirm={handleDeleteCustomer}
+      />
+
+      <ConfirmDialog
+        open={showRemoveLogoConfirm}
+        onOpenChange={setShowRemoveLogoConfirm}
+        title="Remover Logotipo"
+        description="Tem certeza que deseja remover o logotipo deste cliente?"
+        confirmText="Remover"
+        cancelText="Cancelar"
+        variant="destructive"
+        loading={isRemovingLogo}
+        onConfirm={handleCustomerLogoRemove}
+      />
+
+      <ConfirmDialog
+        open={fileToDelete !== null}
+        onOpenChange={(open) => { if (!open) setFileToDelete(null); }}
+        title="Excluir Arquivo Anexo"
+        description={`Deseja realmente remover o arquivo "${fileToDelete?.name}"?`}
+        confirmText="Excluir Arquivo"
+        cancelText="Cancelar"
+        variant="destructive"
+        loading={deleteFile.isPending}
+        onConfirm={async () => {
+          if (!fileToDelete) return;
+          await deleteFile.mutateAsync(fileToDelete.id);
+          setFileToDelete(null);
+        }}
       />
     </div>
   );

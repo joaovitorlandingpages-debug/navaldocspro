@@ -36,6 +36,7 @@ import { NextActionCard } from "@/components/processes/NextActionCard";
 import { WhatsMissingCard } from "@/components/processes/WhatsMissingCard";
 import { BatchGenerationService } from "@/services/automation/batchGenerationService";
 import { Palette } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 // Lazy-loaded heavy panels/modals (Onda 3C.1 — code splitting)
 const ProcessChecklist = lazy(() => import("@/components/ProcessChecklist").then(m => ({ default: m.ProcessChecklist })));
@@ -112,6 +113,7 @@ function ProcessDetail() {
   const { profile } = useAuth();
   const [status, setStatus] = useState("Em Andamento");
   const { files, deleteFile } = useFiles({ processId: id });
+  const [fileToDelete, setFileToDelete] = useState<{ id: string; name: string } | null>(null);
   const [process, setProcess] = useState<any | null>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -885,10 +887,22 @@ function ProcessDetail() {
                                  <FileText className="h-5 w-5" />
                               </div>
                               <div className="flex gap-1">
-                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => openStoredFile(file)}>
+                                 <Button 
+                                   variant="ghost" 
+                                   size="sm" 
+                                   className="min-h-[44px] min-w-[44px] p-0 flex items-center justify-center rounded-lg" 
+                                   onClick={() => openStoredFile(file)}
+                                   aria-label="Visualizar documento"
+                                 >
                                    <Eye className="h-4 w-4" />
                                  </Button>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500" onClick={() => deleteFile.mutate(file.id)}>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="min-h-[44px] min-w-[44px] p-0 text-red-500 hover:text-red-700 hover:bg-red-50 flex items-center justify-center rounded-lg" 
+                                  onClick={() => setFileToDelete({ id: file.id, name: file.file_name })}
+                                  aria-label="Excluir documento"
+                                >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -1034,6 +1048,21 @@ function ProcessDetail() {
         onCreated={() => {
           toast.success("Solicitação de assinatura enviada.");
           fetchProcess();
+        }}
+      />
+      <ConfirmDialog
+        open={fileToDelete !== null}
+        onOpenChange={(open) => { if (!open) setFileToDelete(null); }}
+        title="Excluir Arquivo Anexo"
+        description={`Deseja realmente remover o arquivo "${fileToDelete?.name}" do processo?`}
+        confirmText="Excluir Arquivo"
+        cancelText="Cancelar"
+        variant="destructive"
+        loading={deleteFile.isPending}
+        onConfirm={async () => {
+          if (!fileToDelete) return;
+          await deleteFile.mutateAsync(fileToDelete.id);
+          setFileToDelete(null);
         }}
       />
       </Suspense>

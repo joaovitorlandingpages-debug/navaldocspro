@@ -16,6 +16,7 @@ import {
 } from "@/services/processes/participants";
 import { maskCpfCnpj, maskPhone } from "@/lib/br-format";
 import { casUpdate, notifyConflict } from "@/lib/optimisticLock";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 const ROLES: ParticipantRole[] = [
   "owner", "buyer", "seller", "attorney", "grantor",
@@ -55,6 +56,8 @@ export function ProcessParticipantsTab({
   const [loading, setLoading] = useState(true);
   const [participants, setParticipants] = useState<ProcessParticipant[]>([]);
   const [addOpen, setAddOpen] = useState(false);
+  const [participantToRemove, setParticipantToRemove] = useState<ProcessParticipant | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -118,16 +121,20 @@ export function ProcessParticipantsTab({
     }
   }
 
-  async function handleRemove(p: ProcessParticipant) {
-    if (!confirm(`Remover ${p.name} do papel "${ROLE_LABEL[p.role]}"?`)) return;
+  async function confirmRemoveParticipant() {
+    if (!participantToRemove) return;
+    setIsRemoving(true);
     try {
-      await removeParticipant(p.id);
-      if (p.role === "owner" && customerId === p.customer_id) await syncProcessColumns("owner", null);
-      if (p.role === "seller" && secondaryCustomerId === p.customer_id) await syncProcessColumns("seller", null);
+      await removeParticipant(participantToRemove.id);
+      if (participantToRemove.role === "owner" && customerId === participantToRemove.customer_id) await syncProcessColumns("owner", null);
+      if (participantToRemove.role === "seller" && secondaryCustomerId === participantToRemove.customer_id) await syncProcessColumns("seller", null);
       toast.success("Participante removido.");
+      setParticipantToRemove(null);
       await load();
     } catch (e: any) {
       toast.error("Falha ao remover: " + (e?.message || e));
+    } finally {
+      setIsRemoving(false);
     }
   }
 
@@ -163,8 +170,8 @@ export function ProcessParticipantsTab({
           <Badge variant="secondary" className="text-[10px]">{participants.length}</Badge>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={load}><RefreshCw className="h-3.5 w-3.5" /></Button>
-          <Button size="sm" onClick={() => setAddOpen(true)}><Plus className="h-3.5 w-3.5" /> Adicionar</Button>
+          <Button size="sm" variant="outline" onClick={load} className="min-h-[44px] min-w-[44px]"><RefreshCw className="h-4 w-4" /></Button>
+          <Button size="sm" onClick={() => setAddOpen(true)} className="min-h-[44px]"><Plus className="h-4 w-4 mr-1" /> Adicionar</Button>
         </div>
       </div>
 
@@ -183,7 +190,7 @@ export function ProcessParticipantsTab({
         <div className="p-8 rounded-xl border border-dashed border-slate-300 bg-slate-50 text-center">
           <Users className="h-8 w-8 mx-auto text-slate-400 mb-2" />
           <p className="text-sm text-slate-600 mb-3">Nenhum participante cadastrado.</p>
-          <Button size="sm" onClick={() => setAddOpen(true)}><Plus className="h-3.5 w-3.5" /> Adicionar participante</Button>
+          <Button size="sm" onClick={() => setAddOpen(true)} className="min-h-[44px]"><Plus className="h-4 w-4 mr-1" /> Adicionar participante</Button>
         </div>
       ) : (
         <div className="space-y-2">
@@ -195,7 +202,7 @@ export function ProcessParticipantsTab({
               {grouped[role].map((p) => (
                 <ParticipantCard
                   key={p.id} p={p}
-                  onRemove={() => handleRemove(p)}
+                  onRemove={() => setParticipantToRemove(p)}
                   onChangeRole={(nr) => handleChangeRole(p, nr)}
                 />
               ))}
@@ -211,6 +218,18 @@ export function ProcessParticipantsTab({
           disabledRoles={SINGLE_ROLES.filter((r) => grouped[r]?.length)}
         />
       )}
+
+      <ConfirmDialog
+        open={!!participantToRemove}
+        onOpenChange={(open) => !open && setParticipantToRemove(null)}
+        title="Remover Participante"
+        description={`Tem certeza que deseja remover ${participantToRemove?.name || "este participante"} do papel "${participantToRemove ? ROLE_LABEL[participantToRemove.role] : ""}"?`}
+        confirmText="Confirmar Remoção"
+        cancelText="Voltar"
+        variant="destructive"
+        loading={isRemoving}
+        onConfirm={confirmRemoveParticipant}
+      />
     </div>
   );
 }
@@ -237,18 +256,18 @@ function ParticipantCard({
       </div>
       <div className="flex items-center gap-1 shrink-0">
         <Select value={p.role} onValueChange={(v) => onChangeRole(v as ParticipantRole)}>
-          <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-9 w-[150px] text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
             {ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Button size="icon" variant="ghost" asChild title="Abrir cadastro">
+        <Button size="icon" variant="ghost" asChild title="Abrir cadastro" className="h-11 w-11 min-h-[44px] min-w-[44px] flex items-center justify-center">
           <a href={`/customers?id=${p.customer_id}`} target="_blank" rel="noreferrer">
-            <ExternalLink className="h-3.5 w-3.5" />
+            <ExternalLink className="h-4 w-4" />
           </a>
         </Button>
-        <Button size="icon" variant="ghost" onClick={onRemove} title="Remover">
-          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+        <Button size="icon" variant="ghost" onClick={onRemove} title="Remover" className="h-11 w-11 min-h-[44px] min-w-[44px] flex items-center justify-center text-destructive hover:text-destructive hover:bg-destructive/10">
+          <Trash2 className="h-4 w-4" />
         </Button>
       </div>
     </div>
@@ -382,9 +401,12 @@ function AddParticipantDialog({
             </div>
           )}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={submit} loading={saving}>Adicionar</Button>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="min-h-[44px]">Cancelar</Button>
+          <Button onClick={submit} disabled={saving} className="min-h-[44px]">
+            {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {saving ? "Adicionando..." : "Adicionar"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

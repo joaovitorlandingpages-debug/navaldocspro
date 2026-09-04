@@ -6,6 +6,8 @@ import { Beaker, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { signaturesService, buildPublicSignUrl } from "@/services/signatures";
+import { signatureAnchorsService } from "@/services/signatureAnchors";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type StepStatus = "pending" | "running" | "ok" | "warn" | "fail";
 interface Step { id: string; label: string; status: StepStatus; detail?: string; }
@@ -18,6 +20,7 @@ export function SignatureTestRunner({ companyId, userId, onChanged }: {
   const [open, setOpen] = useState(false);
   const [running, setRunning] = useState(false);
   const [cleaning, setCleaning] = useState(false);
+  const [showCleanupConfirm, setShowCleanupConfirm] = useState(false);
   const [steps, setSteps] = useState<Step[]>([]);
   const [verifyUrl, setVerifyUrl] = useState<string | null>(null);
 
@@ -203,21 +206,21 @@ export function SignatureTestRunner({ companyId, userId, onChanged }: {
         update("customer", { status: cust ? "ok" : "fail", detail: cust ? `customer_id=${cust.id.slice(0, 8)}…` : "falha" });
       } catch (e: any) {
         update("reusable", { status: "warn", detail: e.message });
-        update("customer", { status: "warn", detail: e.message });
       }
+      const anchors = await signatureAnchorsService.resolveForRoles("classico", companyId, ["cliente", "engenheiro"]);
+      update("anchor", {
+        status: anchors.length ? "ok" : "warn",
+        detail: `${anchors.length} âncora(s) mapeada(s)`,
+      });
 
-
-      // 17. Log
-      update("log", { status: "running" });
-      await supabase.from("activity_logs").insert({
+      // Audit log final
+      await supabase.from("audit_logs").insert({
         company_id: companyId,
         user_id: userId,
         action: "signature_test_executed",
         resource_type: "signature_requests",
         resource_id: requestId,
-        metadata: { duration_ms: Date.now() - startedAt, verification_code: cert.verification_code },
       });
-      update("log", { status: "ok" });
 
       toast.success("Teste concluído");
       onChanged();
@@ -228,8 +231,7 @@ export function SignatureTestRunner({ companyId, userId, onChanged }: {
     }
   };
 
-  const cleanup = async () => {
-    if (!confirm(`Apagar TODAS as solicitações com prefixo "${TEST_TITLE_PREFIX}"?`)) return;
+  const handleConfirmCleanup = async () => {
     setCleaning(true);
     try {
       const { data: tests } = await supabase
@@ -238,21 +240,28 @@ export function SignatureTestRunner({ companyId, userId, onChanged }: {
         .eq("company_id", companyId)
         .like("title", `${TEST_TITLE_PREFIX}%`);
       const ids = (tests ?? []).map((t: any) => t.id);
-      if (ids.length === 0) { toast.info("Nada para apagar"); return; }
+      if (ids.length === 0) {
+        toast.info("Nada para apagar");
+        setShowCleanupConfirm(false);
+        return;
+      }
       await supabase.from("signature_evidence_certificates").delete().in("signature_request_id", ids);
       await supabase.from("signature_events").delete().in("signature_request_id", ids);
       await supabase.from("signature_participants").delete().in("signature_request_id", ids);
       await supabase.from("signature_requests").delete().in("id", ids);
       toast.success(`${ids.length} solicitação(ões) de teste removidas`);
+      setShowCleanupConfirm(false);
       onChanged();
     } catch (e: any) {
       toast.error(e.message);
-    } finally { setCleaning(false); }
+    } finally {
+      setCleaning(false);
+    }
   };
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50">
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50 min-h-[44px]">
         <Beaker className="w-4 h-4" /> Rodar teste de assinatura
       </Button>
 
@@ -291,17 +300,29 @@ export function SignatureTestRunner({ companyId, userId, onChanged }: {
           )}
 
           <DialogFooter className="gap-2 flex-wrap">
-            <Button variant="outline" onClick={cleanup} disabled={cleaning || running} className="gap-2">
+            <Button variant="outline" onClick={() => setShowCleanupConfirm(true)} disabled={cleaning || running} className="gap-2 min-h-[44px] text-destructive hover:bg-destructive/10">
               {cleaning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-              Apagar dados de teste
+              {cleaning ? "Apagando..." : "Apagar dados de teste"}
             </Button>
-            <Button onClick={run} disabled={running} className="gap-2">
+            <Button onClick={run} disabled={running} className="gap-2 min-h-[44px]">
               {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Beaker className="w-4 h-4" />}
-              Rodar teste agora
+              {running ? "Executando teste..." : "Rodar teste agora"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={showCleanupConfirm}
+        onOpenChange={setShowCleanupConfirm}
+        title="Apagar Dados de Teste"
+        description={`Tem certeza que deseja apagar permanentemente todas as solicitações de teste com o prefixo "${TEST_TITLE_PREFIX}" e seus respectivos certificados e eventos?`}
+        confirmText="Confirmar Exclusão"
+        cancelText="Voltar"
+        variant="destructive"
+        loading={cleaning}
+        onConfirm={handleConfirmCleanup}
+      />
     </>
   );
 }

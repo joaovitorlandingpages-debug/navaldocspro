@@ -18,6 +18,7 @@ import { ProcessActionsMenu } from "@/components/processes/ProcessActionsMenu";
 import { ProcessEditSheet } from "@/components/processes/ProcessEditSheet";
 import type { VisibleProcessRow } from "@/services/processes/processCreation";
 import { translateTerm } from "@/lib/naval-terms";
+import { TrialBanner } from "@/components/dashboard/TrialBanner";
 
 export const Route = createFileRoute("/processes/")({
   component: Processes,
@@ -143,6 +144,7 @@ function Processes() {
 
   return (
     <div className="animate-in fade-in duration-500 pb-20">
+      <TrialBanner onlyAlerts={true} />
       <PageHeader
         title="Fluxo de Processos"
         description="Acompanhamento operacional em tempo real."

@@ -51,6 +51,14 @@ import {
 } from "@/services/processes/processCreation";
 import { FileUploader } from "@/components/FileUploader";
 import type { FileBucket } from "@/hooks/useFiles";
+import { 
+  validateUpload, 
+  MAX_LOGO_BYTES, 
+  LOGO_ALLOWED_EXTENSIONS, 
+  removeFromBucket, 
+  parseStorageError 
+} from "@/lib/storage";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface Props {
   isOpen: boolean;
@@ -156,6 +164,10 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
   const [libraryQuery, setLibraryQuery] = useState("");
   const [libraryResults, setLibraryResults] = useState<TemplateRow[]>([]);
   const [allowEmptyPackage, setAllowEmptyPackage] = useState(false);
+  const [showRemoveExclusiveLogoConfirm, setShowRemoveExclusiveLogoConfirm] = useState(false);
+  const [isRemovingLogo, setIsRemovingLogo] = useState(false);
+  const [showEmptyBlueprintConfirm, setShowEmptyBlueprintConfirm] = useState(false);
+  const [pendingTargetStep, setPendingTargetStep] = useState<Step | null>(null);
 
   // Criação
   const [submitting, setSubmitting] = useState(false);
@@ -467,9 +479,18 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
 
   async function uploadExclusiveLogo(file: File) {
     if (!profile?.company_id) { toast.error("Empresa não vinculada."); return; }
-    if (!file.type.startsWith("image/")) { toast.error("Envie uma imagem (PNG/JPG/SVG)."); return; }
-    if (file.size > 2 * 1024 * 1024) { toast.error("Logo até 2MB."); return; }
+    
+    const validation = validateUpload(file, {
+      maxSize: MAX_LOGO_BYTES,
+      allowedExtensions: LOGO_ALLOWED_EXTENSIONS,
+    });
+    if (!validation.isValid) {
+      toast.error(validation.error || "Formato de imagem inválido.");
+      return;
+    }
+
     setUploadingLogo(true);
+    const prevPath = exclusiveLogoPath;
     try {
       const ext = (file.name.split(".").pop() || "png").toLowerCase();
       const path = `${profile.company_id}/process-exclusive/${Date.now()}.${ext}`;
@@ -477,6 +498,12 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
         contentType: file.type, upsert: false,
       });
       if (error) throw error;
+
+      // Clean up previous logo from storage if replacing
+      if (prevPath && prevPath !== path) {
+        await removeFromBucket("company-branding", prevPath);
+      }
+
       const { data: signed } = await supabase.storage.from("company-branding")
         .createSignedUrl(path, 60 * 60 * 24 * 7);
       setExclusiveLogoPath(path);
@@ -484,7 +511,7 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       setBrandingMode("exclusive");
       toast.success("Logo exclusivo carregado.");
     } catch (e: any) {
-      toast.error("Falha no upload: " + (e?.message || e));
+      toast.error(parseStorageError(e));
     } finally {
       setUploadingLogo(false);
     }
@@ -530,19 +557,43 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
     toast.success(`Embarcação "${name}" criada.`);
   }
 
+  const handleConfirmRemoveExclusiveLogo = async () => {
+    setIsRemovingLogo(true);
+    try {
+      if (exclusiveLogoPath) {
+        await removeFromBucket("company-branding", exclusiveLogoPath);
+      }
+      setExclusiveLogoPath(null);
+      setExclusiveLogoUrl(null);
+      setShowRemoveExclusiveLogoConfirm(false);
+      toast.success("Logo exclusivo removido.");
+    } catch (err: any) {
+      toast.error("Erro ao remover logo: " + (err?.message || err));
+    } finally {
+      setIsRemovingLogo(false);
+    }
+  };
+
+  const handleConfirmEmptyPackage = () => {
+    setAllowEmptyPackage(true);
+    setPreview([]);
+    setShowEmptyBlueprintConfirm(false);
+    if (pendingTargetStep) {
+      setStep(pendingTargetStep);
+      setPendingTargetStep(null);
+    }
+  };
+
   // ------------------------------------------------------------- navegação entre steps
-  async function loadPreviewIfNeeded() {
-    if (preview.length > 0 || !selectedType) return;
+  async function loadPreviewIfNeeded(targetStep?: Step): Promise<boolean> {
+    if (preview.length > 0 || !selectedType) return true;
     setLoadingPreview(true);
     try {
       const items = await previewProcessBlueprint(selectedType.name);
       if (items.length === 0 && !allowEmptyPackage) {
-        const ok = window.confirm(
-          `⚠ O tipo "${selectedType.name}" ainda não possui modelo de documentos configurado.\n\n` +
-          `Deseja criar um PROCESSO VAZIO MANUALMENTE?`
-        );
-        if (!ok) { setLoadingPreview(false); return; }
-        setAllowEmptyPackage(true);
+        setPendingTargetStep(targetStep || null);
+        setShowEmptyBlueprintConfirm(true);
+        return false;
       }
       setPreview(items);
       const initialExcluded = new Set<string>();
@@ -552,8 +603,10 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
         }
       });
       setExcluded(initialExcluded);
+      return true;
     } catch (e: any) {
       toast.error("Falha ao carregar modelo: " + (e?.message || e));
+      return false;
     } finally {
       setLoadingPreview(false);
     }
@@ -576,8 +629,9 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
       const err = validateStep(target);
       if (err) { toast.error(err); return; }
     }
-    if (target >= 6 && preview.length === 0) {
-      await loadPreviewIfNeeded();
+    if (target >= 6 && preview.length === 0 && !allowEmptyPackage) {
+      const ok = await loadPreviewIfNeeded(target);
+      if (!ok) return;
     }
     setStep(target);
   }
@@ -984,11 +1038,11 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                     Logo exclusivo deste processo
                   </Label>
                   <div className="flex items-center gap-3">
-                    <label className="inline-flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-lg border border-primary/30 bg-white text-primary cursor-pointer hover:bg-primary/10">
-                      {uploadingLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                      {exclusiveLogoUrl ? "Trocar logo" : "Enviar logo (PNG/JPG até 2MB)"}
+                    <label className="inline-flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-lg border border-primary/30 bg-white text-primary cursor-pointer hover:bg-primary/10 min-h-[44px]">
+                      {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      {uploadingLogo ? "Enviando logo..." : (exclusiveLogoUrl ? "Trocar logo" : "Enviar logo (PNG/JPG/WEBP até 5MB)")}
                       <input
-                        type="file" accept="image/png,image/jpeg,image/svg+xml" className="hidden"
+                        type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
                         disabled={uploadingLogo}
                         onChange={(e) => {
                           const f = e.target.files?.[0];
@@ -998,9 +1052,12 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
                       />
                     </label>
                     {exclusiveLogoUrl && (
-                      <button type="button" onClick={() => { setExclusiveLogoPath(null); setExclusiveLogoUrl(null); }}
-                        className="text-[11px] text-red-500 hover:underline font-bold inline-flex items-center gap-1">
-                        <X className="h-3 w-3" /> Remover
+                      <button 
+                        type="button" 
+                        onClick={() => setShowRemoveExclusiveLogoConfirm(true)}
+                        className="min-h-[44px] px-3 py-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg font-bold inline-flex items-center gap-1.5 transition"
+                      >
+                        <X className="h-4 w-4" /> Remover logo
                       </button>
                     )}
                   </div>
@@ -1192,26 +1249,35 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
         <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-between border-t p-4 sm:p-6 shrink-0">
           <div className="flex gap-2">
             {step > 1 ? (
-              <Button variant="ghost" type="button" onClick={() => setStep((step - 1) as Step)} disabled={submitting}>
+              <Button variant="ghost" type="button" onClick={() => setStep((step - 1) as Step)} disabled={submitting} className="min-h-[44px]">
                 <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
               </Button>
             ) : onOpenAdvanced ? (
-              <Button variant="ghost" type="button" onClick={() => { onClose(); onOpenAdvanced(); }} disabled={submitting}>
+              <Button variant="ghost" type="button" onClick={() => { onClose(); onOpenAdvanced(); }} disabled={submitting} className="min-h-[44px]">
                 <Upload className="h-4 w-4 mr-1" /> Modo rápido (upload solto)
               </Button>
             ) : <div />}
           </div>
           <div className="flex gap-2 items-center">
-            <Button variant="outline" type="button" onClick={onClose} disabled={submitting}>Cancelar</Button>
+            <Button variant="outline" type="button" onClick={onClose} disabled={submitting} className="min-h-[44px]">Cancelar</Button>
             {step < 7 ? (
-              <Button type="button" onClick={() => goStep((step + 1) as Step)} disabled={!canAdvance || loadingPreview}>
+              <Button type="button" onClick={() => goStep((step + 1) as Step)} disabled={!canAdvance || loadingPreview} className="min-h-[44px]">
                 {loadingPreview ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
-                Continuar <ArrowRight className="h-4 w-4 ml-1" />
+                {loadingPreview ? "Carregando..." : "Continuar"} <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             ) : (
-              <Button type="button" onClick={handleCreate} disabled={submitting}>
-                {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                {generateNow && selectedCount > 0 ? `Criar e gerar ${selectedCount}` : "Criar Processo"}
+              <Button type="button" onClick={handleCreate} disabled={submitting} className="min-h-[44px]">
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Criando processo...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    {generateNow && selectedCount > 0 ? `Criar e gerar ${selectedCount}` : "Criar Processo"}
+                  </>
+                )}
               </Button>
             )}
           </div>
@@ -1266,13 +1332,43 @@ export function NewProcessQuickDialog({ isOpen, onClose, onOpenAdvanced }: Props
             </div>
           )}
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setGenReport(null)}>Fechar</Button>
-            <Button onClick={openCreatedProcess}>
+            <Button variant="outline" onClick={() => setGenReport(null)} className="min-h-[44px]">Fechar</Button>
+            <Button onClick={openCreatedProcess} className="min-h-[44px]">
               Abrir workspace <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirmação de exclusão do logo exclusivo */}
+      <ConfirmDialog
+        open={showRemoveExclusiveLogoConfirm}
+        onOpenChange={setShowRemoveExclusiveLogoConfirm}
+        title="Remover Logotipo Exclusivo"
+        description="Tem certeza que deseja remover o logotipo exclusivo configurado para este processo?"
+        confirmText="Confirmar Remoção"
+        cancelText="Voltar"
+        variant="destructive"
+        loading={isRemovingLogo}
+        onConfirm={handleConfirmRemoveExclusiveLogo}
+      />
+
+      {/* Confirmação de tipo sem blueprint configurado */}
+      <ConfirmDialog
+        open={showEmptyBlueprintConfirm}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowEmptyBlueprintConfirm(false);
+            setPendingTargetStep(null);
+          }
+        }}
+        title="Tipo sem modelo configurado"
+        description={`O tipo "${selectedType?.name}" ainda não possui modelo de documentos pré-configurado no sistema. Deseja criar um processo vazio e adicionar documentos manualmente?`}
+        confirmText="Criar Processo Vazio"
+        cancelText="Voltar"
+        variant="default"
+        onConfirm={handleConfirmEmptyPackage}
+      />
     </Dialog>
   );
 }

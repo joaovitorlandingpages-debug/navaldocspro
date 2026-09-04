@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export const Route = createFileRoute("/qa-checklist")({
   component: QAChecklistPage,
@@ -64,6 +65,7 @@ const STATUS_STYLES: Record<Status, string> = {
 
 function QAChecklistPage() {
   const [records, setRecords] = useState<QARecord[]>(emptyState);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   useEffect(() => {
     try {
@@ -89,8 +91,9 @@ function QAChecklistPage() {
     setRecords((prev) => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
   };
 
-  const reset = () => {
-    if (confirm("Limpar todo o checklist?")) setRecords(emptyState());
+  const handleConfirmReset = () => {
+    setRecords(emptyState());
+    setShowResetConfirm(false);
   };
 
   const exportReport = () => {
@@ -131,8 +134,8 @@ function QAChecklistPage() {
           <span className="px-3 py-1 rounded bg-muted text-muted-foreground">⏳ Pendente: {counts.pendente}</span>
         </div>
         <div className="flex gap-2">
-          <button onClick={exportReport} className="px-3 py-2 rounded bg-primary text-primary-foreground text-sm font-medium">Exportar relatório (.md)</button>
-          <button onClick={reset} className="px-3 py-2 rounded border text-sm">Limpar tudo</button>
+          <button onClick={exportReport} className="min-h-[44px] px-4 py-2 rounded bg-primary text-primary-foreground text-sm font-medium">Exportar relatório (.md)</button>
+          <button onClick={() => setShowResetConfirm(true)} className="min-h-[44px] px-4 py-2 rounded border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium">Limpar tudo</button>
         </div>
       </header>
 
@@ -181,6 +184,17 @@ function QAChecklistPage() {
           );
         })}
       </ol>
+
+      <ConfirmDialog
+        open={showResetConfirm}
+        onOpenChange={setShowResetConfirm}
+        title="Limpar Todo o Checklist QA"
+        description="Tem certeza que deseja limpar todos os registros do checklist? Todas as notas, marcações de status e evidências serão resetadas."
+        confirmText="Confirmar Limpeza"
+        cancelText="Voltar"
+        variant="destructive"
+        onConfirm={handleConfirmReset}
+      />
     </div>
   );
 }

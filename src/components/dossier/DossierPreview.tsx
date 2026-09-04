@@ -21,12 +21,20 @@ interface DossierPreviewProps {
 
 export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewProps) {
   const [activeSection, setActiveSection] = useState("cover");
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   const handleExportPdf = async () => {
-    if (onExport) onExport();
-    // Use the exported engine function
-    const { dossierEngine } = await import("@/services/automation/dossierEngine");
-    dossierEngine.exportPdf("dossier-preview-content", `NavalDocs_Dossie_${data.process?.id?.substring(0, 8)}.pdf`);
+    if (isExportingPdf || isGenerating) return;
+    setIsExportingPdf(true);
+    try {
+      if (onExport) onExport();
+      const { dossierEngine } = await import("@/services/automation/dossierEngine");
+      await dossierEngine.exportPdf("dossier-preview-content", `NavalDocs_Dossie_${data.process?.id?.substring(0, 8)}.pdf`);
+    } catch (e) {
+      console.error("[EXPORT_PDF_ERROR]", e);
+    } finally {
+      setIsExportingPdf(false);
+    }
   };
 
   const handleExportZip = async () => {
@@ -86,15 +94,19 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
            <p className="text-[11px] text-slate-400 font-bold mb-4">Dossiê v1.0 consolidado com sucesso pela IA do NavalDocs Pro.</p>
             <Button 
               onClick={handleExportPdf}
-              disabled={isGenerating}
+              disabled={isGenerating || isExportingPdf}
               className="w-full bg-primary text-white hover:bg-primary/90 rounded-xl h-12 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 mb-3"
             >
-              {isGenerating ? <Loader2 className="animate-spin h-4 w-4" /> : <><Download className="h-4 w-4 mr-2" /> Exportar PDF</>}
+              {isGenerating || isExportingPdf ? (
+                <><Loader2 className="animate-spin h-4 w-4 mr-2" /> Gerando PDF...</>
+              ) : (
+                <><Download className="h-4 w-4 mr-2" /> Exportar PDF</>
+              )}
             </Button>
             <Button 
               onClick={handleExportZip}
               variant="outline"
-              disabled={isGenerating}
+              disabled={isGenerating || isExportingPdf}
               className="w-full border-slate-200 text-navy hover:bg-slate-50 rounded-xl h-12 font-black text-[10px] uppercase tracking-widest"
             >
               <Archive className="h-4 w-4 mr-2" /> Exportar ZIP
@@ -129,9 +141,19 @@ export function DossierPreview({ data, onExport, isGenerating }: DossierPreviewP
           {activeSection === 'cover' && (
             <div className="max-w-2xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                <div className="text-center space-y-6 pt-10">
-                  <div className="h-24 w-24 bg-slate-50 border border-slate-100 rounded-3xl mx-auto flex items-center justify-center text-slate-300 mb-8">
-                     {/* Company Logo Placeholder */}
-                     <Globe className="h-12 w-12" />
+                  <div className="h-24 w-24 bg-slate-50 border border-slate-100 rounded-3xl mx-auto flex items-center justify-center text-slate-300 mb-8 overflow-hidden">
+                     {data.process?.company?.logo_primary_url ? (
+                       <img 
+                         src={data.process.company.logo_primary_url} 
+                         alt="Logo" 
+                         crossOrigin="anonymous" 
+                         className="max-h-full max-w-[45mm] object-contain p-2" 
+                       />
+                     ) : (
+                       <span className="text-primary font-black text-2xl">
+                         {data.process?.company?.name?.charAt(0) || "N"}
+                       </span>
+                     )}
                   </div>
                   <h1 className="text-4xl font-semibold text-navy leading-tight">
                      {data.process?.process_type}

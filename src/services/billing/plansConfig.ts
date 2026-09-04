@@ -1,6 +1,8 @@
+export type NavalPlanSlug = 'trial' | 'starter' | 'professional' | 'enterprise' | 'lifetime';
+
 export interface NavalPlan {
   id: string;
-  slug: 'trial' | 'starter' | 'professional' | 'enterprise' | 'lifetime';
+  slug: NavalPlanSlug;
   name: string;
   badge?: string;
   description: string;
@@ -9,7 +11,7 @@ export interface NavalPlan {
   billingCycle: 'monthly' | 'yearly';
   customerLimit: number | null;
   vesselLimit: number | null;
-  processLimit: number | null;
+  processLimit: number | null; // OS / Processos ativos por mês
   documentLimit: number | null;
   ocrLimit: number | null;
   userLimit: number | null;
@@ -82,8 +84,8 @@ export const NAVAL_PLANS: NavalPlan[] = [
     ],
     highlightFeatures: [
       "100 Embarcações",
+      "250 Processos / mês",
       "Assinatura Digital ICP-Brasil & QR Code",
-      "Carimbo CREA / ART Automático",
       "Portal do Cliente Incluso"
     ]
   },
@@ -124,13 +126,113 @@ export const NAVAL_PLANS: NavalPlan[] = [
   }
 ];
 
+/**
+ * Regras do Período de Teste Grátis (Trial)
+ */
 export const TRIAL_CONFIG = {
   days: 14,
   label: "14 Dias Grátis",
-  description: "Acesso irrestrito a todas as ferramentas durante os primeiros 14 dias após o cadastro."
+  description: "Acesso irrestrito a todas as ferramentas durante os primeiros 14 dias após o cadastro.",
+  limits: {
+    customerLimit: 50,
+    vesselLimit: 25,
+    processLimit: 50,
+    documentLimit: 100,
+    ocrLimit: 50,
+    userLimit: 3,
+    storageGb: 5
+  }
 };
 
+/**
+ * Regras do Período de Carência (Grace Period)
+ * Dias de tolerância após o vencimento sem bloqueio de visualização,
+ * alertando o usuário antes do bloqueio estrito de novas emissões.
+ */
+export const GRACE_PERIOD_CONFIG = {
+  days: 5,
+  label: "Período de Carência",
+  description: "Tolerância de 5 dias após a data de renovação para regularização de pagamento sem perda imediata das operações."
+};
+
+/**
+ * Acesso Vitalício Admin
+ */
 export const ADMIN_LIFETIME_CONFIG = {
   label: "Acesso Vitalício Admin",
   description: "Acesso total, permanente e ilimitado concedido aos Administradores da plataforma."
 };
+
+/**
+ * Configuração e Bypass Seguro para Homologação
+ * Garante que a oficina/tenant principal de teste nunca sofra bloqueio de cotas durante a validação.
+ */
+export const HOMOLOGATION_CONFIG = {
+  // Tenants conhecidos de homologação e validação contínua
+  knownBypassTenants: [
+    "homologacao",
+    "demo-company",
+    "naval-homologacao",
+    "oficina-homologacao",
+    "master-homologacao",
+    "oficina-teste",
+    "admin-company"
+  ] as string[],
+
+  label: "Modo Homologação",
+  badge: "Bypass Validação",
+  description: "Tenant de homologação com cotas ilimitadas para testes e validação contínua."
+};
+
+/**
+ * Helper seguro para identificar se o tenant está em modo de homologação/validação.
+ * Utiliza variáveis de ambiente e checagem de dados reais do banco, sem tocar em localStorage.
+ */
+export function isHomologationBypass(
+  companyId?: string | null,
+  companyName?: string | null,
+  isDemoOrPilot?: boolean | null
+): boolean {
+  if (!companyId && !companyName) return false;
+
+  // 1. Checa se o companyId corresponde à variável de ambiente configurada
+  const envHomologationId = typeof import.meta !== 'undefined' && import.meta.env
+    ? (import.meta.env.VITE_HOMOLOGATION_COMPANY_ID as string | undefined)
+    : undefined;
+
+  if (envHomologationId && companyId === envHomologationId) {
+    return true;
+  }
+
+  // 2. Checa IDs fixos de homologação
+  if (companyId && HOMOLOGATION_CONFIG.knownBypassTenants.includes(companyId.toLowerCase().trim())) {
+    return true;
+  }
+
+  // 3. Checa o nome corporativo por tags seguras de homologação
+  if (companyName) {
+    const normalized = companyName.toLowerCase();
+    if (
+      normalized.includes("[homologação]") ||
+      normalized.includes("[homologacao]") ||
+      normalized.includes("oficina homologação") ||
+      normalized.includes("oficina homologacao") ||
+      normalized.includes("tenant homologação") ||
+      normalized.includes("ambiente de homologacao") ||
+      normalized.includes("teste naval oficial")
+    ) {
+      return true;
+    }
+  }
+
+  // 4. Se a empresa tem flag is_pilot ou is_demo no Supabase e bypass global ativo
+  const pilotBypassEnabled = typeof import.meta !== 'undefined' && import.meta.env
+    ? (import.meta.env.VITE_PILOT_BYPASS_ENABLED === 'true')
+    : false;
+
+  if (pilotBypassEnabled && isDemoOrPilot === true) {
+    return true;
+  }
+
+  return false;
+}

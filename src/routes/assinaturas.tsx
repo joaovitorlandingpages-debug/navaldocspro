@@ -14,6 +14,7 @@ import { loadSignatureMetrics, type SignatureMetrics } from "@/services/signatur
 import { PageHeader } from "@/components/navigation/PageHeader";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CardGridSkeleton, ListSkeleton } from "@/components/ui/skeletons";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export const Route = createFileRoute("/assinaturas")({
   component: AssinaturasPage,
@@ -83,7 +84,7 @@ function AssinaturasPage() {
             {profile?.role === "admin_master_global" && profile?.company_id && (
               <SignatureTestRunner companyId={profile.company_id} userId={profile.id} onChanged={load} />
             )}
-            <Button onClick={() => setOpen(true)} className="gap-2">
+            <Button onClick={() => setOpen(true)} className="gap-2 min-h-[44px]">
               <Plus className="w-4 h-4" /> Nova Solicitação
             </Button>
           </>
@@ -147,6 +148,8 @@ function AssinaturasPage() {
 }
 
 function RequestRow({ row, onChanged }: { row: any; onChanged: () => void }) {
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const meta = STATUS_META[row.status] ?? STATUS_META.draft;
   const Icon = meta.icon;
   const parts: any[] = row.signature_participants ?? [];
@@ -157,11 +160,18 @@ function RequestRow({ row, onChanged }: { row: any; onChanged: () => void }) {
     toast.success("Link copiado");
   };
 
-  const cancel = async () => {
-    if (!confirm("Cancelar solicitação?")) return;
-    await signaturesService.cancel(row.id, row.company_id);
-    toast.success("Cancelada");
-    onChanged();
+  const handleConfirmCancel = async () => {
+    setCancelling(true);
+    try {
+      await signaturesService.cancel(row.id, row.company_id);
+      toast.success("Solicitação cancelada");
+      setShowCancelConfirm(false);
+      onChanged();
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao cancelar solicitação");
+    } finally {
+      setCancelling(false);
+    }
   };
 
   const downloadSigned = async (path: string) => {
@@ -214,22 +224,22 @@ function RequestRow({ row, onChanged }: { row: any; onChanged: () => void }) {
         </div>
         <div className="flex flex-wrap gap-2">
           {row.final_signed_pdf_url && (
-            <Button variant="outline" size="sm" onClick={() => downloadSigned(row.final_signed_pdf_url)} className="gap-1">
+            <Button variant="outline" size="sm" onClick={() => downloadSigned(row.final_signed_pdf_url)} className="gap-1 min-h-[44px]">
               <Download className="w-3 h-3" /> PDF Assinado
             </Button>
           )}
           {row.evidence_certificate_url && (
-            <Button variant="outline" size="sm" onClick={() => downloadSigned(row.evidence_certificate_url)} className="gap-1">
+            <Button variant="outline" size="sm" onClick={() => downloadSigned(row.evidence_certificate_url)} className="gap-1 min-h-[44px]">
               <Download className="w-3 h-3" /> Certificado
             </Button>
           )}
           {row.status === "completed" && (
-            <Button variant="outline" size="sm" onClick={() => copyVerifyLink(row.id)} className="gap-1">
+            <Button variant="outline" size="sm" onClick={() => copyVerifyLink(row.id)} className="gap-1 min-h-[44px]">
               <Link2 className="w-3 h-3" /> Link de verificação
             </Button>
           )}
           {row.status !== "completed" && row.status !== "cancelled" && (
-            <Button variant="outline" size="sm" onClick={cancel} className="gap-1">
+            <Button variant="outline" size="sm" onClick={() => setShowCancelConfirm(true)} className="gap-1 min-h-[44px] text-destructive hover:bg-destructive/10">
               <X className="w-3 h-3" /> Cancelar
             </Button>
           )}
@@ -276,6 +286,18 @@ function RequestRow({ row, onChanged }: { row: any; onChanged: () => void }) {
           </div>
         ))}
       </div>
+
+      <ConfirmDialog
+        open={showCancelConfirm}
+        onOpenChange={setShowCancelConfirm}
+        title="Cancelar Solicitação de Assinatura"
+        description={`Tem certeza que deseja cancelar a solicitação "${row.title}"? Esta ação não pode ser desfeita.`}
+        confirmText="Confirmar Cancelamento"
+        cancelText="Voltar"
+        variant="destructive"
+        loading={cancelling}
+        onConfirm={handleConfirmCancel}
+      />
     </Card>
   );
 }

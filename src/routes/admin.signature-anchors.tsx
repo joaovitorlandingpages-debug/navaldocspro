@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, Save, Trash2, Plus, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Plus, ShieldCheck, Loader2 } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   signatureAnchorsService, ANCHOR_ROLES, type TemplateSignatureAnchor, type AnchorRole, type AnchorAlign,
 } from "@/services/signatureAnchors";
@@ -41,6 +42,9 @@ function SignatureAnchorsEditor() {
   const [anchors, setAnchors] = useState<TemplateSignatureAnchor[]>([]);
   const [editing, setEditing] = useState<Partial<TemplateSignatureAnchor>>(emptyAnchor());
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [anchorToRemove, setAnchorToRemove] = useState<TemplateSignatureAnchor | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   function emptyAnchor(): Partial<TemplateSignatureAnchor> {
     return {
@@ -83,6 +87,7 @@ function SignatureAnchorsEditor() {
 
   const save = async () => {
     if (!profile?.company_id) return;
+    setSaving(true);
     try {
       const payload: any = {
         ...editing,
@@ -97,13 +102,26 @@ function SignatureAnchorsEditor() {
       toast.success("Âncora salva");
       setEditing(emptyAnchor());
       load();
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const remove = async (id: string) => {
-    if (!confirm("Remover âncora?")) return;
-    try { await signatureAnchorsService.remove(id); load(); toast.success("Removida"); }
-    catch (e: any) { toast.error(e.message); }
+  const confirmRemoveAnchor = async () => {
+    if (!anchorToRemove) return;
+    setIsRemoving(true);
+    try {
+      await signatureAnchorsService.remove(anchorToRemove.id);
+      setAnchorToRemove(null);
+      load();
+      toast.success("Âncora removida com sucesso");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setIsRemoving(false);
+    }
   };
 
   // visual scale to fit a ~240px tall preview
@@ -115,7 +133,7 @@ function SignatureAnchorsEditor() {
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="flex items-center gap-3">
-          <Link to="/dashboard"><Button variant="ghost" size="sm"><ArrowLeft className="w-4 h-4 mr-1" />Voltar</Button></Link>
+          <Link to="/dashboard"><Button variant="ghost" size="sm" className="min-h-[44px]"><ArrowLeft className="w-4 h-4 mr-1" />Voltar</Button></Link>
           <ShieldCheck className="w-6 h-6 text-blue-700" />
           <h1 className="text-2xl font-bold text-slate-900">Editor de Âncoras de Assinatura</h1>
           <Badge variant="outline" className="ml-2">Turno B</Badge>
@@ -147,7 +165,7 @@ function SignatureAnchorsEditor() {
           <Card className="p-4 space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold">Nova âncora</h2>
-              <Button size="sm" variant="ghost" onClick={() => setEditing(emptyAnchor())}><Plus className="w-4 h-4 mr-1" />Resetar</Button>
+              <Button size="sm" variant="ghost" onClick={() => setEditing(emptyAnchor())} className="min-h-[44px]"><Plus className="w-4 h-4 mr-1" />Resetar</Button>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -178,7 +196,19 @@ function SignatureAnchorsEditor() {
               </div>
               <div><Label>Rótulo</Label><Input value={editing.label ?? ""} onChange={e => setEditing({ ...editing, label: e.target.value })} /></div>
             </div>
-            <Button onClick={save} className="w-full"><Save className="w-4 h-4 mr-1" />{editing.id ? "Atualizar âncora" : "Salvar âncora"}</Button>
+            <Button onClick={save} disabled={saving} className="w-full min-h-[44px]">
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-1" />
+                  {editing.id ? "Atualizar âncora" : "Salvar âncora"}
+                </>
+              )}
+            </Button>
             <p className="text-xs text-slate-500">
               Tamanho da página assumido: A4 (595 × 842 pt). Y é medido a partir da base.
             </p>
@@ -229,8 +259,10 @@ function SignatureAnchorsEditor() {
                     <span className="text-slate-500">{a.label}</span>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => setEditing(a)}>Editar</Button>
-                    <Button size="sm" variant="ghost" onClick={() => remove(a.id)}><Trash2 className="w-4 h-4 text-red-500" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => setEditing(a)} className="min-h-[44px]">Editar</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setAnchorToRemove(a)} title="Remover" className="h-11 w-11 min-h-[44px] min-w-[44px] flex items-center justify-center text-destructive hover:bg-destructive/10">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -238,6 +270,18 @@ function SignatureAnchorsEditor() {
           )}
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={!!anchorToRemove}
+        onOpenChange={(open) => !open && setAnchorToRemove(null)}
+        title="Remover Âncora de Assinatura"
+        description={`Tem certeza que deseja remover a âncora "${anchorToRemove?.label || anchorToRemove?.role}" da página ${anchorToRemove?.page}?`}
+        confirmText="Confirmar Remoção"
+        cancelText="Voltar"
+        variant="destructive"
+        loading={isRemoving}
+        onConfirm={confirmRemoveAnchor}
+      />
     </div>
   );
 }

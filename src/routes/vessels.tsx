@@ -18,9 +18,10 @@ import { useFiles, UploadedFile } from "@/hooks/useFiles";
 import { Badge } from "@/components/ui/badge";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
-import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { PageHeader } from "@/components/navigation/PageHeader";
 import { openStoredFile } from "@/utils/file-preview";
+import { TrialBanner } from "@/components/dashboard/TrialBanner";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 
 export const Route = createFileRoute("/vessels")({
@@ -28,6 +29,9 @@ export const Route = createFileRoute("/vessels")({
 });
 
 function Vessels() {
+  const [showDeleteVesselConfirm, setShowDeleteVesselConfirm] = useState(false);
+  const [isDeletingVessel, setIsDeletingVessel] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<{ id: string; name: string } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVessel, setSelectedVessel] = useState<any | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -195,8 +199,30 @@ function Vessels() {
     }
   };
 
+  const handleDeleteVessel = async () => {
+    if (!selectedVessel?.id) return;
+    setIsDeletingVessel(true);
+    const loadingToast = toast.loading("Excluindo embarcação...");
+    try {
+      const { error } = await supabase.from('vessels').delete().eq('id', selectedVessel.id);
+      if (error) throw error;
+      toast.dismiss(loadingToast);
+      toast.success("Embarcação excluída.");
+      setShowDeleteVesselConfirm(false);
+      setIsDetailsOpen(false);
+      setVessels((prev) => prev.filter((v) => v.id !== selectedVessel.id));
+      setSelectedVessel(null);
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
+      toast.error("Erro ao excluir: " + (error.message || "Verifique pendências vinculadas"));
+    } finally {
+      setIsDeletingVessel(false);
+    }
+  };
+
   return (
     <div className="animate-in fade-in duration-500 pb-20">
+      <TrialBanner onlyAlerts={true} />
       <PageHeader 
         title="Embarcações"
         description="Frota cadastrada e monitoramento de status."
@@ -234,7 +260,7 @@ function Vessels() {
           </div>
         ) : vessels.length === 0 ? (
           <div className="col-span-full py-20 text-center">
-            <Ship className="h-16 w-16 text-slate-100 mx-auto mb-4" />
+            <Ship className="h-12 w-12 text-slate-200 mx-auto mb-4" />
             <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Nenhuma embarcação cadastrada</p>
           </div>
         ) : vessels.map((v, i) => (
@@ -252,7 +278,15 @@ function Vessels() {
                <div className="h-14 w-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
                   <Ship className="h-7 w-7" />
                </div>
-               <button className="text-slate-200 hover:text-slate-400 p-1">
+               <button 
+                 type="button"
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   handleOpenDetails(v);
+                 }}
+                 aria-label="Opções da embarcação"
+                 className="text-slate-200 hover:text-slate-400 min-h-[44px] min-w-[44px] flex items-center justify-center p-2 rounded-lg transition-colors"
+               >
                   <MoreHorizontal className="h-6 w-6" />
                </button>
             </div>
@@ -305,10 +339,10 @@ function Vessels() {
               form="create-vessel-form"
               type="submit" 
               disabled={isSubmitting}
-              className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-primary/20 transition-all flex items-center gap-2"
+              className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-primary/20 transition-all flex items-center gap-2 min-h-[44px]"
             >
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Salvar Embarcação
+              {isSubmitting ? "Salvando..." : "Salvar Embarcação"}
             </button>
           </>
         }
@@ -534,26 +568,19 @@ function Vessels() {
                     });
                     setIsEditModalOpen(true);
                   }}
-                  className="h-7 px-3 bg-slate-50 hover:bg-slate-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-primary ml-2"
+                  className="min-h-[44px] px-3 bg-slate-50 hover:bg-slate-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-primary ml-2 flex items-center"
                 >
                   <Settings className="h-3 w-3 mr-1" /> Editar Dados
                 </Button>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={async () => {
-                    if (confirm("Deseja realmente excluir esta embarcação?")) {
-                      const { error } = await supabase.from('vessels').delete().eq('id', selectedVessel.id);
-                      if (error) toast.error(error.message);
-                      else {
-                        toast.success("Embarcação excluída.");
-                        window.location.reload();
-                      }
-                    }
-                  }}
-                  className="h-7 px-3 hover:bg-red-50 text-red-400 hover:text-red-500 rounded-lg text-[10px] font-black uppercase tracking-widest"
+                  onClick={() => setShowDeleteVesselConfirm(true)}
+                  disabled={isDeletingVessel}
+                  className="min-h-[44px] px-3 hover:bg-red-50 text-red-400 hover:text-red-500 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center"
                 >
-                  <Trash2 className="h-3 w-3 mr-1" /> Excluir
+                  {isDeletingVessel ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Trash2 className="h-3 w-3 mr-1" />}
+                  {isDeletingVessel ? "Excluindo..." : "Excluir"}
                 </Button>
               </div>
            </div>
@@ -681,8 +708,22 @@ function Vessels() {
                                </div>
                             </div>
                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => openStoredFile(file)} className="p-2 text-slate-400 hover:text-navy"><Eye className="h-4 w-4" /></button>
-                               <button onClick={() => deleteFile.mutate(file.id)} className="p-2 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
+                                <button 
+                                  type="button"
+                                  onClick={() => openStoredFile(file)} 
+                                  aria-label="Visualizar documento"
+                                  className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 text-slate-400 hover:text-navy rounded-lg transition-colors"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </button>
+                                <button 
+                                  type="button"
+                                  onClick={() => setFileToDelete({ id: file.id, name: file.file_name })} 
+                                  aria-label="Excluir documento"
+                                  className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
                             </div>
                          </div>
                        ))}
@@ -751,9 +792,10 @@ function Vessels() {
                 }
               }} 
               disabled={isSubmitting}
-              className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 transition-all"
+              className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 transition-all flex items-center gap-2 min-h-[44px]"
             >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Alterações"}
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {isSubmitting ? "Salvando..." : "Salvar Alterações"}
             </button>
           </>
         }
@@ -780,6 +822,34 @@ function Vessels() {
           </div>
         </div>
       </ModalLayout>
+
+      <ConfirmDialog
+        open={showDeleteVesselConfirm}
+        onOpenChange={setShowDeleteVesselConfirm}
+        title="Excluir Embarcação"
+        description={`Tem certeza que deseja excluir a embarcação "${selectedVessel?.name}"? Esta ação não pode ser desfeita.`}
+        confirmText="Excluir Embarcação"
+        cancelText="Cancelar"
+        variant="destructive"
+        loading={isDeletingVessel}
+        onConfirm={handleDeleteVessel}
+      />
+
+      <ConfirmDialog
+        open={fileToDelete !== null}
+        onOpenChange={(open) => { if (!open) setFileToDelete(null); }}
+        title="Excluir Documento"
+        description={`Deseja realmente excluir o documento "${fileToDelete?.name}"?`}
+        confirmText="Excluir Documento"
+        cancelText="Cancelar"
+        variant="destructive"
+        loading={deleteFile.isPending}
+        onConfirm={async () => {
+          if (!fileToDelete) return;
+          await deleteFile.mutateAsync(fileToDelete.id);
+          setFileToDelete(null);
+        }}
+      />
     </div>
   );
 }

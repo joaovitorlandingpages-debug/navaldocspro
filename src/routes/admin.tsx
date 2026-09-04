@@ -64,7 +64,7 @@ function AdminLayout() {
     return <Navigate to="/auth/login" search={{ redirect: "/admin" }} />;
   }
 
-  if (profile?.role !== 'admin_master' && profile?.role !== 'admin_master_global') {
+  if (profile?.role !== 'admin_master' && profile?.role !== 'admin_master_global' && profile?.role !== 'superadmin') {
     return <Navigate to="/dashboard" />;
   }
 

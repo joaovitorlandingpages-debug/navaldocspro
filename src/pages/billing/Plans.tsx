@@ -16,11 +16,11 @@ import { Link } from "@tanstack/react-router";
 export default function Plans() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const { user } = useAuth();
-  const { isLifetimeAdmin, isTrial, trialDaysLeft, createPreference } = useSubscription();
+  const { isLifetimeAdmin, isHomologation, isTrial, trialDaysLeft, createPreference } = useSubscription();
 
   const handleSubscribe = async (plan: NavalPlan) => {
-    if (isLifetimeAdmin) {
-      toast.info("Você possui Acesso Vitalício de Administrador. Todas as funções já estão ilimitadas!");
+    if (isLifetimeAdmin || isHomologation) {
+      toast.info("Você possui Acesso Irrestrito (Modo Administrador / Homologação). Todas as funções e cotas já estão liberadas!");
       return;
     }
 
@@ -168,7 +168,7 @@ export default function Plans() {
                     }`}
                   >
                     {createPreference.isPending ? "Processando..." : (
-                      isLifetimeAdmin ? "Acesso Vitalício Ativo" : "Começar 14 Dias Grátis"
+                      isLifetimeAdmin ? "Acesso Vitalício Ativo" : isHomologation ? "Homologação Ativa" : "Começar 14 Dias Grátis"
                     )}
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>

@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { DocumentValidationEngine } from "@/services/validationEngine";
 import { DocumentPreviewEditor } from "@/components/documents/DocumentPreviewEditor";
+import { TrialBanner } from "@/components/dashboard/TrialBanner";
 
 export const Route = createFileRoute("/document-generator")({
   component: DocumentGenerator,
@@ -206,7 +207,7 @@ function DocumentGenerator() {
     if (isGenerating) return; // proteção contra duplo clique
     const limit = await checkLimit("documents");
     if (limit.reached) {
-      toast.error("Limite de documentos mensais atingido.");
+      toast.error(limit.reason || "Limite de documentos mensais atingido.");
       return;
     }
 
@@ -255,6 +256,7 @@ function DocumentGenerator() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20 max-w-7xl mx-auto">
+      <TrialBanner onlyAlerts={true} />
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4">
           <Button
@@ -294,7 +296,7 @@ function DocumentGenerator() {
             className="flex-1 md:flex-none bg-red-500 text-white h-12 rounded-xl font-bold gap-2 hover:bg-red-600 shadow-lg shadow-red-500/20"
           >
             {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileCheck className="h-4 w-4" />}
-            Gerar {selectedTemplateIds.length > 0 ? `${selectedTemplateIds.length} ` : ""}Documento(s)
+            {isGenerating ? "Gerando..." : `Gerar ${selectedTemplateIds.length > 0 ? `${selectedTemplateIds.length} ` : ""}Documento(s)`}
           </Button>
         </div>
       </div>

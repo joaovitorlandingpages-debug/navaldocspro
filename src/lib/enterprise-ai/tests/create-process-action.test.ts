@@ -300,7 +300,7 @@ describe("CreateProcessAction (Sprint 5.2.1 - Idempotency & Atomic Execution)", 
 
     it("should recover and skip process creation if record already has process_id (Retry Flow)", async () => {
       const { materializeProcessBlueprint } = await import("@/services/processes/blueprintEngine");
-      vi.mocked(materializeProcessBlueprint).mockResolvedValue({ success: true });
+      vi.mocked(materializeProcessBlueprint).mockResolvedValue({ success: true } as any);
 
       // 1. Claim recoverable record
       getMockSupabase().rpc.mockImplementationOnce((fn: string, args: any) => {
