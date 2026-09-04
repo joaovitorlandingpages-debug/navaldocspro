@@ -74,7 +74,7 @@ type CompanyItem = {
   updated_at?: string;
 };
 
-export const Route = createFileRoute("/super-admin" as any)({
+export const Route = createFileRoute("/super-admin")({
   component: SuperAdminPageRoute,
 });
 

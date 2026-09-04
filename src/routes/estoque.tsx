@@ -6,7 +6,7 @@ import { Boxes, Plus, Package, Search, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
-export const Route = createFileRoute("/estoque" as any)({
+export const Route = createFileRoute("/estoque")({
   component: EstoqueRoute,
 });
 

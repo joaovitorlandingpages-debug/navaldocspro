@@ -29,6 +29,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
 import { Route as DocumentsRouteImport } from './routes/documents'
+import { Route as EstoqueRouteImport } from './routes/estoque'
 import { Route as ExecutiveRouteImport } from './routes/executive'
 import { Route as ExigenciasRouteImport } from './routes/exigencias'
 import { Route as FocoRouteImport } from './routes/foco'
@@ -40,6 +41,8 @@ import { Route as OcrCenterRouteImport } from './routes/ocr-center'
 import { Route as OcrReviewCenterRouteImport } from './routes/ocr-review-center'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as OperationsCenterRouteImport } from './routes/operations-center'
+import { Route as OrcamentosRouteImport } from './routes/orcamentos'
+import { Route as OrdensRouteImport } from './routes/ordens'
 import { Route as ParceriaRouteImport } from './routes/parceria'
 import { Route as PerformanceCenterRouteImport } from './routes/performance-center'
 import { Route as PilotoRouteImport } from './routes/piloto'
@@ -49,6 +52,7 @@ import { Route as QaChecklistRouteImport } from './routes/qa-checklist'
 import { Route as SalesCenterRouteImport } from './routes/sales-center'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatusRouteImport } from './routes/status'
+import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SystemMonitorRouteImport } from './routes/system-monitor'
 import { Route as TemplatesRouteImport } from './routes/templates'
@@ -233,6 +237,11 @@ const DocumentsRoute = DocumentsRouteImport.update({
   path: '/documents',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EstoqueRoute = EstoqueRouteImport.update({
+  id: '/estoque',
+  path: '/estoque',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExecutiveRoute = ExecutiveRouteImport.update({
   id: '/executive',
   path: '/executive',
@@ -288,6 +297,16 @@ const OperationsCenterRoute = OperationsCenterRouteImport.update({
   path: '/operations-center',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrcamentosRoute = OrcamentosRouteImport.update({
+  id: '/orcamentos',
+  path: '/orcamentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrdensRoute = OrdensRouteImport.update({
+  id: '/ordens',
+  path: '/ordens',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ParceriaRoute = ParceriaRouteImport.update({
   id: '/parceria',
   path: '/parceria',
@@ -331,6 +350,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const StatusRoute = StatusRouteImport.update({
   id: '/status',
   path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuperAdminRoute = SuperAdminRouteImport.update({
+  id: '/super-admin',
+  path: '/super-admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SupportRoute = SupportRouteImport.update({
@@ -781,6 +805,7 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/estoque': typeof EstoqueRoute
   '/executive': typeof ExecutiveRoute
   '/exigencias': typeof ExigenciasRoute
   '/foco': typeof FocoRoute
@@ -792,6 +817,8 @@ export interface FileRoutesByFullPath {
   '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/operations-center': typeof OperationsCenterRoute
+  '/orcamentos': typeof OrcamentosRoute
+  '/ordens': typeof OrdensRoute
   '/parceria': typeof ParceriaRoute
   '/performance-center': typeof PerformanceCenterRoute
   '/piloto': typeof PilotoRoute
@@ -801,6 +828,7 @@ export interface FileRoutesByFullPath {
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
+  '/super-admin': typeof SuperAdminRoute
   '/support': typeof SupportRoute
   '/system-monitor': typeof SystemMonitorRoute
   '/templates': typeof TemplatesRouteWithChildren
@@ -904,6 +932,7 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/estoque': typeof EstoqueRoute
   '/executive': typeof ExecutiveRoute
   '/exigencias': typeof ExigenciasRoute
   '/foco': typeof FocoRoute
@@ -915,6 +944,8 @@ export interface FileRoutesByTo {
   '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/operations-center': typeof OperationsCenterRoute
+  '/orcamentos': typeof OrcamentosRoute
+  '/ordens': typeof OrdensRoute
   '/parceria': typeof ParceriaRoute
   '/performance-center': typeof PerformanceCenterRoute
   '/piloto': typeof PilotoRoute
@@ -924,6 +955,7 @@ export interface FileRoutesByTo {
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
+  '/super-admin': typeof SuperAdminRoute
   '/support': typeof SupportRoute
   '/system-monitor': typeof SystemMonitorRoute
   '/vessels': typeof VesselsRoute
@@ -1028,6 +1060,7 @@ export interface FileRoutesById {
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
+  '/estoque': typeof EstoqueRoute
   '/executive': typeof ExecutiveRoute
   '/exigencias': typeof ExigenciasRoute
   '/foco': typeof FocoRoute
@@ -1039,6 +1072,8 @@ export interface FileRoutesById {
   '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/operations-center': typeof OperationsCenterRoute
+  '/orcamentos': typeof OrcamentosRoute
+  '/ordens': typeof OrdensRoute
   '/parceria': typeof ParceriaRoute
   '/performance-center': typeof PerformanceCenterRoute
   '/piloto': typeof PilotoRoute
@@ -1048,6 +1083,7 @@ export interface FileRoutesById {
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
+  '/super-admin': typeof SuperAdminRoute
   '/support': typeof SupportRoute
   '/system-monitor': typeof SystemMonitorRoute
   '/templates': typeof TemplatesRouteWithChildren
@@ -1155,6 +1191,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/document-generator'
     | '/documents'
+    | '/estoque'
     | '/executive'
     | '/exigencias'
     | '/foco'
@@ -1166,6 +1203,8 @@ export interface FileRouteTypes {
     | '/ocr-review-center'
     | '/onboarding'
     | '/operations-center'
+    | '/orcamentos'
+    | '/ordens'
     | '/parceria'
     | '/performance-center'
     | '/piloto'
@@ -1175,6 +1214,7 @@ export interface FileRouteTypes {
     | '/sales-center'
     | '/settings'
     | '/status'
+    | '/super-admin'
     | '/support'
     | '/system-monitor'
     | '/templates'
@@ -1278,6 +1318,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/document-generator'
     | '/documents'
+    | '/estoque'
     | '/executive'
     | '/exigencias'
     | '/foco'
@@ -1289,6 +1330,8 @@ export interface FileRouteTypes {
     | '/ocr-review-center'
     | '/onboarding'
     | '/operations-center'
+    | '/orcamentos'
+    | '/ordens'
     | '/parceria'
     | '/performance-center'
     | '/piloto'
@@ -1298,6 +1341,7 @@ export interface FileRouteTypes {
     | '/sales-center'
     | '/settings'
     | '/status'
+    | '/super-admin'
     | '/support'
     | '/system-monitor'
     | '/vessels'
@@ -1401,6 +1445,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/document-generator'
     | '/documents'
+    | '/estoque'
     | '/executive'
     | '/exigencias'
     | '/foco'
@@ -1412,6 +1457,8 @@ export interface FileRouteTypes {
     | '/ocr-review-center'
     | '/onboarding'
     | '/operations-center'
+    | '/orcamentos'
+    | '/ordens'
     | '/parceria'
     | '/performance-center'
     | '/piloto'
@@ -1421,6 +1468,7 @@ export interface FileRouteTypes {
     | '/sales-center'
     | '/settings'
     | '/status'
+    | '/super-admin'
     | '/support'
     | '/system-monitor'
     | '/templates'
@@ -1527,6 +1575,7 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
   DocumentsRoute: typeof DocumentsRoute
+  EstoqueRoute: typeof EstoqueRoute
   ExecutiveRoute: typeof ExecutiveRoute
   ExigenciasRoute: typeof ExigenciasRoute
   FocoRoute: typeof FocoRoute
@@ -1538,6 +1587,8 @@ export interface RootRouteChildren {
   OcrReviewCenterRoute: typeof OcrReviewCenterRoute
   OnboardingRoute: typeof OnboardingRoute
   OperationsCenterRoute: typeof OperationsCenterRoute
+  OrcamentosRoute: typeof OrcamentosRoute
+  OrdensRoute: typeof OrdensRoute
   ParceriaRoute: typeof ParceriaRoute
   PerformanceCenterRoute: typeof PerformanceCenterRoute
   PilotoRoute: typeof PilotoRoute
@@ -1547,6 +1598,7 @@ export interface RootRouteChildren {
   SalesCenterRoute: typeof SalesCenterRoute
   SettingsRoute: typeof SettingsRoute
   StatusRoute: typeof StatusRoute
+  SuperAdminRoute: typeof SuperAdminRoute
   SupportRoute: typeof SupportRoute
   SystemMonitorRoute: typeof SystemMonitorRoute
   TemplatesRoute: typeof TemplatesRouteWithChildren
@@ -1709,6 +1761,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocumentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/estoque': {
+      id: '/estoque'
+      path: '/estoque'
+      fullPath: '/estoque'
+      preLoaderRoute: typeof EstoqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/executive': {
       id: '/executive'
       path: '/executive'
@@ -1786,6 +1845,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OperationsCenterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/orcamentos': {
+      id: '/orcamentos'
+      path: '/orcamentos'
+      fullPath: '/orcamentos'
+      preLoaderRoute: typeof OrcamentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ordens': {
+      id: '/ordens'
+      path: '/ordens'
+      fullPath: '/ordens'
+      preLoaderRoute: typeof OrdensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/parceria': {
       id: '/parceria'
       path: '/parceria'
@@ -1847,6 +1920,13 @@ declare module '@tanstack/react-router' {
       path: '/status'
       fullPath: '/status'
       preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/super-admin': {
+      id: '/super-admin'
+      path: '/super-admin'
+      fullPath: '/super-admin'
+      preLoaderRoute: typeof SuperAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/support': {
@@ -2641,6 +2721,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
   DocumentsRoute: DocumentsRoute,
+  EstoqueRoute: EstoqueRoute,
   ExecutiveRoute: ExecutiveRoute,
   ExigenciasRoute: ExigenciasRoute,
   FocoRoute: FocoRoute,
@@ -2652,6 +2733,8 @@ const rootRouteChildren: RootRouteChildren = {
   OcrReviewCenterRoute: OcrReviewCenterRoute,
   OnboardingRoute: OnboardingRoute,
   OperationsCenterRoute: OperationsCenterRoute,
+  OrcamentosRoute: OrcamentosRoute,
+  OrdensRoute: OrdensRoute,
   ParceriaRoute: ParceriaRoute,
   PerformanceCenterRoute: PerformanceCenterRoute,
   PilotoRoute: PilotoRoute,
@@ -2661,6 +2744,7 @@ const rootRouteChildren: RootRouteChildren = {
   SalesCenterRoute: SalesCenterRoute,
   SettingsRoute: SettingsRoute,
   StatusRoute: StatusRoute,
+  SuperAdminRoute: SuperAdminRoute,
   SupportRoute: SupportRoute,
   SystemMonitorRoute: SystemMonitorRoute,
   TemplatesRoute: TemplatesRouteWithChildren,
