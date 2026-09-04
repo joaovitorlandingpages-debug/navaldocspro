@@ -29,7 +29,10 @@ export default function Plans() {
       return;
     }
 
-    createPreference.mutate(plan.slug);
+    createPreference.mutate({
+      planSlug: plan.slug,
+      billingCycle: billingCycle === "yearly" ? "annual" : "monthly"
+    });
   };
 
   return (
@@ -136,8 +139,29 @@ export default function Plans() {
                       {price}
                     </span>
                     <span className="text-xs font-bold text-slate-500">
-                      /mês {billingCycle === "yearly" && "(faturado anualmente)"}
+                      /mês
                     </span>
+                  </div>
+                  {billingCycle === "yearly" && (
+                    <p className="text-[11px] text-emerald-600 font-bold mt-1">
+                      Cobrado anualmente: R$ {plan.priceYearly}/ano (2 meses grátis)
+                    </p>
+                  )}
+
+                  {/* Limites Operacionais em Destaque */}
+                  <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-3 gap-1 text-center bg-slate-50 p-2.5 rounded-xl text-[10px]">
+                    <div>
+                      <p className="font-bold text-navy">{plan.processLimit ? `${plan.processLimit} OS` : "Ilimitadas"}</p>
+                      <span className="text-slate-400">Simultâneas</span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-navy">{plan.userLimit ? `${plan.userLimit} Users` : "Ilimitados"}</p>
+                      <span className="text-slate-400">Equipe</span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-navy">{plan.storageGb ? `${plan.storageGb}GB` : "Ilimitado"}</p>
+                      <span className="text-slate-400">Fotos/PDFs</span>
+                    </div>
                   </div>
                 </CardHeader>
 

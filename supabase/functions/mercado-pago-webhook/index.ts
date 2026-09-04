@@ -90,7 +90,32 @@ serve(async (req) => {
     }
     const paymentData = await r.json();
 
-    const [companyId, planId] = String(paymentData.external_reference || "").split(":");
+    // Parsing do external_reference (suporta formato org:plan:cycle ou JSON)
+    let companyId = "";
+    let planId = "";
+    let billingCycle = "monthly";
+
+    const rawRef = String(paymentData.external_reference || "");
+    if (rawRef.startsWith("{") && rawRef.endsWith("}")) {
+      try {
+        const parsed = JSON.parse(rawRef);
+        companyId = parsed.organization_id || parsed.company_id || "";
+        planId = parsed.plan_id || "";
+        billingCycle = parsed.billing_cycle || "monthly";
+      } catch {
+        // Fallback
+      }
+    }
+
+    if (!companyId) {
+      const parts = rawRef.split(":");
+      companyId = parts[0] || "";
+      planId = parts[1] || "";
+      if (parts[2]) {
+        billingCycle = parts[2].toLowerCase() === "annual" ? "annual" : "monthly";
+      }
+    }
+
     if (!companyId || !planId) return jsonResponse({ received: true });
 
     // Prevenção de chave órfã: valida se a empresa realmente existe no Supabase
@@ -129,8 +154,14 @@ serve(async (req) => {
       }
 
       const effectivePlanId = plan?.id || planId;
-      const periodEnd = new Date(); 
-      periodEnd.setMonth(periodEnd.getMonth() + 1);
+      
+      // Cálculo da vigência conforme o ciclo: Anual (+365 dias) ou Mensal (+30 dias)
+      const periodEnd = new Date();
+      if (billingCycle === "annual") {
+        periodEnd.setDate(periodEnd.getDate() + 365);
+      } else {
+        periodEnd.setDate(periodEnd.getDate() + 30);
+      }
 
       await admin.from("subscriptions").upsert({
         company_id: companyId, 
@@ -141,6 +172,14 @@ serve(async (req) => {
         current_period_end: periodEnd.toISOString(),
         updated_at: new Date().toISOString(),
       }, { onConflict: "company_id" });
+
+      // Atualiza status da empresa para ativo
+      await admin.from("companies").update({
+        billing_status: "active",
+        plan: effectivePlanId,
+        plan_id: effectivePlanId,
+        updated_at: new Date().toISOString(),
+      }).eq("id", companyId);
 
       await admin.from("payments").insert({
         company_id: companyId,

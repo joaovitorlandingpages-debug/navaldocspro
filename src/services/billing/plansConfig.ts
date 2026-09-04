@@ -1,4 +1,5 @@
 export type NavalPlanSlug = 'trial' | 'starter' | 'professional' | 'enterprise' | 'lifetime';
+export type BillingCycle = 'monthly' | 'annual' | 'yearly';
 
 export interface NavalPlan {
   id: string;
@@ -7,15 +8,16 @@ export interface NavalPlan {
   badge?: string;
   description: string;
   priceMonthly: number;
-  priceYearly: number;
-  billingCycle: 'monthly' | 'yearly';
+  priceYearly: number; // Plano anual com 2 meses grátis / ~17-20% off
+  billingCycle: BillingCycle;
   customerLimit: number | null;
   vesselLimit: number | null;
-  processLimit: number | null; // OS / Processos ativos por mês
+  processLimit: number | null; // Quantidade de OS simultâneas ativas por mês
   documentLimit: number | null;
   ocrLimit: number | null;
-  userLimit: number | null;
-  storageGb: number | null;
+  userLimit: number | null; // Usuários inclusos
+  additionalUserPrice?: number; // Preço por usuário adicional/mês
+  storageGb: number | null; // Capacidade de armazenamento de fotos e PDFs
   isPopular?: boolean;
   features: string[];
   highlightFeatures: string[];
@@ -25,57 +27,62 @@ export const NAVAL_PLANS: NavalPlan[] = [
   {
     id: "plan-starter",
     slug: "starter",
-    name: "Starter / Despachante",
-    description: "Ideal para despachantes náuticos e profissionais autônomos iniciando a digitalização.",
-    priceMonthly: 149,
-    priceYearly: 1490, // 2 meses grátis
+    name: "Starter / Despachante & Oficina",
+    description: "Ideal para despachantes náuticos, mecânicos autônomos e oficinas iniciando a gestão digital.",
+    priceMonthly: 89,
+    priceYearly: 890, // 2 meses grátis (R$ 89 x 10)
     billingCycle: "monthly",
     customerLimit: 50,
-    vesselLimit: 25,
-    processLimit: 50,
+    vesselLimit: 30,
+    processLimit: 50, // Até 50 OS simultâneas/mês
     documentLimit: 150,
     ocrLimit: 50,
-    userLimit: 2,
-    storageGb: 5,
+    userLimit: 2, // 2 usuários inclusos
+    additionalUserPrice: 29, // R$ 29/usuário adicional
+    storageGb: 5, // 5GB para fotos de vistorias e PDFs
     features: [
-      "Até 25 embarcações cadastradas",
-      "Até 50 processos navais ativos/mês",
+      "Até 50 Ordens de Serviço simultâneas/mês",
+      "Até 30 embarcações cadastradas",
+      "2 usuários inclusos (R$ 29/usuário adicional)",
+      "5GB para armazenamento de fotos e PDFs",
       "150 gerações de documentos PDF",
       "50 leituras inteligentes via OCR",
-      "2 usuários com acesso ao sistema",
       "Modelos oficiais da Capitania (DPC)",
-      "Checklists básicos NORMAM-01/02/03",
-      "Suporte via e-mail e ticket"
+      "Checklists básicos NORMAM",
+      "Suporte via e-mail e chamado"
     ],
     highlightFeatures: [
-      "25 Embarcações",
-      "50 Processos / mês",
+      "50 OS Simultâneas",
+      "2 Usuários Inclusos",
+      "5GB Fotos e PDFs",
       "Assinatura Digital Básica"
     ]
   },
   {
     id: "plan-professional",
     slug: "professional",
-    name: "Professional / Engenheiro Naval",
+    name: "Professional / Engenheiro Naval & Estaleiro",
     badge: "MAIS ESCOLHIDO",
     isPopular: true,
-    description: "Para engenheiros navais, consultorias e escritórios náuticos em crescimento.",
-    priceMonthly: 299,
-    priceYearly: 2990, // 2 meses grátis
+    description: "Para oficinas consolidadas, consultorias e engenheiros navais que demandam alto volume.",
+    priceMonthly: 179,
+    priceYearly: 1790, // 2 meses grátis (R$ 179 x 10)
     billingCycle: "monthly",
-    customerLimit: 200,
-    vesselLimit: 100,
-    processLimit: 250,
+    customerLimit: 250,
+    vesselLimit: 150,
+    processLimit: 250, // Até 250 OS simultâneas/mês
     documentLimit: 500,
     ocrLimit: 200,
-    userLimit: 5,
-    storageGb: 20,
+    userLimit: 5, // 5 usuários inclusos
+    additionalUserPrice: 25, // R$ 25/usuário adicional
+    storageGb: 20, // 20GB para fotos e PDFs
     features: [
-      "Até 100 embarcações cadastradas",
-      "Até 250 processos navais ativos/mês",
+      "Até 250 Ordens de Serviço simultâneas/mês",
+      "Até 150 embarcações cadastradas",
+      "5 usuários inclusos na equipe",
+      "20GB para fotos em alta resolução e PDFs",
       "500 documentos PDF com papel timbrado",
       "200 leituras inteligentes OCR (TIE, CSN, BIE)",
-      "5 usuários com permissões de equipe",
       "Assinaturas Digitais com Hash SHA-256 e QR Code",
       "Carimbo Digital do Engenheiro (CREA/ART)",
       "Portal do Cliente com link seguro de acompanhamento",
@@ -83,8 +90,9 @@ export const NAVAL_PLANS: NavalPlan[] = [
       "Suporte prioritário via WhatsApp"
     ],
     highlightFeatures: [
-      "100 Embarcações",
-      "250 Processos / mês",
+      "250 OS Simultâneas",
+      "5 Usuários Inclusos",
+      "20GB Fotos e PDFs",
       "Assinatura Digital ICP-Brasil & QR Code",
       "Portal do Cliente Incluso"
     ]
@@ -92,39 +100,69 @@ export const NAVAL_PLANS: NavalPlan[] = [
   {
     id: "plan-enterprise",
     slug: "enterprise",
-    name: "Enterprise / Estaleiro & Frota",
+    name: "Enterprise / Grande Estaleiro & Frota",
     badge: "ALTA PERFORMANCE",
-    description: "Para estaleiros, marinas, operadores de frotas e grandes escritórios de engenharia naval.",
-    priceMonthly: 599,
-    priceYearly: 5990, // 2 meses grátis
+    description: "Para estaleiros de grande porte, marinas, frotas náuticas e oficinas de grande escala.",
+    priceMonthly: 499,
+    priceYearly: 4990, // 2 meses grátis (R$ 499 x 10)
     billingCycle: "monthly",
     customerLimit: null, // Ilimitado
     vesselLimit: null,
-    processLimit: null,
+    processLimit: null, // OS ilimitadas
     documentLimit: null,
     ocrLimit: null,
-    userLimit: null,
-    storageGb: 100,
+    userLimit: 15, // 15 usuários inclusos
+    additionalUserPrice: 19,
+    storageGb: 100, // 100GB para fotos e arquivos
     features: [
+      "Ordens de Serviço (OS) ILIMITADAS",
       "Embarcações ILIMITADAS",
-      "Processos navais ILIMITADOS",
+      "15 usuários inclusos (expansível)",
+      "100GB de armazenamento dedicado para fotos e PDFs",
       "Geração de documentos e PDFs ILIMITADA",
       "Leituras de OCR ILIMITADAS",
-      "Usuários e colaboradores ILIMITADOS",
-      "White-label total (seu domínio e identidade visual)",
+      "White-label total (seu domínio e logotipo)",
       "Motor de Automações & Alertas de Vencimento NORMAM",
       "Acesso completo à API e Webhooks",
-      "Backup automático e auditoria enterprise",
+      "Backup automático diário e trilha de auditoria",
       "Gerente de conta dedicado e onboarding VIP"
     ],
     highlightFeatures: [
-      "Tudo ILIMITADO",
+      "OS Ilimitadas",
+      "15 Usuários Inclusos",
+      "100GB Fotos e PDFs",
       "White-label Completo",
-      "API & Integrações",
       "Suporte VIP 24/7"
     ]
   }
 ];
+
+/**
+ * Retorna o valor de cobrança de acordo com o ciclo (mensal ou anual).
+ */
+export function getPlanPrice(plan: NavalPlan, cycle: BillingCycle = 'monthly'): number {
+  if (cycle === 'annual' || cycle === 'yearly') {
+    return plan.priceYearly;
+  }
+  return plan.priceMonthly;
+}
+
+/**
+ * Calcula a economia em Reais do plano anual (equivalente a 2 meses grátis).
+ */
+export function calculateAnnualSavings(plan: NavalPlan): number {
+  return (plan.priceMonthly * 12) - plan.priceYearly;
+}
+
+/**
+ * Retorna a porcentagem de desconto do plano anual (ex.: ~17%).
+ */
+export function getAnnualDiscountPercentage(plan: NavalPlan): number {
+  const fullYearPrice = plan.priceMonthly * 12;
+  if (fullYearPrice <= 0) return 0;
+  const discount = ((fullYearPrice - plan.priceYearly) / fullYearPrice) * 100;
+  return Math.round(discount);
+}
 
 /**
  * Regras do Período de Teste Grátis (Trial)
@@ -146,8 +184,6 @@ export const TRIAL_CONFIG = {
 
 /**
  * Regras do Período de Carência (Grace Period)
- * Dias de tolerância após o vencimento sem bloqueio de visualização,
- * alertando o usuário antes do bloqueio estrito de novas emissões.
  */
 export const GRACE_PERIOD_CONFIG = {
   days: 5,
@@ -165,10 +201,8 @@ export const ADMIN_LIFETIME_CONFIG = {
 
 /**
  * Configuração e Bypass Seguro para Homologação
- * Garante que a oficina/tenant principal de teste nunca sofra bloqueio de cotas durante a validação.
  */
 export const HOMOLOGATION_CONFIG = {
-  // Tenants conhecidos de homologação e validação contínua
   knownBypassTenants: [
     "homologacao",
     "demo-company",
@@ -186,7 +220,6 @@ export const HOMOLOGATION_CONFIG = {
 
 /**
  * Helper seguro para identificar se o tenant está em modo de homologação/validação.
- * Utiliza variáveis de ambiente e checagem de dados reais do banco, sem tocar em localStorage.
  */
 export function isHomologationBypass(
   companyId?: string | null,

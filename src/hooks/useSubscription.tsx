@@ -320,19 +320,23 @@ export const useSubscription = () => {
 
   // 4. Mutação para Checkout Mercado Pago / Pix
   const createPreference = useMutation({
-    mutationFn: async (planSlug: string) => {
+    mutationFn: async (arg: string | { planSlug: string; billingCycle?: "monthly" | "annual" }) => {
       if (!companyId) {
         throw new Error("Identificação da empresa não encontrada. Verifique seu login antes de prosseguir.");
       }
 
+      const planSlug = typeof arg === "string" ? arg : arg.planSlug;
+      const billingCycle = typeof arg === "string" ? "monthly" : arg.billingCycle || "monthly";
+
       const selectedPlan = NAVAL_PLANS.find(p => p.slug === planSlug) || NAVAL_PLANS[1];
+      const amount = billingCycle === "annual" ? selectedPlan.priceYearly : selectedPlan.priceMonthly;
       
       const result = await mercadoPagoService.createCheckoutPreference({
         planId: selectedPlan.id,
         planSlug: selectedPlan.slug,
         planName: selectedPlan.name,
-        amount: selectedPlan.priceMonthly,
-        billingCycle: "monthly",
+        amount,
+        billingCycle,
         companyId: companyId,
         customerEmail: user?.email || "financeiro@empresa.com.br",
         customerName: profile?.name || companyData?.name || "Cliente NavalDocs"
