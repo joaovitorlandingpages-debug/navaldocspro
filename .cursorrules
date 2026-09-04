@@ -1,0 +1,30 @@
+# Cursor Rules - NavalDocsPro
+
+## Tech Stack
+- Frontend: React 19, TypeScript (strict mode), Vite, TanStack Router, TanStack Query
+- Styling: Tailwind CSS (modern utilities, dark mode support, mobile-first responsiveness)
+- Backend & DB: Supabase (PostgreSQL, Row Level Security, Edge Functions, Storage)
+- Payments: Mercado Pago (Checkout transparente e webhooks estritamente em Edge Functions)
+- Validation: Zod schemas para todas as entradas e queries de busca
+- Testing: Vitest
+
+## Diretrizes de Desenvolvimento e Código Limpo
+1. **Modularidade e Arquitetura:**
+   - Componentes pequenos, reutilizáveis e com responsabilidade única.
+   - Separação clara de camadas: `routes/` (páginas/rotas), `components/` (UI e domínio), `hooks/` (lógica de estado), `services/` (chamadas de API e utilitários), `lib/` (infraestrutura e validação).
+   - Não use inline styles; utilize classes utilitárias do Tailwind CSS.
+
+2. **Tipagem Estrita (TypeScript):**
+   - Proibido uso de `any` implícito. Tipar explicitamente retornos de funções assíncronas, props e eventos.
+   - Utilize tipos gerados pelo Supabase (`types.ts`) para sincronização estrita de tabelas.
+
+3. **Segurança e Isolamento Multi-Tenant:**
+   - Toda consulta ao banco deve respeitar `company_id` / tenant isolation via RLS.
+   - NUNCA exponha credenciais privadas (ex: `MERCADO_PAGO_ACCESS_TOKEN`, webhook secrets) no front-end (`VITE_*`). Operações financeiras rodam exclusivamente em Supabase Edge Functions.
+   - Sanitizar buscas textuais escapando wildcards do ILIKE (`%`, `_`, `\`) e validar dados com Zod antes de enviar ao banco.
+
+4. **Design e Responsividade:**
+   - Mobile-first: todas as telas operacionais devem ser perfeitamente utilizáveis em smartphones e tablets.
+   - Áreas de toque confortáveis (mínimo 44x44px em mobile).
+   - Feedback visual imediato: botões com disabled e loading spinner durante ações assíncronas.
+   - Diálogos de confirmação destrutivos para exclusões.
