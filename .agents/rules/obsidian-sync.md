@@ -1,20 +1,27 @@
 ---
-description: Regra para entrega de resumo formatado para o Obsidian ao término de tarefas importantes
+description: Regra para entrega de resumo formatado para o Obsidian Segundo Cérebro (C:\Users\Pichau\Documents\Segundo Cérebro)
 globs: *
 ---
 
-# Regra: Sincronização e Memória de Longo Prazo (Obsidian)
+# Regra: Sincronização da Memória de Longo Prazo (Obsidian Segundo Cérebro)
 
-Sempre que você concluir uma tarefa importante, refatoração de código, implementação de funcionalidade ou correção crítica na IDE:
+**Caminho do Cofre Central:** `C:\Users\Pichau\Documents\Segundo Cérebro`
+- Pasta de Projetos: `C:\Users\Pichau\Documents\Segundo Cérebro\Projetos`
+- Pasta de Diretrizes: `C:\Users\Pichau\Documents\Segundo Cérebro\Skills e Regras`
+- Índice Mestre: `C:\Users\Pichau\Documents\Segundo Cérebro\Indice.md`
 
-1. **Entregar Bloco Copiável:** No final da resposta, entregue um bloco em Markdown formatado especificamente para ser copiado e colado na nota do projeto correspondente dentro do cofre do Obsidian (`Obsidian/Projetos/NavalDocsPro.md`).
-2. **Formato Obrigatório do Bloco:**
+## Diretiva de Finalização de Tarefas:
+Sempre que você concluir uma tarefa importante de código, implementação, refatoração ou correção crítica em qualquer projeto:
+
+1. **Entregar Bloco Estruturado Copiável:** No final da resposta, gere um resumo em Markdown pronto para ser salvo ou anexado na pasta `Projetos/` do cofre Obsidian do usuário.
+2. **Formato Padrão:**
    ```markdown
    ### 📝 Registro de Entrega · [DATA_HORA]
-   - **Objetivo:** [Resumo conciso da tarefa]
-   - **Status:** [Resultados dos testes e TypeScript, ex: 367 testes ok, 0 tsc errors]
-   - **Arquivos Alterados:** [Lista dos arquivos e papéis]
-   - **Decisões Técnicas:** [Decisões arquiteturais tomadas]
-   - **Próximos Passos:** [Recomendações para a próxima iteração]
+   - **Projeto:** [Nome do Projeto, ex: NavalDocsPro]
+   - **Objetivo:** [Resumo em 1-2 linhas do que foi realizado]
+   - **Status:** [Resultados de testes, build e tipagem]
+   - **Arquivos Alterados:** [Principais arquivos e suas responsabilidades]
+   - **Decisões Técnicas:** [Pontos arquiteturais e regras de negócio aplicadas]
+   - **Próximos Passos:** [Recomendações para a sequência do desenvolvimento]
    ```
-3. **Sem enrolação:** O bloco deve ser direto, limpo e de alta densidade técnica para fácil leitura no grafo de conhecimento.
+3. **Sem enrolação:** O conteúdo deve ser denso, direto e de alto valor técnico.
