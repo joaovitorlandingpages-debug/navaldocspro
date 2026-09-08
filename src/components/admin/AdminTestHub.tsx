@@ -37,10 +37,14 @@ import {
   Server,
   Globe,
   Radio,
-  FileText
+  FileText,
+  Trash2,
+  Flame,
+  CheckCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { purgeAllTestDocuments, CleanupReport } from "@/services/testing/testCleanupService";
 
 interface ServiceHealth {
   name: string;
@@ -59,6 +63,27 @@ export function AdminTestHub() {
   const [copiedReport, setCopiedReport] = useState(false);
   const [expandedTestId, setExpandedTestId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("tests");
+  const [isPurging, setIsPurging] = useState(false);
+  const [cleanupReport, setCleanupReport] = useState<CleanupReport | null>(null);
+
+  // Execução de limpeza segura de testes
+  const handleExecutePurge = async () => {
+    setIsPurging(true);
+    try {
+      toast.loading("Higienizando banco de dados e removendo documentos de teste...", { id: "purge-toast" });
+      const report = await purgeAllTestDocuments();
+      setCleanupReport(report);
+      if (report.success) {
+        toast.success("Sistema limpo com sucesso! Todos os dados de teste foram removidos.", { id: "purge-toast" });
+      } else {
+        toast.warning("Limpeza concluída com observações. Verifique o relatório.", { id: "purge-toast" });
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao executar limpeza.", { id: "purge-toast" });
+    } finally {
+      setIsPurging(false);
+    }
+  };
 
   // Health check em tempo real
   const [healthServices, setHealthServices] = useState<ServiceHealth[]>([
@@ -362,12 +387,15 @@ ${tests
 
       {/* Navegação em Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-slate-100 p-1 rounded-xl">
+        <TabsList className="bg-slate-100 p-1 rounded-xl flex-wrap">
           <TabsTrigger value="tests" className="gap-2 font-bold text-xs">
             <Terminal className="h-4 w-4" /> Bateria de Testes ({filteredTests.length})
           </TabsTrigger>
           <TabsTrigger value="health" className="gap-2 font-bold text-xs">
             <Server className="h-4 w-4" /> Conectividade & Infraestrutura
+          </TabsTrigger>
+          <TabsTrigger value="cleanup" className="gap-2 font-bold text-xs text-rose-600 data-[state=active]:bg-rose-50 data-[state=active]:text-rose-700">
+            <Trash2 className="h-4 w-4" /> Limpeza & Sanitização de Testes
           </TabsTrigger>
         </TabsList>
 
@@ -559,6 +587,103 @@ ${tests
                 </div>
               ))}
             </div>
+          </Card>
+        </TabsContent>
+
+        {/* Tab 3: Higienização & Limpeza de Testes */}
+        <TabsContent value="cleanup" className="space-y-4">
+          <Card className="p-6 border-rose-200 bg-white shadow-sm space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="text-base font-bold text-navy flex items-center gap-2">
+                  <Trash2 className="h-5 w-5 text-rose-600" /> Higienização de Documentos e Dados de Teste
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Remove com segurança todos os documentos gerados, anexos temporários, jobs de OCR e assinaturas de teste, deixando o ambiente pronto para testes reais do engenheiro.
+                </p>
+              </div>
+              <Button
+                onClick={handleExecutePurge}
+                disabled={isPurging}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs gap-2 rounded-xl shadow-md transition-all shadow-rose-600/20 shrink-0"
+              >
+                {isPurging ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" /> Higienizando Sistema...
+                  </>
+                ) : (
+                  <>
+                    <Flame className="h-4 w-4" /> Limpar Todos Documentos de Teste
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Quadro de Garantias de Segurança */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl border border-rose-100 bg-rose-50/40 space-y-2">
+                <h4 className="text-xs font-black uppercase tracking-wider text-rose-800 flex items-center gap-2">
+                  <Trash2 className="h-4 w-4 text-rose-600" /> O que será removido:
+                </h4>
+                <ul className="text-xs text-slate-700 space-y-1 list-disc list-inside">
+                  <li>Documentos gerados de teste (<code className="text-[11px] font-mono">generated_documents</code>)</li>
+                  <li>Uploads e logs de jobs OCR (<code className="text-[11px] font-mono">process_document_uploads</code>)</li>
+                  <li>Assinaturas digitais de homologação (<code className="text-[11px] font-mono">digital_signatures</code>)</li>
+                  <li>Logs temporários de geração (<code className="text-[11px] font-mono">document_generation_logs</code>)</li>
+                </ul>
+              </div>
+
+              <div className="p-4 rounded-xl border border-emerald-100 bg-emerald-50/40 space-y-2">
+                <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" /> O que é preservado com 100% de segurança:
+                </h4>
+                <ul className="text-xs text-slate-700 space-y-1 list-disc list-inside">
+                  <li>Modelos e templates padrão da Marinha / NORMAM (<code className="text-[11px] font-mono">document_templates</code>)</li>
+                  <li>Contas de usuários, despachantes e engenheiros (<code className="text-[11px] font-mono">profiles</code>)</li>
+                  <li>Empresas, planos de assinatura e regras (<code className="text-[11px] font-mono">companies</code>, <code className="text-[11px] font-mono">plans</code>)</li>
+                  <li>Configurações mestres de segurança e criptografia</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Relatório da Última Execução */}
+            {cleanupReport && (
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-navy flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-emerald-600" /> Resultado da Higienização:
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    {new Date(cleanupReport.timestamp).toLocaleString("pt-BR")}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  <div className="p-2.5 bg-white rounded-lg border border-slate-100">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Docs Gerados</span>
+                    <span className="text-sm font-bold text-navy">{cleanupReport.purgedRecords.generatedDocuments}</span>
+                  </div>
+                  <div className="p-2.5 bg-white rounded-lg border border-slate-100">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Uploads / OCR</span>
+                    <span className="text-sm font-bold text-navy">{cleanupReport.purgedRecords.documentUploads}</span>
+                  </div>
+                  <div className="p-2.5 bg-white rounded-lg border border-slate-100">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Assinaturas</span>
+                    <span className="text-sm font-bold text-navy">{cleanupReport.purgedRecords.signatures}</span>
+                  </div>
+                  <div className="p-2.5 bg-white rounded-lg border border-slate-100">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Templates Preservados</span>
+                    <span className="text-sm font-bold text-emerald-600">{cleanupReport.preservedItems.documentTemplates}</span>
+                  </div>
+                </div>
+                {cleanupReport.messages.length > 0 && (
+                  <div className="text-[11px] text-slate-600 space-y-0.5 pt-1">
+                    {cleanupReport.messages.map((m, i) => (
+                      <p key={i}>✓ {m}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </Card>
         </TabsContent>
       </Tabs>

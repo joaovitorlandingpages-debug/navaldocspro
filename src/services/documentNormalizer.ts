@@ -85,8 +85,14 @@ export const formatMeasurement = (raw: unknown, unit: string, decimals = 2): str
   // remove unidade ao final (m, m², kg, hp, etc.), case-insensitive
   const unitRegex = new RegExp(`\\s*${unit.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}\\s*$`, "i");
   s = s.replace(unitRegex, "").trim();
-  // troca vírgula por ponto para parseFloat
-  const n = parseFloat(s.replace(/\./g, "").replace(",", "."));
+  // Normaliza separadores: se tiver ponto e vírgula, ponto é milhar. Se tiver apenas ponto ou vírgula, é decimal.
+  let numStr = s;
+  if (numStr.includes(",") && numStr.includes(".")) {
+    numStr = numStr.replace(/\./g, "").replace(",", ".");
+  } else if (numStr.includes(",")) {
+    numStr = numStr.replace(",", ".");
+  }
+  const n = parseFloat(numStr);
   if (Number.isNaN(n)) return `${s} ${unit}`.trim();
   const formatted = n.toLocaleString("pt-BR", {
     minimumFractionDigits: decimals,

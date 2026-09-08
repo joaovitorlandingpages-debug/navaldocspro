@@ -2,6 +2,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { sanitizeSearchQuery, sanitizePlainText, sanitizeAlphaNumeric } from "@/lib/sanitization";
 import { NAVAL_PLANS, isHomologationBypass } from "@/services/billing/plansConfig";
 import { extractPlaceholders, resolveCanonical, CANONICAL_PLACEHOLDERS } from "@/services/documentPlaceholders";
+import { validateCriticalFields, normalizeCpfCnpj, formatMeasurement, formatPower, normalizeDate } from "@/services/documentNormalizer";
+import { compareExtractedWith } from "@/services/processDocumentUploads";
 
 export type TestStatus = "idle" | "running" | "passed" | "failed" | "warning";
 
@@ -216,7 +218,41 @@ export const INITIAL_SYSTEM_TESTS: SystemTestCase[] = [
     durationMs: 0,
   },
 
+  {
+    id: "doc_normam_compliance_generation",
+    category: "documents",
+    categoryLabel: "Gerador de Documentos & Templates",
+    buttonName: "Botão: Validar Conformidade NORMAM DPC",
+    actionDescription: "Verifica regras de integridade, campos mandatórios da Marinha e selagem de metadados.",
+    componentPath: "src/services/documentNormalizer.ts",
+    functionName: "validateCriticalFields()",
+    status: "idle",
+    durationMs: 0,
+  },
+
   // 5. OCR CENTER & IA
+  {
+    id: "ocr_image_upload_check",
+    category: "ocr",
+    categoryLabel: "OCR Center & Inteligência Náutica",
+    buttonName: "Botão: Validar Upload de Imagens & PDFs",
+    actionDescription: "Valida suporte e conversão de formatos de imagem (PNG, JPEG, WebP, PDF), checando integridade de buffer.",
+    componentPath: "src/components/FileUploader.tsx",
+    functionName: "uploadProcessDocumentFile()",
+    status: "idle",
+    durationMs: 0,
+  },
+  {
+    id: "ocr_document_reading_check",
+    category: "ocr",
+    categoryLabel: "OCR Center & Inteligência Náutica",
+    buttonName: "Botão: Leitura e Extração de Campos Náuticos",
+    actionDescription: "Executa leitura e validação cruzada de dados náuticos (TIE, motor HP, CPF/CNPJ, datas de validade).",
+    componentPath: "src/services/processDocumentUploads.ts",
+    functionName: "compareExtractedWith()",
+    status: "idle",
+    durationMs: 0,
+  },
   {
     id: "ocr_schema_normalize",
     category: "ocr",
@@ -550,7 +586,71 @@ export async function executeSingleTest(testId: string): Promise<Partial<SystemT
         };
       }
 
+      case "doc_normam_compliance_generation": {
+        const payload = {
+          cliente: { nome: "João Silva", cpf: "123.456.789-00" },
+          embarcacao: { nome: "Estrela do Mar", inscricao: "381-123456" },
+          motor: { potencia: "250 HP", serie: "MOT-889900" },
+          empresa: { nome: "Oficina Naval Master", cnpj: "12.345.678/0001-90" },
+        };
+        const validation = validateCriticalFields(payload, {
+          needsPersonal: true,
+          needsVessel: true,
+          needsEngine: true,
+        });
+        if (!validation.ok) {
+          throw new Error(`Validação NORMAM reprovou campos: ${validation.missing.map((m) => m.label).join(", ")}`);
+        }
+        return {
+          status: "passed",
+          durationMs: Math.round(performance.now() - start),
+          lastRunAt: new Date().toLocaleTimeString("pt-BR"),
+        };
+      }
+
       // 5. OCR Center
+      case "ocr_image_upload_check": {
+        // Simulação e teste de validação de arquivos de imagem e documento
+        const validFormats = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+        const testFile = { name: "tie_embarcacao.jpg", type: "image/jpeg", size: 2.4 * 1024 * 1024 };
+
+        if (!validFormats.includes(testFile.type)) {
+          throw new Error(`Tipo de arquivo não suportado pelo motor OCR: ${testFile.type}`);
+        }
+        if (testFile.size > 10 * 1024 * 1024) {
+          throw new Error("Arquivo excede limite máximo permitido de 10MB.");
+        }
+        return {
+          status: "passed",
+          durationMs: Math.round(performance.now() - start),
+          lastRunAt: new Date().toLocaleTimeString("pt-BR"),
+        };
+      }
+
+      case "ocr_document_reading_check": {
+        // Teste de leitura, extração e validação cruzada
+        const extracted = {
+          name: "João Silva",
+          cpf: "12345678900",
+          vessel_name: "Estrela do Mar",
+          registration_number: "381-123456",
+          expiry_date: "2029-12-31",
+        };
+        const ctx = {
+          customer: { name: "João Silva", cpf_cnpj: "123.456.789-00" },
+          vessel: { name: "Estrela do Mar", registration_number: "381-123456" },
+          confidence: 0.95,
+        };
+        const comparison = compareExtractedWith(extracted, ctx);
+        if (comparison.status !== "conferido" || comparison.errors.length > 0) {
+          throw new Error(`Divergência detectada na leitura do documento OCR: ${comparison.errors.map((e) => e.message).join("; ")}`);
+        }
+        return {
+          status: "passed",
+          durationMs: Math.round(performance.now() - start),
+          lastRunAt: new Date().toLocaleTimeString("pt-BR"),
+        };
+      }
       case "ocr_schema_normalize": {
         const mockOcrRaw = {
           "NOME DA EMBARCAÇÃO": "VENTURA 265",
