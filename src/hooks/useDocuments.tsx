@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { uploadToBucket } from "@/lib/storage";
 import { toast } from "sonner";
 
 export interface DocumentField {
@@ -127,7 +128,6 @@ export const useDocuments = () => {
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${profile.company_id}/${fileName}`;
 
-        const { uploadToBucket } = await import("@/lib/storage");
         await uploadToBucket("generated-documents", filePath, doc.file);
         fileUrl = filePath; // store path; signed URL is generated on read
       }
@@ -282,7 +282,6 @@ export const useDocuments = () => {
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${profile.company_id}/${fileName}`;
 
-        const { uploadToBucket } = await import("@/lib/storage");
         await uploadToBucket("document-templates", filePath, template.file);
         fileUrl = filePath;
       }

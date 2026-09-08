@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { signedUrl } from "@/lib/storage";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
@@ -63,7 +64,6 @@ export function OCRReview({ jobId, onBack, onComplete }: OCRReviewProps) {
       setEditedData(data.extracted_data);
 
       if (data.uploaded_files?.file_path) {
-        const { signedUrl } = await import("@/lib/storage");
         try {
           const url = await signedUrl("ocr-documents", data.uploaded_files.file_path, 300);
           setFileUrl(url);

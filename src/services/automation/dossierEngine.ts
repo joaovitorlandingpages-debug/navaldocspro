@@ -1,8 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
-import JSZip from "jszip";
-import { saveAs } from "file-saver";
 import { toast } from "sonner";
 
 export interface DossierData {
@@ -251,6 +247,12 @@ export const dossierEngine = {
 
   async exportZip(data: DossierData) {
     console.log("DOSSIER_ZIP_OK");
+    const [JSZipModule, fileSaverModule] = await Promise.all([
+      import("jszip"),
+      import("file-saver")
+    ]);
+    const JSZip = JSZipModule.default || JSZipModule;
+    const saveAs = fileSaverModule.saveAs || fileSaverModule.default;
     const zip = new JSZip();
     const root = zip.folder(`Processo_Naval_${data.process.id.substring(0, 8)}`);
     
@@ -292,6 +294,13 @@ export const dossierEngine = {
     toast.info("Processando PDF de alta fidelidade...");
     
     try {
+      const [html2canvasModule, jsPdfModule] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf")
+      ]);
+      const html2canvas = html2canvasModule.default || html2canvasModule;
+      const { jsPDF } = jsPdfModule;
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,

@@ -9,6 +9,7 @@
  *   O relatório expande `BatchReport` com `canonical` (relatório estruturado).
  */
 import { supabase } from "@/integrations/supabase/client";
+import * as storage from "@/lib/storage";
 import { toast } from "sonner";
 import {
   runCanonicalBatch,
@@ -236,10 +237,7 @@ export async function batchDownload(
     return report;
   }
 
-  const [{ default: JSZip }, storage] = await Promise.all([
-    import("jszip"),
-    import("@/lib/storage"),
-  ]);
+  const { default: JSZip } = await import("jszip");
   const zip = new JSZip();
   const folders = {
     docs: zip.folder("Documentos")!,
