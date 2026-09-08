@@ -6,58 +6,64 @@ import {
   getAnnualDiscountPercentage,
 } from "@/services/billing/plansConfig";
 
-describe("Plans and Billing Configuration (Sprint Checkout MP)", () => {
+describe("Plans and Billing Configuration (NavalPlans Update)", () => {
   it("provides monthly and annual cycles for each plan", () => {
     expect(NAVAL_PLANS.length).toBeGreaterThanOrEqual(3);
 
     for (const plan of NAVAL_PLANS) {
       expect(plan.priceMonthly).toBeGreaterThan(0);
       expect(plan.priceYearly).toBeGreaterThan(plan.priceMonthly);
-      // O preço anual deve ser exatamente ou aproximadamente 10x o mensal (2 meses grátis)
+      // O preço anual é exatamente 10x o mensal (2 meses grátis)
+      expect(plan.priceYearly).toBe(plan.priceMonthly * 10);
       expect(plan.priceYearly).toBeLessThan(plan.priceMonthly * 12);
     }
   });
 
-  it("calculates annual discount equivalent to ~17-20% (2 months free)", () => {
-    const starter = NAVAL_PLANS.find((p) => p.slug === "starter")!;
-    expect(starter).toBeDefined();
-    expect(starter.priceMonthly).toBe(89);
-    expect(starter.priceYearly).toBe(890); // 10 x 89 = 2 meses grátis
+  it("calculates annual discount equivalent to 2 months free for Despachante Naval", () => {
+    const despachante = NAVAL_PLANS.find((p) => p.slug === "despachante")!;
+    expect(despachante).toBeDefined();
+    expect(despachante.priceMonthly).toBe(129);
+    expect(despachante.priceYearly).toBe(1290);
 
-    const savings = calculateAnnualSavings(starter);
-    expect(savings).toBe(89 * 2); // R$ 178 de economia
+    const savings = calculateAnnualSavings(despachante);
+    expect(savings).toBe(129 * 2); // R$ 258 de economia
 
-    const discountPercentage = getAnnualDiscountPercentage(starter);
+    const discountPercentage = getAnnualDiscountPercentage(despachante);
     expect(discountPercentage).toBeGreaterThanOrEqual(16);
     expect(discountPercentage).toBeLessThanOrEqual(20);
   });
 
-  it("configures operational limits (concurrent OS, users, storage GB)", () => {
-    const starter = NAVAL_PLANS.find((p) => p.slug === "starter")!;
-    expect(starter.processLimit).toBe(50);
-    expect(starter.userLimit).toBe(2);
-    expect(starter.storageGb).toBe(5);
+  it("configures Engenharia & Perícia plan with 100 OS/Laudos and 3 users", () => {
+    const engenharia = NAVAL_PLANS.find((p) => p.slug === "engenharia_pericia")!;
+    expect(engenharia).toBeDefined();
+    expect(engenharia.priceMonthly).toBe(179);
+    expect(engenharia.priceYearly).toBe(1790);
+    expect(engenharia.processLimit).toBe(100);
+    expect(engenharia.userLimit).toBe(3);
+    expect(engenharia.storageGb).toBe(30);
+    expect(engenharia.categoryTag).toBe("Para Engenheiros e Vistoriadores");
+  });
 
-    const pro = NAVAL_PLANS.find((p) => p.slug === "professional")!;
-    expect(pro.processLimit).toBe(250);
-    expect(pro.userLimit).toBe(5);
-    expect(pro.storageGb).toBe(20);
-
-    const enterprise = NAVAL_PLANS.find((p) => p.slug === "enterprise")!;
-    expect(enterprise.processLimit).toBeNull(); // ilimitado
-    expect(enterprise.storageGb).toBe(100);
+  it("configures Marina & Estaleiro plan with unlimited limits and 150GB storage", () => {
+    const marina = NAVAL_PLANS.find((p) => p.slug === "marina_estaleiro")!;
+    expect(marina).toBeDefined();
+    expect(marina.priceMonthly).toBe(249);
+    expect(marina.priceYearly).toBe(2490);
+    expect(marina.processLimit).toBeNull(); // ilimitado
+    expect(marina.userLimit).toBeNull(); // ilimitado
+    expect(marina.storageGb).toBe(150);
   });
 
   it("getPlanPrice returns correct amount according to billing cycle", () => {
-    const starter = NAVAL_PLANS.find((p) => p.slug === "starter")!;
-    expect(getPlanPrice(starter, "monthly")).toBe(89);
-    expect(getPlanPrice(starter, "annual")).toBe(890);
-    expect(getPlanPrice(starter, "yearly")).toBe(890);
+    const engenharia = NAVAL_PLANS.find((p) => p.slug === "engenharia_pericia")!;
+    expect(getPlanPrice(engenharia, "monthly")).toBe(179);
+    expect(getPlanPrice(engenharia, "annual")).toBe(1790);
+    expect(getPlanPrice(engenharia, "yearly")).toBe(1790);
   });
 
   it("parses external_reference tuple with organization_id, plan_id, and billing_cycle", () => {
     const companyId = "company-1234";
-    const planId = "plan-starter";
+    const planId = "plan-engenharia-pericia";
     const cycle = "annual";
     const externalRef = `${companyId}:${planId}:${cycle}`;
 
@@ -65,15 +71,5 @@ describe("Plans and Billing Configuration (Sprint Checkout MP)", () => {
     expect(extractedCompany).toBe(companyId);
     expect(extractedPlan).toBe(planId);
     expect(extractedCycle).toBe("annual");
-
-    // Cálculo da vigência
-    const now = new Date("2026-09-01T00:00:00Z");
-    const endAnnual = new Date(now);
-    endAnnual.setDate(endAnnual.getDate() + 365);
-    expect(endAnnual.toISOString().slice(0, 10)).toBe("2027-09-01");
-
-    const endMonthly = new Date(now);
-    endMonthly.setDate(endMonthly.getDate() + 30);
-    expect(endMonthly.toISOString().slice(0, 10)).toBe("2026-10-01");
   });
 });

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { 
   Check, ArrowRight, Zap, Shield, Crown, 
   Sparkles, CheckCircle2, HelpCircle, Lock, 
-  CreditCard, QrCode, Building2, Ship, ShieldCheck 
+  CreditCard, QrCode, Building2, Ship, ShieldCheck, FileText, Wrench 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -48,7 +48,7 @@ export default function Plans() {
             Planos Navais <span className="text-primary">&</span> Assinaturas
           </h1>
           <p className="text-base sm:text-lg text-slate-600 font-medium">
-            Automatize requerimentos, memoriais da Capitania, controle de vistorias e assinaturas digitais com a ferramenta líder em engenharia naval.
+            Automatize requerimentos, memoriais da Capitania, controle de laudos, vistorias com ART e assinaturas digitais com a ferramenta líder do setor náutico.
           </p>
 
           {/* 14-day trial badge */}
@@ -87,8 +87,8 @@ export default function Plans() {
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-6xl mx-auto">
+        {/* Pricing Cards Grid Responsivo: 1 col mobile, 3 cols desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch max-w-7xl mx-auto">
           {NAVAL_PLANS.map((plan) => {
             const isPopular = plan.isPopular;
             const price = billingCycle === "monthly" ? plan.priceMonthly : Math.round(plan.priceYearly / 12);
@@ -98,7 +98,7 @@ export default function Plans() {
                 key={plan.id}
                 className={`flex flex-col justify-between relative rounded-3xl transition-all duration-300 ${
                   isPopular
-                    ? "border-2 border-primary shadow-2xl shadow-primary/15 bg-white scale-105 z-10"
+                    ? "border-2 border-primary shadow-2xl shadow-primary/15 bg-white lg:scale-105 z-10"
                     : "border border-slate-200 bg-white/80 hover:shadow-lg"
                 }`}
               >
@@ -109,14 +109,22 @@ export default function Plans() {
                 )}
 
                 <CardHeader className="p-8 pb-4">
+                  {/* Tag visual de categoria em destaque (ex.: Para Engenheiros e Vistoriadores) */}
+                  {plan.categoryTag && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 border border-amber-500/20 text-[10px] font-black uppercase tracking-wider mb-2 self-start">
+                      <Sparkles className="h-3 w-3 text-amber-500" />
+                      {plan.categoryTag}
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between gap-4 mb-2">
                     <div className={`p-3 rounded-2xl ${
-                      plan.slug === "starter" ? "bg-blue-50 text-blue-600" :
-                      plan.slug === "professional" ? "bg-primary/10 text-primary" :
-                      "bg-amber-50 text-amber-600"
+                      plan.slug === "despachante" || plan.slug === "starter" ? "bg-blue-50 text-blue-600" :
+                      plan.slug === "engenharia_pericia" || plan.slug === "professional" ? "bg-amber-50 text-amber-600" :
+                      "bg-indigo-50 text-indigo-600"
                     }`}>
-                      {plan.slug === "starter" ? <Zap className="h-6 w-6" /> :
-                       plan.slug === "professional" ? <ShieldCheck className="h-6 w-6" /> :
+                      {plan.slug === "despachante" || plan.slug === "starter" ? <FileText className="h-6 w-6" /> :
+                       plan.slug === "engenharia_pericia" || plan.slug === "professional" ? <ShieldCheck className="h-6 w-6" /> :
                        <Crown className="h-6 w-6" />}
                     </div>
                     {isPopular && (
@@ -151,7 +159,7 @@ export default function Plans() {
                   {/* Limites Operacionais em Destaque */}
                   <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-3 gap-1 text-center bg-slate-50 p-2.5 rounded-xl text-[10px]">
                     <div>
-                      <p className="font-bold text-navy">{plan.processLimit ? `${plan.processLimit} OS` : "Ilimitadas"}</p>
+                      <p className="font-bold text-navy">{plan.processLimit ? `${plan.processLimit} OS/Laudos` : "Ilimitadas"}</p>
                       <span className="text-slate-400">Simultâneas</span>
                     </div>
                     <div>
@@ -236,21 +244,21 @@ export default function Plans() {
             <Card className="p-6 rounded-2xl border-slate-200 bg-white">
               <h3 className="text-sm font-bold text-navy mb-1">Como funciona o período de 14 dias grátis?</h3>
               <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                Ao criar sua conta, você tem 14 dias de acesso irrestrito para testar todas as funcionalidades do NavalDocs Pro (geração de requerimentos, checklists NORMAM, OCR de documentos e assinaturas). Nenhum valor é cobrado antecipadamente.
+                Ao criar sua conta, você tem 14 dias de acesso irrestrito para testar todas as funcionalidades do NavalDocs Pro (geração de requerimentos, checklists NORMAM, emissão de laudos técnicos, OCR de documentos e assinaturas digitais). Nenhum valor é cobrado antecipadamente.
               </p>
             </Card>
 
             <Card className="p-6 rounded-2xl border-slate-200 bg-white">
-              <h3 className="text-sm font-bold text-navy mb-1">Como funciona o Acesso Vitalício para Administradores?</h3>
+              <h3 className="text-sm font-bold text-navy mb-1">O plano Engenharia & Perícia permite emitir laudos com ART?</h3>
               <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                Usuários com perfis administrativos designados possuem acesso perpétuo e vitalício a todas as ferramentas, sem bloqueios de cota ou renovações periódicas.
+                Sim! O plano inclui o módulo especializado de laudos técnicos, checklists da Marinha do Brasil, galeria de fotos de vistoria em alta resolução e campo para vinculação e anexo de ART/CREA.
               </p>
             </Card>
 
             <Card className="p-6 rounded-2xl border-slate-200 bg-white">
               <h3 className="text-sm font-bold text-navy mb-1">Posso trocar de plano ou cancelar a qualquer momento?</h3>
               <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                Sim! Você pode fazer upgrade ou cancelamento direto pelo seu painel financeiro sem multas ou taxas de cancelamento.
+                Sim! Você pode fazer upgrade ou cancelamento direto pelo seu painel financeiro sem multas ou taxas de fidelidade.
               </p>
             </Card>
           </div>

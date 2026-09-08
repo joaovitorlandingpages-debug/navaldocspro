@@ -270,7 +270,7 @@ export const INITIAL_SYSTEM_TESTS: SystemTestCase[] = [
     category: "billing",
     categoryLabel: "Faturamento & Mercado Pago",
     buttonName: "Botão: Calcular Planos Mensal / Anual",
-    actionDescription: "Valida desconto exato de 2 meses grátis em todos os planos anuais (Starter: R$ 890, Pro: R$ 1790, Enterprise: R$ 4990).",
+    actionDescription: "Valida desconto exato de 2 meses grátis em todos os planos anuais (Despachante: R$ 1.290, Engenharia & Perícia: R$ 1.790, Marina & Estaleiro: R$ 2.490).",
     componentPath: "src/services/billing/plansConfig.ts",
     functionName: "calculatePlanPrice()",
     status: "idle",
@@ -621,15 +621,18 @@ export async function executeSingleTest(testId: string): Promise<Partial<SystemT
 
       // 7. Faturamento & Mercado Pago
       case "bill_plans_discount_calc": {
-        const starter = NAVAL_PLANS.find((p) => p.slug === "starter");
-        const pro = NAVAL_PLANS.find((p) => p.slug === "professional" || p.slug === "starter");
-        const enterprise = NAVAL_PLANS.find((p) => p.slug === "enterprise");
+        const despachante = NAVAL_PLANS.find((p) => p.slug === "despachante" || p.slug === "starter");
+        const engenharia = NAVAL_PLANS.find((p) => p.slug === "engenharia_pericia" || p.slug === "professional");
+        const marina = NAVAL_PLANS.find((p) => p.slug === "marina_estaleiro" || p.slug === "enterprise");
 
-        if (!starter || starter.priceYearly !== 890 || starter.priceYearly !== starter.priceMonthly * 10) {
-          throw new Error(`Starter Anual com valor incorreto: R$ ${starter?.priceYearly} (esperado 890 com 2 meses grátis)`);
+        if (!despachante || despachante.priceYearly !== 1290 || despachante.priceYearly !== despachante.priceMonthly * 10) {
+          throw new Error(`Despachante Anual com valor incorreto: R$ ${despachante?.priceYearly} (esperado 1290 com 2 meses grátis)`);
         }
-        if (!enterprise || enterprise.priceYearly !== 4990 || enterprise.priceYearly !== enterprise.priceMonthly * 10) {
-          throw new Error(`Enterprise Anual com valor incorreto: R$ ${enterprise?.priceYearly} (esperado 4990 com 2 meses grátis)`);
+        if (!engenharia || engenharia.priceYearly !== 1790 || engenharia.priceYearly !== engenharia.priceMonthly * 10) {
+          throw new Error(`Engenharia & Perícia Anual com valor incorreto: R$ ${engenharia?.priceYearly} (esperado 1790 com 2 meses grátis)`);
+        }
+        if (!marina || marina.priceYearly !== 2490 || marina.priceYearly !== marina.priceMonthly * 10) {
+          throw new Error(`Marina & Estaleiro Anual com valor incorreto: R$ ${marina?.priceYearly} (esperado 2490 com 2 meses grátis)`);
         }
         return {
           status: "passed",

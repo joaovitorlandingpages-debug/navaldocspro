@@ -1,4 +1,13 @@
-export type NavalPlanSlug = 'trial' | 'starter' | 'professional' | 'enterprise' | 'lifetime';
+export type NavalPlanSlug =
+  | 'despachante'
+  | 'engenharia_pericia'
+  | 'marina_estaleiro'
+  | 'starter'
+  | 'professional'
+  | 'enterprise'
+  | 'trial'
+  | 'lifetime';
+
 export type BillingCycle = 'monthly' | 'annual' | 'yearly';
 
 export interface NavalPlan {
@@ -6,16 +15,17 @@ export interface NavalPlan {
   slug: NavalPlanSlug;
   name: string;
   badge?: string;
+  categoryTag?: string; // Tag visual de categoria (ex.: "Para Engenheiros e Vistoriadores")
   description: string;
   priceMonthly: number;
-  priceYearly: number; // Plano anual com 2 meses grátis / ~17-20% off
+  priceYearly: number; // Plano anual com 2 meses grátis (10x o valor mensal)
   billingCycle: BillingCycle;
   customerLimit: number | null;
   vesselLimit: number | null;
-  processLimit: number | null; // Quantidade de OS simultâneas ativas por mês
+  processLimit: number | null; // Limite de OS / Laudos simultâneos ativos por mês (null = Ilimitado)
   documentLimit: number | null;
   ocrLimit: number | null;
-  userLimit: number | null; // Usuários inclusos
+  userLimit: number | null; // Usuários inclusos (null = Ilimitado)
   additionalUserPrice?: number; // Preço por usuário adicional/mês
   storageGb: number | null; // Capacidade de armazenamento de fotos e PDFs
   isPopular?: boolean;
@@ -24,114 +34,123 @@ export interface NavalPlan {
 }
 
 export const NAVAL_PLANS: NavalPlan[] = [
+  // 1. PLANO DESPACHANTE NAVAL
   {
-    id: "plan-starter",
-    slug: "starter",
-    name: "Starter / Despachante & Oficina",
-    description: "Ideal para despachantes náuticos, mecânicos autônomos e oficinas iniciando a gestão digital.",
-    priceMonthly: 89,
-    priceYearly: 890, // 2 meses grátis (R$ 89 x 10)
+    id: "plan-despachante",
+    slug: "despachante",
+    name: "Despachante Naval",
+    description: "Ideal para despachantes marítimos e oficinas focadas na gestão de processos e documentação de rotina.",
+    priceMonthly: 129,
+    priceYearly: 1290, // 2 meses grátis (R$ 129 x 10)
     billingCycle: "monthly",
-    customerLimit: 50,
-    vesselLimit: 30,
-    processLimit: 50, // Até 50 OS simultâneas/mês
-    documentLimit: 150,
-    ocrLimit: 50,
+    customerLimit: 100,
+    vesselLimit: 80,
+    processLimit: 50, // Até 50 OS/processos simultâneos por mês
+    documentLimit: 200,
+    ocrLimit: 75,
     userLimit: 2, // 2 usuários inclusos
     additionalUserPrice: 29, // R$ 29/usuário adicional
-    storageGb: 5, // 5GB para fotos de vistorias e PDFs
+    storageGb: 10, // 10GB para fotos e PDFs
     features: [
+      "Gestão de processos e documentação de rotina náutica",
+      "Modelos oficiais da Capitania dos Portos (DPC)",
+      "Checklists normativos NORMAM-01, 02 e 03",
+      "Geração automatizada de requerimentos e procurações",
+      "Assinatura digital integrada com QR Code",
       "Até 50 Ordens de Serviço simultâneas/mês",
-      "Até 30 embarcações cadastradas",
-      "2 usuários inclusos (R$ 29/usuário adicional)",
-      "5GB para armazenamento de fotos e PDFs",
-      "150 gerações de documentos PDF",
-      "50 leituras inteligentes via OCR",
-      "Modelos oficiais da Capitania (DPC)",
-      "Checklists básicos NORMAM",
-      "Suporte via e-mail e chamado"
+      "2 usuários inclusos na equipe (+R$ 29/usuário extra)",
+      "10GB para fotos de vistorias e anexos em PDF",
+      "Suporte via e-mail e chamado técnico"
     ],
     highlightFeatures: [
-      "50 OS Simultâneas",
+      "50 OS / Processos Mês",
       "2 Usuários Inclusos",
-      "5GB Fotos e PDFs",
-      "Assinatura Digital Básica"
+      "10GB Fotos e PDFs",
+      "Modelos Oficiais DPC"
     ]
   },
+
+  // 2. PLANO ENGENHARIA & PERÍCIA
   {
-    id: "plan-professional",
-    slug: "professional",
-    name: "Professional / Engenheiro Naval & Estaleiro",
+    id: "plan-engenharia-pericia",
+    slug: "engenharia_pericia",
+    name: "Engenharia & Perícia",
     badge: "MAIS ESCOLHIDO",
+    categoryTag: "Para Engenheiros e Vistoriadores",
     isPopular: true,
-    description: "Para oficinas consolidadas, consultorias e engenheiros navais que demandam alto volume.",
+    description: "Solução completa e avançada para engenheiros navais, peritos marítimos e vistoriadores técnicos credenciados.",
     priceMonthly: 179,
     priceYearly: 1790, // 2 meses grátis (R$ 179 x 10)
     billingCycle: "monthly",
     customerLimit: 250,
-    vesselLimit: 150,
-    processLimit: 250, // Até 250 OS simultâneas/mês
+    vesselLimit: 200,
+    processLimit: 100, // Limite de 100 OS / Laudos Técnicos por mês
     documentLimit: 500,
     ocrLimit: 200,
-    userLimit: 5, // 5 usuários inclusos
+    userLimit: 3, // 3 usuários inclusos
     additionalUserPrice: 25, // R$ 25/usuário adicional
-    storageGb: 20, // 20GB para fotos e PDFs
+    storageGb: 30, // 30GB para fotos em alta resolução e PDFs
     features: [
-      "Até 250 Ordens de Serviço simultâneas/mês",
-      "Até 150 embarcações cadastradas",
-      "5 usuários inclusos na equipe",
-      "20GB para fotos em alta resolução e PDFs",
-      "500 documentos PDF com papel timbrado",
-      "200 leituras inteligentes OCR (TIE, CSN, BIE)",
+      "Módulo de Laudos Técnicos e Vistorias Navais",
+      "Checklists de Segurança da Marinha do Brasil",
+      "Anexo de Anotações de Responsabilidade Técnica (ART)",
+      "Galeria de Fotos de Vistoria em Alta Resolução",
+      "PDFs Formatados para Capitania dos Portos",
+      "Até 100 OS / Laudos Técnicos simultâneos por mês",
+      "3 usuários inclusos na equipe (+R$ 25/usuário extra)",
+      "Carimbo Digital do Engenheiro Naval (CREA/ART)",
       "Assinaturas Digitais com Hash SHA-256 e QR Code",
-      "Carimbo Digital do Engenheiro (CREA/ART)",
-      "Portal do Cliente com link seguro de acompanhamento",
       "Dossiê Naval completo em PDF unificado e ZIP",
-      "Suporte prioritário via WhatsApp"
+      "Portal do Cliente com link de acompanhamento seguro",
+      "Suporte prioritário via WhatsApp e Telefone"
     ],
     highlightFeatures: [
-      "250 OS Simultâneas",
-      "5 Usuários Inclusos",
-      "20GB Fotos e PDFs",
-      "Assinatura Digital ICP-Brasil & QR Code",
-      "Portal do Cliente Incluso"
+      "100 OS / Laudos Mês",
+      "3 Usuários Inclusos",
+      "Módulo Laudos & ART",
+      "Fotos em Alta Resolução",
+      "Carimbo CREA / ART"
     ]
   },
+
+  // 3. PLANO MARINA & ESTALEIRO
   {
-    id: "plan-enterprise",
-    slug: "enterprise",
-    name: "Enterprise / Grande Estaleiro & Frota",
-    badge: "ALTA PERFORMANCE",
-    description: "Para estaleiros de grande porte, marinas, frotas náuticas e oficinas de grande escala.",
-    priceMonthly: 499,
-    priceYearly: 4990, // 2 meses grátis (R$ 499 x 10)
+    id: "plan-marina-estaleiro",
+    slug: "marina_estaleiro",
+    name: "Marina & Estaleiro",
+    badge: "TUDO ILIMITADO",
+    description: "Gestão operacional total e irrestrita para estaleiros, marinas, oficinas e frotas náuticas de grande porte.",
+    priceMonthly: 249,
+    priceYearly: 2490, // 2 meses grátis (R$ 249 x 10)
     billingCycle: "monthly",
     customerLimit: null, // Ilimitado
-    vesselLimit: null,
-    processLimit: null, // OS ilimitadas
-    documentLimit: null,
-    ocrLimit: null,
-    userLimit: 15, // 15 usuários inclusos
-    additionalUserPrice: 19,
-    storageGb: 100, // 100GB para fotos e arquivos
+    vesselLimit: null, // Ilimitado
+    processLimit: null, // Tudo Ilimitado (OS, Laudos e Processos)
+    documentLimit: null, // Ilimitado
+    ocrLimit: null, // Ilimitado
+    userLimit: null, // Usuários Ilimitados
+    additionalUserPrice: 0,
+    storageGb: 150, // 150GB dedicado para fotos e arquivos
     features: [
-      "Ordens de Serviço (OS) ILIMITADAS",
-      "Embarcações ILIMITADAS",
-      "15 usuários inclusos (expansível)",
-      "100GB de armazenamento dedicado para fotos e PDFs",
-      "Geração de documentos e PDFs ILIMITADA",
-      "Leituras de OCR ILIMITADAS",
-      "White-label total (seu domínio e logotipo)",
+      "Ordens de Serviço (OS) e Laudos ILIMITADOS",
+      "Embarcações e Clientes ILIMITADOS",
+      "Usuários e Acessos ILIMITADOS",
+      "Módulo de Controle de Estoque Náutico Avançado",
+      "Módulo Completo de Vistorias Técnicas e ART",
+      "Geração de Documentos e PDFs ILIMITADA",
+      "Leituras inteligentes de OCR ILIMITADAS",
+      "150GB de armazenamento dedicado para fotos e PDFs",
+      "White-label com logotipo e cabeçalho customizado",
       "Motor de Automações & Alertas de Vencimento NORMAM",
       "Acesso completo à API e Webhooks",
       "Backup automático diário e trilha de auditoria",
-      "Gerente de conta dedicado e onboarding VIP"
+      "Gerente de conta dedicado e suporte VIP 24/7"
     ],
     highlightFeatures: [
-      "OS Ilimitadas",
-      "15 Usuários Inclusos",
-      "100GB Fotos e PDFs",
-      "White-label Completo",
+      "OS & Laudos Ilimitados",
+      "Usuários Ilimitados",
+      "Estoque Náutico Ilimitado",
+      "150GB Fotos e PDFs",
       "Suporte VIP 24/7"
     ]
   }
@@ -165,6 +184,24 @@ export function getAnnualDiscountPercentage(plan: NavalPlan): number {
 }
 
 /**
+ * Helper para compatibilidade de busca de plano por slug com suporte aos legados.
+ */
+export function findPlanBySlug(slug: string | null | undefined): NavalPlan {
+  if (!slug) return NAVAL_PLANS[1]; // Engenharia & Perícia como padrão
+  const clean = slug.toLowerCase().trim();
+
+  const direct = NAVAL_PLANS.find((p) => p.slug === clean || p.id === clean);
+  if (direct) return direct;
+
+  // Aliases legados
+  if (clean === "starter" || clean === "despachante") return NAVAL_PLANS[0];
+  if (clean === "professional" || clean === "engenharia_pericia") return NAVAL_PLANS[1];
+  if (clean === "enterprise" || clean === "marina_estaleiro") return NAVAL_PLANS[2];
+
+  return NAVAL_PLANS[1];
+}
+
+/**
  * Regras do Período de Teste Grátis (Trial)
  */
 export const TRIAL_CONFIG = {
@@ -172,13 +209,13 @@ export const TRIAL_CONFIG = {
   label: "14 Dias Grátis",
   description: "Acesso irrestrito a todas as ferramentas durante os primeiros 14 dias após o cadastro.",
   limits: {
-    customerLimit: 50,
-    vesselLimit: 25,
+    customerLimit: 100,
+    vesselLimit: 50,
     processLimit: 50,
-    documentLimit: 100,
+    documentLimit: 150,
     ocrLimit: 50,
     userLimit: 3,
-    storageGb: 5
+    storageGb: 10
   }
 };
 

@@ -131,7 +131,18 @@ export function PlanLimitProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
+      const resourceNames: Record<string, string> = {
+        processes: "Ordens de Serviço e Laudos Técnicos",
+        customers: "Clientes",
+        vessels: "Embarcações",
+        documents: "Documentos e PDFs",
+        ocr: "Leituras OCR",
+        users: "Usuários da Equipe",
+        files: "Armazenamento (GB)",
+      };
+
       const reached = current >= limit;
+      const resourceLabel = resourceNames[resource] || resource;
 
       return {
         reached,
@@ -139,7 +150,7 @@ export function PlanLimitProvider({ children }: { children: React.ReactNode }) {
         limit,
         allowed: !reached,
         reason: reached 
-          ? `Limite de ${resource} atingido (${current}/${limit}). Faça upgrade do plano para expandir.` 
+          ? `Limite de ${resourceLabel} atingido (${current}/${limit}). Faça upgrade do seu plano para expandir.` 
           : undefined
       };
     } catch (err) {
