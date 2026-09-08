@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
 import { DocumentValidationEngine } from "@/services/validationEngine"; 
+import { sanitizeDocumentHtml } from "@/lib/security/xssDefense";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Select,
@@ -107,7 +108,7 @@ export function DocumentPreviewEditor({ template, processData, onSave, onCancel 
   const handleApprove = () => {
     setStatus('aprovado');
     toast.success("Documento revisado e aprovado!");
-    onSave(content);
+    onSave(sanitizeDocumentHtml(content));
   };
 
   const missingFields = content.includes("[") && content.includes("PENDENTE]");

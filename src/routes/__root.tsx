@@ -64,7 +64,7 @@ function ErrorComponent({ error, reset }: { error: any; reset: () => void }) {
         <p className="mt-2 text-sm text-muted-foreground">
           {error?.message || "Algo deu errado ao carregar o sistema."}
         </p>
-        {error?.stack && (
+        {import.meta.env.DEV && error?.stack && (
           <pre className="mt-4 p-4 bg-slate-900 text-red-400 rounded-xl text-left text-[10px] overflow-auto max-h-40 font-mono">
             {error.stack}
           </pre>

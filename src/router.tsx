@@ -45,6 +45,8 @@ export const getRouter = () => {
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
+    // Precarregamento instantâneo no hover/touch para 0ms de delay percebido
+    defaultPreload: "intent",
     // Query controla freshness — router não deve manter preload cache paralelo.
     defaultPreloadStaleTime: 0,
   });
