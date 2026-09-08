@@ -89,6 +89,7 @@ import { Route as AdminSupportRouteImport } from './routes/admin/support'
 import { Route as AdminSystemHealthRouteImport } from './routes/admin/system-health'
 import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
 import { Route as AdminTemplatesRouteImport } from './routes/admin/templates'
+import { Route as AdminTestsRouteImport } from './routes/admin/tests'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AnalyticsOcrRouteImport } from './routes/analytics.ocr'
 import { Route as AnalyticsOperationsRouteImport } from './routes/analytics.operations'
@@ -540,6 +541,11 @@ const AdminTemplatesRoute = AdminTemplatesRouteImport.update({
   path: '/templates',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminTestsRoute = AdminTestsRouteImport.update({
+  id: '/tests',
+  path: '/tests',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -864,6 +870,7 @@ export interface FileRoutesByFullPath {
   '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/templates': typeof AdminTemplatesRouteWithChildren
+  '/admin/tests': typeof AdminTestsRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
@@ -989,6 +996,7 @@ export interface FileRoutesByTo {
   '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/templates': typeof AdminTemplatesRouteWithChildren
+  '/admin/tests': typeof AdminTestsRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
@@ -1119,6 +1127,7 @@ export interface FileRoutesById {
   '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
   '/admin/templates': typeof AdminTemplatesRouteWithChildren
+  '/admin/tests': typeof AdminTestsRoute
   '/admin/users': typeof AdminUsersRoute
   '/analytics/ocr': typeof AnalyticsOcrRoute
   '/analytics/operations': typeof AnalyticsOperationsRoute
@@ -1250,6 +1259,7 @@ export interface FileRouteTypes {
     | '/admin/system-health'
     | '/admin/system-report'
     | '/admin/templates'
+    | '/admin/tests'
     | '/admin/users'
     | '/analytics/ocr'
     | '/analytics/operations'
@@ -1375,6 +1385,7 @@ export interface FileRouteTypes {
     | '/admin/system-health'
     | '/admin/system-report'
     | '/admin/templates'
+    | '/admin/tests'
     | '/admin/users'
     | '/analytics/ocr'
     | '/analytics/operations'
@@ -1504,6 +1515,7 @@ export interface FileRouteTypes {
     | '/admin/system-health'
     | '/admin/system-report'
     | '/admin/templates'
+    | '/admin/tests'
     | '/admin/users'
     | '/analytics/ocr'
     | '/analytics/operations'
@@ -2181,6 +2193,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTemplatesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/tests': {
+      id: '/admin/tests'
+      path: '/tests'
+      fullPath: '/admin/tests'
+      preLoaderRoute: typeof AdminTestsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/users'
@@ -2596,6 +2615,7 @@ interface AdminRouteChildren {
   AdminSystemHealthRoute: typeof AdminSystemHealthRoute
   AdminSystemReportRoute: typeof AdminSystemReportRoute
   AdminTemplatesRoute: typeof AdminTemplatesRouteWithChildren
+  AdminTestsRoute: typeof AdminTestsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminProcessCenterIdRoute: typeof AdminProcessCenterIdRoute
@@ -2634,6 +2654,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSystemHealthRoute: AdminSystemHealthRoute,
   AdminSystemReportRoute: AdminSystemReportRoute,
   AdminTemplatesRoute: AdminTemplatesRouteWithChildren,
+  AdminTestsRoute: AdminTestsRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminProcessCenterIdRoute: AdminProcessCenterIdRoute,

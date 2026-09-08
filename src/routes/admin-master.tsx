@@ -20,9 +20,10 @@ import { toast } from "sonner";
 import {
   ShieldCheck, Building2, Users, FileText, Sparkles, BookOpen, FileArchive,
   DollarSign, Activity, Search, Loader2, Eye, Power, PowerOff, CreditCard,
-  ArrowLeft, AlertTriangle,
+  ArrowLeft, AlertTriangle, FlaskConical,
 } from "lucide-react";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { AdminTestHub } from "@/components/admin/AdminTestHub";
 
 export const Route = createFileRoute("/admin-master")({
   component: AdminMasterPage,
@@ -132,6 +133,9 @@ function AdminMasterPage() {
         <Tabs defaultValue="overview">
           <TabsList className="bg-white border">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            <TabsTrigger value="tests" className="text-primary font-bold flex items-center gap-1.5">
+              <FlaskConical className="h-4 w-4" /> Testes & Botões
+            </TabsTrigger>
             <TabsTrigger value="companies">Empresas</TabsTrigger>
             <TabsTrigger value="plans">Planos</TabsTrigger>
             <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
@@ -141,6 +145,7 @@ function AdminMasterPage() {
           </TabsList>
 
           <TabsContent value="overview" className="mt-6"><OverviewTab /></TabsContent>
+          <TabsContent value="tests" className="mt-6"><AdminTestHub /></TabsContent>
           <TabsContent value="companies" className="mt-6"><CompaniesTab /></TabsContent>
           <TabsContent value="plans" className="mt-6"><PlansTab /></TabsContent>
           <TabsContent value="marketplace" className="mt-6"><MarketplaceTab /></TabsContent>

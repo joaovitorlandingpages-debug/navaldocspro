@@ -23,7 +23,8 @@ import {
   MessageSquare,
   BarChart3,
   Shield,
-  Layout
+  Layout,
+  FlaskConical
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -70,6 +71,7 @@ function AdminLayout() {
 
   const adminNavItems = [
     { name: "Visão Geral", icon: <LayoutDashboard className="h-5 w-5" />, path: "/admin" },
+    { name: "Testes & Botões (Hub)", icon: <FlaskConical className="h-5 w-5 text-amber-400" />, path: "/admin/tests" },
     { name: "Executive Overview", icon: <Globe className="h-5 w-5" />, path: "/admin/executive-overview" },
     { name: "AI Global Console", icon: <Bot className="h-5 w-5" />, path: "/admin/global" },
     { name: "Feedback Operacional", icon: <MessageSquare className="h-5 w-5" />, path: "/admin/operational-feedback" },
