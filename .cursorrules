@@ -23,8 +23,10 @@
    - NUNCA exponha credenciais privadas (ex: `MERCADO_PAGO_ACCESS_TOKEN`, webhook secrets) no front-end (`VITE_*`). Operações financeiras rodam exclusivamente em Supabase Edge Functions.
    - Sanitizar buscas textuais escapando wildcards do ILIKE (`%`, `_`, `\`) e validar dados com Zod antes de enviar ao banco.
 
-4. **Design e Responsividade:**
-   - Mobile-first: todas as telas operacionais devem ser perfeitamente utilizáveis em smartphones e tablets.
-   - Áreas de toque confortáveis (mínimo 44x44px em mobile).
-   - Feedback visual imediato: botões com disabled e loading spinner durante ações assíncronas.
-   - Diálogos de confirmação destrutivos para exclusões.
+## UI & Component Standards
+- **Framework:** Tailwind CSS + Radix / Shadcn UI
+- **Design System:** Minimalista, tokens semânticos (cores, espaçamentos, tipografia).
+- **Microinterações:** Todos os botões, links e cards devem ter hover states, active states, focus visível e transições suaves (`transition-colors duration-200` ou `transition-all duration-200`).
+- **Feedbacks Visuais:** Toda ação assíncrona deve conter estado de loading (skeleton/spinner) e toast de feedback de erro/sucesso via Sonner.
+- **Mobile First:** Todo layout gerado deve ser 100% responsivo, touch-friendly (área mínima de toque 44x44px) e adaptável por padrão.
+- **Ações Destrutivas:** Diálogos de confirmação (`ConfirmDialog` / `AlertDialog`) para exclusões e cancelamentos.
