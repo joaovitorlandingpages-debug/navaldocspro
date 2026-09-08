@@ -35,3 +35,8 @@
 - **Feedbacks Visuais:** Toda ação assíncrona deve conter estado de loading (skeleton/spinner) e toast de feedback de erro/sucesso via Sonner.
 - **Mobile First:** Todo layout gerado deve ser 100% responsivo, touch-friendly (área mínima de toque 44x44px) e adaptável por padrão.
 - **Ações Destrutivas:** Diálogos de confirmação (`ConfirmDialog` / `AlertDialog`) para exclusões e cancelamentos.
+
+## Prohibitions & Constraints
+- **Estilos Globais:** Proibido sobrescrever estilos globais em `index.css` / Tailwind base para corrigir problemas pontuais de componentes locais.
+- **Tipagem Estrita:** Proibido o uso de `@ts-ignore`, `@ts-nocheck` ou `any` para contornar erros de tipagem. Resolva com tipos estritos, interfaces ou type-guards com `unknown`.
+- **Dependências Externas:** Proibido instalar novas dependências ou pacotes no `package.json` sem aprovação prévia explícita no chat se já existir um pacote equivalente instalado.
