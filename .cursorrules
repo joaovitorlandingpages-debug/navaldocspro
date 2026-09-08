@@ -23,6 +23,11 @@
    - NUNCA exponha credenciais privadas (ex: `MERCADO_PAGO_ACCESS_TOKEN`, webhook secrets) no front-end (`VITE_*`). Operações financeiras rodam exclusivamente em Supabase Edge Functions.
    - Sanitizar buscas textuais escapando wildcards do ILIKE (`%`, `_`, `\`) e validar dados com Zod antes de enviar ao banco.
 
+## Data Fetching & State Standards
+- **Separação Estrita:** Proibida chamada direta de API/Supabase inline dentro de arquivos JSX/TSX de apresentação.
+- **TanStack Query & Custom Hooks:** Encapsular toda comunicação em custom hooks (`useQuery` / `useMutation`) com tratativas explícitas de `isLoading`, `isError`, `isFetching` e invalidação automática de cache (`queryClient.invalidateQueries`).
+- **Validação de Entrada:** Validação obrigatória de schemas em 100% dos formulários via Zod com sanitização prévia.
+
 ## UI & Component Standards
 - **Framework:** Tailwind CSS + Radix / Shadcn UI
 - **Design System:** Minimalista, tokens semânticos (cores, espaçamentos, tipografia).
