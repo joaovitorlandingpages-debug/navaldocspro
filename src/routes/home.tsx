@@ -5,10 +5,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTelemetry } from "@/hooks/useTelemetry";
 
 export const Route = createFileRoute("/home")({
-  component: Index,
+  component: LandingPage,
 });
 
-function Index() {
+export function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { session, profile, loading } = useAuth();
