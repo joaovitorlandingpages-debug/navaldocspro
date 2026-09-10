@@ -163,12 +163,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 
+const NavalCopilotDrawer = React.lazy(() =>
+  import("@/components/copilot/NavalCopilotDrawer").then((m) => ({ default: m.NavalCopilotDrawer })),
+);
+
 // Separate component to safely handle floating widgets
 function SafeFloatingWidgets() {
   return (
     <React.Suspense fallback={null}>
       <FeedbackButton />
-      <IntelligentAssistant />
+      <NavalCopilotDrawer />
     </React.Suspense>
   );
 }
