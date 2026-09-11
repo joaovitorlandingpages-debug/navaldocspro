@@ -84,10 +84,11 @@ export function FeedbackButton() {
       {!shouldShow || !profile || window.location.pathname.startsWith('/auth') ? null : (
         <button 
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-40 left-4 md:left-8 z-[80] bg-navy text-white p-4 rounded-full shadow-2xl hover:bg-navy/90 transition-all group lg:mb-0 mb-safe-area-inset-bottom sm:bottom-24"
+          className="fixed bottom-28 lg:bottom-8 left-4 md:left-8 z-[40] bg-navy text-white p-3.5 rounded-full shadow-2xl hover:bg-navy/90 border border-white/10 transition-all group"
+          title="Feedback Operacional"
         >
-          <MessageSquare className="h-6 w-6" />
-          <span className="absolute left-full ml-4 bg-navy text-white text-[10px] font-black uppercase tracking-widest py-2 px-4 rounded-xl opacity-0 md:group-hover:opacity-100 pointer-events-none transition-all whitespace-nowrap">
+          <MessageSquare className="h-5 w-5 text-primary" />
+          <span className="absolute left-full ml-3 bg-navy text-white text-[10px] font-black uppercase tracking-widest py-1.5 px-3 rounded-xl opacity-0 md:group-hover:opacity-100 pointer-events-none transition-all whitespace-nowrap shadow-lg border border-white/10">
             Feedback Operacional
           </span>
         </button>
