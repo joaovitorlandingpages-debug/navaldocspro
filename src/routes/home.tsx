@@ -51,14 +51,14 @@ export function LandingPage() {
       {/* 1. CABEÇALHO */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          {/* Logo oficial da identidade visual */}
+          {/* Logo oficial da identidade visual com tamanho ampliado e sem margens transparentes */}
           <Link to="/" className="flex items-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded-lg p-1">
             <img 
               src="/navaldocs-logo.png" 
               alt="NavalDocs Pro" 
-              className="h-9 sm:h-10 w-auto object-contain transition-transform group-hover:scale-[1.02]"
-              width="180"
-              height="60"
+              className="h-10 sm:h-11 w-auto object-contain transition-transform group-hover:scale-[1.02]"
+              width="200"
+              height="45"
             />
           </Link>
 
@@ -157,18 +157,31 @@ export function LandingPage() {
 
       <main className="flex-1">
         {/* 2. APRESENTAÇÃO PRINCIPAL (HERO) */}
-        <section className="relative overflow-hidden pt-8 pb-16 lg:pt-14 lg:pb-24 bg-gradient-to-b from-blue-50/40 via-white to-[#f8fafc]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+        <section className="relative overflow-hidden pt-6 pb-12 lg:pt-10 lg:pb-16 bg-[#f8fafc]">
+          {/* Fotografia da marina integrada ao fundo inteiro no desktop conforme a referência visual */}
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none hidden lg:block">
+            <img 
+              src="/hero-marina.jpg" 
+              alt="" 
+              className="w-full h-full object-cover object-bottom"
+              loading="eager"
+            />
+            {/* Sobreposição clara sobre a área de texto para contraste perfeito e transparência suave no restante */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/85 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#f8fafc] via-transparent to-white/70" />
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="grid lg:grid-cols-12 gap-8 lg:gap-8 items-center">
               {/* Coluna de Texto */}
-              <div className="lg:col-span-5 text-left space-y-6">
+              <div className="lg:col-span-5 text-left space-y-5 lg:pr-2">
                 <div className="inline-block">
-                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#1868db] bg-blue-50 border border-blue-100/80 px-3 py-1 rounded-full">
+                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#1868db] bg-blue-50/90 border border-blue-100/80 px-3 py-1 rounded-full">
                     Gestão náutica simplificada
                   </span>
                 </div>
 
-                <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-extrabold text-[#0f1d36] leading-[1.18] tracking-tight">
+                <h1 className="text-3xl sm:text-4xl lg:text-[40px] xl:text-[44px] font-extrabold text-[#0f1d36] leading-[1.15] tracking-tight">
                   Seu processo náutico, do início à conclusão.
                 </h1>
 
@@ -176,7 +189,7 @@ export function LandingPage() {
                   Clientes, embarcações e documentos em um só lugar. Mais clareza para despachantes e engenheiros.
                 </p>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-1">
                   <Link 
                     to="/auth/signup" 
                     className="bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold px-6 py-3.5 rounded-lg shadow-md shadow-blue-500/10 transition-all flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 active:scale-98"
@@ -187,45 +200,48 @@ export function LandingPage() {
 
                   <button 
                     onClick={() => scrollToSection("solucao")} 
-                    className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-blue-600 font-semibold px-6 py-3.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                    className="bg-white/95 hover:bg-white border border-slate-200 text-slate-700 hover:text-blue-600 font-semibold px-6 py-3.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                   >
                     Conhecer o sistema
                   </button>
                 </div>
+
+                {/* Assinatura script sutil sob os botões */}
+                <div className="hidden sm:flex items-center gap-2 pt-1 text-slate-600/90 text-base lg:text-lg font-serif italic tracking-wide select-none">
+                  <span>Mais tempo para o que importa</span>
+                  <span className="text-[#1868db] text-base font-sans font-bold">~</span>
+                </div>
               </div>
 
-              {/* Coluna Visual: Scenery + Dashboard Mockup */}
-              <div className="lg:col-span-7 relative">
-                {/* Imagem náutica de fundo da marina conforme a referência */}
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200/90 bg-white">
-                  {/* Cenário náutico sutil no fundo superior/lateral */}
-                  <div className="relative h-44 sm:h-56 w-full overflow-hidden">
+              {/* Coluna Visual: Dashboard Mockup */}
+              <div className="lg:col-span-7 relative flex justify-center lg:justify-end">
+
+                {/* Card do Painel (Interface Real de Demonstração) */}
+                <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl lg:shadow-2xl border border-slate-200/80 overflow-hidden">
+                  {/* Faixa náutica sutil para mobile no topo do card (no desktop o cenário está no fundo da página) */}
+                  <div className="lg:hidden relative h-36 sm:h-44 w-full overflow-hidden">
                     <img 
                       src="/hero-marina.jpg" 
-                      alt="Marina náutica com iates e embarcações" 
-                      className="w-full h-full object-cover object-center scale-105"
+                      alt="Marina náutica com embarcações" 
+                      className="w-full h-full object-cover object-center"
                       loading="eager"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
-                    
-                    {/* Anotação estilizada em script "Mais tempo para o que importa" */}
-                    <div className="absolute bottom-4 right-6 sm:right-10 transform rotate-[-4deg] select-none pointer-events-none">
-                      <div className="text-[#0f1d36]/80 text-xl sm:text-2xl font-serif italic tracking-wide drop-shadow-sm flex items-center gap-1">
-                        <span>Mais tempo para o que importa</span>
-                        <span className="text-blue-600 text-lg">~</span>
-                      </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent" />
+                    <div className="absolute bottom-2 right-4 transform -rotate-3 select-none pointer-events-none">
+                      <span className="text-[#0f1d36]/80 text-sm font-serif italic tracking-wide drop-shadow-sm">
+                        Mais tempo para o que importa ~
+                      </span>
                     </div>
                   </div>
 
-                  {/* Card do Painel (Interface Real de Demonstração) */}
-                  <div className="p-4 sm:p-6 bg-white -mt-16 sm:-mt-24 relative z-10 rounded-2xl mx-2 sm:mx-4 mb-4 shadow-xl border border-slate-100">
+                  <div className="p-4 sm:p-6 bg-white relative z-10">
                     {/* Header do Mockup */}
-                    <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 gap-3">
+                    <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-100 gap-3">
                       <div className="flex items-center gap-2.5">
                         <img 
                           src="/navaldocs-logo.png" 
                           alt="NavalDocs Pro" 
-                          className="h-5 sm:h-6 w-auto object-contain" 
+                          className="h-6 w-auto object-contain" 
                         />
                         <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider bg-slate-100 px-2 py-0.5 rounded">
                           Demonstração
@@ -258,7 +274,7 @@ export function LandingPage() {
                     </div>
 
                     {/* Saudação e Ação Principal do Painel */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-5 gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
                       <div>
                         <h2 className="text-base sm:text-lg font-bold text-[#0f1d36]">Visão geral</h2>
                         <p className="text-[11px] sm:text-xs text-slate-500">Bom dia, Rafael! Aqui está o panorama dos seus processos.</p>
@@ -272,7 +288,7 @@ export function LandingPage() {
                     </div>
 
                     {/* 3 Cartões de Indicadores (KPIs) */}
-                    <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5 sm:mb-6">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5">
                       <div className="p-2 sm:p-3 bg-blue-50/60 rounded-xl border border-blue-100/70 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-3">
                         <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-blue-100/80 text-blue-600 flex items-center justify-center shrink-0">
                           <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -312,7 +328,7 @@ export function LandingPage() {
 
                     {/* Lista de Pendências de Hoje */}
                     <div>
-                      <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center justify-between mb-2.5">
                         <h3 className="text-xs sm:text-sm font-bold text-[#0f1d36]">Pendências de hoje</h3>
                         <span className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 cursor-default flex items-center gap-0.5">
                           Ver todas <ChevronRight className="h-3 w-3" />
@@ -411,32 +427,32 @@ export function LandingPage() {
             </div>
 
             {/* Divisor com subtítulo para despachantes e engenheiros */}
-            <div className="mt-16 sm:mt-20 pt-8 flex items-center justify-center gap-4">
-              <div className="h-px bg-slate-200 flex-1 max-w-[80px] sm:max-w-[140px]" />
+            <div className="mt-12 sm:mt-16 pt-6 flex items-center justify-center gap-4">
+              <div className="h-px bg-slate-200/80 flex-1 max-w-[80px] sm:max-w-[140px]" />
               <span className="text-slate-500 text-xs sm:text-sm font-medium tracking-wide text-center">
                 Para despachantes, engenheiros e equipes náuticas
               </span>
-              <div className="h-px bg-slate-200 flex-1 max-w-[80px] sm:max-w-[140px]" />
+              <div className="h-px bg-slate-200/80 flex-1 max-w-[80px] sm:max-w-[140px]" />
             </div>
           </div>
         </section>
 
         {/* 3. BENEFÍCIOS */}
-        <section id="solucao" className="py-16 sm:py-24 bg-white scroll-mt-20">
+        <section id="solucao" className="py-12 sm:py-16 bg-white scroll-mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-16">
+            <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0f1d36] tracking-tight">
                 Tudo organizado. Próximo passo claro.
               </h2>
-              <p className="mt-3 text-slate-600 text-sm sm:text-base">
+              <p className="mt-2.5 text-slate-600 text-sm sm:text-base">
                 Uma solução completa para simplificar sua rotina e manter o foco no que realmente importa.
               </p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
               {/* Card 1: Processos guiados */}
-              <div className="p-8 rounded-2xl bg-white border border-slate-100 shadow-xs hover:shadow-md transition-shadow">
-                <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6">
+              <div className="p-7 sm:p-8 rounded-2xl bg-white border border-slate-100 shadow-xs hover:shadow-md transition-shadow">
+                <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-5">
                   <ClipboardList className="h-6 w-6" />
                 </div>
                 <h3 className="text-lg font-bold text-[#0f1d36] mb-2">
@@ -448,8 +464,8 @@ export function LandingPage() {
               </div>
 
               {/* Card 2: Documentos conectados */}
-              <div className="p-8 rounded-2xl bg-white border border-slate-100 shadow-xs hover:shadow-md transition-shadow">
-                <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6">
+              <div className="p-7 sm:p-8 rounded-2xl bg-white border border-slate-100 shadow-xs hover:shadow-md transition-shadow">
+                <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-5">
                   <FolderGit2 className="h-6 w-6" />
                 </div>
                 <h3 className="text-lg font-bold text-[#0f1d36] mb-2">
@@ -461,8 +477,8 @@ export function LandingPage() {
               </div>
 
               {/* Card 3: Prazos sob controle */}
-              <div id="recursos" className="p-8 rounded-2xl bg-white border border-slate-100 shadow-xs hover:shadow-md transition-shadow scroll-mt-28">
-                <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6">
+              <div id="recursos" className="p-7 sm:p-8 rounded-2xl bg-white border border-slate-100 shadow-xs hover:shadow-md transition-shadow scroll-mt-28">
+                <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-5">
                   <CalendarCheck className="h-6 w-6" />
                 </div>
                 <h3 className="text-lg font-bold text-[#0f1d36] mb-2">
@@ -477,21 +493,21 @@ export function LandingPage() {
         </section>
 
         {/* 4. COMO FUNCIONA */}
-        <section id="como-funciona" className="py-16 sm:py-24 bg-[#f8fafc] border-t border-slate-100 scroll-mt-20">
+        <section id="como-funciona" className="py-12 sm:py-16 bg-[#f8fafc] border-t border-slate-100 scroll-mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-16">
+            <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0f1d36] tracking-tight">
                 Do cadastro ao acompanhamento
               </h2>
-              <p className="mt-3 text-slate-600 text-sm sm:text-base">
+              <p className="mt-2.5 text-slate-600 text-sm sm:text-base">
                 Em poucos passos, seu processo náutico em andamento, com mais controle e transparência.
               </p>
             </div>
 
             <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 lg:gap-4 relative max-w-5xl mx-auto">
               {/* Etapa 1 */}
-              <div className="flex-1 flex flex-col items-center text-center p-4">
-                <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 font-bold text-lg flex items-center justify-center mb-4 shadow-xs">
+              <div className="flex-1 flex flex-col items-center text-center p-3 sm:p-4">
+                <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 font-bold text-lg flex items-center justify-center mb-3.5 shadow-xs">
                   1
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-[#0f1d36] mb-1.5">
@@ -508,8 +524,8 @@ export function LandingPage() {
               </div>
 
               {/* Etapa 2 */}
-              <div className="flex-1 flex flex-col items-center text-center p-4">
-                <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 font-bold text-lg flex items-center justify-center mb-4 shadow-xs">
+              <div className="flex-1 flex flex-col items-center text-center p-3 sm:p-4">
+                <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 font-bold text-lg flex items-center justify-center mb-3.5 shadow-xs">
                   2
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-[#0f1d36] mb-1.5">
@@ -526,8 +542,8 @@ export function LandingPage() {
               </div>
 
               {/* Etapa 3 */}
-              <div className="flex-1 flex flex-col items-center text-center p-4">
-                <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 font-bold text-lg flex items-center justify-center mb-4 shadow-xs">
+              <div className="flex-1 flex flex-col items-center text-center p-3 sm:p-4">
+                <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 font-bold text-lg flex items-center justify-center mb-3.5 shadow-xs">
                   3
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-[#0f1d36] mb-1.5">
@@ -542,7 +558,7 @@ export function LandingPage() {
         </section>
 
         {/* 5. CHAMADA FINAL (BANNER) */}
-        <section className="py-12 sm:py-16 bg-[#f8fafc]">
+        <section className="pt-4 pb-12 sm:pb-16 bg-[#f8fafc]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="relative rounded-2xl overflow-hidden bg-[#0c1e3d] shadow-xl">
               {/* Imagem náutica de veleiro ao entardecer */}
@@ -557,8 +573,8 @@ export function LandingPage() {
               </div>
 
               {/* Conteúdo do Banner */}
-              <div className="relative z-10 p-8 sm:p-12 lg:p-14 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                <div className="space-y-2">
+              <div className="relative z-10 p-7 sm:p-11 lg:p-12 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <div className="space-y-1.5">
                   <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                     Simplifique sua rotina náutica.
                   </h2>
@@ -586,14 +602,14 @@ export function LandingPage() {
       <footer className="bg-white border-t border-slate-100 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-slate-500">
-            {/* Logo Oficial */}
+            {/* Logo Oficial com visibilidade aprimorada */}
             <div className="flex items-center">
               <img 
                 src="/navaldocs-logo.png" 
                 alt="NavalDocs Pro" 
-                className="h-8 w-auto object-contain"
-                width="150"
-                height="50"
+                className="h-9 sm:h-10 w-auto object-contain"
+                width="180"
+                height="40"
               />
             </div>
 

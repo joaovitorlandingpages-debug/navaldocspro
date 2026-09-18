@@ -5,6 +5,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -169,6 +170,11 @@ const NavalCopilotDrawer = React.lazy(() =>
 
 // Separate component to safely handle floating widgets
 function SafeFloatingWidgets() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname === "/" || pathname === "/home") {
+    return null;
+  }
+
   return (
     <React.Suspense fallback={null}>
       <FeedbackButton />
