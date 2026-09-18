@@ -1,5 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Anchor, Ship, FileText, CheckCircle, Shield, ArrowRight, Menu, X, Users, Settings, LogIn, Mail, Zap, Cpu, Activity, BarChart3, Building2, Globe, Layers, CheckSquare } from "lucide-react";
+import { 
+  ArrowRight, 
+  Menu, 
+  X, 
+  Search, 
+  Bell, 
+  Plus, 
+  FileText, 
+  FolderGit2, 
+  FolderCheck,
+  CalendarCheck, 
+  ChevronRight, 
+  ClipboardList
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTelemetry } from "@/hooks/useTelemetry";
@@ -10,396 +23,651 @@ export const Route = createFileRoute("/home")({
 
 export function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [infoModal, setInfoModal] = useState<{ title: string; content: string } | null>(null);
   const navigate = useNavigate();
   const { session, profile, loading } = useAuth();
   useTelemetry("Landing Page");
 
   useEffect(() => {
-    console.log("LANDING_PREMIUM_OK");
-    console.log("COMMERCIAL_FLOW_READY");
     if (!loading && session) {
-      if (profile?.role === 'customer' || profile?.role === 'client') {
-        console.log("HOME_REDIRECT_CLIENT_PORTAL");
+      if (profile?.role === "customer" || profile?.role === "client") {
         navigate({ to: "/client-portal" });
       } else {
-        console.log("HOME_REDIRECT_DASHBOARD_V2");
         navigate({ to: "/dashboard" });
       }
     }
   }, [session, loading, navigate]);
 
-  return (
-    <div className="flex flex-col h-screen bg-white overflow-y-auto font-sans">
-      {/* Navigation */}
-      <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-xl border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-20 items-center">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500 rounded-xl">
-                <Anchor className="h-7 w-7 text-white" />
-              </div>
-              <span className="text-2xl font-black tracking-tighter text-navy uppercase">NavalDocs <span className="text-emerald-500">Pro</span></span>
-            </div>
-            
-            {/* Desktop Nav */}
-            <div className="hidden md:flex items-center gap-10">
-              <a href="#solucao" className="text-sm font-bold text-navy hover:text-primary transition-colors uppercase tracking-widest">Solução</a>
-              <a href="#fluxo" className="text-sm font-bold text-navy hover:text-primary transition-colors uppercase tracking-widest">Como Funciona</a>
-              <a href="#planos" className="text-sm font-bold text-navy hover:text-primary transition-colors uppercase tracking-widest">Planos</a>
-              <Link to="/auth/login" search={{ redirect: "/dashboard" }} className="text-sm font-bold text-slate-500 hover:text-primary transition-colors uppercase tracking-widest">Entrar</Link>
-              <Link to="/auth/signup" className="bg-primary text-white px-6 py-3 rounded-xl text-sm font-black hover:shadow-lg hover:shadow-primary/30 transition-all uppercase tracking-widest">Solicitar Demo</Link>
-            </div>
+  const scrollToSection = (id: string) => {
+    setIsMenuOpen(false);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 text-navy">
-                {isMenuOpen ? <X /> : <Menu />}
-              </button>
-            </div>
+  return (
+    <div className="min-h-screen bg-[#f8fafc] text-[#0f1d36] font-sans antialiased flex flex-col selection:bg-blue-100 selection:text-blue-900">
+      {/* 1. CABEÇALHO */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+          {/* Logo oficial da identidade visual */}
+          <Link to="/" className="flex items-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded-lg p-1">
+            <img 
+              src="/navaldocs-logo.png" 
+              alt="NavalDocs Pro" 
+              className="h-9 sm:h-10 w-auto object-contain transition-transform group-hover:scale-[1.02]"
+              width="180"
+              height="60"
+            />
+          </Link>
+
+          {/* Links desktop */}
+          <nav className="hidden md:flex items-center gap-8" aria-label="Navegação Principal">
+            <button 
+              onClick={() => scrollToSection("solucao")} 
+              className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded px-2 py-1"
+            >
+              Solução
+            </button>
+            <button 
+              onClick={() => scrollToSection("como-funciona")} 
+              className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded px-2 py-1"
+            >
+              Como funciona
+            </button>
+            <button 
+              onClick={() => scrollToSection("recursos")} 
+              className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded px-2 py-1"
+            >
+              Recursos
+            </button>
+          </nav>
+
+          {/* Ações Desktop */}
+          <div className="hidden md:flex items-center gap-4">
+            <Link 
+              to="/auth/login" 
+              search={{ redirect: "/dashboard" }} 
+              className="text-sm font-semibold text-slate-700 hover:text-blue-600 px-3 py-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded-lg"
+            >
+              Entrar
+            </Link>
+            <Link 
+              to="/auth/signup" 
+              className="bg-[#1868db] hover:bg-[#1456b8] text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm transition-all flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 active:scale-98"
+            >
+              Começar agora
+            </Link>
+          </div>
+
+          {/* Ações Mobile */}
+          <div className="flex md:hidden items-center gap-3">
+            <Link 
+              to="/auth/login" 
+              search={{ redirect: "/dashboard" }} 
+              className="text-sm font-semibold text-slate-700 hover:text-blue-600 px-2.5 py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded-lg"
+            >
+              Entrar
+            </Link>
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)} 
+              aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
+              aria-expanded={isMenuOpen}
+              className="p-2 text-slate-700 hover:text-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded-lg"
+            >
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
 
-        {/* Mobile Nav */}
+        {/* Menu Responsivo Mobile */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white border-b px-4 pt-2 pb-8 flex flex-col gap-4 animate-in slide-in-from-top duration-300">
-            <a href="#solucao" className="text-lg font-bold text-navy py-2">Solução</a>
-            <a href="#fluxo" className="text-lg font-bold text-navy py-2">Como Funciona</a>
-            <a href="#planos" className="text-lg font-bold text-navy py-2">Planos</a>
-            <hr />
-            <Link to="/auth/login" search={{ redirect: "/dashboard" }} className="text-lg font-bold text-navy py-2">Entrar</Link>
-            <Link to="/auth/signup" className="bg-primary text-white px-4 py-4 rounded-xl text-center font-black uppercase tracking-widest">Solicitar Demo</Link>
+          <div className="md:hidden bg-white border-b border-slate-200 px-4 pt-3 pb-6 flex flex-col gap-3 shadow-lg">
+            <button 
+              onClick={() => scrollToSection("solucao")} 
+              className="text-left text-base font-medium text-slate-700 hover:text-blue-600 py-2.5 px-3 rounded-md hover:bg-slate-50 transition-colors"
+            >
+              Solução
+            </button>
+            <button 
+              onClick={() => scrollToSection("como-funciona")} 
+              className="text-left text-base font-medium text-slate-700 hover:text-blue-600 py-2.5 px-3 rounded-md hover:bg-slate-50 transition-colors"
+            >
+              Como funciona
+            </button>
+            <button 
+              onClick={() => scrollToSection("recursos")} 
+              className="text-left text-base font-medium text-slate-700 hover:text-blue-600 py-2.5 px-3 rounded-md hover:bg-slate-50 transition-colors"
+            >
+              Recursos
+            </button>
+            <div className="border-t border-slate-100 my-1 pt-3 flex flex-col gap-3">
+              <Link 
+                to="/auth/signup" 
+                onClick={() => setIsMenuOpen(false)}
+                className="w-full bg-[#1868db] text-white text-center font-semibold py-3 rounded-lg shadow-sm hover:bg-[#1456b8] transition-colors"
+              >
+                Começar agora
+              </Link>
+            </div>
           </div>
         )}
-      </nav>
+      </header>
 
-      <main className="flex-grow">
-        {/* Hero Section Premium */}
-        <section className="relative overflow-hidden pt-32 pb-20 lg:pt-48 lg:pb-32 bg-white">
-          <div className="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none">
-            <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/20 rounded-full blur-[120px]" />
-          </div>
-          
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="text-center space-y-12 max-w-6xl mx-auto">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-black uppercase tracking-[0.2em] animate-fade-in">
-                <Globe className="h-3 w-3" />
-                Plataforma Enterprise de Gestão Naval
-              </div>
-              
-              <h1 className="text-6xl lg:text-[110px] font-black text-navy leading-[0.85] tracking-tighter uppercase">
-                A GESTÃO DOS SEUS PROCESSOS ACEITA <span className="text-emerald-500">ERRO?</span>
-              </h1>
-              
-              <p className="text-xl lg:text-3xl text-slate-500 max-w-4xl mx-auto leading-tight font-bold">
-                O barato sai caro. Automatize tudo com zero atrito e máxima precisão técnica.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8">
-                <Link to="/auth/signup" className="group relative bg-emerald-500 text-white px-12 py-6 rounded-2xl text-2xl font-black hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden shadow-2xl shadow-emerald-500/20">
-                  <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
-                  AGENDAR DEMONSTRAÇÃO <ArrowRight className="h-7 w-7" />
-                </Link>
-                <Link to="/demo" className="bg-white border-4 border-emerald-500 text-emerald-500 px-12 py-6 rounded-2xl text-2xl font-black hover:bg-emerald-50 transition-all flex items-center justify-center gap-3 shadow-xl">
-                  VER EM AÇÃO <Zap className="h-7 w-7" />
-                </Link>
+      <main className="flex-1">
+        {/* 2. APRESENTAÇÃO PRINCIPAL (HERO) */}
+        <section className="relative overflow-hidden pt-8 pb-16 lg:pt-14 lg:pb-24 bg-gradient-to-b from-blue-50/40 via-white to-[#f8fafc]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+              {/* Coluna de Texto */}
+              <div className="lg:col-span-5 text-left space-y-6">
+                <div className="inline-block">
+                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#1868db] bg-blue-50 border border-blue-100/80 px-3 py-1 rounded-full">
+                    Gestão náutica simplificada
+                  </span>
+                </div>
+
+                <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-extrabold text-[#0f1d36] leading-[1.18] tracking-tight">
+                  Seu processo náutico, do início à conclusão.
+                </h1>
+
+                <p className="text-slate-600 text-base sm:text-lg leading-relaxed max-w-lg">
+                  Clientes, embarcações e documentos em um só lugar. Mais clareza para despachantes e engenheiros.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2">
+                  <Link 
+                    to="/auth/signup" 
+                    className="bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold px-6 py-3.5 rounded-lg shadow-md shadow-blue-500/10 transition-all flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 active:scale-98"
+                  >
+                    <span>Começar agora</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+
+                  <button 
+                    onClick={() => scrollToSection("solucao")} 
+                    className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-blue-600 font-semibold px-6 py-3.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                  >
+                    Conhecer o sistema
+                  </button>
+                </div>
               </div>
 
-              <div className="pt-20">
-                <div className="relative mx-auto max-w-5xl group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-emerald-700 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                  <div className="relative rounded-2xl bg-white border border-slate-100 overflow-hidden shadow-2xl">
-                    <div className="h-12 bg-slate-50 border-b border-slate-100 flex items-center px-6 gap-2">
-                      <div className="flex gap-2">
-                        <div className="h-3 w-3 rounded-full bg-slate-200" />
-                        <div className="h-3 w-3 rounded-full bg-slate-200" />
-                        <div className="h-3 w-3 rounded-full bg-slate-200" />
-                      </div>
-                      <div className="mx-auto text-[10px] font-black text-slate-300 uppercase tracking-widest">navaldocs.pro/dashboard/operations</div>
-                    </div>
+              {/* Coluna Visual: Scenery + Dashboard Mockup */}
+              <div className="lg:col-span-7 relative">
+                {/* Imagem náutica de fundo da marina conforme a referência */}
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200/90 bg-white">
+                  {/* Cenário náutico sutil no fundo superior/lateral */}
+                  <div className="relative h-44 sm:h-56 w-full overflow-hidden">
                     <img 
-                      src="https://images.unsplash.com/photo-1551288049-bbbda536339a?q=80&w=2070&auto=format&fit=crop" 
-                      alt="Dashboard Interface" 
-                      className="w-full h-auto grayscale hover:grayscale-0 transition-all duration-1000 scale-[1.02] group-hover:scale-100 contrast-[1.1]"
+                      src="/hero-marina.jpg" 
+                      alt="Marina náutica com iates e embarcações" 
+                      className="w-full h-full object-cover object-center scale-105"
+                      loading="eager"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Fluxo Operacional - Como Funciona */}
-        <section id="fluxo" className="py-32 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-24 space-y-4">
-              <span className="text-emerald-500 font-black uppercase tracking-[0.3em] text-xs">A Jornada Digital</span>
-              <h2 className="text-5xl font-black text-navy uppercase tracking-tighter">Fluxo Operacional 360°</h2>
-              <p className="text-slate-500 text-lg font-bold max-w-2xl mx-auto uppercase tracking-widest text-[10px]">Sua operação em uma linha contínua de produtividade, do cliente ao protocolo final.</p>
-            </div>
-
-            <div className="relative mt-20">
-              <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-100 -translate-y-1/2 hidden lg:block" />
-              <div className="grid lg:grid-cols-9 gap-4">
-                {[
-                  { icon: Users, title: "Cliente" },
-                  { icon: Ship, title: "Embarcação" },
-                  { icon: Layers, title: "Processo" },
-                  { icon: Zap, title: "Upload" },
-                  { icon: Cpu, title: "OCR" },
-                  { icon: CheckSquare, title: "Checklist" },
-                  { icon: FileText, title: "Geração" },
-                  { icon: Shield, title: "Assinatura" },
-                  { icon: Globe, title: "Protocolo" }
-                ].map((step, i) => (
-                  <div key={i} className="relative z-10 flex flex-col items-center text-center group">
-                    <div className="h-12 w-12 bg-white border-2 border-slate-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-lg group-hover:scale-110 group-hover:border-emerald-500/20 transition-all mb-4">
-                      <step.icon className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-navy">{step.title}</h3>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Prova Social Section - Depoimentos */}
-        <section className="py-32 bg-white relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-emerald-500 rounded-full blur-[200px]" />
-          </div>
-          
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="text-center mb-24 space-y-4">
-              <span className="text-emerald-500 font-black uppercase tracking-[0.3em] text-xs">O que dizem os líderes</span>
-              <h2 className="text-5xl font-black text-navy uppercase tracking-tighter">Prova Social Real</h2>
-            </div>
-            
-            <div className="flex gap-8 overflow-hidden py-10">
-              <div className="flex gap-8 animate-scroll whitespace-nowrap">
-                {[
-                  { name: "Eng. Ricardo Santos", company: "Marítima Norte", text: "Reduzimos em 80% o tempo de emissão de laudos técnicos." },
-                  { name: "Dra. Ana Paula", company: "Naval Solutions", text: "A precisão do OCR é impressionante, eliminou erros manuais críticos." },
-                  { name: "Cap. Ferreira", company: "Logística Azul", text: "O melhor investimento em tecnologia que fizemos nos últimos 5 anos." },
-                  { name: "Carlos Mendes", company: "Estaleiro Rio", text: "Interface limpa e suporte técnico de altíssimo nível." },
-                  { name: "Eng. Ricardo Santos", company: "Marítima Norte", text: "Reduzimos em 80% o tempo de emissão de laudos técnicos." },
-                  { name: "Dra. Ana Paula", company: "Naval Solutions", text: "A precisão do OCR é impressionante, eliminou erros manuais críticos." },
-                ].map((item, i) => (
-                  <div key={i} className="inline-block bg-white p-8 rounded-3xl border border-slate-100 shadow-xl min-w-[400px]">
-                    <div className="flex items-center gap-1 mb-6">
-                      {[1,2,3,4,5].map(s => <Zap key={s} className="h-4 w-4 text-emerald-500 fill-emerald-500" />)}
-                    </div>
-                    <p className="text-lg font-bold text-navy mb-6 whitespace-normal italic">"{item.text}"</p>
-                    <div>
-                      <h4 className="font-black text-xs uppercase tracking-widest text-navy">{item.name}</h4>
-                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{item.company}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Interface Real / Screenshots Refactored */}
-        <section className="py-32 bg-white text-navy overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-24">
-               <h2 className="text-5xl font-black mb-4 uppercase tracking-tighter">INTERFACE PREMIUM</h2>
-               <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Desenvolvido por engenheiros, para engenheiros.</p>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-               {[
-                 { title: "Dashboard Operacional", img: "https://images.unsplash.com/photo-1551288049-bbbda536339a?w=800&auto=format&fit=crop" },
-                 { title: "Central de Processos", img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop" },
-                 { title: "Inteligência OCR", img: "https://images.unsplash.com/photo-1518186239717-2e9b1bd67a9a?w=800&auto=format&fit=crop" },
-                 { title: "Biblioteca de Templates", img: "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800&auto=format&fit=crop" },
-                 { title: "Analytics Avançado", img: "https://images.unsplash.com/photo-1543286386-713bdd54867e?w=800&auto=format&fit=crop" },
-                 { title: "Controle de Prazos", img: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&auto=format&fit=crop" }
-               ].map((item, i) => (
-                 <div key={i} className="group cursor-pointer">
-                    <div className="aspect-video bg-white rounded-2xl overflow-hidden border border-slate-100 mb-4 group-hover:border-emerald-500/50 transition-all shadow-sm group-hover:shadow-xl">
-                       <img src={item.img} alt={item.title} className="w-full h-full object-cover grayscale-[0.8] group-hover:grayscale-0 transition-all" />
-                    </div>
-                    <h4 className="text-xs font-black text-navy/60 uppercase tracking-widest group-hover:text-emerald-500 transition-all text-center">{item.title}</h4>
-                 </div>
-               ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Diferenciais Section */}
-        <section id="solucao" className="py-32 bg-slate-50 relative overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-20 items-center">
-              <div className="space-y-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
-                  Por que somos líderes
-                </div>
-                <h2 className="text-5xl font-black text-navy leading-[0.85] uppercase tracking-tighter">
-                  Tecnologia que <span className="text-emerald-500">substitui</span> o trabalho manual.
-                </h2>
-                <div className="space-y-6">
-                  {[
-                    { title: "OCR Inteligente", desc: "Reconhecimento de documentos navais com 98% de precisão." },
-                    { title: "Gestão de Prazos", desc: "Alertas inteligentes de renovação de certificados e vistorias." },
-                    { title: "Analytics Operacional", desc: "Dashboard em tempo real da produtividade do seu escritório." },
-                    { title: "Segurança Enterprise", desc: "Infraestrutura robusta com backup geográfico e criptografia AES-256." }
-                  ].map((item, idx) => (
-                    <div key={idx} className="flex gap-4 p-4 hover:bg-emerald-50 rounded-2xl transition-colors">
-                      <div className="mt-1 h-6 w-6 rounded bg-emerald-500/10 flex items-center justify-center">
-                        <CheckSquare className="h-4 w-4 text-emerald-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
+                    
+                    {/* Anotação estilizada em script "Mais tempo para o que importa" */}
+                    <div className="absolute bottom-4 right-6 sm:right-10 transform rotate-[-4deg] select-none pointer-events-none">
+                      <div className="text-[#0f1d36]/80 text-xl sm:text-2xl font-serif italic tracking-wide drop-shadow-sm flex items-center gap-1">
+                        <span>Mais tempo para o que importa</span>
+                        <span className="text-blue-600 text-lg">~</span>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Card do Painel (Interface Real de Demonstração) */}
+                  <div className="p-4 sm:p-6 bg-white -mt-16 sm:-mt-24 relative z-10 rounded-2xl mx-2 sm:mx-4 mb-4 shadow-xl border border-slate-100">
+                    {/* Header do Mockup */}
+                    <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <img 
+                          src="/navaldocs-logo.png" 
+                          alt="NavalDocs Pro" 
+                          className="h-5 sm:h-6 w-auto object-contain" 
+                        />
+                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider bg-slate-100 px-2 py-0.5 rounded">
+                          Demonstração
+                        </span>
+                      </div>
+
+                      {/* Ações no cabeçalho do mockup (Desktop: busca e perfil / Mobile: ícone de menu) */}
+                      <div className="hidden sm:flex items-center gap-3">
+                        <div className="relative w-44 lg:w-56">
+                          <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                          <input 
+                            type="text" 
+                            disabled 
+                            placeholder="Buscar processo, cliente..." 
+                            className="w-full pl-8 pr-2 py-1 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-600 placeholder:text-slate-400 focus:outline-none"
+                          />
+                        </div>
+                        <div className="relative">
+                          <Bell className="h-4 w-4 text-slate-400" />
+                          <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
+                        </div>
+                        <div className="h-7 w-7 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center">
+                          RS
+                        </div>
+                      </div>
+
+                      <div className="sm:hidden text-slate-400">
+                        <Menu className="h-4 w-4" />
+                      </div>
+                    </div>
+
+                    {/* Saudação e Ação Principal do Painel */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-5 gap-3">
                       <div>
-                        <h4 className="font-black text-navy uppercase tracking-widest text-[11px] mb-1">{item.title}</h4>
-                        <p className="text-slate-500 text-sm font-medium">{item.desc}</p>
+                        <h2 className="text-base sm:text-lg font-bold text-[#0f1d36]">Visão geral</h2>
+                        <p className="text-[11px] sm:text-xs text-slate-500">Bom dia, Rafael! Aqui está o panorama dos seus processos.</p>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="inline-flex items-center gap-1.5 bg-[#1868db] text-white text-xs font-semibold px-3 py-1.5 rounded-md shadow-xs">
+                          <Plus className="h-3.5 w-3.5" />
+                          <span>Novo processo</span>
+                        </span>
                       </div>
                     </div>
-                  ))}
+
+                    {/* 3 Cartões de Indicadores (KPIs) */}
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5 sm:mb-6">
+                      <div className="p-2 sm:p-3 bg-blue-50/60 rounded-xl border border-blue-100/70 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-3">
+                        <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-blue-100/80 text-blue-600 flex items-center justify-center shrink-0">
+                          <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+                            Processos<span className="hidden sm:inline"> em andamento</span>
+                          </p>
+                          <p className="text-sm sm:text-xl font-bold text-[#0f1d36]">12</p>
+                        </div>
+                      </div>
+
+                      <div className="p-2 sm:p-3 bg-red-50/50 rounded-xl border border-red-100/60 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-3">
+                        <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-red-100/80 text-red-500 flex items-center justify-center shrink-0">
+                          <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+                            Pendências<span className="hidden sm:inline"> de hoje</span>
+                          </p>
+                          <p className="text-sm sm:text-xl font-bold text-[#0f1d36]">5</p>
+                        </div>
+                      </div>
+
+                      <div className="p-2 sm:p-3 bg-slate-50 rounded-xl border border-slate-200/60 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-3">
+                        <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                          <FolderCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+                            Documentos
+                          </p>
+                          <p className="text-sm sm:text-xl font-bold text-[#0f1d36]">248</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Lista de Pendências de Hoje */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-xs sm:text-sm font-bold text-[#0f1d36]">Pendências de hoje</h3>
+                        <span className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 cursor-default flex items-center gap-0.5">
+                          Ver todas <ChevronRight className="h-3 w-3" />
+                        </span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {/* Item 1 */}
+                        <div className="p-2.5 sm:p-3 rounded-lg border border-slate-100 hover:border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                          <div className="flex items-start sm:items-center gap-2.5">
+                            <div className="h-7 w-7 rounded-md bg-slate-50 text-slate-500 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+                              <FileText className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-[#0f1d36]">Documentação da embarcação</p>
+                              <p className="text-[11px] text-slate-400">Processo #2847 • Cliente: Marina Costa</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                            <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-100 px-2 py-0.5 rounded">
+                              Atrasado
+                            </span>
+                            <span className="text-[11px] font-medium text-blue-600 border border-blue-200 hover:bg-blue-50 px-2.5 py-1 rounded cursor-default">
+                              Conferir documentos
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Item 2 */}
+                        <div className="p-2.5 sm:p-3 rounded-lg border border-slate-100 hover:border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                          <div className="flex items-start sm:items-center gap-2.5">
+                            <div className="h-7 w-7 rounded-md bg-slate-50 text-slate-500 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+                              <FileText className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-[#0f1d36]">Assinatura do requerimento</p>
+                              <p className="text-[11px] text-slate-400">Processo #2848 • Cliente: João Almeida</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded">
+                              Hoje
+                            </span>
+                            <span className="text-[11px] font-medium text-blue-600 border border-blue-200 hover:bg-blue-50 px-2.5 py-1 rounded cursor-default">
+                              Solicitar assinatura
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Item 3 */}
+                        <div className="p-2.5 sm:p-3 rounded-lg border border-slate-100 hover:border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                          <div className="flex items-start sm:items-center gap-2.5">
+                            <div className="h-7 w-7 rounded-md bg-slate-50 text-slate-500 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+                              <FileText className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-[#0f1d36]">Comprovante de pagamento</p>
+                              <p className="text-[11px] text-slate-400">Processo #2850 • Cliente: Azul Navegação</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded">
+                              Em dia
+                            </span>
+                            <span className="text-[11px] font-medium text-blue-600 border border-blue-200 hover:bg-blue-50 px-2.5 py-1 rounded cursor-default">
+                              Conferir documentos
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Item 4 */}
+                        <div className="p-2.5 sm:p-3 rounded-lg border border-slate-100 hover:border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                          <div className="flex items-start sm:items-center gap-2.5">
+                            <div className="h-7 w-7 rounded-md bg-slate-50 text-slate-500 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+                              <FileText className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-[#0f1d36]">Laudo técnico</p>
+                              <p className="text-[11px] text-slate-400">Processo #2851 • Cliente: Pedro Nunes</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded">
+                              Em dia
+                            </span>
+                            <span className="text-[11px] font-medium text-blue-600 border border-blue-200 hover:bg-blue-50 px-2.5 py-1 rounded cursor-default">
+                              Solicitar assinatura
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-6 mt-12">
-                   <div className="p-8 bg-white rounded-2xl shadow-xl border border-slate-100">
-                      <BarChart3 className="h-10 w-10 text-blue-500 mb-4" />
-                      <p className="text-3xl font-black text-navy tracking-tighter">70%</p>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Mais produtividade</p>
-                   </div>
-                   <div className="p-8 bg-navy text-white rounded-2xl shadow-xl">
-                      <Cpu className="h-10 w-10 text-primary mb-4" />
-                      <p className="text-3xl font-black tracking-tighter">0.5s</p>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tempo de OCR</p>
-                   </div>
+            </div>
+
+            {/* Divisor com subtítulo para despachantes e engenheiros */}
+            <div className="mt-16 sm:mt-20 pt-8 flex items-center justify-center gap-4">
+              <div className="h-px bg-slate-200 flex-1 max-w-[80px] sm:max-w-[140px]" />
+              <span className="text-slate-500 text-xs sm:text-sm font-medium tracking-wide text-center">
+                Para despachantes, engenheiros e equipes náuticas
+              </span>
+              <div className="h-px bg-slate-200 flex-1 max-w-[80px] sm:max-w-[140px]" />
+            </div>
+          </div>
+        </section>
+
+        {/* 3. BENEFÍCIOS */}
+        <section id="solucao" className="py-16 sm:py-24 bg-white scroll-mt-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-16">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0f1d36] tracking-tight">
+                Tudo organizado. Próximo passo claro.
+              </h2>
+              <p className="mt-3 text-slate-600 text-sm sm:text-base">
+                Uma solução completa para simplificar sua rotina e manter o foco no que realmente importa.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
+              {/* Card 1: Processos guiados */}
+              <div className="p-8 rounded-2xl bg-white border border-slate-100 shadow-xs hover:shadow-md transition-shadow">
+                <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6">
+                  <ClipboardList className="h-6 w-6" />
                 </div>
-                <div className="space-y-6">
-                   <div className="p-8 bg-primary text-white rounded-2xl shadow-xl">
-                      <Users className="h-10 w-10 text-white mb-4" />
-                      <p className="text-3xl font-black tracking-tighter">+500</p>
-                      <p className="text-xs font-bold text-white/60 uppercase tracking-widest">Empresas Ativas</p>
-                   </div>
-                   <div className="p-8 bg-white rounded-2xl shadow-xl border border-slate-100">
-                      <Shield className="h-10 w-10 text-emerald-500 mb-4" />
-                      <p className="text-3xl font-black text-navy tracking-tighter">100%</p>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Conformidade Marinha</p>
-                   </div>
+                <h3 className="text-lg font-bold text-[#0f1d36] mb-2">
+                  Processos guiados
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Do cadastro à conclusão, com etapas claras e sem retrabalho.
+                </p>
+              </div>
+
+              {/* Card 2: Documentos conectados */}
+              <div className="p-8 rounded-2xl bg-white border border-slate-100 shadow-xs hover:shadow-md transition-shadow">
+                <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6">
+                  <FolderGit2 className="h-6 w-6" />
                 </div>
+                <h3 className="text-lg font-bold text-[#0f1d36] mb-2">
+                  Documentos conectados
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Tudo vinculado a clientes, embarcações e processos.
+                </p>
+              </div>
+
+              {/* Card 3: Prazos sob controle */}
+              <div id="recursos" className="p-8 rounded-2xl bg-white border border-slate-100 shadow-xs hover:shadow-md transition-shadow scroll-mt-28">
+                <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6">
+                  <CalendarCheck className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold text-[#0f1d36] mb-2">
+                  Prazos sob controle
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Visualize pendências, receba alertas e mantenha sua operação em dia.
+                </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Planos Premium */}
-        <section id="planos" className="py-32 bg-white">
+        {/* 4. COMO FUNCIONA */}
+        <section id="como-funciona" className="py-16 sm:py-24 bg-[#f8fafc] border-t border-slate-100 scroll-mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-24">
-                <h2 className="text-5xl lg:text-7xl font-black text-navy uppercase tracking-tighter text-center mb-16">
-                  Investimento <span className="text-emerald-500">Estratégico</span>
-                </h2>
-              <p className="text-slate-500 mt-4 text-lg">Planos desenhados para todos os tamanhos de operação naval.</p>
+            <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-16">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0f1d36] tracking-tight">
+                Do cadastro ao acompanhamento
+              </h2>
+              <p className="mt-3 text-slate-600 text-sm sm:text-base">
+                Em poucos passos, seu processo náutico em andamento, com mais controle e transparência.
+              </p>
             </div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-                { 
-                  name: "Starter", 
-                  price: "R$ 497", 
-                  desc: "Ideal para profissionais liberais e engenheiros autônomos.",
-                  features: ["Até 50 Embarcações", "OCR Padrão", "Documentos Ilimitados", "Suporte Prioritário", "1 Escritório"] 
-                },
-                { 
-                  name: "Professional", 
-                  price: "R$ 1.297", 
-                  desc: "Focado em empresas de engenharia e despachantes em crescimento.",
-                  features: ["Embarcações Ilimitadas", "OCR Avançado em Lote", "Dashboard de Analytics", "Até 10 Usuários", "Até 3 Escritórios"],
-                  popular: true 
-                },
-                { 
-                  name: "Enterprise", 
-                  price: "Custom", 
-                  desc: "Para grandes frotas, estaleiros e operações nacionais.",
-                  features: ["White Label Parcial", "API de Integração", "Manager Dedicado", "Usuários Ilimitados", "Treinamento VIP"] 
-                }
-              ].map((plan, idx) => (
-                <div key={idx} className={`relative p-10 rounded-3xl border-2 transition-all hover:scale-105 duration-500 ${plan.popular ? 'border-emerald-500 shadow-2xl bg-white scale-105 z-10' : 'bg-white border-slate-100 shadow-sm'}`}>
-                  {plan.popular && <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-500 text-white text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-lg">Mais Vendido</span>}
-                  
-                  <div className="mb-10">
-                    <h3 className="text-2xl font-black text-navy mb-2 uppercase tracking-widest">{plan.name}</h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">{plan.desc}</p>
-                  </div>
-                  
-                  <div className="mb-10">
-                    <span className="text-5xl font-black text-navy tracking-tighter">{plan.price}</span>
-                    {plan.price !== "Custom" && <span className="text-slate-400 font-bold ml-2">/mês</span>}
-                  </div>
-                  
-                  <ul className="space-y-5 mb-12">
-                    {plan.features.map((f, i) => (
-                      <li key={i} className="flex items-center gap-3 text-sm font-bold text-navy/70">
-                        <CheckCircle className="h-5 w-5 text-emerald-500 flex-shrink-0" /> {f}
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  <Link to="/auth/signup" className={`w-full block py-5 rounded-2xl text-center font-black transition-all uppercase tracking-[0.1em] ${plan.popular ? 'bg-emerald-500 text-white hover:shadow-xl shadow-emerald-500/20' : 'bg-white border-2 border-slate-200 text-navy hover:bg-slate-100'}`}>
-                    {plan.price === "Custom" ? "Falar com Vendas" : "Assinar Agora"}
+
+            <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 lg:gap-4 relative max-w-5xl mx-auto">
+              {/* Etapa 1 */}
+              <div className="flex-1 flex flex-col items-center text-center p-4">
+                <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 font-bold text-lg flex items-center justify-center mb-4 shadow-xs">
+                  1
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-[#0f1d36] mb-1.5">
+                  Escolha o serviço
+                </h3>
+                <p className="text-sm text-slate-600 max-w-xs leading-relaxed">
+                  Selecione o tipo de processo que deseja iniciar.
+                </p>
+              </div>
+
+              {/* Conector 1 -> 2 */}
+              <div className="hidden md:flex items-center justify-center pt-8 text-slate-300">
+                <ChevronRight className="h-6 w-6" />
+              </div>
+
+              {/* Etapa 2 */}
+              <div className="flex-1 flex flex-col items-center text-center p-4">
+                <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 font-bold text-lg flex items-center justify-center mb-4 shadow-xs">
+                  2
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-[#0f1d36] mb-1.5">
+                  Confira os documentos
+                </h3>
+                <p className="text-sm text-slate-600 max-w-xs leading-relaxed">
+                  Veja a lista do que é necessário e anexe os arquivos.
+                </p>
+              </div>
+
+              {/* Conector 2 -> 3 */}
+              <div className="hidden md:flex items-center justify-center pt-8 text-slate-300">
+                <ChevronRight className="h-6 w-6" />
+              </div>
+
+              {/* Etapa 3 */}
+              <div className="flex-1 flex flex-col items-center text-center p-4">
+                <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 font-bold text-lg flex items-center justify-center mb-4 shadow-xs">
+                  3
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-[#0f1d36] mb-1.5">
+                  Acompanhe o processo
+                </h3>
+                <p className="text-sm text-slate-600 max-w-xs leading-relaxed">
+                  Receba atualizações e saiba sempre o próximo passo.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 5. CHAMADA FINAL (BANNER) */}
+        <section className="py-12 sm:py-16 bg-[#f8fafc]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="relative rounded-2xl overflow-hidden bg-[#0c1e3d] shadow-xl">
+              {/* Imagem náutica de veleiro ao entardecer */}
+              <div className="absolute inset-0 z-0">
+                <img 
+                  src="/cta-sailboat.jpg" 
+                  alt="Veleiro navegando em águas calmas" 
+                  className="w-full h-full object-cover object-right opacity-40 mix-blend-luminosity"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0c1e3d] via-[#0c1e3d]/90 to-transparent sm:to-[#0c1e3d]/30" />
+              </div>
+
+              {/* Conteúdo do Banner */}
+              <div className="relative z-10 p-8 sm:p-12 lg:p-14 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <div className="space-y-2">
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                    Simplifique sua rotina náutica.
+                  </h2>
+                  <p className="text-blue-100/80 text-sm sm:text-base">
+                    Mais organização para você ir mais longe.
+                  </p>
+                </div>
+
+                <div className="shrink-0">
+                  <Link 
+                    to="/auth/signup" 
+                    className="inline-flex items-center gap-2 bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold px-7 py-3.5 rounded-lg shadow-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c1e3d] active:scale-98"
+                  >
+                    <span>Começar agora</span>
+                    <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Final CTA Premium */}
-        <section className="py-24 bg-white relative overflow-hidden">
-          <div className="absolute inset-0 bg-emerald-500/5 pointer-events-none" />
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="bg-white rounded-3xl p-16 lg:p-24 text-center border border-slate-100 shadow-2xl">
-              <h2 className="text-5xl lg:text-[80px] font-black text-navy mb-8 leading-[0.85] uppercase tracking-tighter">
-                DOMINE O MERCADO <span className="text-emerald-500">NAVAL</span>
-              </h2>
-              <p className="text-xl text-slate-500 mb-12 max-w-2xl mx-auto leading-tight font-bold">
-                Junte-se a centenas de empresas que já automatizaram sua gestão documental com o NavalDocs Pro.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <Link to="/auth/signup" className="group relative bg-emerald-500 text-white px-12 py-6 rounded-2xl text-xl font-black hover:scale-110 transition-all shadow-2xl shadow-emerald-500/20 overflow-hidden">
-                  <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
-                  EXPERIMENTAR AGORA
-                </Link>
-                <Link to="/demo" className="bg-white border-2 border-emerald-500 text-emerald-500 px-12 py-6 rounded-2xl text-xl font-black hover:bg-emerald-50 transition-transform shadow-lg">
-                  VER EM AÇÃO
-                </Link>
               </div>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="bg-white border-t border-slate-100 py-12 text-center">
-         <div className="max-w-7xl mx-auto px-4">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-               <div className="flex items-center gap-2">
-                  <Anchor className="h-6 w-6 text-emerald-500" />
-                  <span className="text-lg font-black tracking-tighter text-navy uppercase italic">NavalDocs <span className="text-emerald-500">Pro</span></span>
-               </div>
-               <div className="flex flex-col items-center md:items-start">
-                  <div className="text-slate-500 text-sm font-bold">
-                    © 2026 NavalDocs Pro - Software Enterprise para Engenharia Naval.
-                  </div>
-                  <div className="flex items-center gap-2 mt-2 px-3 py-1 bg-white/5 border border-white/10 rounded-lg">
-                    <CheckCircle className="h-3 w-3 text-emerald-500" />
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Enterprise Edition Sealed</span>
-                  </div>
-               </div>
-               <div className="flex gap-6">
-                  <Link to="/status" className="text-xs font-black text-slate-500 hover:text-white transition-colors">STATUS</Link>
-                  <Link to="/changelog" className="text-xs font-black text-slate-500 hover:text-white transition-colors">CHANGELOG</Link>
-                  <Link to="/sales-center" className="text-xs font-black text-slate-500 hover:text-white transition-colors">VENDAS</Link>
-               </div>
+      {/* 6. RODAPÉ */}
+      <footer className="bg-white border-t border-slate-100 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-slate-500">
+            {/* Logo Oficial */}
+            <div className="flex items-center">
+              <img 
+                src="/navaldocs-logo.png" 
+                alt="NavalDocs Pro" 
+                className="h-8 w-auto object-contain"
+                width="150"
+                height="50"
+              />
             </div>
-         </div>
+
+            {/* Links existentes */}
+            <div className="flex items-center gap-6 font-medium">
+              <button 
+                onClick={() => setInfoModal({
+                  title: "Política de Privacidade",
+                  content: "O NavalDocs Pro preza pela total confidencialidade e segurança dos dados náuticos, documentos e cadastros de clientes e embarcações. Os dados são armazenados com criptografia e em conformidade com as diretrizes da LGPD."
+                })}
+                className="hover:text-blue-600 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded"
+              >
+                Privacidade
+              </button>
+              <button 
+                onClick={() => setInfoModal({
+                  title: "Termos de Uso",
+                  content: "O NavalDocs Pro é uma plataforma especializada para gestão de processos, clientes e documentos marítimos por despachantes e engenheiros navais. O uso dos serviços obedece às normas marítimas vigentes e termos contratuais de subscrição."
+                })}
+                className="hover:text-blue-600 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded"
+              >
+                Termos
+              </button>
+              <Link 
+                to="/support" 
+                className="hover:text-blue-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded"
+              >
+                Contato
+              </Link>
+            </div>
+
+            {/* Slogan */}
+            <div className="text-slate-400 text-center sm:text-right">
+              — Navegação mais simples para grandes conquistas.
+            </div>
+          </div>
+        </div>
       </footer>
+
+      {/* Modal Informativo para Privacidade / Termos */}
+      {infoModal && (
+        <div 
+          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
+          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <h3 id="modal-title" className="text-lg font-bold text-[#0f1d36]">
+                {infoModal.title}
+              </h3>
+              <button 
+                onClick={() => setInfoModal(null)} 
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
+                aria-label="Fechar"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="text-sm text-slate-600 leading-relaxed mb-6">
+              {infoModal.content}
+            </p>
+            <div className="flex justify-end">
+              <button 
+                onClick={() => setInfoModal(null)} 
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg transition-colors"
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
