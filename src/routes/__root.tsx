@@ -171,7 +171,7 @@ const NavalCopilotDrawer = React.lazy(() =>
 // Separate component to safely handle floating widgets
 function SafeFloatingWidgets() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  if (pathname === "/" || pathname === "/home") {
+  if (pathname === "/" || pathname === "/home" || pathname.startsWith("/auth")) {
     return null;
   }
 
