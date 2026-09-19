@@ -2120,6 +2120,25 @@ function NovoPedidoPage() {
                 variant="outline"
                 onClick={() =>
                   navigate({
+                    to: "/processes/visualizar-e-editar",
+                    search: {
+                      preview: "true",
+                      customerId: selectedCustomerId || undefined,
+                      vesselId: selectedVesselId || undefined,
+                    },
+                  })
+                }
+                className="w-full sm:w-auto h-11 px-4 rounded-xl border-slate-200 text-slate-700 font-semibold text-xs sm:text-sm hover:bg-slate-50 cursor-pointer inline-flex items-center justify-center gap-2"
+              >
+                <Eye className="h-4 w-4 text-[#1868db]" />
+                <span>Visualizar e editar</span>
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  navigate({
                     to: "/processes/arquivos-gerados",
                     search: {
                       preview: "true",
@@ -2128,7 +2147,7 @@ function NovoPedidoPage() {
                     },
                   })
                 }
-                className="w-full sm:w-auto h-11 px-5 rounded-xl border-slate-200 text-slate-700 font-semibold text-xs sm:text-sm hover:bg-slate-50 cursor-pointer inline-flex items-center justify-center gap-2"
+                className="w-full sm:w-auto h-11 px-4 rounded-xl border-slate-200 text-slate-700 font-semibold text-xs sm:text-sm hover:bg-slate-50 cursor-pointer inline-flex items-center justify-center gap-2"
               >
                 <FileText className="h-4 w-4 text-[#1868db]" />
                 <span>Ver arquivos gerados</span>

@@ -115,6 +115,7 @@ import { Route as ProcessesArchivedRouteImport } from './routes/processes.archiv
 import { Route as ProcessesArquivosGeradosRouteImport } from './routes/processes.arquivos-gerados'
 import { Route as ProcessesNovoPedidoRouteImport } from './routes/processes.novo-pedido'
 import { Route as ProcessesTrashRouteImport } from './routes/processes.trash'
+import { Route as ProcessesVisualizarEEditarRouteImport } from './routes/processes.visualizar-e-editar'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as TemplatesIdRouteImport } from './routes/templates.$id'
 import { Route as TemplatesGratuitosRouteImport } from './routes/templates.gratuitos'
@@ -675,6 +676,12 @@ const ProcessesTrashRoute = ProcessesTrashRouteImport.update({
   path: '/processes/trash',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProcessesVisualizarEEditarRoute =
+  ProcessesVisualizarEEditarRouteImport.update({
+    id: '/processes/visualizar-e-editar',
+    path: '/processes/visualizar-e-editar',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -907,6 +914,7 @@ export interface FileRoutesByFullPath {
   '/processes/arquivos-gerados': typeof ProcessesArquivosGeradosRoute
   '/processes/novo-pedido': typeof ProcessesNovoPedidoRoute
   '/processes/trash': typeof ProcessesTrashRoute
+  '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
@@ -1035,6 +1043,7 @@ export interface FileRoutesByTo {
   '/processes/arquivos-gerados': typeof ProcessesArquivosGeradosRoute
   '/processes/novo-pedido': typeof ProcessesNovoPedidoRoute
   '/processes/trash': typeof ProcessesTrashRoute
+  '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
@@ -1168,6 +1177,7 @@ export interface FileRoutesById {
   '/processes/arquivos-gerados': typeof ProcessesArquivosGeradosRoute
   '/processes/novo-pedido': typeof ProcessesNovoPedidoRoute
   '/processes/trash': typeof ProcessesTrashRoute
+  '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
@@ -1302,6 +1312,7 @@ export interface FileRouteTypes {
     | '/processes/arquivos-gerados'
     | '/processes/novo-pedido'
     | '/processes/trash'
+    | '/processes/visualizar-e-editar'
     | '/templates/$id'
     | '/templates/gratuitos'
     | '/templates/marketplace'
@@ -1430,6 +1441,7 @@ export interface FileRouteTypes {
     | '/processes/arquivos-gerados'
     | '/processes/novo-pedido'
     | '/processes/trash'
+    | '/processes/visualizar-e-editar'
     | '/templates/$id'
     | '/templates/gratuitos'
     | '/templates/marketplace'
@@ -1562,6 +1574,7 @@ export interface FileRouteTypes {
     | '/processes/arquivos-gerados'
     | '/processes/novo-pedido'
     | '/processes/trash'
+    | '/processes/visualizar-e-editar'
     | '/templates/$id'
     | '/templates/gratuitos'
     | '/templates/marketplace'
@@ -1654,6 +1667,7 @@ export interface RootRouteChildren {
   ProcessesArquivosGeradosRoute: typeof ProcessesArquivosGeradosRoute
   ProcessesNovoPedidoRoute: typeof ProcessesNovoPedidoRoute
   ProcessesTrashRoute: typeof ProcessesTrashRoute
+  ProcessesVisualizarEEditarRoute: typeof ProcessesVisualizarEEditarRoute
   VerificarAssinaturaCodeRoute: typeof VerificarAssinaturaCodeRoute
   ProcessesIndexRoute: typeof ProcessesIndexRoute
 }
@@ -2402,6 +2416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProcessesTrashRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/processes/visualizar-e-editar': {
+      id: '/processes/visualizar-e-editar'
+      path: '/processes/visualizar-e-editar'
+      fullPath: '/processes/visualizar-e-editar'
+      preLoaderRoute: typeof ProcessesVisualizarEEditarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/templates/': {
       id: '/templates/'
       path: '/'
@@ -2825,6 +2846,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProcessesArquivosGeradosRoute: ProcessesArquivosGeradosRoute,
   ProcessesNovoPedidoRoute: ProcessesNovoPedidoRoute,
   ProcessesTrashRoute: ProcessesTrashRoute,
+  ProcessesVisualizarEEditarRoute: ProcessesVisualizarEEditarRoute,
   VerificarAssinaturaCodeRoute: VerificarAssinaturaCodeRoute,
   ProcessesIndexRoute: ProcessesIndexRoute,
 }

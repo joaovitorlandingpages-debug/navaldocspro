@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-r
 import {
   ArrowLeft, Download, Eye, Ship, FileText, Wrench, ChevronDown, ChevronUp,
   AlertCircle, CheckCircle2, Lightbulb, Clock, Check, X, Loader2, Sparkles,
-  User, Calendar, FolderArchive, FileCheck
+  User, Calendar, FolderArchive, FileCheck, Palette
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import JSZip from "jszip";
@@ -707,21 +707,41 @@ function ArquivosGeradosPage() {
               type="button"
               variant="outline"
               onClick={() => setViewingFile(null)}
-              className="h-9 px-4 rounded-xl border-slate-200 text-slate-700 text-xs font-semibold"
+              className="h-9 px-4 rounded-xl border-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
             >
               Fechar
             </Button>
 
-            {viewingFile && (
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
-                onClick={() => handleDownloadFile(viewingFile)}
-                className="h-9 px-5 rounded-xl bg-[#1868db] hover:bg-[#1456b8] text-white text-xs font-semibold flex items-center gap-1.5"
+                variant="outline"
+                onClick={() => {
+                  setViewingFile(null);
+                  navigate({
+                    to: "/processes/visualizar-e-editar",
+                    search: {
+                      preview: "true",
+                    },
+                  });
+                }}
+                className="h-9 px-3.5 rounded-xl border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 cursor-pointer hover:bg-slate-50"
               >
-                <Download className="h-3.5 w-3.5" />
-                <span>Baixar PDF</span>
+                <Palette className="h-3.5 w-3.5 text-[#1868db]" />
+                <span>Personalizar marca-d'água</span>
               </Button>
-            )}
+
+              {viewingFile && (
+                <Button
+                  type="button"
+                  onClick={() => handleDownloadFile(viewingFile)}
+                  className="h-9 px-5 rounded-xl bg-[#1868db] hover:bg-[#1456b8] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Baixar PDF</span>
+                </Button>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

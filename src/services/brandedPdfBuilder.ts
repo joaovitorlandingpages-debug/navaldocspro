@@ -1,5 +1,16 @@
 import type { CompanyBranding, PdfTemplateId } from "./companyBranding";
 
+export type WatermarkCustomOptions = {
+  enabled?: boolean;
+  opacity?: number; // e.g. 0.05
+  scale?: number; // e.g. 0.60
+  position?: "center" | "top" | "bottom";
+  pages?: "all" | "first_only";
+  logoUrl?: string | null;
+  rawImageBytes?: Uint8Array | null;
+  rawImageType?: "png" | "jpg";
+};
+
 /**
  * Single source of truth para PDFs com identidade visual.
  * Aplica o modelo escolhido em Identidade Corporativa
@@ -10,6 +21,7 @@ export async function buildBrandedDocumentPdf(opts: {
   content: string;
   branding: CompanyBranding | null;
   verificationCode?: string;
+  watermarkOptions?: WatermarkCustomOptions;
 }): Promise<{ bytes: Uint8Array; verificationCode: string }> {
   const { PDFDocument, StandardFonts, rgb, degrees } = await import("pdf-lib");
   const pdfDoc = await PDFDocument.create();
@@ -54,12 +66,30 @@ export async function buildBrandedDocumentPdf(opts: {
     }
   };
 
-  const [logoImg, watermarkImg, signatureImg, stampImg] = await Promise.all([
+  const embedRaw = async (bytes: Uint8Array | null | undefined, type: "png" | "jpg" = "png") => {
+    if (!bytes) return null;
+    try {
+      return type === "png" ? await pdfDoc.embedPng(bytes) : await pdfDoc.embedJpg(bytes);
+    } catch {
+      try {
+        return await pdfDoc.embedPng(bytes);
+      } catch {
+        return null;
+      }
+    }
+  };
+
+  const watermarkTargetUrl = opts.watermarkOptions?.logoUrl || b?.watermark_url || b?.logo_primary_url;
+
+  const [logoImg, watermarkImg, rawWatermarkImg, signatureImg, stampImg] = await Promise.all([
     embedImage(b?.logo_primary_url),
-    embedImage(b?.watermark_url),
+    embedImage(watermarkTargetUrl),
+    embedRaw(opts.watermarkOptions?.rawImageBytes, opts.watermarkOptions?.rawImageType),
     embedImage(b?.signature_url),
     embedImage(b?.stamp_url),
   ]);
+
+  const finalWatermarkImg = rawWatermarkImg || watermarkImg;
 
   const verificationCode =
     opts.verificationCode ||
@@ -679,30 +709,46 @@ export async function buildBrandedDocumentPdf(opts: {
       maxWidth: 240,
     });
 
-    // Watermark (menor, mais transparente, centralizada)
-    if (watermarkImg) {
-      const ww = 260;
-      const wh = (watermarkImg.height / watermarkImg.width) * ww;
-      p.drawImage(watermarkImg, {
-        x: (W - ww) / 2,
-        y: (H - wh) / 2,
-        width: ww,
-        height: wh,
-        opacity: 0.04,
-      });
-    } else if (b?.company_name) {
-      const wmText = sanitize(b.company_name.toUpperCase());
-      const wmSize = 46;
-      const wmW = measure(wmText, wmSize, bold);
-      p.drawText(wmText, {
-        x: (W - wmW) / 2 + wmSize * 0.6,
-        y: H / 2 - wmSize * 0.3,
-        size: wmSize,
-        font: bold,
-        color: secondary,
-        opacity: 0.04,
-        rotate: degrees(-30),
-      });
+    // Watermark personalizada (respeita opacidade, escala, posição e páginas)
+    const wmOpt = opts.watermarkOptions;
+    const isWatermarkEnabled = wmOpt ? wmOpt.enabled !== false : true;
+    const isPageAllowed = !wmOpt || wmOpt.pages !== "first_only" || idx === 0;
+
+    if (isWatermarkEnabled && isPageAllowed) {
+      if (finalWatermarkImg) {
+        const scaleFraction = wmOpt?.scale ?? 0.60;
+        const targetOpacity = wmOpt?.opacity ?? 0.05;
+        const ww = Math.min(CONTENT_W * scaleFraction, W - 40);
+        const wh = (finalWatermarkImg.height / finalWatermarkImg.width) * ww;
+
+        let targetY = (H - wh) / 2;
+        if (wmOpt?.position === "top") {
+          targetY = H - headerHeight - wh - 30;
+        } else if (wmOpt?.position === "bottom") {
+          targetY = BOTTOM_MARGIN + 30;
+        }
+
+        p.drawImage(finalWatermarkImg, {
+          x: (W - ww) / 2,
+          y: targetY,
+          width: ww,
+          height: wh,
+          opacity: Math.max(0.01, Math.min(0.20, targetOpacity)),
+        });
+      } else if (b?.company_name) {
+        const wmText = sanitize(b.company_name.toUpperCase());
+        const wmSize = 46;
+        const wmW = measure(wmText, wmSize, bold);
+        p.drawText(wmText, {
+          x: (W - wmW) / 2 + wmSize * 0.6,
+          y: H / 2 - wmSize * 0.3,
+          size: wmSize,
+          font: bold,
+          color: secondary,
+          opacity: wmOpt?.opacity ?? 0.04,
+          rotate: degrees(-30),
+        });
+      }
     }
 
     // Footer
