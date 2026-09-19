@@ -544,7 +544,12 @@ function ProcessTrackingPage() {
 
             <Button
               type="button"
-              onClick={() => setSignatureModalOpen(true)}
+              onClick={() => {
+                navigate({
+                  to: "/processes/preparar-assinaturas",
+                  search: { processId: id, preview: true },
+                });
+              }}
               className="bg-[#1868db] hover:bg-[#1456b6] text-white font-bold px-6 py-2.5 rounded-xl shadow-xs shrink-0 w-full md:w-auto text-sm"
             >
               Preparar solicitação

@@ -114,6 +114,7 @@ import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as ProcessesArchivedRouteImport } from './routes/processes.archived'
 import { Route as ProcessesArquivosGeradosRouteImport } from './routes/processes.arquivos-gerados'
 import { Route as ProcessesNovoPedidoRouteImport } from './routes/processes.novo-pedido'
+import { Route as ProcessesPrepararAssinaturasRouteImport } from './routes/processes.preparar-assinaturas'
 import { Route as ProcessesTrashRouteImport } from './routes/processes.trash'
 import { Route as ProcessesVisualizarEEditarRouteImport } from './routes/processes.visualizar-e-editar'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
@@ -671,6 +672,12 @@ const ProcessesNovoPedidoRoute = ProcessesNovoPedidoRouteImport.update({
   path: '/processes/novo-pedido',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProcessesPrepararAssinaturasRoute =
+  ProcessesPrepararAssinaturasRouteImport.update({
+    id: '/processes/preparar-assinaturas',
+    path: '/processes/preparar-assinaturas',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ProcessesTrashRoute = ProcessesTrashRouteImport.update({
   id: '/processes/trash',
   path: '/processes/trash',
@@ -913,6 +920,7 @@ export interface FileRoutesByFullPath {
   '/processes/archived': typeof ProcessesArchivedRoute
   '/processes/arquivos-gerados': typeof ProcessesArquivosGeradosRoute
   '/processes/novo-pedido': typeof ProcessesNovoPedidoRoute
+  '/processes/preparar-assinaturas': typeof ProcessesPrepararAssinaturasRoute
   '/processes/trash': typeof ProcessesTrashRoute
   '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
   '/templates/$id': typeof TemplatesIdRoute
@@ -1042,6 +1050,7 @@ export interface FileRoutesByTo {
   '/processes/archived': typeof ProcessesArchivedRoute
   '/processes/arquivos-gerados': typeof ProcessesArquivosGeradosRoute
   '/processes/novo-pedido': typeof ProcessesNovoPedidoRoute
+  '/processes/preparar-assinaturas': typeof ProcessesPrepararAssinaturasRoute
   '/processes/trash': typeof ProcessesTrashRoute
   '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
   '/templates/$id': typeof TemplatesIdRoute
@@ -1176,6 +1185,7 @@ export interface FileRoutesById {
   '/processes/archived': typeof ProcessesArchivedRoute
   '/processes/arquivos-gerados': typeof ProcessesArquivosGeradosRoute
   '/processes/novo-pedido': typeof ProcessesNovoPedidoRoute
+  '/processes/preparar-assinaturas': typeof ProcessesPrepararAssinaturasRoute
   '/processes/trash': typeof ProcessesTrashRoute
   '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
   '/templates/$id': typeof TemplatesIdRoute
@@ -1311,6 +1321,7 @@ export interface FileRouteTypes {
     | '/processes/archived'
     | '/processes/arquivos-gerados'
     | '/processes/novo-pedido'
+    | '/processes/preparar-assinaturas'
     | '/processes/trash'
     | '/processes/visualizar-e-editar'
     | '/templates/$id'
@@ -1440,6 +1451,7 @@ export interface FileRouteTypes {
     | '/processes/archived'
     | '/processes/arquivos-gerados'
     | '/processes/novo-pedido'
+    | '/processes/preparar-assinaturas'
     | '/processes/trash'
     | '/processes/visualizar-e-editar'
     | '/templates/$id'
@@ -1573,6 +1585,7 @@ export interface FileRouteTypes {
     | '/processes/archived'
     | '/processes/arquivos-gerados'
     | '/processes/novo-pedido'
+    | '/processes/preparar-assinaturas'
     | '/processes/trash'
     | '/processes/visualizar-e-editar'
     | '/templates/$id'
@@ -1666,6 +1679,7 @@ export interface RootRouteChildren {
   ProcessesArchivedRoute: typeof ProcessesArchivedRoute
   ProcessesArquivosGeradosRoute: typeof ProcessesArquivosGeradosRoute
   ProcessesNovoPedidoRoute: typeof ProcessesNovoPedidoRoute
+  ProcessesPrepararAssinaturasRoute: typeof ProcessesPrepararAssinaturasRoute
   ProcessesTrashRoute: typeof ProcessesTrashRoute
   ProcessesVisualizarEEditarRoute: typeof ProcessesVisualizarEEditarRoute
   VerificarAssinaturaCodeRoute: typeof VerificarAssinaturaCodeRoute
@@ -2409,6 +2423,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProcessesNovoPedidoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/processes/preparar-assinaturas': {
+      id: '/processes/preparar-assinaturas'
+      path: '/processes/preparar-assinaturas'
+      fullPath: '/processes/preparar-assinaturas'
+      preLoaderRoute: typeof ProcessesPrepararAssinaturasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/processes/trash': {
       id: '/processes/trash'
       path: '/processes/trash'
@@ -2845,6 +2866,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProcessesArchivedRoute: ProcessesArchivedRoute,
   ProcessesArquivosGeradosRoute: ProcessesArquivosGeradosRoute,
   ProcessesNovoPedidoRoute: ProcessesNovoPedidoRoute,
+  ProcessesPrepararAssinaturasRoute: ProcessesPrepararAssinaturasRoute,
   ProcessesTrashRoute: ProcessesTrashRoute,
   ProcessesVisualizarEEditarRoute: ProcessesVisualizarEEditarRoute,
   VerificarAssinaturaCodeRoute: VerificarAssinaturaCodeRoute,
