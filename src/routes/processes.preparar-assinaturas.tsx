@@ -4,7 +4,7 @@ import {
   ArrowLeft, FileText, Check, Eye, Users, UserPlus, Mail, 
   ChevronDown, ChevronUp, Info, Download, AlertCircle, 
   CheckCircle2, Clock, Ship, Calendar, Pencil, Trash2, X,
-  ShieldCheck, Send, User
+  ShieldCheck, Send, User, Settings2, SlidersHorizontal
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -28,6 +28,7 @@ type PrepararAssinaturasSearch = {
   processId?: string;
   orderId?: string;
   preview?: boolean;
+  step?: number | string;
 };
 
 export const Route = createFileRoute("/processes/preparar-assinaturas")({
@@ -35,11 +36,12 @@ export const Route = createFileRoute("/processes/preparar-assinaturas")({
     processId: typeof s.processId === "string" ? s.processId : undefined,
     orderId: typeof s.orderId === "string" ? s.orderId : undefined,
     preview: s.preview === true || s.preview === "true",
+    step: typeof s.step === "number" || typeof s.step === "string" ? s.step : undefined,
   }),
   component: PrepararAssinaturasPage,
 });
 
-// Mock reference data aligned with images and process #0247
+// Mock reference data aligned with process #0247
 const DEFAULT_PROCESS_INFO = {
   processNumber: "0247",
   orderNumber: "0123",
@@ -122,14 +124,17 @@ const INITIAL_SIGNERS: SignerItem[] = [
   },
 ];
 
+const DEFAULT_MESSAGE = "Olá! Seus documentos estão disponíveis para conferência e assinatura. Acesse o link que você receberá por e-mail.";
+
 function PrepararAssinaturasPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const { profile, user } = useAuth();
   const processId = search.processId || "0247";
 
-  // Step indicator: 1 = Preparar, 2 = Revisar envio
-  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  // Step indicator: 1 = Preparar (Tela 14), 2 = Revisar envio (Tela 15)
+  const initialStep = search.step === 2 || search.step === "2" ? 2 : 1;
+  const [currentStep, setCurrentStep] = useState<1 | 2>(initialStep);
 
   // Process details loaded from Supabase or fallback
   const [processData, setProcessData] = useState<any>(DEFAULT_PROCESS_INFO);
@@ -142,17 +147,18 @@ function PrepararAssinaturasPage() {
   // Signers list
   const [signers, setSigners] = useState<SignerItem[]>(INITIAL_SIGNERS);
 
-  // Expandable options section
-  const [optionsExpanded, setOptionsExpanded] = useState(false);
-  const [customMessage, setCustomMessage] = useState("");
+  // Message & Options
+  const [customMessage, setCustomMessage] = useState(DEFAULT_MESSAGE);
   const [signingOrder, setSigningOrder] = useState<"free" | "sequential">("free");
   const [expiresInDays, setExpiresInDays] = useState("15");
   const [enableReminders, setEnableReminders] = useState(false);
+  const [optionsExpanded, setOptionsExpanded] = useState(false);
 
   // Modals
   const [previewDocModal, setPreviewDocModal] = useState<DocumentItem | null>(null);
   const [personModalOpen, setPersonModalOpen] = useState(false);
   const [editingSigner, setEditingSigner] = useState<SignerItem | null>(null);
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
 
   // Form states for Person Modal
   const [personName, setPersonName] = useState("");
@@ -162,6 +168,16 @@ function PrepararAssinaturasPage() {
 
   // Sending status
   const [isSending, setIsSending] = useState(false);
+  const [hasSent, setHasSent] = useState(false);
+
+  // Sync step with URL param if it changes
+  useEffect(() => {
+    if (search.step === 2 || search.step === "2") {
+      setCurrentStep(2);
+    } else if (search.step === 1 || search.step === "1") {
+      setCurrentStep(1);
+    }
+  }, [search.step]);
 
   // Load real process if available
   useEffect(() => {
@@ -325,7 +341,7 @@ function PrepararAssinaturasPage() {
       return;
     }
 
-    // Check if each signer has an email
+    // Check if each signer has a valid email
     for (const s of signers) {
       if (!s.email.trim() || !s.email.includes("@")) {
         toast.error(`O signatário ${s.name} está com e-mail inválido ou incompleto.`);
@@ -374,9 +390,11 @@ function PrepararAssinaturasPage() {
     }
   };
 
-  // Final confirmation and real submission
+  // Final confirmation and real submission (Tela 15)
   const handleSendSignatures = async () => {
+    if (isSending) return;
     setIsSending(true);
+
     try {
       if (profile?.company_id && processId !== "0247") {
         // Real creation via signaturesService
@@ -407,18 +425,27 @@ function PrepararAssinaturasPage() {
           .eq("id", processId);
       }
 
+      setHasSent(true);
       toast.success("Solicitação de assinatura enviada com sucesso aos signatários!");
-      // Navigate back to process detail
-      navigate({
-        to: "/processes/$id",
-        params: { id: processId },
-        search: { preview: true },
-      });
+
+      // Navigate back to process detail with tracking
+      setTimeout(() => {
+        navigate({
+          to: "/processes/$id",
+          params: { id: processId },
+          search: { preview: true },
+        });
+      }, 900);
     } catch (err: any) {
       toast.error(err?.message || "Erro ao disparar assinaturas.");
     } finally {
       setIsSending(false);
     }
+  };
+
+  // Filter documents assigned to each signer
+  const getDocsForSigner = (signer: SignerItem) => {
+    return documents.filter((d) => signer.assignedDocIds.includes(d.id) && selectedDocIds.includes(d.id));
   };
 
   return (
@@ -428,21 +455,34 @@ function PrepararAssinaturasPage() {
 
           {/* 1. CABEÇALHO */}
           <div className="mb-6">
-            <Link
-              to="/processes/$id"
-              params={{ id: processId }}
-              search={{ preview: true }}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1868db] hover:text-[#1351aa] transition-colors mb-3 group"
-            >
-              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-              <span>Voltar ao processo</span>
-            </Link>
+            {currentStep === 1 ? (
+              <Link
+                to="/processes/$id"
+                params={{ id: processId }}
+                search={{ preview: true }}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1868db] hover:text-[#1351aa] transition-colors mb-3 group"
+              >
+                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+                <span>Voltar ao processo</span>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1868db] hover:text-[#1351aa] transition-colors mb-3 group cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+                <span>Voltar à preparação</span>
+              </button>
+            )}
 
             <h1 className="text-2xl md:text-3xl font-extrabold text-[#0d2342] tracking-tight">
-              Preparar assinaturas
+              {currentStep === 1 ? "Preparar assinaturas" : "Revise antes de enviar"}
             </h1>
             <p className="text-sm text-slate-500 font-medium mt-1">
-              Confira os documentos e quem precisa assinar.
+              {currentStep === 1 
+                ? "Confira os documentos e quem precisa assinar." 
+                : "Confira os destinatários e os documentos de cada pessoa."}
             </p>
 
             {/* Metadados do Processo */}
@@ -476,7 +516,7 @@ function PrepararAssinaturasPage() {
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-xs transition-colors ${
                   currentStep === 1 
                     ? "bg-[#1868db] text-white ring-4 ring-[#1868db]/15" 
-                    : "bg-[#10b981] text-white"
+                    : "bg-[#1868db] text-white"
                 }`}>
                   {currentStep > 1 ? <Check className="w-5 h-5 stroke-[3]" /> : 1}
                 </div>
@@ -517,7 +557,7 @@ function PrepararAssinaturasPage() {
           </div>
 
           {/* ========================================================================= */}
-          {/* FASE 1: PREPARAR                                                          */}
+          {/* FASE 1: PREPARAR (TELA 14)                                                */}
           {/* ========================================================================= */}
           {currentStep === 1 && (
             <div className="space-y-6">
@@ -677,7 +717,7 @@ function PrepararAssinaturasPage() {
                 <button
                   type="button"
                   onClick={() => setOptionsExpanded((v) => !v)}
-                  className="w-full p-4 md:p-5 flex items-center justify-between text-left hover:bg-slate-50/50 transition-colors"
+                  className="w-full p-4 md:p-5 flex items-center justify-between text-left hover:bg-slate-50/50 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5">
                     <Mail className="w-5 h-5 text-[#1868db]" />
@@ -700,7 +740,6 @@ function PrepararAssinaturasPage() {
                       </Label>
                       <Textarea
                         rows={3}
-                        placeholder="Olá, favor assinar os documentos náuticos da transferência de propriedade..."
                         value={customMessage}
                         onChange={(e) => setCustomMessage(e.target.value)}
                         className="rounded-xl text-xs bg-slate-50 border-slate-200"
@@ -824,162 +863,278 @@ function PrepararAssinaturasPage() {
           )}
 
           {/* ========================================================================= */}
-          {/* FASE 2: REVISAR ENVIO                                                     */}
+          {/* FASE 2: REVISAR ENVIO DAS ASSINATURAS (TELA 15)                            */}
           {/* ========================================================================= */}
           {currentStep === 2 && (
             <div className="space-y-6">
 
-              {/* Cartão de Resumo da Conferência */}
-              <div className="bg-white rounded-2xl border border-slate-100 p-5 md:p-6 shadow-xs space-y-6">
-                <div className="border-b border-slate-100 pb-4">
-                  <h2 className="text-lg font-bold text-[#0d2342] flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-[#10b981]" />
-                    Conferência Final da Solicitação
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Revise os arquivos selecionados e os signatários antes de confirmar o disparo.
-                  </p>
-                </div>
+              {/* 1. BARRA DE MÉTRICAS / RESUMO */}
+              <div className="bg-white rounded-2xl border border-slate-100 p-4 md:p-5 shadow-xs">
+                {/* Desktop 3 Columns */}
+                <div className="hidden sm:grid grid-cols-3 divide-x divide-slate-100 text-slate-800">
+                  <div className="flex items-center justify-center gap-2.5 px-4">
+                    <FileText className="w-5 h-5 text-[#1868db]" />
+                    <span className="font-bold text-sm md:text-base">
+                      {selectedDocIds.length} documento{selectedDocIds.length > 1 ? "s" : ""}
+                    </span>
+                  </div>
 
-                {/* 1. Documentos selecionados */}
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-                    Documentos a serem assinados ({selectedDocIds.length})
-                  </h3>
-                  <div className="space-y-2">
-                    {documents
-                      .filter((d) => selectedDocIds.includes(d.id))
-                      .map((doc) => (
-                        <div
-                          key={doc.id}
-                          className="flex items-center justify-between p-3 rounded-xl bg-slate-50/60 border border-slate-200/60 text-xs"
-                        >
-                          <div className="flex items-center gap-3">
-                            <FileText className="w-4 h-4 text-red-500 shrink-0" />
-                            <div>
-                              <span className="font-bold text-slate-800">{doc.name}</span>
-                              <span className="text-slate-400 ml-2 font-mono">Versão {doc.version}</span>
-                            </div>
-                          </div>
-                          <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold text-[10px]">
-                            Elegível para envio
-                          </span>
-                        </div>
-                      ))}
+                  <div className="flex items-center justify-center gap-2.5 px-4">
+                    <Users className="w-5 h-5 text-[#1868db]" />
+                    <span className="font-bold text-sm md:text-base">
+                      {signers.length} destinatário{signers.length > 1 ? "s" : ""}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-center gap-2.5 px-4">
+                    <Mail className="w-5 h-5 text-[#1868db]" />
+                    <span className="font-bold text-sm md:text-base">
+                      Envio por e-mail
+                    </span>
                   </div>
                 </div>
 
-                {/* 2. Destinatários e papéis */}
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-                    Destinatários e Atribuições ({signers.length})
-                  </h3>
-                  <div className="space-y-3">
-                    {signers.map((signer) => (
-                      <div
-                        key={signer.id}
-                        className="p-3.5 rounded-xl border border-slate-200/80 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full ${signer.avatarBg} ${signer.avatarColor} font-bold text-xs flex items-center justify-center shrink-0`}>
-                            {signer.initials}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-slate-800">{signer.name}</span>
-                              <Badge variant="outline" className="text-[10px] font-bold">
-                                {signer.role}
-                              </Badge>
-                            </div>
-                            <span className="text-slate-500 font-mono text-[11px]">{signer.email}</span>
-                          </div>
-                        </div>
-
-                        <div className="text-right sm:text-right">
-                          <span className="text-[11px] text-slate-500 block">Irá assinar:</span>
-                          <span className="font-bold text-[#1868db]">
-                            {formatAssignedDocs(signer.assignedDocIds)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 3. Parâmetros de envio */}
-                <div className="pt-2 border-t border-slate-100">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-                    Configurações de envio
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                      <span className="text-slate-400 block mb-1">Canal de Envio</span>
-                      <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                        <Mail className="w-3.5 h-3.5 text-[#1868db]" /> E-mail transacional
-                      </span>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                      <span className="text-slate-400 block mb-1">Ordem de assinatura</span>
-                      <span className="font-bold text-slate-800">
-                        {signingOrder === "free" ? "Livre (simultânea)" : "Sequencial"}
-                      </span>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                      <span className="text-slate-400 block mb-1">Expiração do link</span>
-                      <span className="font-bold text-slate-800">{expiresInDays} dias corridos</span>
-                    </div>
+                {/* Mobile 3 Columns */}
+                <div className="sm:hidden grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="flex flex-col items-center gap-1 p-2 rounded-xl bg-slate-50/50">
+                    <FileText className="w-4 h-4 text-[#1868db]" />
+                    <span className="font-bold text-[11px] text-slate-800 leading-tight">
+                      {selectedDocIds.length} documentos
+                    </span>
                   </div>
 
-                  {customMessage && (
-                    <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
-                      <span className="text-slate-400 block mb-1">Mensagem anexada:</span>
-                      <p className="text-slate-700 italic">"{customMessage}"</p>
-                    </div>
-                  )}
-                </div>
+                  <div className="flex flex-col items-center gap-1 p-2 rounded-xl bg-slate-50/50">
+                    <Users className="w-4 h-4 text-[#1868db]" />
+                    <span className="font-bold text-[11px] text-slate-800 leading-tight">
+                      {signers.length} destinatários
+                    </span>
+                  </div>
 
-                {/* Alerta de confirmação */}
-                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2.5">
-                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                  <span>
-                    Ao clicar em <strong>Enviar solicitações</strong>, os links de assinatura serão gerados com tokens únicos e os convites serão enviados aos e-mails informados.
-                  </span>
+                  <div className="flex flex-col items-center gap-1 p-2 rounded-xl bg-slate-50/50">
+                    <Mail className="w-4 h-4 text-[#1868db]" />
+                    <span className="font-bold text-[11px] text-slate-800 leading-tight">
+                      Envio por e-mail
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Botões da Etapa 2 */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setCurrentStep(1)}
-                  className="w-full sm:w-auto rounded-xl text-xs font-bold text-slate-700 border-slate-200 hover:bg-slate-50 flex items-center gap-1.5"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Voltar e editar</span>
-                </Button>
+              {/* 2. CARTÕES SEPARADOS POR DESTINATÁRIO */}
+              <div className="space-y-4">
+                {signers.map((signer) => {
+                  const assignedDocs = getDocsForSigner(signer);
+                  return (
+                    <div
+                      key={signer.id}
+                      className="bg-white rounded-2xl border border-slate-100 p-5 md:p-6 shadow-xs space-y-4"
+                    >
+                      {/* Top Header: Avatar, Name, Role, Email, Edit Action */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3.5">
+                          <div className={`w-11 h-11 rounded-full ${signer.avatarBg} ${signer.avatarColor} font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs`}>
+                            {signer.initials}
+                          </div>
 
-                <div className="flex items-center gap-3 w-full sm:w-auto">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-base font-bold text-slate-900">{signer.name}</span>
+                              <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${signer.badgeBg} ${signer.badgeColor}`}>
+                                {signer.role}
+                              </span>
+                            </div>
+                            <span className="text-xs text-slate-500 font-mono mt-0.5 block">
+                              {signer.email}
+                            </span>
+                          </div>
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleOpenEditPerson(signer)}
+                          className="h-8 px-3 text-xs font-bold text-[#1868db] hover:bg-blue-50/50 rounded-xl"
+                        >
+                          Editar
+                        </Button>
+                      </div>
+
+                      {/* Sub-block: Receberá para assinar: */}
+                      <div className="pt-2">
+                        <span className="text-xs font-semibold text-slate-600 block mb-2">
+                          Receberá para assinar:
+                        </span>
+
+                        <div className="space-y-2">
+                          {assignedDocs.map((doc) => (
+                            <div
+                              key={doc.id}
+                              className="flex items-center justify-between p-3 rounded-xl bg-slate-50/70 border border-slate-100 text-xs"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-7 h-8 rounded bg-[#fee2e2] text-[#ef4444] font-bold text-[9px] flex flex-col items-center justify-center shrink-0 border border-[#fca5a5]/40 shadow-2xs">
+                                  <span>PDF</span>
+                                </div>
+                                <span className="font-bold text-slate-800">
+                                  {doc.name} <span className="text-slate-400 font-normal font-mono">· v{doc.version}</span>
+                                </span>
+                              </div>
+
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPreviewDocModal(doc)}
+                                className="h-7 px-2.5 rounded-lg text-xs font-bold text-[#1868db] border-slate-200 hover:bg-white flex items-center gap-1"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>Visualizar</span>
+                              </Button>
+                            </div>
+                          ))}
+
+                          {assignedDocs.length === 0 && (
+                            <p className="text-xs text-amber-600 italic py-1">
+                              Nenhum documento selecionado atribuído a este signatário.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* 3. CARTÃO DE MENSAGEM AOS DESTINATÁRIOS & CONFIGURAÇÕES */}
+              <div className="bg-white rounded-2xl border border-slate-100 p-5 md:p-6 shadow-xs space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Mail className="w-5 h-5 text-[#1868db]" />
+                    <h3 className="text-base font-bold text-[#0d2342]">
+                      Mensagem aos destinatários
+                    </h3>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setMessageModalOpen(true)}
+                    className="h-8 px-3 text-xs font-bold text-[#1868db] hover:bg-blue-50/50 rounded-xl"
+                  >
+                    Editar
+                  </Button>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed pl-7">
+                  {customMessage}
+                </p>
+
+                {/* Sub-bar with Order and Reminders */}
+                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-4 h-4 text-slate-400" />
+                    <span>
+                      Ordem: <strong className="text-slate-700">{signingOrder === "free" ? "sem sequência definida" : "sequencial"}</strong>
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-slate-400" />
+                    <span>
+                      Lembretes automáticos: <strong className="text-slate-700">{enableReminders ? "ativados (48h antes)" : "desativados"}</strong>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. AVISO ANTES DO ENVIO */}
+              {!hasSent && (
+                <div className="rounded-2xl bg-[#f0f7ff] border border-[#d0e3ff] p-4 flex items-start gap-3 text-xs text-slate-700">
+                  <div className="w-5 h-5 rounded-full bg-[#1868db] text-white flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">
+                    i
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#0d2342] text-sm">Nada foi enviado ainda.</h4>
+                    <p className="text-slate-600 mt-0.5">
+                      Ao confirmar, cada pessoa receberá acesso apenas aos documentos indicados acima.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* 5. RODAPÉ DE AÇÕES DA TELA 15 */}
+              <div className="pt-2">
+                {/* Desktop Buttons */}
+                <div className="hidden sm:flex items-center justify-between">
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={handleSaveDraft}
-                    className="flex-1 sm:flex-initial rounded-xl text-xs font-bold text-slate-700 border-slate-200"
+                    onClick={() => setCurrentStep(1)}
+                    className="rounded-xl text-xs font-bold text-slate-700 border-slate-200 hover:bg-slate-50 flex items-center gap-1.5"
                   >
-                    Salvar rascunho
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Voltar e corrigir</span>
                   </Button>
 
+                  <div className="flex items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleSaveDraft}
+                      className="rounded-xl text-xs font-bold text-slate-700 border-slate-200"
+                    >
+                      Salvar rascunho
+                    </Button>
+
+                    <Button
+                      type="button"
+                      disabled={isSending}
+                      onClick={handleSendSignatures}
+                      className="rounded-xl text-xs font-bold bg-[#1868db] hover:bg-[#1456b6] text-white px-6 py-2.5 shadow-xs flex items-center justify-center gap-2"
+                    >
+                      <span>{isSending ? "Enviando..." : "Enviar solicitações"}</span>
+                      <Send className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Mobile Buttons */}
+                <div className="sm:hidden space-y-2.5">
                   <Button
                     type="button"
                     disabled={isSending}
                     onClick={handleSendSignatures}
-                    className="flex-1 sm:flex-initial rounded-xl text-xs font-bold bg-[#1868db] hover:bg-[#1456b6] text-white px-6 py-2.5 shadow-xs flex items-center justify-center gap-2"
+                    className="w-full rounded-xl text-sm font-bold bg-[#1868db] hover:bg-[#1456b6] text-white py-3 shadow-xs flex items-center justify-center gap-2"
                   >
-                    <Send className="w-3.5 h-3.5" />
                     <span>{isSending ? "Enviando..." : "Enviar solicitações"}</span>
+                    <Send className="w-4 h-4" />
                   </Button>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCurrentStep(1)}
+                      className="w-full rounded-xl text-xs font-bold text-slate-700 border-slate-200 flex items-center justify-center gap-1"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>Voltar e corrigir</span>
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleSaveDraft}
+                      className="w-full rounded-xl text-xs font-bold text-slate-700 border-slate-200"
+                    >
+                      Salvar rascunho
+                    </Button>
+                  </div>
+
+                  <p className="text-center text-[10px] text-slate-400 pt-1">
+                    Dados ilustrativos
+                  </p>
                 </div>
               </div>
 
@@ -1144,6 +1299,54 @@ function PrepararAssinaturasPage() {
                 Salvar
               </Button>
             </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL: EDITAR MENSAGEM */}
+      <Dialog open={messageModalOpen} onOpenChange={setMessageModalOpen}>
+        <DialogContent className="max-w-md rounded-2xl p-6 bg-white shadow-xl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold text-[#0d2342] flex items-center gap-2">
+              <Mail className="w-5 h-5 text-[#1868db]" />
+              Editar Mensagem aos Destinatários
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Esta mensagem será incluída no e-mail com o link de assinatura.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 my-3 text-xs">
+            <div>
+              <Label className="text-xs font-bold text-slate-700 block mb-1">Mensagem:</Label>
+              <Textarea
+                rows={4}
+                value={customMessage}
+                onChange={(e) => setCustomMessage(e.target.value)}
+                className="text-xs rounded-xl bg-slate-50 border-slate-200"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setMessageModalOpen(false)}
+              className="rounded-xl text-xs font-bold"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setMessageModalOpen(false);
+                toast.success("Mensagem atualizada.");
+              }}
+              className="rounded-xl text-xs font-bold bg-[#1868db] hover:bg-[#1456b6] text-white"
+            >
+              Confirmar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
