@@ -1,49 +1,63 @@
 import { createFileRoute, Link, Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import { 
-  Anchor, LayoutDashboard, Users, Ship, ClipboardList, 
-  FileText, CreditCard, Settings, LogOut, Bell, Search, Plus, 
-  Menu, X, TrendingUp, Clock, ShieldCheck, Activity, FilePlus,
-  Zap, Calendar as CalendarIcon, Cpu, Target, Rocket, DollarSign,
-  AlertTriangle, ArrowUpCircle, HelpCircle, Loader2, AlertCircle, FileWarning,
-  Database, FolderOpen, Library, CheckCircle2, History, ChevronRight, Gauge, ChevronLeft,
-  Briefcase, Boxes, LayoutGrid, FileSearch, ArrowRight, ArrowUpRight, Signature, Lock,
-  Globe, Award, Verified, LayoutTemplate, UserCircle, Archive, Trash2
+  Home, 
+  ClipboardList, 
+  Users, 
+  Ship, 
+  FileText, 
+  Calendar as CalendarIcon, 
+  Settings, 
+  HelpCircle, 
+  LogOut, 
+  Bell, 
+  Search, 
+  Plus, 
+  ChevronDown, 
+  ChevronRight, 
+  Building2, 
+  Sparkles, 
+  CheckCircle2, 
+  Clock, 
+  AlertTriangle, 
+  AlertCircle, 
+  ArrowRight, 
+  UserCheck, 
+  Layers, 
+  Zap, 
+  Cpu, 
+  Signature, 
+  LayoutTemplate, 
+  CreditCard, 
+  ShieldCheck, 
+  RefreshCw,
+  Check
 } from "lucide-react";
 import {
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
-  DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+  DropdownMenu, 
+  DropdownMenuTrigger, 
+  DropdownMenuContent,
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 
-import { useState, useEffect, Suspense, useMemo, type ReactNode } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
-import { usePlanLimits } from "@/hooks/usePlanLimits";
-import { useDashboardStats } from "@/hooks/useDashboardStats";
-import { useQuery } from "@tanstack/react-query";
-import { ReadinessBanner } from "@/components/dashboard/ReadinessBanner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { WelcomeTour } from "@/components/WelcomeTour";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ExpirationMonitor } from "@/components/ExpirationMonitor";
-import { EnterpriseAuditFeed } from "@/components/dashboard/EnterpriseAuditFeed";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { MobileNavigation } from "@/components/navigation/MobileNavigation";
-import { DashboardQuickWidgets } from "@/components/dashboard/DashboardQuickWidgets";
-import { ConsumptionPanel } from "@/components/billing/ConsumptionPanel";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
-
-
-
-
+import { translateTerm } from "@/lib/naval-terms";
+import { format, parseISO, isPast, isToday, startOfMonth } from "date-fns";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayoutWrapper,
@@ -58,40 +72,22 @@ function DashboardLayoutWrapper() {
 }
 
 function DashboardLayout() {
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [isCompact, setIsCompact] = useState(false);
   const [isNotificationsOpen, setNotificationsOpen] = useState(false);
   const [showTour, setShowTour] = useState(false);
-  const { profile, loading, signOut } = useAuth();
-  const { setIsNewProcessOpen, setIsAssembleProcessOpen } = useNewProcess();
-  const { checkLimit, subscription } = usePlanLimits();
-  const [quotaWarnings, setQuotaWarnings] = useState<string[]>([]);
+  const [isMoreToolsOpen, setIsMoreToolsOpen] = useState(false);
+  const { profile, user, loading, signOut, refreshProfile } = useAuth();
+  const { setIsNewProcessOpen } = useNewProcess();
+  const { notifications } = useNotifications();
+  const unreadCount = notifications.filter(n => !n.is_read).length;
   const navigate = useNavigate();
-
-  // SSR-safe responsive detection (replaces window.innerWidth checks)
-  useEffect(() => {
-    const mql = window.matchMedia("(max-width: 1024px)");
-    const apply = () => {
-      setIsCompact(mql.matches);
-      if (mql.matches) setSidebarOpen(false);
-    };
-    apply();
-    mql.addEventListener("change", apply);
-    return () => mql.removeEventListener("change", apply);
-  }, []);
-
-  const showLabels = isSidebarOpen || isCompact;
-
-
-
+  const location = useLocation();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!loading && profile) {
       if (profile.role === 'customer' || profile.role === 'client') {
-        console.log("DASHBOARD_REDIRECT_CLIENT");
         navigate({ to: "/client-portal" });
       } else if (profile.companies?.onboarding_status === 'pending' && window.location.pathname !== '/onboarding') {
-        console.log("REDIRECT_TO_ONBOARDING");
         navigate({ to: "/onboarding" });
       } else if (profile.companies?.onboarding_status === 'completed') {
         const hasSeenTour = localStorage.getItem(`tour_seen_${profile.company_id}`);
@@ -102,41 +98,10 @@ function DashboardLayout() {
     }
   }, [profile, loading, navigate]);
 
-
-  // No direct loading/profile return here anymore, ProtectedRoute handles it
-
-
-  useEffect(() => {
-    const checkAllLimits = async () => {
-      if (!subscription) return;
-      const resources = ['customers', 'vessels', 'processes', 'documents', 'ocr'] as const;
-      const warnings: string[] = [];
-      
-      for (const res of resources) {
-        const status = await checkLimit(res);
-        const percentage = status.limit ? (status.current / status.limit) * 100 : 0;
-        
-        if (percentage >= 100) {
-          warnings.push(`Limite atingido: ${res}`);
-        } else if (percentage >= 80) {
-          warnings.push(`Quase no limite: ${res} (${Math.round(percentage)}%)`);
-        }
-      }
-      setQuotaWarnings(warnings);
-    };
-
-    checkAllLimits();
-  }, [subscription]);
-
-
-  
   const handleLogout = async () => {
     try {
-      console.log("LOGOUT_CLICKED");
       await signOut();
       toast.success("Sessão encerrada");
-      
-      // Use hard redirect to clear memory state
       setTimeout(() => {
         window.location.href = "/auth/login";
       }, 300);
@@ -146,293 +111,394 @@ function DashboardLayout() {
     }
   };
 
-  useEffect(() => {
-    console.log("FINAL_AUDIT_STARTED");
-    console.log("FINAL_SECURITY_OK");
-    console.log("FINAL_FLOW_OK");
-    console.log("FINAL_MOBILE_OK");
-    console.log("FINAL_PRODUCTION_READINESS_OK");
-  }, []);
+  // Consulta somente os espaços que o usuário tem acesso legítimo
+  const { data: userWorkspaces = [] } = useQuery({
+    queryKey: ["user-accessible-workspaces", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from("companies")
+        .select("id, name, is_active")
+        .eq("created_by", user.id);
+      if (error) {
+        console.error("Erro ao carregar espaços do usuário:", error);
+        return profile?.companies ? [profile.companies] : [];
+      }
+      const list = [...(data || [])];
+      if (profile?.companies && !list.some(c => c.id === profile.companies.id)) {
+        list.unshift(profile.companies);
+      }
+      return list;
+    },
+    enabled: !!user?.id,
+  });
 
-  const navItems = [
-    { group: "Painel", items: [
-      { name: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, path: "/dashboard" },
-      { name: "Primeiros Passos", icon: <Rocket className="h-5 w-5" />, path: "/getting-started" },
-    ]},
-    { group: "Operação", items: [
-      { name: "Clientes", icon: <Users className="h-5 w-5" />, path: "/customers" },
-      { name: "Embarcações", icon: <Ship className="h-5 w-5" />, path: "/vessels" },
-      { name: "Processos", icon: <ClipboardList className="h-5 w-5" />, path: "/processes" },
-      { name: "Arquivados", icon: <Archive className="h-5 w-5" />, path: "/processes/archived" },
-      { name: "Lixeira", icon: <Trash2 className="h-5 w-5" />, path: "/processes/trash" },
-    ]},
-    { group: "Documentação", items: [
-      { name: "Biblioteca", icon: <Database className="h-5 w-5" />, path: "/dashboard/document-center" },
-      { name: "OCR", icon: <Zap className="h-5 w-5" />, path: "/ocr-center" },
-      { name: "Templates", icon: <LayoutTemplate className="h-5 w-5" />, path: "/templates" },
-      { name: "Assinaturas", icon: <Signature className="h-5 w-5" />, path: "/assinaturas" },
-    ]},
-    { group: "Empresa", items: [
-      { name: "Financeiro", icon: <CreditCard className="h-5 w-5" />, path: "/billing/subscription" },
-      { name: "Identidade", icon: <Award className="h-5 w-5" />, path: "/identidade" },
-      { name: "Configurações", icon: <Settings className="h-5 w-5" />, path: "/settings" },
-    ]},
-    { group: "Inteligência", items: [
-      { name: "IA", icon: <Cpu className="h-5 w-5" />, path: "/ai-center" },
-      { name: "Parceiros", icon: <Globe className="h-5 w-5" />, path: "/parceria" },
-    ]},
+  const handleSwitchWorkspace = async (companyId: string) => {
+    if (!user?.id || companyId === profile?.company_id) return;
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ company_id: companyId })
+        .eq("id", user.id);
+
+      if (error) {
+        toast.error("Não foi possível alternar de espaço de trabalho.");
+        return;
+      }
+
+      queryClient.clear();
+      await refreshProfile();
+      toast.success("Espaço de trabalho alternado com sucesso!");
+    } catch (err) {
+      console.error("Erro ao trocar espaço:", err);
+      toast.error("Erro ao alternar espaço de trabalho.");
+    }
+  };
+
+  const mainNavItems = [
+    { name: "Início", path: "/dashboard", icon: Home, exact: true },
+    { name: "Processos", path: "/processes", icon: ClipboardList },
+    { name: "Clientes", path: "/customers", icon: Users },
+    { name: "Embarcações", path: "/vessels", icon: Ship },
+    { name: "Documentos", path: "/documents", icon: FileText },
+    { name: "Prazos", path: "/dashboard/deadlines", icon: CalendarIcon },
   ];
 
+  const moreToolsItems = [
+    { name: "Biblioteca", path: "/dashboard/document-center", icon: Layers },
+    { name: "OCR & Validação", path: "/ocr-center", icon: Zap },
+    { name: "Modelos Oficiais", path: "/templates", icon: LayoutTemplate },
+    { name: "Assinaturas", path: "/assinaturas", icon: Signature },
+    { name: "Financeiro", path: "/billing/subscription", icon: CreditCard },
+    { name: "Inteligência IA", path: "/ai-center", icon: Cpu },
+  ];
 
-  console.log("CONTROLLED_EVOLUTION_READY");
-  console.log("FEATURE_FLAGS_READY");
-  console.log("QA_PIPELINE_READY");
-  console.log("SYSTEM_HEALTH_MONITORING_OK");
-  console.log("CONTINUOUS_ENTERPRISE_QUALITY_OK");
-  console.log("NAVALDOCS_EVOLUTION_CERTIFIED");
+  const isPreview = typeof window !== 'undefined' && window.location.search.includes('preview=true');
 
+  const userInitials = useMemo(() => {
+    if (!profile?.name) return isPreview ? "RS" : "ND";
+    const parts = profile.name.trim().split(" ");
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }, [profile?.name, isPreview]);
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-[#000B18]">
-      <div className="p-8 pb-4 flex flex-col gap-1">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 bg-primary rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.4)] group-hover:scale-110 transition-transform duration-500">
-             <Anchor className="h-7 w-7 text-white" />
-          </div>
-          {showLabels && (
-
-            <div className="animate-in fade-in slide-in-from-left-2 duration-500">
-              <span className="font-black text-2xl tracking-tighter text-white uppercase italic">NavalDocs <span className="text-primary">Pro</span></span>
-            </div>
-          )}
-        </div>
-        {showLabels && (
-
-          <div className="mt-8 px-4 py-4 bg-white/5 rounded-2xl border border-white/5 animate-in zoom-in-95 duration-500 relative group/company">
-             {(profile?.companies?.name || "").toLowerCase().includes('demo') && (
-               <Badge className="absolute -top-3 -right-2 bg-amber-500 text-white border-none font-black text-[8px] px-2 py-0.5 animate-pulse shadow-lg shadow-amber-500/20">DEMO MODE</Badge>
-             )}
-             <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-black text-xs border border-primary/20">
-                   {profile?.companies?.name?.substring(0, 2).toUpperCase() || "ND"}
-                </div>
-                <div className="overflow-hidden">
-                  <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary mb-0.5">Licença Enterprise</p>
-                  <p className="text-[11px] font-bold text-white/70 truncate">{profile?.companies?.name || "Empresa..."}</p>
-                </div>
-             </div>
-          </div>
-        )}
-      </div>
-
-      <nav className="flex-grow mt-4 px-3 space-y-5 overflow-y-auto custom-scrollbar pb-10">
-        {navItems.map((group) => (
-          <div key={group.group} className="space-y-0.5">
-            {showLabels && <p className="px-3 mb-2 text-[11px] font-medium text-white/40 tracking-normal">{group.group}</p>}
-            {group.items.map((item) => (
-              <Link 
-                key={item.name}
-                to={item.path}
-                onClick={() => isCompact && setSidebarOpen(false)}
-                activeProps={{ className: "bg-white/10 text-white before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-[3px] before:rounded-r-full before:bg-primary" }}
-                className="relative flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors group/item text-white/60 hover:text-white"
-              >
-                <div className="shrink-0">{item.icon}</div>
-                {showLabels && <span className="text-sm font-medium leading-none">{item.name}</span>}
-              </Link>
-
-            ))}
-          </div>
-        ))}
-      </nav>
-
-
-      <div className="p-4 border-t border-white/5 space-y-2 bg-white/[0.02]">
-         {(profile?.role === 'admin' || profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
-           <AdminMenu
-             role={profile?.role}
-             expanded={showLabels}
-             onNavigate={() => isCompact && setSidebarOpen(false)}
-           />
-         )}
-
-         <button 
-           onClick={handleLogout}
-           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-500/10 text-red-400 transition-colors"
-         >
-            <LogOut className="h-5 w-5 shrink-0" />
-            {showLabels && <span className="text-sm font-medium">Sair</span>}
-         </button>
-
-
-      </div>
-    </div>
-  );
+  const activeCompanyName = profile?.companies?.name || (isPreview ? "Marina Sul" : "Espaço Ativo");
 
   return (
-    <div className="flex h-full bg-slate-50 overflow-hidden">
-      {/* Mobile Sidebar */}
-      <div className="lg:hidden">
-        <Sheet open={isSidebarOpen && isCompact} onOpenChange={setSidebarOpen}>
-          <SheetContent side="left" className="p-0 border-none w-72 bg-[#000B18]">
-            <SidebarContent />
-          </SheetContent>
-        </Sheet>
-      </div>
+    <div className="flex h-screen bg-[#f8fafc] text-slate-900 overflow-hidden font-sans">
+      {/* 1. MENU LATERAL DESKTOP */}
+      <aside className="hidden lg:flex w-64 bg-white border-r border-slate-200/80 flex-col justify-between shrink-0 z-40 select-none">
+        <div className="flex flex-col flex-1 overflow-y-auto custom-scrollbar">
+          {/* Topo: Logo Oficial */}
+          <div className="p-6 pb-4">
+            <Link to="/dashboard" className="inline-block" aria-label="NavalDocs Pro Início">
+              <img 
+                src="/navaldocs-logo.png" 
+                alt="NavalDocs Pro" 
+                className="h-8 w-auto object-contain"
+              />
+            </Link>
 
-      {/* Desktop Sidebar */}
-      <aside 
-        className={`${
-          isSidebarOpen ? "w-64" : "w-16"
-        } hidden lg:flex transition-[width] duration-300 bg-[#000B18] text-white flex-col z-50 border-r border-white/5`}
-      >
-        <SidebarContent />
+            {/* Seletor de Espaço de Trabalho */}
+            <div className="mt-5">
+              <span className="block text-[11px] font-medium text-slate-400 mb-1.5 pl-1">
+                Espaço de trabalho
+              </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button 
+                    className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 transition-colors text-left group shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+                    aria-label="Selecionar espaço de trabalho"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100/80 flex items-center justify-center text-[#1868db] shrink-0">
+                        <Building2 className="h-4 w-4" />
+                      </div>
+                      <span className="text-xs font-semibold text-slate-800 truncate">
+                        {activeCompanyName}
+                      </span>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-slate-400 group-hover:text-slate-600 shrink-0 transition-transform" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56 rounded-xl p-1.5 shadow-lg border border-slate-200">
+                  <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 py-1">
+                    Meus Espaços de Trabalho
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="my-1 bg-slate-100" />
+                  {userWorkspaces.map((ws: any) => (
+                    <DropdownMenuItem
+                      key={ws.id}
+                      onClick={() => handleSwitchWorkspace(ws.id)}
+                      className="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium cursor-pointer text-slate-700 hover:text-slate-900 focus:bg-blue-50 focus:text-[#1868db]"
+                    >
+                      <span className="truncate">{ws.name}</span>
+                      {ws.id === profile?.company_id && (
+                        <Check className="h-4 w-4 text-[#1868db] shrink-0 ml-2" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          {/* Navegação Principal */}
+          <nav className="px-3 pt-2 space-y-1">
+            {mainNavItems.map((item) => {
+              const isActive = item.exact 
+                ? (location.pathname === "/dashboard" || location.pathname === "/dashboard/")
+                : location.pathname.startsWith(item.path);
+
+              return (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    isActive
+                      ? "bg-blue-50 text-[#1868db] font-semibold shadow-2xs"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-[#1868db]" : "text-slate-400"}`} />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
+
+            {/* Mais Ferramentas Collapsible */}
+            <div className="pt-2">
+              <button
+                onClick={() => setIsMoreToolsOpen(!isMoreToolsOpen)}
+                className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-700 uppercase tracking-wider transition-colors"
+                aria-expanded={isMoreToolsOpen}
+              >
+                <span>Mais ferramentas</span>
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isMoreToolsOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isMoreToolsOpen && (
+                <div className="pl-2 pr-1 pt-1 space-y-1 animate-in fade-in-50 duration-200">
+                  {moreToolsItems.map((tool) => (
+                    <Link
+                      key={tool.name}
+                      to={tool.path}
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                    >
+                      <tool.icon className="h-3.5 w-3.5 text-slate-400" />
+                      <span>{tool.name}</span>
+                    </Link>
+                  ))}
+
+                  {(profile?.role === 'admin' || profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
+                    <Link
+                      to="/admin-hub"
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-amber-700 hover:bg-amber-50 transition-colors"
+                    >
+                      <ShieldCheck className="h-3.5 w-3.5 text-amber-600" />
+                      <span>Painel Admin</span>
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+          </nav>
+        </div>
+
+        {/* Parte Inferior do Menu */}
+        <div className="p-3 border-t border-slate-150 space-y-1 bg-white">
+          <Link
+            to="/settings"
+            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+          >
+            <Settings className="h-4 w-4 text-slate-400 shrink-0" />
+            <span>Configurações</span>
+          </Link>
+
+          <Link
+            to="/support"
+            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+          >
+            <HelpCircle className="h-4 w-4 text-slate-400 shrink-0" />
+            <span>Ajuda</span>
+          </Link>
+
+          {/* Perfil do Usuário */}
+          <div className="pt-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button 
+                  className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors group text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+                  aria-label="Opções do perfil"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="h-9 w-9 rounded-full bg-blue-100 text-[#1868db] font-bold text-xs flex items-center justify-center shrink-0 border border-blue-200">
+                      {userInitials}
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-xs font-semibold text-slate-900 truncate">
+                        {profile?.name || "Usuário"}
+                      </p>
+                      <p className="text-[11px] text-slate-400 font-medium truncate">
+                        Ver perfil
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-slate-400 group-hover:text-slate-600 shrink-0" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="top" className="w-56 rounded-xl p-1.5 shadow-lg border border-slate-200">
+                <DropdownMenuLabel className="text-xs font-semibold text-slate-800 px-2 py-1 truncate">
+                  {profile?.email || "Conta conectada"}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="my-1 bg-slate-100" />
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="flex items-center gap-2 text-xs font-medium cursor-pointer text-slate-700 hover:text-slate-900">
+                    <UserCheck className="h-4 w-4 text-slate-400" />
+                    <span>Minha Conta</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="flex items-center gap-2 text-xs font-medium cursor-pointer text-slate-700 hover:text-slate-900">
+                    <Settings className="h-4 w-4 text-slate-400" />
+                    <span>Configurações</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="my-1 bg-slate-100" />
+                <DropdownMenuItem 
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-xs font-medium cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-700"
+                >
+                  <LogOut className="h-4 w-4 text-red-500" />
+                  <span>Sair</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
       </aside>
 
+      {/* ÁREA PRINCIPAL */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* 2. BARRA SUPERIOR DESKTOP E CABEÇALHO COMPACTO MOBILE */}
+        <header className="h-16 bg-white border-b border-slate-200/80 px-4 md:px-8 flex items-center justify-between shrink-0 z-30">
+          {/* Versão Mobile: Logo */}
+          <div className="flex items-center gap-3 lg:hidden">
+            <Link to="/dashboard" aria-label="NavalDocs Pro">
+              <img 
+                src="/navaldocs-logo.png" 
+                alt="NavalDocs Pro" 
+                className="h-7 w-auto object-contain"
+              />
+            </Link>
+          </div>
 
-
-      {/* Main Content */}
-      <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
-        {/* Topbar */}
-        <header className="relative h-auto min-h-16 bg-white border-b flex flex-col z-40 shrink-0">
-           <TrialBanner />
-           {quotaWarnings.length > 0 && (
-             <div className="bg-amber-50 border-b border-amber-100 px-4 md:px-8 py-2 flex items-center justify-between animate-in slide-in-from-top duration-500">
-                <div className="flex items-center gap-3">
-                   <AlertTriangle className="h-4 w-4 text-amber-600" />
-                   <p className="text-[10px] font-bold text-amber-800 uppercase tracking-widest">
-                     Atenção: {quotaWarnings[0]} {quotaWarnings.length > 1 && `(+${quotaWarnings.length - 1} alertas)`}
-                   </p>
-                </div>
-                <Link to="/billing/subscription">
-                   <button className="text-[9px] font-black uppercase text-amber-700 hover:underline flex items-center gap-1">
-                      Gerenciar <ArrowUpCircle className="h-3 w-3" />
-                   </button>
-                </Link>
-             </div>
-           )}
-            <div className="h-auto py-3 md:py-4 flex flex-wrap items-center justify-between px-4 md:px-8 border-b border-slate-100 gap-3 md:gap-6">
-              <div className="flex items-center gap-3 md:gap-6 flex-grow w-full sm:w-auto">
-                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2.5 md:p-3 bg-white hover:bg-slate-50 rounded-xl md:rounded-2xl transition-all shadow-sm border border-slate-100">
-                   <Menu className="h-5 w-5 text-navy" />
-                 </button>
-                 <div className="flex flex-col gap-1 overflow-hidden">
-                    <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
-                       <div className="hidden xs:block font-black text-navy uppercase text-[10px] tracking-widest italic opacity-40">NavalDocs Pro Ops</div>
-                    </div>
-                 </div>
-              </div>
-
-              
-              <div className="flex flex-wrap items-center gap-3 md:gap-6 w-full sm:w-auto justify-end">
-                  <div className="hidden xl:flex items-center gap-3 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl group/seal">
-                    <Award className="h-3 w-3 text-emerald-500 group-hover/seal:scale-125 transition-transform" />
-                    <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Enterprise Certified</span>
-                  </div>
-                  <div className="hidden xl:flex items-center gap-3 px-4 py-2 bg-primary/5 border border-primary/10 rounded-xl group/prod">
-                    <Verified className="h-3 w-3 text-primary group-hover/prod:rotate-12 transition-transform" />
-                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">Production Hardened</span>
-                  </div>
-
-                 <div className="hidden 2xl:flex items-center gap-2">
-                    <GlobalSearch />
-                 </div>
-
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => setIsAssembleProcessOpen(true)}
-                      className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap shrink-0"
-                    >
-                      <Zap className="h-4 w-4 shrink-0" />
-                      <span className="hidden xs:inline">Montar Processo</span>
-                    </button>
-
-                    <button 
-                      onClick={() => setIsNewProcessOpen(true)}
-                      className="flex items-center gap-2 bg-navy text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors whitespace-nowrap shrink-0"
-                    >
-                      <Plus className="h-4 w-4 shrink-0" />
-                      <span className="hidden xs:inline">Novo Processo</span>
-                    </button>
-                  </div>
-
-
-    
-                  <div className="flex items-center gap-3 md:gap-6">
-                     <button 
-                       onClick={() => setNotificationsOpen(true)}
-                       className="relative p-2 md:p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all active:scale-95 border border-transparent hover:border-slate-200"
-                     >
-                         <Bell className="h-5 w-5 text-navy" />
-                         <span className="absolute top-2.5 right-2.5 h-2 w-2 bg-primary rounded-full ring-2 ring-white" />
-                     </button>
-                    <div className="h-8 md:h-10 w-px bg-slate-100" />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="flex items-center gap-2 md:gap-4 rounded-2xl hover:bg-slate-50 px-2 py-1 transition-all" aria-label="Menu do usuário">
-                          <div className="text-right hidden xl:block">
-                              <p className="text-[11px] font-black text-navy leading-none uppercase tracking-widest">{profile?.name || "Operador Master"}</p>
-                              <div className="flex items-center justify-end gap-1.5 mt-1.5">
-                                 <Badge variant="outline" className="text-[8px] font-black border-primary/20 text-primary bg-primary/5 uppercase tracking-widest px-2">{subscription?.plan?.name || "Professional"}</Badge>
-                                 <span className="h-1 w-1 bg-slate-300 rounded-full" />
-                                 <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Ativo</p>
-                              </div>
-                          </div>
-                          <div className="h-9 w-9 md:h-11 md:w-11 rounded-xl md:rounded-2xl bg-gradient-to-br from-navy to-slate-800 flex items-center justify-center text-white font-black text-[10px] md:text-xs shadow-lg border-2 border-white shrink-0">
-                              {profile?.name?.substring(0, 2).toUpperCase() || "ND"}
-                          </div>
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-slate-500">{profile?.email || "Conta"}</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                          <Link to="/settings" className="cursor-pointer"><UserCircle className="h-4 w-4 mr-2" /> Minha Conta</Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link to="/settings" className="cursor-pointer"><Settings className="h-4 w-4 mr-2" /> Configurações</Link>
-                        </DropdownMenuItem>
-                        {profile?.role === 'admin_master_global' && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                              <Link to="/admin-master" className="cursor-pointer text-amber-700 focus:text-amber-800">
-                                <ShieldCheck className="h-4 w-4 mr-2" /> Admin Master Global
-                              </Link>
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 focus:text-red-700">
-                          <LogOut className="h-4 w-4 mr-2" /> Sair
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-              </div>
+          {/* Versão Desktop: Campo de Busca Real */}
+          <div className="hidden lg:flex items-center flex-1 max-w-md">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("open-global-search"))}
+              className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl bg-slate-100/80 hover:bg-slate-100 border border-slate-200/60 text-slate-400 text-sm transition-all text-left shadow-2xs group cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+              aria-label="Buscar cliente, embarcação ou processo"
+            >
+              <Search className="h-4 w-4 text-slate-400 group-hover:text-slate-600 shrink-0" />
+              <span className="truncate">Buscar cliente, embarcação ou processo…</span>
+              <kbd className="ml-auto hidden xl:inline-flex h-5 select-none items-center gap-0.5 rounded border border-slate-200 bg-white px-1.5 font-mono text-[10px] font-medium text-slate-400">
+                ⌘K
+              </kbd>
+            </button>
+            <div className="hidden">
+              <GlobalSearch />
             </div>
-         </header>
+          </div>
 
+          {/* Ações da Direita (Notificações e Avatar) */}
+          <div className="flex items-center gap-3 sm:gap-4 ml-auto">
+            {/* Botão de Busca Mobile */}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("open-global-search"))}
+              className="lg:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+              aria-label="Abrir busca"
+            >
+              <Search className="h-5 w-5" />
+            </button>
 
+            {/* Notificações com badge somente quando unreadCount > 0 */}
+            <button
+              type="button"
+              onClick={() => setNotificationsOpen(true)}
+              className="relative p-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+              aria-label={`Notificações ${unreadCount > 0 ? `(${unreadCount} não lidas)` : ''}`}
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+              )}
+            </button>
+
+            {/* Avatar / Iniciais do Usuário */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="h-8 w-8 rounded-full bg-blue-100 text-[#1868db] font-bold text-xs flex items-center justify-center border border-blue-200 shadow-2xs hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-[#1868db]/20 cursor-pointer"
+                  aria-label="Menu do usuário"
+                >
+                  {userInitials}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52 rounded-xl p-1.5 shadow-lg border border-slate-200">
+                <DropdownMenuLabel className="text-xs font-semibold text-slate-800 px-2 py-1 truncate">
+                  {profile?.name || "Minha Conta"}
+                </DropdownMenuLabel>
+                <p className="text-[11px] text-slate-400 px-2 pb-1.5 truncate">
+                  {profile?.email || ""}
+                </p>
+                <DropdownMenuSeparator className="my-1 bg-slate-100" />
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="flex items-center gap-2 text-xs font-medium cursor-pointer text-slate-700">
+                    <Settings className="h-4 w-4 text-slate-400" />
+                    <span>Configurações</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/support" className="flex items-center gap-2 text-xs font-medium cursor-pointer text-slate-700">
+                    <HelpCircle className="h-4 w-4 text-slate-400" />
+                    <span>Ajuda & Suporte</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="my-1 bg-slate-100" />
+                <DropdownMenuItem 
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-xs font-medium cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-700"
+                >
+                  <LogOut className="h-4 w-4 text-red-500" />
+                  <span>Sair da conta</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+
+        {/* Modal de Notificações */}
         <NotificationCenter 
           isOpen={isNotificationsOpen} 
           onClose={() => setNotificationsOpen(false)} 
         />
 
-        {/* Dynamic Content Container */}
-        <main className="flex-grow overflow-y-auto p-3 sm:p-4 md:p-8 pb-32 lg:pb-12 space-y-8 relative">
-           <Suspense fallback={<DashboardSkeleton />}>
-               <RouteContent />
-            </Suspense>
-         </main>
+        {/* CONTEÚDO DINÂMICO DO PAINEL */}
+        <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 pb-28 lg:pb-12 custom-scrollbar">
+          <TrialBanner />
+          <RouteContent />
+        </main>
 
+        {/* NAVEGAÇÃO INFERIOR MOBILE */}
+        <MobileNavigation />
 
-         <MobileNavigation />
-
-
-
+        {/* TOUR DE INTRODUÇÃO SE APLICÁVEL */}
         {showTour && profile?.companies && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-500">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-300">
             <WelcomeTour 
               onboardingStep={profile.companies.onboarding_step || 1} 
               onClose={() => {
@@ -448,712 +514,797 @@ function DashboardLayout() {
 }
 
 export function RouteContent() {
+  const { profile } = useAuth();
   const { setIsNewProcessOpen } = useNewProcess();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { profile } = useAuth();
-  const { data: statsData, isLoading: isLoadingStats } = useDashboardStats();
-  
-  const { data: recentProcesses } = useQuery({
-    queryKey: ["recent-processes", profile?.company_id],
+  // Se a rota for um sub-módulo de /dashboard (ex.: /dashboard/deadlines), renderiza o Outlet
+  if (location.pathname !== "/dashboard" && location.pathname !== "/dashboard/") {
+    return <Outlet />;
+  }
+
+  const isPreview = typeof window !== 'undefined' && window.location.search.includes('preview=true');
+
+  // Saudação de acordo com o horário local
+  const greetingText = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return "Bom dia";
+    if (hour >= 12 && hour < 18) return "Boa tarde";
+    return "Boa noite";
+  }, []);
+
+  const userFirstName = useMemo(() => {
+    if (!profile?.name) return isPreview ? "Rafael" : "Profissional";
+    return profile.name.trim().split(" ")[0];
+  }, [profile?.name, isPreview]);
+
+  // Data de hoje formatada em ISO local para comparativos (YYYY-MM-DD)
+  const todayStr = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
+  const startOfMonthStr = useMemo(() => format(startOfMonth(new Date()), "yyyy-MM-dd"), []);
+
+  // 1. CONSULTA: Indicadores Operacionais Reais
+  const {
+    data: kpiStats,
+    isLoading: isLoadingKpis,
+    isError: isErrorKpis,
+    refetch: refetchKpis
+  } = useQuery({
+    queryKey: ["dashboard-kpis", profile?.company_id, isPreview],
     queryFn: async () => {
-      if (!profile?.company_id) return [];
+      if (!profile?.company_id) {
+        if (isPreview) {
+          return { inProgressCount: 12, dueTodayCount: 3, completedMonthCount: 8 };
+        }
+        return { inProgressCount: 0, dueTodayCount: 0, completedMonthCount: 0 };
+      }
+
+      // a) Processos em andamento (exclui rascunhos, arquivados, lixeira, concluídos e cancelados)
+      const inProgressPromise = supabase
+        .from("processes")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", profile.company_id)
+        .is("deleted_at", null)
+        .is("archived_at", null)
+        .is("trashed_at", null)
+        .or("is_draft.is.null,is_draft.eq.false")
+        .not("status", "in", "(completed,cancelled)");
+
+      // b) Pendências para hoje (processos abertos com vencimento hoje)
+      const dueProcessesTodayPromise = supabase
+        .from("processes")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", profile.company_id)
+        .is("deleted_at", null)
+        .is("archived_at", null)
+        .is("trashed_at", null)
+        .or("is_draft.is.null,is_draft.eq.false")
+        .not("status", "in", "(completed,cancelled)")
+        .eq("due_date", todayStr);
+
+      // c) Documentos com vencimento hoje
+      const dueDocsTodayPromise = supabase
+        .from("documents")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", profile.company_id)
+        .eq("expiry_date", todayStr);
+
+      // d) Concluídos no mês atual (baseado em updated_at do status concluído)
+      const completedMonthPromise = supabase
+        .from("processes")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", profile.company_id)
+        .is("deleted_at", null)
+        .is("trashed_at", null)
+        .eq("status", "completed")
+        .gte("updated_at", `${startOfMonthStr}T00:00:00Z`);
+
+      const [inProgressRes, dueProcRes, dueDocsRes, completedRes] = await Promise.all([
+        inProgressPromise,
+        dueProcessesTodayPromise,
+        dueDocsTodayPromise,
+        completedMonthPromise,
+      ]);
+
+      const dueTodayTotal = (dueProcRes.count || 0) + (dueDocsRes.count || 0);
+
+      return {
+        inProgressCount: inProgressRes.count || 0,
+        dueTodayCount: dueTodayTotal,
+        completedMonthCount: completedRes.count || 0,
+      };
+    },
+    enabled: !!profile?.company_id || isPreview,
+    staleTime: 1000 * 60 * 2,
+  });
+
+  // 2. CONSULTA: Itens que Precisam de Atenção
+  const {
+    data: attentionItems = [],
+    isLoading: isLoadingAttention,
+    isError: isErrorAttention,
+    refetch: refetchAttention
+  } = useQuery({
+    queryKey: ["dashboard-attention-items", profile?.company_id, isPreview],
+    queryFn: async () => {
+      if (!profile?.company_id) {
+        if (isPreview) {
+          return [
+            {
+              id: "preview-1",
+              actionTitle: "Conferir documento da embarcação",
+              subtitle: "Mar Azul · Marina Costa",
+              actionBtnText: "Conferir",
+              iconType: "check_doc" as const,
+              statusBadge: { label: "Hoje", type: "today" as const },
+              isOverdue: false,
+              isDueToday: true,
+              sortWeight: 2,
+            },
+            {
+              id: "preview-2",
+              actionTitle: "Responder exigência",
+              subtitle: "Estrela do Mar · Carlos Lima",
+              actionBtnText: "Resolver",
+              iconType: "warning" as const,
+              statusBadge: { label: "Atrasado", type: "late" as const },
+              isOverdue: true,
+              isDueToday: false,
+              sortWeight: 1,
+            },
+            {
+              id: "preview-3",
+              actionTitle: "Acompanhar assinatura",
+              subtitle: "Vento Sul · Ana Santos",
+              actionBtnText: "Abrir",
+              iconType: "signature" as const,
+              statusBadge: { label: "Aguardando cliente", type: "client" as const },
+              isOverdue: false,
+              isDueToday: false,
+              sortWeight: 3,
+            },
+          ];
+        }
+        return [];
+      }
+
+      // Buscar processos com prazo ou pendência de ação
+      const { data: processes, error } = await supabase
+        .from("processes")
+        .select(`
+          id,
+          process_type,
+          status,
+          priority,
+          due_date,
+          created_at,
+          updated_at,
+          vessels:vessels!processes_vessel_id_fkey(name),
+          customers:customers!processes_customer_id_fkey(name)
+        `)
+        .eq("company_id", profile.company_id)
+        .is("deleted_at", null)
+        .is("archived_at", null)
+        .is("trashed_at", null)
+        .or("is_draft.is.null,is_draft.eq.false")
+        .not("status", "in", "(completed,cancelled)")
+        .order("due_date", { ascending: true, nullsFirst: false })
+        .limit(10);
+
+      if (error) {
+        console.error("Erro ao carregar pendências:", error);
+        return [];
+      }
+
+      if (!processes) return [];
+
+      // Mapeia e prioriza as ações
+      const formatted = processes.map((proc: any) => {
+        const vesselName = proc.vessels?.name || "Embarcação";
+        const customerName = proc.customers?.name || "Cliente";
+        const dueDate = proc.due_date ? parseISO(proc.due_date) : null;
+        const isOverdue = dueDate ? isPast(dueDate) && !isToday(dueDate) : false;
+        const isDueToday = dueDate ? isToday(dueDate) : false;
+
+        let actionTitle = "Acompanhar processo";
+        let actionBtnText = "Abrir";
+        let iconType: "check_doc" | "warning" | "signature" | "default" = "default";
+        let statusBadge: { label: string; type: "today" | "late" | "client" | "neutral" } = {
+          label: "Em andamento",
+          type: "neutral"
+        };
+
+        if (isOverdue) {
+          actionTitle = "Responder exigência";
+          actionBtnText = "Resolver";
+          iconType = "warning";
+          statusBadge = { label: "Atrasado", type: "late" };
+        } else if (isDueToday) {
+          actionTitle = "Conferir documento da embarcação";
+          actionBtnText = "Conferir";
+          iconType = "check_doc";
+          statusBadge = { label: "Hoje", type: "today" };
+        } else if (proc.status === "waiting_signature" || proc.status === "awaiting_signature") {
+          actionTitle = "Acompanhar assinatura";
+          actionBtnText = "Abrir";
+          iconType = "signature";
+          statusBadge = { label: "Aguardando cliente", type: "client" };
+        } else if (proc.status === "waiting_docs" || proc.status === "pending_docs") {
+          actionTitle = "Conferir documento da embarcação";
+          actionBtnText = "Conferir";
+          iconType = "check_doc";
+          statusBadge = { label: "Aguardando cliente", type: "client" };
+        } else if (proc.priority === "urgent" || proc.priority === "high") {
+          actionTitle = "Responder exigência";
+          actionBtnText = "Resolver";
+          iconType = "warning";
+          statusBadge = { label: "Prioritário", type: "late" };
+        }
+
+        return {
+          id: proc.id,
+          actionTitle,
+          subtitle: `${vesselName} · ${customerName}`,
+          actionBtnText,
+          iconType,
+          statusBadge,
+          isOverdue,
+          isDueToday,
+          sortWeight: isOverdue ? 1 : isDueToday ? 2 : 3,
+        };
+      });
+
+      // Ordena por atrasados primeiro, depois os de hoje, depois demais
+      formatted.sort((a, b) => a.sortWeight - b.sortWeight);
+      return formatted.slice(0, 5);
+    },
+    enabled: !!profile?.company_id || isPreview,
+    staleTime: 1000 * 60 * 2,
+  });
+
+  // 3. CONSULTA: Processos Recentes
+  const {
+    data: recentProcesses = [],
+    isLoading: isLoadingRecent,
+    isError: isErrorRecent,
+    refetch: refetchRecent
+  } = useQuery({
+    queryKey: ["dashboard-recent-processes", profile?.company_id, isPreview],
+    queryFn: async () => {
+      if (!profile?.company_id) {
+        if (isPreview) {
+          return [
+            {
+              id: "preview-p1",
+              process_type: "transferencia",
+              status: "in_progress",
+              vessels: { name: "Mar Azul" },
+              customers: { name: "Marina Costa" },
+            },
+            {
+              id: "preview-p2",
+              process_type: "renovacao",
+              status: "pending_docs",
+              vessels: { name: "Estrela do Mar" },
+              customers: { name: "Carlos Lima" },
+            },
+            {
+              id: "preview-p3",
+              process_type: "inscricao",
+              status: "waiting_signature",
+              vessels: { name: "Vento Sul" },
+              customers: { name: "Ana Santos" },
+            },
+          ];
+        }
+        return [];
+      }
+
       const { data, error } = await supabase
         .from("processes")
-        .select("*, vessels:vessels!processes_vessel_id_fkey(name), customers:customers!processes_customer_id_fkey(name)")
+        .select(`
+          id,
+          process_type,
+          status,
+          title,
+          created_at,
+          updated_at,
+          vessels:vessels!processes_vessel_id_fkey(name),
+          customers:customers!processes_customer_id_fkey(name)
+        `)
         .eq("company_id", profile.company_id)
-        .order("created_at", { ascending: false })
+        .is("deleted_at", null)
+        .is("trashed_at", null)
+        .order("updated_at", { ascending: false })
         .limit(5);
-      if (error) throw error;
-      return data;
+
+      if (error) {
+        console.error("Erro ao carregar processos recentes:", error);
+        return [];
+      }
+
+      return data || [];
     },
-    enabled: !!profile?.company_id
+    enabled: !!profile?.company_id || isPreview,
+    staleTime: 1000 * 60 * 2,
   });
 
-  const { data: recentDocs } = useQuery({
-    queryKey: ["recent-documents-dashboard", profile?.company_id],
-    queryFn: async () => {
-      if (!profile?.company_id) return [];
-      const { data, error } = await supabase
-        .from("documents")
-        .select("*, processes(id, process_type)")
-        .eq("company_id", profile.company_id)
-        .order("created_at", { ascending: false })
-        .limit(4);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!profile?.company_id
-  });
+  const handleOpenAssistant = () => {
+    window.dispatchEvent(new CustomEvent("open-naval-copilot"));
+  };
 
-  const { data: demoConfig } = useQuery({
-    queryKey: ["demo-config", profile?.company_id],
-    queryFn: async () => {
-      if (!profile?.company_id) return null;
-      const { data, error } = await supabase
-        .from("demo_configurations")
-        .select("*")
-        .eq("company_id", profile.company_id)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!profile?.company_id
-  });
+  const handleRetryAll = () => {
+    refetchKpis();
+    refetchAttention();
+    refetchRecent();
+  };
 
-  const stats = [
-    { label: "Clientes Gestão", value: statsData?.activeCustomers.toString() || (demoConfig?.is_demo_mode ? "12" : "0"), icon: <Users className="text-primary" />, trend: "+5.2% Mês" },
-    { label: "Frota Ativa", value: statsData?.totalVessels.toString() || (demoConfig?.is_demo_mode ? "24" : "0"), icon: <Ship className="text-cyan-500" />, trend: "+3.1% Expansão" },
-    { label: "Processos Master", value: statsData?.openProcesses.toString() || (demoConfig?.is_demo_mode ? "18" : "0"), icon: <ClipboardList className="text-amber-500" />, trend: "Operação Nominal" },
-    { label: "Ativos Inteligentes", value: statsData?.generatedDocuments.toString() || (demoConfig?.is_demo_mode ? "142" : "0"), icon: <FileText className="text-emerald-500" />, trend: "98% Automação" },
-  ];
+  const hasAnyError = isErrorKpis || isErrorAttention || isErrorRecent;
 
-    console.log("FINAL_POLISH_OK");
-    console.log("COMMERCIAL_READY_OK");
-    console.log("ENTERPRISE_UX_READY");
-    console.log("PREMIUM_SYSTEM_READY");
-    console.log("NAVALDOCS_READY_FOR_DEMO");
-    console.log("RESPONSIVE_DESKTOP_OK");
-    console.log("MOBILE_LAYOUT_FIXED");
-    console.log("LAYOUT_OVERFLOW_FIXED");
-    console.log("SINGLE_SCROLL_OK");
-    console.log("GO_LIVE_READY");
-    console.log("PRODUCTION_READY");
-    console.log("DEMO_ENV_READY");
-    console.log("FINAL_STABILITY_OK");
-    console.log("NAVALDOCS_ENTERPRISE_READY");
-    console.log("FINAL_ENTERPRISE_AUDIT_OK");
-    console.log("FINAL_SECURITY_OK");
-    console.log("FINAL_OCR_OK");
-    console.log("FINAL_DOCUMENT_FLOW_OK");
-    console.log("FINAL_COMMERCIAL_READY");
-    console.log("FINAL_AUDIT_STARTED");
-    console.log("FINAL_FLOW_OK");
-    console.log("FINAL_MOBILE_OK");
-    console.log("FINAL_PRODUCTION_READINESS_OK");
-    console.log("NAVALDOCS_CERTIFIED_SCALE");
-    if (location.pathname !== '/dashboard') {
-      return <Outlet />;
-    }
-
-    return (
-    <div className="space-y-6 md:space-y-12 animate-in fade-in duration-1000 pb-12 max-w-[1800px] mx-auto">
-      {statsData?.totalVessels === 0 && !demoConfig?.is_demo_mode && (profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
-        <Card className="p-6 md:p-14 bg-[#000B18] text-white border-white/5 rounded-2xl md:rounded-[4rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12 mb-8 md:mb-16 shadow-[0_50px_100px_rgba(0,0,0,0.3)] relative overflow-hidden group">
-           <div className="absolute top-0 right-0 w-2/3 h-full bg-primary/20 blur-[120px] -mr-40 group-hover:bg-primary/30 transition-all duration-1000" />
-           <div className="flex flex-col md:flex-row items-center gap-10 relative z-10 text-center md:text-left">
-              <div className="h-24 w-24 bg-primary rounded-3xl flex items-center justify-center shadow-[0_0_50px_rgba(37,99,235,0.5)] group-hover:scale-110 group-hover:rotate-12 transition-all duration-700">
-                 <Rocket className="h-12 w-12 text-white" />
-              </div>
-              <div className="space-y-3">
-                 <h3 className="text-4xl font-semibold italic leading-none">NavalDocs <span className="text-primary">Genesis</span></h3>
-                 <p className="text-white/40 font-bold text-xl uppercase tracking-widest">Sua jornada para a automação total começa agora.</p>
-                 <p className="text-white/60 font-medium text-lg max-w-2xl leading-relaxed">Bem-vindo, {profile?.name}. O sistema está pronto para ser configurado. Siga o roteiro de implantação premium para liberar todo o potencial da IA.</p>
-              </div>
-           </div>
-           <Link to="/getting-started" className="relative z-10 w-full md:w-auto">
-              <Button className="w-full md:w-auto bg-primary hover:bg-blue-600 text-white text-[12px] font-black uppercase tracking-[0.25em] px-12 py-8 rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 border border-white/10">
-                 Iniciar Implantação <ArrowRight className="ml-4 h-6 w-6" />
-              </Button>
-           </Link>
-        </Card>
-      )}
-      {demoConfig?.is_demo_mode && (
-        <div className="bg-primary/10 border border-primary/20 p-4 rounded-2xl flex items-center justify-between">
-           <div className="flex items-center gap-3">
-              <Zap className="h-5 w-5 text-primary" />
-              <div>
-                 <p className="text-xs font-black uppercase text-primary tracking-widest">Modo Demonstração Ativo</p>
-                 <p className="text-[10px] font-bold text-navy/60">Você está visualizando dados simulados para Douglas & Engenheiros Piloto.</p>
-              </div>
-           </div>
-           <Button variant="outline" size="sm" className="text-[9px] font-black uppercase tracking-widest border-primary/20 hover:bg-primary/10 text-primary">
-              Mudar para Dados Reais
-           </Button>
+  return (
+    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-300">
+      {/* Alerta de Erro Geral com Tentar Novamente */}
+      {hasAnyError && (
+        <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+            <span className="text-xs font-semibold">
+              Houve uma instabilidade ao sincronizar alguns dados com o servidor.
+            </span>
+          </div>
+          <Button
+            size="sm"
+            onClick={handleRetryAll}
+            variant="outline"
+            className="border-red-200 text-red-700 hover:bg-red-100 text-xs font-semibold gap-1.5 shrink-0"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Tentar novamente
+          </Button>
         </div>
       )}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+
+      {/* 3. BOAS-VINDAS */}
+      <section className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-1">
         <div>
-          <h1 className="text-3xl sm:text-5xl font-semibold text-navy italic leading-none">
-            Centro de Operações {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && <span className="text-primary">Master</span>}
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0f1d36] tracking-tight">
+            {greetingText}, {userFirstName}
           </h1>
-          <p className="text-slate-500 font-bold text-xs sm:text-base uppercase tracking-[0.2em] mt-3 italic opacity-60">Gestão inteligente de frota e conformidade operacional.</p>
-
-        </div>
-        
-        <div className="hidden xl:flex flex-wrap gap-3">
-          {profile?.companies?.onboarding_status === 'pending' && (profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
-            <Link to="/onboarding" className="flex items-center gap-4 bg-primary/5 border border-primary/20 px-5 py-3 rounded-2xl animate-in slide-in-from-right duration-700">
-               <Rocket className="h-5 w-5 text-primary animate-pulse" />
-               <div className="text-left">
-                 <p className="text-[10px] font-black uppercase text-primary tracking-widest">Setup Incompleto</p>
-                 <p className="text-[11px] font-bold text-navy">Finalizar Implantação</p>
-               </div>
-            </Link>
-          )}
-        </div>
-      </div>
-
-
-      {/* Critical Operational Center */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-         <div className="lg:col-span-3 space-y-12">
-           <div className="bg-white p-6 md:p-12 rounded-2xl md:rounded-[3.5rem] border border-slate-100 shadow-[0_40px_80px_rgba(0,0,0,0.03)] relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:scale-110 transition-transform duration-1000">
-                 <AlertCircle className="h-48 w-48 text-red-500" />
-              </div>
-              <div className="relative z-10 space-y-8">
-                 <div className="flex justify-between items-center">
-                    <div>
-                       <h2 className="text-2xl font-semibold text-navy italic">
-                         Ações Críticas {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && <span className="text-primary">Master</span>}
-                       </h2>
-                       <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Intervenções manuais e validações urgentes</p>
-                    </div>
-                    <div className="h-10 w-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center animate-pulse">
-                       <AlertCircle className="h-6 w-6" />
-                    </div>
-                 </div>
-
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {[
-                      { title: "Validação OCR", desc: "3 documentos aguardam revisão manual de confiança.", color: "primary", icon: Zap },
-                      { title: "Assinaturas", desc: "2 memoriais prontos para assinatura do engenheiro.", color: "blue-600", icon: Signature },
-                      { title: "Protocolo", desc: "1 processo aguarda envio final para a Marinha.", color: "emerald-500", icon: CheckCircle2 }
-                    ].map((item, i) => (
-                      <div key={i} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-xl transition-all cursor-pointer">
-                         <div className={`h-10 w-10 rounded-xl bg-${item.color}/10 text-${item.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                            <item.icon className="h-5 w-5" />
-                         </div>
-                         <h4 className="font-semibold text-navy text-[11px] mb-1">{item.title}</h4>
-                         <p className="text-xs text-slate-500 font-medium leading-relaxed">{item.desc}</p>
-                      </div>
-                    ))}
-                 </div>
-              </div>
-           </div>
-
-           <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold tracking-[0.2em] text-navy flex items-center gap-2">
-              <Zap className="h-4 w-4 text-primary" /> Inteligência Operacional
-            </h2>
-            {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
-              <div className="flex items-center gap-3">
-                 <div className="flex flex-col items-end">
-                    <p className="text-[10px] font-black uppercase text-slate-400">Readiness Score</p>
-                     <p className="text-xs font-bold text-navy">100%</p>
-                 </div>
-                 <div className="h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-primary w-[100%]"></div>
-                 </div>
-              </div>
-            )}
-          </div>
-
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             {(!recentProcesses || recentProcesses.length === 0) ? (
-               <>
-                 <div className="bg-navy text-white p-6 rounded-2xl border border-white/5 shadow-xl relative overflow-hidden group opacity-40 grayscale pointer-events-none">
-                    <div className="absolute -right-10 -bottom-10 opacity-5">
-                       <Target className="h-40 w-40" />
-                    </div>
-                    <div className="relative z-10">
-                       <Badge className="bg-primary/20 text-primary border-none mb-4 uppercase text-[9px]">Exemplo: Pronto</Badge>
-                       <h3 className="text-lg font-bold mb-2">Processo PR-2024-EX</h3>
-                       <p className="text-xs text-slate-400 mb-6">Este é um exemplo de processo com OCR 100% validado.</p>
-                       <button className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2">
-                          <FilePlus className="h-4 w-4" /> Gerar Documentos
-                       </button>
-                    </div>
-                 </div>
-
-                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group opacity-40 grayscale pointer-events-none">
-                    <div className="absolute -right-10 -bottom-10 opacity-5 text-amber-500">
-                       <AlertTriangle className="h-40 w-40" />
-                    </div>
-                    <div className="relative z-10">
-                       <Badge className="bg-amber-100 text-amber-600 border-none mb-4 uppercase text-[9px]">Exemplo: Pendente</Badge>
-                       <h3 className="text-lg font-bold text-navy mb-2">Renovação CSN</h3>
-                       <p className="text-xs text-slate-400 mb-6">Exemplo de alerta para assinatura técnica pendente.</p>
-                       <button className="w-full bg-slate-100 text-navy py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2">
-                          <Bell className="h-4 w-4" /> Notificar Responsável
-                       </button>
-                    </div>
-                 </div>
-               </>
-             ) : (
-                <>
-                  <div className="bg-navy text-white p-6 rounded-2xl border border-white/5 shadow-xl relative overflow-hidden group">
-                     <div className="absolute -right-10 -bottom-10 opacity-5 group-hover:scale-110 transition-transform duration-700">
-                        <Target className="h-40 w-40" />
-                     </div>
-                     <div className="relative z-10">
-                        <Badge className="bg-primary/20 text-primary border-none mb-4 uppercase text-[9px]">Pronto para Geração</Badge>
-                        <h3 className="text-lg font-bold mb-2">Processo {recentProcesses[0]?.id?.split('-')[0]}</h3>
-                        <p className="text-xs text-slate-400 mb-6">Todos os dados e documentos foram validados pelo OCR.</p>
-                        <button 
-                          onClick={() => navigate({ to: '/document-generator' })}
-                          className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
-                        >
-                           <FilePlus className="h-4 w-4" /> Gerar Documentos
-                        </button>
-                     </div>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
-                     <div className="absolute -right-10 -bottom-10 opacity-5 group-hover:scale-110 transition-transform duration-700 text-amber-500">
-                        <AlertTriangle className="h-40 w-40" />
-                     </div>
-                     <div className="relative z-10">
-                        <Badge className="bg-amber-100 text-amber-600 border-none mb-4 uppercase text-[9px]">Status Operacional</Badge>
-                        <h3 className="text-lg font-bold text-navy mb-2">Conformidade Ativa</h3>
-                        <p className="text-xs text-slate-400 mb-6">Monitoramento automático de regras marítimas em tempo real.</p>
-                        <button className="w-full bg-slate-100 text-navy py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
-                           <ShieldCheck className="h-4 w-4 text-primary" /> Ver Relatório
-                        </button>
-                     </div>
-                  </div>
-                </>
-             )}
-          </div>
-        </div>
-      </div>
-
-      <div className="lg:col-span-1 space-y-6">
-          <div className="bg-navy p-6 rounded-2xl text-white shadow-xl relative overflow-hidden group">
-             <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                <Database className="h-40 w-40" />
-             </div>
-             <div className="relative z-10">
-                <Badge className="bg-primary/20 text-primary border-none mb-4 uppercase text-[9px]">Base Documental</Badge>
-                <h3 className="text-lg font-bold mb-2">Base DPC 2026</h3>
-                <p className="text-xs text-slate-400 mb-6">Templates oficiais e regras de validação atualizados.</p>
-                <Link to="/dashboard/documents-base">
-                   <button className="w-full bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2">
-                      <FolderOpen className="h-4 w-4" /> Acessar Repositório
-                   </button>
-                </Link>
-             </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold tracking-[0.2em] text-navy flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" /> Fila Operacional
-            </h2>
-          </div>
-
-           
-           <Card className="p-6 border-slate-100 shadow-sm space-y-4">
-              {((profile?.role === 'admin_master' || profile?.role === 'admin_master_global') ? [
-                { label: "OCR: Certificado.pdf", status: "processando", progress: 65 },
-                { label: "Geração: Dossiê", status: "na fila", progress: 0 },
-                { label: "Assinatura: Contrato", status: "enviado", progress: 100 },
-              ] : [
-                { label: "Processo: Renovação CSN", status: "analisando", progress: 45 },
-                { label: "Upload: Documentos Mar", status: "validado", progress: 100 },
-                { label: "Status: Em Conformidade", status: "ativo", progress: 100 },
-              ]).map((item, i) => (
-                <div key={i} className="space-y-2">
-                   <div className="flex justify-between items-center text-[10px] font-bold">
-                      <span className="text-slate-600 uppercase tracking-widest">{item.label}</span>
-                      <span className={`${item.status === 'processando' ? 'text-primary' : item.status === 'enviado' ? 'text-emerald-500' : 'text-slate-400'} uppercase tracking-tighter`}>{item.status}</span>
-                   </div>
-                   <div className="h-1 w-full bg-slate-50 rounded-full overflow-hidden">
-                      <div className={`h-full ${item.status === 'processando' ? 'bg-primary animate-pulse' : item.status === 'enviado' ? 'bg-emerald-500' : 'bg-slate-200'}`} style={{ width: `${item.progress || 10}%` }} />
-                   </div>
-                </div>
-              ))}
-              <button className="w-full mt-2 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-navy border-t border-slate-50">Gerenciar Filas</button>
-           </Card>
-        </div>
-      </div>
-
-      <div className="h-px bg-slate-200 my-8" />
-
-      {/* Operational Critical Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <Link to="/dashboard/compliance-center" className="bg-white p-6 rounded-3xl border-2 border-red-100 shadow-sm hover:shadow-md transition-all group">
-           <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-red-50 rounded-2xl group-hover:bg-red-500 group-hover:text-white transition-all text-red-600">
-                 <ShieldCheck className="h-5 w-5" />
-              </div>
-              <Badge className="bg-red-100 text-red-700 border-none text-[9px]">Urgente</Badge>
-           </div>
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Inconformidades</p>
-            <h3 className="text-3xl font-semibold text-navy mt-1">12</h3>
-         </Link>
-
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
-           <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all text-primary">
-                 <FileWarning className="h-5 w-5" />
-              </div>
-           </div>
-           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Docs Faltando</p>
-           <h3 className="text-3xl font-semibold text-navy mt-1">{statsData?.missingDocuments || 0}</h3>
+          <p className="text-slate-500 text-sm sm:text-base mt-1 font-normal">
+            Veja o que precisa da sua atenção hoje.
+          </p>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
-           <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-amber-50 rounded-2xl group-hover:bg-amber-500 group-hover:text-white transition-all text-amber-600">
-                 <Clock className="h-5 w-5" />
-              </div>
-           </div>
-           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Expirando (30 dias)</p>
-           <h3 className="text-3xl font-semibold text-navy mt-1">{statsData?.expiringDocuments || 0}</h3>
-        </div>
-
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
-           <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all text-primary">
-                 <FileText className="h-5 w-5" />
-              </div>
-           </div>
-           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Documentos Gerados</p>
-           <h3 className="text-3xl font-semibold text-navy mt-1">{statsData?.generatedDocuments || 0}</h3>
-        </div>
-      </div>
-
-
-      {/* Consumption & Plan Limits */}
-      <section className="space-y-6">
-        <div className="flex items-center justify-between">
-           <h2 className="text-sm font-semibold tracking-[0.2em] text-navy flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" /> Consumo & Limites do Plano
-           </h2>
-           <Link to="/billing/subscription">
-              <Button variant="ghost" className="text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5">Gerenciar Assinatura</Button>
-           </Link>
-        </div>
-        <ConsumptionPanel />
+        <button
+          type="button"
+          onClick={() => setIsNewProcessOpen(true)}
+          className="w-full sm:w-auto h-11 px-5 rounded-xl bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1868db]/30 active:scale-[0.98]"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Novo processo</span>
+        </button>
       </section>
 
-      {/* Readiness Score Enterprise - Visible only to Admins */}
-      {(profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && <ReadinessBanner />}
-
-
-      {/* Intelligence Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <ExpirationMonitor />
-        <Link to="/ocr-center" className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-2xl text-white shadow-xl hover:scale-[1.02] transition-all group">
-           <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-white/20 rounded-2xl">
-                 <Cpu className="h-6 w-6" />
+      {/* 4. INDICADORES (3 CARTÕES) */}
+      <section>
+        <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:gap-6">
+          {/* Cartão 1: Processos em andamento */}
+          <Link
+            to="/processes"
+            className="bg-white rounded-2xl border border-slate-200/80 p-3 sm:p-5 md:p-6 shadow-2xs hover:shadow-sm hover:border-slate-300 transition-all flex flex-col justify-between group cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-xl bg-blue-50 text-[#1868db] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <span className="text-[10px] font-bold uppercase bg-white/20 px-2 py-1 rounded-full">Inteligência Operacional</span>
-           </div>
-           <h3 className="text-xl font-bold mb-1">OCR Ativo</h3>
-           <p className="text-white/70 text-sm mb-4">12 documentos processados automaticamente hoje.</p>
-           <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
-              <div className="h-full bg-white w-2/3" />
-           </div>
-        </Link>
-
-        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl text-white shadow-xl">
-           <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-white/20 rounded-2xl">
-                 <Rocket className="h-6 w-6" />
+              <div className="hidden sm:block">
+                <span className="text-xs font-semibold text-slate-500 block">
+                  Processos em andamento
+                </span>
               </div>
-              <span className="text-[10px] font-bold uppercase bg-white/20 px-2 py-1 rounded-full">Eficiência</span>
-           </div>
-           <h3 className="text-xl font-bold mb-1">Gargalos Reduzidos</h3>
-           <p className="text-white/70 text-sm mb-4">O tempo médio de análise caiu para 2.4 dias.</p>
-           <div className="flex gap-1 mt-2">
-              {[1,2,3,4,5].map(i => <div key={i} className={`h-8 flex-grow rounded-md bg-white/${i < 4 ? '40' : '10'}`} />)}
-           </div>
+            </div>
+
+            <div className="mt-3 sm:mt-5">
+              {isLoadingKpis ? (
+                <Skeleton className="h-7 sm:h-8 w-10 sm:w-12 rounded-lg" />
+              ) : (
+                <p className="text-xl sm:text-3xl font-extrabold text-[#0f1d36] leading-none">
+                  {kpiStats?.inProgressCount ?? 0}
+                </p>
+              )}
+              {/* No mobile, exibe label concisa; no desktop, o subtítulo */}
+              <p className="text-[11px] sm:text-xs text-slate-500 sm:text-slate-400 font-medium mt-1.5 line-clamp-1">
+                <span className="sm:hidden">Em andamento</span>
+                <span className="hidden sm:inline">Em diversas etapas</span>
+              </p>
+            </div>
+          </Link>
+
+          {/* Cartão 2: Pendências para hoje */}
+          <Link
+            to="/dashboard/deadlines"
+            className="bg-white rounded-2xl border border-slate-200/80 p-3 sm:p-5 md:p-6 shadow-2xs hover:shadow-sm hover:border-slate-300 transition-all flex flex-col justify-between group cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6" />
+              </div>
+              <div className="hidden sm:block">
+                <span className="text-xs font-semibold text-slate-500 block">
+                  Pendências para hoje
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-3 sm:mt-5">
+              {isLoadingKpis ? (
+                <Skeleton className="h-7 sm:h-8 w-10 sm:w-12 rounded-lg" />
+              ) : (
+                <p className="text-xl sm:text-3xl font-extrabold text-[#0f1d36] leading-none">
+                  {kpiStats?.dueTodayCount ?? 0}
+                </p>
+              )}
+              {/* No mobile, exibe label concisa; no desktop, o subtítulo */}
+              <p className="text-[11px] sm:text-xs text-slate-500 sm:text-slate-400 font-medium mt-1.5 line-clamp-1">
+                <span className="sm:hidden">Pendências hoje</span>
+                <span className="hidden sm:inline">Precisam da sua ação</span>
+              </p>
+            </div>
+          </Link>
+
+          {/* Cartão 3: Concluídos no mês */}
+          <Link
+            to="/processes"
+            className="bg-white rounded-2xl border border-slate-200/80 p-3 sm:p-5 md:p-6 shadow-2xs hover:shadow-sm hover:border-slate-300 transition-all flex flex-col justify-between group cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" />
+              </div>
+              <div className="hidden sm:block">
+                <span className="text-xs font-semibold text-slate-500 block">
+                  Concluídos no mês
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-3 sm:mt-5">
+              {isLoadingKpis ? (
+                <Skeleton className="h-7 sm:h-8 w-10 sm:w-12 rounded-lg" />
+              ) : (
+                <p className="text-xl sm:text-3xl font-extrabold text-[#0f1d36] leading-none">
+                  {kpiStats?.completedMonthCount ?? 0}
+                </p>
+              )}
+              {/* No mobile, exibe label concisa; no desktop, o subtítulo */}
+              <p className="text-[11px] sm:text-xs text-slate-500 sm:text-slate-400 font-medium mt-1.5 line-clamp-1">
+                <span className="sm:hidden">Concluídos mês</span>
+                <span className="hidden sm:inline">Processos finalizados</span>
+              </p>
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      {/* 5. PRECISA DA SUA ATENÇÃO */}
+      <section className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-2xs">
+        <div className="flex items-center justify-between pb-5 border-b border-slate-100">
+          <h2 className="text-base sm:text-lg font-bold text-[#0f1d36]">
+            Precisa da sua atenção
+          </h2>
+          <Link 
+            to="/dashboard/deadlines" 
+            className="text-xs sm:text-sm font-semibold text-[#1868db] hover:underline inline-flex items-center gap-1"
+          >
+            <span>Ver todas</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-500 to-pink-600 p-6 rounded-2xl text-white shadow-xl">
-           <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-white/20 rounded-2xl">
-                 <Target className="h-6 w-6" />
+        <div className="divide-y divide-slate-100">
+          {isLoadingAttention ? (
+            <div className="py-6 space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 flex-1">
+                    <Skeleton className="h-10 w-10 rounded-xl shrink-0" />
+                    <div className="space-y-1.5 flex-1">
+                      <Skeleton className="h-4 w-48" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-8 w-20 rounded-lg" />
+                </div>
+              ))}
+            </div>
+          ) : attentionItems.length === 0 ? (
+            <div className="py-10 text-center">
+              <div className="h-12 w-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                <CheckCircle2 className="h-6 w-6" />
               </div>
-              <span className="text-[10px] font-bold uppercase bg-white/20 px-2 py-1 rounded-full">Equipe</span>
-           </div>
-           <h3 className="text-xl font-bold mb-1">Top Performance</h3>
-           <p className="text-white/70 text-sm mb-4">Ranking liderado por Eng. Ricardo (98% conclusão).</p>
-           <div className="flex -space-x-2 mt-2">
-              {[1,2,3].map(i => <div key={i} className="h-8 w-8 rounded-full border-2 border-white bg-slate-200" />)}
-              <div className="h-8 w-8 rounded-full border-2 border-white bg-white/20 flex items-center justify-center text-[10px] font-bold">+5</div>
-           </div>
-        </div>
-      </div>
-
-      {/* Charts & Table Grid */}
-      <div className="grid lg:grid-cols-3 gap-8">
-         {/* Main Activity Column */}
-         <div className="lg:col-span-2 space-y-8">
-            {/* Gráfico Fictício */}
-            <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-100 shadow-sm">
-               <div className="flex justify-between items-center mb-8">
-                  <h3 className="font-bold text-navy flex items-center gap-2 text-xs">
-                    <Activity className="h-5 w-5 text-primary" /> Atividade de Processos
-                  </h3>
-                  <select className="bg-slate-50 border-none text-[10px] font-bold uppercase rounded-lg px-3 py-1.5 outline-none">
-                     <option>Últimos 7 dias</option>
-                     <option>Último mês</option>
-                  </select>
-               </div>
-               {/* Visual placeholder for chart */}
-               <div className="h-64 w-full flex items-end gap-2 md:gap-4 px-2">
-                  {[45, 60, 40, 75, 50, 90, 65].map((h, i) => (
-                    <div key={i} className="flex-grow bg-slate-50 rounded-t-xl relative group">
-                       <div 
-                         className="absolute bottom-0 left-0 w-full bg-primary/20 group-hover:bg-primary/40 transition-all rounded-t-xl" 
-                         style={{ height: `${h}%` }} 
-                       />
-                       <div 
-                         className="absolute bottom-0 left-0 w-full bg-primary rounded-t-xl transition-all" 
-                         style={{ height: `${h/2}%` }} 
-                       />
-                    </div>
-                  ))}
-               </div>
-               <div className="flex justify-between mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">
-                  <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
+              <p className="text-sm font-semibold text-slate-800">
+                Nenhuma pendência urgente encontrada.
+              </p>
+              <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                Sua operação náutica está 100% em dia. Novos prazos ou exigências surgirão aqui automaticamente.
+              </p>
             </div>
-            
-            <div className="mt-8">
-               <EnterpriseAuditFeed />
-            </div>
-         </div>
+          ) : (
+            attentionItems.map((item) => (
+              <div 
+                key={item.id}
+                className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 hover:bg-slate-50/50 -mx-2 px-2 rounded-xl transition-colors"
+              >
+                {/* Ícone + Título + Embarcação/Cliente */}
+                <div className="flex items-start sm:items-center gap-3 min-w-0">
+                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    item.iconType === "warning" 
+                      ? "bg-red-50 text-red-500" 
+                      : item.iconType === "check_doc"
+                      ? "bg-amber-50 text-amber-600"
+                      : "bg-blue-50 text-[#1868db]"
+                  }`}>
+                    {item.iconType === "warning" && <AlertTriangle className="h-5 w-5" />}
+                    {item.iconType === "check_doc" && <FileText className="h-5 w-5" />}
+                    {item.iconType === "signature" && <Signature className="h-5 w-5" />}
+                    {item.iconType === "default" && <Clock className="h-5 w-5" />}
+                  </div>
 
-            {/* Recent Processes */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-               <div className="p-6 border-b flex justify-between items-center bg-slate-50/30">
-                  <h3 className="font-bold text-navy flex items-center gap-2 text-xs">
-                    <Clock className="h-5 w-5 text-primary" /> Últimos Processos
-                  </h3>
-                  <Link to="/processes" className="text-xs text-primary font-black uppercase tracking-widest hover:underline">Ver todos</Link>
-               </div>
-               <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                     <thead>
-                       <tr className="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                          <th className="px-6 py-4">ID</th>
-                          <th className="px-6 py-4">CLIENTE / EMBARCAÇÃO</th>
-                          <th className="px-6 py-4">STATUS</th>
-                          <th className="px-6 py-4 text-right">DATA</th>
-                       </tr>
-                     </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {recentProcesses?.map((proc: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => navigate({ to: `/processes/${proc.id}` })}>
-                            <td className="px-6 py-4 font-mono text-[10px] text-slate-400 truncate max-w-[80px]">{proc.id.split('-')[0]}</td>
-                            <td className="px-6 py-4">
-                               <div className="font-bold text-sm text-navy group-hover:text-primary transition-colors">{proc.customers?.name || 'Cliente s/ nome'}</div>
-                               <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                 <Ship className="h-3 w-3" /> {proc.vessels?.name || 'Embarcação s/ nome'}
-                               </div>
-                            </td>
-                            <td className="px-6 py-4">
-                               <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase ${
-                                 proc.status === 'completed' ? 'bg-green-100 text-green-700' : 
-                                 proc.status === 'pending_docs' ? 'bg-amber-100 text-amber-700' :
-                                 'bg-blue-100 text-blue-700'
-                               }`}>
-                                  {proc.status === 'in_progress' ? 'Em Andamento' : 
-                                   proc.status === 'completed' ? 'Concluído' :
-                                   proc.status === 'pending_docs' ? 'Aguardando Docs' : proc.status}
-                               </span>
-                            </td>
-                            <td className="px-6 py-4 text-right text-[10px] font-bold text-slate-500">
-                               {new Date(proc.created_at).toLocaleDateString('pt-BR')}
-                            </td>
-                          </tr>
-                        ))}
-                        {(!recentProcesses || recentProcesses.length === 0) && (
-                          <tr>
-                            <td colSpan={4} className="px-6 py-12 text-center">
-                              <p className="text-sm text-slate-400 font-medium italic">Nenhum processo recente encontrado.</p>
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-
-                  </table>
-               </div>
-            </div>
-         </div>
-
-          {/* Sidebar Widgets */}
-          <div className="space-y-8">
-            <DashboardQuickWidgets recentDocs={recentDocs} loading={!recentDocs} />
-
-            {/* Team Productivity Widget */}
-            <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-               <div className="flex justify-between items-center mb-6">
-                  <h3 className="font-semibold text-navy text-[10px] flex items-center gap-2">
-                     <Users className="h-4 w-4 text-primary" /> Produtividade da Equipe
-                  </h3>
-               </div>
-                <div className="space-y-4">
-                  {isLoadingStats ? (
-                    <div className="flex justify-center p-4">
-                      <Loader2 className="h-4 w-4 animate-spin text-slate-300" />
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
-                        <div className="flex items-center gap-3">
-                           <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center text-white text-[10px] font-black uppercase">
-                              {profile?.name?.substring(0, 2).toUpperCase()}
-                           </div>
-                           <div>
-                              <p className="text-[10px] font-black text-navy uppercase tracking-widest">{profile?.name}</p>
-                              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{profile?.role}</p>
-                           </div>
-                        </div>
-                        <div className="h-2 w-2 bg-emerald-500 rounded-full" />
-                      </div>
-                      
-                      <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                         <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-2">Estatísticas Rápidas</p>
-                         <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-white p-2 rounded-lg text-center">
-                               <p className="text-[8px] text-slate-400 font-bold uppercase">OCR Mes</p>
-                               <p className="text-sm font-black text-navy">{statsData?.ocrUsage}</p>
-                            </div>
-                            <div className="bg-white p-2 rounded-lg text-center">
-                               <p className="text-[8px] text-slate-400 font-bold uppercase">Docs</p>
-                               <p className="text-sm font-black text-navy">{statsData?.generatedDocuments}</p>
-                            </div>
-                         </div>
-                      </div>
-                    </div>
-                  )}
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-[#0f1d36] truncate">
+                      {item.actionTitle}
+                    </h3>
+                    <p className="text-xs text-slate-400 truncate mt-0.5">
+                      {item.subtitle}
+                    </p>
+                  </div>
                 </div>
 
-               <Link to="/settings" className="mt-6 block text-center text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Gerenciar Equipe</Link>
-            </div>
+                {/* Badge de Situação + Botão de Ação */}
+                <div className="flex items-center justify-between sm:justify-end gap-3 pl-13 sm:pl-0">
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 ${
+                    item.statusBadge.type === "late"
+                      ? "bg-red-50 text-red-700 border border-red-200/80"
+                      : item.statusBadge.type === "today"
+                      ? "bg-amber-50 text-amber-800 border border-amber-200/80"
+                      : item.statusBadge.type === "client"
+                      ? "bg-slate-100 text-slate-700 border border-slate-200"
+                      : "bg-blue-50 text-[#1868db] border border-blue-200/80"
+                  }`}>
+                    {item.statusBadge.type === "late" && <Clock className="h-3 w-3" />}
+                    {item.statusBadge.type === "today" && <Clock className="h-3 w-3" />}
+                    {item.statusBadge.type === "client" && <UserCheck className="h-3 w-3" />}
+                    <span>{item.statusBadge.label}</span>
+                  </span>
 
-            <div className="bg-navy text-white p-8 rounded-2xl shadow-xl relative overflow-hidden group">
-               <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
-                  <TrendingUp className="h-48 w-48" />
-               </div>
-               <div className="relative z-10">
-                  <h4 className="text-xl font-bold mb-2 flex items-center gap-2">
-                    <ShieldCheck className="h-5 w-5 text-primary" /> Desempenho
-                  </h4>
-                  <p className="text-slate-400 text-xs mb-8 font-medium">Sua eficiência subiu 15% este mês.</p>
-                  
-                  <div className="space-y-6">
-                     <div className="space-y-2">
-                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                           <span className="text-slate-500">Meta Mensal</span>
-                           <span className="text-primary">85%</span>
-                        </div>
-                        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                           <div className="h-full bg-primary w-[85%] rounded-full shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)]" />
-                        </div>
-                     </div>
-                     
-                     <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                           <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Tempo Médio</p>
-                           <p className="text-lg font-black text-white">4.2d</p>
-                        </div>
-                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                           <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Taxa Aprovação</p>
-                           <p className="text-lg font-black text-white">98%</p>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-            </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate({ to: `/processes/${item.id}` })}
+                    className="h-8 px-3.5 rounded-lg border-blue-200 text-[#1868db] hover:bg-blue-50 hover:text-blue-700 text-xs font-semibold cursor-pointer shrink-0"
+                  >
+                    {item.actionBtnText}
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
 
-            <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
-               <h3 className="font-bold text-navy mb-6 flex items-center gap-2 text-xs">
-                  <Bell className="h-5 w-5 text-amber-500 animate-bounce" /> Alertas Críticos
-               </h3>
-               <div className="space-y-4">
-                  {isLoadingStats ? (
-                    <div className="flex justify-center p-4"><Loader2 className="h-4 w-4 animate-spin text-slate-300" /></div>
-                  ) : (
-                    <>
-                      {statsData && statsData.expiringDocuments > 0 && (
-                        <div className="p-4 rounded-2xl border-l-4 border-l-amber-500 bg-amber-50/50 transition-all hover:bg-slate-50 cursor-pointer" onClick={() => navigate({ to: '/dashboard/deadlines' })}>
-                           <div className="flex justify-between items-start mb-1">
-                              <p className="text-sm font-black text-navy uppercase tracking-tight">Vencimentos Próximos</p>
-                           </div>
-                           <p className="text-[11px] text-slate-500 mb-2 font-medium">Existem {statsData.expiringDocuments} documentos que expiram em menos de 30 dias.</p>
-                           <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Ação Recomendada</p>
-                        </div>
-                      )}
-                      
-                      {statsData && statsData.urgentProcesses > 0 && (
-                        <div className="p-4 rounded-2xl border-l-4 border-l-red-500 bg-red-50/50 transition-all hover:bg-slate-50 cursor-pointer" onClick={() => navigate({ to: '/dashboard/deadlines' })}>
-                           <div className="flex justify-between items-start mb-1">
-                              <p className="text-sm font-black text-navy uppercase tracking-tight">Processos Retidos</p>
-                           </div>
-                           <p className="text-[11px] text-slate-500 mb-2 font-medium">{statsData.urgentProcesses} processos estão parados há mais de 15 dias.</p>
-                           <p className="text-[10px] font-black uppercase tracking-widest text-red-600">Alta Prioridade</p>
-                        </div>
-                      )}
+      {/* 6. PROCESSOS RECENTES */}
+      <section className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-2xs">
+        <div className="flex items-center justify-between pb-5 border-b border-slate-100">
+          <h2 className="text-base sm:text-lg font-bold text-[#0f1d36]">
+            Processos recentes
+          </h2>
+          <Link 
+            to="/processes" 
+            className="text-xs sm:text-sm font-semibold text-[#1868db] hover:underline inline-flex items-center gap-1"
+          >
+            <span>Ver processos</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
 
-                      {(!statsData || (statsData.expiringDocuments === 0 && statsData.urgentProcesses === 0)) && (
-                        <div className="py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                          <CheckCircle2 className="h-8 w-8 text-emerald-100 mx-auto mb-2" />
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nenhum alerta crítico</p>
-                        </div>
-                      )}
-                    </>
-                  )}
-               </div>
-               <button className="w-full mt-6 py-3 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-navy transition-colors" onClick={() => navigate({ to: '/dashboard/deadlines' })}>Ver Todos os Prazos</button>
-            </div>
+        {isLoadingRecent ? (
+          <div className="py-6 space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center justify-between py-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+            ))}
           </div>
-       </div>
-    </div>
-  );
-}
+        ) : recentProcesses.length === 0 ? (
+          <div className="py-10 text-center">
+            <div className="h-12 w-12 rounded-full bg-blue-50 text-[#1868db] flex items-center justify-center mx-auto mb-3">
+              <Ship className="h-6 w-6" />
+            </div>
+            <p className="text-sm font-semibold text-slate-800">
+              Nenhum processo iniciado neste espaço.
+            </p>
+            <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto mb-4">
+              Vamos começar seu primeiro processo? Organize vistorias, registros e documentos náuticos com poucos cliques.
+            </p>
+            <Button
+              onClick={() => setIsNewProcessOpen(true)}
+              className="bg-[#1868db] hover:bg-blue-700 text-white text-xs font-semibold rounded-xl"
+            >
+              <Plus className="h-4 w-4 mr-1.5" /> Criar primeiro processo
+            </Button>
+          </div>
+        ) : (
+          <>
+            {/* Tabela para Desktop */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-slate-100 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    <th className="py-3.5 pr-4">Embarcação / Cliente</th>
+                    <th className="py-3.5 px-4">Serviço</th>
+                    <th className="py-3.5 px-4">Situação</th>
+                    <th className="py-3.5 pl-4 text-right">Próxima ação</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-sm">
+                  {recentProcesses.map((proc: any) => {
+                    const vesselName = proc.vessels?.name || "Embarcação s/ nome";
+                    const customerName = proc.customers?.name || "Cliente s/ nome";
+                    const serviceName = translateTerm(proc.process_type) || "Processo Naval";
+                    
+                    let statusLabel = "Em andamento";
+                    let statusClass = "bg-blue-50 text-blue-700 border-blue-200";
+                    let nextAction = "Conferir documentos";
 
-function DashboardSkeleton() {
-  return (
-    <div className="space-y-8 animate-pulse">
-      <div className="flex justify-between items-end">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-10 w-24" />
-          <Skeleton className="h-10 w-24" />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {[1,2,3,4].map(i => <Skeleton key={i} className="h-28 md:h-32 rounded-3xl" />)}
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        <Skeleton className="lg:col-span-2 h-[400px] md:h-96 rounded-3xl" />
-        <Skeleton className="h-[400px] md:h-96 rounded-3xl" />
-      </div>
+                    if (proc.status === "completed") {
+                      statusLabel = "Concluído";
+                      statusClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                      nextAction = "Ver conclusão";
+                    } else if (proc.status === "waiting_signature" || proc.status === "awaiting_signature") {
+                      statusLabel = "Aguardando assinatura";
+                      statusClass = "bg-slate-100 text-slate-700 border-slate-200";
+                      nextAction = "Ver documentos";
+                    } else if (proc.status === "waiting_docs" || proc.status === "pending_docs") {
+                      statusLabel = "Pendência";
+                      statusClass = "bg-red-50 text-red-700 border-red-200";
+                      nextAction = "Responder exigência";
+                    } else if (proc.status === "in_progress" || proc.status === "review") {
+                      statusLabel = "Em conferência";
+                      statusClass = "bg-blue-50 text-[#1868db] border-blue-200";
+                      nextAction = "Conferir documentos";
+                    }
 
+                    return (
+                      <tr 
+                        key={proc.id}
+                        onClick={() => navigate({ to: `/processes/${proc.id}` })}
+                        className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
+                      >
+                        <td className="py-3.5 pr-4">
+                          <div className="flex items-center gap-3">
+                            <Ship className="h-4 w-4 text-slate-400 group-hover:text-[#1868db] transition-colors shrink-0" />
+                            <div>
+                              <p className="font-semibold text-slate-900 leading-snug">
+                                {vesselName}
+                              </p>
+                              <p className="text-xs text-slate-400">
+                                {customerName}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-slate-600 font-medium text-xs">
+                          {serviceName}
+                        </td>
+
+                        <td className="py-3.5 px-4">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusClass}`}>
+                            <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                            {statusLabel}
+                          </span>
+                        </td>
+
+                        <td className="py-3.5 pl-4 text-right">
+                          <span className="text-xs font-semibold text-[#1868db] group-hover:underline inline-flex items-center gap-1">
+                            <span>{nextAction}</span>
+                            <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Lista de Cartões para Mobile */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {recentProcesses.map((proc: any) => {
+                const vesselName = proc.vessels?.name || "Embarcação s/ nome";
+                const customerName = proc.customers?.name || "Cliente s/ nome";
+                const serviceName = translateTerm(proc.process_type) || "Processo Naval";
+
+                let statusLabel = "Em andamento";
+                let statusClass = "bg-blue-50 text-blue-700 border-blue-200";
+
+                if (proc.status === "completed") {
+                  statusLabel = "Concluído";
+                  statusClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                } else if (proc.status === "waiting_signature" || proc.status === "awaiting_signature") {
+                  statusLabel = "Aguardando assinatura";
+                  statusClass = "bg-slate-100 text-slate-700 border-slate-200";
+                } else if (proc.status === "waiting_docs" || proc.status === "pending_docs") {
+                  statusLabel = "Pendência";
+                  statusClass = "bg-red-50 text-red-700 border-red-200";
+                } else if (proc.status === "in_progress" || proc.status === "review") {
+                  statusLabel = "Em conferência";
+                  statusClass = "bg-blue-50 text-[#1868db] border-blue-200";
+                }
+
+                return (
+                  <div
+                    key={proc.id}
+                    onClick={() => navigate({ to: `/processes/${proc.id}` })}
+                    className="py-3.5 flex items-center justify-between gap-3 active:bg-slate-50 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-9 w-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                        <Ship className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm text-slate-900 truncate">
+                          {vesselName}
+                        </p>
+                        <p className="text-xs text-slate-400 truncate">
+                          {customerName}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${statusClass}`}>
+                        {statusLabel}
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-slate-400" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* 7. AJUDA CONTEXTUAL */}
+      <section className="bg-gradient-to-r from-blue-50/90 via-blue-50/60 to-indigo-50/40 border border-blue-100/90 rounded-2xl p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-white border border-blue-100 text-[#1868db] flex items-center justify-center shadow-2xs shrink-0">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-sm sm:text-base font-bold text-[#0f1d36]">
+              Precisa de orientação?
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+              O assistente ajuda você a encontrar o próximo passo.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleOpenAssistant}
+          className="w-full sm:w-auto h-10 px-4 rounded-xl bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold text-xs sm:text-sm shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-[0.98]"
+        >
+          <span>Abrir assistente</span>
+          <ArrowRight className="h-3.5 w-3.5" />
+        </button>
+      </section>
     </div>
   );
 }
 
 export const RouteComponent = RouteContent;
-
-function AdminMenu({ role, expanded, onNavigate }: { role?: string | null; expanded: boolean; onNavigate: () => void }) {
-  const isMaster = role === 'admin_master' || role === 'admin_master_global';
-  if (!isMaster && role !== 'admin') return null;
-  return (
-    <Link
-      to="/admin-hub"
-      onClick={onNavigate}
-      className="w-full flex items-center gap-4 px-5 py-3 rounded-2xl hover:bg-amber-500/10 transition-all text-amber-300 hover:text-amber-200 border border-transparent hover:border-amber-500/20"
-      activeProps={{ className: "bg-amber-500/15 text-amber-200 border-amber-500/30" }}
-    >
-      <ShieldCheck className="h-5 w-5 text-amber-400" />
-      {expanded && (
-        <span className="text-[10px] font-black uppercase tracking-widest flex-1 text-left">Admin</span>
-      )}
-    </Link>
-  );
-}
-
-

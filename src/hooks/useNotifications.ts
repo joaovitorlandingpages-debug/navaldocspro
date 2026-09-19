@@ -39,23 +39,33 @@ export function useNotifications() {
   useEffect(() => {
     fetchNotifications();
 
-    // Subscribe to new notifications
-    const channel = supabase
-      .channel('public:notifications')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'notifications' 
-      }, (payload: any) => {
-        setNotifications(prev => [payload.new as Notification, ...prev]);
-        toast(payload.new.title, {
-          description: payload.new.message,
-        });
-      })
-      .subscribe();
+    // Subscribe to new notifications with unique channel per instance
+    let channel: any = null;
+    try {
+      const channelId = `notifications_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      channel = supabase
+        .channel(channelId)
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'notifications' 
+        }, (payload: any) => {
+          setNotifications(prev => [payload.new as Notification, ...prev]);
+          toast(payload.new.title, {
+            description: payload.new.message,
+          });
+        })
+        .subscribe();
+    } catch (err) {
+      console.warn("Erro ao registrar realtime de notificações:", err);
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        try {
+          supabase.removeChannel(channel);
+        } catch {}
+      }
     };
   }, []);
 

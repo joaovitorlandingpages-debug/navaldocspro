@@ -9,9 +9,10 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
+  const isPreview = typeof window !== 'undefined' && window.location.search.includes('preview=true');
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !isPreview) {
       if (!session) {
         console.log("PROTECTED_ROUTE_NO_SESSION");
         navigate({ to: "/auth/login", search: { redirect: window.location.pathname } });
@@ -21,22 +22,21 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     } else {
       console.log("PROTECTED_ROUTE_LOADING");
     }
-  }, [session, loading, navigate]);
+  }, [session, loading, navigate, isPreview]);
 
-  if (loading) {
+  if (loading && !isPreview) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-[#000B18]">
-        <div className="text-white font-bold uppercase tracking-widest animate-pulse">
+      <div className="h-screen w-full flex items-center justify-center bg-white">
+        <div className="text-slate-400 font-bold uppercase tracking-widest animate-pulse">
           Carregando...
         </div>
       </div>
     );
   }
 
-  if (!session) {
+  if (!session && !isPreview) {
     return null;
   }
-
 
   return <>{children}</>;
 };

@@ -43,8 +43,14 @@ export function GlobalSearch() {
       }
     };
 
+    const handleCustomOpen = () => setOpen(true);
+
     document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
+    window.addEventListener("open-global-search", handleCustomOpen);
+    return () => {
+      document.removeEventListener("keydown", down);
+      window.removeEventListener("open-global-search", handleCustomOpen);
+    };
   }, []);
 
   const { data: results } = useQuery<SearchResult | null>({

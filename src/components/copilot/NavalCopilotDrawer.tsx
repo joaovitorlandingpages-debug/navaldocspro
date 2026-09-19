@@ -99,7 +99,7 @@ Como posso acelerar suas operações náuticas hoje?`,
     }
   }, [messages, isOpen, isTyping]);
 
-  // Suporte a atalho Ctrl+K ou Cmd+K
+  // Suporte a atalho Ctrl+K ou Cmd+K e evento customizado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -107,8 +107,14 @@ Como posso acelerar suas operações náuticas hoje?`,
         setIsOpen((prev) => !prev);
       }
     };
+    const handleCustomOpen = () => setIsOpen(true);
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('open-naval-copilot', handleCustomOpen);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('open-naval-copilot', handleCustomOpen);
+    };
   }, []);
 
   // Reconhecimento de Voz (Web Speech API)
@@ -248,7 +254,7 @@ Como posso acelerar suas operações náuticas hoje?`,
     <>
       {/* Botão Flutuante Global Inteligente (posicionado em bottom-28 no mobile/tablet para ter espaço de sobra da bottom nav e bottom-8 no desktop) */}
       {!isOpen && (
-        <div className={`fixed ${isMinimized ? 'top-1/2 -translate-y-1/2 right-0' : 'bottom-28 lg:bottom-8 right-4 sm:right-6'} z-[45] flex items-center gap-2 animate-in fade-in duration-300 transition-all`}>
+        <div className={`fixed ${isMinimized ? 'top-1/2 -translate-y-1/2 right-0' : 'bottom-28 lg:bottom-8 right-4 sm:right-6'} z-[45] hidden md:flex items-center gap-2 animate-in fade-in duration-300 transition-all`}>
           {/* Badge de Alerta se houver vencimentos críticos */}
           {liveContext?.deadlinesSummary && liveContext.deadlinesSummary.criticalCount > 0 && !isMinimized && (
             <div 
