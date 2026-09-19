@@ -41,8 +41,8 @@ function LoginComponent() {
 
   // Redireciona de forma segura caso o usuário já esteja autenticado
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      const session = data.session;
+    supabase.auth.getSession().then((res: any) => {
+      const session = res?.data?.session;
       if (session) {
         let target = FALLBACK_REDIRECT;
         if (isSafeInternalPath(redirectParam)) target = redirectParam;
