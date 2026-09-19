@@ -4,6 +4,8 @@ import { ProcessWizard2 } from "@/components/wizard2/ProcessWizard2";
 import { NewProcessChooserDialog } from "@/components/processes/NewProcessChooserDialog";
 import { NewProcessUploadWizard } from "@/components/processes/NewProcessUploadWizard";
 
+import { useWizardStore } from "@/components/wizard2/Wizard2Store";
+
 interface Ctx {
   /** Abre o Chooser oficial (Guiado × Upload). */
   setIsNewProcessOpen: (open: boolean) => void;
@@ -19,6 +21,7 @@ interface Ctx {
   setIsAdvancedProcessOpen: (open: boolean) => void;
   openGuidedProcess: () => void;
   openUploadProcess: () => void;
+  openWithContext: (ctx: { customerId?: string; vesselId?: string }) => void;
 }
 const NewProcessContext = createContext<Ctx | undefined>(undefined);
 
@@ -30,6 +33,15 @@ export function NewProcessProvider({ children }: { children: React.ReactNode }) 
 
   const openUpload = (open: boolean) => setUploadOpen(open);
 
+  const openWithContext = (ctx: { customerId?: string; vesselId?: string }) => {
+    useWizardStore.getState().setData({
+      customerId: ctx.customerId || null,
+      vesselId: ctx.vesselId || null,
+      step: ctx.vesselId ? 'type' : (ctx.customerId ? 'vessel' : 'documents'),
+    });
+    setWizard2Open(true);
+  };
+
   return (
     <NewProcessContext.Provider value={{
       setIsNewProcessOpen: setChooserOpen,
@@ -38,6 +50,7 @@ export function NewProcessProvider({ children }: { children: React.ReactNode }) 
       setIsAssembleProcessOpen: openUpload,
       openGuidedProcess: () => setWizard2Open(true),
       openUploadProcess: () => setUploadOpen(true),
+      openWithContext,
     }}>
       {children}
       <NewProcessChooserDialog

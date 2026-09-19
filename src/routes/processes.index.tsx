@@ -1,451 +1,692 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-  ClipboardList, Search, Plus,
-  ArrowRight, Calendar, User, Ship, Loader2,
-  Clock, Package, FileSignature, FolderArchive, Filter, ArrowUpDown,
-  AlertTriangle, Star, Archive, Trash2, Rocket, Sparkles, Upload
+  Search, Plus, ArrowRight, User, Users, Ship, Loader2,
+  Clock, Filter, AlertTriangle, ChevronDown, FileText,
+  CheckCircle2, SlidersHorizontal, RefreshCw, X, FileSignature,
+  ArrowUpDown, Archive, Trash2, Rocket, Sparkles, Upload, Star,
+  HelpCircle, AlertCircle
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNewProcess } from "@/hooks/useNewProcess";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { useAuth } from "@/hooks/useAuth";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { supabase } from "@/integrations/supabase/client";
-import { PageHeader } from "@/components/navigation/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
 import { ProcessActionsMenu } from "@/components/processes/ProcessActionsMenu";
 import { ProcessEditSheet } from "@/components/processes/ProcessEditSheet";
-import type { VisibleProcessRow } from "@/services/processes/processCreation";
 import { translateTerm } from "@/lib/naval-terms";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
+import { DashboardLayout } from "@/routes/dashboard";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { parseISO, isPast, isToday, differenceInDays } from "date-fns";
 
 export const Route = createFileRoute("/processes/")({
-  component: Processes,
+  component: () => (
+    <ProtectedRoute>
+      <DashboardLayout>
+        <ProcessesPage />
+      </DashboardLayout>
+    </ProtectedRoute>
+  ),
 });
 
 type SortKey = "recent" | "updated" | "due" | "priority";
-type StatusFilter = "all" | "active" | "pending_signature" | "completed" | "late";
+type StatusFilter = "all" | "active" | "pending" | "waiting_signature" | "completed" | "late";
 type PriorityFilter = "all" | "high" | "medium" | "low";
+type DueFilter = "all" | "today" | "late" | "7days";
 
-function Processes() {
-  const [view, setView] = useState<"crm" | "kanban" | "list">("crm");
+// Dados de exemplo para o modo preview (idênticos à referência)
+const PREVIEW_CUSTOMERS = [
+  {
+    id: "prev-c1",
+    name: "Marina Costa",
+    vessels: [
+      {
+        id: "prev-v1",
+        name: "Mar Azul",
+        processes: [
+          {
+            id: "0247",
+            code: "#0247",
+            service: "Transferência",
+            status: "review",
+            statusLabel: "Em conferência",
+            statusType: "conference",
+            dueLabel: "Hoje",
+            dueType: "today",
+            nextAction: "Conferir documentos →",
+          },
+          {
+            id: "0258",
+            code: "#0258",
+            service: "Alteração de motor",
+            status: "pending",
+            statusLabel: "Pendência",
+            statusType: "pending",
+            dueLabel: "Atrasado",
+            dueType: "late",
+            nextAction: "Resolver pendência →",
+          },
+        ],
+      },
+      {
+        id: "prev-v2",
+        name: "Vento Sul",
+        processes: [
+          {
+            id: "0261",
+            code: "#0261",
+            service: "Renovação",
+            status: "waiting_signature",
+            statusLabel: "Aguardando assinatura",
+            statusType: "signature",
+            dueLabel: "— Sem prazo",
+            dueType: "none",
+            nextAction: "Ver documentos →",
+          },
+        ],
+      },
+    ],
+    personalServices: [],
+  },
+  {
+    id: "prev-c2",
+    name: "Carlos Lima",
+    vessels: [
+      {
+        id: "prev-v3",
+        name: "Estrela do Mar",
+        processes: [
+          {
+            id: "0194",
+            code: "#0194",
+            service: "Transferência",
+            status: "in_progress",
+            statusLabel: "Em andamento",
+            statusType: "in_progress",
+            dueLabel: "Em 5d",
+            dueType: "upcoming",
+            nextAction: "Ver andamento →",
+          },
+          {
+            id: "0210",
+            code: "#0210",
+            service: "Inscrição TIE",
+            status: "waiting_docs",
+            statusLabel: "Em conferência",
+            statusType: "conference",
+            dueLabel: "— Sem prazo",
+            dueType: "none",
+            nextAction: "Conferir documentos →",
+          },
+        ],
+      },
+    ],
+    personalServices: [],
+  },
+  {
+    id: "prev-c3",
+    name: "Ana Santos",
+    vessels: [],
+    personalServices: [
+      {
+        id: "0180",
+        code: "#0180",
+        service: "Habilitação náutica",
+        serviceSubtitle: "Serviço pessoal",
+        status: "in_progress",
+        statusLabel: "Em conferência",
+        statusType: "conference",
+        dueLabel: "Em 3d",
+        dueType: "upcoming",
+        nextAction: "Conferir documentos →",
+      },
+    ],
+  },
+];
 
+function ProcessesPage() {
+  const { profile } = useAuth();
+  const { setIsNewProcessOpen, openWithContext } = useNewProcess();
+  const { checkLimit } = usePlanLimits();
+  const isPreview = typeof window !== "undefined" && window.location.search.includes("preview=true");
+
+  // Alternância entre "Por cliente" e "Todos os processos"
+  const [viewMode, setViewMode] = useState<"by_customer" | "all_processes">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("navaldocs_processes_view_mode");
+      if (saved === "by_customer" || saved === "all_processes") return saved;
+    }
+    return "by_customer";
+  });
+
+  const handleViewModeChange = (mode: "by_customer" | "all_processes") => {
+    setViewMode(mode);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("navaldocs_processes_view_mode", mode);
+    }
+  };
+
+  // Sub-visão operacional para "Todos os processos" (CRM, Kanban, Lista)
+  const [operationalView, setOperationalView] = useState<"crm" | "kanban" | "list">("crm");
+
+  // Estados de filtros e pesquisa
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all");
+  const [dueFilter, setDueFilter] = useState<DueFilter>("all");
+  const [sort, setSort] = useState<SortKey>("recent");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // Paginação e dados
   const [processes, setProcesses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all");
-  const [sort, setSort] = useState<SortKey>("recent");
-  const pageSize = 12;
 
-  const { setIsNewProcessOpen } = useNewProcess();
-  const { checkLimit } = usePlanLimits();
+  // Clientes expandidos no modo "Por cliente"
+  const [expandedCustomers, setExpandedCustomers] = useState<Record<string, boolean>>({});
+
+  // Modal de upgrade
   const [upgradeModal, setUpgradeModal] = useState<{ isOpen: boolean; current: number; limit: number | null }>({
     isOpen: false,
     current: 0,
-    limit: null
+    limit: null,
   });
 
+  // Limpar todos os filtros
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setPriorityFilter("all");
+    setDueFilter("all");
+    setSort("recent");
+    setPage(1);
+  };
+
+  const hasActiveFilters = searchTerm !== "" || statusFilter !== "all" || priorityFilter !== "all" || dueFilter !== "all";
+
+  // Busca processos no Supabase
   const fetchProcesses = useCallback(async () => {
-      setIsLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setIsLoading(false); return; }
+    setIsLoading(true);
+    if (!profile?.company_id) {
+      setIsLoading(false);
+      return;
+    }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile?.company_id) { setIsLoading(false); return; }
-
+    try {
       let query = supabase
-        .from('processes')
-        .select('*, customers:customers!processes_customer_id_fkey(name), vessels:vessels!processes_vessel_id_fkey(name)', { count: 'exact' })
-        .eq('company_id', profile.company_id)
-        .is('deleted_at', null)
-        .is('archived_at', null)
-        .is('trashed_at', null)
-        .or('is_draft.is.null,is_draft.eq.false');
+        .from("processes")
+        .select(
+          `*, 
+           customers:customers!processes_customer_id_fkey(id, name, email, phone), 
+           vessels:vessels!processes_vessel_id_fkey(id, name, vessel_type)`,
+          { count: "exact" }
+        )
+        .eq("company_id", profile?.company_id || "")
+        .is("deleted_at", null)
+        .is("archived_at", null)
+        .is("trashed_at", null)
+        .or("is_draft.is.null,is_draft.eq.false");
 
-      if (searchTerm) {
-        const term = `%${searchTerm}%`;
+      // Filtro por texto
+      if (searchTerm.trim()) {
+        const term = `%${searchTerm.trim()}%`;
         query = query.or(`process_type.ilike.${term},title.ilike.${term},protocol_number.ilike.${term}`);
       }
 
-      if (statusFilter === "completed") query = query.eq('status', 'completed');
-      else if (statusFilter === "pending_signature") query = query.eq('status', 'waiting_signature');
-      else if (statusFilter === "active") query = query.not('status', 'in', '(completed,cancelled)');
-      else if (statusFilter === "late") query = query.lt('due_date', new Date().toISOString().slice(0, 10)).not('status', 'in', '(completed,cancelled)');
+      // Filtros de status
+      if (statusFilter === "completed") query = query.eq("status", "completed");
+      else if (statusFilter === "pending") query = query.in("status", ["pending", "waiting_docs", "review"]);
+      else if (statusFilter === "waiting_signature") query = query.in("status", ["waiting_signature", "awaiting_signature"]);
+      else if (statusFilter === "active") query = query.not("status", "in", "(completed,cancelled)");
+      else if (statusFilter === "late") query = query.lt("due_date", new Date().toISOString().slice(0, 10)).not("status", "in", "(completed,cancelled)");
 
-      if (priorityFilter !== "all") query = query.eq('priority', priorityFilter);
+      // Filtro de prioridade
+      if (priorityFilter !== "all") query = query.eq("priority", priorityFilter);
+
+      // Filtro de prazo
+      if (dueFilter === "today") {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        query = query.eq("due_date", todayStr);
+      } else if (dueFilter === "late") {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        query = query.lt("due_date", todayStr).not("status", "in", "(completed,cancelled)");
+      }
 
       const orderColumn =
-        sort === "updated" ? 'updated_at' :
-        sort === "due" ? 'due_date' :
-        sort === "priority" ? 'priority_score' : 'created_at';
+        sort === "updated" ? "updated_at" :
+        sort === "due" ? "due_date" :
+        sort === "priority" ? "priority_score" : "created_at";
       const orderAsc = sort === "due";
+
+      // Para a visão "Por cliente", buscamos todos os processos da empresa para agrupar com fidelidade
+      // Para "Todos os processos", paginamos normalmente
+      const rangeLimit = viewMode === "by_customer" ? 200 : 24;
+      const rangeOffset = viewMode === "by_customer" ? 0 : (page - 1) * 24;
 
       const { data, count, error } = await query
         .order(orderColumn, { ascending: orderAsc, nullsFirst: false })
-        .range((page - 1) * pageSize, page * pageSize - 1);
+        .range(rangeOffset, rangeOffset + rangeLimit - 1);
 
-      if (data) setProcesses(data);
-      if (count !== null) setTotalCount(count);
-      if (error) console.error("Error fetching processes:", error);
+      if (error) {
+        console.error("Erro ao buscar processos:", error);
+      } else {
+        setProcesses(data || []);
+        if (count !== null) setTotalCount(count);
+      }
+    } catch (err) {
+      console.error("Exceção na busca de processos:", err);
+    } finally {
       setIsLoading(false);
-  }, [page, searchTerm, statusFilter, priorityFilter, sort]);
+    }
+  }, [profile?.company_id, isPreview, searchTerm, statusFilter, priorityFilter, dueFilter, sort, page, viewMode]);
 
   useEffect(() => {
-    const debounceTimer = setTimeout(fetchProcesses, 300);
-    return () => clearTimeout(debounceTimer);
+    const timer = setTimeout(fetchProcesses, 300);
+    return () => clearTimeout(timer);
   }, [fetchProcesses]);
 
-  // Refetch imediato quando um processo é criado/alterado em qualquer lugar do app.
+  // Listener para atualizações em tempo real disparadas pelo app
   useEffect(() => {
-    const handler = (event: Event) => {
-      const process = (event as CustomEvent<{ process?: VisibleProcessRow }>).detail?.process;
-      if (process?.id) {
-        setProcesses((prev) => {
-          const existed = prev.some((p) => p.id === process.id);
-          const next = [process, ...prev.filter((p) => p.id !== process.id)];
-          if (!existed) setTotalCount((count) => Math.max(count + 1, next.length));
-          return next.slice(0, pageSize);
-        });
-      }
-      fetchProcesses();
-    };
+    const handler = () => fetchProcesses();
     window.addEventListener("processes:changed", handler);
     return () => window.removeEventListener("processes:changed", handler);
   }, [fetchProcesses]);
 
+  // AGRUPAMENTO DE PROCESSOS POR CLIENTE
+  const groupedCustomers = useMemo(() => {
+    // Modo preview com os dados de referência
+    if ((isPreview || (processes.length === 0 && !isLoading && !hasActiveFilters && totalCount === 0))) {
+      return PREVIEW_CUSTOMERS;
+    }
 
-  const columns = [
-    { id: "pending", title: "Novo", color: "bg-red-500" },
-    { id: "in_progress", title: "Em andamento", color: "bg-blue-500" },
-    { id: "waiting_docs", title: "Aguardando documentos", color: "bg-amber-500" },
-    { id: "review", title: "Em revisão", color: "bg-purple-500" },
-    { id: "ready_to_generate", title: "Pronto para geração", color: "bg-indigo-500" },
-    { id: "waiting_signature", title: "Aguardando assinatura", color: "bg-orange-500" },
-    { id: "protocolado", title: "Protocolado", color: "bg-cyan-500" },
-    { id: "completed", title: "Finalizado", color: "bg-green-500" },
-  ];
+    if (!processes.length) return [];
 
-  const statusTabs: { id: StatusFilter; label: string }[] = [
-    { id: "all", label: "Todos" },
-    { id: "active", label: "Ativos" },
-    { id: "pending_signature", label: "Aguardando assinatura" },
-    { id: "late", label: "Atrasados" },
-    { id: "completed", label: "Finalizados" },
-  ];
+    const map = new Map<string, {
+      id: string;
+      name: string;
+      vesselsMap: Map<string, { id: string; name: string; processes: any[] }>;
+      personalServices: any[];
+      unlinkedProcesses: any[];
+    }>();
+
+    for (const proc of processes) {
+      const customerId = proc.customer_id || (proc.customers?.id) || "unassigned";
+      const customerName = proc.customers?.name || (customerId === "unassigned" ? "Cliente não associado" : "Cliente");
+
+      if (!map.has(customerId)) {
+        map.set(customerId, {
+          id: customerId,
+          name: customerName,
+          vesselsMap: new Map(),
+          personalServices: [],
+          unlinkedProcesses: [],
+        });
+      }
+
+      const clientEntry = map.get(customerId)!;
+
+      // Classificação do status e prazo do processo
+      const dueDate = proc.due_date ? parseISO(proc.due_date) : null;
+      const isOverdue = dueDate ? isPast(dueDate) && !isToday(dueDate) : false;
+      const isDueToday = dueDate ? isToday(dueDate) : false;
+
+      let statusLabel = "Em andamento";
+      let statusType: "conference" | "pending" | "signature" | "in_progress" | "completed" = "in_progress";
+      let nextAction = "Ver andamento →";
+
+      if (proc.status === "completed") {
+        statusLabel = "Finalizado";
+        statusType = "completed";
+        nextAction = "Ver detalhes →";
+      } else if (proc.status === "waiting_signature" || proc.status === "awaiting_signature") {
+        statusLabel = "Aguardando assinatura";
+        statusType = "signature";
+        nextAction = "Ver documentos →";
+      } else if (isOverdue || proc.status === "pending" || proc.priority === "urgent") {
+        statusLabel = "Pendência";
+        statusType = "pending";
+        nextAction = "Resolver pendência →";
+      } else if (isDueToday || proc.status === "waiting_docs" || proc.status === "review") {
+        statusLabel = "Em conferência";
+        statusType = "conference";
+        nextAction = "Conferir documentos →";
+      }
+
+      let dueLabel = "— Sem prazo";
+      let dueType: "today" | "late" | "upcoming" | "none" = "none";
+
+      if (dueDate) {
+        if (isDueToday) {
+          dueLabel = "Hoje";
+          dueType = "today";
+        } else if (isOverdue) {
+          dueLabel = "Atrasado";
+          dueType = "late";
+        } else {
+          const days = differenceInDays(dueDate, new Date());
+          dueLabel = days <= 0 ? "Hoje" : `Em ${days}d`;
+          dueType = "upcoming";
+        }
+      }
+
+      const formattedProc = {
+        id: proc.id,
+        code: proc.protocol_number ? `#${proc.protocol_number}` : `#${proc.id.substring(0, 4)}`,
+        service: proc.title || translateTerm(proc.process_type) || "Serviço Naval",
+        status: proc.status,
+        statusLabel,
+        statusType,
+        dueLabel,
+        dueType,
+        nextAction,
+        isOverdue,
+        isDueToday,
+      };
+
+      if (proc.vessel_id && proc.vessels) {
+        const vesselId = proc.vessel_id;
+        const vesselName = proc.vessels.name || "Embarcação";
+        if (!clientEntry.vesselsMap.has(vesselId)) {
+          clientEntry.vesselsMap.set(vesselId, { id: vesselId, name: vesselName, processes: [] });
+        }
+        clientEntry.vesselsMap.get(vesselId)!.processes.push(formattedProc);
+      } else if (!proc.vessel_id) {
+        clientEntry.personalServices.push(formattedProc);
+      } else {
+        clientEntry.unlinkedProcesses.push(formattedProc);
+      }
+    }
+
+    // Converte os clientes para array
+    return Array.from(map.values()).map(c => ({
+      id: c.id,
+      name: c.name,
+      vessels: Array.from(c.vesselsMap.values()),
+      personalServices: c.personalServices,
+      unlinkedProcesses: c.unlinkedProcesses,
+    }));
+  }, [processes, isPreview, isLoading, hasActiveFilters, totalCount]);
+
+  // Inicializa o primeiro cliente expandido por padrão se nenhum estiver
+  useEffect(() => {
+    if (groupedCustomers.length > 0 && Object.keys(expandedCustomers).length === 0) {
+      setExpandedCustomers({ [groupedCustomers[0].id]: true });
+    }
+  }, [groupedCustomers, expandedCustomers]);
+
+  // Se o usuário estiver buscando, expande automaticamente os clientes com resultados
+  useEffect(() => {
+    if (searchTerm.trim().length > 1 && groupedCustomers.length > 0) {
+      const autoExpanded: Record<string, boolean> = {};
+      groupedCustomers.forEach(c => {
+        autoExpanded[c.id] = true;
+      });
+      setExpandedCustomers(autoExpanded);
+    }
+  }, [searchTerm, groupedCustomers]);
+
+  const toggleCustomer = (id: string) => {
+    setExpandedCustomers(prev => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const handleStartProcessWithContext = async (context: { customerId?: string; vesselId?: string }) => {
+    const limit = await checkLimit("processes");
+    if (limit.reached) {
+      setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
+      return;
+    }
+    openWithContext(context);
+  };
 
   return (
-    <div className="animate-in fade-in duration-500 pb-20">
-      <TrialBanner onlyAlerts={true} />
-      <PageHeader
-        title="Fluxo de Processos"
-        description="Acompanhamento operacional em tempo real."
-        actions={
-          <div className="flex flex-wrap gap-3 w-full sm:w-auto">
-            <div className="bg-slate-100 p-1 rounded-2xl flex border border-slate-200">
-              {(["crm", "kanban", "list"] as const).map(v => (
-                <button
-                  key={v}
-                  onClick={() => setView(v)}
-                  className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${view === v ? 'bg-white shadow-sm text-navy' : 'text-slate-500'}`}
-                >
-                  {v === "crm" ? "CRM" : v === "kanban" ? "Kanban" : "Lista"}
-                </button>
-              ))}
-            </div>
-
-            <Link
-              to="/processes/archived"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-primary hover:border-primary/40"
-            >
-              <Archive className="h-3.5 w-3.5" /> Arquivados
-            </Link>
-            <Link
-              to="/processes/trash"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-red-600 hover:border-red-300"
-            >
-              <Trash2 className="h-3.5 w-3.5" /> Lixeira
-            </Link>
-
-            <button
-              onClick={async () => {
-                const limit = await checkLimit('processes');
-                if (limit.reached) {
-                  setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
-                  return;
-                }
-                setIsNewProcessOpen(true);
-              }}
-              className="flex-grow sm:flex-initial bg-primary text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/20"
-            >
-              <Plus className="h-4 w-4 inline mr-2" /> Novo Processo
-            </button>
-          </div>
-        }
-      />
-
-      <div className="flex flex-col gap-4 mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto_auto] gap-3">
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-            <input
-              placeholder="Buscar por tipo, título ou protocolo..."
-              value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
-            />
-          </div>
-
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-            <select
-              value={priorityFilter}
-              onChange={(e) => { setPriorityFilter(e.target.value as PriorityFilter); setPage(1); }}
-              className="pl-9 pr-8 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm focus:ring-4 focus:ring-primary/10 appearance-none"
-            >
-              <option value="all">Prioridade: Todas</option>
-              <option value="high">Alta</option>
-              <option value="medium">Média</option>
-              <option value="low">Baixa</option>
-            </select>
-          </div>
-
-          <div className="relative">
-            <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortKey)}
-              className="pl-9 pr-8 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm focus:ring-4 focus:ring-primary/10 appearance-none"
-            >
-              <option value="recent">Mais recentes</option>
-              <option value="updated">Última atualização</option>
-              <option value="due">Prazo mais próximo</option>
-              <option value="priority">Maior prioridade</option>
-            </select>
-          </div>
+    <div className="animate-in fade-in duration-300 max-w-7xl mx-auto space-y-6">
+      {/* 1. CABEÇALHO DA PÁGINA */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0f1d36] tracking-tight">
+            Processos
+          </h1>
+          <p className="text-slate-500 text-sm sm:text-base mt-1 font-normal">
+            Todos os serviços do cliente, organizados em um só lugar.
+          </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {statusTabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => { setStatusFilter(t.id); setPage(1); }}
-              className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${statusFilter === t.id ? 'bg-navy text-white border-navy shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:border-primary/40 hover:text-primary'}`}
-            >
-              {t.label}
-            </button>
-          ))}
+        {/* Botão Novo Processo Desktop */}
+        <button
+          type="button"
+          onClick={async () => {
+            const limit = await checkLimit("processes");
+            if (limit.reached) {
+              setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
+              return;
+            }
+            setIsNewProcessOpen(true);
+          }}
+          className="w-full sm:w-auto h-11 px-5 rounded-xl bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Novo processo</span>
+        </button>
+      </div>
+
+      {/* 2. TOGGLE DE VISUALIZAÇÕES ("Todos os processos" / "Por cliente") */}
+      <div className="flex items-center">
+        <div className="bg-slate-100/90 p-1 rounded-2xl border border-slate-200/80 flex w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={() => handleViewModeChange("all_processes")}
+            className={cn(
+              "flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer",
+              viewMode === "all_processes"
+                ? "bg-[#1868db] text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            )}
+          >
+            <Users className="h-4 w-4" />
+            <span>Todos os processos</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleViewModeChange("by_customer")}
+            className={cn(
+              "flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer",
+              viewMode === "by_customer"
+                ? "bg-[#1868db] text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            )}
+          >
+            <User className="h-4 w-4" />
+            <span>Por cliente</span>
+          </button>
         </div>
       </div>
 
-      {processes.length === 0 && !isLoading && totalCount === 0 && !searchTerm && statusFilter === "all" && priorityFilter === "all" ? (
-        <div className="mb-8 rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/5 via-white to-white p-6 md:p-10 shadow-sm">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-12 w-12 rounded-2xl bg-primary text-white grid place-items-center shadow-lg shrink-0">
-              <Rocket className="h-6 w-6" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-lg md:text-xl font-black text-navy truncate">Bem-vindo ao NavalDocs Pro</h2>
-              <p className="text-xs md:text-sm text-slate-500 font-medium">Vamos criar seu primeiro processo — leva menos de 2 minutos.</p>
-            </div>
-          </div>
-          <div className="grid md:grid-cols-2 gap-3 md:gap-4 mb-5">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="flex items-center gap-2 mb-1"><Sparkles className="h-4 w-4 text-primary" /><span className="text-[11px] font-black uppercase tracking-widest text-primary">Processo Guiado</span></div>
-              <p className="text-xs text-slate-500 font-medium">Perguntas simples passo a passo. Ideal se você está começando.</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="flex items-center gap-2 mb-1"><Upload className="h-4 w-4 text-primary" /><span className="text-[11px] font-black uppercase tracking-widest text-primary">Criar por Upload</span></div>
-              <p className="text-xs text-slate-500 font-medium">Envie PDFs já existentes e a IA extrai os dados por você.</p>
-            </div>
-          </div>
-          <Button onClick={() => setIsNewProcessOpen(true)} className="w-full sm:w-auto bg-navy hover:bg-slate-900 text-white text-[11px] font-black uppercase tracking-[0.2em] px-8 py-6 rounded-2xl shadow-lg">
-            <Plus className="h-4 w-4 mr-2" /> Criar meu primeiro processo
-          </Button>
-        </div>
-      ) : processes.length === 0 && !isLoading && (
-        <div className="mb-8">
-          <EmptyState
-            icon={ClipboardList}
-            title="Nenhum processo encontrado"
-            description="Ajuste os filtros ou clique em 'Novo Processo' para iniciar um atendimento."
-            actionLabel="Iniciar Novo Processo"
-            onAction={() => setIsNewProcessOpen(true)}
+      {/* 3. BARRA DE BUSCA E FILTROS */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#1868db] transition-colors" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Buscar cliente, embarcação ou processo..."
+            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200/80 rounded-2xl text-xs sm:text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1868db]/20 focus:border-[#1868db] transition-all shadow-2xs"
           />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Botão de Filtros com Popover */}
+        <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                "h-11 px-4 rounded-2xl border transition-all flex items-center justify-center gap-2 font-semibold text-xs sm:text-sm cursor-pointer shadow-2xs",
+                hasActiveFilters
+                  ? "bg-blue-50 border-blue-200 text-[#1868db]"
+                  : "bg-white border-slate-200/80 text-slate-700 hover:bg-slate-50"
+              )}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              <span className="hidden sm:inline">Filtros</span>
+              {hasActiveFilters && (
+                <span className="h-2 w-2 rounded-full bg-[#1868db]" />
+              )}
+            </button>
+          </PopoverTrigger>
+
+          <PopoverContent align="end" className="w-80 p-5 rounded-2xl shadow-xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <span className="font-bold text-sm text-[#0f1d36]">Filtros Operacionais</span>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="text-xs font-semibold text-[#1868db] hover:underline"
+                >
+                  Limpar filtros
+                </button>
+              )}
+            </div>
+
+            {/* Situação */}
+            <div>
+              <label className="text-xs font-bold text-slate-600 mb-1.5 block">Situação</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value as StatusFilter);
+                  setPage(1);
+                }}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+              >
+                <option value="all">Todas as situações</option>
+                <option value="active">Em andamento</option>
+                <option value="pending">Com pendência</option>
+                <option value="waiting_signature">Aguardando assinatura</option>
+                <option value="late">Atrasados</option>
+                <option value="completed">Finalizados</option>
+              </select>
+            </div>
+
+            {/* Prioridade */}
+            <div>
+              <label className="text-xs font-bold text-slate-600 mb-1.5 block">Prioridade</label>
+              <select
+                value={priorityFilter}
+                onChange={(e) => {
+                  setPriorityFilter(e.target.value as PriorityFilter);
+                  setPage(1);
+                }}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+              >
+                <option value="all">Todas as prioridades</option>
+                <option value="high">Alta / Urgente</option>
+                <option value="medium">Média</option>
+                <option value="low">Baixa</option>
+              </select>
+            </div>
+
+            {/* Prazo */}
+            <div>
+              <label className="text-xs font-bold text-slate-600 mb-1.5 block">Prazo de Vencimento</label>
+              <select
+                value={dueFilter}
+                onChange={(e) => {
+                  setDueFilter(e.target.value as DueFilter);
+                  setPage(1);
+                }}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+              >
+                <option value="all">Qualquer prazo</option>
+                <option value="today">Vencendo hoje</option>
+                <option value="late">Já atrasados</option>
+              </select>
+            </div>
+
+            <Button
+              type="button"
+              onClick={() => setIsFilterOpen(false)}
+              className="w-full bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold text-xs py-2 rounded-xl"
+            >
+              Aplicar filtros
+            </Button>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {/* Informativo de filtros ativos */}
+      {hasActiveFilters && (
+        <div className="flex items-center justify-between px-4 py-2.5 bg-blue-50/70 border border-blue-100 rounded-xl text-xs text-[#1868db]">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold">Filtros aplicados:</span>
+            {searchTerm && <Badge variant="secondary" className="bg-white text-slate-700 text-[10px]">Busca: {searchTerm}</Badge>}
+            {statusFilter !== "all" && <Badge variant="secondary" className="bg-white text-slate-700 text-[10px]">Situação: {statusFilter}</Badge>}
+            {priorityFilter !== "all" && <Badge variant="secondary" className="bg-white text-slate-700 text-[10px]">Prioridade: {priorityFilter}</Badge>}
+            {dueFilter !== "all" && <Badge variant="secondary" className="bg-white text-slate-700 text-[10px]">Prazo: {dueFilter}</Badge>}
+          </div>
+          <button
+            type="button"
+            onClick={handleClearFilters}
+            className="text-xs font-bold underline hover:opacity-80 shrink-0 cursor-pointer ml-2"
+          >
+            Limpar filtros
+          </button>
         </div>
       )}
 
-      {view === "crm" ? (
-        <CrmGrid
+      {/* 4. CONTEÚDO PRINCIPAL DE ACORDO COM A VISUALIZAÇÃO */}
+      {viewMode === "by_customer" ? (
+        <CustomerGroupedView
+          customers={groupedCustomers}
+          isLoading={isLoading}
+          expandedCustomers={expandedCustomers}
+          onToggleCustomer={toggleCustomer}
+          onNewProcessWithContext={handleStartProcessWithContext}
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={handleClearFilters}
+          onGeneralNewProcess={() => setIsNewProcessOpen(true)}
+        />
+      ) : (
+        <AllProcessesOperationalView
           processes={processes}
           isLoading={isLoading}
-          columns={columns}
+          operationalView={operationalView}
+          onOperationalViewChange={setOperationalView}
           onNewProcess={() => setIsNewProcessOpen(true)}
           onChanged={fetchProcesses}
+          totalCount={totalCount}
+          page={page}
+          setPage={setPage}
+          sort={sort}
+          setSort={setSort}
         />
-      ) : view === "kanban" ? (
-
-        <div className="flex gap-4 md:gap-8 overflow-x-auto pb-8 min-h-[600px] md:min-h-[700px] custom-scrollbar px-2">
-          {columns.map((col) => {
-            const columnProcesses = processes.filter(p => p.status === col.id);
-            return (
-              <div key={col.id} className="flex-shrink-0 w-80 flex flex-col gap-6">
-                <div className="flex items-center justify-between px-2">
-                  <div className="flex items-center gap-3">
-                    <div className={`h-2.5 w-2.5 rounded-full ${col.color} shadow-[0_0_10px_rgba(0,0,0,0.1)]`} />
-                    <h3 className="font-semibold text-navy text-[10px] tracking-[0.15em]">{col.title}</h3>
-                    <span className="bg-slate-200/50 text-navy/40 text-[9px] font-black px-2 py-0.5 rounded-full">
-                      {columnProcesses.length}
-                    </span>
-                  </div>
-                  <button onClick={() => setIsNewProcessOpen(true)} className="p-1 hover:bg-slate-100 rounded-lg text-slate-300 transition-colors"><Plus className="h-4 w-4" /></button>
-                </div>
-
-                <div className="flex-grow bg-slate-100/30 rounded-3xl p-5 space-y-5 border border-slate-100/50 overflow-y-auto custom-scrollbar backdrop-blur-sm">
-                  {isLoading ? (
-                    <div className="py-10 text-center">
-                      <Loader2 className="h-6 w-6 animate-spin text-slate-300 mx-auto" />
-                    </div>
-                  ) : columnProcesses.length > 0 ? (
-                    columnProcesses.map((p) => (
-                      <Link
-                        key={p.id}
-                        to="/processes/$id" params={{ id: p.id }}
-                        className="block bg-white p-5 rounded-2xl shadow-sm border border-slate-100 hover:shadow-2xl hover:border-primary/40 hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden"
-                      >
-                        <div className="mb-3 flex items-center justify-between">
-                          <span className="text-[10px] font-mono font-black text-primary bg-primary/5 px-2 py-0.5 rounded uppercase tracking-tighter border border-primary/10">PROC-{p.id.substring(0, 6)}</span>
-                          {p.priority && <PriorityChip priority={p.priority} />}
-                        </div>
-
-                        <h4 className="font-semibold text-navy text-[13px] mb-3 leading-tight group-hover:text-primary transition-colors line-clamp-2">{p.title || p.process_type}</h4>
-
-                        <div className="space-y-2 pb-3 mb-3 border-b border-slate-50">
-                          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 min-w-0">
-                            <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                            <span className="truncate">{p.customers?.name || "Cliente"}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 min-w-0">
-                            <Ship className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                            <span className="truncate">{p.vessels?.name || "Sem embarcação"}</span>
-                          </div>
-                        </div>
-
-                        <ProgressBar value={p.completion_percentage} />
-
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
-                          <DueLabel dueDate={p.due_date} />
-                          <span className="text-[10px] font-black uppercase text-primary group-hover:translate-x-1 transition-transform">Abrir</span>
-                        </div>
-                      </Link>
-                    ))
-                  ) : (
-                    <div className="py-8 px-4 opacity-80 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center">
-                      <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                        <Package className="h-6 w-6 text-slate-300" />
-                      </div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Etapa sem processos</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                  <th className="px-6 py-4">PROCESSO / TIPO</th>
-                  <th className="px-6 py-4">CLIENTE</th>
-                  <th className="px-6 py-4">EMBARCAÇÃO</th>
-                  <th className="px-6 py-4">STATUS</th>
-                  <th className="px-6 py-4">PROGRESSO</th>
-                  <th className="px-6 py-4">PRAZO</th>
-                  <th className="px-6 py-4"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {isLoading ? (
-                  <tr><td colSpan={7} className="px-6 py-10 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></td></tr>
-                ) : processes.length === 0 ? (
-                  <tr><td colSpan={7} className="px-6 py-10 text-center"><p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhum processo encontrado</p></td></tr>
-                ) : processes.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <Link to="/processes/$id" params={{ id: p.id }} className="block">
-                        <div className="font-bold text-navy text-sm">{p.title || p.process_type}</div>
-                        <div className="text-[10px] text-primary font-mono font-black uppercase tracking-tighter">PROC-{p.id.substring(0, 6)}</div>
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4 text-xs font-bold text-slate-600">{p.customers?.name || "---"}</td>
-                    <td className="px-6 py-4 text-xs font-bold text-slate-600">{p.vessels?.name || "---"}</td>
-                    <td className="px-6 py-4">
-                      <Badge className="text-[8px] font-black uppercase tracking-widest bg-slate-100 text-slate-600 border-none">
-                        {columns.find(c => c.id === p.status)?.title || translateTerm(p.status)}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 w-40"><ProgressBar value={p.completion_percentage} compact /></td>
-                    <td className="px-6 py-4 text-xs font-bold"><DueLabel dueDate={p.due_date} /></td>
-                    <td className="px-6 py-4 text-right">
-                      <Link to="/processes/$id" params={{ id: p.id }}>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><ArrowRight className="h-4 w-4" /></Button>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="md:hidden divide-y divide-slate-100">
-            {isLoading ? (
-              <div className="p-10 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
-            ) : processes.length === 0 ? (
-              <div className="p-10 text-center"><p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Nenhum processo</p></div>
-            ) : processes.map((p) => (
-              <Link key={p.id} to="/processes/$id" params={{ id: p.id }} className="block p-4 active:bg-slate-50 transition-colors">
-                <div className="flex justify-between items-start mb-2 gap-2">
-                  <div className="min-w-0">
-                    <div className="font-bold text-navy text-sm truncate">{p.title || p.process_type}</div>
-                    <div className="text-[9px] text-primary font-mono font-black uppercase">PROC-{p.id.substring(0, 6)}</div>
-                  </div>
-                  <Badge className="shrink-0 text-[7px] font-black uppercase tracking-widest bg-primary/10 text-primary border-none">
-                    {columns.find(c => c.id === p.status)?.title || translateTerm(p.status)}
-                  </Badge>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 mb-2">
-                  <div className="flex items-center gap-1.5 overflow-hidden"><User className="h-3 w-3 shrink-0" /><span className="truncate">{p.customers?.name || "---"}</span></div>
-                  <div className="flex items-center gap-1.5 overflow-hidden justify-end"><Ship className="h-3 w-3 shrink-0" /><span className="truncate">{p.vessels?.name || "---"}</span></div>
-                </div>
-                <ProgressBar value={p.completion_percentage} compact />
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {!isLoading && totalCount > 0 && (
-        <div className="p-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white rounded-b-[2rem]">
-          <span>Mostrando {processes.length} de {totalCount} processos</span>
-          <div className="flex gap-2 items-center">
-            <Button variant="outline" size="sm" className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200 bg-white" onClick={() => setPage(prev => Math.max(1, prev - 1))} disabled={page === 1}>Anterior</Button>
-            <span className="px-3 h-8 flex items-center bg-primary text-white rounded-lg shadow-sm">{page}</span>
-            <span className="text-slate-300">/</span>
-            <span className="px-3 h-8 flex items-center text-navy font-bold">{Math.ceil(totalCount / pageSize) || 1}</span>
-            <Button variant="outline" size="sm" className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200 bg-white" onClick={() => setPage(prev => prev + 1)} disabled={page >= Math.ceil(totalCount / pageSize)}>Próximo</Button>
-          </div>
-        </div>
       )}
 
       <UpgradeModal
@@ -459,204 +700,750 @@ function Processes() {
   );
 }
 
-type Col = { id: string; title: string; color: string };
-
-function PriorityChip({ priority }: { priority: string }) {
-  const map: Record<string, string> = {
-    high: "bg-red-50 text-red-700 border-red-100",
-    medium: "bg-amber-50 text-amber-700 border-amber-100",
-    low: "bg-emerald-50 text-emerald-700 border-emerald-100",
-  };
-  const cls = map[priority] || "bg-slate-50 text-slate-600 border-slate-100";
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${cls}`}>
-      <Star className="h-2.5 w-2.5" />{priority}
-    </span>
-  );
-}
-
-function ProgressBar({ value, compact = false }: { value: number | null | undefined; compact?: boolean }) {
-  const v = Math.max(0, Math.min(100, value ?? 0));
-  return (
-    <div className={compact ? "space-y-1" : "space-y-2"}>
-      {!compact && (
-        <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
-          <span>Progresso</span>
-          <span className="text-navy">{value != null ? `${Math.round(v)}%` : "—"}</span>
-        </div>
-      )}
-      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-        <div className="h-full bg-gradient-to-r from-primary to-cyan-500 transition-all" style={{ width: `${v}%` }} />
+// ----------------------------------------------------------------------
+// VISÃO 1: AGRUPADA POR CLIENTE ("Por cliente")
+// ----------------------------------------------------------------------
+function CustomerGroupedView({
+  customers,
+  isLoading,
+  expandedCustomers,
+  onToggleCustomer,
+  onNewProcessWithContext,
+  hasActiveFilters,
+  onClearFilters,
+  onGeneralNewProcess,
+}: {
+  customers: any[];
+  isLoading: boolean;
+  expandedCustomers: Record<string, boolean>;
+  onToggleCustomer: (id: string) => void;
+  onNewProcessWithContext: (ctx: { customerId?: string; vesselId?: string }) => void;
+  hasActiveFilters: boolean;
+  onClearFilters: () => void;
+  onGeneralNewProcess: () => void;
+}) {
+  if (isLoading) {
+    return (
+      <div className="py-20 flex flex-col items-center justify-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-[#1868db]" />
+        <span className="text-xs font-semibold text-slate-500">Carregando processos dos clientes...</span>
       </div>
-      {compact && <div className="text-[9px] font-black text-slate-400">{value != null ? `${Math.round(v)}%` : "—"}</div>}
+    );
+  }
+
+  if (customers.length === 0) {
+    if (hasActiveFilters) {
+      return (
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-2xs space-y-4">
+          <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+            <Search className="h-6 w-6" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-[#0f1d36]">Nenhum processo encontrado com esses filtros</h3>
+            <p className="text-slate-500 text-xs mt-1">Tente ajustar a busca ou limpe os filtros para ver todos os registros.</p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClearFilters}
+            className="rounded-xl border-slate-300 text-xs font-semibold"
+          >
+            Limpar filtros
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="bg-white rounded-3xl border border-slate-200/80 p-8 md:p-12 text-center shadow-2xs space-y-4">
+        <div className="h-16 w-16 rounded-2xl bg-blue-50 text-[#1868db] flex items-center justify-center mx-auto">
+          <Rocket className="h-8 w-8" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-[#0f1d36]">Vamos começar seu primeiro processo?</h2>
+          <p className="text-slate-500 text-sm mt-1 max-w-md mx-auto">
+            Organize embarcações, clientes e requerimentos náuticos em um só lugar.
+          </p>
+        </div>
+        <Button
+          type="button"
+          onClick={onGeneralNewProcess}
+          className="bg-[#1868db] hover:bg-[#1456b8] text-white px-6 py-2.5 rounded-xl font-semibold text-sm shadow-sm"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Novo processo
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {customers.map((customer) => {
+        const isExpanded = !!expandedCustomers[customer.id];
+
+        // Cálculos de totais deste cliente
+        let totalActiveProcesses = 0;
+        let pendingCount = 0;
+        const vesselIds = new Set<string>();
+
+        // Percorre embarcações
+        for (const vessel of customer.vessels || []) {
+          vesselIds.add(vessel.id);
+          for (const p of vessel.processes || []) {
+            if (p.status !== "completed" && p.status !== "cancelled") {
+              totalActiveProcesses++;
+            }
+            if (p.statusType === "pending" || p.dueType === "late") {
+              pendingCount++;
+            }
+          }
+        }
+
+        // Percorre serviços pessoais
+        for (const p of customer.personalServices || []) {
+          if (p.status !== "completed" && p.status !== "cancelled") {
+            totalActiveProcesses++;
+          }
+          if (p.statusType === "pending" || p.dueType === "late") {
+            pendingCount++;
+          }
+        }
+
+        const distinctVesselsCount = customer.vessels?.length || 0;
+        const initials = customer.name
+          .trim()
+          .split(" ")
+          .map((n: string) => n[0])
+          .slice(0, 2)
+          .join("")
+          .toUpperCase() || "CL";
+
+        const customerFirstName = customer.name.trim().split(" ")[0];
+
+        return (
+          <div
+            key={customer.id}
+            className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden transition-all"
+          >
+            {/* CABEÇALHO DO CLIENTE */}
+            <div
+              onClick={() => onToggleCustomer(customer.id)}
+              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none hover:bg-slate-50/60 transition-colors"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                {/* Avatar com iniciais */}
+                <div className="h-10 w-10 rounded-full bg-blue-100 text-[#1868db] flex items-center justify-center font-bold text-xs sm:text-sm shrink-0">
+                  {initials}
+                </div>
+
+                <div className="min-w-0">
+                  <h3 className="text-base sm:text-lg font-bold text-[#0f1d36] truncate leading-tight">
+                    {customer.name}
+                  </h3>
+
+                  <div className="text-xs text-slate-500 font-medium mt-0.5">
+                    {distinctVesselsCount > 0 ? (
+                      <span>
+                        {totalActiveProcesses} {totalActiveProcesses === 1 ? "processo ativo" : "processos ativos"} ·{" "}
+                        {distinctVesselsCount} {distinctVesselsCount === 1 ? "embarcação" : "embarcações"}
+                      </span>
+                    ) : (
+                      <div>
+                        <span>
+                          {totalActiveProcesses} {totalActiveProcesses === 1 ? "processo ativo" : "processos ativos"} · Serviço pessoal
+                        </span>
+                        {customer.personalServices?.[0]?.service && (
+                          <span className="block text-slate-400 text-[11px]">
+                            {customer.personalServices[0].service}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Lado direito: badge de pendência e chevron */}
+              <div className="flex items-center gap-3 shrink-0">
+                {pendingCount > 0 && (
+                  <div className="bg-amber-50 text-amber-700 border border-amber-200/70 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5">
+                    <span className="h-3.5 w-3.5 rounded-full border border-amber-500 flex items-center justify-center text-[9px] font-bold text-amber-600">!</span>
+                    <span>{pendingCount} {pendingCount === 1 ? "pendência" : "pendências"}</span>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  aria-label={isExpanded ? "Recolher cliente" : "Expandir cliente"}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  <ChevronDown
+                    className={cn(
+                      "h-5 w-5 transition-transform duration-200",
+                      isExpanded ? "rotate-180" : ""
+                    )}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* CONTEÚDO EXPANDIDO */}
+            {isExpanded && (
+              <div className="border-t border-slate-100 p-4 sm:p-6 bg-white space-y-6 animate-in fade-in-50 duration-200">
+                {/* Botão contextual no Mobile: "+ Processo para [Nome]" */}
+                <div className="sm:hidden">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onNewProcessWithContext({ customerId: customer.id });
+                    }}
+                    className="w-full py-2.5 px-4 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-100/60 text-[#1868db] font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Processo para {customerFirstName}</span>
+                  </button>
+                </div>
+
+                {/* 1. GRUPOS DE EMBARCAÇÕES */}
+                {customer.vessels && customer.vessels.length > 0 && (
+                  <div className="space-y-6">
+                    {customer.vessels.map((vessel: any) => (
+                      <div key={vessel.id} className="space-y-3">
+                        {/* Header da Embarcação */}
+                        <div className="flex items-center justify-between pb-1">
+                          <div className="flex items-center gap-2 text-[#0f1d36]">
+                            <Ship className="h-5 w-5 text-[#0f1d36]" />
+                            <h4 className="font-bold text-sm sm:text-base">
+                              {vessel.name}
+                            </h4>
+                          </div>
+
+                          {/* Botão Desktop "+ Novo processo" junto à embarcação */}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onNewProcessWithContext({
+                                customerId: customer.id,
+                                vesselId: vessel.id,
+                              })
+                            }
+                            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[#1868db] text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                            <span>Novo processo</span>
+                          </button>
+                        </div>
+
+                        {/* Lista de processos desta embarcação */}
+                        <div className="space-y-2">
+                          {vessel.processes.map((proc: any) => (
+                            <ProcessRowOrCard key={proc.id} process={proc} />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 2. GRUPO SERVIÇOS PESSOAIS (SEM EMBARCAÇÃO) */}
+                {customer.personalServices && customer.personalServices.length > 0 && (
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between pb-1">
+                      <div className="flex items-center gap-2 text-[#0f1d36]">
+                        <User className="h-5 w-5 text-[#0f1d36]" />
+                        <h4 className="font-bold text-sm sm:text-base">
+                          Serviços pessoais
+                        </h4>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onNewProcessWithContext({
+                            customerId: customer.id,
+                          })
+                        }
+                        className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[#1868db] text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>Novo serviço</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {customer.personalServices.map((proc: any) => (
+                        <ProcessRowOrCard key={proc.id} process={proc} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. PROCESSOS COM PENDÊNCIA DE ASSOCIAÇÃO */}
+                {customer.unlinkedProcesses && customer.unlinkedProcesses.length > 0 && (
+                  <div className="space-y-3 pt-2">
+                    <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl flex items-center justify-between text-xs text-amber-800">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                        <span>Estes processos precisam de vínculo com embarcação para organização completa.</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {customer.unlinkedProcesses.map((proc: any) => (
+                        <ProcessRowOrCard key={proc.id} process={proc} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      <div className="text-center pt-2">
+        <span className="text-[11px] text-slate-400 font-medium">Dados reais do espaço de trabalho ativo.</span>
+      </div>
     </div>
   );
 }
 
-function DueLabel({ dueDate }: { dueDate?: string | null }) {
-  const info = useMemo(() => {
-    if (!dueDate) return { label: "Sem prazo", tone: "text-slate-400", late: false };
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const due = new Date(dueDate);
-    const diff = Math.ceil((due.getTime() - today.getTime()) / 86400000);
-    if (diff < 0) return { label: `${Math.abs(diff)}d atrasado`, tone: "text-red-600", late: true };
-    if (diff === 0) return { label: "Vence hoje", tone: "text-amber-600", late: false };
-    if (diff <= 3) return { label: `Em ${diff}d`, tone: "text-amber-600", late: false };
-    return { label: `Em ${diff}d`, tone: "text-slate-500", late: false };
-  }, [dueDate]);
+// Linha de processo (Desktop em linha, Mobile em card)
+function ProcessRowOrCard({ process }: { process: any }) {
+  const statusBadge = useMemo(() => {
+    switch (process.statusType) {
+      case "conference":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
+            <Clock className="h-3.5 w-3.5 text-amber-600" />
+            {process.statusLabel}
+          </span>
+        );
+      case "pending":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200/60">
+            <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
+            {process.statusLabel}
+          </span>
+        );
+      case "signature":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/60">
+            <FileSignature className="h-3.5 w-3.5 text-blue-600" />
+            {process.statusLabel}
+          </span>
+        );
+      case "completed":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+            {process.statusLabel}
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+            <RefreshCw className="h-3.5 w-3.5 text-slate-500" />
+            {process.statusLabel}
+          </span>
+        );
+    }
+  }, [process.statusType, process.statusLabel]);
+
+  const dueBadge = useMemo(() => {
+    switch (process.dueType) {
+      case "today":
+        return (
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600">
+            <Clock className="h-3.5 w-3.5" />
+            {process.dueLabel}
+          </span>
+        );
+      case "late":
+        return (
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-600">
+            <Clock className="h-3.5 w-3.5" />
+            {process.dueLabel}
+          </span>
+        );
+      case "upcoming":
+        return (
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500">
+            <Clock className="h-3.5 w-3.5 text-slate-400" />
+            {process.dueLabel}
+          </span>
+        );
+      default:
+        return (
+          <span className="text-xs font-medium text-slate-400">
+            {process.dueLabel}
+          </span>
+        );
+    }
+  }, [process.dueType, process.dueLabel]);
+
   return (
-    <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest ${info.tone}`}>
-      {info.late ? <AlertTriangle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-      {info.label}
-    </span>
+    <>
+      {/* DESKTOP ROW (tabela linear sem quebras) */}
+      <div className="hidden md:flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/40 hover:bg-slate-50 transition-colors">
+        <div className="flex items-center gap-3 w-1/3 min-w-0">
+          <span className="font-mono text-xs font-bold text-slate-400 shrink-0">
+            {process.code}
+          </span>
+          <span className="text-slate-300">·</span>
+          <span className="font-semibold text-sm text-[#0f1d36] truncate">
+            {process.service}
+          </span>
+        </div>
+
+        <div className="w-1/4 flex justify-start">
+          {statusBadge}
+        </div>
+
+        <div className="w-1/5 flex justify-start">
+          {dueBadge}
+        </div>
+
+        <div className="w-1/5 flex justify-end">
+          <Link
+            to="/processes/$id"
+            params={{ id: process.id }}
+            className="text-xs font-semibold text-[#1868db] hover:underline inline-flex items-center gap-1 cursor-pointer"
+          >
+            <span>{process.nextAction}</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* MOBILE CARD (otimizado para toque) */}
+      <div className="md:hidden bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-mono text-[11px] font-bold text-slate-400 shrink-0">
+              {process.code}
+            </span>
+            <span className="text-slate-300">·</span>
+            <span className="font-semibold text-xs text-[#0f1d36] truncate">
+              {process.service}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          {statusBadge}
+          {dueBadge}
+        </div>
+
+        <div className="pt-1 border-t border-slate-100 flex justify-end">
+          <Link
+            to="/processes/$id"
+            params={{ id: process.id }}
+            className="text-xs font-semibold text-[#1868db] hover:underline inline-flex items-center gap-1 cursor-pointer"
+          >
+            <span>{process.nextAction}</span>
+          </Link>
+        </div>
+      </div>
+    </>
   );
 }
 
-function CrmGrid({
+// ----------------------------------------------------------------------
+// VISÃO 2: OPERACIONAL INDIVIDUAL ("Todos os processos")
+// ----------------------------------------------------------------------
+function AllProcessesOperationalView({
   processes,
   isLoading,
+  operationalView,
+  onOperationalViewChange,
+  onNewProcess,
+  onChanged,
+  totalCount,
+  page,
+  setPage,
+  sort,
+  setSort,
+}: {
+  processes: any[];
+  isLoading: boolean;
+  operationalView: "crm" | "kanban" | "list";
+  onOperationalViewChange: (v: "crm" | "kanban" | "list") => void;
+  onNewProcess: () => void;
+  onChanged?: () => void;
+  totalCount: number;
+  page: number;
+  setPage: React.Dispatch<React.SetStateAction<number>>;
+  sort: SortKey;
+  setSort: React.Dispatch<React.SetStateAction<SortKey>>;
+}) {
+  const [editing, setEditing] = useState<any>(null);
+  const pageSize = 24;
+
+  const columns = [
+    { id: "pending", title: "Novo", color: "bg-red-500" },
+    { id: "in_progress", title: "Em andamento", color: "bg-blue-500" },
+    { id: "waiting_docs", title: "Aguardando documentos", color: "bg-amber-500" },
+    { id: "review", title: "Em revisão", color: "bg-purple-500" },
+    { id: "ready_to_generate", title: "Pronto para geração", color: "bg-indigo-500" },
+    { id: "waiting_signature", title: "Aguardando assinatura", color: "bg-orange-500" },
+    { id: "protocolado", title: "Protocolado", color: "bg-cyan-500" },
+    { id: "completed", title: "Finalizado", color: "bg-green-500" },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {/* Barra secundária: Seleção de modo operacional e ordenação */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-2xs">
+        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+          {(["crm", "kanban", "list"] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => onOperationalViewChange(v)}
+              className={cn(
+                "px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer",
+                operationalView === v
+                  ? "bg-white text-[#0f1d36] shadow-sm"
+                  : "text-slate-500 hover:text-slate-900"
+              )}
+            >
+              {v === "crm" ? "CRM" : v === "kanban" ? "Kanban" : "Tabela"}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Link
+            to="/processes/archived"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:text-[#1868db]"
+          >
+            <Archive className="h-3.5 w-3.5" /> Arquivados
+          </Link>
+          <Link
+            to="/processes/trash"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:text-red-600"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Lixeira
+          </Link>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="py-20 flex flex-col items-center justify-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-[#1868db]" />
+          <span className="text-xs font-semibold text-slate-500">Carregando lista de processos...</span>
+        </div>
+      ) : operationalView === "crm" ? (
+        <CrmOperationalGrid
+          processes={processes}
+          isLoading={isLoading}
+          columns={columns}
+          onNewProcess={onNewProcess}
+          onChanged={onChanged}
+        />
+      ) : operationalView === "kanban" ? (
+        <div className="flex gap-4 md:gap-6 overflow-x-auto pb-6 min-h-[550px] custom-scrollbar">
+          {columns.map((col) => {
+            const columnProcesses = processes.filter((p) => p.status === col.id);
+            return (
+              <div key={col.id} className="flex-shrink-0 w-72 flex flex-col gap-3">
+                <div className="flex items-center justify-between px-2">
+                  <div className="flex items-center gap-2">
+                    <div className={`h-2.5 w-2.5 rounded-full ${col.color}`} />
+                    <h3 className="font-bold text-slate-700 text-xs">{col.title}</h3>
+                    <span className="bg-slate-200 text-slate-700 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+                      {columnProcesses.length}
+                    </span>
+                  </div>
+                  <button
+                    onClick={onNewProcess}
+                    className="p-1 hover:bg-slate-100 rounded-lg text-slate-400"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                <div className="flex-grow bg-slate-50/80 rounded-2xl p-3 space-y-3 border border-slate-200/60 overflow-y-auto custom-scrollbar">
+                  {columnProcesses.map((p) => (
+                    <Link
+                      key={p.id}
+                      to="/processes/$id"
+                      params={{ id: p.id }}
+                      className="block bg-white p-4 rounded-xl border border-slate-200/70 shadow-2xs hover:shadow-sm hover:border-[#1868db]/40 transition-all cursor-pointer"
+                    >
+                      <span className="text-[10px] font-mono font-bold text-slate-400">
+                        PROC-{p.id.substring(0, 6)}
+                      </span>
+                      <h4 className="font-bold text-sm text-[#0f1d36] line-clamp-2 mt-1">
+                        {p.title || p.process_type}
+                      </h4>
+                      <p className="text-xs text-slate-500 truncate mt-1">
+                        {p.customers?.name || "Cliente não informado"}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* TABELA INDIVIDUAL */
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                <tr>
+                  <th className="px-5 py-3">Processo</th>
+                  <th className="px-5 py-3">Cliente</th>
+                  <th className="px-5 py-3">Embarcação</th>
+                  <th className="px-5 py-3">Situação</th>
+                  <th className="px-5 py-3">Prazo</th>
+                  <th className="px-5 py-3 text-right">Ação</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium">
+                {processes.map((p) => (
+                  <tr key={p.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-5 py-3.5">
+                      <Link to="/processes/$id" params={{ id: p.id }} className="block">
+                        <span className="font-bold text-[#0f1d36] block">{p.title || p.process_type}</span>
+                        <span className="font-mono text-[10px] text-slate-400">PROC-{p.id.substring(0, 6)}</span>
+                      </Link>
+                    </td>
+                    <td className="px-5 py-3.5 text-slate-600">{p.customers?.name || "—"}</td>
+                    <td className="px-5 py-3.5 text-slate-600">{p.vessels?.name || "—"}</td>
+                    <td className="px-5 py-3.5">
+                      <Badge variant="outline" className="text-[10px] font-semibold">
+                        {translateTerm(p.status)}
+                      </Badge>
+                    </td>
+                    <td className="px-5 py-3.5 text-slate-500">
+                      {p.due_date ? new Date(p.due_date).toLocaleDateString("pt-BR") : "Sem prazo"}
+                    </td>
+                    <td className="px-5 py-3.5 text-right">
+                      <Link
+                        to="/processes/$id"
+                        params={{ id: p.id }}
+                        className="text-[#1868db] font-semibold hover:underline inline-flex items-center gap-1"
+                      >
+                        Abrir <ArrowRight className="h-3 w-3" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Paginação */}
+      {!isLoading && totalCount > pageSize && (
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
+          <span>Mostrando {processes.length} de {totalCount} processos</span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 rounded-lg"
+              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+              disabled={page === 1}
+            >
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 rounded-lg"
+              onClick={() => setPage((prev) => prev + 1)}
+              disabled={page >= Math.ceil(totalCount / pageSize)}
+            >
+              Próximo
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <ProcessEditSheet
+        process={editing ?? undefined}
+        open={!!editing}
+        onOpenChange={(o) => {
+          if (!o) setEditing(null);
+        }}
+        onSaved={() => onChanged?.()}
+      />
+    </div>
+  );
+}
+
+// CRM Grid para a visualização operacional
+function CrmOperationalGrid({
+  processes,
   columns,
   onNewProcess,
   onChanged,
 }: {
   processes: any[];
   isLoading: boolean;
-  columns: Col[];
+  columns: any[];
   onNewProcess: () => void;
   onChanged?: () => void;
 }) {
-  const navigate = useNavigate();
   const [editing, setEditing] = useState<any>(null);
-  const goToTab = (pid: string, tab: string) =>
-    navigate({ to: "/processes/$id", params: { id: pid }, search: { tab } as any });
-
-  if (isLoading) {
-    return (
-      <div className="py-20 grid place-items-center">
-        <Loader2 className="h-7 w-7 animate-spin text-primary" />
-      </div>
-    );
-  }
-  if (!processes.length) return null;
-
-  const statusMeta = (status: string) => {
-    const found = columns.find((c) => c.id === status);
-    return { title: found?.title || status, color: found?.color || "bg-slate-400" };
-  };
-
-  const fmtDate = (iso?: string | null) => {
-    if (!iso) return null;
-    try { return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }); } catch { return null; }
-  };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       {processes.map((p) => {
-        const s = statusMeta(p.status);
-        const updated = fmtDate(p.updated_at);
-        const pendingDocs = typeof p.pending_documents_count === "number" ? p.pending_documents_count : 0;
-        const missingSigs = typeof p.missing_signatures_count === "number" ? p.missing_signatures_count : 0;
-        const progress = Math.max(0, Math.min(100, p.completion_percentage ?? 0));
+        const found = columns.find((c) => c.id === p.status);
+        const colColor = found?.color || "bg-slate-400";
 
         return (
           <div
             key={p.id}
-            className="group bg-white rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-lg hover:border-primary/40 hover:-translate-y-0.5 transition-all overflow-hidden flex flex-col"
+            className="group bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-sm hover:border-[#1868db]/40 transition-all overflow-hidden flex flex-col justify-between"
           >
-            {/* Top accent bar */}
-            <div className={`h-1 w-full ${s.color}`} />
-
-            {/* Body */}
-            <Link
-              to="/processes/$id" params={{ id: p.id }} search={{ tab: "processo", sub: "geral" }}
-              className="block p-5 flex-1"
-            >
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-tight">
-                      PROC-{p.id.substring(0, 6)}
-                    </span>
-                    {p.is_favorite && <Star className="h-3 w-3 text-amber-500 fill-amber-500" />}
-                  </div>
-                  <h3 className="font-bold text-navy text-[15px] leading-snug line-clamp-2 group-hover:text-primary transition-colors" title={p.title || p.process_type}>
-                    {p.title || p.process_type}
-                  </h3>
-                </div>
-                <Badge variant="outline" className="shrink-0 text-[9px] font-bold uppercase tracking-wider bg-slate-50 border-slate-200 text-slate-600">
-                  <span className={`h-1.5 w-1.5 rounded-full ${s.color} mr-1.5`} />
-                  {s.title}
+            <div className={`h-1 w-full ${colColor}`} />
+            <div className="p-5 flex-1">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <span className="font-mono text-[10px] font-bold text-slate-400">
+                  PROC-{p.id.substring(0, 6)}
+                </span>
+                <Badge variant="outline" className="text-[10px] font-semibold text-slate-600">
+                  {translateTerm(p.status)}
                 </Badge>
               </div>
 
-              {/* Customer / Vessel */}
-              <div className="space-y-1.5 mb-4">
-                <div className="flex items-center gap-2 text-[12px] text-slate-600 min-w-0">
-                  <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                  <span className="truncate font-medium">{p.customers?.name || "Sem cliente"}</span>
+              <Link to="/processes/$id" params={{ id: p.id }} className="block group-hover:text-[#1868db] transition-colors">
+                <h3 className="font-bold text-sm sm:text-base text-[#0f1d36] line-clamp-2">
+                  {p.title || p.process_type}
+                </h3>
+              </Link>
+
+              <div className="mt-3 space-y-1 text-xs text-slate-500">
+                <div className="flex items-center gap-1.5 truncate">
+                  <User className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <span className="truncate">{p.customers?.name || "Sem cliente"}</span>
                 </div>
-                <div className="flex items-center gap-2 text-[12px] text-slate-500 min-w-0">
-                  <Ship className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                <div className="flex items-center gap-1.5 truncate">
+                  <Ship className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                   <span className="truncate">{p.vessels?.name || "Sem embarcação"}</span>
                 </div>
               </div>
+            </div>
 
-              {/* Progress + due */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
-                  <span className="text-slate-400">Progresso</span>
-                  <span className="text-navy">{progress}%</span>
-                </div>
-                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-primary to-cyan-500 transition-all" style={{ width: `${progress}%` }} />
-                </div>
-                <div className="flex items-center justify-between pt-1">
-                  <DueLabel dueDate={p.due_date} />
-                  {(pendingDocs > 0 || missingSigs > 0) && (
-                    <div className="flex items-center gap-1.5">
-                      {pendingDocs > 0 && (
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
-                          {pendingDocs} doc
-                        </span>
-                      )}
-                      {missingSigs > 0 && (
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-orange-700 bg-orange-50 px-1.5 py-0.5 rounded">
-                          {missingSigs} assin.
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Link>
-
-            {/* Footer actions */}
-            <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/60 flex items-center justify-between gap-2">
-              <div className="text-[10px] font-medium text-slate-400 truncate">
-                {updated ? `Atualizado ${updated}` : "—"}
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); goToTab(p.id, "overview"); }}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 hover:text-primary hover:bg-white border border-slate-200 bg-white transition-colors"
+            <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs">
+              <span className="text-slate-400">
+                {p.due_date ? `Vence ${new Date(p.due_date).toLocaleDateString("pt-BR")}` : "Sem prazo"}
+              </span>
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/processes/$id"
+                  params={{ id: p.id }}
+                  className="font-semibold text-[#1868db] hover:underline"
                 >
-                  Abrir
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditing(p); }}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 hover:text-primary hover:bg-white border border-slate-200 bg-white transition-colors"
-                >
-                  Editar
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); goToTab(p.id, "generation"); }}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white bg-primary hover:opacity-90 transition-opacity"
-                >
-                  Continuar <ArrowRight className="h-3 w-3" />
-                </button>
+                  Abrir →
+                </Link>
                 <ProcessActionsMenu process={p} onChanged={onChanged} onEdit={() => setEditing(p)} />
               </div>
             </div>
@@ -665,20 +1452,22 @@ function CrmGrid({
       })}
 
       <button
+        type="button"
         onClick={onNewProcess}
-        className="rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary/40 hover:bg-primary/5 transition-all min-h-[240px] flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-primary"
+        className="rounded-2xl border-2 border-dashed border-slate-200 hover:border-[#1868db]/50 hover:bg-blue-50/20 transition-all min-h-[160px] flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-[#1868db] cursor-pointer"
       >
         <Plus className="h-6 w-6" />
-        <span className="text-[10px] font-bold uppercase tracking-wider">Novo Processo</span>
+        <span className="text-xs font-bold uppercase tracking-wider">Novo Processo</span>
       </button>
 
       <ProcessEditSheet
         process={editing ?? undefined}
         open={!!editing}
-        onOpenChange={(o) => { if (!o) setEditing(null); }}
+        onOpenChange={(o) => {
+          if (!o) setEditing(null);
+        }}
         onSaved={() => onChanged?.()}
       />
     </div>
   );
 }
-

@@ -71,7 +71,7 @@ function DashboardLayoutWrapper() {
   );
 }
 
-function DashboardLayout() {
+export function DashboardLayout({ children }: { children?: React.ReactNode }) {
   const [isNotificationsOpen, setNotificationsOpen] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [isMoreToolsOpen, setIsMoreToolsOpen] = useState(false);
@@ -490,7 +490,7 @@ function DashboardLayout() {
         {/* CONTEÚDO DINÂMICO DO PAINEL */}
         <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 pb-28 lg:pb-12 custom-scrollbar">
           <TrialBanner />
-          <RouteContent />
+          {children || <RouteContent />}
         </main>
 
         {/* NAVEGAÇÃO INFERIOR MOBILE */}
