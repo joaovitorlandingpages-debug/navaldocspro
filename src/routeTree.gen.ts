@@ -112,6 +112,7 @@ import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as ProcessesIndexRouteImport } from './routes/processes.index'
 import { Route as ProcessesIdRouteImport } from './routes/processes.$id'
 import { Route as ProcessesArchivedRouteImport } from './routes/processes.archived'
+import { Route as ProcessesNovoPedidoRouteImport } from './routes/processes.novo-pedido'
 import { Route as ProcessesTrashRouteImport } from './routes/processes.trash'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as TemplatesIdRouteImport } from './routes/templates.$id'
@@ -657,6 +658,11 @@ const ProcessesArchivedRoute = ProcessesArchivedRouteImport.update({
   path: '/processes/archived',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProcessesNovoPedidoRoute = ProcessesNovoPedidoRouteImport.update({
+  id: '/processes/novo-pedido',
+  path: '/processes/novo-pedido',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProcessesTrashRoute = ProcessesTrashRouteImport.update({
   id: '/processes/trash',
   path: '/processes/trash',
@@ -891,6 +897,7 @@ export interface FileRoutesByFullPath {
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/processes/archived': typeof ProcessesArchivedRoute
+  '/processes/novo-pedido': typeof ProcessesNovoPedidoRoute
   '/processes/trash': typeof ProcessesTrashRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
@@ -1017,6 +1024,7 @@ export interface FileRoutesByTo {
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/processes/archived': typeof ProcessesArchivedRoute
+  '/processes/novo-pedido': typeof ProcessesNovoPedidoRoute
   '/processes/trash': typeof ProcessesTrashRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
@@ -1148,6 +1156,7 @@ export interface FileRoutesById {
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRoute
   '/processes/archived': typeof ProcessesArchivedRoute
+  '/processes/novo-pedido': typeof ProcessesNovoPedidoRoute
   '/processes/trash': typeof ProcessesTrashRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
@@ -1280,6 +1289,7 @@ export interface FileRouteTypes {
     | '/portal/$token'
     | '/processes/$id'
     | '/processes/archived'
+    | '/processes/novo-pedido'
     | '/processes/trash'
     | '/templates/$id'
     | '/templates/gratuitos'
@@ -1406,6 +1416,7 @@ export interface FileRouteTypes {
     | '/portal/$token'
     | '/processes/$id'
     | '/processes/archived'
+    | '/processes/novo-pedido'
     | '/processes/trash'
     | '/templates/$id'
     | '/templates/gratuitos'
@@ -1536,6 +1547,7 @@ export interface FileRouteTypes {
     | '/portal/$token'
     | '/processes/$id'
     | '/processes/archived'
+    | '/processes/novo-pedido'
     | '/processes/trash'
     | '/templates/$id'
     | '/templates/gratuitos'
@@ -1626,6 +1638,7 @@ export interface RootRouteChildren {
   PortalTokenRoute: typeof PortalTokenRoute
   ProcessesIdRoute: typeof ProcessesIdRoute
   ProcessesArchivedRoute: typeof ProcessesArchivedRoute
+  ProcessesNovoPedidoRoute: typeof ProcessesNovoPedidoRoute
   ProcessesTrashRoute: typeof ProcessesTrashRoute
   VerificarAssinaturaCodeRoute: typeof VerificarAssinaturaCodeRoute
   ProcessesIndexRoute: typeof ProcessesIndexRoute
@@ -2354,6 +2367,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProcessesArchivedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/processes/novo-pedido': {
+      id: '/processes/novo-pedido'
+      path: '/processes/novo-pedido'
+      fullPath: '/processes/novo-pedido'
+      preLoaderRoute: typeof ProcessesNovoPedidoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/processes/trash': {
       id: '/processes/trash'
       path: '/processes/trash'
@@ -2781,6 +2801,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortalTokenRoute: PortalTokenRoute,
   ProcessesIdRoute: ProcessesIdRoute,
   ProcessesArchivedRoute: ProcessesArchivedRoute,
+  ProcessesNovoPedidoRoute: ProcessesNovoPedidoRoute,
   ProcessesTrashRoute: ProcessesTrashRoute,
   VerificarAssinaturaCodeRoute: VerificarAssinaturaCodeRoute,
   ProcessesIndexRoute: ProcessesIndexRoute,

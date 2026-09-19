@@ -155,6 +155,7 @@ const PREVIEW_CUSTOMERS = [
 ];
 
 function ProcessesPage() {
+  const navigate = useNavigate();
   const { profile } = useAuth();
   const { setIsNewProcessOpen, openWithContext } = useNewProcess();
   const { checkLimit } = usePlanLimits();
@@ -449,7 +450,22 @@ function ProcessesPage() {
       setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
       return;
     }
-    openWithContext(context);
+    navigate({
+      to: "/processes/novo-pedido",
+      search: {
+        customerId: context.customerId,
+        vesselId: context.vesselId,
+      },
+    });
+  };
+
+  const handleGeneralNewProcess = async () => {
+    const limit = await checkLimit("processes");
+    if (limit.reached) {
+      setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
+      return;
+    }
+    navigate({ to: "/processes/novo-pedido" });
   };
 
   return (
@@ -468,14 +484,7 @@ function ProcessesPage() {
         {/* Botão Novo Processo Desktop */}
         <button
           type="button"
-          onClick={async () => {
-            const limit = await checkLimit("processes");
-            if (limit.reached) {
-              setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
-              return;
-            }
-            setIsNewProcessOpen(true);
-          }}
+          onClick={handleGeneralNewProcess}
           className="w-full sm:w-auto h-11 px-5 rounded-xl bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
         >
           <Plus className="h-4 w-4" />
@@ -671,7 +680,7 @@ function ProcessesPage() {
           onNewProcessWithContext={handleStartProcessWithContext}
           hasActiveFilters={hasActiveFilters}
           onClearFilters={handleClearFilters}
-          onGeneralNewProcess={() => setIsNewProcessOpen(true)}
+          onGeneralNewProcess={handleGeneralNewProcess}
         />
       ) : (
         <AllProcessesOperationalView
@@ -679,7 +688,7 @@ function ProcessesPage() {
           isLoading={isLoading}
           operationalView={operationalView}
           onOperationalViewChange={setOperationalView}
-          onNewProcess={() => setIsNewProcessOpen(true)}
+          onNewProcess={handleGeneralNewProcess}
           onChanged={fetchProcesses}
           totalCount={totalCount}
           page={page}
