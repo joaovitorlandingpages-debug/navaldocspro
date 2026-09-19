@@ -287,3 +287,18 @@ export function isHomologationBypass(
   return name.includes("homologação") || name.includes("homologacao") || name.includes("teste naval");
 }
 
+
+// Helpers de precificação usados pelo checkout e pela vitrine de planos
+export function getPlanPrice(plan: NavalPlan, cycle: BillingCycle): number {
+  return cycle === 'monthly' ? plan.priceMonthly : plan.priceYearly;
+}
+
+export function calculateAnnualSavings(plan: NavalPlan): number {
+  return plan.priceMonthly * 12 - plan.priceYearly;
+}
+
+export function getAnnualDiscountPercentage(plan: NavalPlan): number {
+  const full = plan.priceMonthly * 12;
+  if (!full) return 0;
+  return Math.round((calculateAnnualSavings(plan) / full) * 100);
+}

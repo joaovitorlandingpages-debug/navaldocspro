@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/auth/login")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
   }),
   component: LoginComponent,
@@ -41,7 +41,8 @@ function LoginComponent() {
 
   // Redireciona de forma segura caso o usuário já esteja autenticado
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then((res: any) => {
+      const session = res?.data?.session;
       if (session) {
         let target = FALLBACK_REDIRECT;
         if (isSafeInternalPath(redirectParam)) target = redirectParam;

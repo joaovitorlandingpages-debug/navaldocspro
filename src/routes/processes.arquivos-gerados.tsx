@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/arquivos-gerados")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { orderId?: string; customerId?: string; vesselId?: string; preview?: string; allReady?: string } => ({
     orderId: (search.orderId as string) || undefined,
     customerId: (search.customerId as string) || undefined,
     vesselId: (search.vesselId as string) || undefined,

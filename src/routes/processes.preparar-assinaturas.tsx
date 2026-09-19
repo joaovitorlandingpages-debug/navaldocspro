@@ -192,7 +192,7 @@ function PrepararAssinaturasPage() {
         `)
         .eq("id", processId)
         .maybeSingle()
-        .then(({ data }) => {
+        .then(({ data }: any) => {
           if (data) {
             setProcessData({
               processNumber: data.id.slice(0, 4),
