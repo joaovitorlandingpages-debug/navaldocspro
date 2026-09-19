@@ -799,8 +799,10 @@ function ProcessTrackingPage() {
                     Envie procurações, comprovantes de residência ou vistorias adicionais.
                   </p>
                   <FileUploader 
+                    bucket="process-documents"
+                    category="anexos"
                     processId={id} 
-                    onUploadSuccess={() => toast.success("Arquivo anexado com sucesso!")} 
+                    onSuccess={() => toast.success("Arquivo anexado com sucesso!")} 
                   />
                 </div>
               </div>
@@ -920,7 +922,9 @@ function ProcessTrackingPage() {
                   <p className="text-xs text-slate-600 font-semibold mt-1">Próxima ação: {p.nextAction}</p>
                 </div>
                 <Link
-                  to={`/processes/${p.id}?preview=true`}
+                  to="/processes/$id"
+                  params={{ id: String(p.id) }}
+                  search={{ preview: true }}
                   onClick={() => setOtherProcessesModalOpen(false)}
                   className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#1868db] group-hover:bg-[#1868db] group-hover:text-white transition-colors border border-[#1868db]/30"
                 >

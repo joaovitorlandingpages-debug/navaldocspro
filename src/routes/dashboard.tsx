@@ -755,7 +755,7 @@ export function RouteContent() {
       });
 
       // Ordena por atrasados primeiro, depois os de hoje, depois demais
-      formatted.sort((a, b) => a.sortWeight - b.sortWeight);
+      formatted.sort((a: any, b: any) => a.sortWeight - b.sortWeight);
       return formatted.slice(0, 5);
     },
     enabled: !!profile?.company_id || isPreview,
@@ -1030,7 +1030,7 @@ export function RouteContent() {
               </p>
             </div>
           ) : (
-            attentionItems.map((item) => (
+            attentionItems.map((item: any) => (
               <div 
                 key={item.id}
                 className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 hover:bg-slate-50/50 -mx-2 px-2 rounded-xl transition-colors"

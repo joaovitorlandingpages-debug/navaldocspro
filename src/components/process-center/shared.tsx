@@ -227,8 +227,7 @@ export function ProcessCenterSidebar({
   const location = useLocation();
   const navigate = useNavigate();
   
-  const searchParams = new URLSearchParams(location.search);
-  const activeTab = searchParams.get('tab') || 'workspace';
+  const activeTab = ((location.search as Record<string, unknown>)?.tab as string) || 'workspace';
 
   const items = [
     { id: "workspace", label: "Visão Geral", icon: Activity },

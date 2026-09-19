@@ -468,7 +468,7 @@ Emitido em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTi
           <div>
             <button
               type="button"
-              onClick={() => navigate({ to: "/processes/novo-pedido", search: { preview: "true", step: 4 } })}
+              onClick={() => navigate({ to: "/processes/novo-pedido", search: { preview: "true", step: "4" } })}
               className="text-xs font-semibold text-[#1868db] hover:text-[#1456b8] inline-flex items-center gap-1.5 cursor-pointer mb-1 transition-colors"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
@@ -828,7 +828,7 @@ Emitido em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTi
             <div className="text-center">
               <button
                 type="button"
-                onClick={() => navigate({ to: "/processes/novo-pedido", search: { preview: "true", step: 4 } })}
+                onClick={() => navigate({ to: "/processes/novo-pedido", search: { preview: "true", step: "4" } })}
                 className="text-xs font-semibold text-slate-500 hover:text-[#1868db] inline-flex items-center gap-1 cursor-pointer"
               >
                 <ArrowLeft className="h-3 w-3" />

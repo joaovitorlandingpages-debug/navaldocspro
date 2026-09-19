@@ -57,8 +57,8 @@ export async function fetchLiveSystemContext(): Promise<LiveSystemContext> {
 
     // Avaliar prazos de vencimento
     const deadlineItems = vessels
-      .filter((v) => v.tie_expiration_date || v.csn_expiration_date)
-      .flatMap((v) => {
+      .filter((v: any) => v.tie_expiration_date || v.csn_expiration_date)
+      .flatMap((v: any) => {
         const items: any[] = [];
         if (v.tie_expiration_date) {
           items.push({
@@ -94,12 +94,12 @@ export async function fetchLiveSystemContext(): Promise<LiveSystemContext> {
       processesCount: processes.length,
       customersCount: customers.length,
       deadlinesSummary,
-      recentVessels: vessels.slice(0, 5).map((v) => ({
+      recentVessels: vessels.slice(0, 5).map((v: any) => ({
         name: v.name || 'Sem nome',
         registrationNumber: v.registration_number,
         vesselType: v.vessel_type,
       })),
-      activeProcesses: processes.slice(0, 5).map((p) => ({
+      activeProcesses: processes.slice(0, 5).map((p: any) => ({
         id: p.id,
         type: p.process_type || 'Processo Naval',
         status: p.status || 'Em andamento',
