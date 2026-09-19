@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { 
   Check, ArrowRight, Zap, Shield, Crown, 
   Sparkles, CheckCircle2, HelpCircle, Lock, 
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { NAVAL_PLANS, NavalPlan, TRIAL_CONFIG } from "@/services/billing/plansConfig";
+import { getPublishedCatalogPlans, NavalPlan, TRIAL_CONFIG } from "@/services/billing/plansConfig";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "@tanstack/react-router";
@@ -16,7 +16,9 @@ import { Link } from "@tanstack/react-router";
 export default function Plans() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const { user } = useAuth();
-  const { isLifetimeAdmin, isHomologation, isTrial, trialDaysLeft, createPreference } = useSubscription();
+  const { isLifetimeAdmin, isHomologation, createPreference } = useSubscription();
+
+  const plans = useMemo(() => getPublishedCatalogPlans(), []);
 
   const handleSubscribe = async (plan: NavalPlan) => {
     if (isLifetimeAdmin || isHomologation) {
@@ -51,10 +53,10 @@ export default function Plans() {
             Automatize requerimentos, memoriais da Capitania, controle de laudos, vistorias com ART e assinaturas digitais com a ferramenta líder do setor náutico.
           </p>
 
-          {/* 14-day trial badge */}
-          <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-2 rounded-full text-xs font-bold shadow-sm">
+          {/* 30-day trial badge */}
+          <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-2 rounded-full text-xs font-bold shadow-xs">
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            <span>Todos os planos incluem <strong>14 dias de teste grátis</strong> sem compromisso</span>
+            <span>Todos os novos escritórios contam com <strong>{TRIAL_CONFIG.durationDays} dias de teste gratuito</strong> sem necessidade de cartão</span>
           </div>
 
           {/* Billing Cycle Toggle */}
@@ -64,7 +66,7 @@ export default function Plans() {
                 onClick={() => setBillingCycle("monthly")}
                 className={`px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                   billingCycle === "monthly"
-                    ? "bg-white text-navy shadow-sm"
+                    ? "bg-white text-navy shadow-xs"
                     : "text-slate-600 hover:text-navy"
                 }`}
               >
@@ -74,13 +76,13 @@ export default function Plans() {
                 onClick={() => setBillingCycle("yearly")}
                 className={`px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
                   billingCycle === "yearly"
-                    ? "bg-navy text-white shadow-sm"
+                    ? "bg-[#0d2342] text-white shadow-xs"
                     : "text-slate-600 hover:text-navy"
                 }`}
               >
                 Anual
                 <span className="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase">
-                  2 Meses Grátis
+                  Economia Real
                 </span>
               </button>
             </div>
@@ -89,85 +91,93 @@ export default function Plans() {
 
         {/* Pricing Cards Grid Responsivo: 1 col mobile, 3 cols desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch max-w-7xl mx-auto">
-          {NAVAL_PLANS.map((plan) => {
+          {plans.map((plan) => {
             const isPopular = plan.isPopular;
-            const price = billingCycle === "monthly" ? plan.priceMonthly : Math.round(plan.priceYearly / 12);
+            const savings = (plan.priceMonthly * 12) - plan.priceYearly;
 
             return (
               <Card
                 key={plan.id}
                 className={`flex flex-col justify-between relative rounded-3xl transition-all duration-300 ${
                   isPopular
-                    ? "border-2 border-primary shadow-2xl shadow-primary/15 bg-white lg:scale-105 z-10"
-                    : "border border-slate-200 bg-white/80 hover:shadow-lg"
+                    ? "border-2 border-[#1868db] shadow-xl shadow-blue-500/10 bg-white lg:scale-105 z-10"
+                    : "border border-slate-200 bg-white hover:shadow-md"
                 }`}
               >
                 {plan.badge && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-blue-600 text-white text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1 rounded-full shadow-md">
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#1868db] text-white text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1 rounded-full shadow-xs">
                     {plan.badge}
                   </div>
                 )}
 
                 <CardHeader className="p-8 pb-4">
-                  {/* Tag visual de categoria em destaque (ex.: Para Engenheiros e Vistoriadores) */}
                   {plan.categoryTag && (
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 border border-amber-500/20 text-[10px] font-black uppercase tracking-wider mb-2 self-start">
-                      <Sparkles className="h-3 w-3 text-amber-500" />
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-[#1868db] border border-blue-100 text-[10px] font-bold uppercase tracking-wider mb-2 self-start">
+                      <Sparkles className="h-3 w-3" />
                       {plan.categoryTag}
                     </div>
                   )}
 
                   <div className="flex items-center justify-between gap-4 mb-2">
-                    <div className={`p-3 rounded-2xl ${
-                      plan.slug === "despachante" || plan.slug === "starter" ? "bg-blue-50 text-blue-600" :
-                      plan.slug === "engenharia_pericia" || plan.slug === "professional" ? "bg-amber-50 text-amber-600" :
-                      "bg-indigo-50 text-indigo-600"
-                    }`}>
-                      {plan.slug === "despachante" || plan.slug === "starter" ? <FileText className="h-6 w-6" /> :
-                       plan.slug === "engenharia_pericia" || plan.slug === "professional" ? <ShieldCheck className="h-6 w-6" /> :
-                       <Crown className="h-6 w-6" />}
+                    <div className="p-3 rounded-2xl bg-blue-50 text-[#1868db]">
+                      <FileText className="h-6 w-6" />
                     </div>
                     {isPopular && (
-                      <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] font-black uppercase tracking-wider">
+                      <Badge className="bg-blue-50 text-[#1868db] border-blue-100 text-[9px] font-bold uppercase tracking-wider">
                         Recomendado
                       </Badge>
                     )}
                   </div>
 
-                  <CardTitle className="text-2xl font-black text-navy uppercase italic">
+                  <CardTitle className="text-2xl font-black text-[#0d2342] uppercase tracking-tight">
                     {plan.name}
                   </CardTitle>
-                  <CardDescription className="text-xs text-slate-500 font-medium min-h-[36px]">
+                  <CardDescription className="text-xs text-slate-500 font-medium min-h-[36px] mt-1">
                     {plan.description}
                   </CardDescription>
 
-                  <div className="pt-4 flex items-baseline gap-1.5">
-                    <span className="text-xs font-bold text-slate-400">R$</span>
-                    <span className="text-4xl font-black text-navy tracking-tight">
-                      {price}
-                    </span>
-                    <span className="text-xs font-bold text-slate-500">
-                      /mês
-                    </span>
+                  {/* Preço Exibido */}
+                  <div className="pt-4 border-t border-slate-100 mt-4">
+                    {billingCycle === "monthly" ? (
+                      <div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-4xl font-black text-[#0d2342]">
+                            R$ {plan.priceMonthly}
+                          </span>
+                          <span className="text-sm font-bold text-slate-400">/mês</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-1">Cobrança mensal com renovação automática</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-4xl font-black text-[#0d2342]">
+                            R$ {plan.priceYearly.toLocaleString("pt-BR")}
+                          </span>
+                          <span className="text-sm font-bold text-slate-400">/ano</span>
+                        </div>
+                        <p className="text-xs text-emerald-600 font-bold mt-1">
+                          Economia de R$ {savings.toLocaleString("pt-BR")} no ciclo anual
+                        </p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          Cobrado em parcela única anual (equivale a ~R$ {Math.round(plan.priceYearly / 12)}/mês)
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  {billingCycle === "yearly" && (
-                    <p className="text-[11px] text-emerald-600 font-bold mt-1">
-                      Cobrado anualmente: R$ {plan.priceYearly}/ano (2 meses grátis)
-                    </p>
-                  )}
 
                   {/* Limites Operacionais em Destaque */}
                   <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-3 gap-1 text-center bg-slate-50 p-2.5 rounded-xl text-[10px]">
                     <div>
-                      <p className="font-bold text-navy">{plan.processLimit ? `${plan.processLimit} OS/Laudos` : "Ilimitadas"}</p>
+                      <p className="font-bold text-[#0d2342]">{plan.processLimit ? `${plan.processLimit} OS/Laudos` : "Ilimitadas"}</p>
                       <span className="text-slate-400">Simultâneas</span>
                     </div>
                     <div>
-                      <p className="font-bold text-navy">{plan.userLimit ? `${plan.userLimit} Users` : "Ilimitados"}</p>
+                      <p className="font-bold text-[#0d2342]">{plan.userLimit ? `${plan.userLimit} Users` : "Ilimitados"}</p>
                       <span className="text-slate-400">Equipe</span>
                     </div>
                     <div>
-                      <p className="font-bold text-navy">{plan.storageGb ? `${plan.storageGb}GB` : "Ilimitado"}</p>
+                      <p className="font-bold text-[#0d2342]">{plan.storageGb ? `${plan.storageGb}GB` : "Ilimitado"}</p>
                       <span className="text-slate-400">Fotos/PDFs</span>
                     </div>
                   </div>

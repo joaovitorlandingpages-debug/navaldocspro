@@ -1,4 +1,9 @@
+import { StripeSyncService, AdminPlanData } from "./stripeSyncService";
+
 export type NavalPlanSlug =
+  | 'essencial'
+  | 'profissional'
+  | 'equipe'
   | 'despachante'
   | 'engenharia_pericia'
   | 'marina_estaleiro'
@@ -15,294 +20,270 @@ export interface NavalPlan {
   slug: NavalPlanSlug;
   name: string;
   badge?: string;
-  categoryTag?: string; // Tag visual de categoria (ex.: "Para Engenheiros e Vistoriadores")
+  categoryTag?: string;
   description: string;
   priceMonthly: number;
-  priceYearly: number; // Plano anual com 2 meses grátis (10x o valor mensal)
+  priceYearly: number; // Plano anual em cobrança única
   billingCycle: BillingCycle;
   customerLimit: number | null;
   vesselLimit: number | null;
-  processLimit: number | null; // Limite de OS / Laudos simultâneos ativos por mês (null = Ilimitado)
+  processLimit: number | null; // Novos processos/mês
   documentLimit: number | null;
-  ocrLimit: number | null;
-  userLimit: number | null; // Usuários inclusos (null = Ilimitado)
-  additionalUserPrice?: number; // Preço por usuário adicional/mês
-  storageGb: number | null; // Capacidade de armazenamento de fotos e PDFs
+  ocrLimit: number | null; // Páginas analisadas por IA/mês
+  userLimit: number | null;
+  additionalUserPrice?: number;
+  storageGb: number | null;
   isPopular?: boolean;
   features: string[];
   highlightFeatures: string[];
+  availableForSale?: boolean;
 }
 
-export const NAVAL_PLANS: NavalPlan[] = [
-  // 1. PLANO DESPACHANTE NAVAL
+// 1. PLANOS OFICIAIS DO CATÁLOGO NAVALDOCS PRO
+export const OFFICIAL_NAVAL_PLANS: NavalPlan[] = [
   {
-    id: "plan-despachante",
-    slug: "despachante",
-    name: "Despachante Naval",
-    description: "Ideal para despachantes marítimos e oficinas focadas na gestão de processos e documentação de rotina.",
-    priceMonthly: 129,
-    priceYearly: 1290, // 2 meses grátis (R$ 129 x 10)
+    id: "plan-essencial",
+    slug: "essencial",
+    name: "Essencial",
+    description: "Ideal para profissionais autônomos e pequenos escritórios náuticos em início de operação.",
+    priceMonthly: 149,
+    priceYearly: 1490,
     billingCycle: "monthly",
-    customerLimit: 100,
-    vesselLimit: 80,
-    processLimit: 50, // Até 50 OS/processos simultâneos por mês
-    documentLimit: 200,
-    ocrLimit: 75,
-    userLimit: 2, // 2 usuários inclusos
-    additionalUserPrice: 29, // R$ 29/usuário adicional
-    storageGb: 10, // 10GB para fotos e PDFs
-    features: [
-      "Gestão de processos e documentação de rotina náutica",
-      "Modelos oficiais da Capitania dos Portos (DPC)",
-      "Checklists normativos NORMAM-01, 02 e 03",
-      "Geração automatizada de requerimentos e procurações",
-      "Assinatura digital integrada com QR Code",
-      "Até 50 Ordens de Serviço simultâneas/mês",
-      "2 usuários inclusos na equipe (+R$ 29/usuário extra)",
-      "10GB para fotos de vistorias e anexos em PDF",
-      "Suporte via e-mail e chamado técnico"
-    ],
-    highlightFeatures: [
-      "50 OS / Processos Mês",
-      "2 Usuários Inclusos",
-      "10GB Fotos e PDFs",
-      "Modelos Oficiais DPC"
-    ]
-  },
-
-  // 2. PLANO ENGENHARIA & PERÍCIA
-  {
-    id: "plan-engenharia-pericia",
-    slug: "engenharia_pericia",
-    name: "Engenharia & Perícia",
-    badge: "MAIS ESCOLHIDO",
-    categoryTag: "Para Engenheiros e Vistoriadores",
-    isPopular: true,
-    description: "Solução completa e avançada para engenheiros navais, peritos marítimos e vistoriadores técnicos credenciados.",
-    priceMonthly: 179,
-    priceYearly: 1790, // 2 meses grátis (R$ 179 x 10)
-    billingCycle: "monthly",
-    customerLimit: 250,
-    vesselLimit: 200,
-    processLimit: 100, // Limite de 100 OS / Laudos Técnicos por mês
-    documentLimit: 500,
+    customerLimit: 50,
+    vesselLimit: 40,
+    processLimit: 20,
+    documentLimit: 100,
     ocrLimit: 200,
-    userLimit: 3, // 3 usuários inclusos
-    additionalUserPrice: 25, // R$ 25/usuário adicional
-    storageGb: 30, // 30GB para fotos em alta resolução e PDFs
+    userLimit: 1,
+    storageGb: 5,
+    isPopular: false,
+    availableForSale: true,
     features: [
-      "Módulo de Laudos Técnicos e Vistorias Navais",
-      "Checklists de Segurança da Marinha do Brasil",
-      "Anexo de Anotações de Responsabilidade Técnica (ART)",
-      "Galeria de Fotos de Vistoria em Alta Resolução",
-      "PDFs Formatados para Capitania dos Portos",
-      "Até 100 OS / Laudos Técnicos simultâneos por mês",
-      "3 usuários inclusos na equipe (+R$ 25/usuário extra)",
-      "Carimbo Digital do Engenheiro Naval (CREA/ART)",
-      "Assinaturas Digitais com Hash SHA-256 e QR Code",
-      "Dossiê Naval completo em PDF unificado e ZIP",
-      "Portal do Cliente com link de acompanhamento seguro",
-      "Suporte prioritário via WhatsApp e Telefone"
+      "1 usuário incluindo o titular",
+      "20 novos processos por mês",
+      "200 páginas analisadas por IA por mês",
+      "5 GB de armazenamento total",
+      "Modelos oficiais da Capitania dos Portos (DPC)",
+      "Reaproveitamento inteligente de documentos",
+      "Geração automatizada de requerimentos e procurações",
+      "Assinatura eletrônica com QR Code de verificação",
+      "Suporte prioritário por e-mail"
     ],
     highlightFeatures: [
-      "100 OS / Laudos Mês",
-      "3 Usuários Inclusos",
-      "Módulo Laudos & ART",
-      "Fotos em Alta Resolução",
-      "Carimbo CREA / ART"
+      "1 Usuário",
+      "20 Processos/mês",
+      "200 Páginas IA/mês",
+      "5 GB Storage"
     ]
   },
-
-  // 3. PLANO MARINA & ESTALEIRO
   {
-    id: "plan-marina-estaleiro",
-    slug: "marina_estaleiro",
-    name: "Marina & Estaleiro",
-    badge: "TUDO ILIMITADO",
-    description: "Gestão operacional total e irrestrita para estaleiros, marinas, oficinas e frotas náuticas de grande porte.",
-    priceMonthly: 249,
-    priceYearly: 2490, // 2 meses grátis (R$ 249 x 10)
+    id: "plan-profissional",
+    slug: "profissional",
+    name: "Profissional",
+    badge: "Recomendado",
+    categoryTag: "Mais Escolhido por Engenheiros e Vistoriadores",
+    isPopular: true,
+    description: "Para escritórios em crescimento que exigem mais capacidade analítica com IA e múltiplos usuários.",
+    priceMonthly: 299,
+    priceYearly: 2990,
     billingCycle: "monthly",
-    customerLimit: null, // Ilimitado
-    vesselLimit: null, // Ilimitado
-    processLimit: null, // Tudo Ilimitado (OS, Laudos e Processos)
-    documentLimit: null, // Ilimitado
-    ocrLimit: null, // Ilimitado
-    userLimit: null, // Usuários Ilimitados
-    additionalUserPrice: 0,
-    storageGb: 150, // 150GB dedicado para fotos e arquivos
+    customerLimit: 200,
+    vesselLimit: 150,
+    processLimit: 60,
+    documentLimit: 300,
+    ocrLimit: 600,
+    userLimit: 3,
+    storageGb: 15,
+    availableForSale: true,
     features: [
-      "Ordens de Serviço (OS) e Laudos ILIMITADOS",
-      "Embarcações e Clientes ILIMITADOS",
-      "Usuários e Acessos ILIMITADOS",
-      "Módulo de Controle de Estoque Náutico Avançado",
-      "Módulo Completo de Vistorias Técnicas e ART",
-      "Geração de Documentos e PDFs ILIMITADA",
-      "Leituras inteligentes de OCR ILIMITADAS",
-      "150GB de armazenamento dedicado para fotos e PDFs",
-      "White-label com logotipo e cabeçalho customizado",
-      "Motor de Automações & Alertas de Vencimento NORMAM",
-      "Acesso completo à API e Webhooks",
-      "Backup automático diário e trilha de auditoria",
-      "Gerente de conta dedicado e suporte VIP 24/7"
+      "3 usuários incluindo o titular",
+      "60 novos processos por mês",
+      "600 páginas analisadas por IA por mês",
+      "15 GB de armazenamento total",
+      "Destaque 'Recomendado' para escritórios estruturados",
+      "Módulo de Laudos Técnicos e Vistorias Navais",
+      "Checklists normativos NORMAM-01, 02 e 03",
+      "Personalização com marca-d'água oficial da empresa",
+      "Geração de pacotes ZIP com arquivos prontos",
+      "Suporte via e-mail e WhatsApp em horário comercial"
     ],
     highlightFeatures: [
-      "OS & Laudos Ilimitados",
-      "Usuários Ilimitados",
-      "Estoque Náutico Ilimitado",
-      "150GB Fotos e PDFs",
-      "Suporte VIP 24/7"
+      "3 Usuários",
+      "60 Processos/mês",
+      "600 Páginas IA/mês",
+      "15 GB Storage"
+    ]
+  },
+  {
+    id: "plan-equipe",
+    slug: "equipe",
+    name: "Equipe",
+    description: "Solução completa para grandes empresas marítimas, estaleiros e consultorias com alta demanda.",
+    priceMonthly: 599,
+    priceYearly: 5990,
+    billingCycle: "monthly",
+    customerLimit: 500,
+    vesselLimit: 400,
+    processLimit: 150,
+    documentLimit: 800,
+    ocrLimit: 1500,
+    userLimit: 10,
+    storageGb: 40,
+    isPopular: false,
+    availableForSale: true,
+    features: [
+      "10 usuários incluindo o titular",
+      "150 novos processos por mês",
+      "1.500 páginas analisadas por IA por mês",
+      "40 GB de armazenamento total",
+      "Gestão avançada de múltiplos escritórios e filiais",
+      "Auditoria de ações da IA e relatórios de conformidade",
+      "Exportação em lote e integrações avançadas",
+      "Gestor de conta dedicado e onboarding técnico"
+    ],
+    highlightFeatures: [
+      "10 Usuários",
+      "150 Processos/mês",
+      "1.500 Páginas IA/mês",
+      "40 GB Storage"
     ]
   }
 ];
 
-/**
- * Retorna o valor de cobrança de acordo com o ciclo (mensal ou anual).
- */
-export function getPlanPrice(plan: NavalPlan, cycle: BillingCycle = 'monthly'): number {
-  if (cycle === 'annual' || cycle === 'yearly') {
-    return plan.priceYearly;
-  }
-  return plan.priceMonthly;
-}
-
-/**
- * Calcula a economia em Reais do plano anual (equivalente a 2 meses grátis).
- */
-export function calculateAnnualSavings(plan: NavalPlan): number {
-  return (plan.priceMonthly * 12) - plan.priceYearly;
-}
-
-/**
- * Retorna a porcentagem de desconto do plano anual (ex.: ~17%).
- */
-export function getAnnualDiscountPercentage(plan: NavalPlan): number {
-  const fullYearPrice = plan.priceMonthly * 12;
-  if (fullYearPrice <= 0) return 0;
-  const discount = ((fullYearPrice - plan.priceYearly) / fullYearPrice) * 100;
-  return Math.round(discount);
-}
-
-/**
- * Helper para compatibilidade de busca de plano por slug com suporte aos legados.
- */
-export function findPlanBySlug(slug: string | null | undefined): NavalPlan {
-  if (!slug) return NAVAL_PLANS[1]; // Engenharia & Perícia como padrão
-  const clean = slug.toLowerCase().trim();
-
-  const direct = NAVAL_PLANS.find((p) => p.slug === clean || p.id === clean);
-  if (direct) return direct;
-
-  // Aliases legados
-  if (clean === "starter" || clean === "despachante") return NAVAL_PLANS[0];
-  if (clean === "professional" || clean === "engenharia_pericia") return NAVAL_PLANS[1];
-  if (clean === "enterprise" || clean === "marina_estaleiro") return NAVAL_PLANS[2];
-
-  return NAVAL_PLANS[1];
-}
-
-/**
- * Regras do Período de Teste Grátis (Trial)
- */
-export const TRIAL_CONFIG = {
-  days: 14,
-  label: "14 Dias Grátis",
-  description: "Acesso irrestrito a todas as ferramentas durante os primeiros 14 dias após o cadastro.",
-  limits: {
+// PLANOS LEGADOS (PRESERVADOS PARA NÃO QUEBRAR ASSINATURAS ATIVAS)
+export const LEGACY_NAVAL_PLANS: NavalPlan[] = [
+  {
+    id: "plan-despachante",
+    slug: "despachante",
+    name: "Despachante Naval (Legado)",
+    description: "Plano contratado em condições anteriores.",
+    priceMonthly: 129,
+    priceYearly: 1290,
+    billingCycle: "monthly",
     customerLimit: 100,
-    vesselLimit: 50,
+    vesselLimit: 80,
     processLimit: 50,
-    documentLimit: 150,
-    ocrLimit: 50,
+    documentLimit: 200,
+    ocrLimit: 75,
+    userLimit: 2,
+    storageGb: 10,
+    availableForSale: false,
+    features: ["Contrato legado preservado"],
+    highlightFeatures: ["Plano Legado"]
+  },
+  {
+    id: "plan-engenharia-pericia",
+    slug: "engenharia_pericia",
+    name: "Engenharia & Perícia (Legado)",
+    description: "Plano contratado em condições anteriores.",
+    priceMonthly: 179,
+    priceYearly: 1790,
+    billingCycle: "monthly",
+    customerLimit: 250,
+    vesselLimit: 200,
+    processLimit: 100,
+    documentLimit: 500,
+    ocrLimit: 200,
     userLimit: 3,
-    storageGb: 10
+    storageGb: 30,
+    availableForSale: false,
+    features: ["Contrato legado preservado"],
+    highlightFeatures: ["Plano Legado"]
+  }
+];
+
+// Planos ativos expostos por padrão
+export const NAVAL_PLANS: NavalPlan[] = OFFICIAL_NAVAL_PLANS;
+
+/**
+ * Retorna o catálogo comercial ativo publicado pelo Admin.
+ * Se o administrador atualizou os planos no painel, reflete as alterações sem necessidade de deploy.
+ */
+export function getPublishedCatalogPlans(): NavalPlan[] {
+  try {
+    const adminCatalog = StripeSyncService.getPlans();
+    if (adminCatalog && adminCatalog.length > 0) {
+      return adminCatalog
+        .filter(p => p.availableForSale)
+        .map(p => {
+          const defaultRef = OFFICIAL_NAVAL_PLANS.find(o => o.slug === p.slug);
+          return {
+            id: p.id,
+            slug: p.slug as NavalPlanSlug,
+            name: p.name,
+            badge: p.highlightBadge || (p.isPopular ? "Recomendado" : undefined),
+            description: p.description,
+            priceMonthly: p.priceMonthly,
+            priceYearly: p.priceYearly,
+            billingCycle: "monthly" as BillingCycle,
+            customerLimit: defaultRef?.customerLimit || 100,
+            vesselLimit: defaultRef?.vesselLimit || 80,
+            processLimit: p.processLimit,
+            documentLimit: defaultRef?.documentLimit || 200,
+            ocrLimit: p.aiPagesLimit,
+            userLimit: p.userLimit,
+            storageGb: p.storageGb,
+            isPopular: p.isPopular,
+            features: defaultRef?.features || [
+              `${p.userLimit} usuário${p.userLimit > 1 ? 's' : ''}`,
+              `${p.processLimit} processos/mês`,
+              `${p.aiPagesLimit} páginas de IA/mês`,
+              `${p.storageGb} GB de armazenamento total`,
+              "Modelos oficiais DPC / NORMAM",
+              "Assinatura eletrônica com verificação"
+            ],
+            highlightFeatures: [
+              `${p.userLimit} Usuário${p.userLimit > 1 ? 's' : ''}`,
+              `${p.processLimit} Processos/mês`,
+              `${p.aiPagesLimit} Páginas IA`,
+              `${p.storageGb} GB`
+            ]
+          };
+        });
+    }
+  } catch (e) {
+    console.warn("Falha ao ler catálogo dinâmico de planos, usando planos padrão:", e);
+  }
+  return OFFICIAL_NAVAL_PLANS;
+}
+
+export const TRIAL_CONFIG = {
+  days: 30,
+  durationDays: 30,
+  campaignDurationDays: 60,
+  userLimit: 1,
+  processLimit: 10,
+  ocrLimit: 100,
+  storageGb: 1,
+  retentionDaysAfterEnd: 30,
+  limits: {
+    customerLimit: 50,
+    vesselLimit: 40,
+    processLimit: 10,
+    documentLimit: 100,
+    userLimit: 1,
+    ocrLimit: 100,
+    storageGb: 1
   }
 };
 
-/**
- * Regras do Período de Carência (Grace Period)
- */
 export const GRACE_PERIOD_CONFIG = {
   days: 5,
-  label: "Período de Carência",
-  description: "Tolerância de 5 dias após a data de renovação para regularização de pagamento sem perda imediata das operações."
+  description: "Período de tolerância de 5 dias corridos após o vencimento"
 };
 
 /**
- * Acesso Vitalício Admin
- */
-export const ADMIN_LIFETIME_CONFIG = {
-  label: "Acesso Vitalício Admin",
-  description: "Acesso total, permanente e ilimitado concedido aos Administradores da plataforma."
-};
-
-/**
- * Configuração e Bypass Seguro para Homologação
- */
-export const HOMOLOGATION_CONFIG = {
-  knownBypassTenants: [
-    "homologacao",
-    "demo-company",
-    "naval-homologacao",
-    "oficina-homologacao",
-    "master-homologacao",
-    "oficina-teste",
-    "admin-company"
-  ] as string[],
-
-  label: "Modo Homologação",
-  badge: "Bypass Validação",
-  description: "Tenant de homologação com cotas ilimitadas para testes e validação contínua."
-};
-
-/**
- * Helper seguro para identificar se o tenant está em modo de homologação/validação.
+ * Função de verificação para ambiente de testes de homologação/validação interna
  */
 export function isHomologationBypass(
   companyId?: string | null,
   companyName?: string | null,
-  isDemoOrPilot?: boolean | null
+  isPilotOrDemo?: boolean
 ): boolean {
-  if (!companyId && !companyName) return false;
-
-  // 1. Checa se o companyId corresponde à variável de ambiente configurada
-  const envHomologationId = typeof import.meta !== 'undefined' && import.meta.env
-    ? (import.meta.env.VITE_HOMOLOGATION_COMPANY_ID as string | undefined)
-    : undefined;
-
-  if (envHomologationId && companyId === envHomologationId) {
-    return true;
-  }
-
-  // 2. Checa IDs fixos de homologação
-  if (companyId && HOMOLOGATION_CONFIG.knownBypassTenants.includes(companyId.toLowerCase().trim())) {
-    return true;
-  }
-
-  // 3. Checa o nome corporativo por tags seguras de homologação
-  if (companyName) {
-    const normalized = companyName.toLowerCase();
-    if (
-      normalized.includes("[homologação]") ||
-      normalized.includes("[homologacao]") ||
-      normalized.includes("oficina homologação") ||
-      normalized.includes("oficina homologacao") ||
-      normalized.includes("tenant homologação") ||
-      normalized.includes("ambiente de homologacao") ||
-      normalized.includes("teste naval oficial")
-    ) {
-      return true;
-    }
-  }
-
-  // 4. Se a empresa tem flag is_pilot ou is_demo no Supabase e bypass global ativo
-  const pilotBypassEnabled = typeof import.meta !== 'undefined' && import.meta.env
-    ? (import.meta.env.VITE_PILOT_BYPASS_ENABLED === 'true')
-    : false;
-
-  if (pilotBypassEnabled && isDemoOrPilot === true) {
-    return true;
-  }
-
-  return false;
+  if (!companyId) return false;
+  if (isPilotOrDemo) return true;
+  if (companyId === "admin-homologation" || companyId === "sub-homologation-bypass") return true;
+  const name = (companyName || "").toLowerCase();
+  return name.includes("homologação") || name.includes("homologacao") || name.includes("teste naval");
 }
+

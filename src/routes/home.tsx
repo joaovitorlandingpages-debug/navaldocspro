@@ -13,9 +13,10 @@ import {
   ChevronRight, 
   ClipboardList
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTelemetry } from "@/hooks/useTelemetry";
+import { getPublishedCatalogPlans, TRIAL_CONFIG } from "@/services/billing/plansConfig";
 
 export const Route = createFileRoute("/home")({
   component: LandingPage,
@@ -24,6 +25,8 @@ export const Route = createFileRoute("/home")({
 export function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [infoModal, setInfoModal] = useState<{ title: string; content: string } | null>(null);
+  const [pricingCycle, setPricingCycle] = useState<"monthly" | "yearly">("monthly");
+  const catalogPlans = useMemo(() => getPublishedCatalogPlans(), []);
   const navigate = useNavigate();
   const { session, profile, loading } = useAuth();
   useTelemetry("Landing Page");
@@ -81,6 +84,12 @@ export function LandingPage() {
               className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded px-2 py-1"
             >
               Recursos
+            </button>
+            <button 
+              onClick={() => scrollToSection("planos")} 
+              className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded px-2 py-1"
+            >
+              Planos
             </button>
           </nav>
 
@@ -553,6 +562,154 @@ export function LandingPage() {
                   Receba atualizações e saiba sempre o próximo passo.
                 </p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 4.5 SEÇÃO DE PLANOS & PREÇOS (Consumindo catálogo oficial do Admin) */}
+        <section id="planos" className="py-16 sm:py-24 bg-white border-y border-slate-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
+              <span className="text-xs font-bold text-[#1868db] uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                Planos & Investimento
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0d2342] tracking-tight">
+                Planos transparentes para cada momento do seu negócio
+              </h2>
+              <p className="text-slate-600 text-sm sm:text-base">
+                Sem custos ocultos. Todos os novos escritórios contam com <strong>{TRIAL_CONFIG.durationDays} dias de teste gratuito</strong> sem necessidade de cartão de crédito.
+              </p>
+
+              {/* Toggle Mensal / Anual */}
+              <div className="flex items-center justify-center pt-3">
+                <div className="bg-slate-100 p-1 rounded-2xl flex items-center border border-slate-200/80 shadow-inner">
+                  <button
+                    onClick={() => setPricingCycle("monthly")}
+                    className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${
+                      pricingCycle === "monthly"
+                        ? "bg-white text-[#0d2342] shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Mensal
+                  </button>
+                  <button
+                    onClick={() => setPricingCycle("yearly")}
+                    className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      pricingCycle === "yearly"
+                        ? "bg-[#0d2342] text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <span>Anual</span>
+                    <span className="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase">
+                      Economia Real
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Grid de 3 Planos */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
+              {catalogPlans.map((plan) => {
+                const isPopular = plan.isPopular;
+                const savings = (plan.priceMonthly * 12) - plan.priceYearly;
+
+                return (
+                  <div
+                    key={plan.id}
+                    className={`rounded-3xl p-8 bg-white transition-all flex flex-col justify-between relative border ${
+                      isPopular
+                        ? "border-2 border-[#1868db] shadow-xl shadow-blue-500/10 md:-translate-y-2"
+                        : "border-slate-200 hover:border-slate-300 hover:shadow-md"
+                    }`}
+                  >
+                    {isPopular && (
+                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                        <span className="bg-[#1868db] text-white text-[10px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full shadow-xs">
+                          Recomendado
+                        </span>
+                      </div>
+                    )}
+
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-xl font-bold text-[#0d2342]">{plan.name}</h3>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-2 min-h-[36px]">
+                        {plan.description}
+                      </p>
+
+                      <div className="mt-6 pt-4 border-t border-slate-100">
+                        {pricingCycle === "monthly" ? (
+                          <div>
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-3xl sm:text-4xl font-black text-[#0d2342]">
+                                R$ {plan.priceMonthly}
+                              </span>
+                              <span className="text-xs font-semibold text-slate-400">/mês</span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 mt-1">Cobrança mensal com cancelamento a qualquer momento</p>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-3xl sm:text-4xl font-black text-[#0d2342]">
+                                R$ {plan.priceYearly.toLocaleString("pt-BR")}
+                              </span>
+                              <span className="text-xs font-semibold text-slate-400">/ano</span>
+                            </div>
+                            <p className="text-xs text-emerald-600 font-bold mt-1">
+                              Economia de R$ {savings.toLocaleString("pt-BR")} por ano
+                            </p>
+                            <p className="text-[10px] text-slate-400 mt-0.5">
+                              Cobrança única anual (~R$ {Math.round(plan.priceYearly / 12)}/mês)
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Recursos & Limites */}
+                      <div className="mt-6 space-y-2 text-xs text-slate-600 pt-4 border-t border-slate-100">
+                        <p className="font-semibold text-slate-800 flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#1868db]" />
+                          {plan.userLimit} usuário{plan.userLimit && plan.userLimit > 1 ? "s" : ""}
+                        </p>
+                        <p className="font-semibold text-slate-800 flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#1868db]" />
+                          {plan.processLimit} novos processos por mês
+                        </p>
+                        <p className="font-semibold text-slate-800 flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#1868db]" />
+                          {plan.ocrLimit} páginas de IA por mês
+                        </p>
+                        <p className="font-semibold text-slate-800 flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#1868db]" />
+                          {plan.storageGb} GB de armazenamento total
+                        </p>
+                        <p className="text-[11px] text-slate-400 italic pt-1">
+                          * As franquias de processos e IA renovam a cada mês.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-8">
+                      <Link
+                        to="/auth/signup"
+                        className={`w-full py-3 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                          isPopular
+                            ? "bg-[#1868db] hover:bg-[#1557b8] text-white shadow-xs"
+                            : "bg-slate-100 hover:bg-slate-200 text-slate-800"
+                        }`}
+                      >
+                        <span>Começar teste de {TRIAL_CONFIG.durationDays} dias</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>

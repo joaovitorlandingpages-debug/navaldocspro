@@ -318,19 +318,46 @@ export const useSubscription = () => {
   // Apenas a CRIAÇÃO de novos registros é restrita quando expirado pós-carência
   const canCreate = isLifetimeAdmin || isHomologation || subscription?.status === "active" || (isTrial && trialDaysLeft > 0) || isInGracePeriod;
 
-  // 4. Mutação para Checkout Mercado Pago / Pix
+  // 4. Mutação para Checkout Oficial (Stripe e Mercado Pago)
   const createPreference = useMutation({
-    mutationFn: async (arg: string | { planSlug: string; billingCycle?: "monthly" | "annual" }) => {
+    mutationFn: async (arg: string | { planSlug: string; billingCycle?: "monthly" | "annual"; provider?: "stripe" | "mercadopago" }) => {
       if (!companyId) {
         throw new Error("Identificação da empresa não encontrada. Verifique seu login antes de prosseguir.");
       }
 
       const planSlug = typeof arg === "string" ? arg : arg.planSlug;
       const billingCycle = typeof arg === "string" ? "monthly" : arg.billingCycle || "monthly";
+      const provider = typeof arg === "string" ? "stripe" : arg.provider || "stripe";
 
       const selectedPlan = NAVAL_PLANS.find(p => p.slug === planSlug) || NAVAL_PLANS[1];
       const amount = billingCycle === "annual" ? selectedPlan.priceYearly : selectedPlan.priceMonthly;
+
+      // 4.1. Fluxo Stripe (Provedor Primário da Plataforma)
+      if (provider === "stripe") {
+        const { stripeCheckoutService } = await import("@/services/billing/stripeCheckoutService");
+        const stripeRes = await stripeCheckoutService.createCheckoutSession({
+          planSlug: selectedPlan.slug,
+          billingCycle,
+          companyId
+        });
+
+        if (stripeRes.pendingConfiguration) {
+          throw new Error(stripeRes.message || "Stripe: Configuração pendente no servidor seguro.");
+        }
+
+        if (!stripeRes.success || !stripeRes.url) {
+          throw new Error(stripeRes.message || "Não foi possível gerar a sessão Stripe.");
+        }
+
+        return {
+          success: true,
+          provider: "stripe",
+          url: stripeRes.url,
+          sessionId: stripeRes.sessionId
+        };
+      }
       
+      // 4.2. Fluxo Mercado Pago (Pix e Cobrança Alternativa)
       const result = await mercadoPagoService.createCheckoutPreference({
         planId: selectedPlan.id,
         planSlug: selectedPlan.slug,
@@ -346,12 +373,21 @@ export const useSubscription = () => {
         throw new Error(result.message || "Erro ao conectar com o gateway do Mercado Pago.");
       }
 
-      return result;
+      return {
+        success: true,
+        provider: "mercadopago",
+        url: result.initPoint,
+        preferenceId: result.preferenceId
+      };
     },
     onSuccess: (data) => {
-      if (data.initPoint) {
-        toast.success("Redirecionando para o pagamento seguro via Pix / Cartão no Mercado Pago...");
-        window.location.href = data.initPoint;
+      if (data.url) {
+        toast.success(
+          data.provider === "stripe" 
+            ? "Redirecionando para o checkout seguro da Stripe..." 
+            : "Redirecionando para o pagamento seguro via Pix / Mercado Pago..."
+        );
+        window.location.href = data.url;
       }
     },
     onError: (error: any) => {

@@ -112,18 +112,9 @@ export const mercadoPagoService = {
         };
       }
 
-      // Fallback simulado caso gateway esteja em modo sandbox sem token
-      const simulatedPrefId = `pref_${params.planSlug}_${Date.now()}`;
-      const mockInitPoint = `${origin}/billing/success?collection_id=mock_pay_${Date.now()}&collection_status=approved&payment_id=mock_pay_${Date.now()}&status=approved&external_reference=${encodeURIComponent(
-        externalReference
-      )}&payment_type=pix&preference_id=${simulatedPrefId}`;
-
       return {
-        success: true,
-        initPoint: mockInitPoint,
-        preferenceId: simulatedPrefId,
-        externalReference,
-        message: "Sessão de checkout iniciada em modo Sandbox.",
+        success: false,
+        message: response.error?.message || data?.message || "Gateway de pagamento não retornou ponto de inicialização válido. Verifique as credenciais do provedor.",
       };
     } catch (error: any) {
       console.error("Erro no serviço de checkout do Mercado Pago:", error);

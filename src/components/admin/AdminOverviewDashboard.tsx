@@ -39,43 +39,49 @@ export const AdminOverviewDashboard: React.FC = () => {
   const [isStripeOpen, setIsStripeOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState("Este mês");
 
-  // Query de dados reais do banco (com fallbacks elegantes caso o banco seja novo)
-  const { data: metrics } = useQuery({
+  // Query de dados 100% reais do banco de dados (sem números inventados)
+  const { data: metrics, isLoading } = useQuery({
     queryKey: ["admin-overview-metrics", selectedPeriod],
     queryFn: async () => {
       try {
         const [
           { count: activeSubs },
           { count: trialingCompanies },
-          { count: totalCompanies },
-          { data: pendingSubs }
+          { data: paymentsData },
+          { data: pendingSubs },
+          { data: companiesList }
         ] = await Promise.all([
           supabase.from("subscriptions").select("*", { count: "exact", head: true }).eq("status", "active"),
           supabase.from("companies").select("*", { count: "exact", head: true }).eq("is_pilot", true),
-          supabase.from("companies").select("*", { count: "exact", head: true }),
-          supabase.from("subscriptions").select("id").eq("status", "pending")
+          supabase.from("payments").select("amount, status, created_at").eq("status", "approved"),
+          supabase.from("subscriptions").select("id").eq("status", "pending"),
+          supabase.from("companies").select("id, name, created_at, is_pilot")
         ]);
 
+        const totalRevenue = paymentsData?.reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0) || 0;
+        const pendingCount = pendingSubs?.length || 0;
+
         return {
-          activeSubs: activeSubs || 48,
-          trialing: trialingCompanies || 16,
-          revenueReceived: 12450,
-          pendingPayments: pendingSubs?.length || 3,
-          revenueGrowth: 12,
-          pendingItemsCount: 3,
-          expiringTrialsCount: 5,
-          nearLimitCount: 2
+          activeSubs: activeSubs || 0,
+          trialing: trialingCompanies || 0,
+          revenueReceived: totalRevenue,
+          pendingPayments: pendingCount,
+          revenueGrowth: 0,
+          pendingItemsCount: pendingCount,
+          expiringTrialsCount: 0,
+          nearLimitCount: 0
         };
       } catch (e) {
+        console.error("Erro ao carregar métricas reais do admin:", e);
         return {
-          activeSubs: 48,
-          trialing: 16,
-          revenueReceived: 12450,
-          pendingPayments: 3,
-          revenueGrowth: 12,
-          pendingItemsCount: 3,
-          expiringTrialsCount: 5,
-          nearLimitCount: 2
+          activeSubs: 0,
+          trialing: 0,
+          revenueReceived: 0,
+          pendingPayments: 0,
+          revenueGrowth: 0,
+          pendingItemsCount: 0,
+          expiringTrialsCount: 0,
+          nearLimitCount: 0
         };
       }
     }
@@ -192,7 +198,7 @@ export const AdminOverviewDashboard: React.FC = () => {
           <div>
             <span className="text-xs text-slate-500 font-medium block">Pagamentos pendentes</span>
             <span className="text-2xl font-black text-[#0d2342] block mt-0.5">
-              {metrics?.pendingPayments ?? 3}
+              {metrics?.pendingPayments ?? 0}
             </span>
           </div>
         </Card>
@@ -209,72 +215,68 @@ export const AdminOverviewDashboard: React.FC = () => {
             <div className="text-left sm:text-right">
               <div className="flex items-baseline gap-2 sm:justify-end">
                 <span className="text-xl sm:text-2xl font-black text-[#0d2342]">
-                  R$ {(metrics?.revenueReceived ?? 12450).toLocaleString("pt-BR")}
+                  R$ {(metrics?.revenueReceived ?? 0).toLocaleString("pt-BR")}
                 </span>
-                <span className="inline-flex items-center text-xs font-bold text-emerald-600">
-                  ↑ {metrics?.revenueGrowth ?? 12}%
-                </span>
+                {metrics?.revenueGrowth ? (
+                  <span className="inline-flex items-center text-xs font-bold text-emerald-600">
+                    ↑ {metrics.revenueGrowth}%
+                  </span>
+                ) : null}
               </div>
               <span className="text-[11px] text-slate-400 block mt-0.5">
-                em relação ao mês anterior
+                {selectedPeriod}
               </span>
             </div>
           </div>
 
-          {/* Gráfico SVG SVG fluido de Linha */}
-          <div className="w-full h-44 sm:h-52 relative pt-2">
-            <svg viewBox="0 0 500 160" className="w-full h-full overflow-visible">
-              <defs>
-                <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#1868db" stopOpacity="0.22" />
-                  <stop offset="100%" stopColor="#1868db" stopOpacity="0.01" />
-                </linearGradient>
-              </defs>
+          {/* Gráfico SVG SVG fluido de Linha ou Estado Vazio */}
+          {(!metrics?.revenueReceived || metrics.revenueReceived === 0) ? (
+            <div className="w-full h-44 sm:h-52 flex flex-col items-center justify-center border border-dashed border-slate-100 rounded-xl p-4 text-center">
+              <TrendingUp className="h-8 w-8 text-slate-300 mb-2" />
+              <p className="text-xs font-bold text-slate-600">Nenhum pagamento liquidado no período</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">Os valores recebidos de assinaturas serão refletidos aqui automaticamente.</p>
+            </div>
+          ) : (
+            <div className="w-full h-44 sm:h-52 relative pt-2">
+              <svg viewBox="0 0 500 160" className="w-full h-full overflow-visible">
+                <defs>
+                  <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#1868db" stopOpacity="0.22" />
+                    <stop offset="100%" stopColor="#1868db" stopOpacity="0.01" />
+                  </linearGradient>
+                </defs>
 
-              {/* Linhas de grade sutis */}
-              <line x1="30" y1="30" x2="490" y2="30" stroke="#f1f5f9" strokeWidth="1" />
-              <line x1="30" y1="70" x2="490" y2="70" stroke="#f1f5f9" strokeWidth="1" />
-              <line x1="30" y1="110" x2="490" y2="110" stroke="#f1f5f9" strokeWidth="1" />
-              <line x1="30" y1="140" x2="490" y2="140" stroke="#f1f5f9" strokeWidth="1" />
+                <line x1="30" y1="30" x2="490" y2="30" stroke="#f1f5f9" strokeWidth="1" />
+                <line x1="30" y1="70" x2="490" y2="70" stroke="#f1f5f9" strokeWidth="1" />
+                <line x1="30" y1="110" x2="490" y2="110" stroke="#f1f5f9" strokeWidth="1" />
+                <line x1="30" y1="140" x2="490" y2="140" stroke="#f1f5f9" strokeWidth="1" />
 
-              {/* Rótulos do eixo Y */}
-              <text x="5" y="34" className="text-[10px] fill-slate-400 font-sans">2.000</text>
-              <text x="5" y="74" className="text-[10px] fill-slate-400 font-sans">1.500</text>
-              <text x="5" y="114" className="text-[10px] fill-slate-400 font-sans">1.000</text>
-              <text x="12" y="144" className="text-[10px] fill-slate-400 font-sans">0</text>
+                <path
+                  d="M 50 140 L 50 130 Q 130 120, 150 115 T 250 100 T 350 85 T 450 40 L 450 140 Z"
+                  fill="url(#blueGrad)"
+                />
+                <path
+                  d="M 50 130 Q 130 120, 150 115 T 250 100 T 350 85 T 450 40"
+                  fill="none"
+                  stroke="#1868db"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
 
-              {/* Área preenchida com gradiente */}
-              <path
-                d="M 50 140 L 50 130 Q 130 120, 150 115 T 250 100 T 350 85 T 450 40 L 450 140 Z"
-                fill="url(#blueGrad)"
-              />
+                <circle cx="50" cy="130" r="4" fill="#1868db" className="drop-shadow-xs" />
+                <circle cx="130" cy="120" r="4" fill="#1868db" className="drop-shadow-xs" />
+                <circle cx="210" cy="112" r="4" fill="#1868db" className="drop-shadow-xs" />
+                <circle cx="290" cy="100" r="4" fill="#1868db" className="drop-shadow-xs" />
+                <circle cx="370" cy="85" r="4" fill="#1868db" className="drop-shadow-xs" />
+                <circle cx="450" cy="40" r="5" fill="#1868db" stroke="#ffffff" strokeWidth="2" className="drop-shadow-xs" />
 
-              {/* Linha da curva principal */}
-              <path
-                d="M 50 130 Q 130 120, 150 115 T 250 100 T 350 85 T 450 40"
-                fill="none"
-                stroke="#1868db"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-
-              {/* Pontos de dados com círculos azuis */}
-              <circle cx="50" cy="130" r="4" fill="#1868db" className="drop-shadow-xs" />
-              <circle cx="130" cy="120" r="4" fill="#1868db" className="drop-shadow-xs" />
-              <circle cx="210" cy="112" r="4" fill="#1868db" className="drop-shadow-xs" />
-              <circle cx="290" cy="100" r="4" fill="#1868db" className="drop-shadow-xs" />
-              <circle cx="370" cy="85" r="4" fill="#1868db" className="drop-shadow-xs" />
-              <circle cx="450" cy="40" r="5" fill="#1868db" stroke="#ffffff" strokeWidth="2" className="drop-shadow-xs" />
-
-              {/* Rótulos dos meses no eixo X */}
-              <text x="42" y="158" className="text-[11px] fill-slate-400 font-medium font-sans">Jan</text>
-              <text x="122" y="158" className="text-[11px] fill-slate-400 font-medium font-sans">Fev</text>
-              <text x="202" y="158" className="text-[11px] fill-slate-400 font-medium font-sans">Mar</text>
-              <text x="282" y="158" className="text-[11px] fill-slate-400 font-medium font-sans">Abr</text>
-              <text x="362" y="158" className="text-[11px] fill-slate-400 font-medium font-sans">Mai</text>
-              <text x="442" y="158" className="text-[11px] fill-slate-400 font-medium font-sans">Jun</text>
-            </svg>
-          </div>
+                <text x="42" y="158" className="text-[11px] fill-slate-400 font-medium font-sans">Sem 1</text>
+                <text x="122" y="158" className="text-[11px] fill-slate-400 font-medium font-sans">Sem 2</text>
+                <text x="202" y="158" className="text-[11px] fill-slate-400 font-medium font-sans">Sem 3</text>
+                <text x="282" y="158" className="text-[11px] fill-slate-400 font-medium font-sans">Sem 4</text>
+              </svg>
+            </div>
+          )}
         </Card>
 
         {/* Coluna Direita: Precisa da sua atenção (5 colunas) */}
@@ -284,70 +286,86 @@ export const AdminOverviewDashboard: React.FC = () => {
               Precisa da sua atenção
             </h2>
 
-            <div className="space-y-3">
-              {/* Item 1: Pagamentos pendentes */}
-              <Link 
-                to="/admin/billing"
-                className="flex items-center justify-between p-3.5 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100 group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
-                    !
-                  </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-[#0d2342] group-hover:text-[#1868db] transition-colors">
-                      {metrics?.pendingItemsCount ?? 3} pagamentos pendentes
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      Aguardando confirmação de pagamento
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#1868db] group-hover:translate-x-0.5 transition-all" />
-              </Link>
+            {((metrics?.pendingItemsCount || 0) === 0 && (metrics?.expiringTrialsCount || 0) === 0 && (metrics?.nearLimitCount || 0) === 0) ? (
+              <div className="p-6 text-center border border-dashed border-slate-200 rounded-xl space-y-2">
+                <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto" />
+                <p className="text-xs font-bold text-[#0d2342]">Tudo em dia!</p>
+                <p className="text-[11px] text-slate-500">
+                  Nenhuma pendência ou alerta operacional no período selecionado.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Item 1: Pagamentos pendentes */}
+                {(metrics?.pendingItemsCount || 0) > 0 && (
+                  <Link 
+                    to="/admin/billing"
+                    className="flex items-center justify-between p-3.5 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100 group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                        !
+                      </div>
+                      <div>
+                        <h3 className="text-xs sm:text-sm font-bold text-[#0d2342] group-hover:text-[#1868db] transition-colors">
+                          {metrics?.pendingItemsCount} pagamentos pendentes
+                        </h3>
+                        <p className="text-[11px] text-slate-500">
+                          Aguardando confirmação de pagamento
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#1868db] group-hover:translate-x-0.5 transition-all" />
+                  </Link>
+                )}
 
-              {/* Item 2: Testes terminando */}
-              <Link 
-                to="/admin/tests"
-                className="flex items-center justify-between p-3.5 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100 group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-[#1868db] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
-                    <Clock className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-[#0d2342] group-hover:text-[#1868db] transition-colors">
-                      {metrics?.expiringTrialsCount ?? 5} testes terminam em 7 dias
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      Entre em contato com os escritórios
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#1868db] group-hover:translate-x-0.5 transition-all" />
-              </Link>
+                {/* Item 2: Testes terminando */}
+                {(metrics?.expiringTrialsCount || 0) > 0 && (
+                  <Link 
+                    to="/admin/tests"
+                    className="flex items-center justify-between p-3.5 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100 group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-[#1868db] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                        <Clock className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs sm:text-sm font-bold text-[#0d2342] group-hover:text-[#1868db] transition-colors">
+                          {metrics?.expiringTrialsCount} testes terminam em 7 dias
+                        </h3>
+                        <p className="text-[11px] text-slate-500">
+                          Entre em contato com os escritórios
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#1868db] group-hover:translate-x-0.5 transition-all" />
+                  </Link>
+                )}
 
-              {/* Item 3: Perto do limite */}
-              <Link 
-                to="/admin/saas-metrics"
-                className="flex items-center justify-between p-3.5 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100 group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
-                    !
-                  </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-[#0d2342] group-hover:text-[#1868db] transition-colors">
-                      {metrics?.nearLimitCount ?? 2} escritórios perto do limite
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      Atingiram mais de 80% do plano
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#1868db] group-hover:translate-x-0.5 transition-all" />
-              </Link>
-            </div>
+                {/* Item 3: Perto do limite */}
+                {(metrics?.nearLimitCount || 0) > 0 && (
+                  <Link 
+                    to="/admin/saas-metrics"
+                    className="flex items-center justify-between p-3.5 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100 group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                        !
+                      </div>
+                      <div>
+                        <h3 className="text-xs sm:text-sm font-bold text-[#0d2342] group-hover:text-[#1868db] transition-colors">
+                          {metrics?.nearLimitCount} escritórios perto do limite
+                        </h3>
+                        <p className="text-[11px] text-slate-500">
+                          Atingiram mais de 80% do plano
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#1868db] group-hover:translate-x-0.5 transition-all" />
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Botão Mobile 'Gerenciar planos' (visível apenas em telas menores, igual à imagem mobile) */}

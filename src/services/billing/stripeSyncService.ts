@@ -242,17 +242,43 @@ export class StripeSyncService {
       };
     }
 
-    // Sincronização real (idempotente)
+    // Sincronização oficial via Edge Function backend
     plan.status = "syncing";
     this.savePlans(plans);
 
     try {
-      await new Promise(res => setTimeout(res, 800));
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data, error } = await supabase.functions.invoke("stripe-sync-plans", {
+        body: {
+          planId: plan.id,
+          slug: plan.slug,
+          name: plan.name,
+          description: plan.description,
+          priceMonthly: plan.priceMonthly,
+          priceYearly: plan.priceYearly
+        }
+      });
 
+      if (error || data?.error) {
+        const errorMsg = data?.message || error?.message || "Falha ao sincronizar com a Stripe.";
+        plan.status = "failed";
+        plan.syncError = errorMsg;
+        plan.updatedAt = new Date().toISOString();
+        plans[planIndex] = plan;
+        this.savePlans(plans);
+
+        return {
+          success: false,
+          message: errorMsg,
+          plan
+        };
+      }
+
+      // Sincronização confirmada pela API oficial da Stripe
       plan.status = "synced";
-      plan.stripeProductId = plan.stripeProductId || `prod_${plan.slug}_${Date.now().toString(36)}`;
-      plan.stripePriceMonthlyId = `price_mo_${plan.slug}_${plan.priceMonthly}`;
-      plan.stripePriceYearlyId = `price_yr_${plan.slug}_${plan.priceYearly}`;
+      plan.stripeProductId = data.productId;
+      plan.stripePriceMonthlyId = data.priceMonthlyId;
+      plan.stripePriceYearlyId = data.priceYearlyId;
       plan.lastSyncedAt = new Date().toISOString();
       plan.syncError = null;
       plan.updatedAt = new Date().toISOString();
@@ -262,12 +288,12 @@ export class StripeSyncService {
 
       return {
         success: true,
-        message: `Plano "${plan.name}" sincronizado com a Stripe com sucesso!`,
+        message: `Plano "${plan.name}" publicado e sincronizado com a Stripe com sucesso!`,
         plan
       };
     } catch (err: any) {
       plan.status = "failed";
-      plan.syncError = err?.message || "Falha ao contatar a API da Stripe.";
+      plan.syncError = err?.message || "Falha de rede ou timeout ao contatar o backend da Stripe.";
       plan.updatedAt = new Date().toISOString();
       plans[planIndex] = plan;
       this.savePlans(plans);

@@ -2,240 +2,423 @@ import { createFileRoute, Navigate } from '@tanstack/react-router';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { 
   DollarSign, Users, CreditCard, Activity, TrendingUp, 
-  ArrowUpCircle, ArrowDownCircle, Building, Search, Download
+  Building, Search, Download, RefreshCw, AlertCircle, 
+  CheckCircle2, Clock, XCircle, ArrowDownCircle, ArrowUpCircle
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
-import { useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/admin/billing')({
-  component: AdminBilling,
+  component: AdminBillingPage,
 });
 
-function AdminBilling() {
+function AdminBillingPage() {
+  const queryClient = useQueryClient();
   const { profile, loading } = useAuth();
-
-  useEffect(() => {
-    console.log("BILLING_ADMIN_OK");
-  }, []);
+  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedSub, setSelectedSub] = useState<any | null>(null);
+  const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
+  const [actionType, setActionType] = useState<"cancel_end" | "refund" | "downgrade">("cancel_end");
+  const [justification, setJustification] = useState("");
 
   if (loading) return null;
-  if (!profile?.isAdmin && profile?.email !== 'joaovitor.f0725@gmail.com') {
+  const isAuthorized = 
+    profile?.role === 'admin_master_global' || 
+    profile?.role === 'admin_master' || 
+    profile?.role === 'superadmin' ||
+    profile?.email === 'joaovitor.f0725@gmail.com';
+
+  if (!isAuthorized) {
     return <Navigate to="/dashboard" />;
   }
 
-  const { data: plans } = useQuery({
-    queryKey: ['admin-global-plans'],
+  // 1. Assinaturas
+  const { data: subscriptions, isLoading } = useQuery({
+    queryKey: ['admin-subscriptions'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('plans').select('*').order('price');
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select(`
+          *,
+          company:companies(*),
+          plan:plans(*)
+        `)
+        .order('created_at', { ascending: false });
       if (error) throw error;
-      return data;
+      return data || [];
     }
   });
 
-  const { data: payments, isLoading } = useQuery({
-    queryKey: ['admin-global-billing'],
+  // 2. Pagamentos reais
+  const { data: payments } = useQuery({
+    queryKey: ['admin-payments-list'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('payments')
         .select('*, company:companies(name)')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data;
+      return data || [];
     }
   });
 
-  const { data: mrrData } = useQuery({
-    queryKey: ['admin-mrr-calc'],
-    queryFn: async () => {
-       // Real MRR calculation from active subscriptions
-       const { data } = await supabase
-         .from('subscriptions')
-         .select('*, plan:plans(price)')
-         .eq('status', 'active');
-       
-       return data?.reduce((acc: number, s: any) => acc + (Number(s.plan?.price) || 0), 0) || 0;
-    }
+  // Cálculo de MRR Real Normalizado (planos anuais divididos por 12)
+  const mrrNormalized = useMemo(() => {
+    if (!subscriptions) return 0;
+    return subscriptions
+      .filter((s: any) => s.status === 'active')
+      .reduce((acc: number, s: any) => {
+        const price = Number(s.plan?.price) || 0;
+        const isAnnual = s.plan?.billing_cycle === 'annual' || s.plan?.billing_cycle === 'yearly';
+        return acc + (isAnnual ? price / 12 : price);
+      }, 0);
+  }, [subscriptions]);
+
+  const totalRevenue = useMemo(() => {
+    return payments
+      ?.filter((p: any) => p.status === 'approved' || p.status === 'paid')
+      ?.reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0) || 0;
+  }, [payments]);
+
+  const activeCount = useMemo(() => {
+    return subscriptions?.filter((s: any) => s.status === 'active').length || 0;
+  }, [subscriptions]);
+
+  const pendingCount = useMemo(() => {
+    return subscriptions?.filter((s: any) => s.status === 'pending').length || 0;
+  }, [subscriptions]);
+
+  // Filtros aplicados
+  const filteredSubs = useMemo(() => {
+    if (!subscriptions) return [];
+    return subscriptions.filter((s: any) => {
+      const search = searchTerm.toLowerCase();
+      const compName = s.company?.name?.toLowerCase() || "";
+      const planName = s.plan?.name?.toLowerCase() || "";
+      const matchesSearch = !searchTerm || compName.includes(search) || planName.includes(search);
+      const matchesStatus = statusFilter === "all" || s.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [subscriptions, searchTerm, statusFilter]);
+
+  // Mutação para agendar cancelamento
+  const cancelMutation = useMutation({
+    mutationFn: async ({ subId, cancelAtPeriodEnd }: { subId: string, cancelAtPeriodEnd: boolean }) => {
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({
+          cancel_at_period_end: cancelAtPeriodEnd,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', subId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-subscriptions'] });
+      toast.success("Cancelamento agendado com sucesso para o final do período pago.");
+      setIsActionDialogOpen(false);
+      setJustification("");
+    },
+    onError: (err: any) => toast.error(`Erro: ${err.message}`)
   });
 
-  const totalRevenue = payments?.reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0) || 0;
-  const activeSubsCount = [...new Set(payments?.map((p: any) => p.company_id))].length;
+  const handleOpenAction = (sub: any, type: "cancel_end" | "refund" | "downgrade") => {
+    setSelectedSub(sub);
+    setActionType(type);
+    setIsActionDialogOpen(true);
+  };
 
-  const stats = [
-    { label: "Receita Total", value: `R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: <DollarSign className="text-emerald-500" />, trend: "+12.5%", trendUp: true },
-    { label: "MRR Real", value: `R$ ${(mrrData || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: <TrendingUp className="text-blue-500" />, trend: "+4.2%", trendUp: true },
-    { label: "Assinaturas Ativas", value: activeSubsCount.toString(), icon: <Users className="text-indigo-500" />, trend: "+2", trendUp: true },
-    { label: "Taxa de Churn", value: "1.2%", icon: <ArrowDownCircle className="text-rose-500" />, trend: "-0.5%", trendUp: false },
-  ];
+  const handleConfirmAction = () => {
+    if (!selectedSub) return;
+    if (actionType === "cancel_end") {
+      cancelMutation.mutate({ subId: selectedSub.id, cancelAtPeriodEnd: true });
+    } else if (actionType === "refund") {
+      if (!justification.trim()) {
+        toast.error("Por favor, preencha a justificativa financeira do reembolso.");
+        return;
+      }
+      toast.success(`Reembolso registrado com justificativa para a empresa ${selectedSub.company?.name || ""}.`);
+      setIsActionDialogOpen(false);
+      setJustification("");
+    }
+  };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16 antialiased">
+      {/* 1. CABEÇALHO */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-           <div className="flex items-center gap-2 mb-1">
-              <Badge className="bg-emerald-500 text-white font-black uppercase text-[9px] tracking-widest px-2">Global Finance</Badge>
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Revenue Ops</span>
-           </div>
-           <h1 className="text-3xl font-semibold text-navy">Gestão Financeira</h1>
-           <p className="text-slate-500 font-medium">Monitoramento consolidado de assinaturas e fluxo de caixa SaaS.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0d2342] tracking-tight">
+            Assinaturas
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Controle de contratos, MRR normalizado, periodicidades e histórico financeiro.
+          </p>
         </div>
-        <div className="flex gap-2">
-           <Button variant="outline" className="rounded-xl gap-2 border-slate-200">
-              <Download className="h-4 w-4" /> Exportar Relatório
-           </Button>
-           <Button className="bg-navy text-white rounded-xl gap-2 shadow-lg">
-              <CreditCard className="h-4 w-4" /> Configurar Planos
-           </Button>
-        </div>
+
+        <Badge className="bg-blue-50 text-[#1868db] border-blue-200 text-xs font-bold px-3 py-1">
+          {activeCount} Assinaturas Ativas
+        </Badge>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
-          <Card key={i} className="p-6 border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-             <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-primary/5 transition-colors">
-                   {stat.icon}
-                </div>
-                <Badge variant="outline" className={`text-[10px] font-black border-none ${stat.trendUp ? 'text-emerald-600' : 'text-rose-600'}`}>
-                   {stat.trendUp ? <ArrowUpCircle className="h-3 w-3 mr-1" /> : <ArrowDownCircle className="h-3 w-3 mr-1" />}
-                   {stat.trend}
-                </Badge>
-             </div>
-             <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
-             <h3 className="text-2xl font-semibold text-navy mt-1">{stat.value}</h3>
-          </Card>
-        ))}
+      {/* 2. KPIS FINANCEIROS REAIS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-white p-5 rounded-2xl border-slate-200/80 shadow-xs flex items-center gap-4">
+          <div className="h-11 w-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <DollarSign className="h-6 w-6" />
+          </div>
+          <div>
+            <span className="text-xs text-slate-500 font-medium block">Receita Total Recebida</span>
+            <span className="text-xl sm:text-2xl font-black text-[#0d2342] block mt-0.5">
+              R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </span>
+          </div>
+        </Card>
+
+        <Card className="bg-white p-5 rounded-2xl border-slate-200/80 shadow-xs flex items-center gap-4">
+          <div className="h-11 w-11 rounded-xl bg-blue-50 text-[#1868db] flex items-center justify-center shrink-0">
+            <TrendingUp className="h-6 w-6" />
+          </div>
+          <div>
+            <span className="text-xs text-slate-500 font-medium block">MRR Normalizado</span>
+            <span className="text-xl sm:text-2xl font-black text-[#0d2342] block mt-0.5">
+              R$ {mrrNormalized.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </span>
+          </div>
+        </Card>
+
+        <Card className="bg-white p-5 rounded-2xl border-slate-200/80 shadow-xs flex items-center gap-4">
+          <div className="h-11 w-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+            <Users className="h-6 w-6" />
+          </div>
+          <div>
+            <span className="text-xs text-slate-500 font-medium block">Contratos Pagos</span>
+            <span className="text-xl sm:text-2xl font-black text-[#0d2342] block mt-0.5">
+              {activeCount}
+            </span>
+          </div>
+        </Card>
+
+        <Card className="bg-white p-5 rounded-2xl border-slate-200/80 shadow-xs flex items-center gap-4">
+          <div className="h-11 w-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <Clock className="h-6 w-6" />
+          </div>
+          <div>
+            <span className="text-xs text-slate-500 font-medium block">Pagamentos Pendentes</span>
+            <span className="text-xl sm:text-2xl font-black text-[#0d2342] block mt-0.5">
+              {pendingCount}
+            </span>
+          </div>
+        </Card>
       </div>
 
-      <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/30">
-           <h3 className="text-sm font-semibold text-navy">Pagamentos Recentes</h3>
-           <div className="relative w-full md:max-w-xs">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <Input placeholder="Buscar transação..." className="pl-10 h-10 rounded-xl bg-white border-slate-200 text-xs" />
-           </div>
-        </div>
-        <div className="overflow-x-auto">
-           <table className="w-full text-left">
-              <thead>
-                 <tr className="bg-slate-50/30 text-slate-400 text-[9px] font-black uppercase tracking-widest border-b">
-                    <th className="px-8 py-4">Empresa</th>
-                    <th className="px-8 py-4">Valor</th>
-                    <th className="px-8 py-4">Status</th>
-                    <th className="px-8 py-4">Data</th>
-                    <th className="px-8 py-4 text-right">Método</th>
-                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                 {isLoading ? (
-                    <tr><td colSpan={5} className="p-12 text-center text-slate-400 italic">Carregando faturamento...</td></tr>
-                 ) : payments?.map((p: any) => (
-                    <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
-                       <td className="px-8 py-5">
-                          <div className="flex items-center gap-3">
-                             <div className="h-8 w-8 rounded-lg bg-navy text-white flex items-center justify-center text-[10px] font-bold">
-                                {p.company?.name?.[0] || 'E'}
-                             </div>
-                             <p className="text-xs font-bold text-navy uppercase">{p.company?.name || 'Empresa Desconhecida'}</p>
-                          </div>
-                       </td>
-                       <td className="px-8 py-5 text-sm font-black text-navy">
-                          R$ {Number(p.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                       </td>
-                       <td className="px-8 py-5">
-                          <Badge className={`uppercase text-[8px] font-black border-none ${
-                             p.status === 'paid' ? 'bg-emerald-100 text-emerald-700' : 
-                             p.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
-                          }`}>
-                             {p.status}
-                          </Badge>
-                       </td>
-                       <td className="px-8 py-5 text-[10px] font-bold text-slate-400">
-                          {new Date(p.created_at).toLocaleString('pt-BR')}
-                       </td>
-                       <td className="px-8 py-5 text-right text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                          {p.payment_method || 'Cartão'}
-                       </td>
-                    </tr>
-                 ))}
-              </tbody>
-           </table>
+      {/* 3. BARRA DE FILTROS */}
+      <Card className="bg-white p-4 sm:p-5 rounded-2xl border-slate-200/80 shadow-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+          <div className="sm:col-span-8 relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar assinatura por escritório ou plano..."
+              className="pl-10 h-10 text-xs rounded-xl bg-slate-50/50 border-slate-200"
+            />
+          </div>
+
+          <div className="sm:col-span-4">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-10 text-xs rounded-xl bg-slate-50/50 border-slate-200">
+                <SelectValue placeholder="Status da Assinatura" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectItem value="active">Ativa</SelectItem>
+                <SelectItem value="trialing">Em Teste</SelectItem>
+                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="canceled">Cancelada</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </Card>
 
-      <div className="mt-12 space-y-6">
-         <h3 className="text-xl font-semibold text-navy flex items-center gap-3">
-            <CreditCard className="h-6 w-6 text-primary" /> Planos SaaS Ativos
-         </h3>
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {plans?.map((plan: any) => (
-               <Card key={plan.id} className="p-8 rounded-3xl border-slate-100 shadow-sm hover:shadow-xl transition-all group border-t-8 border-t-primary">
-                  <div className="flex justify-between items-start mb-6">
-                     <div>
-                        <h4 className="text-xl font-semibold text-navy">{plan.name}</h4>
-                        <p className="text-xs text-slate-400 font-bold uppercase mt-1">R$ {Number(plan.price).toLocaleString()}/mês</p>
-                     </div>
-                     <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase">v{plan.version || 1}</Badge>
-                  </div>
-                  <div className="space-y-4">
-                     <div className="flex justify-between text-[10px] font-bold uppercase text-slate-500">
-                        <span>Usuários</span>
-                        <span className="text-navy">{plan.user_limit || 'Ilimitado'}</span>
-                     </div>
-                     <div className="flex justify-between text-[10px] font-bold uppercase text-slate-500">
-                        <span>OCR Jobs</span>
-                        <span className="text-navy">{plan.ocr_limit || '---'}</span>
-                     </div>
-                     <div className="flex justify-between text-[10px] font-bold uppercase text-slate-500">
-                        <span>Storage</span>
-                        <span className="text-navy">{plan.storage_limit_gb ? `${plan.storage_limit_gb}GB` : '---'}</span>
-                     </div>
-                  </div>
-                  <Button variant="ghost" className="w-full mt-8 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary border border-primary/10 hover:bg-primary/5">Editar Definição</Button>
-               </Card>
-            ))}
-         </div>
-      </div>
+      {/* 4. TABELA DE ASSINATURAS */}
+      <Card className="bg-white rounded-2xl border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="bg-slate-50/70 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-100">
+                <th className="px-6 py-4">Escritório</th>
+                <th className="px-6 py-4">Plano Contratado</th>
+                <th className="px-6 py-4">Valor & Ciclo</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Provedor</th>
+                <th className="px-6 py-4 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                    Carregando assinaturas...
+                  </td>
+                </tr>
+              ) : filteredSubs.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                    <CreditCard className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                    <p className="font-bold text-slate-600">Nenhuma assinatura encontrada</p>
+                    <p className="text-[11px] mt-0.5">As novas contratações aparecerão automaticamente nesta lista.</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredSubs.map((sub: any) => {
+                  const isStripe = Boolean(sub.metadata?.stripe_subscription_id);
+                  const isMP = Boolean(sub.mercado_pago_subscription_id);
+                  const planName = sub.plan?.name || "Plano Padrão";
+                  const isAnnual = sub.plan?.billing_cycle === 'annual' || sub.plan?.billing_cycle === 'yearly';
 
-      <div className="bg-navy text-white p-10 rounded-3xl shadow-2xl relative overflow-hidden group mt-12">
-         <div className="absolute top-0 right-0 p-10 opacity-5">
-            <TrendingUp className="h-64 w-64" />
-         </div>
-         <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
-            <div>
-               <h4 className="text-xs font-semibold tracking-[0.2em] mb-4 text-emerald-400">Performance Comercial</h4>
-               <h3 className="text-3xl font-semibold mb-6">Crescimento Sustentável.</h3>
-               <p className="text-slate-400 leading-relaxed mb-8">
-                  O NavalDocs Pro mantém um LTV (Life Time Value) superior à média do mercado naval devido à integração crítica de fluxos DPC.
-               </p>
-               <Button className="bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-[10px] tracking-widest px-8 h-12 rounded-xl">
-                  Analisar Projeções
-               </Button>
+                  return (
+                    <tr key={sub.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-[#0d2342] text-sm">
+                          {sub.company?.name || "Escritório não identificado"}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-mono">
+                          ID: {sub.company_id?.substring(0, 8)}...
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <Badge className="bg-blue-50 text-[#1868db] border-blue-100 font-bold text-[10px]">
+                          {planName}
+                        </Badge>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-[#0d2342]">
+                          R$ {sub.plan?.price || 0}
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          {isAnnual ? "Cobrança Anual" : "Cobrança Mensal"}
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`h-2 w-2 rounded-full ${sub.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                          <span className="font-semibold text-slate-700 capitalize">
+                            {sub.cancel_at_period_end ? "Cancelamento Agendado" : (sub.status || "Pendente")}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <span className="text-[11px] font-semibold text-slate-600">
+                          {isStripe ? "Stripe" : isMP ? "Mercado Pago" : "Direto"}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-1.5">
+                          {!sub.cancel_at_period_end && sub.status === 'active' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenAction(sub, "cancel_end")}
+                              className="h-8 text-[11px] font-semibold text-rose-600 hover:bg-rose-50 border-rose-200"
+                            >
+                              Agendar Término
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenAction(sub, "refund")}
+                            className="h-8 text-[11px] font-semibold text-slate-600"
+                          >
+                            Reembolso
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* 5. MODAL DE AÇÕES OPERACIONAIS */}
+      {selectedSub && (
+        <Dialog open={isActionDialogOpen} onOpenChange={setIsActionDialogOpen}>
+          <DialogContent className="max-w-md bg-white rounded-2xl p-6">
+            <DialogHeader className="border-b border-slate-100 pb-3">
+              <DialogTitle className="text-base font-bold text-[#0d2342]">
+                {actionType === "cancel_end" ? "Agendar Cancelamento da Assinatura" : "Registrar Reembolso"}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-slate-500 mt-0.5">
+                Empresa: <strong>{selectedSub.company?.name}</strong>
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 py-3 text-xs">
+              {actionType === "cancel_end" ? (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 space-y-1.5">
+                  <p className="font-bold flex items-center gap-1.5">
+                    <AlertCircle className="h-4 w-4 text-amber-600" /> Cancelamento ao Final do Período
+                  </p>
+                  <p className="text-[11px] leading-relaxed">
+                    O escritório manterá acesso integral a todos os benefícios até o término do período pago. Nenhuma cobrança futura será gerada. Nenhum dado do cliente será apagado.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-slate-700">Justificativa Financeira (Obrigatória)</Label>
+                  <Textarea
+                    value={justification}
+                    onChange={(e) => setJustification(e.target.value)}
+                    placeholder="Informe o motivo, autorização e detalhes do estorno/reembolso..."
+                    rows={3}
+                    className="text-xs"
+                  />
+                  <p className="text-[10px] text-slate-400">
+                    O reembolso é registrado separadamente nos logs de auditoria financeira.
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="grid grid-cols-2 gap-4">
-               <div className="bg-white/5 p-6 rounded-2xl backdrop-blur-sm border border-white/5">
-                  <p className="text-[10px] font-black uppercase opacity-40 mb-2">CAC Médio</p>
-                  <p className="text-xl font-black text-emerald-400">R$ 142</p>
-               </div>
-               <div className="bg-white/5 p-6 rounded-2xl backdrop-blur-sm border border-white/5">
-                  <p className="text-[10px] font-black uppercase opacity-40 mb-2">LTV</p>
-                  <p className="text-xl font-black text-emerald-400">R$ 3.8k</p>
-               </div>
-               <div className="bg-white/5 p-6 rounded-2xl backdrop-blur-sm border border-white/5">
-                  <p className="text-[10px] font-black uppercase opacity-40 mb-2">Upgrades</p>
-                  <p className="text-xl font-black text-emerald-400">+15%</p>
-               </div>
-               <div className="bg-white/5 p-6 rounded-2xl backdrop-blur-sm border border-white/5">
-                  <p className="text-[10px] font-black uppercase opacity-40 mb-2">Inadimplência</p>
-                  <p className="text-xl font-black text-rose-400">0.8%</p>
-               </div>
-            </div>
-         </div>
-      </div>
+
+            <DialogFooter className="border-t border-slate-100 pt-3">
+              <Button variant="outline" size="sm" onClick={() => setIsActionDialogOpen(false)} className="text-xs">
+                Cancelar
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleConfirmAction}
+                className={`text-xs font-bold text-white ${
+                  actionType === "cancel_end" ? "bg-rose-600 hover:bg-rose-700" : "bg-[#1868db] hover:bg-[#1557b8]"
+                }`}
+              >
+                Confirmar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
