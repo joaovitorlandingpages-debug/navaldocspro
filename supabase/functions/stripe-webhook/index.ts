@@ -43,7 +43,67 @@ serve(async (req) => {
       );
     }
 
-    // Validação do evento
+    // Validação criptográfica real da assinatura Stripe (HMAC-SHA256 sobre "t.payload")
+    const sigParts = Object.fromEntries(
+      signature.split(",").map((p) => {
+        const idx = p.indexOf("=");
+        return [p.slice(0, idx).trim(), p.slice(idx + 1).trim()];
+      })
+    ) as Record<string, string>;
+
+    const timestamp = sigParts["t"];
+    const providedSigs = signature
+      .split(",")
+      .filter((p) => p.trim().startsWith("v1="))
+      .map((p) => p.trim().slice(3));
+
+    if (!timestamp || providedSigs.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "invalid_signature_format", message: "Cabeçalho stripe-signature malformado." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Proteção contra replay (tolerância de 5 minutos)
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (Math.abs(nowSec - Number(timestamp)) > 300) {
+      return new Response(
+        JSON.stringify({ error: "timestamp_out_of_tolerance", message: "Assinatura Stripe expirada." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(webhookSecret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const mac = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      new TextEncoder().encode(`${timestamp}.${rawBody}`)
+    );
+    const expectedSig = Array.from(new Uint8Array(mac))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    const timingSafeEqualHex = (a: string, b: string) => {
+      if (a.length !== b.length) return false;
+      let diff = 0;
+      for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+      return diff === 0;
+    };
+
+    if (!providedSigs.some((s) => timingSafeEqualHex(s, expectedSig))) {
+      console.warn("Assinatura Stripe inválida — requisição rejeitada.");
+      return new Response(
+        JSON.stringify({ error: "invalid_signature", message: "Assinatura Stripe inválida." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const event = JSON.parse(rawBody);
     const eventId = event.id;
     const eventType = event.type;
