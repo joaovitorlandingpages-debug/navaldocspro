@@ -43,7 +43,7 @@ import type { WatermarkCustomOptions } from "@/services/brandedPdfBuilder";
 import { type CompanyBranding } from "@/services/companyBranding";
 
 export const Route = createFileRoute("/processes/visualizar-e-editar")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { orderId?: string; customerId?: string; vesselId?: string; preview?: string; docIndex?: number } => ({
     orderId: (search.orderId as string) || undefined,
     customerId: (search.customerId as string) || undefined,
     vesselId: (search.vesselId as string) || undefined,

@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/novo-pedido")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { customerId?: string; vesselId?: string; preview?: string; step?: string } => ({
     customerId: (search.customerId as string) || undefined,
     vesselId: (search.vesselId as string) || undefined,
     preview: (search.preview as string) || undefined,
