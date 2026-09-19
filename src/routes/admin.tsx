@@ -338,12 +338,12 @@ function AdminLayout() {
 
           {/* Pill de Demonstração / Dados Ilustrativos */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50/90 border border-amber-200/80 text-amber-800 text-[11px] font-medium shadow-2xs">
-              <span className="h-4 w-4 rounded-full bg-amber-500 text-white font-bold text-[10px] flex items-center justify-center">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50/90 border border-amber-200/80 text-amber-800 text-[10px] sm:text-[11px] font-medium shadow-2xs">
+              <span className="h-4 w-4 rounded-full bg-amber-500 text-white font-bold text-[10px] flex items-center justify-center shrink-0">
                 !
               </span>
               <span className="font-bold">Demonstração</span>
-              <span className="hidden sm:inline text-amber-700/80">• Todos os dados são ilustrativos.</span>
+              <span className="text-amber-700/80 text-[9px] sm:text-[11px] hidden xs:inline">Todos os dados são ilustrativos.</span>
             </div>
           </div>
         </header>
