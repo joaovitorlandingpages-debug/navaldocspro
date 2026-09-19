@@ -19,6 +19,7 @@ export interface AuthContext {
   userId: string;
   companyId: string | null;
   isAdminMaster: boolean;
+  role?: string;
   admin: SupabaseClient;
   user: SupabaseClient;
   /** Throws 403 if resourceCompanyId !== companyId (admin_master_global bypasses). */
@@ -92,6 +93,7 @@ export async function authContext(req: Request): Promise<AuthContext> {
     userId: user.id,
     companyId,
     isAdminMaster,
+    role: profile?.role ?? "user",
     admin,
     user: userClient,
     requireCompany(resourceCompanyId) {
