@@ -799,7 +799,7 @@ function ProcessTrackingPage() {
                     Envie procurações, comprovantes de residência ou vistorias adicionais.
                   </p>
                   <FileUploader 
-                    bucket="process-documents"
+                    bucket="process-attachments"
                     category="anexos"
                     processId={id} 
                     onSuccess={() => toast.success("Arquivo anexado com sucesso!")} 
