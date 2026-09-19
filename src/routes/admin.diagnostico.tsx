@@ -91,8 +91,8 @@ function DiagnosticoPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500">
-      <Link to="/admin-master" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Admin Master
+      <Link to="/admin" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" /> Painel Admin
       </Link>
 
       <PageHeader

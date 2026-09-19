@@ -45,25 +45,36 @@ export const AdminOverviewDashboard: React.FC = () => {
     queryFn: async () => {
       try {
         const [
-          { count: activeSubs },
-          { count: trialingCompanies },
+          { data: subsData },
+          { data: companiesData },
           { data: paymentsData },
-          { data: pendingSubs },
-          { data: companiesList }
         ] = await Promise.all([
-          supabase.from("subscriptions").select("*", { count: "exact", head: true }).eq("status", "active"),
-          supabase.from("companies").select("*", { count: "exact", head: true }).eq("is_pilot", true),
+          supabase.from("subscriptions").select("id, status, current_period_end, plan_id"),
+          supabase.from("companies").select("id, name, created_at, billing_status, is_active, is_demo, is_pilot, billing_monthly_amount"),
           supabase.from("payments").select("amount, status, created_at").eq("status", "approved"),
-          supabase.from("subscriptions").select("id").eq("status", "pending"),
-          supabase.from("companies").select("id, name, created_at, is_pilot")
         ]);
 
+        const list = companiesData || [];
+        
+        // Ativos: status active na tabela subscriptions OU billing_status active na tabela companies
+        const activeCount = list.filter((c: any) => c.is_active && c.billing_status === "active").length ||
+          (subsData?.filter((s: any) => s.status === "active").length || 0);
+
+        // Em teste: billing_status === 'trial', is_pilot, is_demo ou sem assinatura ativa ainda
+        const trialCount = list.filter((c: any) => 
+          c.billing_status === "trial" || 
+          c.is_pilot || 
+          c.is_demo || 
+          (!c.billing_status && c.is_active)
+        ).length;
+
         const totalRevenue = paymentsData?.reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0) || 0;
-        const pendingCount = pendingSubs?.length || 0;
+        const pendingCount = subsData?.filter((s: any) => s.status === "pending" || s.status === "past_due").length || 0;
 
         return {
-          activeSubs: activeSubs || 0,
-          trialing: trialingCompanies || 0,
+          totalCompanies: list.length,
+          activeSubs: activeCount,
+          trialing: trialCount,
           revenueReceived: totalRevenue,
           pendingPayments: pendingCount,
           revenueGrowth: 0,
@@ -74,6 +85,7 @@ export const AdminOverviewDashboard: React.FC = () => {
       } catch (e) {
         console.error("Erro ao carregar métricas reais do admin:", e);
         return {
+          totalCompanies: 0,
           activeSubs: 0,
           trialing: 0,
           revenueReceived: 0,
@@ -140,11 +152,16 @@ export const AdminOverviewDashboard: React.FC = () => {
               <ChevronDown className="h-3.5 w-3.5 text-slate-400 ml-1" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40 bg-white">
-            <DropdownMenuItem onClick={() => setSelectedPeriod("Este mês")}>Este mês</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSelectedPeriod("Mês anterior")}>Mês anterior</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSelectedPeriod("Últimos 90 dias")}>Últimos 90 dias</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSelectedPeriod("Este ano")}>Este ano</DropdownMenuItem>
+          <DropdownMenuContent align="end" className="w-48 bg-white border-slate-200 text-slate-700">
+            {["Hoje", "Últimos 7 dias", "Este mês", "Último trimestre", "Ano atual"].map((period) => (
+              <DropdownMenuItem
+                key={period}
+                onClick={() => setSelectedPeriod(period)}
+                className="text-xs font-medium cursor-pointer"
+              >
+                {period}
+              </DropdownMenuItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -159,7 +176,7 @@ export const AdminOverviewDashboard: React.FC = () => {
           <div>
             <span className="text-xs text-slate-500 font-medium block">Assinaturas ativas</span>
             <span className="text-2xl font-black text-[#0d2342] block mt-0.5">
-              {metrics?.activeSubs ?? 48}
+              {metrics?.activeSubs ?? 0}
             </span>
           </div>
         </Card>
@@ -172,7 +189,7 @@ export const AdminOverviewDashboard: React.FC = () => {
           <div>
             <span className="text-xs text-slate-500 font-medium block">Em teste</span>
             <span className="text-2xl font-black text-[#0d2342] block mt-0.5">
-              {metrics?.trialing ?? 16}
+              {metrics?.trialing ?? 0}
             </span>
           </div>
         </Card>
@@ -185,7 +202,7 @@ export const AdminOverviewDashboard: React.FC = () => {
           <div>
             <span className="text-xs text-slate-500 font-medium block">Receita recebida</span>
             <span className="text-2xl font-black text-[#0d2342] block mt-0.5">
-              R$ {(metrics?.revenueReceived ?? 12450).toLocaleString("pt-BR")}
+              R$ {(metrics?.revenueReceived ?? 0).toLocaleString("pt-BR")}
             </span>
           </div>
         </Card>

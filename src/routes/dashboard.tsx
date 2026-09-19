@@ -290,9 +290,9 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
                     </Link>
                   ))}
 
-                  {(profile?.role === 'admin' || profile?.role === 'admin_master' || profile?.role === 'admin_master_global') && (
+                  {(profile?.role === 'admin' || profile?.role === 'admin_master' || profile?.role === 'admin_master_global' || profile?.email === 'joaovitor.f0725@gmail.com') && (
                     <Link
-                      to="/admin-hub"
+                      to="/admin"
                       className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-amber-700 hover:bg-amber-50 transition-colors"
                     >
                       <ShieldCheck className="h-3.5 w-3.5 text-amber-600" />

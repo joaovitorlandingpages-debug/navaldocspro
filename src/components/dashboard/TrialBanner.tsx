@@ -40,7 +40,7 @@ export function TrialBanner({ onlyAlerts = false }: TrialBannerProps) {
             </p>
           </div>
         </div>
-        <Link to="/admin-master">
+        <Link to="/admin">
           <Button variant="ghost" size="sm" className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 text-[10px] font-black uppercase tracking-wider h-7 px-3 gap-1">
             Painel Admin <ArrowRight className="h-3 w-3" />
           </Button>

@@ -23,7 +23,7 @@ const SECTIONS: Section[] = [
     color: "from-blue-500 to-blue-700",
     items: [
       { name: "Painel Admin", to: "/admin", icon: <ShieldCheck />, desc: "Console master geral" },
-      { name: "Admin Master Global", to: "/admin-master", icon: <Award />, desc: "Tenants, planos e billing", globalOnly: true },
+      { name: "Admin Master Global", to: "/admin", icon: <Award />, desc: "Tenants, planos e billing", globalOnly: true },
       { name: "Empresas", to: "/admin/companies", icon: <Users />, desc: "Gestão de tenants" },
       { name: "Usuários", to: "/admin/users", icon: <Users />, desc: "Acesso e perfis" },
     ],
@@ -42,7 +42,7 @@ const SECTIONS: Section[] = [
     title: "Marketplace & Documentos",
     color: "from-violet-500 to-violet-700",
     items: [
-      { name: "Marketplace Admin", to: "/admin-master", icon: <LayoutTemplate />, desc: "Curadoria de templates", globalOnly: true },
+      { name: "Marketplace Admin", to: "/admin/templates", icon: <LayoutTemplate />, desc: "Curadoria de templates", globalOnly: true },
       { name: "Cofre de Documentos", to: "/admin/documents", icon: <Database />, desc: "Gestão definitiva de arquivos e certificados" },
       { name: "Modelos de Documentação", to: "/admin/templates", icon: <Library />, desc: "Rascunhos, publicados, globais e arquivados" },
       { name: "Biblioteca Nacional", to: "/documentos/biblioteca", icon: <FileText />, desc: "Catálogo público" },
@@ -85,7 +85,7 @@ const SECTIONS: Section[] = [
     items: [
       { name: "AI Global Console", to: "/admin/global", icon: <Bot />, desc: "Configuração de IA" },
       { name: "Roadmap Enterprise", to: "/admin/roadmap", icon: <Rocket />, desc: "Backlog estratégico" },
-      { name: "Limpeza de Testes", to: "/admin-master", icon: <FileWarning />, desc: "Reset de dados demo", globalOnly: true },
+      { name: "Limpeza de Testes", to: "/admin/system-health", icon: <FileWarning />, desc: "Diagnóstico e integridade", globalOnly: true },
       { name: "Ambiente Demo", to: "/demo", icon: <Rocket />, desc: "Sandbox demonstração" },
       { name: "Changelog", to: "/changelog", icon: <History />, desc: "Histórico de releases" },
       { name: "Ajustes Master", to: "/admin/settings", icon: <Settings />, desc: "Feature flags & config" },

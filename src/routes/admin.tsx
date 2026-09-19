@@ -32,6 +32,7 @@ import {
   Tag,
   Gift,
   Link2,
+  Wrench,
   X
 } from "lucide-react";
 import { useState, useEffect, useMemo, Component, ErrorInfo, ReactNode } from "react";
@@ -108,7 +109,10 @@ function AdminLayout() {
     { name: "Modelos de documentos", icon: FileText, path: "/admin/templates" },
     { name: "Integrações", icon: Link2, path: "/admin/settings" },
     { name: "Histórico", icon: History, path: "/admin/logs" },
-  ], []);
+    ...(profile?.role === 'admin_master_global' || profile?.email === 'joaovitor.f0725@gmail.com' ? [
+      { name: "Manutenção", icon: Wrench, path: "/admin/maintenance" }
+    ] : [])
+  ], [profile]);
 
   // Fechar menu mobile ao navegar
   useEffect(() => {
@@ -140,9 +144,11 @@ function AdminLayout() {
   // Permite papéis administrativos (ou modo de preview/teste)
   const isAuthorized = 
     isDevPreview ||
+    profile?.role === 'admin' ||
     profile?.role === 'admin_master' || 
     profile?.role === 'admin_master_global' || 
     profile?.role === 'superadmin' ||
+    profile?.email === 'joaovitor.f0725@gmail.com' ||
     profile?.email?.includes("admin") ||
     profile?.email?.includes("joao");
 

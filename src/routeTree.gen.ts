@@ -74,6 +74,7 @@ import { Route as AdminFrontendErrorsRouteImport } from './routes/admin/frontend
 import { Route as AdminFullQaReportRouteImport } from './routes/admin/full-qa-report'
 import { Route as AdminGlobalRouteImport } from './routes/admin/global'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
+import { Route as AdminMaintenanceRouteImport } from './routes/admin/maintenance'
 import { Route as AdminModelosProcessoRouteImport } from './routes/admin/modelos-processo'
 import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
 import { Route as AdminOperationalFeedbackRouteImport } from './routes/admin/operational-feedback'
@@ -466,6 +467,11 @@ const AdminGlobalRoute = AdminGlobalRouteImport.update({
 const AdminLogsRoute = AdminLogsRouteImport.update({
   id: '/logs',
   path: '/logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMaintenanceRoute = AdminMaintenanceRouteImport.update({
+  id: '/maintenance',
+  path: '/maintenance',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminModelosProcessoRoute = AdminModelosProcessoRouteImport.update({
@@ -882,6 +888,7 @@ export interface FileRoutesByFullPath {
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/modelos-processo': typeof AdminModelosProcessoRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
@@ -1012,6 +1019,7 @@ export interface FileRoutesByTo {
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/modelos-processo': typeof AdminModelosProcessoRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
@@ -1147,6 +1155,7 @@ export interface FileRoutesById {
   '/admin/full-qa-report': typeof AdminFullQaReportRoute
   '/admin/global': typeof AdminGlobalRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/modelos-processo': typeof AdminModelosProcessoRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
@@ -1283,6 +1292,7 @@ export interface FileRouteTypes {
     | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
+    | '/admin/maintenance'
     | '/admin/modelos-processo'
     | '/admin/ocr'
     | '/admin/operational-feedback'
@@ -1413,6 +1423,7 @@ export interface FileRouteTypes {
     | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
+    | '/admin/maintenance'
     | '/admin/modelos-processo'
     | '/admin/ocr'
     | '/admin/operational-feedback'
@@ -1547,6 +1558,7 @@ export interface FileRouteTypes {
     | '/admin/full-qa-report'
     | '/admin/global'
     | '/admin/logs'
+    | '/admin/maintenance'
     | '/admin/modelos-processo'
     | '/admin/ocr'
     | '/admin/operational-feedback'
@@ -2143,6 +2155,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLogsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/maintenance': {
+      id: '/admin/maintenance'
+      path: '/maintenance'
+      fullPath: '/admin/maintenance'
+      preLoaderRoute: typeof AdminMaintenanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/modelos-processo': {
       id: '/admin/modelos-processo'
       path: '/modelos-processo'
@@ -2683,6 +2702,7 @@ interface AdminRouteChildren {
   AdminFullQaReportRoute: typeof AdminFullQaReportRoute
   AdminGlobalRoute: typeof AdminGlobalRoute
   AdminLogsRoute: typeof AdminLogsRoute
+  AdminMaintenanceRoute: typeof AdminMaintenanceRoute
   AdminModelosProcessoRoute: typeof AdminModelosProcessoRoute
   AdminOcrRoute: typeof AdminOcrRoute
   AdminOperationalFeedbackRoute: typeof AdminOperationalFeedbackRoute
@@ -2722,6 +2742,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFullQaReportRoute: AdminFullQaReportRoute,
   AdminGlobalRoute: AdminGlobalRoute,
   AdminLogsRoute: AdminLogsRoute,
+  AdminMaintenanceRoute: AdminMaintenanceRoute,
   AdminModelosProcessoRoute: AdminModelosProcessoRoute,
   AdminOcrRoute: AdminOcrRoute,
   AdminOperationalFeedbackRoute: AdminOperationalFeedbackRoute,
