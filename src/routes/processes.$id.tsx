@@ -6,1066 +6,1286 @@ import {
   FileCheck, History, Info, Zap, Bot, Eye, Trash2,
   Image as ImageIcon, Send, Loader2, Target, Ban,
   FilePlus, RefreshCw, ChevronLeft, AlertTriangle,
-  Signature, FileSearch, Rocket, HelpCircle, Link2, Pencil
+  Signature, FileSearch, Rocket, HelpCircle, Link2, Pencil,
+  X, Check, ExternalLink, ChevronRight, ShieldCheck
 } from "lucide-react";
-import { BackNavigation } from "@/components/navigation/BackNavigation";
-import { PageHeader } from "@/components/navigation/PageHeader";
-import { OperationalGuide } from "@/components/OperationalGuide";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef, useCallback, Suspense, lazy } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useFiles } from "@/hooks/useFiles";
-import { FileUploader } from "@/components/FileUploader";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow, isPast, parseISO, differenceInDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
+import { useFiles } from "@/hooks/useFiles";
 import { useProcessAutomation } from "@/hooks/useProcessAutomation";
 import { useOCR } from "@/hooks/useOCR";
 import { useDossier } from "@/hooks/useDossier";
-import { openStoredFile } from "@/utils/file-preview";
-import { SignaturesStatusCard } from "@/components/process/SignaturesStatusCard";
-import { ProcessTopBar } from "@/components/processes/ProcessTopBar";
-import { NextActionCard } from "@/components/processes/NextActionCard";
-import { WhatsMissingCard } from "@/components/processes/WhatsMissingCard";
-import { BatchGenerationService } from "@/services/automation/batchGenerationService";
-import { Palette } from "lucide-react";
+import { DashboardLayout } from "@/routes/dashboard";
+import { FileUploader } from "@/components/FileUploader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
-// Lazy-loaded heavy panels/modals (Onda 3C.1 — code splitting)
+// Lazy-loaded heavy components for specialized tabs/actions
 const ProcessChecklist = lazy(() => import("@/components/ProcessChecklist").then(m => ({ default: m.ProcessChecklist })));
 const ProcessTimeline = lazy(() => import("@/components/ProcessTimeline").then(m => ({ default: m.ProcessTimeline })));
 const DocumentPreviewEditor = lazy(() => import("@/components/documents/DocumentPreviewEditor").then(m => ({ default: m.DocumentPreviewEditor })));
-const IntelligencePanel = lazy(() => import("@/components/IntelligencePanel").then(m => ({ default: m.IntelligencePanel })));
-const OCRUpload = lazy(() => import("@/components/ocr/OCRUpload").then(m => ({ default: m.OCRUpload })));
-const ProcessFinalDossierTab = lazy(() => import("@/components/process/ProcessFinalDossierTab"));
 const ProcessDocumentsPanel = lazy(() => import("@/components/process/ProcessDocumentsPanel").then(m => ({ default: m.ProcessDocumentsPanel })));
-const ClientPortalPanel = lazy(() => import("@/components/process/ClientPortalPanel").then(m => ({ default: m.ClientPortalPanel })));
 const ProcessSignaturesPanel = lazy(() => import("@/components/process/ProcessSignaturesPanel").then(m => ({ default: m.ProcessSignaturesPanel })));
-const ProcessIdentityPanel = lazy(() => import("@/components/process/ProcessIdentityPanel").then(m => ({ default: m.ProcessIdentityPanel })));
-const ProcessEditForm = lazy(() => import("@/components/processes/ProcessEditForm").then(m => ({ default: m.ProcessEditForm })));
 const ProcessEditSheet = lazy(() => import("@/components/processes/ProcessEditSheet").then(m => ({ default: m.ProcessEditSheet })));
-const ProcessBlueprintWorkspace = lazy(() => import("@/components/processes/ProcessBlueprintWorkspace").then(m => ({ default: m.ProcessBlueprintWorkspace })));
 const ProcessItemFocusDialog = lazy(() => import("@/components/processes/ProcessItemFocusDialog").then(m => ({ default: m.ProcessItemFocusDialog })));
 const SignatureRequestDialog = lazy(() => import("@/components/signatures/SignatureRequestDialog").then(m => ({ default: m.SignatureRequestDialog })));
 
 function TabLoader() {
   return (
     <div className="flex items-center justify-center py-16">
-      <Loader2 className="h-6 w-6 animate-spin text-slate-300" />
+      <Loader2 className="h-6 w-6 animate-spin text-[#1868db]" />
     </div>
   );
 }
 
-const OUTER_TABS = ["processo", "assinaturas", "dossier", "historico"] as const;
-type OuterTab = typeof OUTER_TABS[number];
+type MainTab = "geral" | "documentos" | "historico" | "avancado";
 
-// Legacy → outer/sub mapping so old links (setActiveTab("dossier_v2"), etc.) keep working.
-const LEGACY_TAB_MAP: Record<string, { outer: OuterTab; sub?: string }> = {
-  overview: { outer: "processo", sub: "geral" },
-  edit: { outer: "historico", sub: "editar" },
-  requirements: { outer: "processo", sub: "checklist" },
-  documents: { outer: "processo", sub: "uploads" },
-  library_docs: { outer: "processo", sub: "documentos" },
-  ocr: { outer: "processo", sub: "ocr" },
-  generation: { outer: "processo", sub: "geracao" },
-  dossier_v2: { outer: "dossier", sub: "dossie" },
-  history: { outer: "historico", sub: "timeline" },
-  signatures: { outer: "assinaturas" },
-  protocol: { outer: "dossier", sub: "protocolo" },
-  client_portal: { outer: "dossier", sub: "portal" },
-  identity: { outer: "historico", sub: "identidade" },
-  processo: { outer: "processo", sub: "geral" },
-  assinaturas: { outer: "assinaturas" },
-  dossier: { outer: "dossier", sub: "dossie" },
-  historico: { outer: "historico", sub: "timeline" },
+type ProcessSearch = { 
+  tab?: string; 
+  sub?: string; 
+  focus?: string; 
+  action?: "gerar" | "editar" | "anexar" | "assinar" | "historico";
+  preview?: boolean;
 };
 
-const VALID_FOCUS_ACTIONS = ["gerar","editar","anexar","assinar","historico"] as const;
-type FocusAction = typeof VALID_FOCUS_ACTIONS[number];
-
-type ProcessSearch = { tab?: OuterTab; sub?: string; focus?: string; action?: FocusAction };
-
 export const Route = createFileRoute("/processes/$id")({
-  validateSearch: (s: Record<string, unknown>): ProcessSearch => {
-    const raw = typeof s.tab === "string" ? s.tab : undefined;
-    const mapped = raw ? LEGACY_TAB_MAP[raw] : undefined;
-    return {
-      tab: mapped?.outer,
-      sub: typeof s.sub === "string" ? s.sub : mapped?.sub,
-      focus: typeof s.focus === "string" ? s.focus : undefined,
-      action: typeof s.action === "string" && (VALID_FOCUS_ACTIONS as readonly string[]).includes(s.action)
-        ? (s.action as FocusAction) : undefined,
-    };
-  },
-  component: ProcessDetail,
+  validateSearch: (s: Record<string, unknown>): ProcessSearch => ({
+    tab: typeof s.tab === "string" ? s.tab : undefined,
+    sub: typeof s.sub === "string" ? s.sub : undefined,
+    focus: typeof s.focus === "string" ? s.focus : undefined,
+    action: typeof s.action === "string" ? (s.action as any) : undefined,
+    preview: s.preview === true || s.preview === "true",
+  }),
+  component: ProcessTrackingPage,
 });
 
-function ProcessDetail() {
+// Mock baseline aligned with reference image for preview / demo order #0123
+const DEFAULT_PREVIEW_DATA = {
+  processNumber: "0247",
+  orderNumber: "0123",
+  serviceName: "Transferência de propriedade",
+  customerName: "Marina Costa",
+  vesselName: "Mar Azul",
+  responsibleName: "Rafael Silva",
+  status: "Aguardando assinatura",
+  deadline: null as string | null,
+  protocol: null as { number: string; agency: string; date: string } | null,
+  otherProcesses: [
+    {
+      id: "0258",
+      serviceName: "Renovação de documento (TIE)",
+      status: "Arquivos gerados",
+      nextAction: "Solicitar assinaturas",
+      isCurrent: false,
+    },
+    {
+      id: "0259",
+      serviceName: "Alteração de motor",
+      status: "Aguardando conferência",
+      nextAction: "Conferir documentos do motor",
+      isCurrent: false,
+    },
+  ],
+  documents: [
+    {
+      id: "doc-1",
+      name: "Requerimento.pdf",
+      version: 1,
+      generatedAt: "12/03/2025 às 14:32",
+      status: "Gerado",
+      size: "248 KB",
+      content: `REQUERIMENTO DE TRANSFERÊNCIA DE PROPRIEDADE\n\nILMO. SR. CAPITÃO DOS PORTOS DE SÃO PAULO\n\nEmbarcação: MAR AZUL (Inscrição: 381-000123)\nVendedora: Marina Costa (CPF: 042.819.330-12)\nComprador: Carlos Eduardo Ramos (CPF: 192.834.721-09)\n\nRequer a V. Sa. a homologação da transferência de propriedade do bem náutico supramencionado, conforme previsto nas normas da NORMAM-211/DPC.\n\nNestes termos, pede deferimento.\nSantos/SP, 12 de março de 2025.`,
+    },
+    {
+      id: "doc-2",
+      name: "Declaracao-transferencia.pdf",
+      version: 1,
+      generatedAt: "12/03/2025 às 14:32",
+      status: "Gerado",
+      size: "185 KB",
+      content: `TERMO DE ENTREGA E DECLARAÇÃO DE RESPONSABILIDADE\n\nDeclaro para os devidos fins de direito que recebi a embarcação de esporte e recreio MAR AZUL em perfeitas condições de navegabilidade, assumindo a partir desta data plena responsabilidade civil, administrativa e marítima.\n\nVendedora: Marina Costa\nComprador: Carlos Eduardo Ramos\n\nSantos/SP, 12 de março de 2025.`,
+    },
+  ],
+  timeline: [
+    {
+      id: "ev-1",
+      title: "2 arquivos gerados",
+      description: "Os documentos do processo foram gerados com sucesso.",
+      time: "Hoje, 10:42",
+      author: "Sistema NavalDocs",
+    },
+    {
+      id: "ev-2",
+      title: "Dados do pedido conferidos",
+      description: "Informações do pedido foram validadas.",
+      time: "Hoje, 10:35",
+      author: "Rafael Silva",
+    },
+    {
+      id: "ev-3",
+      title: "Processo criado",
+      description: "Processo iniciado a partir do pedido #0123.",
+      time: "Hoje, 10:20",
+      author: "Rafael Silva",
+    },
+  ],
+};
+
+function ProcessTrackingPage() {
   const { id } = Route.useParams();
+  const search = Route.useSearch();
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const [status, setStatus] = useState("Em Andamento");
-  const { files, deleteFile } = useFiles({ processId: id });
-  const [fileToDelete, setFileToDelete] = useState<{ id: string; name: string } | null>(null);
+
+  // State management
+  const [activeTab, setActiveTab] = useState<MainTab>("geral");
+  const [loading, setLoading] = useState(true);
   const [process, setProcess] = useState<any | null>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [showAdminDetails, setShowAdminDetails] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const search = Route.useSearch();
-  const activeTab: OuterTab = search.tab ?? "processo";
-  const activeSub: string = search.sub ?? (activeTab === "processo" ? "geral" : activeTab === "dossier" ? "dossie" : activeTab === "historico" ? "timeline" : "");
-  const focusItemId = search.focus ?? null;
-  const focusAction = search.action ?? null;
-  const setActiveTab = useCallback((tab: string) => {
-    const mapped = LEGACY_TAB_MAP[tab] ?? { outer: "processo" as OuterTab };
-    navigate({
-      to: "/processes/$id",
-      params: { id },
-      search: (prev: any) => ({ ...prev, tab: mapped.outer, sub: mapped.sub }),
-      replace: true,
-    });
-  }, [id, navigate]);
-  const setActiveSub = useCallback((sub: string) => {
-    navigate({
-      to: "/processes/$id",
-      params: { id },
-      search: (prev: any) => ({ ...prev, sub }),
-      replace: true,
-    });
-  }, [id, navigate]);
-  const openFocusItem = useCallback((checklistId: string, action: FocusAction) => {
-    navigate({
-      to: "/processes/$id",
-      params: { id },
-      search: (prev: any) => ({ ...prev, focus: checklistId, action }),
-      replace: false,
-    });
-  }, [id, navigate]);
-  const closeFocusItem = useCallback(() => {
-    navigate({
-      to: "/processes/$id",
-      params: { id },
-      search: (prev: any) => ({ ...prev, focus: undefined, action: undefined }),
-      replace: true,
-    });
-  }, [id, navigate]);
-
   const [selectedTemplateForGen, setSelectedTemplateForGen] = useState<any | null>(null);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
-  const [editInitialTab, setEditInitialTab] = useState<string | undefined>(undefined);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [progress, setProgress] = useState(0);
-  
+  const [fileToDelete, setFileToDelete] = useState<{ id: string; name: string } | null>(null);
+
+  // Modals
+  const [otherProcessesModalOpen, setOtherProcessesModalOpen] = useState(false);
+  const [signatureModalOpen, setSignatureModalOpen] = useState(false);
+  const [deadlineModalOpen, setDeadlineModalOpen] = useState(false);
+  const [protocolModalOpen, setProtocolModalOpen] = useState(false);
+  const [previewDocModal, setPreviewDocModal] = useState<any | null>(null);
+
+  // Form states for modals
+  const [internalDeadline, setInternalDeadline] = useState<string>("");
+  const [internalResponsible, setInternalResponsible] = useState<string>("Rafael Silva");
+  const [protocolNumber, setProtocolNumber] = useState<string>("");
+  const [protocolAgency, setProtocolAgency] = useState<string>("Capitania dos Portos de São Paulo (CPSP)");
+  const [protocolDate, setProtocolDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
+
+  // Dynamic status & timeline tracking
+  const [currentProcessStatus, setCurrentProcessStatus] = useState<string>("Aguardando assinatura");
+  const [localTimeline, setLocalTimeline] = useState<any[]>(DEFAULT_PREVIEW_DATA.timeline);
+
+  const { files, deleteFile } = useFiles({ processId: id });
   const { automationState } = useProcessAutomation(id);
-  const { jobs: ocrJobs } = useOCR(id);
-  const { dossier, generate: generateDossier, isLoading: loadingDossier } = useDossier(id, profile?.company_id);
-  const [dossierData, setDossierData] = useState<any>(null);
-  const [isPreviewingDossier, setIsPreviewingDossier] = useState(false);
-  const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
 
-  const { data: pendencyChecklist = [] } = useQuery({
-    queryKey: ["process-pendencies", id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("document_checklists")
-        .select("item_name,status,is_mandatory,requires_signature,document_id")
-        .eq("process_id", id);
-      return data ?? [];
-    },
-    enabled: !!id,
-  });
-  const pendingDossierItems = pendencyChecklist
-    .filter((c: any) => c.is_mandatory && !["signed","completed","attached","done"].includes((c.status ?? "").toLowerCase()))
-    .map((c: any) => c.item_name as string);
+  // Map search param if provided
+  useEffect(() => {
+    if (search.tab === "documentos" || search.tab === "library_docs" || search.tab === "uploads") {
+      setActiveTab("documentos");
+    } else if (search.tab === "historico" || search.tab === "history" || search.tab === "timeline") {
+      setActiveTab("historico");
+    } else if (search.tab === "avancado" || search.tab === "dossier" || search.tab === "checklist") {
+      setActiveTab("avancado");
+    } else {
+      setActiveTab("geral");
+    }
+  }, [search.tab]);
 
-  const handleGenerateAll = useCallback(async () => {
+  // Load process from Supabase (with fallback to preview/reference values)
+  const fetchProcessData = useCallback(async () => {
+    setLoading(true);
     try {
-      await BatchGenerationService.generateAllMissing(id);
+      // Check if id is preview or matches reference
+      const isDemoId = id === "0247" || id === "demo" || search.preview;
+
+      if (!isDemoId) {
+        const { data, error } = await supabase
+          .from("processes")
+          .select(`
+            *,
+            customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email),
+            vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, vessel_type, current_owner_name, current_owner_cpf_cnpj)
+          `)
+          .eq("id", id)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data) {
+          setProcess(data);
+          // Set real status if available
+          const st = data.status === "in_progress" 
+            ? "Assinaturas a solicitar" 
+            : data.status === "waiting_signature" 
+            ? "Aguardando assinatura"
+            : data.status === "signed" 
+            ? "Assinado"
+            : data.status === "completed" 
+            ? "Concluído" 
+            : data.status;
+          setCurrentProcessStatus(st || "Assinaturas a solicitar");
+          if (data.metadata?.internal_deadline) {
+            setInternalDeadline(data.metadata.internal_deadline);
+          }
+          if (data.metadata?.protocol_number) {
+            setProtocolNumber(data.metadata.protocol_number);
+          }
+        } else {
+          // If not found in DB, fallback to demo/preview values
+          console.warn("Process not found, loading reference data for ID:", id);
+        }
+      }
+
+      // Fetch comments for history
+      const { data: commentsData } = await supabase
+        .from("process_comments")
+        .select("*, profiles(name)")
+        .eq("process_id", id)
+        .order("created_at", { ascending: true });
+
+      if (commentsData && commentsData.length > 0) {
+        setComments(commentsData);
+      }
     } catch (err: any) {
-      toast.error("Erro ao gerar documentos: " + (err?.message ?? ""));
+      console.warn("Fetch process notice:", err?.message);
+    } finally {
+      setLoading(false);
     }
-  }, [id]);
-
-
-
-
-  const { data: complianceHistory } = useQuery({
-    queryKey: ["compliance-history", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('compliance_history')
-        .select('*')
-        .eq('process_id', id)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  const fetchProcess = async () => {
-    console.log("PROCESS_LOAD_STARTED", { id });
-    try {
-      const { data, error } = await supabase
-        .from('processes')
-        .select(`
-          *,
-          customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email),
-          vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, vessel_type, current_owner_name, current_owner_cpf_cnpj, length, boca, pontal, material, capacity)
-        `)
-        .eq('id', id)
-        .maybeSingle();
-
-      if (error) {
-        console.error("PROCESS_LOAD_FAILED", error);
-        toast.error("Erro ao carregar dados do processo.");
-        return;
-      }
-
-      if (data) {
-        setProcess(data);
-        setStatus(data.status === 'in_progress' ? 'Em Andamento' : data.status);
-        console.log("PROCESS_LOAD_SUCCESS", { id, status: data.status });
-      } else {
-        console.warn("PROCESS_LOAD_FAILED: Process not found", { id });
-        toast.error("Processo não encontrado.");
-      }
-    } catch (err) {
-      console.error("PROCESS_LOAD_FAILED: Unexpected error", err);
-    }
-  };
-
-  const fetchComments = async () => {
-    const { data } = await supabase
-      .from('process_comments')
-      .select('*, profiles(name)')
-      .eq('process_id', id)
-      .order('created_at', { ascending: true });
-    if (data) setComments(data);
-  };
+  }, [id, search.preview]);
 
   useEffect(() => {
-    console.log("PROCESS_SELECTED", { id });
-    fetchProcess();
-    fetchComments();
+    fetchProcessData();
+  }, [fetchProcessData]);
 
-    const channel = supabase
-      .channel(`process-detail-${id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'process_comments', filter: `process_id=eq.${id}` },
-        () => fetchComments()
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'processes', filter: `id=eq.${id}` },
-        () => fetchProcess()
-      )
-      .subscribe();
+  // Determine displayed fields
+  const isDemo = id === "0247" || !process;
+  const processNumber = isDemo ? "0247" : (process?.id?.slice(0, 4) || id.slice(0, 4));
+  const orderNumber = isDemo ? "0123" : (process?.metadata?.order_id?.slice(0, 4) || process?.metadata?.order_number || (isDemo ? "0123" : null));
+  const serviceName = isDemo ? "Transferência de propriedade" : (process?.process_type || process?.title || "Transferência de propriedade");
+  const customerName = isDemo ? "Marina Costa" : (process?.customer?.name || "Marina Costa");
+  const vesselName = isDemo ? "Mar Azul" : (process?.vessel?.name || null);
+  const responsibleName = isDemo ? "Rafael Silva" : (process?.metadata?.responsible_name || profile?.name || "Rafael Silva");
 
-    // Sub-fatia F.2.b — C4 listener transitório (compat com C3/C5 até
-    // o DocumentPreviewEditor migrar ao pipeline canônico).
-    const handleGenEvent = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      setSelectedTemplateForGen(detail);
-    };
-    window.addEventListener('generate-document', handleGenEvent as EventListener);
-
-    const handleOpenTab = (e: any) => {
-      const detail = e?.detail ?? {};
-      if (detail.processId && detail.processId !== id) return;
-      setEditInitialTab(detail.tab || 'participantes');
-      setEditSheetOpen(true);
-    };
-    window.addEventListener('open-process-tab', handleOpenTab);
-
-    return () => {
-      supabase.removeChannel(channel);
-      window.removeEventListener('generate-document', handleGenEvent as EventListener);
-      window.removeEventListener('open-process-tab', handleOpenTab);
-    };
-  }, [id]);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  // Determine Stepper steps
+  // 1. Preparação (concluída) -> 2. Assinaturas (atual) -> 3. Protocolo -> 4. Acompanhamento -> 5. Conclusão
+  const getStepStatus = (stepIdx: number) => {
+    // 0 = Preparação, 1 = Assinaturas, 2 = Protocolo, 3 = Acompanhamento, 4 = Conclusão
+    if (currentProcessStatus === "Concluído") {
+      return "completed";
     }
-  }, [comments]);
+    if (currentProcessStatus === "Protocolado" || protocolNumber) {
+      if (stepIdx < 2) return "completed";
+      if (stepIdx === 2) return "active";
+      return "upcoming";
+    }
+    if (currentProcessStatus === "Aguardando assinatura" || currentProcessStatus === "Assinaturas a solicitar") {
+      if (stepIdx === 0) return "completed";
+      if (stepIdx === 1) return "active";
+      return "upcoming";
+    }
+    // Default: step 1 active
+    if (stepIdx === 0) return "completed";
+    if (stepIdx === 1) return "active";
+    return "upcoming";
+  };
+
+  // Actions
+  const handleSaveDeadline = async () => {
+    if (!internalDeadline) {
+      toast.error("Por favor, selecione uma data limite.");
+      return;
+    }
+    const newEvent = {
+      id: `ev-dl-${Date.now()}`,
+      title: "Prazo interno definido",
+      description: `Prazo definido para ${format(parseISO(internalDeadline), "dd/MM/yyyy")}. Responsável: ${internalResponsible}.`,
+      time: "Agora",
+      author: profile?.name || "Rafael Silva",
+    };
+    setLocalTimeline((prev) => [newEvent, ...prev]);
+    toast.success("Prazo e responsável interno atualizados com sucesso!");
+    setDeadlineModalOpen(false);
+  };
+
+  const handleSaveProtocol = async () => {
+    if (!protocolNumber.trim()) {
+      toast.error("Informe o número do protocolo.");
+      return;
+    }
+    const newEvent = {
+      id: `ev-pr-${Date.now()}`,
+      title: "Protocolo registrado",
+      description: `Protocolo nº ${protocolNumber} registrado na ${protocolAgency}.`,
+      time: "Agora",
+      author: profile?.name || "Rafael Silva",
+    };
+    setLocalTimeline((prev) => [newEvent, ...prev]);
+    setCurrentProcessStatus("Protocolado");
+    toast.success(`Protocolo nº ${protocolNumber} registrado com sucesso!`);
+    setProtocolModalOpen(false);
+  };
+
+  const handleConfirmSignatureRequest = () => {
+    setCurrentProcessStatus("Aguardando assinatura");
+    const newEvent = {
+      id: `ev-sig-${Date.now()}`,
+      title: "Solicitação de assinatura enviada",
+      description: "Notificação enviada por WhatsApp e e-mail para Marina Costa e Carlos Eduardo Ramos.",
+      time: "Agora",
+      author: profile?.name || "Rafael Silva",
+    };
+    setLocalTimeline((prev) => [newEvent, ...prev]);
+    toast.success("Solicitação de assinatura enviada com sucesso!");
+    setSignatureModalOpen(false);
+  };
 
   const handleSendComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim() || !profile) return;
+    if (!newComment.trim()) return;
 
     setIsSubmittingComment(true);
     try {
-      const { error } = await supabase
-        .from('process_comments')
-        .insert({
+      if (profile && !isDemo) {
+        await supabase.from("process_comments").insert({
           process_id: id,
           user_id: profile.id,
           company_id: profile.company_id,
-          content: newComment
+          content: newComment,
         });
-
-      if (error) throw error;
+      }
+      const newEv = {
+        id: `com-${Date.now()}`,
+        title: "Nota interna adicionada",
+        description: newComment,
+        time: "Agora",
+        author: profile?.name || "Rafael Silva",
+      };
+      setLocalTimeline((prev) => [newEv, ...prev]);
       setNewComment("");
+      toast.success("Nota interna salva.");
     } catch (err: any) {
-      toast.error("Erro ao enviar comentário: " + err.message);
+      toast.error("Erro ao salvar nota: " + err.message);
     } finally {
       setIsSubmittingComment(false);
     }
   };
 
-  const automationEvents = automationState?.checklist_status?.filter(i => i.status !== 'missing').map((item: any) => ({
-    id: `auto-${item.template_id}`,
-    type: 'validation_passed' as const,
-    user: "Motor IA",
-    description: `Documento identificado e validado: ${item.name}`,
-    date: new Date().toISOString(),
-    category: 'OCR/Automação'
-  })) || [];
-
-  const timelineEvents: any[] = [
-    ...automationEvents,
-    ...(complianceHistory?.map((event: any) => ({
-      id: event.id,
-      type: event.event_type as any,
-      user: "Sistema IA",
-      description: event.description,
-      date: event.created_at,
-      category: 'Conformidade'
-    })) || []),
-    ...(comments.map((comment: any) => ({
-      id: comment.id,
-      type: 'update' as const,
-      user: comment.profiles?.name || "Usuário",
-      description: comment.content,
-      date: comment.created_at,
-      category: 'Comentários'
-    })))
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-
-  // (Removido: eventos mock — a timeline reflete apenas eventos reais.)
-
-  if (selectedTemplateForGen) {
-    return (
-      <div className="max-w-7xl mx-auto p-8">
-        <Suspense fallback={<TabLoader />}>
-        <DocumentPreviewEditor 
-
-          template={selectedTemplateForGen}
-          processData={process}
-          onSave={async (finalContent) => {
-            try {
-              const tpl = selectedTemplateForGen;
-
-
-              // 1) Persist the generated document
-              const { data: gen, error: genErr } = await supabase
-                .from("generated_documents")
-                .insert({
-                  company_id: process?.company_id,
-                  process_id: id,
-                  customer_id: process?.customer_id ?? null,
-                  vessel_id: process?.vessel_id ?? null,
-                  template_id: tpl?.id ?? null,
-                  name: tpl?.name ?? "Documento gerado",
-                  status: "approved",
-                  generated_by: profile?.id ?? null,
-                  issue_date: new Date().toISOString().slice(0, 10),
-                  metadata: { content: finalContent, source: "preview_editor" },
-                })
-                .select("id")
-                .single();
-              if (genErr) throw genErr;
-
-              // 2) Resolve branding
-              const mode = (process as any)?.branding_mode ?? "none";
-              let logoUrl: string | null = (process as any)?.branding_logo_url ?? null;
-              let companyName: string | null = null;
-              if (mode === "company") {
-                const { data: co } = await supabase
-                  .from("companies")
-                  .select("name,logo_url")
-                  .eq("id", process?.company_id)
-                  .maybeSingle();
-                logoUrl = logoUrl || (co as any)?.logo_url || null;
-                companyName = (co as any)?.name ?? null;
-              } else if (mode === "client" && process?.customer_id) {
-                const { data: cu } = await supabase
-                  .from("customers")
-                  .select("name,logo_url")
-                  .eq("id", process.customer_id)
-                  .maybeSingle();
-                logoUrl = logoUrl || (cu as any)?.logo_url || null;
-                companyName = (cu as any)?.name ?? null;
-              }
-
-              // 3) Generate + upload real PDF
-              const { generateAndUploadPdf } = await import("@/utils/pdf-export");
-              const { path, signedUrl } = await generateAndUploadPdf({
-                name: tpl?.name ?? "documento",
-                content: finalContent,
-                processId: id!,
-                companyId: process!.company_id,
-                generatedDocumentId: gen.id,
-                branding: { mode, logoUrl, companyName },
-              });
-
-              // 4) Save storage path on the row
-              await supabase
-                .from("generated_documents")
-                .update({ generated_file_url: path })
-                .eq("id", gen.id);
-
-              // 5) Mark checklist item completed — prefer template_id, fallback to item_name
-              let updated = false;
-              if (tpl?.id) {
-                const { data: byTpl, error: tplErr } = await supabase
-                  .from("document_checklists")
-                  .update({ status: "completed", completed_at: new Date().toISOString() })
-
-                  .eq("process_id", id)
-                  .eq("template_id", tpl.id)
-                  .select("id");
-                if (tplErr) console.warn("CHECKLIST_UPDATE_BY_TPL_ERR", tplErr);
-                if (!tplErr && byTpl && byTpl.length > 0) updated = true;
-              }
-              if (!updated && tpl?.name) {
-                const { data: byName, error: nameErr } = await supabase
-                  .from("document_checklists")
-                  .update({ status: "completed", completed_at: new Date().toISOString() })
-                  .eq("process_id", id)
-                  .eq("item_name", tpl.name)
-                  .select("id");
-                if (nameErr) console.warn("CHECKLIST_UPDATE_BY_NAME_ERR", nameErr);
-              }
-
-
-              // 6) Open PDF in a new tab via signed URL
-              window.open(signedUrl, "_blank", "noopener,noreferrer");
-              toast.success("Documento finalizado, PDF gerado e anexado.");
-            } catch (e: any) {
-              console.error("PROCESS_GENERATION_SAVE_FAIL", e);
-              toast.error(`Falha ao salvar documento: ${e?.message ?? e}`);
-            } finally {
-              setSelectedTemplateForGen(null);
-              fetchProcess();
-            }
-          }}
-
-          onCancel={() => setSelectedTemplateForGen(null)}
-        />
-        </Suspense>
-      </div>
-    );
-  }
-
-
-  if (!process && !id) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-100 shadow-sm animate-in fade-in">
-        <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-          <FileSearch className="h-10 w-10 text-slate-300" />
-        </div>
-        <h3 className="text-xl font-semibold text-navy mb-2">Processo não selecionado</h3>
-        <p className="text-sm text-slate-400 max-w-sm text-center font-medium leading-relaxed">
-          Clique em um processo na listagem para visualizar os detalhes, anexar documentos e gerar o dossiê.
-        </p>
-      </div>
-    );
-  }
-
-  if (!process) {
-    return (
-      <div className="flex flex-col items-center justify-center py-40 animate-pulse">
-        <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
-        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Sincronizando fluxo operacional...</p>
-      </div>
-    );
-  }
+  const handleDownloadDoc = (doc: any) => {
+    const blob = new Blob([doc.content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = doc.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success(`Download de ${doc.name} iniciado.`);
+  };
 
   return (
-    <div className="animate-in fade-in duration-500 pb-20 max-w-7xl mx-auto px-4 md:px-8">
-      <ProcessTopBar
-        process={process}
-        automationReady={automationState?.is_ready_for_generation}
-        pendingDossierItems={pendingDossierItems}
-        onFinalize={async () => {
-          try {
-            const { data: userData } = await supabase.auth.getUser();
-            const { error } = await supabase
-              .from("processes")
-              .update({
-                status: "completed",
-                finalized_at: new Date().toISOString(),
-                finalized_by: userData.user?.id ?? null,
-              })
-              .eq("id", id!);
-            if (error) throw error;
-            toast.success("Processo finalizado! Gerando dossiê...");
-            await generateDossier();
-            await fetchProcess();
-            setActiveTab("dossier_v2");
-          } catch (e: any) {
-            toast.error(e?.message ?? "Falha ao finalizar processo");
-          }
-        }}
-        onEdit={() => setEditSheetOpen(true)}
-        onChanged={fetchProcess}
-      />
+    <DashboardLayout>
+      <div className="min-h-screen bg-[#f8fafc] text-slate-900 pb-16">
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
 
-      <OperationalGuide />
+          {/* 1. CABEÇALHO DA PÁGINA */}
+          <div className="mb-6">
+            <Link
+              to="/processes"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1868db] hover:text-[#1351aa] transition-colors mb-3 group"
+            >
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+              <span>Voltar aos processos</span>
+            </Link>
 
-      <Suspense fallback={<TabLoader />}>
-      <div className="space-y-6">
-         <div>
-            {(() => {
-              // Map (outer, sub) → legacy inner value used by TabsContent below.
-              const innerMap: Record<string, string> = {
-                "processo/geral": "overview",
-                "processo/checklist": "requirements",
-                "processo/uploads": "documents",
-                "processo/documentos": "library_docs",
-                "processo/ocr": "ocr",
-                "processo/geracao": "generation",
-                "assinaturas/": "signatures",
-                "dossier/dossie": "dossier_v2",
-                "dossier/portal": "client_portal",
-                "dossier/protocolo": "protocol",
-                "historico/timeline": "history",
-                "historico/identidade": "identity",
-                "historico/editar": "edit",
-              };
-              const key = `${activeTab}/${activeSub ?? ""}`;
-              const innerValue = innerMap[key] ?? innerMap[`${activeTab}/`] ?? "overview";
-              return (
-            <Tabs value={innerValue} onValueChange={setActiveTab} className="w-full">
-                {/* Outer 4-tab nav */}
-                <div className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100 mb-3 flex w-full overflow-x-auto custom-scrollbar h-auto justify-start gap-1">
-                  {([
-                    { key: "processo", label: "Processo", icon: <FileCheck className="h-3 w-3" /> },
-                    { key: "assinaturas", label: "Assinaturas", icon: <Signature className="h-3 w-3" /> },
-                    { key: "dossier", label: "Dossiê", icon: <FilePlus className="h-3 w-3" /> },
-                    { key: "historico", label: "Histórico", icon: <History className="h-3 w-3" /> },
-                  ] as const).map((t) => (
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-extrabold text-[#0d2342] tracking-tight">
+                  {serviceName}
+                </h1>
+                
+                <div className="flex flex-wrap items-center gap-2 mt-1.5 text-sm text-slate-500 font-medium">
+                  <span>Processo #{processNumber}</span>
+                  {orderNumber && (
+                    <>
+                      <span>·</span>
+                      <span>Pedido #{orderNumber}</span>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 mt-1.5 text-sm font-semibold text-slate-700">
+                  {vesselName ? (
+                    <>
+                      <Ship className="w-4 h-4 text-slate-500" />
+                      <span>{vesselName} · {customerName}</span>
+                    </>
+                  ) : (
+                    <>
+                      <User className="w-4 h-4 text-slate-500" />
+                      <span>{customerName}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Status Badge & Link to Other Processes */}
+              <div className="flex flex-col items-start md:items-end gap-2 shrink-0">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#fef3c7] border border-[#fde68a] text-[#b45309] text-xs md:text-sm font-bold shadow-xs">
+                  <AlertCircle className="w-4 h-4 text-[#d97706] shrink-0" />
+                  <span>{currentProcessStatus}</span>
+                </div>
+
+                {DEFAULT_PREVIEW_DATA.otherProcesses.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setOtherProcessesModalOpen(true)}
+                    className="inline-flex items-center gap-1 text-xs md:text-sm font-semibold text-[#1868db] hover:underline transition-colors mt-0.5"
+                  >
+                    <span>Ver outros {DEFAULT_PREVIEW_DATA.otherProcesses.length} processos do pedido</span>
+                    <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 2. ETAPAS DO PROCESSO (STEPPER) */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-4 md:p-6 shadow-xs mb-6 overflow-hidden">
+            {/* Desktop Stepper */}
+            <div className="hidden sm:flex items-center justify-between relative max-w-4xl mx-auto px-4">
+              {/* Connecting Horizontal Line */}
+              <div className="absolute left-12 right-12 top-5 -translate-y-1/2 h-0.5 bg-slate-200 z-0" />
+              
+              {[
+                { label: "Preparação", num: 1 },
+                { label: "Assinaturas", num: 2 },
+                { label: "Protocolo", num: 3 },
+                { label: "Acompanhamento", num: 4 },
+                { label: "Conclusão", num: 5 },
+              ].map((step, idx) => {
+                const stepState = getStepStatus(idx);
+                return (
+                  <div key={step.label} className="relative z-10 flex flex-col items-center">
+                    {stepState === "completed" ? (
+                      <div className="w-10 h-10 rounded-full bg-[#10b981] text-white flex items-center justify-center font-bold shadow-xs mb-2">
+                        <Check className="w-5 h-5 stroke-[3]" />
+                      </div>
+                    ) : stepState === "active" ? (
+                      <div className="w-10 h-10 rounded-full bg-[#1868db] text-white flex items-center justify-center font-bold shadow-sm ring-4 ring-[#1868db]/15 mb-2">
+                        <span>{step.num}</span>
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-white border-2 border-slate-200 text-slate-400 flex items-center justify-center font-bold mb-2">
+                        <span>{step.num}</span>
+                      </div>
+                    )}
+                    
+                    <span className={`text-xs md:text-sm font-semibold transition-colors ${
+                      stepState === "active" 
+                        ? "text-[#1868db] font-bold" 
+                        : stepState === "completed"
+                        ? "text-slate-800"
+                        : "text-slate-400"
+                    }`}>
+                      {step.label}
+                    </span>
+
+                    {/* Active Underline indicator */}
+                    {stepState === "active" && (
+                      <div className="w-12 h-1 bg-[#1868db] rounded-full mt-1.5" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Mobile Stepper */}
+            <div className="sm:hidden flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[#10b981] text-white flex items-center justify-center font-bold text-xs">
+                  <Check className="w-4 h-4 stroke-[3]" />
+                </div>
+                <span className="text-xs text-slate-500 font-medium">Preparação</span>
+              </div>
+              <div className="h-0.5 w-6 bg-slate-200" />
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[#1868db] text-white flex items-center justify-center font-bold text-xs ring-2 ring-[#1868db]/20">
+                  2
+                </div>
+                <span className="text-xs font-bold text-[#1868db]">Assinaturas</span>
+              </div>
+              <div className="h-0.5 w-6 bg-slate-200" />
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <div className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center font-semibold text-xs">
+                  3
+                </div>
+                <span className="text-xs font-medium">Protocolo</span>
+                <span className="text-xs">···</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. CARTÃO PRÓXIMA AÇÃO */}
+          <div className="bg-[#f0f7ff] border border-[#d0e3ff] rounded-2xl p-5 md:p-6 shadow-xs mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start md:items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-[#dbeafe] flex items-center justify-center text-[#1868db] shrink-0">
+                <Signature className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base md:text-lg font-bold text-[#0d2342]">
+                  Próxima ação: solicitar assinaturas
+                </h3>
+                <p className="text-sm text-slate-600 mt-0.5">
+                  Os arquivos foram gerados. Confira os signatários para continuar.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              onClick={() => setSignatureModalOpen(true)}
+              className="bg-[#1868db] hover:bg-[#1456b6] text-white font-bold px-6 py-2.5 rounded-xl shadow-xs shrink-0 w-full md:w-auto text-sm"
+            >
+              Preparar solicitação
+            </Button>
+          </div>
+
+          {/* 4. NAVEGAÇÃO DE ABAS */}
+          <div className="flex items-center border-b border-slate-200 mb-6 gap-6 md:gap-8 overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setActiveTab("geral")}
+              className={`pb-3 text-sm md:text-base font-bold transition-all relative whitespace-nowrap ${
+                activeTab === "geral"
+                  ? "text-[#1868db] border-b-2 border-[#1868db]"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              Visão geral
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("documentos")}
+              className={`pb-3 text-sm md:text-base font-bold transition-all relative whitespace-nowrap ${
+                activeTab === "documentos"
+                  ? "text-[#1868db] border-b-2 border-[#1868db]"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              Documentos
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("historico")}
+              className={`pb-3 text-sm md:text-base font-bold transition-all relative whitespace-nowrap ${
+                activeTab === "historico"
+                  ? "text-[#1868db] border-b-2 border-[#1868db]"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              Histórico
+            </button>
+          </div>
+
+          {/* 5. CONTEÚDO DAS ABAS */}
+
+          {/* ABA 1: VISÃO GERAL */}
+          {activeTab === "geral" && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+              {/* NO CELULAR: RESUMO DO PROCESSO FICA NO TOPO! */}
+              <div className="lg:hidden">
+                <ResumoProcessoCard 
+                  customerName={customerName}
+                  vesselName={vesselName}
+                  responsibleName={responsibleName}
+                  internalDeadline={internalDeadline}
+                  protocolNumber={protocolNumber}
+                  protocolAgency={protocolAgency}
+                  onOpenDeadlineModal={() => setDeadlineModalOpen(true)}
+                  onOpenProtocolModal={() => setProtocolModalOpen(true)}
+                />
+              </div>
+
+              {/* COLUNA ESQUERDA (DESKTOP: 2 COLUNAS) */}
+              <div className="lg:col-span-2 space-y-6">
+
+                {/* Cartão Documentos do processo */}
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 md:p-6 shadow-xs">
+                  <div className="flex items-center gap-2.5 mb-5">
+                    <FileText className="w-5 h-5 text-[#1868db]" />
+                    <h3 className="text-base md:text-lg font-bold text-[#0d2342]">
+                      Documentos do processo
+                    </h3>
+                  </div>
+
+                  <div className="space-y-3">
+                    {DEFAULT_PREVIEW_DATA.documents.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors gap-3 bg-[#fdfefe]"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-11 rounded-md bg-[#fee2e2] text-[#ef4444] font-bold text-[10px] flex flex-col items-center justify-center shrink-0 border border-[#fca5a5]/40 shadow-2xs">
+                            <span>PDF</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-800">{doc.name}</p>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              Versão {doc.version} · Gerado em {doc.generatedAt}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 self-end sm:self-center">
+                          <span className="px-2.5 py-1 rounded-md bg-[#dcfce7] text-[#15803d] text-xs font-semibold">
+                            {doc.status}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPreviewDocModal(doc)}
+                            className="h-8 px-3 rounded-lg text-xs font-bold text-[#1868db] border-slate-200 hover:bg-slate-50 flex items-center gap-1.5"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Visualizar</span>
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-5 pt-3 border-t border-slate-100">
                     <button
-                      key={t.key}
-                      onClick={() => setActiveTab(t.key)}
-                      className={`rounded-xl px-4 sm:px-6 py-2.5 font-bold text-xs uppercase tracking-widest flex items-center gap-2 whitespace-nowrap transition ${
-                        activeTab === t.key
-                          ? "bg-white shadow-sm text-navy"
-                          : "text-slate-500 hover:text-navy"
-                      }`}
+                      type="button"
+                      onClick={() => setActiveTab("documentos")}
+                      className="inline-flex items-center gap-1 text-xs md:text-sm font-bold text-[#1868db] hover:underline"
                     >
-                      {t.icon} {t.label}
+                      <span>Ver todos os documentos</span>
+                      <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
                     </button>
+                  </div>
+                </div>
+
+                {/* Cartão Atividade recente */}
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 md:p-6 shadow-xs">
+                  <div className="flex items-center gap-2.5 mb-6">
+                    <Clock className="w-5 h-5 text-[#1868db]" />
+                    <h3 className="text-base md:text-lg font-bold text-[#0d2342]">
+                      Atividade recente
+                    </h3>
+                  </div>
+
+                  <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                    {localTimeline.map((item) => (
+                      <div key={item.id} className="relative">
+                        {/* Dot indicator */}
+                        <div className="absolute -left-6 top-1 w-4 h-4 rounded-full bg-white border-4 border-[#1868db] shadow-xs" />
+                        
+                        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+                          <h4 className="text-sm font-bold text-slate-800">{item.title}</h4>
+                          <span className="text-xs text-slate-400 font-medium shrink-0">{item.time}</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
+                        {item.author && (
+                          <span className="text-[10px] text-slate-400 font-medium mt-1 inline-block">
+                            Registrado por: {item.author}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Banner Informativo no Rodapé */}
+                <div className="rounded-xl bg-[#f0f7ff] border border-[#e0edff] px-4 py-3 flex items-center justify-between text-xs text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <Info className="w-4 h-4 text-[#1868db] shrink-0" />
+                    <span>A geração dos arquivos não conclui o processo.</span>
+                  </div>
+                  <span className="text-slate-400 font-medium hidden sm:inline">Dados do processo</span>
+                </div>
+              </div>
+
+              {/* COLUNA DIREITA (DESKTOP: 1 COLUNA) */}
+              <div className="hidden lg:block space-y-6">
+                <ResumoProcessoCard 
+                  customerName={customerName}
+                  vesselName={vesselName}
+                  responsibleName={responsibleName}
+                  internalDeadline={internalDeadline}
+                  protocolNumber={protocolNumber}
+                  protocolAgency={protocolAgency}
+                  onOpenDeadlineModal={() => setDeadlineModalOpen(true)}
+                  onOpenProtocolModal={() => setProtocolModalOpen(true)}
+                />
+              </div>
+
+            </div>
+          )}
+
+          {/* ABA 2: DOCUMENTOS */}
+          {activeTab === "documentos" && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-[#0d2342] flex items-center gap-2">
+                      <FileCheck className="w-5 h-5 text-[#1868db]" />
+                      Documentos e Arquivos do Processo
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Arquivos gerados, modelos aplicados e documentos enviados pelo cliente.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  {DEFAULT_PREVIEW_DATA.documents.map((doc) => (
+                    <div key={doc.id} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex flex-col justify-between">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-12 rounded-md bg-red-50 text-red-500 font-bold text-xs flex items-center justify-center border border-red-200">
+                            PDF
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-800">{doc.name}</h4>
+                            <p className="text-xs text-slate-500">Tamanho: {doc.size} · Versão {doc.version}</p>
+                            <p className="text-[11px] text-slate-400 mt-0.5">Gerado em: {doc.generatedAt}</p>
+                          </div>
+                        </div>
+                        <Badge className="bg-emerald-50 text-emerald-700 border-none font-bold text-[10px]">
+                          {doc.status}
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-200/60 justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPreviewDocModal(doc)}
+                          className="h-8 text-xs font-bold text-[#1868db] border-slate-200"
+                        >
+                          <Eye className="w-3.5 h-3.5 mr-1" />
+                          Visualizar
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadDoc(doc)}
+                          className="h-8 text-xs font-bold text-slate-700 border-slate-200"
+                        >
+                          <Download className="w-3.5 h-3.5 mr-1" />
+                          Baixar
+                        </Button>
+                      </div>
+                    </div>
                   ))}
                 </div>
 
-                {/* Contextual sub-nav */}
-                {activeTab === "processo" && (
-                  <div className="flex w-full overflow-x-auto custom-scrollbar gap-1 mb-6 pb-1">
-                    {[
-                      { k: "geral", l: "Visão geral" },
-                      { k: "checklist", l: "Checklist" },
-                      { k: "documentos", l: "Documentos" },
-                      { k: "uploads", l: "Uploads" },
-                      { k: "ocr", l: "OCR" },
-                      { k: "geracao", l: "Geração" },
-                    ].map((s) => (
-                      <button
-                        key={s.k}
-                        onClick={() => setActiveSub(s.k)}
-                        className={`rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition ${
-                          activeSub === s.k ? "bg-navy text-white" : "text-slate-500 hover:bg-slate-100"
-                        }`}
-                      >
-                        {s.l}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {activeTab === "dossier" && (
-                  <div className="flex w-full overflow-x-auto custom-scrollbar gap-1 mb-6 pb-1">
-                    {[
-                      { k: "dossie", l: "Dossiê final" },
-                      { k: "portal", l: "Portal do cliente" },
-                      { k: "protocolo", l: "Protocolo" },
-                    ].map((s) => (
-                      <button
-                        key={s.k}
-                        onClick={() => setActiveSub(s.k)}
-                        className={`rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition ${
-                          activeSub === s.k ? "bg-navy text-white" : "text-slate-500 hover:bg-slate-100"
-                        }`}
-                      >
-                        {s.l}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {activeTab === "historico" && (
-                  <div className="flex w-full overflow-x-auto custom-scrollbar gap-1 mb-6 pb-1">
-                    {[
-                      { k: "timeline", l: "Timeline" },
-                      { k: "identidade", l: "Identidade" },
-                      { k: "editar", l: "Editar" },
-                    ].map((s) => (
-                      <button
-                        key={s.k}
-                        onClick={() => setActiveSub(s.k)}
-                        className={`rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition ${
-                          activeSub === s.k ? "bg-navy text-white" : "text-slate-500 hover:bg-slate-100"
-                        }`}
-                      >
-                        {s.l}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-
-                <TabsContent value="identity" className="animate-in fade-in duration-300">
-                   <ProcessIdentityPanel processId={id} />
-                </TabsContent>
-                <TabsContent value="edit" className="animate-in fade-in duration-300">
-                   <ProcessEditForm process={process} onSaved={fetchProcess} onCancel={() => setActiveTab("overview")} />
-                </TabsContent>
-
-
-               <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-300">
-                  <NextActionCard
-                    processId={id}
-                    processStatus={process?.status}
-                    onOpenTab={setActiveTab}
-                    onGenerateAll={handleGenerateAll}
-                    onOpenSignatureDialog={() => setSignatureDialogOpen(true)}
-                    onGenerateDossier={async () => { await generateDossier(); setActiveTab("dossier_v2"); }}
+                {/* Upload adicional de documentos fonte */}
+                <div className="mt-8 pt-6 border-t border-slate-100">
+                  <h4 className="text-sm font-bold text-slate-800 mb-2">Adicionar arquivos fonte ao processo</h4>
+                  <p className="text-xs text-slate-500 mb-4">
+                    Envie procurações, comprovantes de residência ou vistorias adicionais.
+                  </p>
+                  <FileUploader 
+                    processId={id} 
+                    onUploadSuccess={() => toast.success("Arquivo anexado com sucesso!")} 
                   />
-                  <WhatsMissingCard processId={id} onOpenTab={setActiveTab} />
-                  <ProcessBlueprintWorkspace process={process} onOpenTab={setActiveTab} onFocusItem={openFocusItem} onChanged={fetchProcess} />
-                  <SignaturesStatusCard processId={id} onOpen={() => setActiveTab("signatures")} />
-                  <div className="grid md:grid-cols-2 gap-6">
-                     <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-                        <h3 className="text-lg font-semibold text-navy mb-6 flex items-center gap-2">
-                           <Info className="h-5 w-5 text-primary" /> Informações
-                        </h3>
-                        <div className="space-y-4">
-                           <div className="flex justify-between py-3 border-b border-slate-50">
-                              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tipo</span>
-                              <span className="text-sm font-bold text-navy">{process?.process_type || "---"}</span>
-                           </div>
-                           <div className="flex justify-between py-3 border-b border-slate-50">
-                              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Conformidade</span>
-                              <div className="flex flex-col items-end gap-1">
-                                <Badge variant="outline" className={`text-[10px] font-black uppercase tracking-widest border-none ${
-                                  automationState?.is_ready_for_generation ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
-                                }`}>
-                                  {automationState?.is_ready_for_generation ? 'Conforme' : 'Pendente'}
-                                </Badge>
-                                {automationState?.is_ready_for_generation && (
-                                  <span className="text-[8px] text-emerald-600 font-bold uppercase tracking-tighter flex items-center gap-1">
-                                    <Zap className="h-2 w-2" /> Identificado automaticamente
-                                  </span>
-                                )}
-                              </div>
-                           </div>
-                           <div className="flex justify-between py-3 border-b border-slate-50">
-                              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Prazo</span>
-                              <span className="text-sm font-bold text-red-500">{process?.due_date ? new Date(process.due_date).toLocaleDateString('pt-BR') : "---"}</span>
-                           </div>
-                           <div className="flex justify-between py-3">
-                              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Prioridade</span>
-                              <span className="text-sm font-bold text-amber-500 uppercase">{process?.priority || "Média"}</span>
-                           </div>
-                        </div>
-                     </div>
+                </div>
+              </div>
+            </div>
+          )}
 
-                     <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
-                        <div>
-                           <h3 className="text-lg font-semibold text-navy mb-6 flex items-center gap-2">
-                              <Target className="h-5 w-5 text-primary" /> Progresso do SLA
-                           </h3>
-                           <div className="space-y-6">
-                              <div className="flex justify-between items-end">
-                                 <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status do Prazo</p>
-                                    <p className={`text-sm font-bold ${process?.due_date && isPast(parseISO(process.due_date)) ? 'text-red-500' : 'text-emerald-500'}`}>
-                                      {process?.due_date && isPast(parseISO(process.due_date)) ? 'Processo Atrasado' : 'No prazo operacional'}
-                                    </p>
-                                 </div>
-                                 <span className="text-xl font-black text-navy">{automationState?.completion_percentage || 0}%</span>
-                              </div>
-                              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                                 <div className="h-full bg-primary transition-all duration-1000" style={{ width: `${automationState?.completion_percentage || 0}%` }}></div>
-                              </div>
-                              
-                              {process?.due_date && (
-                                <div className={`p-4 rounded-xl border flex items-center gap-3 ${isPast(parseISO(process.due_date)) ? 'bg-red-50 border-red-100 text-red-600' : 'bg-amber-50 border-amber-100 text-amber-600'}`}>
-                                  <AlertCircle className="h-5 w-5" />
-                                  <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Alerta de Prazo</p>
-                                    <p className="text-xs font-bold leading-none">
-                                      {isPast(parseISO(process.due_date)) 
-                                        ? `Atrasado há ${differenceInDays(new Date(), parseISO(process.due_date))} dias`
-                                        : `Expira em ${differenceInDays(parseISO(process.due_date), new Date())} dias`
-                                      }
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                           </div>
-                        </div>
-                        <div className="bg-slate-50 p-4 rounded-2xl mt-6">
-                           <p className="text-xs text-slate-500 leading-relaxed font-medium">{process?.notes || "Nenhuma observação interna registrada."}</p>
-                        </div>
-                     </div>
-                  </div>
-               </TabsContent>
+          {/* ABA 3: HISTÓRICO */}
+          {activeTab === "historico" && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 p-6 shadow-xs">
+                <h3 className="text-lg font-bold text-[#0d2342] flex items-center gap-2 mb-6">
+                  <History className="w-5 h-5 text-[#1868db]" />
+                  Histórico e Rastreabilidade do Processo
+                </h3>
 
-               <TabsContent value="ocr" className="space-y-8 animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-                    <h3 className="text-lg font-semibold text-navy mb-6 flex items-center gap-2">
-                      <Zap className="h-5 w-5 text-primary" /> Central de Extração OCR
-                    </h3>
-                    <div className="grid md:grid-cols-2 gap-8">
-                      <div className="space-y-6">
-                        <p className="text-sm text-slate-500">Suba documentos para extração automática de dados neste processo.</p>
-                        <OCRUpload companyId={profile?.company_id || ""} processId={id} />
+                <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                  {localTimeline.map((ev) => (
+                    <div key={ev.id} className="relative">
+                      <div className="absolute -left-6 top-1 w-4 h-4 rounded-full bg-white border-4 border-[#1868db] shadow-xs" />
+                      <div className="flex items-baseline justify-between">
+                        <h4 className="text-sm font-bold text-slate-800">{ev.title}</h4>
+                        <span className="text-xs text-slate-400">{ev.time}</span>
                       </div>
-                      <div className="space-y-4">
-                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Jobs de OCR neste Processo</p>
-                        {ocrJobs?.length === 0 ? (
-                          <div className="p-12 border-2 border-dashed border-slate-100 rounded-2xl text-center">
-                            <Bot className="h-10 w-10 text-slate-200 mx-auto mb-4" />
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nenhum job processado ainda.</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {ocrJobs?.map((job) => (
-                              <div key={job.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <FileText className="h-4 w-4 text-slate-400" />
-                                  <div>
-                                    <p className="text-xs font-bold text-navy truncate max-w-[150px]">{job.uploaded_files?.file_name}</p>
-                                    <p className="text-[9px] text-slate-400 font-bold uppercase">{job.identified_document_type || 'Pendente'}</p>
-                                  </div>
-                                </div>
-                                <Badge className="text-[8px] uppercase font-black">{job.status}</Badge>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-               </TabsContent>
-
-               <TabsContent value="generation" className="space-y-8 animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-                    <h3 className="text-lg font-semibold text-navy mb-6 flex items-center gap-2">
-                      <FilePlus className="h-5 w-5 text-primary" /> Geração de Documentos Reais
-                    </h3>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                       {[
-                         { name: "Requerimento DPC-2211", label: "Gerar DPC-2211" },
-                         { name: "BCE - Boletim de Cadastro", label: "Gerar BCE" },
-                         { name: "Procuração Marítima", label: "Gerar Procuração" },
-                         { name: "Memorial Técnico", label: "Gerar Memorial" },
-                         { name: "Declaração de Propriedade", label: "Gerar Declaração" }
-                       ].map((tpl) => (
-                        <Button 
-                          key={tpl.name}
-                          variant="outline" 
-                          className="h-24 rounded-2xl border-slate-100 flex flex-col items-center justify-center gap-2 group hover:border-primary/40 hover:bg-slate-50"
-                          onClick={async () => {
-                             const { data } = await supabase.from('document_templates').select('*').eq('name', tpl.name).single();
-                             if (data) setSelectedTemplateForGen(data);
-                             else toast.error(`Modelo "${tpl.name}" não encontrado.`);
-                          }}
-                        >
-                           <FileText className="h-6 w-6 text-slate-400 group-hover:text-primary" />
-                           <span className="text-[10px] font-black uppercase tracking-widest">{tpl.label}</span>
-                        </Button>
-                       ))}
-                    </div>
-                  </div>
-               </TabsContent>
-
-               <TabsContent value="signatures" className="space-y-8 animate-in fade-in duration-300">
-                  <ProcessSignaturesPanel processId={id} />
-               </TabsContent>
-
-               <TabsContent value="protocol" className="space-y-8 animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-                    <h3 className="text-lg font-semibold text-navy mb-6 flex items-center gap-2">
-                      <Send className="h-5 w-5 text-primary" /> Protocolo e Envio Final
-                    </h3>
-                    <div className="space-y-6">
-                       <div className="p-6 border border-slate-100 rounded-2xl bg-slate-50">
-                          <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                             <span>Consolidado para Protocolo</span>
-                             <span>Ready</span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                             <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-slate-400">
-                                <FileCheck className="h-5 w-5" />
-                             </div>
-                             <div>
-                                <p className="text-sm font-bold text-navy">NavalDocs_Protocolo_Consolidado.pdf</p>
-                                <p className="text-[10px] text-slate-400 font-medium">Gerado em 20/05/2026</p>
-                             </div>
-                          </div>
-                       </div>
-                       <div className="flex flex-col gap-3">
-                         <Button 
-                          disabled={!automationState?.is_ready_for_generation}
-                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-12 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-emerald-600/20"
-                         >
-                            <PlayCircle className="h-4 w-4" /> Enviar para Órgão Competente
-                         </Button>
-                         <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-center gap-3">
-                            <Zap className="h-4 w-4 text-primary animate-pulse" />
-                            <p className="text-[10px] text-navy font-bold uppercase tracking-tight">O motor de IA sugere que o Memorial Técnico seja revisado antes do envio.</p>
-                         </div>
-                       </div>
-                    </div>
-                  </div>
-               </TabsContent>
-               
-               <TabsContent value="dossier_v2" className="animate-in fade-in duration-500">
-                  <ProcessFinalDossierTab processId={id} />
-               </TabsContent>
-
-                <TabsContent value="requirements" className="space-y-8 animate-in fade-in duration-300">
-                   <ProcessChecklist processId={id} processTypeId={process?.process_type_id} />
-                </TabsContent>
-
-               <TabsContent value="documents" className="animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 pb-6 border-b border-slate-50">
-                      <div>
-                        <h3 className="text-lg font-semibold text-navy flex items-center gap-2">
-                          <FileText className="h-5 w-5 text-primary" /> Central de Documentos
-                        </h3>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Gestão de arquivos e evidências do processo</p>
-                      </div>
-                      <div className="w-full md:w-auto flex gap-2">
-                        <div className="relative flex-1 md:w-64">
-                          <FileSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                          <Input placeholder="Filtrar arquivos..." className="pl-10 h-11 rounded-xl border-slate-100 text-xs" />
-                        </div>
-                        <FileUploader 
-                          processId={id} 
-                          bucket="process-attachments" 
-                          category="Processo" 
-                          compact
-                        />
-                      </div>
-                    </div>
-                    <div className="flex gap-2 mb-6">
-                       <Badge variant="outline" className="px-3 py-1.5 rounded-lg border-primary/20 bg-primary/5 text-primary cursor-pointer hover:bg-primary/10">Todos</Badge>
-                       <Badge variant="outline" className="px-3 py-1.5 rounded-lg border-slate-100 text-slate-400 cursor-pointer hover:bg-slate-50">Recentes</Badge>
-                       <Badge variant="outline" className="px-3 py-1.5 rounded-lg border-slate-100 text-slate-400 cursor-pointer hover:bg-slate-50">Favoritos</Badge>
-                    </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {files && files.map((file: any) => (
-                        <div key={file.id} className="p-4 rounded-2xl border border-slate-100 bg-slate-50/30 group hover:bg-white hover:border-primary/20 transition-all">
-                           <div className="flex justify-between items-start mb-4">
-                              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400">
-                                 <FileText className="h-5 w-5" />
-                              </div>
-                              <div className="flex gap-1">
-                                 <Button 
-                                   variant="ghost" 
-                                   size="sm" 
-                                   className="min-h-[44px] min-w-[44px] p-0 flex items-center justify-center rounded-lg" 
-                                   onClick={() => openStoredFile(file)}
-                                   aria-label="Visualizar documento"
-                                 >
-                                   <Eye className="h-4 w-4" />
-                                 </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="min-h-[44px] min-w-[44px] p-0 text-red-500 hover:text-red-700 hover:bg-red-50 flex items-center justify-center rounded-lg" 
-                                  onClick={() => setFileToDelete({ id: file.id, name: file.file_name })}
-                                  aria-label="Excluir documento"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                           </div>
-                           <p className="text-sm font-bold text-navy truncate">{file.file_name}</p>
-                           <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-1">
-                             {file.file_type || 'Documento'} • {Math.round((file.file_size || 0) / 1024)} KB
-                           </p>
-                        </div>
-                      ))}
-                      {(!files || files.length === 0) && (
-                        <div className="col-span-full py-10 text-center opacity-40">
-                          <FileText className="h-12 w-12 mx-auto mb-2" />
-                          <p className="text-sm font-bold uppercase tracking-widest">Nenhum arquivo enviado</p>
-                        </div>
+                      <p className="text-xs text-slate-600 mt-1">{ev.description}</p>
+                      {ev.author && (
+                        <p className="text-[11px] text-slate-400 mt-1 font-medium">
+                          Origem: {ev.author}
+                        </p>
                       )}
                     </div>
-                  </div>
-               </TabsContent>
-
-               <TabsContent value="library_docs" className="animate-in fade-in duration-300">
-                  <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm">
-                    <h3 className="text-lg font-semibold text-navy mb-1 flex items-center gap-2">
-                      <FileCheck className="h-5 w-5 text-primary" /> Documentos do processo
-                    </h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">
-                      Anexe arquivos, execute OCR, valide e aplique dados aos modelos vinculados
-                    </p>
-                    <ProcessDocumentsPanel processId={id} />
-                  </div>
-               </TabsContent>
-
-               <TabsContent value="history" className="animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                    <h3 className="text-lg font-semibold text-navy mb-10 flex items-center gap-2">
-                       <History className="h-5 w-5 text-primary" /> Histórico Inteligente
-                    </h3>
-                    <ProcessTimeline events={timelineEvents} />
-                  </div>
-               </TabsContent>
-
-               <TabsContent value="client_portal" className="animate-in fade-in duration-300">
-                 <ClientPortalPanel processId={id} />
-               </TabsContent>
-            </Tabs>
-              );
-            })()}
-         </div>
-
-         {/* Full-width chat + optional admin details */}
-         <div className="grid lg:grid-cols-3 gap-6">
-           <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col h-[420px] overflow-hidden">
-             <div className="p-4 border-b bg-slate-50/50 flex justify-between items-center">
-                <h3 className="text-sm font-semibold text-navy flex items-center gap-2">
-                   <MessageSquare className="h-4 w-4 text-primary" /> Notas internas
-                </h3>
-             </div>
-             <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-                <div className="space-y-3">
-                   {comments.map((comment) => (
-                      <div key={comment.id} className={`flex flex-col ${comment.user_id === profile?.id ? "items-end" : "items-start"}`}>
-                         <div className={`max-w-[90%] p-3 rounded-2xl text-xs ${
-                            comment.user_id === profile?.id
-                               ? "bg-navy text-white rounded-tr-none"
-                               : "bg-slate-100 text-navy rounded-tl-none"
-                         }`}>
-                            {comment.content}
-                         </div>
-                         <span className="text-[8px] font-black text-slate-400 uppercase mt-1">
-                            {comment.profiles?.name} • {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}
-                         </span>
-                      </div>
-                   ))}
-                   {comments.length === 0 && (
-                     <p className="text-xs text-slate-400 text-center py-8">Nenhuma nota interna ainda.</p>
-                   )}
+                  ))}
                 </div>
-             </ScrollArea>
-             <form onSubmit={handleSendComment} className="p-3 border-t bg-white flex gap-2">
-                <Input
-                   placeholder="Nota interna..."
-                   value={newComment}
-                   onChange={(e) => setNewComment(e.target.value)}
-                   className="h-10 rounded-xl bg-slate-50 text-xs"
-                />
-                <Button size="icon" type="submit" className="h-10 w-10 shrink-0 rounded-xl bg-primary">
-                   <Send className="h-4 w-4" />
-                </Button>
-             </form>
-           </div>
+              </div>
 
-           {/* Admin-only technical details, collapsed by default */}
-           {(profile?.role === "admin_master" || profile?.role === "admin_master_global") && (
-             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-               <button
-                 onClick={() => setShowAdminDetails((v) => !v)}
-                 className="w-full flex items-center justify-between text-left"
-               >
-                 <span className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                   <Info className="h-3.5 w-3.5" /> Detalhes técnicos (admin)
-                 </span>
-                 <span className="text-xs text-slate-400">{showAdminDetails ? "Ocultar" : "Mostrar"}</span>
-               </button>
-               {showAdminDetails && (
-                 <div className="mt-4 space-y-2 text-[11px] font-mono text-slate-600">
-                   <div><span className="text-slate-400">process.id:</span> {process?.id}</div>
-                   <div><span className="text-slate-400">status:</span> {process?.status}</div>
-                   <div><span className="text-slate-400">company_id:</span> {process?.company_id}</div>
-                   <div><span className="text-slate-400">version:</span> {process?.version ?? "—"}</div>
-                   <div><span className="text-slate-400">automation_ready:</span> {String(automationState?.is_ready_for_generation ?? false)}</div>
-                   <div><span className="text-slate-400">completion:</span> {automationState?.completion_percentage ?? 0}%</div>
-                 </div>
-               )}
-             </div>
-           )}
-         </div>
-       </div>
+              {/* Notas Internas */}
+              <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col h-[520px]">
+                <h3 className="text-sm font-bold text-[#0d2342] flex items-center gap-2 mb-4">
+                  <MessageSquare className="w-4 h-4 text-[#1868db]" />
+                  Notas Internas
+                </h3>
+                
+                <ScrollArea className="flex-1 pr-3">
+                  <div className="space-y-3">
+                    {comments.map((c) => (
+                      <div key={c.id} className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                        <p className="text-slate-800 font-medium">{c.content}</p>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase mt-1 block">
+                          {c.profiles?.name || "Usuário"} · {formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: ptBR })}
+                        </span>
+                      </div>
+                    ))}
+                    {comments.length === 0 && (
+                      <p className="text-xs text-slate-400 text-center py-10">Nenhuma nota interna registrada ainda.</p>
+                    )}
+                  </div>
+                </ScrollArea>
 
+                <form onSubmit={handleSendComment} className="mt-4 pt-3 border-t border-slate-100 flex gap-2">
+                  <Input
+                    placeholder="Adicionar nota interna..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    className="h-10 text-xs rounded-xl bg-slate-50 border-slate-200"
+                  />
+                  <Button 
+                    type="submit" 
+                    size="icon" 
+                    disabled={isSubmittingComment}
+                    className="h-10 w-10 shrink-0 bg-[#1868db] hover:bg-[#1558bd] rounded-xl text-white"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </form>
+              </div>
+            </div>
+          )}
 
+        </div>
+      </div>
 
-      <ProcessEditSheet
-        process={process}
-        open={editSheetOpen}
-        onOpenChange={(o) => { setEditSheetOpen(o); if (!o) setEditInitialTab(undefined); }}
-        onSaved={fetchProcess}
-        initialTab={editInitialTab}
-      />
+      {/* MODAL: OUTROS PROCESSOS DO PEDIDO */}
+      <Dialog open={otherProcessesModalOpen} onOpenChange={setOtherProcessesModalOpen}>
+        <DialogContent className="max-w-xl rounded-2xl p-6 bg-white shadow-xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-[#0d2342] flex items-center gap-2">
+              <Ship className="w-5 h-5 text-[#1868db]" />
+              Processos do Pedido #{orderNumber}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Todos os processos vinculados a este pedido mantêm sua identificação, situação e histórico próprios.
+            </DialogDescription>
+          </DialogHeader>
 
-      <ProcessItemFocusDialog
-        processId={id}
-        process={process}
-        checklistId={focusItemId}
-        action={focusAction}
-        onClose={closeFocusItem}
-        onChanged={fetchProcess}
-      />
-      <SignatureRequestDialog
-        open={signatureDialogOpen}
-        onOpenChange={setSignatureDialogOpen}
-        processId={id}
-        defaultCustomerId={process?.customer_id ?? undefined}
-        defaultTitle={process?.title ? `Assinatura — ${process.title}` : undefined}
-        onCreated={() => {
-          toast.success("Solicitação de assinatura enviada.");
-          fetchProcess();
-        }}
-      />
-      <ConfirmDialog
-        open={fileToDelete !== null}
-        onOpenChange={(open) => { if (!open) setFileToDelete(null); }}
-        title="Excluir Arquivo Anexo"
-        description={`Deseja realmente remover o arquivo "${fileToDelete?.name}" do processo?`}
-        confirmText="Excluir Arquivo"
-        cancelText="Cancelar"
-        variant="destructive"
-        loading={deleteFile.isPending}
-        onConfirm={async () => {
-          if (!fileToDelete) return;
-          await deleteFile.mutateAsync(fileToDelete.id);
-          setFileToDelete(null);
-        }}
-      />
-      </Suspense>
+          <div className="space-y-3 my-4">
+            {/* Processo Atual */}
+            <div className="p-4 rounded-xl border-2 border-[#1868db]/30 bg-[#f0f7ff] flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm text-[#0d2342]">{serviceName}</span>
+                  <Badge className="bg-[#1868db] text-white text-[10px] font-bold">Processo Atual</Badge>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">Identificador: #{processNumber} · Situação: {currentProcessStatus}</p>
+                <p className="text-xs text-[#1868db] font-semibold mt-1">Próxima ação: Solicitar assinaturas</p>
+              </div>
+              <CheckCircle2 className="w-5 h-5 text-[#1868db] shrink-0" />
+            </div>
+
+            {/* Outros processos */}
+            {DEFAULT_PREVIEW_DATA.otherProcesses.map((p) => (
+              <div
+                key={p.id}
+                className="p-4 rounded-xl border border-slate-200 hover:border-[#1868db] transition-colors flex items-center justify-between group bg-white"
+              >
+                <div>
+                  <h4 className="font-bold text-sm text-slate-800">{p.serviceName}</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">Identificador: #{p.id} · Situação: {p.status}</p>
+                  <p className="text-xs text-slate-600 font-semibold mt-1">Próxima ação: {p.nextAction}</p>
+                </div>
+                <Link
+                  to={`/processes/${p.id}?preview=true`}
+                  onClick={() => setOtherProcessesModalOpen(false)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#1868db] group-hover:bg-[#1868db] group-hover:text-white transition-colors border border-[#1868db]/30"
+                >
+                  Abrir processo
+                </Link>
+              </div>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOtherProcessesModalOpen(false)}
+              className="rounded-xl text-xs font-bold text-slate-600"
+            >
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL: PREPARAR SOLICITAÇÃO DE ASSINATURA */}
+      <Dialog open={signatureModalOpen} onOpenChange={setSignatureModalOpen}>
+        <DialogContent className="max-w-xl rounded-2xl p-6 bg-white shadow-xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-[#0d2342] flex items-center gap-2">
+              <Signature className="w-5 h-5 text-[#1868db]" />
+              Preparar Solicitação de Assinaturas
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Confira os documentos e signatários antes de disparar as notificações por WhatsApp e e-mail.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 my-3 text-xs">
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+              <span className="font-bold text-slate-700 block mb-2">Documentos a serem assinados:</span>
+              <ul className="space-y-1.5 text-slate-600">
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600" />
+                  <span>Requerimento.pdf (Versão 1 · Transferência de propriedade)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600" />
+                  <span>Declaracao-transferencia.pdf (Versão 1 · Termo de responsabilidade)</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="space-y-2.5">
+              <span className="font-bold text-slate-700 block">Signatários identificados:</span>
+              
+              <div className="p-3 rounded-xl border border-slate-200 flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-slate-800">Marina Costa (Vendedora / Proprietária)</p>
+                  <p className="text-slate-500">CPF: 042.819.330-12 · WhatsApp: (11) 98765-4321</p>
+                </div>
+                <Badge className="bg-blue-50 text-[#1868db] border-none font-bold">Assinatura ICP/Gov</Badge>
+              </div>
+
+              <div className="p-3 rounded-xl border border-slate-200 flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-slate-800">Carlos Eduardo Ramos (Comprador)</p>
+                  <p className="text-slate-500">CPF: 192.834.721-09 · WhatsApp: (11) 97654-3210</p>
+                </div>
+                <Badge className="bg-blue-50 text-[#1868db] border-none font-bold">Assinatura ICP/Gov</Badge>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 flex items-start gap-2">
+              <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <span>
+                Ao confirmar, o status será atualizado para <strong>Aguardando assinatura</strong> e um link seguro será disponibilizado aos signatários.
+              </span>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSignatureModalOpen(false)}
+              className="rounded-xl text-xs font-bold"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmSignatureRequest}
+              className="rounded-xl text-xs font-bold bg-[#1868db] hover:bg-[#1456b6] text-white"
+            >
+              Confirmar e Enviar Solicitação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL: DEFINIR PRAZO E RESPONSÁVEL */}
+      <Dialog open={deadlineModalOpen} onOpenChange={setDeadlineModalOpen}>
+        <DialogContent className="max-w-md rounded-2xl p-6 bg-white shadow-xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-[#0d2342] flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-[#1868db]" />
+              Definir Prazo e Responsável Interno
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Prazo de acompanhamento interno para controle da equipe náutica.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 my-3 text-xs">
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">Responsável interno:</label>
+              <Input
+                value={internalResponsible}
+                onChange={(e) => setInternalResponsible(e.target.value)}
+                className="h-10 text-xs rounded-xl"
+                placeholder="Nome do responsável"
+              />
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">Prazo interno limite:</label>
+              <Input
+                type="date"
+                value={internalDeadline}
+                onChange={(e) => setInternalDeadline(e.target.value)}
+                className="h-10 text-xs rounded-xl"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeadlineModalOpen(false)}
+              className="rounded-xl text-xs font-bold"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSaveDeadline}
+              className="rounded-xl text-xs font-bold bg-[#1868db] hover:bg-[#1456b6] text-white"
+            >
+              Salvar Prazo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL: REGISTRAR PROTOCOLO */}
+      <Dialog open={protocolModalOpen} onOpenChange={setProtocolModalOpen}>
+        <DialogContent className="max-w-md rounded-2xl p-6 bg-white shadow-xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-[#0d2342] flex items-center gap-2">
+              <FileCheck className="w-5 h-5 text-[#1868db]" />
+              Registrar Protocolo Oficial
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Insira o número e órgão de protocolo fornecidos pela Capitania ou órgão náutico.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 my-3 text-xs">
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">Número do protocolo:</label>
+              <Input
+                placeholder="Ex: 381.2025/004921-8"
+                value={protocolNumber}
+                onChange={(e) => setProtocolNumber(e.target.value)}
+                className="h-10 text-xs rounded-xl"
+              />
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">Órgão / Capitania:</label>
+              <Input
+                value={protocolAgency}
+                onChange={(e) => setProtocolAgency(e.target.value)}
+                className="h-10 text-xs rounded-xl"
+              />
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">Data do protocolo:</label>
+              <Input
+                type="date"
+                value={protocolDate}
+                onChange={(e) => setProtocolDate(e.target.value)}
+                className="h-10 text-xs rounded-xl"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setProtocolModalOpen(false)}
+              className="rounded-xl text-xs font-bold"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSaveProtocol}
+              className="rounded-xl text-xs font-bold bg-[#1868db] hover:bg-[#1456b6] text-white"
+            >
+              Registrar Protocolo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL: VISUALIZAR DOCUMENTO */}
+      <Dialog open={previewDocModal !== null} onOpenChange={(open) => { if (!open) setPreviewDocModal(null); }}>
+        <DialogContent className="max-w-3xl rounded-2xl p-6 bg-white shadow-xl max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <div className="flex items-center justify-between pr-6">
+              <DialogTitle className="text-base md:text-lg font-bold text-[#0d2342] flex items-center gap-2">
+                <FileText className="w-5 h-5 text-red-500" />
+                {previewDocModal?.name}
+              </DialogTitle>
+              <Badge className="bg-emerald-50 text-emerald-700 font-bold text-xs">
+                {previewDocModal?.status}
+              </Badge>
+            </div>
+            <DialogDescription className="text-xs text-slate-500">
+              Versão {previewDocModal?.version} · {previewDocModal?.generatedAt} · {previewDocModal?.size}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 rounded-xl border border-slate-200 font-mono text-xs text-slate-800 whitespace-pre-wrap leading-relaxed my-2 select-text">
+            {previewDocModal?.content}
+          </div>
+
+          <DialogFooter className="gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPreviewDocModal(null)}
+              className="rounded-xl text-xs font-bold"
+            >
+              Fechar
+            </Button>
+            <Button
+              type="button"
+              onClick={() => handleDownloadDoc(previewDocModal)}
+              className="rounded-xl text-xs font-bold bg-[#1868db] hover:bg-[#1456b6] text-white flex items-center gap-1.5"
+            >
+              <Download className="w-4 h-4" />
+              Baixar Arquivo PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+    </DashboardLayout>
+  );
+}
+
+// Componente isolado para o Cartão de Resumo do Processo (reutilizado no desktop e no celular com mesma fidelidade)
+function ResumoProcessoCard({
+  customerName,
+  vesselName,
+  responsibleName,
+  internalDeadline,
+  protocolNumber,
+  protocolAgency,
+  onOpenDeadlineModal,
+  onOpenProtocolModal,
+}: {
+  customerName: string;
+  vesselName: string | null;
+  responsibleName: string;
+  internalDeadline: string | null;
+  protocolNumber: string | null;
+  protocolAgency: string;
+  onOpenDeadlineModal: () => void;
+  onOpenProtocolModal: () => void;
+}) {
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 p-5 md:p-6 shadow-xs">
+      <div className="flex items-center gap-2.5 mb-5">
+        <FileText className="w-5 h-5 text-[#1868db]" />
+        <h3 className="text-base md:text-lg font-bold text-[#0d2342]">
+          Resumo do processo
+        </h3>
+      </div>
+
+      <div className="space-y-4 text-xs md:text-sm">
+        {/* Cliente */}
+        <div className="flex items-center justify-between py-1 border-b border-slate-50">
+          <div className="flex items-center gap-2 text-slate-500">
+            <User className="w-4 h-4 text-slate-400 shrink-0" />
+            <span className="font-medium">Cliente</span>
+          </div>
+          <span className="font-bold text-slate-800 text-right">{customerName}</span>
+        </div>
+
+        {/* Embarcação (omitir se for serviço pessoal) */}
+        {vesselName && (
+          <div className="flex items-center justify-between py-1 border-b border-slate-50">
+            <div className="flex items-center gap-2 text-slate-500">
+              <Ship className="w-4 h-4 text-slate-400 shrink-0" />
+              <span className="font-medium">Embarcação</span>
+            </div>
+            <span className="font-bold text-slate-800 text-right">{vesselName}</span>
+          </div>
+        )}
+
+        {/* Responsável interno */}
+        <div className="flex items-center justify-between py-1 border-b border-slate-50">
+          <div className="flex items-center gap-2 text-slate-500">
+            <User className="w-4 h-4 text-slate-400 shrink-0" />
+            <span className="font-medium">Responsável interno</span>
+          </div>
+          <span className="font-bold text-slate-800 text-right">{responsibleName}</span>
+        </div>
+
+        {/* Prazo interno */}
+        <div className="flex items-center justify-between py-1 border-b border-slate-50">
+          <div className="flex items-center gap-2 text-slate-500">
+            <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
+            <span className="font-medium">Prazo interno</span>
+          </div>
+          <div className="flex items-center gap-2 text-right">
+            <span className="font-semibold text-slate-700">
+              {internalDeadline ? format(parseISO(internalDeadline), "dd/MM/yyyy") : "Não definido"}
+            </span>
+            <button
+              type="button"
+              onClick={onOpenDeadlineModal}
+              className="text-xs font-bold text-[#1868db] hover:underline"
+            >
+              Definir
+            </button>
+          </div>
+        </div>
+
+        {/* Protocolo */}
+        <div className="flex items-center justify-between py-1">
+          <div className="flex items-center gap-2 text-slate-500">
+            <FileCheck className="w-4 h-4 text-slate-400 shrink-0" />
+            <span className="font-medium">Protocolo</span>
+          </div>
+          <div className="flex items-center gap-2 text-right">
+            {protocolNumber ? (
+              <div className="flex flex-col items-end">
+                <span className="font-bold text-slate-800">{protocolNumber}</span>
+                <span className="text-[10px] text-slate-400">{protocolAgency}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-slate-400">Ainda não registrado</span>
+                <button
+                  type="button"
+                  onClick={onOpenProtocolModal}
+                  className="text-xs font-bold text-[#1868db] hover:underline"
+                >
+                  Registrar
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
