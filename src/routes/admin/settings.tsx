@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { 
   Building, CreditCard, ShieldAlert,
@@ -6,16 +7,19 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { StripeConfigDialog } from "@/components/admin/StripeConfigDialog";
 
 export const Route = createFileRoute("/admin/settings")({
   component: AdminSettings,
 });
 
 function AdminSettings() {
+  const [isStripeDialogOpen, setIsStripeDialogOpen] = useState(false);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div>
-        <h1 className="text-3xl font-semibold text-navy">Configurações Globais</h1>
+        <h1 className="text-3xl font-semibold text-[#0d2342]">Configurações Globais</h1>
         <p className="text-slate-500 font-medium">Ajustes de infraestrutura e parâmetros do sistema.</p>
       </div>
 
@@ -24,18 +28,24 @@ function AdminSettings() {
            <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-2">
               <ShieldAlert className="h-6 w-6" />
            </div>
-           <h3 className="text-xl font-bold text-navy">Segurança do Core</h3>
+           <h3 className="text-xl font-bold text-[#0d2342]">Segurança do Core</h3>
            <p className="text-sm text-slate-500 leading-relaxed">Configurações de firewall, limites de API e chaves de criptografia mestras.</p>
-           <Button className="w-full bg-navy text-white rounded-xl">Gerenciar Chaves</Button>
+           <Button className="w-full bg-[#0d2342] text-white rounded-xl">Gerenciar Chaves</Button>
         </Card>
 
         <Card className="p-8 rounded-3xl border-slate-100 shadow-sm space-y-6">
            <div className="h-12 w-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mb-2">
               <CreditCard className="h-6 w-6" />
            </div>
-           <h3 className="text-xl font-bold text-navy">Gateways de Pagamento</h3>
+           <h3 className="text-xl font-bold text-[#0d2342]">Gateways de Pagamento</h3>
            <p className="text-sm text-slate-500 leading-relaxed">Conexões com Mercado Pago, Stripe e conciliação bancária automática.</p>
-           <Button className="w-full bg-navy text-white rounded-xl">Configurar Webhooks</Button>
+           <Button 
+             id="btn-configurar-stripe"
+             onClick={() => setIsStripeDialogOpen(true)}
+             className="w-full bg-[#1868db] hover:bg-[#1557b8] text-white rounded-xl font-bold"
+           >
+             Configurar Stripe
+           </Button>
         </Card>
 
         <Card className="p-8 rounded-3xl border-slate-100 shadow-sm space-y-6">
@@ -75,8 +85,13 @@ function AdminSettings() {
                   <Button variant="outline" className="border-white/20 hover:bg-white/10 flex-1"><Phone className="h-4 w-4 mr-2" /> Emergência</Button>
                </div>
             </div>
-         </div>
+          </div>
       </div>
+
+      <StripeConfigDialog
+        isOpen={isStripeDialogOpen}
+        onClose={() => setIsStripeDialogOpen(false)}
+      />
     </div>
   );
 }

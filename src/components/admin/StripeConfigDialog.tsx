@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2, ShieldCheck, Key, RefreshCw, ExternalLink, Globe } from "lucide-react";
-import { StripeSyncService } from "@/services/billing/stripeSyncService";
+import { 
+  AlertCircle, CheckCircle2, ShieldCheck, Key, RefreshCw, 
+  ExternalLink, Globe, Copy, Check, Info, Server, Zap
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface StripeConfigDialogProps {
@@ -12,137 +15,283 @@ interface StripeConfigDialogProps {
   onStatusChanged?: () => void;
 }
 
+interface VerificationResult {
+  status: "connected" | "pending_configuration" | "error" | "offline";
+  environment: "test" | "production" | "pending";
+  connected: boolean;
+  hasSecretKey: boolean;
+  hasWebhookSecret: boolean;
+  webhookUrl: string;
+  requiredEvents: string[];
+  message: string;
+  livemode?: boolean;
+  checkedAt?: string;
+}
+
 export const StripeConfigDialog: React.FC<StripeConfigDialogProps> = ({
   isOpen,
   onClose,
   onStatusChanged
 }) => {
-  const isConfigured = StripeSyncService.isStripeConfigured();
-  const [isSimulatingTestConnection, setIsSimulatingTestConnection] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [hasCopiedUrl, setHasCopiedUrl] = useState(false);
+  const [result, setResult] = useState<VerificationResult | null>(null);
 
-  const handleToggleSimulatedTest = () => {
-    setIsSimulatingTestConnection(true);
-    setTimeout(() => {
-      setIsSimulatingTestConnection(false);
-      const current = localStorage.getItem("navaldocs_stripe_configured");
-      if (current === "true") {
-        localStorage.removeItem("navaldocs_stripe_configured");
-        toast.info("Modo de teste da Stripe desativado. Status retornado a Configuração Pendente.");
-      } else {
-        localStorage.setItem("navaldocs_stripe_configured", "true");
-        toast.success("Credenciais de Teste da Stripe validadas com sucesso!");
+  // Determinar URL do webhook padrão com base no ambiente do Supabase
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://sua-instancia.supabase.co";
+  const defaultWebhookUrl = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/stripe-webhook`;
+
+  const requiredEvents = [
+    "checkout.session.completed",
+    "invoice.payment_succeeded",
+    "invoice.payment_failed",
+    "customer.subscription.deleted",
+    "customer.subscription.updated"
+  ];
+
+  // Executar verificação real via backend
+  const verifyBackendConnection = async () => {
+    setIsVerifying(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : undefined;
+
+      const response = await supabase.functions.invoke("stripe-verify", {
+        headers
+      });
+
+      if (response.error) {
+        // Se a function retornou erro HTTP ou 404/503
+        const errData = response.data || {};
+        setResult({
+          status: "pending_configuration",
+          environment: "pending",
+          connected: false,
+          hasSecretKey: false,
+          hasWebhookSecret: false,
+          webhookUrl: defaultWebhookUrl,
+          requiredEvents,
+          message: errData.message || response.error.message || "A Edge Function 'stripe-verify' não retornou conexão ativa. Verifique as credenciais no servidor seguro.",
+          checkedAt: new Date().toISOString()
+        });
+        toast.error("Stripe: Conexão pendente de configuração no backend.");
+      } else if (response.data) {
+        const d = response.data;
+        setResult({
+          status: d.status || (d.connected ? "connected" : "pending_configuration"),
+          environment: d.environment || "pending",
+          connected: !!d.connected,
+          hasSecretKey: !!d.hasSecretKey,
+          hasWebhookSecret: !!d.hasWebhookSecret,
+          webhookUrl: d.webhookUrl || defaultWebhookUrl,
+          requiredEvents: d.requiredEvents || requiredEvents,
+          message: d.message || (d.connected ? "Conexão validada com sucesso com a Stripe." : "Configuração pendente."),
+          livemode: d.livemode,
+          checkedAt: d.checkedAt || new Date().toISOString()
+        });
+
+        if (d.connected) {
+          toast.success("Conexão com a Stripe verificada com sucesso!");
+        } else {
+          toast.info("Status da Stripe: " + (d.message || "Configuração pendente."));
+        }
       }
       onStatusChanged?.();
-    }, 800);
+    } catch (err: any) {
+      console.warn("Falha ao invocar verificação Stripe no backend:", err);
+      setResult({
+        status: "pending_configuration",
+        environment: "pending",
+        connected: false,
+        hasSecretKey: false,
+        hasWebhookSecret: false,
+        webhookUrl: defaultWebhookUrl,
+        requiredEvents,
+        message: "Configuração pendente: nenhuma credencial da Stripe detectada nas variáveis de ambiente seguras da hospedagem.",
+        checkedAt: new Date().toISOString()
+      });
+    } finally {
+      setIsVerifying(false);
+    }
   };
+
+  // Verificar automaticamente ao abrir o diálogo
+  useEffect(() => {
+    if (isOpen) {
+      verifyBackendConnection();
+    }
+  }, [isOpen]);
+
+  const handleCopyWebhookUrl = () => {
+    const url = result?.webhookUrl || defaultWebhookUrl;
+    navigator.clipboard.writeText(url);
+    setHasCopiedUrl(true);
+    toast.success("URL do Webhook copiada para a área de transferência!");
+    setTimeout(() => setHasCopiedUrl(false), 2500);
+  };
+
+  const isConnected = result?.connected ?? false;
+  const currentEnv = result?.environment === "production" ? "Produção (Live)" : result?.environment === "test" ? "Teste (Sandbox)" : "Pendente";
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-xl bg-white rounded-2xl p-6 sm:p-8">
-        <DialogHeader className="border-b border-slate-100 pb-4">
-          <div className="flex items-center justify-between">
+      <DialogContent className="max-w-xl max-h-[90vh] flex flex-col bg-white rounded-2xl p-5 sm:p-6 custom-scrollbar">
+        <DialogHeader className="border-b border-slate-100 pb-3 shrink-0">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                <span className="font-black text-lg text-[#635BFF] tracking-tighter">S</span>
+              <div className="h-10 w-10 rounded-xl bg-purple-50 flex items-center justify-center border border-purple-100 shrink-0">
+                <span className="font-extrabold text-xl text-[#635BFF] tracking-tighter">S</span>
               </div>
               <div>
-                <DialogTitle className="text-xl font-bold text-[#0d2342]">
-                  Integração Stripe Payments
+                <DialogTitle className="text-lg sm:text-xl font-bold text-[#0d2342]">
+                  Configurar Stripe & Webhooks
                 </DialogTitle>
                 <DialogDescription className="text-xs text-slate-500 mt-0.5">
-                  Sincronização de catálogo de produtos, preços recorrentes e webhooks.
+                  Diagnóstico oficial da integração de pagamentos e eventos assíncronos.
                 </DialogDescription>
               </div>
             </div>
 
             <Badge 
-              className={`text-[11px] font-semibold px-2.5 py-1 ${
-                isConfigured 
+              className={`text-[11px] font-bold px-2.5 py-1 ${
+                isConnected 
                   ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-                  : "bg-amber-50 text-amber-700 border-amber-200"
+                  : "bg-amber-50 text-amber-800 border-amber-200"
               }`}
             >
-              {isConfigured ? "Conectado (Ambiente Teste)" : "Configuração pendente"}
+              {isConnected ? `Conectado (${currentEnv})` : "Configuração pendente"}
             </Badge>
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 py-3">
-          {/* Status real do ambiente */}
-          {!isConfigured ? (
-            <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-xl space-y-2">
-              <div className="flex items-center gap-2 text-amber-800 font-bold text-xs">
-                <AlertCircle className="h-4 w-4 text-amber-600" />
-                Nenhuma credencial de produção ou sandbox detectada
-              </div>
-              <p className="text-xs text-amber-700 leading-relaxed">
-                Para ativar a cobrança e sincronização automática dos planos, configure as variáveis de ambiente seguras na hospedagem:
-              </p>
-              <div className="p-2.5 bg-white/80 rounded-lg border border-amber-200/80 font-mono text-[11px] text-slate-700 space-y-1">
-                <div>STRIPE_SECRET_KEY = sk_test_... ou sk_live_...</div>
-                <div>STRIPE_WEBHOOK_SECRET = whsec_...</div>
-                <div>VITE_STRIPE_PUBLISHABLE_KEY = pk_test_... ou pk_live_...</div>
-              </div>
+        <div className="space-y-4 py-3 text-xs flex-1 overflow-y-auto pr-1">
+          {/* 1. Status Real & Ambiente */}
+          <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 text-[11px]">
+            <div>
+              <span className="text-slate-400 block font-medium uppercase tracking-wider text-[9px]">Ambiente Detectado</span>
+              <span className="font-bold text-[#0d2342] text-xs mt-0.5 block">{currentEnv}</span>
             </div>
-          ) : (
-            <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-2">
-              <div className="flex items-center gap-2 text-emerald-800 font-bold text-xs">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                Conta Stripe Conectada e Operacional
-              </div>
-              <p className="text-xs text-emerald-700 leading-relaxed">
-                Os planos publicados neste painel administrativo serão sincronizados de forma idempotente com a Stripe.
-              </p>
+            <div>
+              <span className="text-slate-400 block font-medium uppercase tracking-wider text-[9px]">Status da Integração</span>
+              <span className={`font-bold text-xs mt-0.5 block ${isConnected ? "text-emerald-600" : "text-amber-700"}`}>
+                {isConnected ? "Operacional e Ativo" : "Aguardando Credenciais"}
+              </span>
             </div>
-          )}
+          </div>
 
-          {/* Instruções de Segurança */}
-          <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-2">
-            <div className="flex items-center gap-2 text-[#0d2342] font-bold text-xs">
-              <ShieldCheck className="h-4 w-4 text-[#1868db]" />
-              Segurança e Conformidade
+          {/* 2. Diagnóstico de Configurações no Backend (Sem expor segredos) */}
+          <div className="p-4 rounded-xl border space-y-2.5 bg-white border-slate-200">
+            <h4 className="font-bold text-[#0d2342] text-xs flex items-center gap-2">
+              <Key className="h-4 w-4 text-[#1868db]" /> Variáveis de Backend Requeridas
+            </h4>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                <div className="space-y-0.5">
+                  <span className="font-mono font-bold text-slate-800">STRIPE_SECRET_KEY</span>
+                  <p className="text-[10px] text-slate-500">Chave secreta para checkouts e balance (sk_test_... ou sk_live_...)</p>
+                </div>
+                <Badge variant={result?.hasSecretKey ? "default" : "outline"} className={result?.hasSecretKey ? "bg-emerald-600 text-white text-[10px]" : "text-amber-700 border-amber-300 text-[10px]"}>
+                  {result?.hasSecretKey ? "Presente no servidor" : "Pendente"}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                <div className="space-y-0.5">
+                  <span className="font-mono font-bold text-slate-800">STRIPE_WEBHOOK_SECRET</span>
+                  <p className="text-[10px] text-slate-500">Segredo de validação da assinatura criptográfica (whsec_...)</p>
+                </div>
+                <Badge variant={result?.hasWebhookSecret ? "default" : "outline"} className={result?.hasWebhookSecret ? "bg-emerald-600 text-white text-[10px]" : "text-amber-700 border-amber-300 text-[10px]"}>
+                  {result?.hasWebhookSecret ? "Presente no servidor" : "Pendente"}
+                </Badge>
+              </div>
             </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              As chaves secretas do Stripe nunca são expostas ao frontend. Todas as chamadas de cobrança e checkout são autenticadas no servidor. Assinaturas existentes em outros provedores (ex: Mercado Pago) são preservadas sem substituição forçada.
+
+            {result?.message && (
+              <p className="text-[11px] text-slate-600 mt-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                {result.message}
+              </p>
+            )}
+          </div>
+
+          {/* 3. Orientação de Cadastro Seguro */}
+          <div className="p-3.5 bg-blue-50/70 border border-blue-100 rounded-xl space-y-1.5 text-blue-900">
+            <div className="flex items-center gap-1.5 font-bold text-xs">
+              <ShieldCheck className="h-4 w-4 text-[#1868db]" />
+              Local Seguro para Configuração
+            </div>
+            <p className="text-[11px] leading-relaxed text-blue-950/80">
+              Cadastre as variáveis no <strong>Supabase Dashboard</strong> &gt; <strong>Project Settings</strong> &gt; <strong>Edge Functions</strong> &gt; <strong>Secrets</strong> (ou via CLI: <code className="font-mono bg-white/70 px-1 py-0.5 rounded text-[10px]">supabase secrets set STRIPE_SECRET_KEY=...</code>). 
+              Nunca inclua credenciais secretas no código frontend ou no chat.
             </p>
           </div>
 
-          {/* Webhooks */}
-          <div className="space-y-1.5 pt-1">
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
-              <span>Endpoint de Webhook Recomendado:</span>
-              <span className="text-[11px] text-[#1868db] flex items-center gap-1">
-                <Globe className="h-3 w-3" /> Produção & Sandbox
+          {/* 4. URL Real do Webhook & Botão Copiar */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between font-semibold text-slate-700">
+              <span className="flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5 text-[#1868db]" /> URL do Endpoint de Webhook
               </span>
+              <span className="text-[10px] text-slate-400 font-normal">Cadastre no Stripe Dashboard</span>
             </div>
-            <div className="p-2.5 bg-slate-100 rounded-lg font-mono text-[11px] text-slate-600 select-all">
-              https://[seu-dominio].supabase.co/functions/v1/stripe-webhook
+            
+            <div className="flex items-center gap-2">
+              <div className="p-2.5 bg-slate-100 rounded-xl font-mono text-[11px] text-slate-700 flex-1 truncate select-all border border-slate-200">
+                {result?.webhookUrl || defaultWebhookUrl}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCopyWebhookUrl}
+                className="gap-1.5 shrink-0 h-9 font-bold text-xs"
+              >
+                {hasCopiedUrl ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                <span>{hasCopiedUrl ? "Copiado" : "Copiar"}</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* 5. Eventos Exigidos pelo Handler */}
+          <div className="space-y-1.5">
+            <span className="font-semibold text-slate-700 block">
+              Eventos Exigidos pelo Handler Backend:
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {requiredEvents.map((evt) => (
+                <Badge 
+                  key={evt} 
+                  variant="outline" 
+                  className="font-mono text-[10px] bg-slate-50 border-slate-200 text-slate-700 py-0.5"
+                >
+                  {evt}
+                </Badge>
+              ))}
             </div>
           </div>
         </div>
 
-        <DialogFooter className="border-t border-slate-100 pt-4 flex-col sm:flex-row gap-2 sm:gap-0 justify-between">
+        <DialogFooter className="border-t border-slate-100 pt-3 shrink-0 flex flex-col sm:flex-row items-center justify-between gap-3">
           <Button
             type="button"
-            variant="ghost"
-            onClick={handleToggleSimulatedTest}
-            disabled={isSimulatingTestConnection}
-            className="text-[11px] text-slate-500 hover:text-slate-700"
+            variant="outline"
+            onClick={verifyBackendConnection}
+            disabled={isVerifying}
+            className="w-full sm:w-auto text-xs font-bold gap-2 text-[#0d2342] border-slate-200 hover:bg-slate-50"
           >
-            {isConfigured ? "Desconectar Modo Teste" : "Alternar Conexão de Teste"}
+            <RefreshCw className={`h-3.5 w-3.5 ${isVerifying ? "animate-spin text-[#1868db]" : ""}`} />
+            <span>{isVerifying ? "Verificando no backend..." : "Verificar conexão"}</span>
           </Button>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={onClose} className="text-xs font-semibold">
-              Fechar
-            </Button>
-            <Button
-              onClick={onClose}
-              className="bg-[#1868db] hover:bg-[#1557b8] text-white text-xs font-bold gap-1.5 shadow-xs"
-            >
-              Entendido
-            </Button>
-          </div>
+          <Button
+            type="button"
+            onClick={onClose}
+            className="w-full sm:w-auto bg-[#1868db] hover:bg-[#1557b8] text-white text-xs font-bold px-5"
+          >
+            Fechar
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
