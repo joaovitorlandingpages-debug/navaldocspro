@@ -3,7 +3,8 @@ import {
   ArrowLeft, Search, Check, Ship, ArrowLeftRight, FileText,
   Wrench, FileCheck, CheckCircle2, ChevronRight, X, Info,
   AlertCircle, Upload, Sparkles, User, Award, FileSpreadsheet,
-  UserCheck, Anchor, Loader2, ArrowRight
+  UserCheck, Anchor, Loader2, ArrowRight, Pencil, ChevronDown,
+  ChevronUp, Plus, Building2, CheckSquare
 } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +14,14 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -21,6 +30,7 @@ export const Route = createFileRoute("/processes/novo-pedido")({
     customerId: (search.customerId as string) || undefined,
     vesselId: (search.vesselId as string) || undefined,
     preview: (search.preview as string) || undefined,
+    step: (search.step as string) || undefined,
   }),
   component: () => (
     <ProtectedRoute>
@@ -136,17 +146,43 @@ const SERVICES_CATALOG: ServiceItem[] = [
   },
 ];
 
+// Dados mock para o modo preview (idênticos à referência visual)
+const PREVIEW_CUSTOMERS = [
+  { id: "prev-c1", name: "Marina Costa", document_number: "042.819.330-12", email: "marina@costa.com.br", phone: "(11) 98765-4321", type: "PF" },
+  { id: "prev-c2", name: "Carlos Eduardo Ramos", document_number: "192.834.721-09", email: "carlos.ramos@empresa.com", phone: "(21) 99876-1234", type: "PF" },
+  { id: "prev-c3", name: "Roberto Alencar", document_number: "554.218.990-44", email: "roberto@nautica.com", phone: "(13) 97654-8899", type: "PF" },
+  { id: "prev-c4", name: "Oceanic Brasil Navegação LTDA", document_number: "12.345.678/0001-90", email: "contato@oceanic.com.br", phone: "(11) 3344-5566", type: "PJ" },
+];
+
+const PREVIEW_VESSELS = [
+  { id: "prev-v1", name: "Mar Azul", vessel_type: "Lancha", customer_id: "prev-c1", customer_name: "Marina Costa", registration_number: "381-000123" },
+  { id: "prev-v2", name: "Vento Forte", vessel_type: "Veleiro", customer_id: "prev-c1", customer_name: "Marina Costa", registration_number: "381-000456" },
+  { id: "prev-v3", name: "Estrela do Mar", vessel_type: "Iate", customer_id: "prev-c2", customer_name: "Carlos Eduardo Ramos", registration_number: "381-000789" },
+];
+
 function NovoPedidoPage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/processes/novo-pedido" });
   const { profile } = useAuth();
+  const isPreview = (search && search.preview === "true") || (typeof window !== "undefined" && window.location.search.includes("preview=true"));
 
   // Etapa atual: 1 = Serviços, 2 = Dados, 3 = Documentos, 4 = Revisão e geração
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(() => {
+    if (search.step === "2" || (typeof window !== "undefined" && window.location.search.includes("step=2"))) {
+      return 2;
+    }
+    if (search.step === "3" || (typeof window !== "undefined" && window.location.search.includes("step=3"))) {
+      return 3;
+    }
+    if (search.step === "4" || (typeof window !== "undefined" && window.location.search.includes("step=4"))) {
+      return 4;
+    }
+    return 1;
+  });
 
   // Seleção múltipla de serviços (armazena os IDs selecionados)
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(() => {
-    if ((search && search.preview === "true") || (typeof window !== "undefined" && window.location.search.includes("preview=true"))) {
+    if (isPreview) {
       return ["transferencia", "renovacao", "alteracao_motor"];
     }
     // Tenta recuperar do localStorage se existir rascunho anterior
@@ -169,50 +205,154 @@ function NovoPedidoPage() {
   // Controle para exibir mais serviços do catálogo
   const [showAllServices, setShowAllServices] = useState(false);
 
-  // Dados do pedido (Etapa 2)
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(search.customerId || "");
-  const [selectedVesselId, setSelectedVesselId] = useState<string>(search.vesselId || "");
-  const [orderNotes, setOrderNotes] = useState("");
-  const [customFields, setCustomFields] = useState<Record<string, string>>({});
-
   // Lista de clientes e embarcações do workspace
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [vessels, setVessels] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<any[]>(() => isPreview ? PREVIEW_CUSTOMERS : []);
+  const [vessels, setVessels] = useState<any[]>(() => isPreview ? PREVIEW_VESSELS : []);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Dados do pedido (Etapa 2)
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(() => {
+    if (search.customerId) return search.customerId;
+    if (isPreview) return "prev-c1";
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("navaldocs_pedido_draft_customer");
+      if (saved) return saved;
+    }
+    return "";
+  });
+
+  const [selectedVesselId, setSelectedVesselId] = useState<string>(() => {
+    if (search.vesselId) return search.vesselId;
+    if (isPreview) return "prev-v1";
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("navaldocs_pedido_draft_vessel");
+      if (saved) return saved;
+    }
+    return "";
+  });
+
+  const [orderNotes, setOrderNotes] = useState("");
+
+  // Dados específicos de cada serviço
+  const [transferData, setTransferData] = useState({
+    vendedorId: isPreview ? "prev-c1" : "",
+    compradorId: "",
+    compradorNome: "",
+  });
+
+  const [renovacaoData, setRenovacaoData] = useState({
+    tipoDocumento: "TIE (Título de Inscrição de Embarcação)",
+    numeroDocumento: isPreview ? "381-000123" : "",
+    validadeAtual: isPreview ? "2025-11-20" : "",
+  });
+
+  const [motorData, setMotorData] = useState({
+    motorAtualPotencia: "250 HP",
+    motorAtualMarca: "Mercury Verado",
+    motorAtualSerie: isPreview ? "MV-892182" : "",
+    novoMotorPotencia: "",
+    novoMotorMarca: "",
+    novoMotorSerie: "",
+    novoMotorCombustivel: "Gasolina",
+  });
+
+  // Controle de expansão das seções específicas (Transferência aberta por padrão, como na imagem)
+  const [expandedAccordions, setExpandedAccordions] = useState<Record<string, boolean>>({
+    transferencia: true,
+    renovacao: false,
+    alteracao_motor: false,
+  });
+
+  const toggleAccordion = (id: string) => {
+    setExpandedAccordions(prev => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  // Modais de cadastro in-context
+  const [isNewCustomerModalOpen, setIsNewCustomerModalOpen] = useState(false);
+  const [isNewVesselModalOpen, setIsNewVesselModalOpen] = useState(false);
+  const [isNewBuyerModalOpen, setIsNewBuyerModalOpen] = useState(false);
 
   // Salva rascunho das seleções no localStorage para evitar perda em navegação acidental
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("navaldocs_pedido_draft_services", JSON.stringify(selectedServiceIds));
+      if (selectedCustomerId) localStorage.setItem("navaldocs_pedido_draft_customer", selectedCustomerId);
+      if (selectedVesselId) localStorage.setItem("navaldocs_pedido_draft_vessel", selectedVesselId);
     }
-  }, [selectedServiceIds]);
+  }, [selectedServiceIds, selectedCustomerId, selectedVesselId]);
 
-  // Carrega clientes e embarcações da empresa
+  // Carrega clientes e embarcações reais da empresa no Supabase
   useEffect(() => {
     if (!profile?.company_id) return;
 
     const loadWorkspaceEntities = async () => {
       try {
         const [cRes, vRes] = await Promise.all([
-          supabase.from("customers").select("id, name, document_number").eq("company_id", profile.company_id).order("name"),
-          supabase.from("vessels").select("id, name, customer_id, registration_number, tie_number").eq("company_id", profile.company_id).order("name"),
+          supabase.from("customers").select("id, name, document_number, email, phone").eq("company_id", profile.company_id).order("name"),
+          supabase.from("vessels").select("id, name, customer_id, registration_number, tie_number, vessel_type").eq("company_id", profile.company_id).order("name"),
         ]);
-        if (cRes.data) setCustomers(cRes.data);
-        if (vRes.data) setVessels(vRes.data);
+        if (cRes.data && cRes.data.length > 0) {
+          setCustomers(cRes.data);
+        } else if (isPreview) {
+          setCustomers(PREVIEW_CUSTOMERS);
+        }
+        if (vRes.data && vRes.data.length > 0) {
+          setVessels(vRes.data);
+        } else if (isPreview) {
+          setVessels(PREVIEW_VESSELS);
+        }
       } catch (err) {
         console.error("Erro ao carregar clientes/embarcações:", err);
       }
     };
 
     loadWorkspaceEntities();
-  }, [profile?.company_id]);
+  }, [profile?.company_id, isPreview]);
 
-  // Filtra embarcações pelo cliente selecionado se aplicável
+  // Lista unificada de clientes
+  const allCustomers = useMemo(() => {
+    if (customers.length > 0) return customers;
+    return isPreview ? PREVIEW_CUSTOMERS : [];
+  }, [customers, isPreview]);
+
+  // Lista unificada de embarcações
+  const allVessels = useMemo(() => {
+    if (vessels.length > 0) return vessels;
+    return isPreview ? PREVIEW_VESSELS : [];
+  }, [vessels, isPreview]);
+
+  // Filtra embarcações pelo cliente selecionado se aplicável, priorizando as dele
   const filteredVessels = useMemo(() => {
-    if (!selectedCustomerId) return vessels;
-    const clientVessels = vessels.filter(v => v.customer_id === selectedCustomerId);
-    return clientVessels.length > 0 ? clientVessels : vessels;
-  }, [vessels, selectedCustomerId]);
+    if (!selectedCustomerId) return allVessels;
+    const clientVessels = allVessels.filter(v => v.customer_id === selectedCustomerId);
+    return clientVessels.length > 0 ? clientVessels : allVessels;
+  }, [allVessels, selectedCustomerId]);
+
+  // Dados da embarcação selecionada
+  const currentVessel = useMemo(() => {
+    return allVessels.find(v => v.id === selectedVesselId);
+  }, [allVessels, selectedVesselId]);
+
+  // Proprietário registrado da embarcação selecionada
+  const currentVesselOwnerName = useMemo(() => {
+    if (!currentVessel) return "";
+    if (currentVessel.customer_name) return currentVessel.customer_name;
+    const owner = allCustomers.find(c => c.id === currentVessel.customer_id);
+    return owner?.name || "Marina Costa";
+  }, [currentVessel, allCustomers]);
+
+  // Sincroniza o vendedor padrão da transferência com o proprietário cadastrado da embarcação
+  useEffect(() => {
+    if (currentVessel && !transferData.vendedorId) {
+      setTransferData(prev => ({
+        ...prev,
+        vendedorId: currentVessel.customer_id || selectedCustomerId || "prev-c1",
+      }));
+    }
+  }, [currentVessel, selectedCustomerId, transferData.vendedorId]);
 
   // Serviços selecionados completos
   const selectedServices = useMemo(() => {
@@ -245,7 +385,6 @@ function NovoPedidoPage() {
     let list = SERVICES_CATALOG;
 
     if (!showAllServices && !term) {
-      // Exibe os 6 principais da referência por padrão
       list = SERVICES_CATALOG.slice(0, 6);
     }
 
@@ -258,9 +397,33 @@ function NovoPedidoPage() {
     return list;
   }, [serviceSearchTerm, showAllServices]);
 
-  // Finalizar e criar os processos do pedido
+  // Ação "Salvar e sair" da etapa 2
+  const handleSaveAndExit = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("navaldocs_pedido_draft_services", JSON.stringify(selectedServiceIds));
+      localStorage.setItem("navaldocs_pedido_draft_customer", selectedCustomerId);
+      localStorage.setItem("navaldocs_pedido_draft_vessel", selectedVesselId);
+    }
+    toast.success("Rascunho do pedido salvo com sucesso!");
+    navigate({ to: "/processes" });
+  };
+
+  // Ação "Continuar para documentos"
+  const handleContinueToDocuments = () => {
+    if (!selectedCustomerId && allCustomers.length > 0) {
+      toast.info("Selecione o cliente do pedido para continuar.");
+      return;
+    }
+    if (requiresVessel && !selectedVesselId && allVessels.length > 0) {
+      toast.info("Selecione a embarcação associada para os serviços marítimos.");
+      return;
+    }
+    setCurrentStep(3);
+  };
+
+  // Finalizar e criar os processos do pedido (Etapa 4)
   const handleCreateOrderProcesses = async () => {
-    if (!profile?.company_id) {
+    if (!profile?.company_id && !isPreview) {
       toast.error("Você precisa estar em um espaço de trabalho ativo.");
       return;
     }
@@ -272,34 +435,34 @@ function NovoPedidoPage() {
 
     setIsSubmitting(true);
     try {
-      // Cria um processo individual para cada serviço selecionado, compartilhando cliente e embarcação
-      const inserts = selectedServices.map(service => ({
-        company_id: profile.company_id,
-        customer_id: selectedCustomerId || null,
-        vessel_id: service.requiresVessel ? (selectedVesselId || null) : null,
-        title: `${service.name}${selectedVesselId ? ` - ${vessels.find(v => v.id === selectedVesselId)?.name || ""}` : ""}`,
-        process_type: service.id,
-        status: "waiting_docs",
-        priority: "normal",
-        notes: orderNotes || `Pedido com ${selectedServices.length} serviço(s) unificado(s).`,
-      }));
+      if (profile?.company_id) {
+        const inserts = selectedServices.map(service => ({
+          company_id: profile.company_id,
+          customer_id: selectedCustomerId || null,
+          vessel_id: service.requiresVessel ? (selectedVesselId || null) : null,
+          title: `${service.name}${selectedVesselId ? ` - ${allVessels.find(v => v.id === selectedVesselId)?.name || ""}` : ""}`,
+          process_type: service.id,
+          status: "waiting_docs",
+          priority: "normal",
+          notes: orderNotes || `Pedido com ${selectedServices.length} serviço(s) unificado(s).`,
+        }));
 
-      const { data, error } = await supabase.from("processes").insert(inserts).select();
-
-      if (error) {
-        console.error("Erro ao criar processos do pedido:", error);
-        toast.error("Não foi possível criar os processos. Tente novamente.");
-        return;
+        const { error } = await supabase.from("processes").insert(inserts);
+        if (error) {
+          console.error("Erro ao criar processos do pedido:", error);
+          toast.error("Não foi possível criar os processos. Tente novamente.");
+          return;
+        }
       }
 
       // Limpa rascunho
       if (typeof window !== "undefined") {
         localStorage.removeItem("navaldocs_pedido_draft_services");
+        localStorage.removeItem("navaldocs_pedido_draft_customer");
+        localStorage.removeItem("navaldocs_pedido_draft_vessel");
       }
 
-      // Notifica os ouvintes da aplicação
       window.dispatchEvent(new CustomEvent("processes:changed"));
-
       toast.success(`Pedido com ${selectedServices.length} processo(s) criado com sucesso!`);
       navigate({ to: "/processes" });
     } catch (err) {
@@ -326,7 +489,13 @@ function NovoPedidoPage() {
           Novo pedido
         </h1>
         <p className="text-slate-500 text-sm sm:text-base mt-1 font-normal">
-          Prepare um ou vários serviços de uma só vez.
+          {currentStep === 1
+            ? "Prepare um ou vários serviços de uma só vez."
+            : currentStep === 2
+            ? "Informe os dados uma vez para os serviços selecionados."
+            : currentStep === 3
+            ? "Envie os documentos compartilhados do pedido."
+            : "Confira os detalhes e gere os documentos do pedido."}
         </p>
       </div>
 
@@ -347,7 +516,6 @@ function NovoPedidoPage() {
               <button
                 type="button"
                 onClick={() => {
-                  // Só permite avançar se houver serviços selecionados
                   if (step.num > 1 && selectedServiceIds.length === 0) {
                     toast.info("Selecione pelo menos um serviço para avançar.");
                     return;
@@ -375,7 +543,7 @@ function NovoPedidoPage() {
                 >
                   {isDone ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : step.num}
                 </div>
-                <span className={cn(isActive && "border-b-2 border-[#1868db] pb-0.5")}>
+                <span className={cn(isActive && "border-b-2 border-[#1868db] pb-0.5 font-bold")}>
                   {step.label}
                 </span>
               </button>
@@ -405,7 +573,9 @@ function NovoPedidoPage() {
         </div>
       </div>
 
+      {/* ========================================================================= */}
       {/* 3. CONTEÚDO DA ETAPA 1: SERVIÇOS */}
+      {/* ========================================================================= */}
       {currentStep === 1 && (
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-2xs space-y-6">
           {/* Título & Descrição da Seleção */}
@@ -523,7 +693,6 @@ function NovoPedidoPage() {
                 : `${selectedServiceIds.length} serviços selecionados`}
             </h4>
 
-            {/* Etiquetas / Badges com 'x' para desmarcar */}
             {selectedServices.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {selectedServices.map((service) => (
@@ -566,7 +735,7 @@ function NovoPedidoPage() {
             </div>
           </div>
 
-          {/* Botões de Ação */}
+          {/* Botões de Ação da Etapa 1 */}
           <div className="pt-2 flex flex-col-reverse sm:flex-row items-center justify-between gap-3">
             <Button
               type="button"
@@ -600,96 +769,511 @@ function NovoPedidoPage() {
         </div>
       )}
 
-      {/* 4. CONTEÚDO DA ETAPA 2: DADOS */}
+      {/* ========================================================================= */}
+      {/* 4. CONTEÚDO DA ETAPA 2: DADOS (REFERÊNCIA VISUAL COMPLETA) */}
+      {/* ========================================================================= */}
       {currentStep === 2 && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-2xs space-y-6">
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-[#0f1d36]">
-              Dados comuns do pedido
-            </h2>
-            <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
-              Associe o cliente e a embarcação para estes {selectedServices.length} serviço(s).
-            </p>
-          </div>
+        <div className="space-y-4">
+          {/* BARRA DE RESUMO COM SERVIÇOS SELECIONADOS + "Editar serviços" */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="font-bold text-xs sm:text-sm text-[#0f1d36] shrink-0">
+                {selectedServices.length} {selectedServices.length === 1 ? "serviço neste pedido" : "serviços neste pedido"}
+              </span>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Seleção do Cliente */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Cliente / Requerente *
-              </label>
-              <select
-                value={selectedCustomerId}
-                onChange={(e) => setSelectedCustomerId(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
-              >
-                <option value="">Selecione um cliente...</option>
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} {c.document_number ? `(${c.document_number})` : ""}
-                  </option>
+              <div className="flex items-center gap-2 flex-wrap">
+                {selectedServices.map(s => (
+                  <span
+                    key={s.id}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#1868db] border border-blue-100/80 animate-in fade-in duration-150"
+                  >
+                    <span>{s.shortName}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeService(s.id)}
+                      aria-label={`Remover ${s.name}`}
+                      className="hover:text-red-500 transition-colors cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
                 ))}
-              </select>
+              </div>
             </div>
 
-            {/* Seleção de Embarcação (se aplicável) */}
-            {requiresVessel && (
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Embarcação associada *
+            <button
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1868db] hover:underline cursor-pointer self-start sm:self-auto shrink-0"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              <span>Editar serviços</span>
+            </button>
+          </div>
+
+          {/* CARD 1: CLIENTE E EMBARCAÇÃO */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-2xs space-y-6">
+            <h2 className="text-base sm:text-lg font-bold text-[#0f1d36]">
+              Cliente e embarcação
+            </h2>
+
+            {/* Campo: Cliente do pedido */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700">
+                  Cliente do pedido
                 </label>
-                <select
-                  value={selectedVesselId}
-                  onChange={(e) => setSelectedVesselId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+                {/* Mobile "+ Novo cliente" link */}
+                <button
+                  type="button"
+                  onClick={() => setIsNewCustomerModalOpen(true)}
+                  className="sm:hidden text-xs font-bold text-[#1868db] hover:underline cursor-pointer"
                 >
-                  <option value="">Selecione a embarcação...</option>
-                  {filteredVessels.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.name} {v.registration_number ? `(${v.registration_number})` : ""}
-                    </option>
-                  ))}
-                </select>
+                  + Novo cliente
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1">
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <select
+                    value={selectedCustomerId}
+                    onChange={(e) => setSelectedCustomerId(e.target.value)}
+                    className="w-full pl-10 pr-10 py-3 bg-white border border-slate-200/80 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1868db]/20 focus:border-[#1868db] transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="">Selecione o cliente...</option>
+                    {allCustomers.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} {c.document_number ? `· ${c.document_number}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                </div>
+
+                {/* Desktop "+ Novo cliente" button */}
+                <button
+                  type="button"
+                  onClick={() => setIsNewCustomerModalOpen(true)}
+                  className="hidden sm:inline-flex items-center justify-center h-11 px-4 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold shrink-0 cursor-pointer shadow-2xs transition-colors"
+                >
+                  + Novo cliente
+                </button>
+              </div>
+
+              <p className="text-[11px] sm:text-xs text-slate-500 flex items-center gap-1.5 pt-0.5">
+                <Info className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                <span>Dados do cadastro serão reaproveitados.</span>
+              </p>
+            </div>
+
+            {/* Campo: Embarcação (quando serviços exigirem) */}
+            {requiresVessel && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700">
+                    Embarcação
+                  </label>
+                  {/* Mobile "+ Nova embarcação" link */}
+                  <button
+                    type="button"
+                    onClick={() => setIsNewVesselModalOpen(true)}
+                    className="sm:hidden text-xs font-bold text-[#1868db] hover:underline cursor-pointer"
+                  >
+                    + Nova embarcação
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-1">
+                    <Ship className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <select
+                      value={selectedVesselId}
+                      onChange={(e) => setSelectedVesselId(e.target.value)}
+                      className="w-full pl-10 pr-10 py-3 bg-white border border-slate-200/80 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1868db]/20 focus:border-[#1868db] transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">Selecione a embarcação...</option>
+                      {filteredVessels.map(v => (
+                        <option key={v.id} value={v.id}>
+                          {v.name} {v.vessel_type ? `· ${v.vessel_type}` : ""} {v.registration_number ? `(${v.registration_number})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                  </div>
+
+                  {/* Desktop "+ Nova embarcação" button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsNewVesselModalOpen(true)}
+                    className="hidden sm:inline-flex items-center justify-center h-11 px-4 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold shrink-0 cursor-pointer shadow-2xs transition-colors"
+                  >
+                    + Nova embarcação
+                  </button>
+                </div>
+
+                {/* Sub-barra: Proprietária cadastrada */}
+                {selectedVesselId && (
+                  <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-slate-50/70 border border-slate-100 text-xs">
+                    <div className="flex items-center gap-2 text-slate-700 min-w-0">
+                      <Ship className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span className="truncate">
+                        Proprietária cadastrada: <strong className="text-[#0f1d36]">{currentVesselOwnerName}</strong>
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toast.info(`Cadastro da embarcação: proprietária registrada como ${currentVesselOwnerName}.`)}
+                      className="text-xs font-bold text-[#1868db] hover:underline shrink-0 ml-2 cursor-pointer"
+                    >
+                      Conferir cadastro →
+                    </button>
+                  </div>
+                )}
+
+                <p className="text-[11px] sm:text-xs text-slate-500 flex items-center gap-1.5 pt-0.5">
+                  <Info className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <span>O cliente do pedido pode ser diferente do proprietário.</span>
+                </p>
               </div>
             )}
           </div>
 
-          {/* Observações do Pedido */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Observações Gerais do Pedido (opcional)
-            </label>
-            <textarea
-              rows={3}
-              value={orderNotes}
-              onChange={(e) => setOrderNotes(e.target.value)}
-              placeholder="Instruções ou referências de protocolo na Capitania..."
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
-            />
+          {/* CARD 2: DADOS ESPECÍFICOS DOS SERVIÇOS */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-2xs space-y-4">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-[#0f1d36]">
+                Dados específicos dos serviços
+              </h2>
+              <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
+                Complete apenas o que muda neste pedido.
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-1">
+              {/* 1. SEÇÃO: Transferência de propriedade */}
+              {selectedServiceIds.includes("transferencia") && (
+                <div className="rounded-2xl border border-slate-200/80 overflow-hidden bg-white transition-all shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => toggleAccordion("transferencia")}
+                    className="w-full p-4 sm:p-4.5 flex items-center justify-between hover:bg-slate-50/60 text-left transition-colors cursor-pointer select-none"
+                  >
+                    <div className="flex items-center gap-3">
+                      <ArrowLeftRight className="h-4 w-4 text-slate-700" />
+                      <h3 className="text-xs sm:text-sm font-bold text-[#0f1d36]">
+                        Transferência de propriedade
+                      </h3>
+                    </div>
+                    {expandedAccordions.transferencia ? (
+                      <ChevronUp className="h-4 w-4 text-slate-500" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-slate-500" />
+                    )}
+                  </button>
+
+                  {expandedAccordions.transferencia && (
+                    <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3.5">
+                        {/* Proprietário atual / vendedor */}
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-700">
+                            Proprietário atual / vendedor
+                          </label>
+                          <div className="relative">
+                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <select
+                              value={transferData.vendedorId}
+                              onChange={(e) => setTransferData(prev => ({ ...prev, vendedorId: e.target.value }))}
+                              className="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1868db]/20 appearance-none cursor-pointer"
+                            >
+                              <option value="">Selecione vendedor...</option>
+                              {allCustomers.map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
+                            </select>
+                            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                          </div>
+                        </div>
+
+                        {/* Novo proprietário / comprador */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-slate-700">
+                              Novo proprietário / comprador
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setIsNewBuyerModalOpen(true)}
+                              className="sm:hidden text-[11px] font-bold text-[#1868db] hover:underline cursor-pointer"
+                            >
+                              + Cadastrar pessoa
+                            </button>
+                          </div>
+
+                          <div className="flex items-center gap-2.5">
+                            <div className="relative flex-1">
+                              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                              <select
+                                value={transferData.compradorId}
+                                onChange={(e) => setTransferData(prev => ({ ...prev, compradorId: e.target.value }))}
+                                className="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1868db]/20 appearance-none cursor-pointer"
+                              >
+                                <option value="">Selecionar pessoa ou empresa</option>
+                                {allCustomers.map(c => (
+                                  <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                              </select>
+                              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setIsNewBuyerModalOpen(true)}
+                              className="hidden sm:inline-flex text-xs font-bold text-[#1868db] hover:underline shrink-0 whitespace-nowrap cursor-pointer"
+                            >
+                              + Cadastrar pessoa
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] sm:text-xs text-slate-500 flex items-center gap-1.5">
+                        <Info className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        <span>O cadastro de propriedade só será atualizado no momento adequado do processo.</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 2. SEÇÃO: Renovação de documento */}
+              {selectedServiceIds.includes("renovacao") && (
+                <div className="rounded-2xl border border-slate-200/80 overflow-hidden bg-white transition-all shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => toggleAccordion("renovacao")}
+                    className="w-full p-4 sm:p-4.5 flex items-center justify-between hover:bg-slate-50/60 text-left transition-colors cursor-pointer select-none"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-4 w-4 text-slate-700" />
+                      <div>
+                        <h3 className="text-xs sm:text-sm font-bold text-[#0f1d36]">
+                          Renovação de documento
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          {renovacaoData.tipoDocumento || "Selecionar documento"}
+                        </p>
+                      </div>
+                    </div>
+                    {expandedAccordions.renovacao ? (
+                      <ChevronUp className="h-4 w-4 text-slate-500" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-slate-500" />
+                    )}
+                  </button>
+
+                  {expandedAccordions.renovacao && (
+                    <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3.5">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-700">Documento a renovar</label>
+                          <select
+                            value={renovacaoData.tipoDocumento}
+                            onChange={(e) => setRenovacaoData(prev => ({ ...prev, tipoDocumento: e.target.value }))}
+                            className="w-full px-3 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+                          >
+                            <option value="TIE (Título de Inscrição de Embarcação)">TIE (Título de Inscrição)</option>
+                            <option value="TIEM (Título de Inscrição de Embarcação Miúda)">TIEM (Miúda)</option>
+                            <option value="CHA (Habilitação Náutica)">CHA (Habilitação Náutica)</option>
+                            <option value="Procuração da Capitania">Procuração da Capitania</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-700">Número do documento</label>
+                          <input
+                            type="text"
+                            value={renovacaoData.numeroDocumento}
+                            onChange={(e) => setRenovacaoData(prev => ({ ...prev, numeroDocumento: e.target.value }))}
+                            placeholder="Ex: 381-000123"
+                            className="w-full px-3 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-700">Validade anterior</label>
+                          <input
+                            type="date"
+                            value={renovacaoData.validadeAtual}
+                            onChange={(e) => setRenovacaoData(prev => ({ ...prev, validadeAtual: e.target.value }))}
+                            className="w-full px-3 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 3. SEÇÃO: Alteração de motor */}
+              {selectedServiceIds.includes("alteracao_motor") && (
+                <div className="rounded-2xl border border-slate-200/80 overflow-hidden bg-white transition-all shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => toggleAccordion("alteracao_motor")}
+                    className="w-full p-4 sm:p-4.5 flex items-center justify-between hover:bg-slate-50/60 text-left transition-colors cursor-pointer select-none"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Wrench className="h-4 w-4 text-slate-700" />
+                      <div>
+                        <h3 className="text-xs sm:text-sm font-bold text-[#0f1d36]">
+                          Alteração de motor
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          {motorData.novoMotorMarca ? `${motorData.novoMotorMarca} ${motorData.novoMotorPotencia}` : "Informar dados do motor"}
+                        </p>
+                      </div>
+                    </div>
+                    {expandedAccordions.alteracao_motor ? (
+                      <ChevronUp className="h-4 w-4 text-slate-500" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-slate-500" />
+                    )}
+                  </button>
+
+                  {expandedAccordions.alteracao_motor && (
+                    <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-4">
+                      <div className="pt-3.5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Motor atual */}
+                        <div className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-200/70 space-y-2">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                            Motor atual cadastrado
+                          </span>
+                          <div className="text-xs font-bold text-[#0f1d36]">
+                            {motorData.motorAtualMarca} ({motorData.motorAtualPotencia})
+                          </div>
+                          <div className="text-[11px] text-slate-500 font-mono">
+                            Série: {motorData.motorAtualSerie || "MV-892182"}
+                          </div>
+                        </div>
+
+                        {/* Novo motor */}
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-700">Nova Potência (HP)</label>
+                              <input
+                                type="text"
+                                value={motorData.novoMotorPotencia}
+                                onChange={(e) => setMotorData(prev => ({ ...prev, novoMotorPotencia: e.target.value }))}
+                                placeholder="Ex: 300 HP"
+                                className="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-700">Nova Marca/Modelo</label>
+                              <input
+                                type="text"
+                                value={motorData.novoMotorMarca}
+                                onChange={(e) => setMotorData(prev => ({ ...prev, novoMotorMarca: e.target.value }))}
+                                placeholder="Ex: Yamaha V8"
+                                className="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-700">Nº de Série / Nota Fiscal</label>
+                            <input
+                              type="text"
+                              value={motorData.novoMotorSerie}
+                              onChange={(e) => setMotorData(prev => ({ ...prev, novoMotorSerie: e.target.value }))}
+                              placeholder="Ex: NF-e 001.234 / Série 987654"
+                              className="w-full px-3 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Informational Banner */}
+            <div className="p-3.5 rounded-xl bg-blue-50/50 border border-blue-100/70 flex items-center gap-2.5 text-xs text-slate-700">
+              <Info className="h-4 w-4 text-[#1868db] shrink-0" />
+              <span>Você pode completar as informações e conferir tudo na revisão.</span>
+            </div>
           </div>
 
-          <div className="pt-2 flex items-center justify-between gap-3">
+          {/* BOTÕES DE AÇÃO DA ETAPA 2 */}
+          {/* Desktop Footer */}
+          <div className="hidden sm:flex items-center justify-between pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => setCurrentStep(1)}
-              className="h-11 px-6 rounded-xl border-slate-200 text-slate-700 font-semibold text-xs sm:text-sm"
+              className="h-11 px-6 rounded-xl border-slate-200 text-slate-700 font-semibold text-xs sm:text-sm hover:bg-slate-50 cursor-pointer"
             >
-              ← Voltar aos serviços
+              Voltar
             </Button>
 
-            <Button
-              type="button"
-              onClick={() => setCurrentStep(3)}
-              className="h-11 px-7 rounded-xl bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold text-xs sm:text-sm"
-            >
-              Continuar para Documentos →
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSaveAndExit}
+                className="h-11 px-6 rounded-xl border-slate-200 text-slate-700 font-semibold text-xs sm:text-sm hover:bg-slate-50 cursor-pointer"
+              >
+                Salvar e sair
+              </Button>
+
+              <Button
+                type="button"
+                onClick={handleContinueToDocuments}
+                className="h-11 px-7 rounded-xl bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold text-xs sm:text-sm shadow-sm cursor-pointer"
+              >
+                Continuar para documentos →
+              </Button>
+            </div>
+          </div>
+
+          {/* Mobile Footer */}
+          <div className="sm:hidden space-y-3 pt-2">
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleSaveAndExit}
+                className="text-xs font-bold text-[#1868db] hover:underline cursor-pointer"
+              >
+                Salvar e sair
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCurrentStep(1)}
+                className="h-11 rounded-xl border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 cursor-pointer"
+              >
+                Voltar
+              </Button>
+
+              <Button
+                type="button"
+                onClick={handleContinueToDocuments}
+                className="h-11 rounded-xl bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold text-xs shadow-sm cursor-pointer"
+              >
+                Continuar →
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
+      {/* ========================================================================= */}
       {/* 5. CONTEÚDO DA ETAPA 3: DOCUMENTOS */}
+      {/* ========================================================================= */}
       {currentStep === 3 && (
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-2xs space-y-6">
           <div>
@@ -729,7 +1313,7 @@ function NovoPedidoPage() {
               type="button"
               variant="outline"
               onClick={() => setCurrentStep(2)}
-              className="h-11 px-6 rounded-xl border-slate-200 text-slate-700 font-semibold text-xs sm:text-sm"
+              className="h-11 px-6 rounded-xl border-slate-200 text-slate-700 font-semibold text-xs sm:text-sm cursor-pointer"
             >
               ← Voltar aos dados
             </Button>
@@ -737,7 +1321,7 @@ function NovoPedidoPage() {
             <Button
               type="button"
               onClick={() => setCurrentStep(4)}
-              className="h-11 px-7 rounded-xl bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold text-xs sm:text-sm"
+              className="h-11 px-7 rounded-xl bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold text-xs sm:text-sm cursor-pointer"
             >
               Revisar e gerar →
             </Button>
@@ -745,7 +1329,9 @@ function NovoPedidoPage() {
         </div>
       )}
 
+      {/* ========================================================================= */}
       {/* 6. CONTEÚDO DA ETAPA 4: REVISÃO E GERAÇÃO */}
+      {/* ========================================================================= */}
       {currentStep === 4 && (
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-2xs space-y-6">
           <div>
@@ -782,11 +1368,11 @@ function NovoPedidoPage() {
 
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1">
             <p className="font-semibold text-[#0f1d36]">
-              Cliente: {customers.find(c => c.id === selectedCustomerId)?.name || "Não informado"}
+              Cliente: {allCustomers.find(c => c.id === selectedCustomerId)?.name || "Não informado"}
             </p>
             {requiresVessel && (
               <p>
-                Embarcação: {vessels.find(v => v.id === selectedVesselId)?.name || "Não informada"}
+                Embarcação: {allVessels.find(v => v.id === selectedVesselId)?.name || "Não informada"}
               </p>
             )}
           </div>
@@ -796,7 +1382,7 @@ function NovoPedidoPage() {
               type="button"
               variant="outline"
               onClick={() => setCurrentStep(3)}
-              className="w-full sm:w-auto h-11 px-6 rounded-xl border-slate-200 text-slate-700 font-semibold text-xs sm:text-sm"
+              className="w-full sm:w-auto h-11 px-6 rounded-xl border-slate-200 text-slate-700 font-semibold text-xs sm:text-sm cursor-pointer"
             >
               ← Voltar aos documentos
             </Button>
@@ -822,6 +1408,378 @@ function NovoPedidoPage() {
           </div>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* 7. MODAIS DE CADASTRO NO CONTEXTO DA TELA */}
+      {/* ========================================================================= */}
+      {/* Modal: Novo Cliente */}
+      <ModalNovoCliente
+        isOpen={isNewCustomerModalOpen}
+        onClose={() => setIsNewCustomerModalOpen(false)}
+        companyId={profile?.company_id}
+        onSuccess={(newCustomer) => {
+          setCustomers(prev => [newCustomer, ...prev]);
+          setSelectedCustomerId(newCustomer.id);
+          setIsNewCustomerModalOpen(false);
+          toast.success(`Cliente ${newCustomer.name} adicionado e selecionado!`);
+        }}
+      />
+
+      {/* Modal: Nova Embarcação */}
+      <ModalNovaEmbarcacao
+        isOpen={isNewVesselModalOpen}
+        onClose={() => setIsNewVesselModalOpen(false)}
+        companyId={profile?.company_id}
+        currentCustomerId={selectedCustomerId}
+        onSuccess={(newVessel) => {
+          setVessels(prev => [newVessel, ...prev]);
+          setSelectedVesselId(newVessel.id);
+          setIsNewVesselModalOpen(false);
+          toast.success(`Embarcação ${newVessel.name} cadastrada e associada!`);
+        }}
+      />
+
+      {/* Modal: Cadastrar Comprador / Pessoa */}
+      <ModalNovoCliente
+        isOpen={isNewBuyerModalOpen}
+        onClose={() => setIsNewBuyerModalOpen(false)}
+        companyId={profile?.company_id}
+        title="Cadastrar Novo Comprador"
+        onSuccess={(newPerson) => {
+          setCustomers(prev => [newPerson, ...prev]);
+          setTransferData(prev => ({ ...prev, compradorId: newPerson.id, compradorNome: newPerson.name }));
+          setIsNewBuyerModalOpen(false);
+          toast.success(`Comprador ${newPerson.name} registrado para o pedido!`);
+        }}
+      />
     </div>
+  );
+}
+
+// ----------------------------------------------------------------------
+// SUB-MODAIS INTERNOS PARA CADASTRO IN-CONTEXT
+// ----------------------------------------------------------------------
+function ModalNovoCliente({
+  isOpen,
+  onClose,
+  companyId,
+  title = "Cadastrar Novo Cliente",
+  onSuccess,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  companyId?: string;
+  title?: string;
+  onSuccess: (customer: any) => void;
+}) {
+  const [name, setName] = useState("");
+  const [doc, setDoc] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [type, setType] = useState<"PF" | "PJ">("PF");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      toast.error("Informe o nome do cliente.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const newCustomerObj = {
+        id: `c_${Date.now()}`,
+        name: name.trim(),
+        document_number: doc.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        type,
+      };
+
+      if (companyId) {
+        const { data, error } = await supabase.from("customers").insert({
+          company_id: companyId,
+          name: name.trim(),
+          document_number: doc.trim() || null,
+          email: email.trim() || null,
+          phone: phone.trim() || null,
+        }).select().single();
+
+        if (error) {
+          console.error("Erro ao inserir cliente:", error);
+          toast.error("Erro ao salvar cliente no banco.");
+          setIsLoading(false);
+          return;
+        }
+        if (data) {
+          onSuccess(data);
+          return;
+        }
+      }
+
+      onSuccess(newCustomerObj);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro inesperado ao salvar cliente.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md p-6 bg-white rounded-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-bold text-[#0f1d36]">
+            {title}
+          </DialogTitle>
+          <DialogDescription className="text-xs text-slate-500">
+            Cadastre a pessoa ou empresa para utilização neste pedido.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          {/* Tipo PF / PJ */}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setType("PF")}
+              className={cn(
+                "flex-1 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer",
+                type === "PF"
+                  ? "border-[#1868db] bg-blue-50/50 text-[#1868db]"
+                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
+              )}
+            >
+              Pessoa Física (CPF)
+            </button>
+            <button
+              type="button"
+              onClick={() => setType("PJ")}
+              className={cn(
+                "flex-1 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer",
+                type === "PJ"
+                  ? "border-[#1868db] bg-blue-50/50 text-[#1868db]"
+                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
+              )}
+            >
+              Pessoa Jurídica (CNPJ)
+            </button>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-700">
+              {type === "PF" ? "Nome Completo *" : "Razão Social *"}
+            </label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={type === "PF" ? "Ex: Marina Costa" : "Ex: Náutica Sul LTDA"}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">
+                {type === "PF" ? "CPF" : "CNPJ"}
+              </label>
+              <input
+                type="text"
+                value={doc}
+                onChange={(e) => setDoc(e.target.value)}
+                placeholder={type === "PF" ? "000.000.000-00" : "00.000.000/0000-00"}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Telefone / WhatsApp</label>
+              <input
+                type="text"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="(00) 00000-0000"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-700">E-mail</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="cliente@email.com"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+            />
+          </div>
+
+          <DialogFooter className="pt-2 flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="rounded-xl border-slate-200 text-xs cursor-pointer"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="bg-[#1868db] hover:bg-[#1456b8] text-white rounded-xl text-xs font-bold cursor-pointer"
+            >
+              {isLoading ? "Salvando..." : "Salvar e Vincular"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ModalNovaEmbarcacao({
+  isOpen,
+  onClose,
+  companyId,
+  currentCustomerId,
+  onSuccess,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  companyId?: string;
+  currentCustomerId?: string;
+  onSuccess: (vessel: any) => void;
+}) {
+  const [name, setName] = useState("");
+  const [vesselType, setVesselType] = useState("Lancha");
+  const [regNumber, setRegNumber] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      toast.error("Informe o nome da embarcação.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const newVesselObj = {
+        id: `v_${Date.now()}`,
+        name: name.trim(),
+        vessel_type: vesselType,
+        registration_number: regNumber.trim() || "381-P99999",
+        customer_id: currentCustomerId || null,
+      };
+
+      if (companyId) {
+        const { data, error } = await supabase.from("vessels").insert({
+          company_id: companyId,
+          name: name.trim(),
+          vessel_type: vesselType,
+          registration_number: regNumber.trim() || null,
+          customer_id: currentCustomerId || null,
+        }).select().single();
+
+        if (error) {
+          console.error("Erro ao inserir embarcação:", error);
+          toast.error("Erro ao salvar embarcação no banco.");
+          setIsLoading(false);
+          return;
+        }
+        if (data) {
+          onSuccess(data);
+          return;
+        }
+      }
+
+      onSuccess(newVesselObj);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro inesperado ao salvar embarcação.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md p-6 bg-white rounded-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-bold text-[#0f1d36]">
+            Cadastrar Embarcação
+          </DialogTitle>
+          <DialogDescription className="text-xs text-slate-500">
+            Adicione uma nova embarcação associada ao cliente do pedido.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-700">Nome da Embarcação *</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex: Mar Azul"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Tipo de Embarcação</label>
+              <select
+                value={vesselType}
+                onChange={(e) => setVesselType(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+              >
+                <option value="Lancha">Lancha</option>
+                <option value="Veleiro">Veleiro</option>
+                <option value="Moto Aquática">Moto Aquática (Jet Ski)</option>
+                <option value="Iate">Iate</option>
+                <option value="Bote / Inflável">Bote / Inflável</option>
+                <option value="Barco de Pesca">Barco de Pesca</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Nº de Inscrição / TIE</label>
+              <input
+                type="text"
+                value={regNumber}
+                onChange={(e) => setRegNumber(e.target.value)}
+                placeholder="Ex: 381-000123"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1868db]/20"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="pt-2 flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="rounded-xl border-slate-200 text-xs cursor-pointer"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="bg-[#1868db] hover:bg-[#1456b8] text-white rounded-xl text-xs font-bold cursor-pointer"
+            >
+              {isLoading ? "Salvando..." : "Salvar Embarcação"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
