@@ -16,11 +16,12 @@ interface StripeConfigDialogProps {
 }
 
 interface VerificationResult {
-  status: "connected" | "pending_configuration" | "error" | "offline";
+  status: "connected" | "pending_configuration" | "function_not_deployed" | "error" | "offline";
   environment: "test" | "production" | "pending";
   connected: boolean;
   hasSecretKey: boolean;
   hasWebhookSecret: boolean;
+  isFunctionDeployed: boolean;
   webhookUrl: string;
   requiredEvents: string[];
   message: string;
@@ -63,21 +64,46 @@ export const StripeConfigDialog: React.FC<StripeConfigDialogProps> = ({
       });
 
       if (response.error) {
-        // Se a function retornou erro HTTP ou 404/503
-        const errData = response.data || {};
-        setResult({
-          status: "pending_configuration",
-          environment: "pending",
-          connected: false,
-          hasSecretKey: false,
-          hasWebhookSecret: false,
-          webhookUrl: defaultWebhookUrl,
-          requiredEvents,
-          message: errData.message || response.error.message || "A Edge Function 'stripe-verify' não retornou conexão ativa. Verifique as credenciais no servidor seguro.",
-          checkedAt: new Date().toISOString()
-        });
-        toast.error("Stripe: Conexão pendente de configuração no backend.");
+        const httpStatus = (response.error as any)?.context?.status;
+        const errMsg = response.error.message || "";
+        const isNotFoundOrUnpublished = 
+          httpStatus === 404 || 
+          errMsg.toLowerCase().includes("not found") || 
+          errMsg.toLowerCase().includes("non-2xx") ||
+          errMsg.toLowerCase().includes("failed to send a request");
+
+        if (isNotFoundOrUnpublished) {
+          // A Edge Function ainda não foi publicada no Supabase ou endpoint 404
+          setResult({
+            status: "function_not_deployed",
+            environment: "pending",
+            connected: false,
+            hasSecretKey: false,
+            hasWebhookSecret: false,
+            isFunctionDeployed: false,
+            webhookUrl: defaultWebhookUrl,
+            requiredEvents,
+            message: "A Edge Function 'stripe-verify' ainda não está publicada no projeto Supabase (vqutxzdsajinhsvuddcp - HTTP 404 / Não encontrada). Para verificar credenciais no servidor, publique as Edge Functions ('npx supabase functions deploy stripe-verify') e cadastre os segredos no painel do Supabase.",
+            checkedAt: new Date().toISOString()
+          });
+          toast.warning("Edge Function 'stripe-verify' ainda não publicada no Supabase (HTTP 404).");
+        } else {
+          setResult({
+            status: "error",
+            environment: "pending",
+            connected: false,
+            hasSecretKey: false,
+            hasWebhookSecret: false,
+            isFunctionDeployed: true,
+            webhookUrl: defaultWebhookUrl,
+            requiredEvents,
+            message: `Falha ao contactar a Edge Function: ${errMsg}`,
+            checkedAt: new Date().toISOString()
+          });
+          toast.error("Erro ao contactar a Edge Function: " + errMsg);
+        }
       } else if (response.data) {
+        // Resposta REAL do backend executado no servidor
         const d = response.data;
         setResult({
           status: d.status || (d.connected ? "connected" : "pending_configuration"),
@@ -85,9 +111,10 @@ export const StripeConfigDialog: React.FC<StripeConfigDialogProps> = ({
           connected: !!d.connected,
           hasSecretKey: !!d.hasSecretKey,
           hasWebhookSecret: !!d.hasWebhookSecret,
+          isFunctionDeployed: true,
           webhookUrl: d.webhookUrl || defaultWebhookUrl,
           requiredEvents: d.requiredEvents || requiredEvents,
-          message: d.message || (d.connected ? "Conexão validada com sucesso com a Stripe." : "Configuração pendente."),
+          message: d.message || (d.connected ? "Conexão validada com sucesso com a Stripe." : "Configuração pendente no backend."),
           livemode: d.livemode,
           checkedAt: d.checkedAt || new Date().toISOString()
         });
@@ -95,21 +122,22 @@ export const StripeConfigDialog: React.FC<StripeConfigDialogProps> = ({
         if (d.connected) {
           toast.success("Conexão com a Stripe verificada com sucesso!");
         } else {
-          toast.info("Status da Stripe: " + (d.message || "Configuração pendente."));
+          toast.info("Diagnóstico Stripe: " + (d.message || "Configuração pendente."));
         }
       }
       onStatusChanged?.();
     } catch (err: any) {
-      console.warn("Falha ao invocar verificação Stripe no backend:", err);
+      console.warn("Falha na chamada da Edge Function:", err);
       setResult({
-        status: "pending_configuration",
+        status: "function_not_deployed",
         environment: "pending",
         connected: false,
         hasSecretKey: false,
         hasWebhookSecret: false,
+        isFunctionDeployed: false,
         webhookUrl: defaultWebhookUrl,
         requiredEvents,
-        message: "Configuração pendente: nenhuma credencial da Stripe detectada nas variáveis de ambiente seguras da hospedagem.",
+        message: "Falha de rede ao conectar à Edge Function 'stripe-verify'. Certifique-se de que a função foi implantada no Supabase.",
         checkedAt: new Date().toISOString()
       });
     } finally {
@@ -158,10 +186,16 @@ export const StripeConfigDialog: React.FC<StripeConfigDialogProps> = ({
               className={`text-[11px] font-bold px-2.5 py-1 ${
                 isConnected 
                   ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-                  : "bg-amber-50 text-amber-800 border-amber-200"
+                  : result?.status === "function_not_deployed"
+                    ? "bg-amber-100 text-amber-900 border-amber-300"
+                    : "bg-amber-50 text-amber-800 border-amber-200"
               }`}
             >
-              {isConnected ? `Conectado (${currentEnv})` : "Configuração pendente"}
+              {isConnected 
+                ? `Conectado (${currentEnv})` 
+                : result?.status === "function_not_deployed"
+                  ? "Função Backend Não Publicada (404)"
+                  : "Configuração pendente"}
             </Badge>
           </div>
         </DialogHeader>
@@ -175,8 +209,18 @@ export const StripeConfigDialog: React.FC<StripeConfigDialogProps> = ({
             </div>
             <div>
               <span className="text-slate-400 block font-medium uppercase tracking-wider text-[9px]">Status da Integração</span>
-              <span className={`font-bold text-xs mt-0.5 block ${isConnected ? "text-emerald-600" : "text-amber-700"}`}>
-                {isConnected ? "Operacional e Ativo" : "Aguardando Credenciais"}
+              <span className={`font-bold text-xs mt-0.5 block ${
+                isConnected 
+                  ? "text-emerald-600" 
+                  : result?.status === "function_not_deployed"
+                    ? "text-amber-800"
+                    : "text-amber-700"
+              }`}>
+                {isConnected 
+                  ? "Operacional e Ativo" 
+                  : result?.status === "function_not_deployed"
+                    ? "Função Backend Pendente (404)"
+                    : "Aguardando Credenciais"}
               </span>
             </div>
           </div>
@@ -193,8 +237,21 @@ export const StripeConfigDialog: React.FC<StripeConfigDialogProps> = ({
                   <span className="font-mono font-bold text-slate-800">STRIPE_SECRET_KEY</span>
                   <p className="text-[10px] text-slate-500">Chave secreta para checkouts e balance (sk_test_... ou sk_live_...)</p>
                 </div>
-                <Badge variant={result?.hasSecretKey ? "default" : "outline"} className={result?.hasSecretKey ? "bg-emerald-600 text-white text-[10px]" : "text-amber-700 border-amber-300 text-[10px]"}>
-                  {result?.hasSecretKey ? "Presente no servidor" : "Pendente"}
+                <Badge 
+                  variant={result?.hasSecretKey ? "default" : "outline"} 
+                  className={
+                    result?.hasSecretKey 
+                      ? "bg-emerald-600 text-white text-[10px]" 
+                      : result?.isFunctionDeployed === false
+                        ? "bg-amber-50 text-amber-800 border-amber-300 text-[10px]"
+                        : "text-amber-700 border-amber-300 text-[10px]"
+                  }
+                >
+                  {result?.hasSecretKey 
+                    ? "Presente no servidor" 
+                    : result?.isFunctionDeployed === false
+                      ? "Aguardando deploy da função"
+                      : "Pendente"}
                 </Badge>
               </div>
 
@@ -203,14 +260,31 @@ export const StripeConfigDialog: React.FC<StripeConfigDialogProps> = ({
                   <span className="font-mono font-bold text-slate-800">STRIPE_WEBHOOK_SECRET</span>
                   <p className="text-[10px] text-slate-500">Segredo de validação da assinatura criptográfica (whsec_...)</p>
                 </div>
-                <Badge variant={result?.hasWebhookSecret ? "default" : "outline"} className={result?.hasWebhookSecret ? "bg-emerald-600 text-white text-[10px]" : "text-amber-700 border-amber-300 text-[10px]"}>
-                  {result?.hasWebhookSecret ? "Presente no servidor" : "Pendente"}
+                <Badge 
+                  variant={result?.hasWebhookSecret ? "default" : "outline"} 
+                  className={
+                    result?.hasWebhookSecret 
+                      ? "bg-emerald-600 text-white text-[10px]" 
+                      : result?.isFunctionDeployed === false
+                        ? "bg-amber-50 text-amber-800 border-amber-300 text-[10px]"
+                        : "text-amber-700 border-amber-300 text-[10px]"
+                  }
+                >
+                  {result?.hasWebhookSecret 
+                    ? "Presente no servidor" 
+                    : result?.isFunctionDeployed === false
+                      ? "Aguardando deploy da função"
+                      : "Pendente"}
                 </Badge>
               </div>
             </div>
 
             {result?.message && (
-              <p className="text-[11px] text-slate-600 mt-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <p className={`text-[11px] mt-2 p-2.5 rounded-lg border leading-relaxed ${
+                result.status === "function_not_deployed"
+                  ? "bg-amber-50 border-amber-200 text-amber-900"
+                  : "bg-slate-50 border-slate-100 text-slate-600"
+              }`}>
                 {result.message}
               </p>
             )}
@@ -252,6 +326,11 @@ export const StripeConfigDialog: React.FC<StripeConfigDialogProps> = ({
                 <span>{hasCopiedUrl ? "Copiado" : "Copiar"}</span>
               </Button>
             </div>
+            {result?.status === "function_not_deployed" && (
+              <p className="text-[10px] text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200">
+                ⚠️ <strong>Atenção:</strong> O endpoint real do webhook só responderá às notificações do Stripe após o deploy da função <code>stripe-webhook</code> no Supabase (atualmente retorna HTTP 404).
+              </p>
+            )}
           </div>
 
           {/* 5. Eventos Exigidos pelo Handler */}
