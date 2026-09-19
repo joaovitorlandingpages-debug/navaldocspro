@@ -704,7 +704,14 @@ function NovoPedidoPage() {
 
       window.dispatchEvent(new CustomEvent("processes:changed"));
       toast.success(`Pedido com ${selectedServices.length} processo(s) criado com sucesso!`);
-      navigate({ to: "/processes" });
+      navigate({
+        to: "/processes/arquivos-gerados",
+        search: {
+          preview: isPreview ? "true" : undefined,
+          customerId: selectedCustomerId || undefined,
+          vesselId: selectedVesselId || undefined,
+        },
+      });
     } catch (err) {
       console.error("Exceção na criação do pedido:", err);
       toast.error("Erro inesperado ao registrar pedido.");
@@ -2107,24 +2114,45 @@ function NovoPedidoPage() {
               ← Voltar aos documentos
             </Button>
 
-            <Button
-              type="button"
-              disabled={isSubmitting}
-              onClick={handleCreateOrderProcesses}
-              className="w-full sm:w-auto h-11 px-8 rounded-xl bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Criando processos...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span>Confirmar e criar {selectedServices.length} processos</span>
-                </>
-              )}
-            </Button>
+            <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  navigate({
+                    to: "/processes/arquivos-gerados",
+                    search: {
+                      preview: "true",
+                      customerId: selectedCustomerId || undefined,
+                      vesselId: selectedVesselId || undefined,
+                    },
+                  })
+                }
+                className="w-full sm:w-auto h-11 px-5 rounded-xl border-slate-200 text-slate-700 font-semibold text-xs sm:text-sm hover:bg-slate-50 cursor-pointer inline-flex items-center justify-center gap-2"
+              >
+                <FileText className="h-4 w-4 text-[#1868db]" />
+                <span>Ver arquivos gerados</span>
+              </Button>
+
+              <Button
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleCreateOrderProcesses}
+                className="w-full sm:w-auto h-11 px-7 rounded-xl bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Criando processos...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>Confirmar e gerar arquivos</span>
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       )}
