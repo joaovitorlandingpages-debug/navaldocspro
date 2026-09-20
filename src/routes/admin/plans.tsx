@@ -91,6 +91,34 @@ function AdminPlansPage() {
     }
   });
 
+  // Mutação para publicar plano
+  const publishMutation = useMutation({
+    mutationFn: async (planId: string) => {
+      return await StripeSyncService.publishPlan(planId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-plans-catalog'] });
+      toast.success("Plano publicado! Agora visível na vitrine para clientes.");
+    },
+    onError: (err: any) => {
+      toast.error(`Falha ao publicar: ${err.message}`);
+    }
+  });
+
+  // Mutação para reverter para rascunho
+  const draftMutation = useMutation({
+    mutationFn: async (plan: AdminPlanData) => {
+      return StripeSyncService.saveDraft({ ...plan, status: 'draft' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-plans-catalog'] });
+      toast.success("Plano revertido para rascunho (não contratável).");
+    },
+    onError: (err: any) => {
+      toast.error(`Falha ao alterar status: ${err.message}`);
+    }
+  });
+
   if (loading) return null;
 
   if (!isAuthorized) {
@@ -106,19 +134,22 @@ function AdminPlansPage() {
 
     const matchesStatus = 
       statusFilter === "all" ||
-      (statusFilter === "synced" && plan.status === "synced") ||
+      (statusFilter === "published" && plan.status === "published") ||
       (statusFilter === "draft" && plan.status === "draft") ||
-      (statusFilter === "failed" && plan.status === "failed") ||
-      (statusFilter === "archived" && plan.status === "archived");
+      (statusFilter === "archived" && plan.status === "archived") ||
+      (statusFilter === "synced" && plan.stripeSyncStatus === "synced") ||
+      (statusFilter === "not_synced" && plan.stripeSyncStatus === "not_synced") ||
+      (statusFilter === "failed" && plan.stripeSyncStatus === "failed");
 
     return matchesSearch && matchesStatus;
   });
 
   // Métricas do catálogo
   const totalPlans = plans.length;
-  const syncedPlans = plans.filter(p => p.status === 'synced').length;
+  const publishedPlans = plans.filter(p => p.status === 'published').length;
   const draftPlans = plans.filter(p => p.status === 'draft').length;
-  const failedPlans = plans.filter(p => p.status === 'failed').length;
+  const syncedPlans = plans.filter(p => p.stripeSyncStatus === 'synced').length;
+  const failedPlans = plans.filter(p => p.stripeSyncStatus === 'failed').length;
 
   const handleEdit = (plan: AdminPlanData) => {
     setSelectedPlan(plan);
@@ -189,46 +220,46 @@ function AdminPlansPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Total no catálogo</span>
+            <span className="text-xs font-medium text-slate-500">Total de Planos</span>
             <div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center text-[#1868db]">
               <Tag className="h-4 w-4" />
             </div>
           </div>
           <p className="text-2xl font-bold text-[#0d2342] mt-2">{totalPlans}</p>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">Planos cadastrados</span>
+          <span className="text-[11px] text-slate-400 mt-0.5 block">Cadastrados no catálogo</span>
         </Card>
 
         <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Sincronizados Stripe</span>
+            <span className="text-xs font-medium text-slate-500">Publicados na Vitrine</span>
             <div className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
               <CheckCircle2 className="h-4 w-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-emerald-700 mt-2">{syncedPlans}</p>
-          <span className="text-[11px] text-emerald-600/80 mt-0.5 block">Prontos para cobrança</span>
+          <p className="text-2xl font-bold text-emerald-700 mt-2">{publishedPlans}</p>
+          <span className="text-[11px] text-emerald-600/80 mt-0.5 block">Visíveis para novos clientes</span>
         </Card>
 
         <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Rascunhos</span>
+            <span className="text-xs font-medium text-slate-500">Rascunhos Internos</span>
             <div className="h-8 w-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
               <Clock className="h-4 w-4" />
             </div>
           </div>
           <p className="text-2xl font-bold text-amber-700 mt-2">{draftPlans}</p>
-          <span className="text-[11px] text-amber-600/80 mt-0.5 block">Pendentes de publicação</span>
+          <span className="text-[11px] text-amber-600/80 mt-0.5 block">Não contratáveis</span>
         </Card>
 
         <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Falha / Pendente</span>
-            <div className="h-8 w-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
-              <AlertCircle className="h-4 w-4" />
+            <span className="text-xs font-medium text-slate-500">Sincronizados Stripe</span>
+            <div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center text-[#1868db]">
+              <Sparkles className="h-4 w-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-rose-700 mt-2">{failedPlans}</p>
-          <span className="text-[11px] text-rose-600/80 mt-0.5 block">Requer atenção</span>
+          <p className="text-2xl font-bold text-[#1868db] mt-2">{syncedPlans}</p>
+          <span className="text-[11px] text-slate-400 mt-0.5 block">{failedPlans > 0 ? `${failedPlans} com pendência` : 'Gateway integrado'}</span>
         </Card>
       </div>
 
@@ -247,15 +278,17 @@ function AdminPlansPage() {
 
           <div className="flex items-center gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48 h-10 text-xs font-medium border-slate-200 rounded-xl">
-                <SelectValue placeholder="Status de sincronização" />
+              <SelectTrigger className="w-full sm:w-56 h-10 text-xs font-medium border-slate-200 rounded-xl">
+                <SelectValue placeholder="Filtrar por status" />
               </SelectTrigger>
               <SelectContent className="bg-white border-slate-200">
-                <SelectItem value="all" className="text-xs">Todos os status</SelectItem>
-                <SelectItem value="synced" className="text-xs">Sincronizados (Stripe)</SelectItem>
-                <SelectItem value="draft" className="text-xs">Rascunhos</SelectItem>
-                <SelectItem value="failed" className="text-xs">Com falha</SelectItem>
-                <SelectItem value="archived" className="text-xs">Arquivados</SelectItem>
+                <SelectItem value="all" className="text-xs">Todos os planos</SelectItem>
+                <SelectItem value="published" className="text-xs font-semibold text-emerald-700">● Publicados (Vitrine)</SelectItem>
+                <SelectItem value="draft" className="text-xs font-semibold text-amber-700">● Rascunhos</SelectItem>
+                <SelectItem value="archived" className="text-xs text-slate-500">● Arquivados</SelectItem>
+                <SelectItem value="synced" className="text-xs font-semibold text-blue-700">⚡ Stripe: Sincronizados</SelectItem>
+                <SelectItem value="not_synced" className="text-xs text-slate-500">⚪ Stripe: Não sincronizados</SelectItem>
+                <SelectItem value="failed" className="text-xs font-semibold text-rose-700">⚠️ Stripe: Com falha</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -322,23 +355,35 @@ function AdminPlansPage() {
                       </span>
                     </div>
 
-                    {/* Status Badge */}
-                    <div>
-                      {plan.status === 'synced' ? (
-                        <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[10px] font-bold border border-emerald-200 px-2 py-0.5 rounded-md gap-1">
-                          <CheckCircle2 className="h-3 w-3" /> Stripe Ativo
-                        </Badge>
-                      ) : plan.status === 'failed' ? (
-                        <Badge className="bg-rose-50 text-rose-700 hover:bg-rose-50 text-[10px] font-bold border border-rose-200 px-2 py-0.5 rounded-md gap-1">
-                          <AlertCircle className="h-3 w-3" /> Falha Stripe
+                    {/* Status Badges: Publicação + Stripe */}
+                    <div className="flex flex-col items-end gap-1.5">
+                      {/* Badge 1: Publicação Comercial */}
+                      {plan.status === 'published' ? (
+                        <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[10px] font-bold border border-emerald-200 px-2 py-0.5 rounded-md">
+                          ● Publicado
                         </Badge>
                       ) : plan.status === 'archived' ? (
                         <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100 text-[10px] font-bold border border-slate-200 px-2 py-0.5 rounded-md">
-                          Arquivado
+                          ● Arquivado
                         </Badge>
                       ) : (
-                        <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100 text-[10px] font-bold border border-slate-200 px-2 py-0.5 rounded-md">
-                          Rascunho
+                        <Badge className="bg-amber-50 text-amber-700 hover:bg-amber-50 text-[10px] font-bold border border-amber-200 px-2 py-0.5 rounded-md">
+                          ● Rascunho
+                        </Badge>
+                      )}
+
+                      {/* Badge 2: Integração Stripe */}
+                      {plan.stripeSyncStatus === 'synced' ? (
+                        <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 text-[9px] font-semibold border border-blue-200 px-1.5 py-0.5 rounded-md gap-1">
+                          <CheckCircle2 className="h-2.5 w-2.5 text-blue-600" /> Stripe Ativo
+                        </Badge>
+                      ) : plan.stripeSyncStatus === 'failed' ? (
+                        <Badge className="bg-rose-50 text-rose-700 hover:bg-rose-50 text-[9px] font-semibold border border-rose-200 px-1.5 py-0.5 rounded-md gap-1">
+                          <AlertCircle className="h-2.5 w-2.5 text-rose-600" /> Falha Stripe
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-slate-50 text-slate-500 hover:bg-slate-50 text-[9px] font-semibold border border-slate-200 px-1.5 py-0.5 rounded-md">
+                          Stripe Pendente
                         </Badge>
                       )}
                     </div>
@@ -462,14 +507,30 @@ function AdminPlansPage() {
                         •••
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44 bg-white border-slate-200">
+                    <DropdownMenuContent align="end" className="w-48 bg-white border-slate-200">
                       <DropdownMenuItem onClick={() => handleEdit(plan)} className="text-xs cursor-pointer">
                         Editar detalhes
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => syncMutation.mutate(plan.id)} className="text-xs cursor-pointer">
-                        Forçar sincronização
+                        Sincronizar com Stripe
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
+                      {plan.status === 'draft' && (
+                        <DropdownMenuItem 
+                          onClick={() => publishMutation.mutate(plan.id)} 
+                          className="text-xs text-emerald-700 font-semibold cursor-pointer"
+                        >
+                          Publicar na vitrine
+                        </DropdownMenuItem>
+                      )}
+                      {plan.status === 'published' && (
+                        <DropdownMenuItem 
+                          onClick={() => draftMutation.mutate(plan)} 
+                          className="text-xs text-amber-700 font-semibold cursor-pointer"
+                        >
+                          Mover para rascunho
+                        </DropdownMenuItem>
+                      )}
                       {plan.status !== 'archived' ? (
                         <DropdownMenuItem 
                           onClick={() => archiveMutation.mutate(plan.id)} 
@@ -479,13 +540,10 @@ function AdminPlansPage() {
                         </DropdownMenuItem>
                       ) : (
                         <DropdownMenuItem 
-                          onClick={() => {
-                            StripeSyncService.savePlan({ ...plan, status: 'draft', availableForSale: true })
-                              .then(() => queryClient.invalidateQueries({ queryKey: ['admin-plans-catalog'] }));
-                          }} 
+                          onClick={() => draftMutation.mutate(plan)} 
                           className="text-xs text-slate-700 cursor-pointer"
                         >
-                          Restaurar rascunho
+                          Restaurar como rascunho
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>

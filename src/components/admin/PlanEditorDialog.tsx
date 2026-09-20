@@ -74,13 +74,15 @@ export const PlanEditorDialog: React.FC<PlanEditorDialogProps> = ({
     try {
       const saved = await StripeSyncService.savePlan({
         ...formData,
+        status: "draft",
+        availableForSale: false,
         id: plan?.id
       });
-      toast.success(`Plano "${saved.name}" salvo com sucesso!`);
+      toast.success(`Rascunho de "${saved.name}" salvo com sucesso!`);
       onSaved(saved);
       onClose();
     } catch (err: any) {
-      toast.error(`Erro ao salvar plano: ${err.message}`);
+      toast.error(`Erro ao salvar rascunho: ${err.message}`);
     } finally {
       setIsSaving(false);
     }
@@ -93,9 +95,11 @@ export const PlanEditorDialog: React.FC<PlanEditorDialogProps> = ({
     }
     setIsSyncing(true);
     try {
-      // 1. Salva primeiro no banco
+      // 1. Salva com status 'published'
       const saved = await StripeSyncService.savePlan({
         ...formData,
+        status: "published",
+        availableForSale: true,
         id: plan?.id
       });
 
@@ -103,11 +107,11 @@ export const PlanEditorDialog: React.FC<PlanEditorDialogProps> = ({
       const result = await StripeSyncService.syncWithStripe(saved.id);
 
       if (result.success && result.plan) {
-        toast.success(result.message);
+        toast.success(`Plano publicado e sincronizado na Stripe!`);
         onSaved(result.plan);
         onClose();
       } else {
-        toast.error(result.message);
+        toast.warning(`Plano publicado, mas Stripe retornou: ${result.message}`);
         if (result.plan) {
           onSaved(result.plan);
         }
@@ -151,21 +155,36 @@ export const PlanEditorDialog: React.FC<PlanEditorDialogProps> = ({
                 </DialogDescription>
               </div>
             </div>
-            {plan && (
-              <Badge 
-                className={`text-[11px] font-semibold px-2.5 py-1 ${
-                  plan.status === 'synced' 
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                    : plan.status === 'failed'
-                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                    : plan.status === 'archived'
-                    ? 'bg-slate-100 text-slate-600 border border-slate-200'
-                    : 'bg-amber-50 text-amber-700 border border-amber-200'
-                }`}
-              >
-                {plan.status === 'synced' ? 'Sincronizado na Stripe' : plan.status === 'failed' ? 'Falha Stripe' : plan.status === 'archived' ? 'Arquivado' : 'Rascunho'}
-              </Badge>
-            )}
+
+            <div className="flex items-center gap-2">
+              {plan && (
+                <>
+                  <Badge 
+                    className={`text-[10px] font-bold px-2 py-0.5 border rounded-md ${
+                      formData.status === 'published'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                        : formData.status === 'archived'
+                        ? 'bg-slate-100 text-slate-600 border-slate-200'
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                    }`}
+                  >
+                    {formData.status === 'published' ? '● Publicado' : formData.status === 'archived' ? '● Arquivado' : '● Rascunho'}
+                  </Badge>
+
+                  <Badge 
+                    className={`text-[10px] font-bold px-2 py-0.5 border rounded-md ${
+                      plan.stripeSyncStatus === 'synced' 
+                        ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                        : plan.stripeSyncStatus === 'failed'
+                        ? 'bg-rose-50 text-rose-700 border-rose-200'
+                        : 'bg-slate-50 text-slate-500 border-slate-200'
+                    }`}
+                  >
+                    {plan.stripeSyncStatus === 'synced' ? 'Stripe Ativo' : plan.stripeSyncStatus === 'failed' ? 'Falha Stripe' : 'Não Sincronizado'}
+                  </Badge>
+                </>
+              )}
+            </div>
           </div>
         </DialogHeader>
 
@@ -286,9 +305,30 @@ export const PlanEditorDialog: React.FC<PlanEditorDialogProps> = ({
             {/* Opções de Destaque e Status */}
             <div className="p-4 bg-slate-50/70 border border-slate-100 rounded-xl space-y-3">
               <h4 className="text-xs font-bold text-[#0d2342] uppercase tracking-wide">
-                Configurações Comerciais
+                Ciclo de Vida & Apresentação
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label className="text-xs font-semibold text-slate-700">Status de Publicação</Label>
+                  <Select
+                    value={formData.status || "draft"}
+                    onValueChange={(val: any) => setFormData({ 
+                      ...formData, 
+                      status: val, 
+                      availableForSale: val === "published" 
+                    })}
+                  >
+                    <SelectTrigger className="h-9 text-xs bg-white">
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Rascunho (Não disponível para contratação)</SelectItem>
+                      <SelectItem value="published">Publicado (Disponível na vitrine/checkout)</SelectItem>
+                      <SelectItem value="archived">Arquivado (Inativo comercialmente)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg">
                   <div className="space-y-0.5">
                     <Label className="text-xs font-semibold text-slate-700">Destaque "Recomendado"</Label>
@@ -297,17 +337,6 @@ export const PlanEditorDialog: React.FC<PlanEditorDialogProps> = ({
                   <Switch
                     checked={Boolean(formData.isPopular)}
                     onCheckedChange={(checked) => setFormData({ ...formData, isPopular: checked, highlightBadge: checked ? "Recomendado" : "" })}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg">
-                  <div className="space-y-0.5">
-                    <Label className="text-xs font-semibold text-slate-700">Disponível para Venda</Label>
-                    <p className="text-[10px] text-slate-400">Liberado para novos clientes</p>
-                  </div>
-                  <Switch
-                    checked={Boolean(formData.availableForSale)}
-                    onCheckedChange={(checked) => setFormData({ ...formData, availableForSale: checked })}
                   />
                 </div>
               </div>
@@ -332,8 +361,14 @@ export const PlanEditorDialog: React.FC<PlanEditorDialogProps> = ({
               <div>
                 <div className="flex items-start justify-between">
                   <h3 className="text-base font-bold text-[#0d2342]">{formData.name || "Nome do Plano"}</h3>
-                  <Badge className="bg-slate-100 text-slate-500 hover:bg-slate-100 text-[10px] font-semibold border-none">
-                    {formData.status === 'synced' ? 'Sincronizado' : formData.status === 'archived' ? 'Arquivado' : 'Rascunho'}
+                  <Badge className={`text-[10px] font-bold border rounded-md ${
+                    formData.status === 'published'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : formData.status === 'archived'
+                      ? 'bg-slate-100 text-slate-600 border-slate-200'
+                      : 'bg-amber-50 text-amber-700 border-amber-200'
+                  }`}>
+                    {formData.status === 'published' ? 'Publicado' : formData.status === 'archived' ? 'Arquivado' : 'Rascunho'}
                   </Badge>
                 </div>
 

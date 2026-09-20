@@ -11,7 +11,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export type PlanSyncStatus = 'draft' | 'syncing' | 'synced' | 'failed' | 'archived';
+export type PlanPublicationStatus = 'draft' | 'published' | 'archived';
+export type StripeSyncStatus = 'not_synced' | 'syncing' | 'synced' | 'failed';
 
 export interface AdminPlanData {
   id: string;
@@ -26,7 +27,10 @@ export interface AdminPlanData {
   storageGb: number;
   isPopular?: boolean;
   highlightBadge?: string;
-  status: PlanSyncStatus;
+  /** Status de publicação comercial / visibilidade aos clientes */
+  status: PlanPublicationStatus;
+  /** Status técnico de integração com o gateway Stripe */
+  stripeSyncStatus: StripeSyncStatus;
   version: number;
   order: number;
   availableForSale: boolean;
@@ -55,6 +59,7 @@ export const OFFICIAL_DEFAULT_PLANS: AdminPlanData[] = [
     isPopular: false,
     highlightBadge: undefined,
     status: "draft",
+    stripeSyncStatus: "not_synced",
     version: 1,
     order: 1,
     availableForSale: true,
@@ -80,6 +85,7 @@ export const OFFICIAL_DEFAULT_PLANS: AdminPlanData[] = [
     isPopular: true,
     highlightBadge: "Recomendado",
     status: "draft",
+    stripeSyncStatus: "not_synced",
     version: 1,
     order: 2,
     availableForSale: true,
@@ -105,6 +111,7 @@ export const OFFICIAL_DEFAULT_PLANS: AdminPlanData[] = [
     isPopular: false,
     highlightBadge: undefined,
     status: "draft",
+    stripeSyncStatus: "not_synced",
     version: 1,
     order: 3,
     availableForSale: true,
@@ -135,10 +142,30 @@ export class StripeSyncService {
       ? Number(row.price_yearly) 
       : (feat.priceYearly != null ? Number(feat.priceYearly) : priceMo * 10);
 
-    const statusVal: PlanSyncStatus = 
-      row.status || 
-      feat.status || 
-      (row.is_active === false ? 'archived' : (row.stripe_product_id || feat.stripeProductId ? 'synced' : 'draft'));
+    // Status de publicação comercial
+    let statusVal: PlanPublicationStatus = 'draft';
+    if (row.status === 'published' || row.status === 'archived' || row.status === 'draft') {
+      statusVal = row.status;
+    } else if (feat.status === 'published' || feat.status === 'archived' || feat.status === 'draft') {
+      statusVal = feat.status;
+    } else if (row.is_active === false) {
+      statusVal = 'archived';
+    } else {
+      // Planos legados ativos por padrão são published
+      statusVal = row.slug && ['essencial', 'profissional', 'equipe'].includes(row.slug.toLowerCase())
+        ? 'draft'
+        : 'published';
+    }
+
+    // Status de sincronização com Stripe
+    let syncStatusVal: StripeSyncStatus = 'not_synced';
+    if (row.stripe_sync_status === 'synced' || row.stripe_sync_status === 'failed' || row.stripe_sync_status === 'syncing' || row.stripe_sync_status === 'not_synced') {
+      syncStatusVal = row.stripe_sync_status;
+    } else if (row.stripe_product_id || feat.stripeProductId) {
+      syncStatusVal = 'synced';
+    } else if (row.sync_error || feat.syncError) {
+      syncStatusVal = 'failed';
+    }
 
     const isPop = Boolean(row.is_popular ?? feat.isPopular ?? (row.slug === 'profissional' || row.slug === 'pro'));
     const badge = row.highlight_badge || feat.highlightBadge || (isPop ? "Recomendado" : undefined);
@@ -157,9 +184,10 @@ export class StripeSyncService {
       isPopular: isPop,
       highlightBadge: badge,
       status: statusVal,
+      stripeSyncStatus: syncStatusVal,
       version: row.version || 1,
       order,
-      availableForSale: row.is_active !== false && statusVal !== 'archived',
+      availableForSale: row.is_active !== false && statusVal === 'published',
       stripeProductId: row.stripe_product_id || feat.stripeProductId || null,
       stripePriceMonthlyId: row.stripe_price_monthly_id || feat.stripePriceMonthlyId || null,
       stripePriceYearlyId: row.stripe_price_yearly_id || feat.stripePriceYearlyId || null,
@@ -303,9 +331,10 @@ export class StripeSyncService {
       isPopular: Boolean(plan.isPopular),
       highlightBadge: plan.highlightBadge || undefined,
       status: plan.status || 'draft',
+      stripeSyncStatus: plan.stripeSyncStatus || 'not_synced',
       version: plan.version || 1,
       order: plan.order || (plans.length + 1),
-      availableForSale: plan.availableForSale ?? (plan.status !== 'archived'),
+      availableForSale: (plan.status ? plan.status === 'published' : (plan.availableForSale ?? false)),
       stripeProductId: plan.stripeProductId || null,
       stripePriceMonthlyId: plan.stripePriceMonthlyId || null,
       stripePriceYearlyId: plan.stripePriceYearlyId || null,
@@ -329,12 +358,14 @@ export class StripeSyncService {
         ocr_limit: planData.aiPagesLimit,
         storage_limit_gb: planData.storageGb,
         status: planData.status,
+        stripe_sync_status: planData.stripeSyncStatus,
         is_popular: planData.isPopular,
         highlight_badge: planData.highlightBadge || null,
         is_active: planData.status !== 'archived',
         features: {
           priceYearly: planData.priceYearly,
           status: planData.status,
+          stripeSyncStatus: planData.stripeSyncStatus,
           isPopular: planData.isPopular,
           highlightBadge: planData.highlightBadge,
           highlightFeatures: [
@@ -407,41 +438,95 @@ export class StripeSyncService {
           ...plans[idx],
           ...plan,
           status: 'draft',
+          availableForSale: false,
           updatedAt: now
-        } as AdminPlanData;
+        };
         plans[idx] = updated;
       } else {
         updated = {
-          ...OFFICIAL_DEFAULT_PLANS[0],
-          ...plan,
+          id: plan.id!,
+          slug: plan.slug || `plano-${Date.now().toString(36)}`,
+          name: plan.name || "Novo Rascunho",
+          description: plan.description || "",
+          priceMonthly: plan.priceMonthly || 149,
+          priceYearly: plan.priceYearly || 1490,
+          userLimit: plan.userLimit || 1,
+          processLimit: plan.processLimit || 20,
+          aiPagesLimit: plan.aiPagesLimit || 200,
+          storageGb: plan.storageGb || 5,
+          isPopular: Boolean(plan.isPopular),
+          highlightBadge: plan.highlightBadge,
           status: 'draft',
-          id: plan.id || `plan-${Date.now()}`,
+          stripeSyncStatus: plan.stripeSyncStatus || 'not_synced',
+          version: 1,
+          order: plans.length + 1,
+          availableForSale: false,
+          stripeProductId: null,
+          stripePriceMonthlyId: null,
+          stripePriceYearlyId: null,
+          lastSyncedAt: null,
+          syncError: null,
           createdAt: now,
           updatedAt: now
-        } as AdminPlanData;
+        };
         plans.push(updated);
       }
     } else {
       updated = {
-        ...OFFICIAL_DEFAULT_PLANS[0],
-        ...plan,
-        status: 'draft',
         id: `plan-${Date.now()}`,
+        slug: plan.slug || `plano-${Date.now().toString(36)}`,
+        name: plan.name || "Novo Rascunho",
+        description: plan.description || "",
+        priceMonthly: plan.priceMonthly || 149,
+        priceYearly: plan.priceYearly || 1490,
+        userLimit: plan.userLimit || 1,
+        processLimit: plan.processLimit || 20,
+        aiPagesLimit: plan.aiPagesLimit || 200,
+        storageGb: plan.storageGb || 5,
+        isPopular: Boolean(plan.isPopular),
+        highlightBadge: plan.highlightBadge,
+        status: 'draft',
+        stripeSyncStatus: 'not_synced',
+        version: 1,
+        order: plans.length + 1,
+        availableForSale: false,
+        stripeProductId: null,
+        stripePriceMonthlyId: null,
+        stripePriceYearlyId: null,
+        lastSyncedAt: null,
+        syncError: null,
         createdAt: now,
         updatedAt: now
-      } as AdminPlanData;
+      };
       plans.push(updated);
     }
 
     this.savePlans(plans);
-    // Salva no banco em segundo plano de forma não bloqueante
-    this.savePlan(updated).catch(console.error);
-
+    this.savePlan(updated).catch(e => console.warn("Sync async draft failed:", e));
     return updated;
   }
 
   /**
-   * Arquiva um plano (remove de circulação sem afetar assinaturas ativas existentes)
+   * Publica comercialmente um plano (disponível para clientes)
+   */
+  static async publishPlan(planId: string): Promise<AdminPlanData | null> {
+    const plans = this.getPlans();
+    const idx = plans.findIndex(p => p.id === planId);
+    if (idx === -1) return null;
+
+    const plan = plans[idx];
+    plan.status = 'published';
+    plan.availableForSale = true;
+    plan.updatedAt = new Date().toISOString();
+    plans[idx] = plan;
+    this.savePlans(plans);
+
+    await this.savePlan(plan);
+    return plan;
+  }
+
+  /**
+   * Arquiva um plano (remove de circulação comercial sem afetar assinaturas ativas existentes)
    */
   static async archivePlan(planId: string): Promise<AdminPlanData | null> {
     const plans = this.getPlans();
@@ -461,7 +546,7 @@ export class StripeSyncService {
 
   /**
    * Sincroniza um plano com a API da Stripe pelo backend seguro
-   * Mostra sucesso ou erro real, sem simular falso sucesso
+   * Mantém o status de publicação comercial independente do status de sincronização
    */
   static async syncWithStripe(planId: string): Promise<{ success: boolean; message: string; plan?: AdminPlanData }> {
     const plans = this.getPlans();
@@ -471,7 +556,7 @@ export class StripeSyncService {
     }
 
     const plan = plans[planIndex];
-    plan.status = "syncing";
+    plan.stripeSyncStatus = "syncing";
     this.savePlans(plans);
 
     try {
@@ -488,7 +573,7 @@ export class StripeSyncService {
 
       if (error || data?.error) {
         const errorMsg = data?.message || error?.message || "Falha na comunicação com a API da Stripe.";
-        plan.status = "failed";
+        plan.stripeSyncStatus = "failed";
         plan.syncError = errorMsg;
         plan.updatedAt = new Date().toISOString();
         plans[planIndex] = plan;
@@ -503,10 +588,10 @@ export class StripeSyncService {
       }
 
       // Sincronização confirmada pela Stripe
-      plan.status = "synced";
+      plan.stripeSyncStatus = "synced";
       plan.stripeProductId = data.productId;
       plan.stripePriceMonthlyId = data.priceMonthlyId;
-      plan.stripePriceYearlyId = data.priceYearlyId;
+      plan.stripePriceYearlyId = data.pricePriceYearlyId || data.priceYearlyId;
       plan.lastSyncedAt = new Date().toISOString();
       plan.syncError = null;
       plan.updatedAt = new Date().toISOString();
@@ -522,7 +607,7 @@ export class StripeSyncService {
       };
     } catch (err: any) {
       const errorMsg = err?.message || "Erro de rede ou falha ao acionar a função de sincronização.";
-      plan.status = "failed";
+      plan.stripeSyncStatus = "failed";
       plan.syncError = errorMsg;
       plan.updatedAt = new Date().toISOString();
       plans[planIndex] = plan;

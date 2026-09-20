@@ -55,7 +55,29 @@ serve(async (req) => {
       });
     }
 
-    // 3. Mapeamento dos planos oficiais
+    // 3. Validação do plano no catálogo do banco (bloqueia rascunhos e arquivados)
+    const { data: dbPlan } = await supabase
+      .from("plans")
+      .select("id, name, slug, price, price_yearly, status, is_active, stripe_price_monthly_id, stripe_price_yearly_id")
+      .or(`slug.eq.${planSlug},id.eq.${planSlug}`)
+      .maybeSingle();
+
+    if (dbPlan) {
+      if (dbPlan.status === "draft") {
+        throw new HttpError(400, {
+          error: "draft_plan_not_purchasable",
+          message: "Este plano está em fase de rascunho e não pode ser contratado."
+        });
+      }
+      if (dbPlan.status === "archived" || dbPlan.is_active === false) {
+        throw new HttpError(400, {
+          error: "archived_plan_not_purchasable",
+          message: "Este plano foi arquivado e não está disponível para novas contratações."
+        });
+      }
+    }
+
+    // Mapeamento de fallback
     const planCatalog: Record<string, { name: string; monthlyPrice: number; yearlyPrice: number }> = {
       "essencial": { name: "Essencial", monthlyPrice: 149, yearlyPrice: 1490 },
       "profissional": { name: "Profissional", monthlyPrice: 299, yearlyPrice: 2990 },
@@ -65,7 +87,10 @@ serve(async (req) => {
       "engenharia_pericia": { name: "Engenharia & Perícia", monthlyPrice: 179, yearlyPrice: 1790 }
     };
 
-    const targetPlan = planCatalog[planSlug] || planCatalog["profissional"];
+    const targetPlan = dbPlan 
+      ? { name: dbPlan.name, monthlyPrice: Number(dbPlan.price), yearlyPrice: Number(dbPlan.price_yearly || dbPlan.price * 10) }
+      : (planCatalog[planSlug] || planCatalog["profissional"]);
+
     const amountInCents = billingCycle === "annual" ? targetPlan.yearlyPrice * 100 : targetPlan.monthlyPrice * 100;
     const interval = billingCycle === "annual" ? "year" : "month";
 

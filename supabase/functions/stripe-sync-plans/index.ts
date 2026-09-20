@@ -16,14 +16,8 @@ serve(async (req) => {
   try {
     const ctx = await authContext(req);
     
-    // Apenas administradores master podem publicar ou sincronizar planos
-    const isAdmin = 
-      ctx.role === "admin_master" || 
-      ctx.role === "admin_master_global" || 
-      ctx.role === "superadmin" ||
-      ctx.userEmail === "joaovitor.f0725@gmail.com";
-
-    if (!isAdmin) {
+    // Apenas administradores master da plataforma podem publicar ou sincronizar planos
+    if (!ctx.isAdminMaster) {
       throw new HttpError(403, { error: "forbidden", message: "Apenas administradores da plataforma podem sincronizar planos." });
     }
 
@@ -123,7 +117,7 @@ serve(async (req) => {
       const errorMsg = "Configuração pendente: nenhuma credencial da Stripe (STRIPE_SECRET_KEY) configurada no ambiente seguro da hospedagem.";
       if (slug || planId) {
         const query = supabase.from("plans").update({
-          status: "failed",
+          stripe_sync_status: "failed",
           sync_error: errorMsg,
           updated_at: new Date().toISOString()
         });
@@ -162,7 +156,7 @@ serve(async (req) => {
       const errText = product.error?.message || "Erro ao criar produto na Stripe.";
       if (slug || planId) {
         const q = supabase.from("plans").update({
-          status: "failed",
+          stripe_sync_status: "failed",
           sync_error: errText,
           updated_at: new Date().toISOString()
         });
@@ -218,7 +212,7 @@ serve(async (req) => {
         stripe_product_id: product.id,
         stripe_price_monthly_id: priceMonthlyObj.id,
         stripe_price_yearly_id: priceYearlyObj.id,
-        status: "synced",
+        stripe_sync_status: "synced",
         sync_error: null,
         last_synced_at: now,
         price: Number(priceMonthly),
