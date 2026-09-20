@@ -371,7 +371,7 @@ export const AdminOverviewDashboard: React.FC = () => {
 
           {/* Botão Mobile 'Gerenciar planos' (visível no celular idêntico à captura) */}
           <div className="mt-5 block lg:hidden">
-            <Link to="/admin/billing">
+            <Link to="/admin/plans">
               <Button 
                 className="w-full bg-[#1868db] hover:bg-[#1557b8] text-white text-xs font-bold h-11 rounded-2xl gap-2 shadow-xs flex items-center justify-center"
               >
@@ -387,14 +387,30 @@ export const AdminOverviewDashboard: React.FC = () => {
       {/* 4. SEÇÃO "PLANOS E PREÇOS" (Visível no Desktop) */}
       <div className="hidden lg:block space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[#0d2342]">Planos e preços</h2>
-          <Button
-            onClick={handleNewPlan}
-            className="bg-[#1868db] hover:bg-[#1557b8] text-white text-xs font-bold h-9 px-4 rounded-xl gap-1.5 shadow-xs"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Novo plano</span>
-          </Button>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-bold text-[#0d2342]">Planos e preços</h2>
+            <Link to="/admin/plans" className="text-xs font-semibold text-[#1868db] hover:underline flex items-center gap-1">
+              <span>Ver catálogo completo</span>
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link to="/admin/plans">
+              <Button
+                variant="outline"
+                className="text-slate-700 border-slate-200 text-xs font-semibold h-9 px-3 rounded-xl gap-1.5 shadow-2xs hover:bg-slate-50"
+              >
+                <span>Gerenciar catálogo</span>
+              </Button>
+            </Link>
+            <Button
+              onClick={handleNewPlan}
+              className="bg-[#1868db] hover:bg-[#1557b8] text-white text-xs font-bold h-9 px-4 rounded-xl gap-1.5 shadow-xs"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Novo plano</span>
+            </Button>
+          </div>
         </div>
 
         {/* 3 Cartões de Planos Desktop */}

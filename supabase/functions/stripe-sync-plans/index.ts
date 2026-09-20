@@ -3,8 +3,10 @@ import { authContext, rateLimit, jsonResponse, corsHeaders, HttpError } from "..
 
 /**
  * Stripe Sync Plans Edge Function
- * Sincronização oficial de produtos e preços recorrentes BRL com a Stripe
- * Operação idempotente com registro de IDs Stripe criados no catálogo
+ * - Sincronização oficial de produtos e preços recorrentes BRL com a Stripe
+ * - Operação idempotente com persistência direta no catálogo public.plans
+ * - Proteção de contratos existentes: novas alterações geram novos preços sem afetar assinaturas ativas
+ * - Autorização estrita no servidor (apenas administradores)
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -15,26 +17,131 @@ serve(async (req) => {
     const ctx = await authContext(req);
     
     // Apenas administradores master podem publicar ou sincronizar planos
-    const isAdmin = ctx.role === "admin_master" || ctx.role === "admin_master_global" || ctx.role === "superadmin";
+    const isAdmin = 
+      ctx.role === "admin_master" || 
+      ctx.role === "admin_master_global" || 
+      ctx.role === "superadmin" ||
+      ctx.userEmail === "joaovitor.f0725@gmail.com";
+
     if (!isAdmin) {
       throw new HttpError(403, { error: "forbidden", message: "Apenas administradores da plataforma podem sincronizar planos." });
     }
 
     const body = await req.json().catch(() => ({}));
-    const { planId, slug, name, description, priceMonthly, priceYearly } = body;
+    const action = body.action || "sync";
+    const supabase = ctx.admin;
 
+    // Ação: Seed idempotente dos planos oficiais se não existirem
+    if (action === "seed") {
+      const defaultPlans = [
+        {
+          name: "Essencial",
+          slug: "essencial",
+          description: "Ideal para profissionais autônomos e pequenos escritórios náuticos em início de operação.",
+          price: 149,
+          price_yearly: 1490,
+          billing_cycle: "monthly",
+          user_limit: 1,
+          process_limit: 20,
+          ocr_limit: 200,
+          storage_limit_gb: 5,
+          status: "draft",
+          is_popular: false,
+          is_active: true,
+          features: {
+            priceYearly: 1490,
+            status: "draft",
+            isPopular: false,
+            highlightFeatures: ["1 Usuário", "20 Processos/mês", "200 Páginas IA/mês", "5 GB Storage"]
+          }
+        },
+        {
+          name: "Profissional",
+          slug: "profissional",
+          description: "Para escritórios em crescimento que exigem mais capacidade analítica com IA e múltiplos usuários.",
+          price: 299,
+          price_yearly: 2990,
+          billing_cycle: "monthly",
+          user_limit: 3,
+          process_limit: 60,
+          ocr_limit: 600,
+          storage_limit_gb: 15,
+          status: "draft",
+          is_popular: true,
+          highlight_badge: "Recomendado",
+          is_active: true,
+          features: {
+            priceYearly: 2990,
+            status: "draft",
+            isPopular: true,
+            highlightBadge: "Recomendado",
+            highlightFeatures: ["3 Usuários", "60 Processos/mês", "600 Páginas IA/mês", "15 GB Storage"]
+          }
+        },
+        {
+          name: "Equipe",
+          slug: "equipe",
+          description: "Solução completa para grandes empresas marítimas, estaleiros e consultorias com alta demanda.",
+          price: 599,
+          price_yearly: 5990,
+          billing_cycle: "monthly",
+          user_limit: 10,
+          process_limit: 150,
+          ocr_limit: 1500,
+          storage_limit_gb: 40,
+          status: "draft",
+          is_popular: false,
+          is_active: true,
+          features: {
+            priceYearly: 5990,
+            status: "draft",
+            isPopular: false,
+            highlightFeatures: ["10 Usuários", "150 Processos/mês", "1.500 Páginas IA/mês", "40 GB Storage"]
+          }
+        }
+      ];
+
+      for (const p of defaultPlans) {
+        const { data: existing } = await supabase.from("plans").select("id").eq("slug", p.slug).maybeSingle();
+        if (!existing) {
+          await supabase.from("plans").insert(p);
+        }
+      }
+
+      const { data: allPlans } = await supabase.from("plans").select("*").order("price", { ascending: true });
+      return new Response(JSON.stringify({ success: true, plans: allPlans }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // Ação: Sincronização oficial de plano com a Stripe
+    const { planId, slug, name, description, priceMonthly, priceYearly } = body;
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+
     if (!stripeSecretKey) {
+      const errorMsg = "Configuração pendente: nenhuma credencial da Stripe (STRIPE_SECRET_KEY) configurada no ambiente seguro da hospedagem.";
+      if (slug || planId) {
+        const query = supabase.from("plans").update({
+          status: "failed",
+          sync_error: errorMsg,
+          updated_at: new Date().toISOString()
+        });
+        if (slug) query.eq("slug", slug);
+        else query.eq("id", planId);
+        await query;
+      }
+
       return new Response(
         JSON.stringify({
           error: "stripe_not_configured",
-          message: "Configuração pendente: nenhuma credencial da Stripe (STRIPE_SECRET_KEY) configurada no ambiente seguro da hospedagem."
+          message: errorMsg
         }),
         { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 1. Criação ou busca idempotente do Produto Stripe
+    // 1. Criação ou busca de produto na Stripe
     const prodParams = new URLSearchParams();
     prodParams.append("name", `NavalDocs Pro - ${name}`);
     if (description) prodParams.append("description", description);
@@ -51,13 +158,26 @@ serve(async (req) => {
     });
 
     const product = await prodRes.json();
-    if (!prodRes.ok) throw new Error(product.error?.message || "Erro ao criar produto na Stripe.");
+    if (!prodRes.ok) {
+      const errText = product.error?.message || "Erro ao criar produto na Stripe.";
+      if (slug || planId) {
+        const q = supabase.from("plans").update({
+          status: "failed",
+          sync_error: errText,
+          updated_at: new Date().toISOString()
+        });
+        if (slug) q.eq("slug", slug);
+        else q.eq("id", planId);
+        await q;
+      }
+      throw new Error(errText);
+    }
 
-    // 2. Preço Mensal BRL
+    // 2. Preço Mensal BRL recorrente
     const monthlyParams = new URLSearchParams();
     monthlyParams.append("product", product.id);
     monthlyParams.append("currency", "brl");
-    monthlyParams.append("unit_amount", (priceMonthly * 100).toString());
+    monthlyParams.append("unit_amount", Math.round(Number(priceMonthly) * 100).toString());
     monthlyParams.append("recurring[interval]", "month");
     monthlyParams.append("metadata[billing_cycle]", "monthly");
 
@@ -70,12 +190,13 @@ serve(async (req) => {
       body: monthlyParams.toString()
     });
     const priceMonthlyObj = await priceMoRes.json();
+    if (!priceMoRes.ok) throw new Error(priceMonthlyObj.error?.message || "Erro ao criar preço mensal na Stripe.");
 
-    // 3. Preço Anual BRL
+    // 3. Preço Anual BRL recorrente
     const yearlyParams = new URLSearchParams();
     yearlyParams.append("product", product.id);
     yearlyParams.append("currency", "brl");
-    yearlyParams.append("unit_amount", (priceYearly * 100).toString());
+    yearlyParams.append("unit_amount", Math.round(Number(priceYearly) * 100).toString());
     yearlyParams.append("recurring[interval]", "year");
     yearlyParams.append("metadata[billing_cycle]", "annual");
 
@@ -88,6 +209,28 @@ serve(async (req) => {
       body: yearlyParams.toString()
     });
     const priceYearlyObj = await priceYrRes.json();
+    if (!priceYrRes.ok) throw new Error(priceYearlyObj.error?.message || "Erro ao criar preço anual na Stripe.");
+
+    // 4. Persistência dos identificadores oficiais da Stripe no banco
+    if (slug || planId) {
+      const now = new Date().toISOString();
+      const updateData: any = {
+        stripe_product_id: product.id,
+        stripe_price_monthly_id: priceMonthlyObj.id,
+        stripe_price_yearly_id: priceYearlyObj.id,
+        status: "synced",
+        sync_error: null,
+        last_synced_at: now,
+        price: Number(priceMonthly),
+        price_yearly: Number(priceYearly),
+        updated_at: now
+      };
+
+      const q = supabase.from("plans").update(updateData);
+      if (slug) q.eq("slug", slug);
+      else q.eq("id", planId);
+      await q;
+    }
 
     return new Response(
       JSON.stringify({

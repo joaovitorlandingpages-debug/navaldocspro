@@ -102,7 +102,7 @@ function AdminLayout() {
     { name: "Visão geral", icon: Home, path: "/admin" },
     { name: "Escritórios", icon: Building, path: "/admin/companies" },
     { name: "Assinaturas", icon: CreditCard, path: "/admin/billing" },
-    { name: "Planos e preços", icon: Tag, path: "/admin/billing" },
+    { name: "Planos e preços", icon: Tag, path: "/admin/plans" },
     { name: "Cupons e campanhas", icon: Gift, path: "/admin/commercial" },
     { name: "Testes gratuitos", icon: FlaskConical, path: "/admin/tests" },
     { name: "Consumo e custos", icon: BarChart3, path: "/admin/saas-metrics" },
