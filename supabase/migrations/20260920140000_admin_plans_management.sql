@@ -1,8 +1,15 @@
 -- ============================================================
 -- Migration: Gestão de Planos & Preços (Admin NavalDocs Pro)
 -- ============================================================
+-- Seguro para execução direta no Supabase Cloud SQL Editor.
+-- Idempotente: preserva planos legados, contratos de assinaturas
+-- e garante permissões de administração sem duplicidades.
 
--- 1. Colunas adicionais na tabela public.plans para suportar ciclo de vida e sincronização Stripe
+-- 1. Assegurar colunas essenciais e adicionais na tabela public.plans
+ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS slug TEXT;
+ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS ocr_limit INTEGER DEFAULT 0;
+ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS storage_limit_gb INTEGER DEFAULT 1;
+ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS process_limit INTEGER DEFAULT 5;
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS price_yearly DECIMAL(10,2);
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'draft';
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS is_popular BOOLEAN DEFAULT false;
@@ -12,23 +19,61 @@ ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS stripe_price_monthly_id TEXT;
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS stripe_price_yearly_id TEXT;
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS last_synced_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS sync_error TEXT;
+ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now());
 
--- 2. Atualizar políticas RLS de administração para public.plans
+-- Índice único em slug para garantir idempotência
+CREATE UNIQUE INDEX IF NOT EXISTS plans_slug_idx ON public.plans (slug);
+
+-- Normalizar status de planos existentes que estavam sem a nova coluna
+UPDATE public.plans 
+SET status = CASE WHEN is_active = true THEN 'published' ELSE 'draft' END 
+WHERE status IS NULL;
+
+-- 2. Permissões de tabela (GRANT) para API Supabase
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.plans TO authenticated;
+GRANT ALL ON public.plans TO service_role;
+
+-- 3. Políticas RLS (Row Level Security) para public.plans
+ALTER TABLE public.plans ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated users can view plans" ON public.plans;
+DROP POLICY IF EXISTS "Everyone can view active plans" ON public.plans;
+DROP POLICY IF EXISTS "Plans are viewable by everyone" ON public.plans;
 DROP POLICY IF EXISTS "Admin master can manage everything" ON public.plans;
-CREATE POLICY "Admin master can manage everything" 
+DROP POLICY IF EXISTS "Admin master can manage plans" ON public.plans;
+
+-- Leitura de planos para qualquer usuário autenticado (checkout, listagem, etc.)
+CREATE POLICY "Authenticated users can view plans"
+ON public.plans FOR SELECT
+TO authenticated
+USING (true);
+
+-- Gestão completa (CRUD) restrita aos administradores da plataforma
+CREATE POLICY "Admin master can manage plans" 
 ON public.plans FOR ALL 
+TO authenticated
 USING (
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = auth.uid() 
+    WHERE profiles.id = auth.uid() 
     AND (
-      role IN ('admin_master', 'admin_master_global', 'superadmin')
-      OR email = 'joaovitor.f0725@gmail.com'
+      profiles.role IN ('admin_master', 'admin_master_global', 'superadmin')
+      OR profiles.email = 'joaovitor.f0725@gmail.com'
+    )
+  )
+)
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM public.profiles 
+    WHERE profiles.id = auth.uid() 
+    AND (
+      profiles.role IN ('admin_master', 'admin_master_global', 'superadmin')
+      OR profiles.email = 'joaovitor.f0725@gmail.com'
     )
   )
 );
 
--- 3. Inserção idempotente dos 3 planos previstos como rascunhos (caso não existam)
+-- 4. Inserção idempotente dos 3 planos previstos como rascunhos (caso ainda não existam)
 INSERT INTO public.plans (
   name,
   slug,
