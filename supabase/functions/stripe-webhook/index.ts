@@ -140,11 +140,34 @@ function extractCustomerId(obj: any): string | null {
 }
 
 /**
+ * Consulta a assinatura na API da Stripe para obter o status real
+ * (ex: 'trialing', 'active', 'past_due', 'canceled')
+ */
+async function fetchStripeSubscription(subscriptionId: string | null, secretKey?: string | null): Promise<any | null> {
+  if (!subscriptionId || !secretKey) return null;
+  try {
+    const res = await fetch(`https://api.stripe.com/v1/subscriptions/${subscriptionId}`, {
+      headers: {
+        "Authorization": `Bearer ${secretKey}`
+      }
+    });
+    if (!res.ok) {
+      console.warn(`Não foi possível consultar assinatura Stripe ${subscriptionId}: status ${res.status}`);
+      return null;
+    }
+    return await res.json();
+  } catch (err) {
+    console.error(`Erro ao consultar assinatura Stripe ${subscriptionId}:`, err);
+    return null;
+  }
+}
+
+/**
  * Stripe Webhook Edge Function
  * - Suporte oficial à versão moderna 2026-08-26.dahlia e retrocompatibilidade com versões legadas
  * - Validação criptográfica da assinatura Stripe-Signature com proteção de replay
  * - Processamento idempotente de checkout, fatura, atualização e cancelamento
- * - Tratamento defensivo de período, moeda, valores e status (pago, pendente e gratuito)
+ * - Diferenciação precisa de status: pago, trial real e cupom de 100% / fatura zerada
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -154,6 +177,7 @@ serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+  const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -233,8 +257,9 @@ serve(async (req) => {
             .maybeSingle();
 
           // Diferenciação de status:
-          // - "paid": pagamento confirmado -> status 'active'
-          // - "no_payment_required": período gratuito (trial) ou cupom 100% -> status 'trialing' ou 'active'
+          // - "paid": pagamento confirmado de imediato -> status 'active'
+          // - "no_payment_required": pode ser teste gratuito (trial) OU cupom de 100% / fatura zerada.
+          //   Consulta o status real da assinatura na Stripe para definir com precisão entre 'trialing' ou 'active'.
           // - outros ("unpaid", aguardando confirmação assíncrona): status 'pending' (não ativa empresa ainda)
           let subStatus = "pending";
           let activateCompany = false;
@@ -243,7 +268,33 @@ serve(async (req) => {
             subStatus = "active";
             activateCompany = true;
           } else if (session.payment_status === "no_payment_required") {
-            subStatus = session.mode === "subscription" ? "trialing" : "active";
+            // Verifica se a assinatura veio expandida no payload
+            let resolvedStatus: string | null = null;
+            if (typeof session.subscription === "object" && session.subscription?.status) {
+              resolvedStatus = session.subscription.status;
+            }
+
+            // Se não veio expandida, consulta a assinatura diretamente na API da Stripe
+            if (!resolvedStatus && subscriptionId && stripeSecretKey) {
+              const stripeSub = await fetchStripeSubscription(subscriptionId, stripeSecretKey);
+              if (stripeSub?.status) {
+                resolvedStatus = stripeSub.status;
+              }
+            }
+
+            if (resolvedStatus === "trialing") {
+              subStatus = "trialing";
+            } else if (resolvedStatus === "active") {
+              // Cupom de 100% ou fatura zerada em plano ativo
+              subStatus = "active";
+            } else {
+              // Fallback se a consulta remota não estiver disponível
+              const hasTrial = Boolean(
+                session.subscription_data?.trial_period_days ||
+                (typeof session.subscription === "object" && session.subscription?.trial_end)
+              );
+              subStatus = hasTrial ? "trialing" : "active";
+            }
             activateCompany = true;
           } else {
             subStatus = "pending";
@@ -306,7 +357,7 @@ serve(async (req) => {
         if (subscriptionId) {
           const { data } = await supabase
             .from("subscriptions")
-            .select("id, company_id, metadata")
+            .select("id, company_id, status, metadata")
             .contains("metadata", { stripe_subscription_id: subscriptionId })
             .maybeSingle();
           sub = data;
@@ -315,14 +366,44 @@ serve(async (req) => {
         if (!sub && invoice.metadata?.company_id) {
           const { data } = await supabase
             .from("subscriptions")
-            .select("id, company_id, metadata")
+            .select("id, company_id, status, metadata")
             .eq("company_id", invoice.metadata.company_id)
             .maybeSingle();
           sub = data;
         }
 
         if (sub?.company_id) {
-          // Idempotência na tabela de pagamentos: evita registrar a mesma fatura mais de uma vez
+          // Determina o status da assinatura:
+          // Se a fatura é zerada (amountPaid === 0), pode ser:
+          // 1. Fatura inicial de período gratuito (trial): a assinatura NÃO deve ser transformada em 'active'! Permanece 'trialing'.
+          // 2. Fatura zerada por cupom de 100% ou abatimento integral: assinatura 'active'.
+          let targetStatus = "active";
+
+          if (amountPaid === 0) {
+            let realSubStatus: string | null = null;
+            if (subscriptionId && stripeSecretKey) {
+              const stripeSub = await fetchStripeSubscription(subscriptionId, stripeSecretKey);
+              if (stripeSub?.status) {
+                realSubStatus = stripeSub.status;
+              }
+            }
+
+            if (realSubStatus === "trialing") {
+              // Confirmação oficial da Stripe de que é período gratuito
+              targetStatus = "trialing";
+            } else if (realSubStatus === "active") {
+              // Cupom de 100% ou desconto integral
+              targetStatus = "active";
+            } else {
+              // Fallback: se o banco já registrou como trialing, preserva trialing para não ativar precocemente
+              targetStatus = sub.status === "trialing" ? "trialing" : "active";
+            }
+          } else {
+            // Pagamento com valor monetário real recebido (> 0)
+            targetStatus = "active";
+          }
+
+          // Idempotência na tabela de pagamentos: registra apenas se for valor real e ainda não registrado
           const { data: existingPayment } = await supabase
             .from("payments")
             .select("id")
@@ -352,9 +433,9 @@ serve(async (req) => {
             });
           }
 
-          // Atualiza vigência e status da assinatura para active
+          // Atualiza vigência e status da assinatura preservando trialing se aplicável
           const subUpdate: any = {
-            status: "active",
+            status: targetStatus,
             updated_at: new Date().toISOString()
           };
           if (currentPeriodStart) subUpdate.current_period_start = currentPeriodStart;
