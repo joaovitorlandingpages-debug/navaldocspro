@@ -42,12 +42,7 @@ serve(async (req) => {
           status: "draft",
           is_popular: false,
           is_active: true,
-          features: {
-            priceYearly: 1490,
-            status: "draft",
-            isPopular: false,
-            highlightFeatures: ["1 Usuário", "20 Processos/mês", "200 Páginas IA/mês", "5 GB Storage"]
-          }
+          features: ["1 usuário", "20 processos/mês", "200 páginas IA/mês", "5GB de armazenamento"]
         },
         {
           name: "Profissional",
@@ -64,13 +59,7 @@ serve(async (req) => {
           is_popular: true,
           highlight_badge: "Recomendado",
           is_active: true,
-          features: {
-            priceYearly: 2990,
-            status: "draft",
-            isPopular: true,
-            highlightBadge: "Recomendado",
-            highlightFeatures: ["3 Usuários", "60 Processos/mês", "600 Páginas IA/mês", "15 GB Storage"]
-          }
+          features: ["3 usuários", "60 processos/mês", "600 páginas IA/mês", "15GB de armazenamento"]
         },
         {
           name: "Equipe",
@@ -86,19 +75,26 @@ serve(async (req) => {
           status: "draft",
           is_popular: false,
           is_active: true,
-          features: {
-            priceYearly: 5990,
-            status: "draft",
-            isPopular: false,
-            highlightFeatures: ["10 Usuários", "150 Processos/mês", "1.500 Páginas IA/mês", "40 GB Storage"]
-          }
+          features: ["10 usuários", "150 processos/mês", "1.500 páginas IA/mês", "40GB de armazenamento"]
         }
       ];
 
       for (const p of defaultPlans) {
-        const { data: existing } = await supabase.from("plans").select("id").eq("slug", p.slug).maybeSingle();
+        const { data: existing } = await supabase.from("plans").select("id, status").eq("slug", p.slug).maybeSingle();
         if (!existing) {
           await supabase.from("plans").insert(p);
+        } else if (existing.status === "draft") {
+          await supabase.from("plans").update({
+            price: p.price,
+            price_yearly: p.price_yearly,
+            user_limit: p.user_limit,
+            process_limit: p.process_limit,
+            ocr_limit: p.ocr_limit,
+            storage_limit_gb: p.storage_limit_gb,
+            features: p.features,
+            is_popular: p.is_popular,
+            highlight_badge: p.highlight_badge || null
+          }).eq("id", existing.id);
         }
       }
 

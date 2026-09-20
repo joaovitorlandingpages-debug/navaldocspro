@@ -39,7 +39,6 @@ function AdminPlansPage() {
     profile?.role === 'admin_master_global' || 
     profile?.role === 'admin_master' || 
     profile?.role === 'superadmin' ||
-    profile?.email === 'joaovitor.f0725@gmail.com' ||
     (typeof window !== 'undefined' && localStorage.getItem('navaldocs_admin_preview') === 'true');
 
   // Busca dos planos integrada ao banco de dados com suporte aos planos previstos

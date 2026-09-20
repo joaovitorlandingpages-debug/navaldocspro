@@ -63,16 +63,10 @@ serve(async (req) => {
       .maybeSingle();
 
     if (dbPlan) {
-      if (dbPlan.status === "draft") {
+      if (dbPlan.status !== "published" || dbPlan.is_active !== true) {
         throw new HttpError(400, {
-          error: "draft_plan_not_purchasable",
-          message: "Este plano está em fase de rascunho e não pode ser contratado."
-        });
-      }
-      if (dbPlan.status === "archived" || dbPlan.is_active === false) {
-        throw new HttpError(400, {
-          error: "archived_plan_not_purchasable",
-          message: "Este plano foi arquivado e não está disponível para novas contratações."
+          error: "plan_not_purchasable",
+          message: `O plano "${dbPlan.name}" não está disponível para novas contratações.`
         });
       }
     }

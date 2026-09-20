@@ -2,11 +2,12 @@
 -- Migration: Gestão de Planos & Preços (Admin NavalDocs Pro)
 -- ============================================================
 -- Execução transacional para o Cloud SQL Editor.
--- 1. Garante colunas base (incluindo slug) antes de qualquer manipulação.
+-- 1. Garante colunas base (incluindo slug, price_yearly, process_limit) antes de qualquer manipulação.
 -- 2. Migra valores legados técnicos ('synced', 'failed', 'syncing') para stripe_sync_status.
 -- 3. Normaliza status comercial sem publicar automaticamente planos arquivados com contratos antigos.
--- 4. Bloqueia contratação de rascunhos, arquivados e inativos (preservando renovações do mesmo plano).
+-- 4. Bloqueia contratação se status IS DISTINCT FROM 'published' ou is_active IS DISTINCT FROM true (preservando renovações do mesmo plano).
 -- 5. RLS separadas: leitura pública sem dependências circulares e leitura de contratos autenticados.
+-- 6. Preços e limites preservados exatamente conforme aprovado, sem limites de clientes ou benefícios comerciais não solicitados.
 -- ============================================================
 
 BEGIN;
@@ -16,22 +17,25 @@ BEGIN;
 -- ------------------------------------------------------------
 -- Garante a coluna slug antes de qualquer consulta, update ou criação de índice
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS slug TEXT;
-ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS ocr_limit INTEGER DEFAULT 0;
-ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS storage_limit_gb INTEGER DEFAULT 1;
-ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS process_limit INTEGER DEFAULT 5;
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS price_yearly DECIMAL(10,2);
+ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS user_limit INTEGER DEFAULT 1;
+ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS process_limit INTEGER DEFAULT 20;
+ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS ocr_limit INTEGER DEFAULT 200;
+ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS storage_limit_gb INTEGER DEFAULT 5;
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS is_popular BOOLEAN DEFAULT false;
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS highlight_badge TEXT;
+ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS features JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+
+-- Colunas de controle de ciclo de vida e integração Stripe
+ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS stripe_sync_status TEXT DEFAULT 'not_synced';
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS stripe_product_id TEXT;
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS stripe_price_monthly_id TEXT;
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS stripe_price_yearly_id TEXT;
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS last_synced_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS sync_error TEXT;
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now());
-
--- Colunas de controle de ciclo de vida e integração Stripe
-ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS status TEXT;
-ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS stripe_sync_status TEXT DEFAULT 'not_synced';
 
 -- ------------------------------------------------------------
 -- 2. TRATAMENTO DE SLUGS (NORMALIZAÇÃO E ÍNDICE EXCLUSIVO)
@@ -223,24 +227,12 @@ BEGIN
     RAISE EXCEPTION 'Plano de destino não encontrado no catálogo (id: %).', NEW.plan_id;
   END IF;
 
-  -- Bloqueia contratação de planos em rascunho
-  IF v_plan_status = 'draft' THEN
-    RAISE EXCEPTION 'Operação bloqueada: O plano "%" está em rascunho e não aceita contratações.', COALESCE(v_plan_name, NEW.plan_id::text);
-  END IF;
-
-  -- Bloqueia contratação de planos arquivados
-  IF v_plan_status = 'archived' THEN
-    RAISE EXCEPTION 'Operação bloqueada: O plano "%" foi arquivado e não aceita novas contratações.', COALESCE(v_plan_name, NEW.plan_id::text);
-  END IF;
-
-  -- Bloqueia contratação de planos inativos
-  IF v_is_active IS FALSE THEN
-    RAISE EXCEPTION 'Operação bloqueada: O plano "%" está inativo e não aceita novas contratações.', COALESCE(v_plan_name, NEW.plan_id::text);
-  END IF;
-
-  -- Valida se o status é publicado
-  IF v_plan_status != 'published' THEN
-    RAISE EXCEPTION 'Operação bloqueada: O plano "%" não está liberado para contratação.', COALESCE(v_plan_name, NEW.plan_id::text);
+  -- Rejeita se status IS DISTINCT FROM 'published' ou is_active IS DISTINCT FROM true (cobre rascunhos, arquivados, inativos e valores nulos)
+  IF (v_plan_status IS DISTINCT FROM 'published') OR (v_is_active IS DISTINCT FROM true) THEN
+    RAISE EXCEPTION 'Operação bloqueada: O plano "%" não está disponível para novas contratações (status: %, ativo: %).', 
+      COALESCE(v_plan_name, NEW.plan_id::text),
+      COALESCE(v_plan_status, 'nulo'),
+      COALESCE(v_is_active::text, 'nulo');
   END IF;
 
   RETURN NEW;
@@ -256,8 +248,13 @@ CREATE TRIGGER trg_check_subscription_plan_eligibility
   EXECUTE FUNCTION public.check_plan_eligibility_for_subscription();
 
 -- ------------------------------------------------------------
--- 7. INSERÇÃO IDEMPOTENTE DOS 3 PLANOS OFICIAIS COMO RASCUNHOS
+-- 7. INSERÇÃO E ATUALIZAÇÃO IDEMPOTENTE DOS 3 PLANOS OFICIAIS COMO RASCUNHOS
 -- ------------------------------------------------------------
+-- Insere ou atualiza rascunhos preservando exatamente limites aprovados:
+-- Essencial: R$149/mês, R$1.490/ano, 1 usuário, 20 processos/mês, 200 páginas IA/mês, 5GB
+-- Profissional: R$299/mês, R$2.990/ano, 3 usuários, 60 processos/mês, 600 páginas IA/mês, 15GB
+-- Equipe: R$599/mês, R$5.990/ano, 10 usuários, 150 processos/mês, 1.500 páginas IA/mês, 40GB
+-- Sem acrescentar limites de clientes ou benefícios comerciais sem aprovação.
 INSERT INTO public.plans (
   name,
   slug,
@@ -293,13 +290,7 @@ VALUES
   false,
   NULL,
   true,
-  jsonb_build_object(
-    'priceYearly', 1490,
-    'status', 'draft',
-    'stripeSyncStatus', 'not_synced',
-    'isPopular', false,
-    'highlightFeatures', jsonb_build_array('1 Usuário', '20 Processos/mês', '200 Páginas IA/mês', '5 GB Storage')
-  )
+  '["1 usuário", "20 processos/mês", "200 páginas IA/mês", "5GB de armazenamento"]'::jsonb
 ),
 (
   'Profissional',
@@ -317,14 +308,7 @@ VALUES
   true,
   'Recomendado',
   true,
-  jsonb_build_object(
-    'priceYearly', 2990,
-    'status', 'draft',
-    'stripeSyncStatus', 'not_synced',
-    'isPopular', true,
-    'highlightBadge', 'Recomendado',
-    'highlightFeatures', jsonb_build_array('3 Usuários', '60 Processos/mês', '600 Páginas IA/mês', '15 GB Storage')
-  )
+  '["3 usuários", "60 processos/mês", "600 páginas IA/mês", "15GB de armazenamento"]'::jsonb
 ),
 (
   'Equipe',
@@ -342,15 +326,29 @@ VALUES
   false,
   NULL,
   true,
-  jsonb_build_object(
-    'priceYearly', 5990,
-    'status', 'draft',
-    'stripeSyncStatus', 'not_synced',
-    'isPopular', false,
-    'highlightFeatures', jsonb_build_array('10 Usuários', '150 Processos/mês', '1.500 Páginas IA/mês', '40 GB Storage')
-  )
+  '["10 usuários", "150 processos/mês", "1.500 páginas IA/mês", "40GB de armazenamento"]'::jsonb
 )
-ON CONFLICT (slug) DO NOTHING;
+ON CONFLICT (slug) DO UPDATE SET
+  name = EXCLUDED.name,
+  description = EXCLUDED.description,
+  price = EXCLUDED.price,
+  price_yearly = EXCLUDED.price_yearly,
+  billing_cycle = EXCLUDED.billing_cycle,
+  user_limit = EXCLUDED.user_limit,
+  process_limit = EXCLUDED.process_limit,
+  ocr_limit = EXCLUDED.ocr_limit,
+  storage_limit_gb = EXCLUDED.storage_limit_gb,
+  is_popular = EXCLUDED.is_popular,
+  highlight_badge = EXCLUDED.highlight_badge,
+  features = EXCLUDED.features
+WHERE public.plans.status = 'draft'
+  AND public.plans.id NOT IN (SELECT plan_id FROM public.subscriptions WHERE plan_id IS NOT NULL);
+
+-- Garante que customer_limit e document_limit não fiquem preenchidos indevidamente nos 3 rascunhos oficiais
+UPDATE public.plans
+SET customer_limit = NULL,
+    document_limit = NULL
+WHERE slug IN ('essencial', 'profissional', 'equipe') AND status = 'draft';
 
 -- ------------------------------------------------------------
 -- 8. VERIFICAÇÕES PÓS-EXECUÇÃO
@@ -360,16 +358,19 @@ DECLARE
   v_published_count INT;
   v_draft_count INT;
   v_archived_count INT;
-  v_total_count INT;
+  v_invalid_count INT;
 BEGIN
-  SELECT COUNT(*) INTO v_total_count FROM public.plans;
   SELECT COUNT(*) INTO v_published_count FROM public.plans WHERE status = 'published';
   SELECT COUNT(*) INTO v_draft_count FROM public.plans WHERE status = 'draft';
   SELECT COUNT(*) INTO v_archived_count FROM public.plans WHERE status = 'archived';
+  SELECT COUNT(*) INTO v_invalid_count FROM public.plans WHERE status NOT IN ('draft', 'published', 'archived') OR status IS NULL;
 
-  RAISE NOTICE 'Migration concluída com sucesso!';
-  RAISE NOTICE 'Total de planos: %, Publicados: %, Rascunhos: %, Arquivados: %', 
-    v_total_count, v_published_count, v_draft_count, v_archived_count;
+  IF v_invalid_count > 0 THEN
+    RAISE EXCEPTION 'Falha de integridade: existem % planos com status inválido.', v_invalid_count;
+  END IF;
+
+  RAISE NOTICE 'Migration executada com sucesso! Publicados: %, Rascunhos: %, Arquivados: %',
+    v_published_count, v_draft_count, v_archived_count;
 END $$;
 
 COMMIT;

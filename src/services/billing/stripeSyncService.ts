@@ -39,6 +39,7 @@ export interface AdminPlanData {
   stripePriceYearlyId?: string | null;
   lastSyncedAt?: string | null;
   syncError?: string | null;
+  features?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -60,6 +61,12 @@ export const OFFICIAL_DEFAULT_PLANS: AdminPlanData[] = [
     highlightBadge: undefined,
     status: "draft",
     stripeSyncStatus: "not_synced",
+    features: [
+      "1 usuário",
+      "20 processos/mês",
+      "200 páginas IA/mês",
+      "5GB de armazenamento"
+    ],
     version: 1,
     order: 1,
     availableForSale: true,
@@ -86,6 +93,12 @@ export const OFFICIAL_DEFAULT_PLANS: AdminPlanData[] = [
     highlightBadge: "Recomendado",
     status: "draft",
     stripeSyncStatus: "not_synced",
+    features: [
+      "3 usuários",
+      "60 processos/mês",
+      "600 páginas IA/mês",
+      "15GB de armazenamento"
+    ],
     version: 1,
     order: 2,
     availableForSale: true,
@@ -112,6 +125,12 @@ export const OFFICIAL_DEFAULT_PLANS: AdminPlanData[] = [
     highlightBadge: undefined,
     status: "draft",
     stripeSyncStatus: "not_synced",
+    features: [
+      "10 usuários",
+      "150 processos/mês",
+      "1.500 páginas IA/mês",
+      "40GB de armazenamento"
+    ],
     version: 1,
     order: 3,
     availableForSale: true,
@@ -167,8 +186,22 @@ export class StripeSyncService {
       syncStatusVal = 'failed';
     }
 
-    const isPop = Boolean(row.is_popular ?? feat.isPopular ?? (row.slug === 'profissional' || row.slug === 'pro'));
-    const badge = row.highlight_badge || feat.highlightBadge || (isPop ? "Recomendado" : undefined);
+    let featuresList: string[] = [];
+    if (Array.isArray(feat)) {
+      featuresList = feat;
+    } else if (Array.isArray(feat?.highlightFeatures)) {
+      featuresList = feat.highlightFeatures;
+    } else {
+      featuresList = [
+        `${row.user_limit ?? 1} ${(row.user_limit ?? 1) > 1 ? 'usuários' : 'usuário'}`,
+        `${row.process_limit ?? 20} processos/mês`,
+        `${row.ocr_limit ?? 200} páginas IA/mês`,
+        `${row.storage_limit_gb ?? 5}GB de armazenamento`
+      ];
+    }
+
+    const isPop = Boolean(row.is_popular ?? feat?.isPopular ?? (row.slug === 'profissional' || row.slug === 'pro'));
+    const badge = row.highlight_badge || feat?.highlightBadge || (isPop ? "Recomendado" : undefined);
 
     return {
       id: row.id,
@@ -185,14 +218,15 @@ export class StripeSyncService {
       highlightBadge: badge,
       status: statusVal,
       stripeSyncStatus: syncStatusVal,
+      features: featuresList,
       version: row.version || 1,
       order,
       availableForSale: row.is_active !== false && statusVal === 'published',
-      stripeProductId: row.stripe_product_id || feat.stripeProductId || null,
-      stripePriceMonthlyId: row.stripe_price_monthly_id || feat.stripePriceMonthlyId || null,
-      stripePriceYearlyId: row.stripe_price_yearly_id || feat.stripePriceYearlyId || null,
-      lastSyncedAt: row.last_synced_at || feat.lastSyncedAt || null,
-      syncError: row.sync_error || feat.syncError || null,
+      stripeProductId: row.stripe_product_id || feat?.stripeProductId || null,
+      stripePriceMonthlyId: row.stripe_price_monthly_id || feat?.stripePriceMonthlyId || null,
+      stripePriceYearlyId: row.stripe_price_yearly_id || feat?.stripePriceYearlyId || null,
+      lastSyncedAt: row.last_synced_at || feat?.lastSyncedAt || null,
+      syncError: row.sync_error || feat?.syncError || null,
       createdAt: row.created_at || new Date().toISOString(),
       updatedAt: row.updated_at || new Date().toISOString(),
     };
@@ -274,18 +308,12 @@ export class StripeSyncService {
                 is_popular: p.isPopular || false,
                 highlight_badge: p.highlightBadge || null,
                 is_active: true,
-                features: {
-                  priceYearly: p.priceYearly,
-                  status: 'draft',
-                  isPopular: p.isPopular,
-                  highlightBadge: p.highlightBadge,
-                  highlightFeatures: [
-                    `${p.userLimit} Usuário${p.userLimit > 1 ? 's' : ''}`,
-                    `${p.processLimit} Processos/mês`,
-                    `${p.aiPagesLimit} Páginas IA/mês`,
-                    `${p.storageGb} GB Storage`
-                  ]
-                }
+                features: p.features || [
+                  `${p.userLimit} ${p.userLimit > 1 ? 'usuários' : 'usuário'}`,
+                  `${p.processLimit} processos/mês`,
+                  `${p.aiPagesLimit} páginas IA/mês`,
+                  `${p.storageGb}GB de armazenamento`
+                ]
               })
               .select()
               .maybeSingle();
@@ -332,6 +360,12 @@ export class StripeSyncService {
       highlightBadge: plan.highlightBadge || undefined,
       status: plan.status || 'draft',
       stripeSyncStatus: plan.stripeSyncStatus || 'not_synced',
+      features: plan.features || [
+        `${plan.userLimit || 1} ${(plan.userLimit || 1) > 1 ? 'usuários' : 'usuário'}`,
+        `${plan.processLimit || 20} processos/mês`,
+        `${plan.aiPagesLimit || 200} páginas IA/mês`,
+        `${plan.storageGb || 5}GB de armazenamento`
+      ],
       version: plan.version || 1,
       order: plan.order || (plans.length + 1),
       availableForSale: (plan.status ? plan.status === 'published' : (plan.availableForSale ?? false)),
@@ -362,24 +396,7 @@ export class StripeSyncService {
         is_popular: planData.isPopular,
         highlight_badge: planData.highlightBadge || null,
         is_active: planData.status !== 'archived',
-        features: {
-          priceYearly: planData.priceYearly,
-          status: planData.status,
-          stripeSyncStatus: planData.stripeSyncStatus,
-          isPopular: planData.isPopular,
-          highlightBadge: planData.highlightBadge,
-          highlightFeatures: [
-            `${planData.userLimit} Usuário${planData.userLimit > 1 ? 's' : ''}`,
-            `${planData.processLimit} Processos/mês`,
-            `${planData.aiPagesLimit} Páginas IA/mês`,
-            `${planData.storageGb} GB Storage`
-          ],
-          stripeProductId: planData.stripeProductId,
-          stripePriceMonthlyId: planData.stripePriceMonthlyId,
-          stripePriceYearlyId: planData.stripePriceYearlyId,
-          lastSyncedAt: planData.lastSyncedAt,
-          syncError: planData.syncError
-        },
+        features: planData.features,
         updated_at: now
       };
 
@@ -458,6 +475,12 @@ export class StripeSyncService {
           highlightBadge: plan.highlightBadge,
           status: 'draft',
           stripeSyncStatus: plan.stripeSyncStatus || 'not_synced',
+          features: plan.features || [
+            `${plan.userLimit || 1} ${(plan.userLimit || 1) > 1 ? 'usuários' : 'usuário'}`,
+            `${plan.processLimit || 20} processos/mês`,
+            `${plan.aiPagesLimit || 200} páginas IA/mês`,
+            `${plan.storageGb || 5}GB de armazenamento`
+          ],
           version: 1,
           order: plans.length + 1,
           availableForSale: false,
@@ -487,6 +510,12 @@ export class StripeSyncService {
         highlightBadge: plan.highlightBadge,
         status: 'draft',
         stripeSyncStatus: 'not_synced',
+        features: plan.features || [
+          `${plan.userLimit || 1} ${(plan.userLimit || 1) > 1 ? 'usuários' : 'usuário'}`,
+          `${plan.processLimit || 20} processos/mês`,
+          `${plan.aiPagesLimit || 200} páginas IA/mês`,
+          `${plan.storageGb || 5}GB de armazenamento`
+        ],
         version: 1,
         order: plans.length + 1,
         availableForSale: false,

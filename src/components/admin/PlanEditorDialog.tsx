@@ -72,8 +72,16 @@ export const PlanEditorDialog: React.FC<PlanEditorDialogProps> = ({
     }
     setIsSaving(true);
     try {
+      const features = [
+        `${formData.userLimit || 1} ${(formData.userLimit || 1) > 1 ? 'usuários' : 'usuário'}`,
+        `${formData.processLimit || 20} processos/mês`,
+        `${formData.aiPagesLimit || 200} páginas IA/mês`,
+        `${formData.storageGb || 5}GB de armazenamento`
+      ];
+
       const saved = await StripeSyncService.savePlan({
         ...formData,
+        features,
         status: "draft",
         availableForSale: false,
         id: plan?.id
@@ -95,9 +103,17 @@ export const PlanEditorDialog: React.FC<PlanEditorDialogProps> = ({
     }
     setIsSyncing(true);
     try {
+      const features = [
+        `${formData.userLimit || 1} ${(formData.userLimit || 1) > 1 ? 'usuários' : 'usuário'}`,
+        `${formData.processLimit || 20} processos/mês`,
+        `${formData.aiPagesLimit || 200} páginas IA/mês`,
+        `${formData.storageGb || 5}GB de armazenamento`
+      ];
+
       // 1. Salva com status 'published'
       const saved = await StripeSyncService.savePlan({
         ...formData,
+        features,
         status: "published",
         availableForSale: true,
         id: plan?.id
