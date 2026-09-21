@@ -481,7 +481,7 @@ function AdminPlansPage() {
                     onClick={() => syncMutation.mutate(plan.id)}
                     disabled={isSyncingThis || plan.status === 'archived'}
                     className={`flex-1 text-xs font-bold h-8 rounded-lg gap-1.5 shadow-2xs ${
-                      plan.status === 'synced'
+                      plan.stripeSyncStatus === 'synced'
                         ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                         : 'bg-[#1868db] hover:bg-[#1557b8] text-white'
                     }`}
@@ -494,7 +494,7 @@ function AdminPlansPage() {
                     ) : (
                       <>
                         <RefreshCw className="h-3 w-3" />
-                        <span>{plan.status === 'synced' ? 'Ressincronizar' : 'Publicar Stripe'}</span>
+                        <span>{plan.stripeSyncStatus === 'synced' ? 'Ressincronizar' : 'Publicar Stripe'}</span>
                       </>
                     )}
                   </Button>
