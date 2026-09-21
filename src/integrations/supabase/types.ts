@@ -3996,15 +3996,25 @@ export type Database = {
           description: string | null
           document_limit: number | null
           features: Json | null
+          highlight_badge: string | null
           id: string
           is_active: boolean | null
+          is_popular: boolean | null
+          last_synced_at: string | null
           mercado_pago_plan_id: string | null
           name: string
           ocr_limit: number | null
           price: number
+          price_yearly: number | null
           process_limit: number | null
           slug: string | null
+          status: string | null
           storage_limit_gb: number | null
+          stripe_price_monthly_id: string | null
+          stripe_price_yearly_id: string | null
+          stripe_product_id: string | null
+          stripe_sync_status: string | null
+          sync_error: string | null
           updated_at: string
           user_limit: number | null
           version: number | null
@@ -4016,15 +4026,25 @@ export type Database = {
           description?: string | null
           document_limit?: number | null
           features?: Json | null
+          highlight_badge?: string | null
           id?: string
           is_active?: boolean | null
+          is_popular?: boolean | null
+          last_synced_at?: string | null
           mercado_pago_plan_id?: string | null
           name: string
           ocr_limit?: number | null
           price: number
+          price_yearly?: number | null
           process_limit?: number | null
           slug?: string | null
+          status?: string | null
           storage_limit_gb?: number | null
+          stripe_price_monthly_id?: string | null
+          stripe_price_yearly_id?: string | null
+          stripe_product_id?: string | null
+          stripe_sync_status?: string | null
+          sync_error?: string | null
           updated_at?: string
           user_limit?: number | null
           version?: number | null
@@ -4036,15 +4056,25 @@ export type Database = {
           description?: string | null
           document_limit?: number | null
           features?: Json | null
+          highlight_badge?: string | null
           id?: string
           is_active?: boolean | null
+          is_popular?: boolean | null
+          last_synced_at?: string | null
           mercado_pago_plan_id?: string | null
           name?: string
           ocr_limit?: number | null
           price?: number
+          price_yearly?: number | null
           process_limit?: number | null
           slug?: string | null
+          status?: string | null
           storage_limit_gb?: number | null
+          stripe_price_monthly_id?: string | null
+          stripe_price_yearly_id?: string | null
+          stripe_product_id?: string | null
+          stripe_sync_status?: string | null
+          sync_error?: string | null
           updated_at?: string
           user_limit?: number | null
           version?: number | null
