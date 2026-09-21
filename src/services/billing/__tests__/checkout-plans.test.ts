@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   NAVAL_PLANS,
+  LEGACY_NAVAL_PLANS,
   getPlanPrice,
   calculateAnnualSavings,
   getAnnualDiscountPercentage,
@@ -19,46 +20,48 @@ describe("Plans and Billing Configuration (NavalPlans Update)", () => {
     }
   });
 
-  it("calculates annual discount equivalent to 2 months free for Despachante Naval", () => {
-    const despachante = NAVAL_PLANS.find((p) => p.slug === "despachante")!;
-    expect(despachante).toBeDefined();
-    expect(despachante.priceMonthly).toBe(129);
-    expect(despachante.priceYearly).toBe(1290);
+  it("calculates annual discount equivalent to 2 months free for Plano Profissional", () => {
+    const profissional = NAVAL_PLANS.find((p) => p.slug === "profissional")!;
+    expect(profissional).toBeDefined();
+    expect(profissional.priceMonthly).toBe(299);
+    expect(profissional.priceYearly).toBe(2990);
 
-    const savings = calculateAnnualSavings(despachante);
-    expect(savings).toBe(129 * 2); // R$ 258 de economia
+    const savings = calculateAnnualSavings(profissional);
+    expect(savings).toBe(299 * 2); // R$ 598 de economia
 
-    const discountPercentage = getAnnualDiscountPercentage(despachante);
+    const discountPercentage = getAnnualDiscountPercentage(profissional);
     expect(discountPercentage).toBeGreaterThanOrEqual(16);
     expect(discountPercentage).toBeLessThanOrEqual(20);
   });
 
-  it("configures Engenharia & Perícia plan with 100 OS/Laudos and 3 users", () => {
-    const engenharia = NAVAL_PLANS.find((p) => p.slug === "engenharia_pericia")!;
+  it("configures Profissional plan with 60 OS/Laudos and 3 users", () => {
+    const profissional = NAVAL_PLANS.find((p) => p.slug === "profissional")!;
+    expect(profissional).toBeDefined();
+    expect(profissional.priceMonthly).toBe(299);
+    expect(profissional.priceYearly).toBe(2990);
+    expect(profissional.processLimit).toBe(60);
+    expect(profissional.userLimit).toBe(3);
+    expect(profissional.storageGb).toBe(15);
+    expect(profissional.isPopular).toBe(true);
+  });
+
+  it("preserves legacy plans (Despachante & Engenharia) for existing contracts", () => {
+    const despachante = LEGACY_NAVAL_PLANS.find((p) => p.slug === "despachante")!;
+    expect(despachante).toBeDefined();
+    expect(despachante.priceMonthly).toBe(129);
+    expect(despachante.priceYearly).toBe(1290);
+
+    const engenharia = LEGACY_NAVAL_PLANS.find((p) => p.slug === "engenharia_pericia")!;
     expect(engenharia).toBeDefined();
     expect(engenharia.priceMonthly).toBe(179);
     expect(engenharia.priceYearly).toBe(1790);
-    expect(engenharia.processLimit).toBe(100);
-    expect(engenharia.userLimit).toBe(3);
-    expect(engenharia.storageGb).toBe(30);
-    expect(engenharia.categoryTag).toBe("Para Engenheiros e Vistoriadores");
-  });
-
-  it("configures Marina & Estaleiro plan with unlimited limits and 150GB storage", () => {
-    const marina = NAVAL_PLANS.find((p) => p.slug === "marina_estaleiro")!;
-    expect(marina).toBeDefined();
-    expect(marina.priceMonthly).toBe(249);
-    expect(marina.priceYearly).toBe(2490);
-    expect(marina.processLimit).toBeNull(); // ilimitado
-    expect(marina.userLimit).toBeNull(); // ilimitado
-    expect(marina.storageGb).toBe(150);
   });
 
   it("getPlanPrice returns correct amount according to billing cycle", () => {
-    const engenharia = NAVAL_PLANS.find((p) => p.slug === "engenharia_pericia")!;
-    expect(getPlanPrice(engenharia, "monthly")).toBe(179);
-    expect(getPlanPrice(engenharia, "annual")).toBe(1790);
-    expect(getPlanPrice(engenharia, "yearly")).toBe(1790);
+    const profissional = NAVAL_PLANS.find((p) => p.slug === "profissional")!;
+    expect(getPlanPrice(profissional, "monthly")).toBe(299);
+    expect(getPlanPrice(profissional, "annual")).toBe(2990);
+    expect(getPlanPrice(profissional, "yearly")).toBe(2990);
   });
 
   it("parses external_reference tuple with organization_id, plan_id, and billing_cycle", () => {

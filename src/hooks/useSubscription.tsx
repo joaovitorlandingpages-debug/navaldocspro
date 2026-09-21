@@ -240,9 +240,12 @@ export const useSubscription = () => {
         console.warn("Assinatura não encontrada no banco ou erro na consulta. Calculando período de teste via data de criação:", e);
       }
 
-      // 3.3. Se não há registro na tabela subscriptions, calcula os 14 dias de Trial baseado no created_at do banco
+      // 3.3. Se não há registro na tabela subscriptions, calcula o Trial baseado no created_at real da empresa
       const createdAt = companyData?.created_at ? new Date(companyData.created_at) : new Date();
-      const trialDurationMs = TRIAL_CONFIG.days * 24 * 60 * 60 * 1000;
+      // O padrão aprovado é 30 dias, suportando campanhas de até 60 dias totais
+      const campaignDays = (companyData as any)?.trial_days || (companyData as any)?.metadata?.trial_days;
+      const trialDaysCount = campaignDays === 60 ? TRIAL_CONFIG.campaignDurationDays : TRIAL_CONFIG.days;
+      const trialDurationMs = trialDaysCount * 24 * 60 * 60 * 1000;
       const trialEndsAt = new Date(createdAt.getTime() + trialDurationMs);
       const isStillInTrial = trialEndsAt.getTime() > now;
 
@@ -267,13 +270,14 @@ export const useSubscription = () => {
         plan_id: "plan-professional",
         status: trialStatus,
         cancel_at_period_end: false,
+        current_period_start: createdAt.toISOString(),
         current_period_end: trialEndsAt.toISOString(),
         isInGracePeriod: trialInGrace,
         graceDaysLeft: trialDaysInGrace,
         plan: {
           id: "plan-professional",
           name: isStillInTrial 
-            ? "Professional (14 Dias Grátis)" 
+            ? "Professional (Teste Gratuito)" 
             : trialInGrace 
               ? "Período de Teste Vencido (Carência Ativa)" 
               : "Período de Teste Expirado",
@@ -295,10 +299,24 @@ export const useSubscription = () => {
     enabled: !!companyId || isLifetimeAdmin,
   });
 
-  // Cálculos de dias restantes e flags operacionais
-  const createdAtMs = companyData?.created_at ? new Date(companyData.created_at).getTime() : Date.now();
-  const trialDaysPassed = Math.floor((Date.now() - createdAtMs) / (1000 * 60 * 60 * 24));
-  const trialDaysLeft = Math.max(0, TRIAL_CONFIG.days - trialDaysPassed);
+  // Datas reais de início e término do período de teste
+  const trialStartDate = subscription?.current_period_start 
+    ? new Date(subscription.current_period_start) 
+    : (companyData?.created_at ? new Date(companyData.created_at) : null);
+
+  const trialEndDate = subscription?.current_period_end 
+    ? new Date(subscription.current_period_end) 
+    : (trialStartDate ? new Date(trialStartDate.getTime() + TRIAL_CONFIG.days * 24 * 60 * 60 * 1000) : null);
+
+  const trialEndDateFormatted = trialEndDate && !isNaN(trialEndDate.getTime())
+    ? `${String(trialEndDate.getDate()).padStart(2, '0')}/${String(trialEndDate.getMonth() + 1).padStart(2, '0')}/${trialEndDate.getFullYear()}`
+    : "";
+
+  // Cálculo matemático dos dias restantes a partir da data de término real
+  const now = Date.now();
+  const trialDaysLeft = trialEndDate
+    ? Math.max(0, Math.ceil((trialEndDate.getTime() - now) / (1000 * 60 * 60 * 24)))
+    : 0;
 
   const isTrial = !isLifetimeAdmin && !isHomologation && subscription?.status === "trialing";
   const isInGracePeriod = !!subscription?.isInGracePeriod;
@@ -402,6 +420,9 @@ export const useSubscription = () => {
     isLifetimeAdmin,
     isHomologation,
     isTrial,
+    trialStartDate,
+    trialEndDate,
+    trialEndDateFormatted,
     trialDaysLeft,
     isTrialExpired,
     isInGracePeriod,

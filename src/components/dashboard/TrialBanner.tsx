@@ -15,12 +15,18 @@ export function TrialBanner({ onlyAlerts = false }: TrialBannerProps) {
     isHomologation, 
     isTrial, 
     trialDaysLeft, 
+    trialEndDate,
+    trialEndDateFormatted,
     isTrialExpired,
     isInGracePeriod,
     graceDaysLeft,
     isPastDue,
     isCanceled
   } = usePlanLimits();
+
+  const formattedEndDate = trialEndDateFormatted || (trialEndDate && !isNaN(trialEndDate.getTime())
+    ? `${String(trialEndDate.getDate()).padStart(2, '0')}/${String(trialEndDate.getMonth() + 1).padStart(2, '0')}/${trialEndDate.getFullYear()}`
+    : "");
 
   // 1. ADMIN VITALÍCIO
   if (isLifetimeAdmin) {
@@ -135,6 +141,10 @@ export function TrialBanner({ onlyAlerts = false }: TrialBannerProps) {
 
   // 5. TRIAL EXPIRADO FORA DA CARÊNCIA
   if (isTrialExpired) {
+    const expiredTitle = formattedEndDate
+      ? `Seu teste gratuito encerrou em ${formattedEndDate} • Período encerrado`
+      : "Período de Teste Gratuito Expirado • Consulta Ativa";
+
     return (
       <div className="bg-gradient-to-r from-rose-900 via-rose-800 to-rose-900 text-white border-b border-rose-700 px-4 md:px-8 py-3 flex items-center justify-between shadow-md animate-in slide-in-from-top duration-500">
         <div className="flex items-center gap-3">
@@ -142,7 +152,7 @@ export function TrialBanner({ onlyAlerts = false }: TrialBannerProps) {
             <AlertTriangle className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-xs font-black uppercase tracking-wider">Período de Teste Gratuito Expirado • Consulta Ativa</p>
+            <p className="text-xs font-black uppercase tracking-wider">{expiredTitle}</p>
             <p className="text-[11px] text-white/80">
               Seus dados permanecem seguros para consulta. Escolha um dos planos navais para emitir novos requerimentos e processos.
             </p>
@@ -157,12 +167,28 @@ export function TrialBanner({ onlyAlerts = false }: TrialBannerProps) {
     );
   }
 
-  // 6. TRIAL ATIVO (14 DIAS GRÁTIS)
+  // 6. TRIAL ATIVO
   if (isTrial) {
     const isEnding = trialDaysLeft <= 3;
 
     // Se onlyAlerts estiver ativado e o trial ainda tiver mais de 3 dias, não polui a tela de consulta
     if (onlyAlerts && !isEnding) return null;
+
+    // Redação aprovada com singular, plural e data de término:
+    // "Seu teste gratuito termina em DD/MM/AAAA • Restam X dias"
+    // "Seu teste gratuito termina em DD/MM/AAAA • Resta 1 dia"
+    // "Seu teste gratuito encerrou em DD/MM/AAAA • Período encerrado"
+    const trialMessage = trialDaysLeft <= 0
+      ? (formattedEndDate 
+          ? `Seu teste gratuito encerrou em ${formattedEndDate} • Período encerrado`
+          : "Seu teste gratuito encerrou • Período encerrado")
+      : trialDaysLeft === 1
+        ? (formattedEndDate
+            ? `Seu teste gratuito termina em ${formattedEndDate} • Resta 1 dia`
+            : "Último dia de teste gratuito! • Resta 1 dia")
+        : (formattedEndDate
+            ? `Seu teste gratuito termina em ${formattedEndDate} • Restam ${trialDaysLeft} dias`
+            : `Restam ${trialDaysLeft} dias do seu teste gratuito`);
 
     return (
       <div className={`border-b px-4 md:px-8 py-2.5 flex items-center justify-between shadow-sm animate-in fade-in duration-500 ${
@@ -183,9 +209,14 @@ export function TrialBanner({ onlyAlerts = false }: TrialBannerProps) {
               Teste Grátis
             </Badge>
             <span className="font-bold">
-              {trialDaysLeft === 1 ? "Último dia de teste gratuito!" : `Restam ${trialDaysLeft} dias do seu período de 14 dias grátis.`}
+              {trialMessage}
             </span>
-            <span className="text-slate-500 hidden sm:inline">• Todas as ferramentas desbloqueadas.</span>
+            <span 
+              className="text-slate-500 hidden sm:inline"
+              title="Todas as ferramentas desbloqueadas com franquia de teste (10 processos, 100 análises IA, 1 usuário, 1 GB)"
+            >
+              • Todas as ferramentas desbloqueadas (franquia de teste inclusa).
+            </span>
           </div>
         </div>
         <Link to="/plans">

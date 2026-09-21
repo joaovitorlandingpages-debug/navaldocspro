@@ -12,11 +12,23 @@ import { getPublishedCatalogPlans, NavalPlan, TRIAL_CONFIG } from "@/services/bi
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "@tanstack/react-router";
+import { CheckoutConfirmationDialog } from "@/components/billing/CheckoutConfirmationDialog";
 
 export default function Plans() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [checkoutPlan, setCheckoutPlan] = useState<NavalPlan | null>(null);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+
   const { user } = useAuth();
-  const { isLifetimeAdmin, isHomologation, createPreference } = useSubscription();
+  const { 
+    isLifetimeAdmin, 
+    isHomologation, 
+    isTrial, 
+    trialDaysLeft, 
+    trialEndDateFormatted, 
+    isTrialExpired,
+    createPreference 
+  } = useSubscription();
 
   const plans = useMemo(() => getPublishedCatalogPlans(), []);
 
@@ -31,9 +43,17 @@ export default function Plans() {
       return;
     }
 
+    // Abre diálogo de confirmação com transparência total de valores, data de cobrança e aproveitamento do trial
+    setCheckoutPlan(plan);
+    setIsCheckoutModalOpen(true);
+  };
+
+  const handleConfirmCheckout = (provider: "stripe" | "mercadopago") => {
+    if (!checkoutPlan) return;
     createPreference.mutate({
-      planSlug: plan.slug,
-      billingCycle: billingCycle === "yearly" ? "annual" : "monthly"
+      planSlug: checkoutPlan.slug,
+      billingCycle: billingCycle === "yearly" ? "annual" : "monthly",
+      provider
     });
   };
 
@@ -210,7 +230,15 @@ export default function Plans() {
                     }`}
                   >
                     {createPreference.isPending ? "Processando..." : (
-                      isLifetimeAdmin ? "Acesso Vitalício Ativo" : isHomologation ? "Homologação Ativa" : "Começar 14 Dias Grátis"
+                      isLifetimeAdmin 
+                        ? "Acesso Vitalício Ativo" 
+                        : isHomologation 
+                          ? "Homologação Ativa" 
+                          : isTrial 
+                            ? "Contratar Plano" 
+                            : isTrialExpired 
+                              ? "Assinar Agora" 
+                              : "Começar 30 Dias Grátis"
                     )}
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
@@ -227,7 +255,7 @@ export default function Plans() {
               <Lock className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-navy">Pagamento Seguro via Mercado Pago</h2>
+              <h2 className="text-sm font-bold text-navy">Pagamento Seguro via Mercado Pago e Stripe</h2>
               <p className="text-xs text-slate-500 font-medium">
                 Aceitamos Pix com aprovação imediata, Cartão de Crédito em até 12x e Boleto Bancário.
               </p>
@@ -252,14 +280,21 @@ export default function Plans() {
 
           <div className="space-y-4">
             <Card className="p-6 rounded-2xl border-slate-200 bg-white">
-              <h3 className="text-sm font-bold text-navy mb-1">Como funciona o período de 14 dias grátis?</h3>
+              <h3 className="text-sm font-bold text-navy mb-1">Como funciona o período de 30 dias grátis?</h3>
               <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                Ao criar sua conta, você tem 14 dias de acesso irrestrito para testar todas as funcionalidades do NavalDocs Pro (geração de requerimentos, checklists NORMAM, emissão de laudos técnicos, OCR de documentos e assinaturas digitais). Nenhum valor é cobrado antecipadamente.
+                Ao criar sua conta, você conta com 30 dias de acesso gratuito para testar todas as funcionalidades do NavalDocs Pro (geração de requerimentos, checklists NORMAM, emissão de laudos técnicos, OCR de documentos e assinaturas digitais com franquia de teste inclusa). Campanhas de parceiros podem contemplar até 60 dias totais. Nenhum valor é cobrado antecipadamente e não é exigido cartão de crédito para iniciar.
               </p>
             </Card>
 
             <Card className="p-6 rounded-2xl border-slate-200 bg-white">
-              <h3 className="text-sm font-bold text-navy mb-1">O plano Engenharia & Perícia permite emitir laudos com ART?</h3>
+              <h3 className="text-sm font-bold text-navy mb-1">O que acontece se eu contratar um plano antes de terminar o teste gratuito?</h3>
+              <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                Você recebe <strong>upgrade imediato</strong> para os limites completos do plano contratado (ampliação imediata de processos mensais, armazenamento e usuários). A primeira cobrança é realizada no ato da confirmação do pagamento e o ciclo contratado (anual ou mensal) passa a valer a partir da confirmação, garantindo operação ininterrupta e sem travas de demonstração.
+              </p>
+            </Card>
+
+            <Card className="p-6 rounded-2xl border-slate-200 bg-white">
+              <h3 className="text-sm font-bold text-navy mb-1">O plano Profissional permite emitir laudos com ART?</h3>
               <p className="text-xs text-slate-600 font-medium leading-relaxed">
                 Sim! O plano inclui o módulo especializado de laudos técnicos, checklists da Marinha do Brasil, galeria de fotos de vistoria em alta resolução e campo para vinculação e anexo de ART/CREA.
               </p>
@@ -273,6 +308,19 @@ export default function Plans() {
             </Card>
           </div>
         </div>
+
+        {/* Modal de Confirmação e Transparência Pré-Checkout */}
+        <CheckoutConfirmationDialog
+          isOpen={isCheckoutModalOpen}
+          onClose={() => setIsCheckoutModalOpen(false)}
+          onConfirm={handleConfirmCheckout}
+          plan={checkoutPlan}
+          billingCycle={billingCycle}
+          isTrial={isTrial}
+          trialDaysLeft={trialDaysLeft}
+          trialEndDateFormatted={trialEndDateFormatted}
+          isSubmitting={createPreference.isPending}
+        />
 
       </div>
     </div>

@@ -16,6 +16,9 @@ export interface PlanLimitContextType {
   isLifetimeAdmin: boolean;
   isHomologation: boolean;
   isTrial: boolean;
+  trialStartDate?: Date | null;
+  trialEndDate?: Date | null;
+  trialEndDateFormatted?: string;
   trialDaysLeft: number;
   isTrialExpired: boolean;
   isInGracePeriod: boolean;
@@ -36,6 +39,9 @@ export function PlanLimitProvider({ children }: { children: React.ReactNode }) {
     isLifetimeAdmin,
     isHomologation,
     isTrial,
+    trialStartDate,
+    trialEndDate,
+    trialEndDateFormatted,
     trialDaysLeft,
     isTrialExpired,
     isInGracePeriod,
@@ -167,6 +173,9 @@ export function PlanLimitProvider({ children }: { children: React.ReactNode }) {
       isLifetimeAdmin,
       isHomologation,
       isTrial,
+      trialStartDate,
+      trialEndDate,
+      trialEndDateFormatted,
       trialDaysLeft,
       isTrialExpired,
       isInGracePeriod,
