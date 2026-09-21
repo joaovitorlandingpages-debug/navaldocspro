@@ -342,13 +342,25 @@ ON CONFLICT (slug) DO UPDATE SET
   highlight_badge = EXCLUDED.highlight_badge,
   features = EXCLUDED.features
 WHERE public.plans.status = 'draft'
-  AND public.plans.id NOT IN (SELECT plan_id FROM public.subscriptions WHERE plan_id IS NOT NULL);
+  AND NOT EXISTS (
+    SELECT 1 FROM public.subscriptions s WHERE s.plan_id = public.plans.id
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM public.companies c WHERE c.plan_id = public.plans.id
+  );
 
--- Garante que customer_limit e document_limit não fiquem preenchidos indevidamente nos 3 rascunhos oficiais
+-- Garante que customer_limit e document_limit não fiquem preenchidos indevidamente nos 3 rascunhos oficiais não contratados
 UPDATE public.plans
 SET customer_limit = NULL,
     document_limit = NULL
-WHERE slug IN ('essencial', 'profissional', 'equipe') AND status = 'draft';
+WHERE slug IN ('essencial', 'profissional', 'equipe')
+  AND status = 'draft'
+  AND NOT EXISTS (
+    SELECT 1 FROM public.subscriptions s WHERE s.plan_id = public.plans.id
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM public.companies c WHERE c.plan_id = public.plans.id
+  );
 
 -- ------------------------------------------------------------
 -- 8. VERIFICAÇÕES PÓS-EXECUÇÃO
