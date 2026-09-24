@@ -6,10 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
 };
 
-/**
- * Validação criptográfica de assinatura Stripe usando corpo raw e HMAC-SHA256 (Web Crypto nativo).
- * Previne ataques de repetição com validação de timestamp (tolerância de 300s).
- */
 async function verifyStripeSignature(
   rawBody: string,
   signatureHeader: string,
@@ -93,11 +89,6 @@ function extractId(val: unknown): string | null {
   return null;
 }
 
-/**
- * Extração unificada de ID de assinatura suportando:
- * 1. Formato Moderno Stripe (2025+ e 2026-08-26.dahlia): invoice.parent.subscription_details.subscription
- * 2. Formato Legado: invoice.subscription
- */
 function extractSubscriptionIdFromInvoice(invoice: any): string | null {
   if (!invoice || typeof invoice !== "object") return null;
 
@@ -188,7 +179,7 @@ serve(async (req) => {
     eventId = event.id;
     eventType = event.type;
 
-    // 1. Idempotência: verifica se o evento já foi processado com sucesso
+    // 1. Idempotência por evento
     const { data: existingLog, error: logCheckErr } = await supabase
       .from("payment_logs")
       .select("id")
@@ -198,7 +189,6 @@ serve(async (req) => {
       .maybeSingle();
 
     if (logCheckErr) {
-      console.error("Erro ao verificar log de pagamento:", logCheckErr);
       throw new Error(`Falha no banco ao verificar idempotência: ${logCheckErr.message}`);
     }
 
@@ -210,7 +200,7 @@ serve(async (req) => {
       });
     }
 
-    // 2. Processamento dos eventos principais
+    // 2. Processamento dos eventos
     switch (eventType) {
       // -------------------------------------------------------------
       // EVENTO 1: checkout.session.completed
@@ -229,38 +219,35 @@ serve(async (req) => {
           const { data: plan } = await supabase
             .from("plans")
             .select("id, name")
-            .eq("slug", planSlug)
+            .or(`slug.eq.${planSlug},id.eq.${planSlug}`)
             .maybeSingle();
 
           let subStatus = "pending";
           let activateCompany = false;
+          let stripeTrialEndIso: string | null = null;
+
+          // Se houver assinatura vinculada, obtém detalhes completos da Stripe
+          let stripeSubObj: any = null;
+          if (typeof session.subscription === "object" && session.subscription !== null) {
+            stripeSubObj = session.subscription;
+          } else if (subscriptionId && stripeSecretKey) {
+            stripeSubObj = await fetchStripeSubscription(subscriptionId, stripeSecretKey);
+          }
+
+          if (stripeSubObj?.trial_end) {
+            stripeTrialEndIso = new Date(stripeSubObj.trial_end * 1000).toISOString();
+          }
 
           if (session.payment_status === "paid") {
             subStatus = "active";
             activateCompany = true;
           } else if (session.payment_status === "no_payment_required") {
-            let resolvedStatus: string | null = null;
-            if (typeof session.subscription === "object" && session.subscription?.status) {
-              resolvedStatus = session.subscription.status;
-            }
-
-            if (!resolvedStatus && subscriptionId && stripeSecretKey) {
-              const stripeSub = await fetchStripeSubscription(subscriptionId, stripeSecretKey);
-              if (stripeSub?.status) {
-                resolvedStatus = stripeSub.status;
-              }
-            }
-
-            if (resolvedStatus === "trialing") {
+            if (stripeSubObj?.status === "trialing") {
               subStatus = "trialing";
-            } else if (resolvedStatus === "active") {
+            } else if (stripeSubObj?.status === "active") {
               subStatus = "active";
             } else {
-              const hasTrial = Boolean(
-                session.subscription_data?.trial_period_days ||
-                (typeof session.subscription === "object" && session.subscription?.trial_end)
-              );
-              subStatus = hasTrial ? "trialing" : "active";
+              subStatus = stripeTrialEndIso ? "trialing" : "active";
             }
             activateCompany = true;
           }
@@ -282,7 +269,8 @@ serve(async (req) => {
             plan_slug: planSlug || existingSub?.metadata?.plan_slug,
             billing_cycle: billingCycle,
             payment_status: session.payment_status,
-            checkout_mode: session.mode
+            checkout_mode: session.mode,
+            stripe_trial_end: stripeTrialEndIso || undefined
           };
 
           const subUpsertData: any = {
@@ -296,6 +284,10 @@ serve(async (req) => {
             updated_at: new Date().toISOString()
           };
 
+          if (stripeTrialEndIso) {
+            subUpsertData.trial_ends_at = stripeTrialEndIso;
+          }
+
           const { error: upsertErr } = await supabase
             .from("subscriptions")
             .upsert(subUpsertData, { onConflict: "company_id" });
@@ -305,14 +297,20 @@ serve(async (req) => {
           }
 
           if (activateCompany) {
+            const companyUpdateData: any = {
+              is_active: true,
+              is_pilot: false,
+              stripe_customer_id: customerId || undefined,
+              updated_at: new Date().toISOString()
+            };
+
+            if (stripeTrialEndIso) {
+              companyUpdateData.trial_ends_at = stripeTrialEndIso;
+            }
+
             const { error: compErr } = await supabase
               .from("companies")
-              .update({
-                is_active: true,
-                is_pilot: false,
-                stripe_customer_id: customerId || undefined,
-                updated_at: new Date().toISOString()
-              })
+              .update(companyUpdateData)
               .eq("id", companyId);
 
             if (compErr) {
@@ -321,11 +319,31 @@ serve(async (req) => {
           }
 
           // Confirmação atômica de resgate de cupom
-          if (couponId || preSessionId || session.id) {
+          // Verifica cupom em metadata ou inserido via checkout da Stripe
+          let effectiveCouponId = couponId;
+          if (!effectiveCouponId) {
+            const rawDiscount = session.total_details?.breakdown?.discounts?.[0]?.discount || session.discount;
+            const stripePromoId = rawDiscount?.promotion_code;
+            const stripeCoupId = rawDiscount?.coupon?.id || rawDiscount?.coupon;
+
+            if (stripePromoId || stripeCoupId) {
+              const { data: dbCoup } = await supabase
+                .from("coupons")
+                .select("id")
+                .or(`stripe_promotion_code_id.eq.${stripePromoId || 'none'},stripe_coupon_id.eq.${stripeCoupId || 'none'}`)
+                .maybeSingle();
+
+              if (dbCoup?.id) {
+                effectiveCouponId = dbCoup.id;
+              }
+            }
+          }
+
+          if (effectiveCouponId || preSessionId || session.id) {
             const { data: confirmRes, error: rpcErr } = await supabase.rpc("confirm_discount_coupon_redemption", {
               p_session_id: session.id,
               p_company_id: companyId,
-              p_coupon_id: couponId ? couponId : null,
+              p_coupon_id: effectiveCouponId ? effectiveCouponId : null,
               p_metadata: {
                 pre_session_id: preSessionId,
                 stripe_session_id: session.id,
@@ -335,13 +353,11 @@ serve(async (req) => {
             });
 
             if (rpcErr) {
-              console.error("Erro na RPC de confirmação de cupom:", rpcErr);
               throw new Error(`Erro na RPC confirm_discount_coupon_redemption: ${rpcErr.message}`);
             }
 
             if (confirmRes && !confirmRes.success && confirmRes.error !== "reservation_not_found") {
-              console.error("Falha ao confirmar resgate de cupom:", confirmRes.error);
-              throw new Error(`Falha na validação do cupom: ${confirmRes.error}`);
+              throw new Error(`Falha na validação do cupom no webhook: ${confirmRes.error}`);
             }
           }
         }
@@ -386,99 +402,136 @@ serve(async (req) => {
           sub = data;
         }
 
-        if (sub?.company_id) {
-          let targetStatus = "active";
+        // Se a assinatura não foi encontrada (evento chegou antes do checkout.session.completed),
+        // retorna HTTP 500 para o Stripe reenviar o evento em seguida sem perder o processamento.
+        if (!sub?.company_id) {
+          throw new Error(`Assinatura não localizada para o invoice ${invoiceId} (subscriptionId: ${subscriptionId}). Reenviando.`);
+        }
 
-          if (amountPaid === 0) {
-            let realSubStatus: string | null = null;
-            if (subscriptionId && stripeSecretKey) {
-              const stripeSub = await fetchStripeSubscription(subscriptionId, stripeSecretKey);
-              if (stripeSub?.status) {
-                realSubStatus = stripeSub.status;
-              }
-            }
+        let targetStatus = "active";
+        let stripeTrialEndIso: string | null = null;
 
-            if (realSubStatus === "trialing") {
-              targetStatus = "trialing";
-            } else if (realSubStatus === "active") {
-              targetStatus = "active";
-            } else {
-              targetStatus = sub.status === "trialing" ? "trialing" : "active";
+        if (amountPaid === 0) {
+          let realSubStatus: string | null = null;
+          if (subscriptionId && stripeSecretKey) {
+            const stripeSub = await fetchStripeSubscription(subscriptionId, stripeSecretKey);
+            if (stripeSub?.status) {
+              realSubStatus = stripeSub.status;
             }
-          } else {
+            if (stripeSub?.trial_end) {
+              stripeTrialEndIso = new Date(stripeSub.trial_end * 1000).toISOString();
+            }
+          }
+
+          if (realSubStatus === "trialing") {
+            targetStatus = "trialing";
+          } else if (realSubStatus === "active") {
             targetStatus = "active";
+          } else {
+            targetStatus = sub.status === "trialing" ? "trialing" : "active";
           }
+        } else {
+          targetStatus = "active";
+        }
 
-          // Idempotência no registro de pagamentos
-          const { data: existingPayment } = await supabase
-            .from("payments")
-            .select("id")
-            .contains("metadata", { stripe_invoice_id: invoiceId })
-            .maybeSingle();
+        // Transição correta: se já houver registro com status 'rejected', atualiza para 'approved'
+        const { data: existingPayment } = await supabase
+          .from("payments")
+          .select("id, status")
+          .contains("metadata", { stripe_invoice_id: invoiceId })
+          .maybeSingle();
 
-          if (!existingPayment && amountPaid > 0) {
-            const paidAt = invoice.status_transitions?.paid_at
-              ? new Date(invoice.status_transitions.paid_at * 1000).toISOString()
-              : new Date().toISOString();
+        const paidAt = invoice.status_transitions?.paid_at
+          ? new Date(invoice.status_transitions.paid_at * 1000).toISOString()
+          : new Date().toISOString();
 
-            const { error: payErr } = await supabase.from("payments").insert({
-              company_id: sub.company_id,
-              subscription_id: sub.id,
-              amount: amountPaid,
-              status: "approved",
-              payment_method: "credit_card",
-              paid_at: paidAt,
-              metadata: {
-                stripe_invoice_id: invoiceId,
-                stripe_subscription_id: subscriptionId,
-                stripe_customer_id: customerId,
-                currency: currency,
-                billing_reason: invoice.billing_reason
-              },
-              created_at: new Date().toISOString()
-            });
+        if (existingPayment) {
+          if (existingPayment.status === "rejected" && amountPaid > 0) {
+            const { error: payUpErr } = await supabase
+              .from("payments")
+              .update({
+                status: "approved",
+                paid_at: paidAt,
+                amount: amountPaid,
+                metadata: {
+                  stripe_invoice_id: invoiceId,
+                  stripe_subscription_id: subscriptionId,
+                  stripe_customer_id: customerId,
+                  currency: currency,
+                  status_transition: "rejected_to_approved",
+                  billing_reason: invoice.billing_reason
+                }
+              })
+              .eq("id", existingPayment.id);
 
-            if (payErr) {
-              throw new Error(`Falha ao registrar pagamento no banco: ${payErr.message}`);
+            if (payUpErr) {
+              throw new Error(`Falha ao atualizar pagamento de rejected para approved: ${payUpErr.message}`);
             }
           }
+        } else if (amountPaid > 0) {
+          const { error: payErr } = await supabase.from("payments").insert({
+            company_id: sub.company_id,
+            subscription_id: sub.id,
+            amount: amountPaid,
+            status: "approved",
+            payment_method: "credit_card",
+            paid_at: paidAt,
+            metadata: {
+              stripe_invoice_id: invoiceId,
+              stripe_subscription_id: subscriptionId,
+              stripe_customer_id: customerId,
+              currency: currency,
+              billing_reason: invoice.billing_reason
+            },
+            created_at: new Date().toISOString()
+          });
 
-          const subUpdate: any = {
-            status: targetStatus,
-            stripe_subscription_id: subscriptionId || undefined,
-            stripe_customer_id: customerId || undefined,
-            updated_at: new Date().toISOString()
-          };
-          if (currentPeriodStart) subUpdate.current_period_start = currentPeriodStart;
-          if (currentPeriodEnd) subUpdate.current_period_end = currentPeriodEnd;
-
-          subUpdate.metadata = {
-            ...(sub.metadata || {}),
-            stripe_subscription_id: subscriptionId || sub.metadata?.stripe_subscription_id,
-            stripe_customer_id: customerId || sub.metadata?.stripe_customer_id
-          };
-
-          const { error: subUpErr } = await supabase
-            .from("subscriptions")
-            .update(subUpdate)
-            .eq("company_id", sub.company_id);
-
-          if (subUpErr) {
-            throw new Error(`Falha ao atualizar vigência da assinatura: ${subUpErr.message}`);
+          if (payErr) {
+            throw new Error(`Falha ao registrar pagamento no banco: ${payErr.message}`);
           }
+        }
 
-          const { error: compUpErr } = await supabase
-            .from("companies")
-            .update({
-              is_active: true,
-              is_pilot: false,
-              updated_at: new Date().toISOString()
-            })
-            .eq("id", sub.company_id);
+        const subUpdate: any = {
+          status: targetStatus,
+          stripe_subscription_id: subscriptionId || undefined,
+          stripe_customer_id: customerId || undefined,
+          updated_at: new Date().toISOString()
+        };
+        if (currentPeriodStart) subUpdate.current_period_start = currentPeriodStart;
+        if (currentPeriodEnd) subUpdate.current_period_end = currentPeriodEnd;
+        if (stripeTrialEndIso) subUpdate.trial_ends_at = stripeTrialEndIso;
 
-          if (compUpErr) {
-            throw new Error(`Falha ao ativar empresa após pagamento: ${compUpErr.message}`);
-          }
+        subUpdate.metadata = {
+          ...(sub.metadata || {}),
+          stripe_subscription_id: subscriptionId || sub.metadata?.stripe_subscription_id,
+          stripe_customer_id: customerId || sub.metadata?.stripe_customer_id
+        };
+
+        const { error: subUpErr } = await supabase
+          .from("subscriptions")
+          .update(subUpdate)
+          .eq("company_id", sub.company_id);
+
+        if (subUpErr) {
+          throw new Error(`Falha ao atualizar vigência da assinatura: ${subUpErr.message}`);
+        }
+
+        const companyUpdateData: any = {
+          is_active: true,
+          is_pilot: false,
+          updated_at: new Date().toISOString()
+        };
+        if (stripeTrialEndIso) {
+          companyUpdateData.trial_ends_at = stripeTrialEndIso;
+        }
+
+        const { error: compUpErr } = await supabase
+          .from("companies")
+          .update(companyUpdateData)
+          .eq("id", sub.company_id);
+
+        if (compUpErr) {
+          throw new Error(`Falha ao ativar empresa após pagamento: ${compUpErr.message}`);
         }
         break;
       }
@@ -518,7 +571,7 @@ serve(async (req) => {
           const { data: existingPayment } = await supabase
             .from("payments")
             .select("id")
-            .contains("metadata", { stripe_invoice_id: invoiceId, failure_recorded: true })
+            .contains("metadata", { stripe_invoice_id: invoiceId })
             .maybeSingle();
 
           if (!existingPayment && amountDue > 0) {
@@ -600,6 +653,9 @@ serve(async (req) => {
         const currentPeriodEnd = subObj.current_period_end
           ? new Date(subObj.current_period_end * 1000).toISOString()
           : null;
+        const trialEndsAtIso = subObj.trial_end
+          ? new Date(subObj.trial_end * 1000).toISOString()
+          : null;
 
         if (subscriptionId) {
           const { data: sub } = await supabase
@@ -618,6 +674,7 @@ serve(async (req) => {
             };
             if (currentPeriodStart) updateData.current_period_start = currentPeriodStart;
             if (currentPeriodEnd) updateData.current_period_end = currentPeriodEnd;
+            if (trialEndsAtIso) updateData.trial_ends_at = trialEndsAtIso;
 
             updateData.metadata = {
               ...(sub.metadata || {}),
@@ -636,17 +693,17 @@ serve(async (req) => {
               throw new Error(`Falha ao atualizar assinatura no evento subscription.updated: ${subUpErr.message}`);
             }
 
+            const companyUpdate: any = {
+              updated_at: new Date().toISOString()
+            };
             if (mappedStatus === "active" || mappedStatus === "trialing") {
-              await supabase.from("companies").update({
-                is_active: true,
-                updated_at: new Date().toISOString()
-              }).eq("id", sub.company_id);
+              companyUpdate.is_active = true;
             } else if (mappedStatus === "canceled") {
-              await supabase.from("companies").update({
-                is_active: false,
-                updated_at: new Date().toISOString()
-              }).eq("id", sub.company_id);
+              companyUpdate.is_active = false;
             }
+            if (trialEndsAtIso) companyUpdate.trial_ends_at = trialEndsAtIso;
+
+            await supabase.from("companies").update(companyUpdate).eq("id", sub.company_id);
           }
         }
         break;
@@ -696,15 +753,19 @@ serve(async (req) => {
       }
 
       default:
-        console.log(`Evento Stripe não manipulado: ${eventType}`);
+        console.log(`Evento Stripe não manipulado diretamente: ${eventType}`);
     }
 
-    // 3. Log de auditoria persistido com sucesso
-    await supabase.from("payment_logs").insert({
+    // 3. Log de auditoria persistido com status success
+    const { error: logErr } = await supabase.from("payment_logs").insert({
       event_type: `stripe_${eventType}`,
       status: "success",
       payload: { eventId, type: eventType, data: event.data?.object }
     });
+
+    if (logErr) {
+      console.warn("Aviso: falha ao salvar log de pagamento com sucesso:", logErr);
+    }
 
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
@@ -722,10 +783,9 @@ serve(async (req) => {
         payload: { eventId, type: eventType, error: err.stack || err.message }
       });
     } catch (_logErr) {
-      // Ignora erro secundário de log
+      // Ignora erro secundário
     }
 
-    // Retorna HTTP 500 para acionar retentativas do Stripe
     return new Response(
       JSON.stringify({ error: err.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

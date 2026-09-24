@@ -1,42 +1,29 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { authContext, jsonResponse, corsHeaders, HttpError } from "../_shared/auth.ts";
 
-/**
- * Validação e sanitização rigorosa de origens permitidas vinculadas aos domínios oficiais.
- * Domínios autorizados:
- * - https://navaldocspro.lovable.app
- * - https://preview--navaldocspro.lovable.app
- * - https://navaldocspro.com.br
- * - https://www.navaldocspro.com.br
- * - http://localhost:* / http://127.0.0.1:*
- */
 export function sanitizeAllowedOrigin(rawOrigin: string | null | undefined): string {
   if (!rawOrigin) return "https://navaldocspro.lovable.app";
   try {
     const parsed = new URL(rawOrigin);
     const host = parsed.hostname.toLowerCase();
     
-    // Domínios Lovable autorizados expressamente para este projeto
     const isLovableApp = host === "navaldocspro.lovable.app" || host === "preview--navaldocspro.lovable.app";
-    // Domínios personalizados de produção (confirmados na infraestrutura)
     const isCustomProd = host === "navaldocspro.com.br" || host === "www.navaldocspro.com.br";
-    // Desenvolvimento local
     const isLocal = (host === "localhost" || host === "127.0.0.1") && ["5173", "3000", "8080", "5174"].includes(parsed.port);
 
     if (isLovableApp || isCustomProd || isLocal) {
       return `${parsed.protocol}//${parsed.host}`;
     }
   } catch {
-    // Formato de URL inválido
+    // URL inválida
   }
   return "https://navaldocspro.lovable.app";
 }
 
 /**
  * Stripe Customer Portal Edge Function
- * - Gera uma sessão segura do Stripe Billing Customer Portal
- * - Permite aos clientes atualizar cartão, consultar faturas, renovar ou cancelar assinaturas
- * - Protegido por autenticação: somente usuários do próprio escritório
+ * - Exige autenticação e permissão de faturamento no servidor (can_manage_company_billing)
+ * - Usuários comuns (ex: viewer, operacional) são estritamente bloqueados
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -49,27 +36,45 @@ serve(async (req) => {
     const rawOrigin = body.origin || req.headers.get("origin");
     const supabase = ctx.admin;
 
-    // Validação estrita de origens permitidas vinculadas aos domínios autorizados
     const origin = sanitizeAllowedOrigin(rawOrigin);
-    const returnUrl = `${origin}/billing/subscription`;
+    const returnUrl = `${origin}/configuracoes?tab=billing`;
 
     const companyId = ctx.companyId || body.companyId;
     if (!companyId) {
       throw new HttpError(403, { error: "no_company_bound", message: "Nenhum escritório vinculado ao usuário autenticado." });
     }
 
-    if (ctx.companyId !== companyId && !ctx.isAdminMaster) {
-      throw new HttpError(403, { error: "forbidden", message: "Sem permissão para acessar faturamento deste escritório." });
+    // Validação estrita de permissão financeira no servidor
+    const { data: canManage, error: permErr } = await supabase.rpc("can_manage_company_billing", {
+      p_user_id: ctx.userId,
+      p_company_id: companyId,
+    });
+
+    if (permErr || !canManage) {
+      throw new HttpError(403, {
+        error: "forbidden_billing_permission",
+        message: "Você não possui permissão para acessar o painel financeiro e portal de clientes deste escritório."
+      });
     }
 
-    // Busca a assinatura do escritório para obter o stripe_customer_id
-    const { data: sub } = await supabase
-      .from("subscriptions")
-      .select("id, status, metadata")
-      .eq("company_id", companyId)
+    // Busca stripe_customer_id na empresa ou na assinatura
+    const { data: company } = await supabase
+      .from("companies")
+      .select("stripe_customer_id")
+      .eq("id", companyId)
       .maybeSingle();
 
-    const customerId = sub?.metadata?.stripe_customer_id;
+    let customerId = company?.stripe_customer_id;
+
+    if (!customerId) {
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("stripe_customer_id, metadata")
+        .eq("company_id", companyId)
+        .maybeSingle();
+
+      customerId = sub?.stripe_customer_id || sub?.metadata?.stripe_customer_id;
+    }
 
     if (!customerId) {
       throw new HttpError(404, {
@@ -86,7 +91,6 @@ serve(async (req) => {
       });
     }
 
-    // Criação da sessão do Billing Portal na API da Stripe
     const params = new URLSearchParams();
     params.append("customer", customerId);
     params.append("return_url", returnUrl);

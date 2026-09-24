@@ -1,59 +1,74 @@
-export interface PlanConfig {
+import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
+export interface ResolvedPlan {
   planId: string;
+  planDbId?: string;
   name: string;
-  priceMonthly: number;
-  priceYearly: number;
-  priceIdMonthly?: string;
-  priceIdYearly?: string;
+  billingCycle: 'monthly' | 'annual';
+  priceId?: string;
+  unitAmount: number;
+  currency: string;
 }
 
-export const KNOWN_PLANS: Record<string, PlanConfig> = {
-  essencial: {
-    planId: "essencial",
-    name: "Essencial",
-    priceMonthly: 149,
-    priceYearly: 1490,
-  },
-  profissional: {
-    planId: "profissional",
-    name: "Profissional",
-    priceMonthly: 299,
-    priceYearly: 2990,
-  },
-  equipe: {
-    planId: "equipe",
-    name: "Equipe",
-    priceMonthly: 599,
-    priceYearly: 5990,
-  },
-};
+/**
+ * Consulta dinâmica de plano diretamente da tabela public.plans.
+ * Novos planos criados no painel de administração e sincronizados com a Stripe funcionam sem editar código.
+ */
+export async function resolvePlanFromDatabase(
+  adminClient: SupabaseClient,
+  planIdentifier: string,
+  billingCycle: string = 'monthly'
+): Promise<ResolvedPlan | null> {
+  if (!planIdentifier) return null;
 
-export function resolvePlan(planId: string, billingCycle = "monthly"): { planId: string; billingCycle: string; priceId?: string; unitAmount: number; name: string } | null {
-  const cleanId = planId.toLowerCase().trim();
-  const plan = KNOWN_PLANS[cleanId];
-  if (!plan) return null;
+  const cycle = (billingCycle === 'annual' || billingCycle === 'yearly') ? 'annual' : 'monthly';
+  const cleanId = planIdentifier.trim().toLowerCase();
 
-  const isYearly = billingCycle === "annual" || billingCycle === "yearly";
-  const unitAmount = isYearly ? Math.round(plan.priceYearly * 100) : Math.round(plan.priceMonthly * 100);
+  // Busca plano no banco por slug ou id
+  const { data: plan, error } = await adminClient
+    .from('plans')
+    .select('id, slug, name, price, price_yearly, stripe_product_id, stripe_price_monthly_id, stripe_price_yearly_id, is_active, status')
+    .or(`slug.eq.${cleanId},id.eq.${cleanId}`)
+    .maybeSingle();
+
+  if (error || !plan) {
+    return null;
+  }
+
+  const isAnnual = cycle === 'annual';
+  const priceId = isAnnual ? plan.stripe_price_yearly_id : plan.stripe_price_monthly_id;
+  const rawPrice = isAnnual ? (plan.price_yearly || (plan.price ? plan.price * 10 : 0)) : (plan.price || 0);
+  const unitAmount = Math.round(Number(rawPrice) * 100);
 
   return {
-    planId: plan.planId,
-    billingCycle: isYearly ? "annual" : "monthly",
-    priceId: isYearly ? plan.priceIdYearly : plan.priceIdMonthly,
+    planId: plan.slug || plan.id,
+    planDbId: plan.id,
+    name: plan.name || 'Plano NavalDocs Pro',
+    billingCycle: cycle,
+    priceId: (priceId && priceId.startsWith('price_')) ? priceId : undefined,
     unitAmount,
-    name: plan.name,
+    currency: 'brl',
   };
 }
 
-export function findPlanByPriceId(priceId?: string | null): { planId: string; billingCycle: string } | null {
+export async function findPlanByPriceIdInDatabase(
+  adminClient: SupabaseClient,
+  priceId?: string | null
+): Promise<{ planId: string; billingCycle: string; planDbId: string } | null> {
   if (!priceId) return null;
-  for (const [key, plan] of Object.entries(KNOWN_PLANS)) {
-    if (plan.priceIdMonthly === priceId) {
-      return { planId: key, billingCycle: "monthly" };
-    }
-    if (plan.priceIdYearly === priceId) {
-      return { planId: key, billingCycle: "annual" };
-    }
-  }
-  return null;
+
+  const { data: plan } = await adminClient
+    .from('plans')
+    .select('id, slug, stripe_price_monthly_id, stripe_price_yearly_id')
+    .or(`stripe_price_monthly_id.eq.${priceId},stripe_price_yearly_id.eq.${priceId}`)
+    .maybeSingle();
+
+  if (!plan) return null;
+
+  const isAnnual = plan.stripe_price_yearly_id === priceId;
+  return {
+    planId: plan.slug || plan.id,
+    planDbId: plan.id,
+    billingCycle: isAnnual ? 'annual' : 'monthly',
+  };
 }

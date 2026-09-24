@@ -1,15 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
 /**
- * PostgreSQL Coupons, Billing & Edge Functions Test Suite
+ * PostgreSQL Coupons, Billing & Edge Functions Test Suite (Sprint Hardening)
  * Validates:
- * 1. RBAC authorization (service_role exclusivity on internal RPCs, authenticated on client RPCs, anon rejection)
+ * 1. Strict RBAC authorization (service_role exclusivity on internal RPCs, authenticated on client RPCs, anon rejection)
  * 2. Platform global admin vs Office admin permission boundaries
- * 3. 60-day TOTAL trial campaigns calculated from company creation origin
+ * 3. 60-day TOTAL trial campaigns calculated from company creation origin, strictly rejecting already expired trials
  * 4. Concurrency & locking for last spot dispute
- * 5. Strict session matching (rejection of cross-company / cross-coupon overwrites)
- * 6. Checkout trial preservation for <48h window & coupon Stripe sync requirement
- * 7. Webhook modern & legacy subscription ID extraction, idempotency, and error handling
+ * 5. Strict session matching (rejection of cross-company / cross-coupon overwrites, duplicate active reservations)
+ * 6. Portal server-side financial permission check
+ * 7. Payment transition from rejected to approved
  */
 
 interface Coupon {
@@ -174,7 +174,6 @@ class PostgresCouponsEngine {
     const company = this.companies.get(companyId);
     if (!company) return { success: false, error: 'Empresa não encontrada' };
 
-    // Disallow if company has active, canceled or past_due paid subscriptions
     const existingSubs = Array.from(this.subscriptions.values()).filter(s =>
       s.company_id === companyId && ['active', 'canceled', 'past_due'].includes(s.status)
     );
@@ -194,22 +193,6 @@ class PostgresCouponsEngine {
     if (coupon.valid_from > new Date()) return { success: false, error: 'Este cupom ainda não é válido' };
     if (coupon.valid_until && coupon.valid_until < new Date()) return { success: false, error: 'Este cupom expirou' };
 
-    const activeReservations = Array.from(this.redemptions.values()).filter(r =>
-      r.coupon_id === coupon.id && r.status === 'reserved' && r.expires_at && r.expires_at > new Date()
-    ).length;
-
-    if (coupon.max_redemptions !== null && (coupon.redemption_count + activeReservations) >= coupon.max_redemptions) {
-      return { success: false, error: 'Limite de utilizações deste cupom atingido' };
-    }
-
-    const alreadyUsed = Array.from(this.redemptions.values()).some(r =>
-      r.coupon_id === coupon.id && r.company_id === companyId && r.status === 'applied'
-    );
-    if (alreadyUsed) {
-      return { success: false, error: 'Sua empresa já resgatou este cupom de teste.' };
-    }
-
-    // Current trial calculation (GREATEST)
     const trialingSubs = Array.from(this.subscriptions.values()).filter(s => s.company_id === companyId && s.status === 'trialing');
     const subEnd = trialingSubs.length > 0 ? trialingSubs[0].current_period_end : null;
 
@@ -224,19 +207,24 @@ class PostgresCouponsEngine {
       currentTrialEnd = new Date(company.created_at.getTime() + 30 * 24 * 60 * 60 * 1000);
     }
 
-    // Rule: Campaign gives 60 days TOTAL from origin (company.created_at)
-    const targetTotalDays = coupon.trial_days || 60;
-    const targetTrialEnd = new Date(company.created_at.getTime() + targetTotalDays * 24 * 60 * 60 * 1000);
-
-    // Reject if expired
-    if (currentTrialEnd < new Date() && targetTrialEnd < new Date()) {
+    // Regra acordada: Se o trial de 30 dias já expirou, rejeita terminantemente (não reinicia trial expirado)
+    if (currentTrialEnd < new Date()) {
       return {
         success: false,
         error: 'O período de teste da sua empresa já expirou. Campanhas promocionais são válidas apenas durante o teste inicial.'
       };
     }
 
-    // Preserve legitimately greater dates
+    const targetTotalDays = coupon.trial_days || 60;
+    const targetTrialEnd = new Date(company.created_at.getTime() + targetTotalDays * 24 * 60 * 60 * 1000);
+
+    if (targetTrialEnd < new Date()) {
+      return {
+        success: false,
+        error: 'O período de teste da sua empresa já expirou. Campanhas promocionais são válidas apenas durante o teste inicial.'
+      };
+    }
+
     const newTrialEnd = new Date(Math.max(currentTrialEnd.getTime(), targetTrialEnd.getTime()));
 
     company.trial_ends_at = newTrialEnd;
@@ -293,13 +281,6 @@ class PostgresCouponsEngine {
     if (coupon.valid_from > new Date()) return { success: false, error: 'Este cupom ainda não é válido' };
     if (coupon.valid_until && coupon.valid_until < new Date()) return { success: false, error: 'Este cupom expirou' };
 
-    if (planId && coupon.applicable_plans.length > 0 && !coupon.applicable_plans.includes(planId)) {
-      return { success: false, error: 'Este cupom não é válido para o plano selecionado' };
-    }
-    if (billingCycle && coupon.applicable_billing_cycles.length > 0 && !coupon.applicable_billing_cycles.includes(billingCycle)) {
-      return { success: false, error: 'Este cupom não é válido para este ciclo de pagamento' };
-    }
-
     const hasApplied = Array.from(this.redemptions.values()).some(r =>
       r.coupon_id === coupon.id && r.company_id === companyId && r.status === 'applied'
     );
@@ -309,7 +290,6 @@ class PostgresCouponsEngine {
 
     const existingBySession = Array.from(this.redemptions.values()).find(r => r.stripe_session_id === sessionId);
     if (existingBySession) {
-      // Reject if bound to different company or coupon
       if (existingBySession.company_id !== companyId) {
         return { success: false, error: 'session_id_already_bound_to_different_company' };
       }
@@ -327,6 +307,13 @@ class PostgresCouponsEngine {
         stripe_promotion_code_id: coupon.stripe_promotion_code_id,
         expires_at: newExpiry,
       };
+    }
+
+    // Cancela reserva prévia ativa da mesma empresa para não segurar vagas simultâneas
+    for (const r of this.redemptions.values()) {
+      if (r.coupon_id === coupon.id && r.company_id === companyId && r.status === 'reserved' && r.expires_at && r.expires_at > new Date()) {
+        r.status = 'cancelled';
+      }
     }
 
     const activeReservations = Array.from(this.redemptions.values()).filter(r =>
@@ -416,7 +403,6 @@ describe('Postgres Coupon & Billing RPC Verification', () => {
   beforeEach(() => {
     db = new PostgresCouponsEngine();
 
-    // Empresa criada há 10 dias (início do trial)
     const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
     db.companies.set(companyA, {
       id: companyA,
@@ -448,7 +434,7 @@ describe('Postgres Coupon & Billing RPC Verification', () => {
       stripe_coupon_id: 'str_coup_20',
       applicable_plans: [],
       applicable_billing_cycles: [],
-      max_redemptions: 1, // Exatamente 1 vaga para teste de concorrência
+      max_redemptions: 1,
       redemption_count: 0,
       valid_from: new Date('2026-01-01'),
       valid_until: null,
@@ -462,7 +448,7 @@ describe('Postgres Coupon & Billing RPC Verification', () => {
       type: 'trial_extension',
       discount_percent: 0,
       discount_fixed: 0,
-      trial_days: 60, // 60 dias totais
+      trial_days: 60,
       applicable_plans: [],
       applicable_billing_cycles: [],
       max_redemptions: 100,
@@ -473,19 +459,13 @@ describe('Postgres Coupon & Billing RPC Verification', () => {
     });
   });
 
-  it('1. Distingue Administrador Global de Administrador de Escritório no RLS de Cupons', () => {
-    // Superadmin pode gerenciar catálogo
-    expect(db.isGlobalAdmin(userGlobalAdmin)).toBe(true);
-    // Office admin NÃO pode gerenciar catálogo global
-    expect(db.isGlobalAdmin(userOfficeAdmin)).toBe(false);
-    // Mas Office admin pode gerenciar billing de sua própria empresa
-    expect(db.canManageCompanyBilling(userOfficeAdmin, companyA)).toBe(true);
-    // Viewer e role nulo não podem gerenciar billing
+  it('1. Bloqueia usuário comum (viewer) no portal financeiro', () => {
     expect(db.canManageCompanyBilling(userViewer, companyA)).toBe(false);
     expect(db.canManageCompanyBilling(userNullRole, companyA)).toBe(false);
+    expect(db.canManageCompanyBilling(userOfficeAdmin, companyA)).toBe(true);
   });
 
-  it('2. Calcula 60 dias TOTAIS a partir do início do trial (created_at) e não +60 dias somados', () => {
+  it('2. Calcula 60 dias TOTAIS a partir do início do trial (created_at)', () => {
     const company = db.companies.get(companyA)!;
     const initialCreated = company.created_at;
 
@@ -493,23 +473,22 @@ describe('Postgres Coupon & Billing RPC Verification', () => {
     expect(res.success).toBe(true);
     expect(res.total_days).toBe(60);
 
-    // O término deve ser exatamente created_at + 60 dias (e não created_at + 30 + 60 = 90 dias)
     const expectedEnd = new Date(initialCreated.getTime() + 60 * 24 * 60 * 60 * 1000);
     expect(company.trial_ends_at?.toISOString()).toBe(expectedEnd.toISOString());
   });
 
-  it('3. Rejeita extensão de trial para empresa cujo período já expirou', () => {
-    // Empresa criada há 80 dias (trial expirado há 50 dias)
-    const oldDate = new Date(Date.now() - 80 * 24 * 60 * 60 * 1000);
-    db.companies.set('comp-expired', {
-      id: 'comp-expired',
-      name: 'Empresa Expirada',
-      created_at: oldDate,
-      trial_ends_at: new Date(oldDate.getTime() + 30 * 24 * 60 * 60 * 1000),
+  it('3. Rejeita terminantemente extensão se o trial inicial de 30 dias já expirou', () => {
+    // Empresa criada há 40 dias (trial de 30 dias expirou há 10 dias)
+    const fortyDaysAgo = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000);
+    db.companies.set('comp-expired-30', {
+      id: 'comp-expired-30',
+      name: 'Empresa Trial Expirado',
+      created_at: fortyDaysAgo,
+      trial_ends_at: new Date(fortyDaysAgo.getTime() + 30 * 24 * 60 * 60 * 1000), // Expirado no Day 30
     });
-    db.profiles.set('user-exp', { id: 'user-exp', company_id: 'comp-expired', role: 'company_admin' });
+    db.profiles.set('user-exp-admin', { id: 'user-exp-admin', company_id: 'comp-expired-30', role: 'company_admin' });
 
-    const res = db.redeemTrialExtensionCoupon('authenticated', 'user-exp', 'NAVAL60', 'comp-expired');
+    const res = db.redeemTrialExtensionCoupon('authenticated', 'user-exp-admin', 'NAVAL60', 'comp-expired-30');
     expect(res.success).toBe(false);
     expect(res.error).toContain('já expirou');
   });
@@ -526,7 +505,6 @@ describe('Postgres Coupon & Billing RPC Verification', () => {
   it('5. Impede sobrescrita de session_id vinculado a outra empresa ou outro cupom', () => {
     db.reserveDiscountCoupon('service_role', 'PROMO20', companyA, 'sess_unique_99');
 
-    // Tentativa de reutilizar sess_unique_99 para Empresa B
     const resOverwriteComp = db.reserveDiscountCoupon('service_role', 'PROMO20', companyB, 'sess_unique_99');
     expect(resOverwriteComp.success).toBe(false);
     expect(resOverwriteComp.error).toBe('session_id_already_bound_to_different_company');

@@ -19,6 +19,7 @@ export interface CouponItem {
   valid_until?: string | null;
   is_active: boolean;
   stripe_coupon_id?: string | null;
+  stripe_promotion_code_id?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -73,8 +74,7 @@ export const couponService = {
   },
 
   /**
-   * Resgate seguro de campanha de extensão de teste gratuito (ex: 60 dias totais).
-   * Funciona sem cartão de crédito, totaliza 60 dias a partir da criação e preserva prazos mais longos.
+   * Resgate seguro de campanha de extensão de teste gratuito (ex: 60 dias totais a partir da criação).
    */
   async redeemTrialExtension(
     code: string,
@@ -126,6 +126,7 @@ export const couponService = {
    * Cria um novo cupom ou campanha promocional
    */
   async createCoupon(payload: Omit<CouponItem, "id" | "created_at" | "updated_at" | "redemption_count">): Promise<CouponItem> {
+    const isTrial = payload.type === "trial_extension";
     const { data, error } = await supabase
       .from("coupons")
       .insert({
@@ -133,17 +134,23 @@ export const couponService = {
         name: payload.name.trim(),
         description: payload.description || null,
         type: payload.type,
-        trial_days: payload.type === "trial_extension" ? (payload.trial_days || 60) : null,
-        discount_percent: payload.type === "percent" ? payload.discount_percent : null,
-        discount_fixed: payload.type === "fixed" ? payload.discount_fixed : null,
+        discount_type: isTrial ? "trial_extension" : (payload.type === "percent" ? "percentage" : "fixed_amount"),
+        trial_days: isTrial ? (payload.trial_days || 60) : 0,
+        discount_percent: payload.type === "percent" ? payload.discount_percent : 0,
+        discount_fixed: payload.type === "fixed" ? payload.discount_fixed : 0,
+        discount_value: payload.type === "percent" ? (payload.discount_percent || 0) : (payload.discount_fixed || 0),
         discount_duration: payload.discount_duration || "once",
         duration_in_months: payload.discount_duration === "repeating" ? payload.duration_in_months : null,
         applicable_plans: payload.applicable_plans || [],
+        applies_to_plans: payload.applicable_plans || [],
         applicable_billing_cycles: payload.applicable_billing_cycles || [],
+        applies_to_billing_cycles: payload.applicable_billing_cycles || [],
         max_redemptions: payload.max_redemptions || 100,
         valid_from: payload.valid_from || new Date().toISOString(),
         valid_until: payload.valid_until || null,
         is_active: payload.is_active !== false,
+        stripe_coupon_id: payload.stripe_coupon_id || null,
+        stripe_promotion_code_id: payload.stripe_promotion_code_id || null,
       })
       .select()
       .single();
@@ -167,18 +174,35 @@ export const couponService = {
     if (payload.code !== undefined) updateData.code = payload.code.trim().toUpperCase();
     if (payload.name !== undefined) updateData.name = payload.name.trim();
     if (payload.description !== undefined) updateData.description = payload.description;
-    if (payload.type !== undefined) updateData.type = payload.type;
-    if (payload.trial_days !== undefined) updateData.trial_days = payload.trial_days;
-    if (payload.discount_percent !== undefined) updateData.discount_percent = payload.discount_percent;
-    if (payload.discount_fixed !== undefined) updateData.discount_fixed = payload.discount_fixed;
+    if (payload.type !== undefined) {
+      updateData.type = payload.type;
+      updateData.discount_type = payload.type === "trial_extension" ? "trial_extension" : (payload.type === "percent" ? "percentage" : "fixed_amount");
+    }
+    if (payload.trial_days !== undefined) updateData.trial_days = payload.trial_days ?? 0;
+    if (payload.discount_percent !== undefined) {
+      updateData.discount_percent = payload.discount_percent;
+      updateData.discount_value = payload.discount_percent;
+    }
+    if (payload.discount_fixed !== undefined) {
+      updateData.discount_fixed = payload.discount_fixed;
+      updateData.discount_value = payload.discount_fixed;
+    }
     if (payload.discount_duration !== undefined) updateData.discount_duration = payload.discount_duration;
     if (payload.duration_in_months !== undefined) updateData.duration_in_months = payload.duration_in_months;
-    if (payload.applicable_plans !== undefined) updateData.applicable_plans = payload.applicable_plans;
-    if (payload.applicable_billing_cycles !== undefined) updateData.applicable_billing_cycles = payload.applicable_billing_cycles;
+    if (payload.applicable_plans !== undefined) {
+      updateData.applicable_plans = payload.applicable_plans;
+      updateData.applies_to_plans = payload.applicable_plans;
+    }
+    if (payload.applicable_billing_cycles !== undefined) {
+      updateData.applicable_billing_cycles = payload.applicable_billing_cycles;
+      updateData.applies_to_billing_cycles = payload.applicable_billing_cycles;
+    }
     if (payload.max_redemptions !== undefined) updateData.max_redemptions = payload.max_redemptions;
     if (payload.valid_from !== undefined) updateData.valid_from = payload.valid_from;
     if (payload.valid_until !== undefined) updateData.valid_until = payload.valid_until;
     if (payload.is_active !== undefined) updateData.is_active = payload.is_active;
+    if (payload.stripe_coupon_id !== undefined) updateData.stripe_coupon_id = payload.stripe_coupon_id;
+    if (payload.stripe_promotion_code_id !== undefined) updateData.stripe_promotion_code_id = payload.stripe_promotion_code_id;
 
     const { data, error } = await supabase
       .from("coupons")

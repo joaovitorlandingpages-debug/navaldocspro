@@ -1,8 +1,7 @@
--- Migration: Admin Coupons, Campaigns and Billing Hardening (Hardened Revision)
--- Creates/updates public.coupons and public.coupon_redemptions
--- Preserves existing schema compatibility, strict RBAC authorization, and state consistency.
+-- Migration: Admin Coupons, Campaigns and Billing Hardening (Production Ready Revision)
+-- Handles schema evolution, legacy data migration, lock order unification, and strict constraints.
 
--- 1. Schema compatibility & table updates for public.coupons
+-- 1. Create tables if they do not exist
 CREATE TABLE IF NOT EXISTS public.coupons (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     code TEXT NOT NULL UNIQUE,
@@ -32,7 +31,7 @@ CREATE TABLE IF NOT EXISTS public.coupons (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
--- Ensure all columns exist if table was previously created with older schema
+-- Ensure all columns exist on public.coupons
 ALTER TABLE public.coupons ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'percent';
 ALTER TABLE public.coupons ADD COLUMN IF NOT EXISTS discount_type TEXT NOT NULL DEFAULT 'percentage';
 ALTER TABLE public.coupons ADD COLUMN IF NOT EXISTS discount_percent NUMERIC(10, 2) DEFAULT 0;
@@ -54,7 +53,41 @@ ALTER TABLE public.coupons ADD COLUMN IF NOT EXISTS valid_from TIMESTAMP WITH TI
 ALTER TABLE public.coupons ADD COLUMN IF NOT EXISTS valid_until TIMESTAMP WITH TIME ZONE DEFAULT NULL;
 ALTER TABLE public.coupons ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
 
--- 2. Schema compatibility & table updates for public.coupon_redemptions
+-- Explicit data migration for legacy columns in public.coupons
+UPDATE public.coupons
+SET type = CASE 
+        WHEN discount_type = 'percentage' THEN 'percent'
+        WHEN discount_type = 'fixed_amount' THEN 'fixed'
+        WHEN discount_type = 'trial_extension' THEN 'trial_extension'
+        ELSE COALESCE(type, 'percent')
+    END
+WHERE type IS NULL OR type = 'percent';
+
+UPDATE public.coupons
+SET discount_percent = discount_value
+WHERE (discount_percent IS NULL OR discount_percent = 0) AND discount_value > 0 AND type = 'percent';
+
+UPDATE public.coupons
+SET discount_fixed = discount_value
+WHERE (discount_fixed IS NULL OR discount_fixed = 0) AND discount_value > 0 AND type = 'fixed';
+
+UPDATE public.coupons
+SET redemption_count = times_redeemed
+WHERE (redemption_count IS NULL OR redemption_count = 0) AND times_redeemed > 0;
+
+UPDATE public.coupons
+SET times_redeemed = redemption_count
+WHERE (times_redeemed IS NULL OR times_redeemed = 0) AND redemption_count > 0;
+
+UPDATE public.coupons
+SET applicable_plans = applies_to_plans
+WHERE (applicable_plans IS NULL OR array_length(applicable_plans, 1) = 0) AND applies_to_plans IS NOT NULL AND array_length(applies_to_plans, 1) > 0;
+
+UPDATE public.coupons
+SET applicable_billing_cycles = applies_to_billing_cycles
+WHERE (applicable_billing_cycles IS NULL OR array_length(applicable_billing_cycles, 1) = 0) AND applies_to_billing_cycles IS NOT NULL AND array_length(applies_to_billing_cycles, 1) > 0;
+
+-- 2. Create and update public.coupon_redemptions
 CREATE TABLE IF NOT EXISTS public.coupon_redemptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     coupon_id UUID NOT NULL REFERENCES public.coupons(id) ON DELETE CASCADE,
@@ -74,7 +107,12 @@ ALTER TABLE public.coupon_redemptions ADD COLUMN IF NOT EXISTS expires_at TIMEST
 ALTER TABLE public.coupon_redemptions ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb;
 ALTER TABLE public.coupon_redemptions ADD COLUMN IF NOT EXISTS redeemed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now();
 
--- Ensure companies and subscriptions have stripe helper columns if not present
+-- Unique constraint on stripe_session_id for non-null active sessions
+CREATE UNIQUE INDEX IF NOT EXISTS idx_coupon_redemptions_session_unique 
+    ON public.coupon_redemptions(stripe_session_id) 
+    WHERE stripe_session_id IS NOT NULL;
+
+-- Helper columns on companies, subscriptions and plans
 ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
 ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE public.subscriptions ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMP WITH TIME ZONE;
@@ -87,13 +125,12 @@ CREATE INDEX IF NOT EXISTS idx_coupons_code ON public.coupons(code);
 CREATE INDEX IF NOT EXISTS idx_coupons_active ON public.coupons(is_active) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_coupon_redemptions_company ON public.coupon_redemptions(company_id);
 CREATE INDEX IF NOT EXISTS idx_coupon_redemptions_coupon ON public.coupon_redemptions(coupon_id);
-CREATE INDEX IF NOT EXISTS idx_coupon_redemptions_session ON public.coupon_redemptions(stripe_session_id);
 
 -- Enable RLS
 ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.coupon_redemptions ENABLE ROW LEVEL SECURITY;
 
--- Drop all existing policies to avoid conflicts
+-- Drop all existing policies
 DROP POLICY IF EXISTS "Public can view active coupons" ON public.coupons;
 DROP POLICY IF EXISTS "Admins can manage coupons" ON public.coupons;
 DROP POLICY IF EXISTS "Global admins can manage coupons" ON public.coupons;
@@ -102,7 +139,6 @@ DROP POLICY IF EXISTS "Users can view own company redemptions" ON public.coupon_
 DROP POLICY IF EXISTS "Service can manage redemptions" ON public.coupon_redemptions;
 
 -- RLS: Platform Global Administrators ONLY can manage coupons catalog
--- Office/Company admins (role 'company_admin', 'admin', 'owner', 'finance') do NOT manage the global coupon catalog
 CREATE POLICY "Global admins can manage coupons"
     ON public.coupons
     FOR ALL
@@ -134,7 +170,7 @@ CREATE POLICY "Users can view own company redemptions"
     );
 
 -- -------------------------------------------------------------
--- Helper: Check if user has permission to manage billing for a company
+-- Helper: can_manage_company_billing
 -- -------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.can_manage_company_billing(p_user_id UUID, p_company_id UUID)
 RETURNS BOOLEAN
@@ -161,7 +197,7 @@ AS $$
     );
 $$;
 
--- Drop all old overloads of RPCs to ensure clean signature and permission slate
+-- Drop all old overloads of RPCs
 DROP FUNCTION IF EXISTS public.validate_coupon_code(TEXT, UUID, TEXT, TEXT);
 DROP FUNCTION IF EXISTS public.validate_coupon_code(TEXT, UUID);
 DROP FUNCTION IF EXISTS public.validate_coupon_code(TEXT);
@@ -176,7 +212,7 @@ DROP FUNCTION IF EXISTS public.confirm_discount_coupon_redemption(TEXT, UUID);
 DROP FUNCTION IF EXISTS public.release_discount_coupon_reservation(TEXT);
 
 -- -------------------------------------------------------------
--- 1. validate_coupon_code: Authenticated client endpoint
+-- 1. validate_coupon_code: Authenticated endpoint
 -- -------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.validate_coupon_code(
     p_code TEXT,
@@ -195,8 +231,6 @@ DECLARE
     v_active_reservations INTEGER;
     v_effective_redemptions INTEGER;
     v_already_redeemed BOOLEAN;
-    v_discount_type TEXT;
-    v_discount_val NUMERIC;
     v_applicable_plans TEXT[];
     v_applicable_cycles TEXT[];
 BEGIN
@@ -232,7 +266,6 @@ BEGIN
         RETURN jsonb_build_object('valid', false, 'error', 'Este cupom expirou', 'message', 'Este cupom expirou');
     END IF;
 
-    -- Normalize plan & billing cycle filters
     v_applicable_plans := COALESCE(v_coupon.applicable_plans, v_coupon.applies_to_plans, '{}');
     IF p_plan_slug IS NOT NULL AND array_length(v_applicable_plans, 1) > 0 THEN
         IF NOT (p_plan_slug = ANY(v_applicable_plans)) THEN
@@ -271,16 +304,13 @@ BEGIN
         RETURN jsonb_build_object('valid', false, 'error', 'Sua empresa já utilizou este cupom', 'message', 'Sua empresa já utilizou este cupom');
     END IF;
 
-    v_discount_type := COALESCE(v_coupon.type, v_coupon.discount_type, 'percent');
-    v_discount_val := COALESCE(v_coupon.discount_percent, v_coupon.discount_fixed, v_coupon.discount_value, 0);
-
     RETURN jsonb_build_object(
         'valid', true,
         'id', v_coupon.id,
         'code', v_coupon.code,
         'name', v_coupon.name,
         'description', v_coupon.description,
-        'type', v_discount_type,
+        'type', COALESCE(v_coupon.type, v_coupon.discount_type, 'percent'),
         'trial_days', v_coupon.trial_days,
         'discount_percent', COALESCE(v_coupon.discount_percent, v_coupon.discount_value),
         'discount_fixed', v_coupon.discount_fixed,
@@ -292,9 +322,9 @@ END;
 $$;
 
 -- -------------------------------------------------------------
--- 2. redeem_trial_extension_coupon: Authenticated client endpoint
---    Totalizes 60 days from original trial start (company.created_at)
---    Preserves legitimately granted greater dates, serializes per company
+-- 2. redeem_trial_extension_coupon: Authenticated endpoint
+--    Lock order: companies -> coupons -> coupon_redemptions
+--    Does NOT restart an expired trial (checks v_current_trial_end < now())
 -- -------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.redeem_trial_extension_coupon(
     p_code TEXT,
@@ -330,7 +360,7 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'error', 'unauthorized', 'message', 'Você não tem permissão para gerenciar faturamento nesta empresa');
     END IF;
 
-    -- Lock company first (consistent lock order: companies -> coupons -> redemptions)
+    -- 1. Lock company first
     SELECT * INTO v_company
     FROM public.companies
     WHERE id = p_company_id
@@ -340,7 +370,7 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'error', 'Empresa não encontrada', 'message', 'Empresa não encontrada');
     END IF;
 
-    -- Check if company already has paid subscriptions, canceled or overdue subscriptions
+    -- Disallow if company has active, canceled or past_due paid subscriptions
     SELECT COUNT(*) INTO v_existing_active_subs
     FROM public.subscriptions
     WHERE company_id = p_company_id
@@ -354,7 +384,7 @@ BEGIN
         );
     END IF;
 
-    -- Lock coupon second
+    -- 2. Lock coupon second
     SELECT * INTO v_coupon
     FROM public.coupons
     WHERE UPPER(code) = UPPER(TRIM(p_code))
@@ -401,7 +431,7 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'error', 'Sua empresa já resgatou este cupom de teste.', 'message', 'Sua empresa já resgatou este cupom de teste.');
     END IF;
 
-    -- Current active trial end (GREATEST between company.trial_ends_at and subscription.current_period_end)
+    -- Current active trial end
     SELECT MAX(current_period_end) INTO v_sub_period_end
     FROM public.subscriptions
     WHERE company_id = p_company_id
@@ -417,12 +447,8 @@ BEGIN
         v_current_trial_end := v_company.created_at + interval '30 days';
     END IF;
 
-    -- Rule: Trial campaign targets 60 days TOTAL from original start (v_company.created_at)
-    v_target_total_days := COALESCE(NULLIF(v_coupon.trial_days, 0), 60);
-    v_target_trial_end := v_company.created_at + (v_target_total_days || ' days')::interval;
-
-    -- Do not restart expired trial
-    IF v_current_trial_end < now() AND v_target_trial_end < now() THEN
+    -- Rule: Do NOT restart an already expired trial!
+    IF v_current_trial_end < now() THEN
         RETURN jsonb_build_object(
             'success', false,
             'error', 'O período de teste da sua empresa já expirou. Campanhas promocionais são válidas apenas durante o teste inicial.',
@@ -430,16 +456,24 @@ BEGIN
         );
     END IF;
 
-    -- Preserve greater dates already legitimately granted
+    v_target_total_days := COALESCE(NULLIF(v_coupon.trial_days, 0), 60);
+    v_target_trial_end := v_company.created_at + (v_target_total_days || ' days')::interval;
+
+    IF v_target_trial_end < now() THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'O período de teste correspondente a esta campanha já está no passado para o cadastro da sua empresa.',
+            'message', 'Período de teste já encerrado.'
+        );
+    END IF;
+
     v_new_trial_end := GREATEST(v_current_trial_end, v_target_trial_end);
 
-    -- Update company trial date
     UPDATE public.companies
     SET trial_ends_at = v_new_trial_end,
         updated_at = now()
     WHERE id = p_company_id;
 
-    -- Update trialing subscriptions
     UPDATE public.subscriptions
     SET current_period_end = v_new_trial_end,
         trial_ends_at = v_new_trial_end,
@@ -447,7 +481,7 @@ BEGIN
     WHERE company_id = p_company_id
       AND status = 'trialing';
 
-    -- Record redemption
+    -- 3. Insert redemption record
     INSERT INTO public.coupon_redemptions (
         coupon_id,
         company_id,
@@ -484,9 +518,9 @@ END;
 $$;
 
 -- -------------------------------------------------------------
--- 3. reserve_discount_coupon: Service Role ONLY (called by stripe-checkout)
---    Locks: company -> coupon -> redemption
---    Strict session binding: never overwrites different company/coupon
+-- 3. reserve_discount_coupon: Service Role ONLY
+--    Lock order: companies -> coupons -> coupon_redemptions
+--    Prevents multiple active reservations per company
 -- -------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.reserve_discount_coupon(
     p_code TEXT,
@@ -505,6 +539,7 @@ DECLARE
     v_company public.companies%ROWTYPE;
     v_coupon public.coupons%ROWTYPE;
     v_existing_res public.coupon_redemptions%ROWTYPE;
+    v_existing_company_res public.coupon_redemptions%ROWTYPE;
     v_active_reservations INTEGER;
     v_redemption_id UUID;
     v_expires_at TIMESTAMPTZ := COALESCE(p_expires_at, now() + interval '30 minutes');
@@ -551,7 +586,6 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'error', 'Este cupom expirou');
     END IF;
 
-    -- Verify plans & billing cycles
     v_applicable_plans := COALESCE(v_coupon.applicable_plans, v_coupon.applies_to_plans, '{}');
     IF p_plan_id IS NOT NULL AND array_length(v_applicable_plans, 1) > 0 THEN
         IF NOT (p_plan_id = ANY(v_applicable_plans)) THEN
@@ -566,7 +600,6 @@ BEGIN
         END IF;
     END IF;
 
-    -- Check if company already redeemed this coupon permanently
     IF EXISTS (
         SELECT 1 FROM public.coupon_redemptions
         WHERE coupon_id = v_coupon.id
@@ -576,14 +609,13 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'error', 'Sua empresa já utilizou este cupom de desconto.');
     END IF;
 
-    -- 3. Check existing reservation by session_id
+    -- 3. Lock and verify existing reservation by session_id
     SELECT * INTO v_existing_res
     FROM public.coupon_redemptions
     WHERE stripe_session_id = p_session_id
     FOR UPDATE;
 
     IF FOUND THEN
-        -- Strictly disallow overwriting different company or coupon
         IF v_existing_res.company_id != p_company_id THEN
             RETURN jsonb_build_object('success', false, 'error', 'session_id_already_bound_to_different_company');
         END IF;
@@ -591,7 +623,6 @@ BEGIN
             RETURN jsonb_build_object('success', false, 'error', 'session_id_already_bound_to_different_coupon');
         END IF;
 
-        -- Update expiration and metadata for the existing session reservation
         UPDATE public.coupon_redemptions
         SET status = 'reserved',
             expires_at = v_expires_at,
@@ -600,7 +631,23 @@ BEGIN
 
         v_redemption_id := v_existing_res.id;
     ELSE
-        -- Check quota / concurrency limit
+        -- Check if company has another pending reservation for the same coupon
+        SELECT * INTO v_existing_company_res
+        FROM public.coupon_redemptions
+        WHERE coupon_id = v_coupon.id
+          AND company_id = p_company_id
+          AND status = 'reserved'
+          AND expires_at > now()
+        FOR UPDATE;
+
+        IF FOUND THEN
+            -- Cancel stale prior reservation to prevent holding multiple concurrent spots
+            UPDATE public.coupon_redemptions
+            SET status = 'cancelled',
+                metadata = metadata || jsonb_build_object('replaced_by', p_session_id)
+            WHERE id = v_existing_company_res.id;
+        END IF;
+
         SELECT COUNT(*) INTO v_active_reservations
         FROM public.coupon_redemptions
         WHERE coupon_id = v_coupon.id
@@ -641,8 +688,8 @@ END;
 $$;
 
 -- -------------------------------------------------------------
--- 4. confirm_discount_coupon_redemption: Service Role ONLY (called by stripe-webhook)
---    Validates exact matching, idempotency, updates counts
+-- 4. confirm_discount_coupon_redemption: Service Role ONLY
+--    Lock order: companies -> coupons -> coupon_redemptions
 -- -------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.confirm_discount_coupon_redemption(
     p_session_id TEXT,
@@ -656,20 +703,39 @@ SECURITY DEFINER
 SET search_path = public, auth
 AS $$
 DECLARE
-    v_redemption public.coupon_redemptions%ROWTYPE;
+    v_company public.companies%ROWTYPE;
     v_coupon public.coupons%ROWTYPE;
+    v_redemption public.coupon_redemptions%ROWTYPE;
 BEGIN
     IF p_session_id IS NULL OR p_company_id IS NULL THEN
         RETURN jsonb_build_object('success', false, 'error', 'invalid_parameters');
     END IF;
 
+    -- 1. Lock company first
+    SELECT * INTO v_company
+    FROM public.companies
+    WHERE id = p_company_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Empresa não encontrada');
+    END IF;
+
+    -- 2. Lock coupon if p_coupon_id passed
+    IF p_coupon_id IS NOT NULL THEN
+        SELECT * INTO v_coupon
+        FROM public.coupons
+        WHERE id = p_coupon_id
+        FOR UPDATE;
+    END IF;
+
+    -- 3. Lock redemption record
     SELECT * INTO v_redemption
     FROM public.coupon_redemptions
     WHERE stripe_session_id = p_session_id
     FOR UPDATE;
 
     IF NOT FOUND THEN
-        -- If redemption record not found by session_id but coupon_id is provided, look up by metadata pre_session_id
         IF p_metadata ? 'pre_session_id' THEN
             SELECT * INTO v_redemption
             FROM public.coupon_redemptions
@@ -679,10 +745,51 @@ BEGIN
     END IF;
 
     IF NOT FOUND THEN
-        RETURN jsonb_build_object('success', false, 'error', 'reservation_not_found');
+        -- If session had no prior reservation but coupon exists, create applied record if eligible
+        IF v_coupon.id IS NOT NULL THEN
+            IF EXISTS (
+                SELECT 1 FROM public.coupon_redemptions
+                WHERE coupon_id = v_coupon.id
+                  AND company_id = p_company_id
+                  AND status = 'applied'
+            ) THEN
+                RETURN jsonb_build_object('success', false, 'error', 'company_already_redeemed_coupon');
+            END IF;
+
+            INSERT INTO public.coupon_redemptions (
+                coupon_id,
+                company_id,
+                stripe_session_id,
+                status,
+                metadata,
+                redeemed_at
+            ) VALUES (
+                v_coupon.id,
+                p_company_id,
+                p_session_id,
+                'applied',
+                p_metadata,
+                now()
+            ) RETURNING * INTO v_redemption;
+
+            UPDATE public.coupons
+            SET times_redeemed = times_redeemed + 1,
+                redemption_count = redemption_count + 1,
+                updated_at = now()
+            WHERE id = v_coupon.id;
+
+            RETURN jsonb_build_object(
+                'success', true,
+                'redemption_id', v_redemption.id,
+                'coupon_id', v_coupon.id,
+                'code', v_coupon.code
+            );
+        ELSE
+            RETURN jsonb_build_object('success', false, 'error', 'reservation_not_found');
+        END IF;
     END IF;
 
-    -- Strict entity matching
+    -- Strict company matching
     IF v_redemption.company_id != p_company_id THEN
         RETURN jsonb_build_object('success', false, 'error', 'company_mismatch');
     END IF;
@@ -696,11 +803,13 @@ BEGIN
         RETURN jsonb_build_object('success', true, 'already_confirmed', true, 'redemption_id', v_redemption.id);
     END IF;
 
-    -- Lock coupon row
-    SELECT * INTO v_coupon
-    FROM public.coupons
-    WHERE id = v_redemption.coupon_id
-    FOR UPDATE;
+    -- Ensure coupon is locked if not locked earlier
+    IF v_coupon.id IS NULL THEN
+        SELECT * INTO v_coupon
+        FROM public.coupons
+        WHERE id = v_redemption.coupon_id
+        FOR UPDATE;
+    END IF;
 
     UPDATE public.coupon_redemptions
     SET status = 'applied',
@@ -766,20 +875,16 @@ END;
 $$;
 
 -- -------------------------------------------------------------
--- PERMISSIONS (Strict Least-Privilege RBAC)
+-- PERMISSIONS
 -- -------------------------------------------------------------
-
--- 1. Revoke all execution rights on internal operations from PUBLIC, anon, and authenticated
 REVOKE EXECUTE ON FUNCTION public.reserve_discount_coupon(TEXT, UUID, TEXT, TEXT, TEXT, TIMESTAMPTZ) FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.confirm_discount_coupon_redemption(TEXT, UUID, UUID, JSONB) FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.release_discount_coupon_reservation(TEXT) FROM PUBLIC, anon, authenticated;
 
--- 2. Grant internal operations exclusively to service_role (Edge Functions / Backend)
 GRANT EXECUTE ON FUNCTION public.reserve_discount_coupon(TEXT, UUID, TEXT, TEXT, TEXT, TIMESTAMPTZ) TO service_role;
 GRANT EXECUTE ON FUNCTION public.confirm_discount_coupon_redemption(TEXT, UUID, UUID, JSONB) TO service_role;
 GRANT EXECUTE ON FUNCTION public.release_discount_coupon_reservation(TEXT) TO service_role;
 
--- 3. Grant client-facing operations to authenticated users only (revoked from anon and PUBLIC)
 REVOKE EXECUTE ON FUNCTION public.validate_coupon_code(TEXT, UUID, TEXT, TEXT) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.validate_coupon_code(TEXT, UUID, TEXT, TEXT) TO authenticated;
 

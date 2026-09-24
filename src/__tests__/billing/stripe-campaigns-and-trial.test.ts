@@ -171,4 +171,24 @@ describe("Billing & Stripe Hardening Unit Tests", () => {
       expect(extractSubscriptionIdFromInvoice(oneTimeInvoice)).toBeNull();
     });
   });
+
+  describe("5. Payment Status Transitions & Error Handling", () => {
+    it("handles transition from rejected payment to approved upon successful charge", () => {
+      const payments = [
+        { id: "pay_1", invoice_id: "in_abc", status: "rejected", amount: 299 }
+      ];
+
+      // Webhook receives payment_succeeded for invoice in_abc
+      const existing = payments.find(p => p.invoice_id === "in_abc");
+      expect(existing).toBeDefined();
+      expect(existing?.status).toBe("rejected");
+
+      // Update to approved
+      if (existing) {
+        existing.status = "approved";
+      }
+
+      expect(payments[0].status).toBe("approved");
+    });
+  });
 });

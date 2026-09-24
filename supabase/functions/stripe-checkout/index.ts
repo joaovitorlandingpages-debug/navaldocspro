@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initContext, handleCors, jsonResponse, errorResponse } from "../_shared/stripe-client.ts";
-import { resolvePlan } from "../_shared/stripe-plans.ts";
+import { resolvePlanFromDatabase } from "../_shared/stripe-plans.ts";
 
 const ALLOWED_REDIRECT_ORIGINS = [
   'https://navaldocspro.lovable.app',
@@ -51,9 +51,10 @@ serve(async (req) => {
       return errorResponse("planId é obrigatório", 400);
     }
 
-    const resolved = resolvePlan(planId, billingCycle);
+    // 1. Consulta dinâmica do catálogo no banco public.plans
+    const resolved = await resolvePlanFromDatabase(ctx.admin, planId, billingCycle);
     if (!resolved) {
-      return errorResponse(`Plano inválido: ${planId} (${billingCycle})`, 400);
+      return errorResponse(`Plano não encontrado no catálogo: ${planId} (${billingCycle})`, 404);
     }
 
     const { data: profile, error: profileErr } = await ctx.admin
@@ -68,6 +69,7 @@ serve(async (req) => {
 
     const companyId = profile.company_id;
 
+    // 2. Validação de autorização financeira no servidor
     const { data: canManage, error: permErr } = await ctx.admin
       .rpc('can_manage_company_billing', {
         p_user_id: user.id,
@@ -75,12 +77,12 @@ serve(async (req) => {
       });
 
     if (permErr || !canManage) {
-      return errorResponse("Você não tem permissão para gerenciar assinaturas desta empresa", 403);
+      return errorResponse("Você não tem permissão para gerenciar faturamento desta empresa", 403);
     }
 
     const { data: company, error: compErr } = await ctx.admin
       .from('companies')
-      .select('id, name, cnpj, stripe_customer_id, trial_ends_at')
+      .select('id, name, cnpj, email, stripe_customer_id, trial_ends_at')
       .eq('id', companyId)
       .single();
 
@@ -108,20 +110,31 @@ serve(async (req) => {
         .eq('id', companyId);
     }
 
+    // 3. Verificação de assinaturas existentes: impede criação duplicada quando já existe assinatura ativa/trialing na Stripe
     const { data: existingSub } = await ctx.admin
       .from('subscriptions')
-      .select('id, status, current_period_end, trial_ends_at')
+      .select('id, status, current_period_end, trial_ends_at, stripe_subscription_id, metadata')
       .eq('company_id', companyId)
       .in('status', ['active', 'trialing', 'past_due'])
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (existingSub && existingSub.status === 'active') {
-      return errorResponse("Empresa já possui uma assinatura ativa. Use o portal para alterar seu plano.", 400);
+    const hasStripeContract = Boolean(existingSub?.stripe_subscription_id || existingSub?.metadata?.stripe_subscription_id);
+
+    if (existingSub && hasStripeContract) {
+      if (existingSub.status === 'active') {
+        return errorResponse("Empresa já possui uma assinatura ativa na Stripe. Acesse o portal para gerenciar ou alterar seu plano.", 400);
+      }
+      if (existingSub.status === 'trialing') {
+        return errorResponse("Empresa já possui assinatura contratada em período de teste na Stripe. Acesse o portal para gerenciar.", 400);
+      }
+      if (existingSub.status === 'past_due') {
+        return errorResponse("Existe uma assinatura com cobrança pendente. Regularize o pagamento pelo portal antes de contratar um novo plano.", 400);
+      }
     }
 
-    // 1. Cálculo de Trial restante: preserva o período de teste e sincroniza data com a Stripe
+    // 4. Cálculo de Trial restante
     let trialEndTimestamp: number | undefined = undefined;
     let trialExtendedTechnically = false;
 
@@ -147,16 +160,15 @@ serve(async (req) => {
         if (remainingSeconds >= 48 * 3600) {
           trialEndTimestamp = Math.floor(maxTrialMs / 1000);
         } else {
-          // Stripe exige no mínimo 48h para trial_end. Para preservar o período de teste do cliente
-          // sem cobrar o cartão de imediato, alinhamos trial_end à margem técnica mínima da Stripe (48h + 60s).
-          // A data retornada e persistida reflete exatamente esse prazo.
+          // Stripe exige no mínimo 48h para trial_end.
+          // Alinhamos o timestamp para a margem mínima de 48h + 60s para impedir cobrança imediata do cartão.
           trialEndTimestamp = Math.floor(Date.now() / 1000) + 48 * 3600 + 60;
           trialExtendedTechnically = true;
         }
       }
     }
 
-    // 2. Reserva de cupom de desconto com validação estrita da Stripe
+    // 5. Reserva atômica de cupom de desconto
     let stripeDiscounts: any[] | undefined = undefined;
     let reservedCouponId: string | null = null;
     const sessionExpiresAt = Math.floor(Date.now() / 1000) + 1800; // 30 minutos exatos
@@ -168,8 +180,8 @@ serve(async (req) => {
           p_code: couponCode.trim(),
           p_company_id: companyId,
           p_session_id: preSessionId,
-          p_plan_id: planId,
-          p_billing_cycle: billingCycle,
+          p_plan_id: resolved.planId,
+          p_billing_cycle: resolved.billingCycle,
           p_expires_at: new Date(sessionExpiresAt * 1000).toISOString(),
         });
 
@@ -192,6 +204,23 @@ serve(async (req) => {
     const safeSuccessBase = validateRedirectUrl(successUrl);
     const safeCancelBase = validateRedirectUrl(cancelUrl);
 
+    // Montagem dos line_items (usa price oficial da Stripe ou price_data se o plano não estiver pré-sincronizado)
+    const lineItems = resolved.priceId
+      ? [{ price: resolved.priceId, quantity: 1 }]
+      : [{
+          price_data: {
+            currency: 'brl',
+            product_data: {
+              name: `NavalDocs Pro - Plano ${resolved.name}`,
+            },
+            unit_amount: resolved.unitAmount,
+            recurring: {
+              interval: resolved.billingCycle === 'annual' ? 'year' : 'month',
+            },
+          },
+          quantity: 1,
+        }];
+
     const checkoutSessionParams: any = {
       customer: customerId,
       customer_update: {
@@ -199,19 +228,15 @@ serve(async (req) => {
         name: 'auto',
       },
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price: resolved.priceId,
-          quantity: 1,
-        },
-      ],
+      line_items: lineItems,
       mode: 'subscription',
       subscription_data: {
         metadata: {
           company_id: companyId,
           user_id: user.id,
-          plan_id: planId,
-          billing_cycle: billingCycle,
+          plan_id: resolved.planId,
+          plan_db_id: resolved.planDbId || '',
+          billing_cycle: resolved.billingCycle,
           coupon_id: reservedCouponId || '',
           pre_session_id: preSessionId,
         },
@@ -220,8 +245,9 @@ serve(async (req) => {
       metadata: {
         company_id: companyId,
         user_id: user.id,
-        plan_id: planId,
-        billing_cycle: billingCycle,
+        plan_id: resolved.planId,
+        plan_db_id: resolved.planDbId || '',
+        billing_cycle: resolved.billingCycle,
         coupon_id: reservedCouponId || '',
         pre_session_id: preSessionId,
       },
@@ -246,31 +272,39 @@ serve(async (req) => {
       return errorResponse(`Erro ao criar checkout no Stripe: ${stripeErr.message}`, 400);
     }
 
-    // 3. Vinculação atômica da reserva à sessão Stripe criada
+    // 6. Vinculação da reserva e tratamento de falhas
     if (reservedCouponId) {
-      const { error: updateErr } = await ctx.admin
+      const { data: updatedRows, error: updateErr } = await ctx.admin
         .from('coupon_redemptions')
         .update({
           stripe_session_id: session.id,
           expires_at: new Date(session.expires_at * 1000).toISOString(),
           metadata: {
-            plan_id: planId,
-            billing_cycle: billingCycle,
+            plan_id: resolved.planId,
+            billing_cycle: resolved.billingCycle,
             pre_session_id: preSessionId,
           }
         })
-        .eq('stripe_session_id', preSessionId);
+        .eq('stripe_session_id', preSessionId)
+        .select();
 
-      if (updateErr) {
-        console.error("Erro ao associar reserva à sessão de checkout:", updateErr);
-        // Não libera a vaga enquanto a sessão Stripe estiver utilizável!
-        // Encerra/expira a sessão na Stripe primeiro para impedir pagamentos e só então libera a reserva.
+      if (updateErr || !updatedRows || updatedRows.length === 0) {
+        console.error("Falha ao atualizar reserva com session_id Stripe:", updateErr);
+        // Tenta expirar a sessão na Stripe primeiro para garantir que o cliente não pague com vaga liberada
+        let expiredSuccessfully = false;
         try {
-          await ctx.stripe.checkout.sessions.expire(session.id);
+          const expRes = await ctx.stripe.checkout.sessions.expire(session.id);
+          if (expRes.status === 'expired') {
+            expiredSuccessfully = true;
+          }
         } catch (expireErr: any) {
-          console.error("Erro ao expirar sessão Stripe após falha de vinculação:", expireErr);
+          console.error("Não foi possível expirar a sessão Stripe:", expireErr);
         }
-        await ctx.admin.rpc('release_discount_coupon_reservation', { p_session_id: preSessionId });
+
+        // Se e somente se a sessão foi expirada na Stripe, libera a reserva local
+        if (expiredSuccessfully) {
+          await ctx.admin.rpc('release_discount_coupon_reservation', { p_session_id: preSessionId });
+        }
         return errorResponse("Falha ao vincular reserva promocional à sessão de pagamento.", 500);
       }
     }
