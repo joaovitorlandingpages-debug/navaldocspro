@@ -334,40 +334,21 @@ serve(async (req) => {
             }).eq("id", companyId);
           }
 
-          // Se um cupom de desconto foi aplicado no checkout, registra o resgate definitivamente no banco
+          // Se um cupom de desconto foi aplicado no checkout, confirma a reserva/resgate atomicamente no banco
           const appliedCouponId = session.metadata?.applied_coupon_id;
+          const couponReservationId = session.metadata?.coupon_reservation_id;
           if (appliedCouponId && (subStatus === "active" || subStatus === "trialing")) {
-            const { data: existingRedemption } = await supabase
-              .from("coupon_redemptions")
-              .select("id")
-              .eq("coupon_id", appliedCouponId)
-              .eq("company_id", companyId)
-              .maybeSingle();
-
-            if (!existingRedemption) {
-              await supabase.from("coupon_redemptions").insert({
-                coupon_id: appliedCouponId,
-                company_id: companyId,
-                metadata: {
-                  session_id: session.id,
-                  applied_at: new Date().toISOString(),
-                  source: "stripe_checkout_completed"
-                }
-              });
-
-              const { data: coup } = await supabase
-                .from("coupons")
-                .select("redemption_count")
-                .eq("id", appliedCouponId)
-                .maybeSingle();
-
-              if (coup) {
-                await supabase.from("coupons").update({
-                  redemption_count: (coup.redemption_count || 0) + 1,
-                  updated_at: new Date().toISOString()
-                }).eq("id", appliedCouponId);
+            await supabase.rpc("confirm_discount_coupon_redemption", {
+              p_session_id: couponReservationId || session.id,
+              p_coupon_id: appliedCouponId,
+              p_company_id: companyId,
+              p_metadata: {
+                stripe_session_id: session.id,
+                payment_status: session.payment_status,
+                applied_at: new Date().toISOString(),
+                source: "stripe_checkout_completed"
               }
-            }
+            });
           }
         }
         break;

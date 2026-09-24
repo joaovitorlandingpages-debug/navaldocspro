@@ -243,9 +243,25 @@ serve(async (req) => {
           error: "coupon_is_trial_extension",
           message: `O código "${couponCode}" é uma extensão de teste gratuito de ${dbCoupon.trial_days || 60} dias e não requer cartão de crédito. Resgate-o diretamente no painel de sua conta.`
         });
-      } else if (dbCoupon.type === "percent" || dbCoupon.type === "fixed") {
-        appliedCouponDbId = dbCoupon.id;
-        let stripeCoupId = dbCoupon.stripe_coupon_id;
+        // 7.1. Reserva Temporária no Banco (Garante concorrência e evita overbooking)
+        const reservationSessionId = `res_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+        const { data: reserveData, error: reserveErr } = await supabase.rpc("reserve_discount_coupon", {
+          p_code: couponCode,
+          p_company_id: companyId,
+          p_session_id: reservationSessionId,
+          p_plan_slug: planSlug,
+          p_billing_cycle: billingCycle
+        });
+
+        if (reserveErr || !reserveData?.success) {
+          throw new HttpError(400, {
+            error: "coupon_reservation_failed",
+            message: reserveData?.message || reserveErr?.message || "Não foi possível reservar o cupom no momento."
+          });
+        }
+
+        appliedCouponDbId = reserveData.coupon_id;
+        let stripeCoupId = reserveData.stripe_coupon_id;
 
         // Se o cupom ainda não foi criado na Stripe, cria agora
         if (!stripeCoupId) {
@@ -288,6 +304,7 @@ serve(async (req) => {
           appliedStripeCouponId = stripeCoupId;
           appliedCampaignInfo = { 
             coupon_id: dbCoupon.id,
+            reservation_id: reservationSessionId,
             code: couponCode, 
             type: dbCoupon.type, 
             discount: dbCoupon.discount_percent || dbCoupon.discount_fixed,
@@ -334,6 +351,7 @@ serve(async (req) => {
     params.append("metadata[plan_slug]", planSlug);
     params.append("metadata[billing_cycle]", billingCycle);
     if (appliedCouponDbId) params.append("metadata[applied_coupon_id]", appliedCouponDbId);
+    if (appliedCampaignInfo?.reservation_id) params.append("metadata[coupon_reservation_id]", appliedCampaignInfo.reservation_id);
     if (trialEndIsoString) params.append("metadata[preserved_trial_end]", trialEndIsoString);
     if (appliedCampaignInfo) params.append("metadata[applied_campaign]", JSON.stringify(appliedCampaignInfo));
 
@@ -349,6 +367,9 @@ serve(async (req) => {
     const sessionData = await stripeRes.json();
 
     if (!stripeRes.ok) {
+      if (appliedCampaignInfo?.reservation_id) {
+        await supabase.rpc("release_discount_coupon_reservation", { p_session_id: appliedCampaignInfo.reservation_id });
+      }
       await supabase.from("payment_logs").insert({
         company_id: companyId,
         event_type: "stripe_checkout_error",
