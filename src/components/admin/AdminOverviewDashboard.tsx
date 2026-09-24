@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { AdminPlanData, StripeSyncService } from "@/services/billing/stripeSyncService";
 import { PlanEditorDialog } from "@/components/admin/PlanEditorDialog";
-import { CampaignEditorDialog } from "@/components/admin/CampaignEditorDialog";
+import { CampaignManagerDialog } from "@/components/admin/CampaignManagerDialog";
 import { FreeTrialConfigDialog } from "@/components/admin/FreeTrialConfigDialog";
 import { StripeConfigDialog } from "@/components/admin/StripeConfigDialog";
 import { useQuery } from "@tanstack/react-query";
@@ -567,7 +567,7 @@ export const AdminOverviewDashboard: React.FC = () => {
         onSaved={handlePlanSaved}
       />
 
-      <CampaignEditorDialog
+      <CampaignManagerDialog
         isOpen={isCampaignOpen}
         onClose={() => setIsCampaignOpen(false)}
       />

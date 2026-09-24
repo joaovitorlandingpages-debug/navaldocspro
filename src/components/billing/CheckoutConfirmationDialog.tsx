@@ -186,14 +186,14 @@ export const CheckoutConfirmationDialog: React.FC<CheckoutConfirmationDialogProp
           {/* Campo de Cupom ou Campanha Promocional */}
           <div className="space-y-1.5 pt-1">
             <Label className="text-xs font-bold text-navy uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-primary" /> Possui Cupom ou Código de Parceiro?
+              <Sparkles className="h-3.5 w-3.5 text-primary" /> Possui Cupom ou Código Promocional?
             </Label>
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value.toUpperCase().replace(/\s+/g, ""))}
-                placeholder="Ex: NAVAL60 ou BEMVINDO2026"
+                placeholder="Ex: PARCEIRO2026"
                 className="flex-1 h-9 px-3 text-xs font-mono uppercase font-bold border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary"
               />
               {couponCode.trim().length > 0 && (
@@ -203,7 +203,7 @@ export const CheckoutConfirmationDialog: React.FC<CheckoutConfirmationDialogProp
               )}
             </div>
             <p className="text-[10px] text-slate-400">
-              Códigos de parceria e cupons de desconto serão validados e aplicados no faturamento.
+              Códigos de desconto e campanhas serão validados no servidor seguro antes da conclusão.
             </p>
           </div>
 

@@ -2,12 +2,44 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { authContext, rateLimit, jsonResponse, corsHeaders, HttpError } from "../_shared/auth.ts";
 
 /**
+ * Validação e sanitização rigorosa de origens permitidas vinculadas aos domínios oficiais.
+ * Domínios autorizados:
+ * - https://navaldocspro.lovable.app
+ * - https://preview--navaldocspro.lovable.app
+ * - https://navaldocspro.com.br
+ * - https://www.navaldocspro.com.br
+ * - http://localhost:* / http://127.0.0.1:*
+ */
+export function sanitizeAllowedOrigin(rawOrigin: string | null | undefined): string {
+  if (!rawOrigin) return "https://navaldocspro.lovable.app";
+  try {
+    const parsed = new URL(rawOrigin);
+    const host = parsed.hostname.toLowerCase();
+    
+    // Domínios Lovable autorizados expressamente para este projeto
+    const isLovableApp = host === "navaldocspro.lovable.app" || host === "preview--navaldocspro.lovable.app";
+    // Domínios personalizados de produção (confirmados na infraestrutura)
+    const isCustomProd = host === "navaldocspro.com.br" || host === "www.navaldocspro.com.br";
+    // Desenvolvimento local
+    const isLocal = (host === "localhost" || host === "127.0.0.1") && ["5173", "3000", "8080", "5174"].includes(parsed.port);
+
+    if (isLovableApp || isCustomProd || isLocal) {
+      return `${parsed.protocol}//${parsed.host}`;
+    }
+  } catch {
+    // Formato de URL inválido
+  }
+  return "https://navaldocspro.lovable.app";
+}
+
+/**
  * Stripe Checkout Edge Function
  * Criação segura de sessão de checkout no servidor com:
  * - Validação de usuário e empresa autenticada
  * - Restrição estrita de URLs de retorno aos domínios autorizados deste projeto
  * - Preservação do término real do trial já concedido (1ª cobrança agendada na data exata)
- * - Integração e validação de cupons e campanhas (descontos e extensão de trial de 60 dias totais)
+ * - Tratamento explícito de trials com menos de 48 horas restantes (sem cobrança antecipada indevida)
+ * - Validação server-side de cupons e campanhas com preservação de estoque até conclusão do pagamento
  * - Registro em log de auditoria
  */
 serve(async (req) => {
@@ -23,28 +55,11 @@ serve(async (req) => {
     const planSlug = body.planSlug || body.plan_slug;
     const billingCycle = body.billingCycle || "monthly"; // 'monthly' | 'annual'
     const couponCode = (body.couponCode || body.coupon_code || "").toString().trim().toUpperCase();
-    const rawOrigin = body.origin || req.headers.get("origin") || "https://navaldocspro.com.br";
+    const rawOrigin = body.origin || req.headers.get("origin");
     const supabase = ctx.admin;
 
-    // 1. Validação estrita de origens permitidas vinculadas exclusivamente a este projeto
-    function sanitizeOrigin(orig: string): string {
-      try {
-        const parsed = new URL(orig);
-        const host = parsed.hostname.toLowerCase();
-        const isOfficialProd = host === "navaldocspro.com.br" || host === "www.navaldocspro.com.br";
-        const isProjectPreview = host.includes("vqutxzdsajinhsvuddcp") && (host.endsWith(".lovableproject.com") || host.endsWith(".lovable.app"));
-        const isLocal = (host === "localhost" || host === "127.0.0.1") && (parsed.port === "5173" || parsed.port === "3000" || parsed.port === "8080");
-
-        if (isOfficialProd || isProjectPreview || isLocal) {
-          return `${parsed.protocol}//${parsed.host}`;
-        }
-      } catch {
-        // Formato inválido
-      }
-      return "https://navaldocspro.com.br";
-    }
-
-    const origin = sanitizeOrigin(rawOrigin);
+    // 1. Sanitização estrita de URL de retorno
+    const origin = sanitizeAllowedOrigin(rawOrigin);
 
     const companyId = ctx.companyId || body.companyId;
     if (!companyId) {
@@ -54,7 +69,7 @@ serve(async (req) => {
     // 2. Verifica existência do escritório e permissão do usuário
     const { data: company, error: companyError } = await supabase
       .from("companies")
-      .select("id, name, email, created_at, metadata")
+      .select("id, name, email, created_at, trial_ends_at, metadata")
       .eq("id", companyId)
       .maybeSingle();
 
@@ -76,7 +91,7 @@ serve(async (req) => {
     if (existingSub && existingSub.status === "active") {
       throw new HttpError(400, {
         error: "active_subscription_exists",
-        message: "Este escritório já possui uma assinatura ativa. Acesse o portal de cobrança para alterar o plano."
+        message: "Este escritório já possui uma assinatura ativa. Acesse o portal de cobrança para alterar o plano ou cartão."
       });
     }
 
@@ -111,18 +126,37 @@ serve(async (req) => {
     const amountInCents = billingCycle === "annual" ? targetPlan.yearlyPrice * 100 : targetPlan.monthlyPrice * 100;
     const interval = billingCycle === "annual" ? "year" : "month";
 
-    // 5. Preservação do Trial End já concedido
+    // 5. Preservação do Trial End Real e Tratamento de Trials < 48h
     const now = Date.now();
     let stripeTrialEndTimestamp: number | null = null;
     let trialEndIsoString: string | null = null;
 
-    if (existingSub && (existingSub.status === "trialing" || existingSub.status === "pending")) {
-      if (existingSub.current_period_end) {
-        const currentEndMs = new Date(existingSub.current_period_end).getTime();
-        // A Stripe exige que o trial_end seja no mínimo 48 horas no futuro para checkout de assinatura sem cobrança imediata
-        if (currentEndMs > now + (48 * 60 * 60 * 1000)) {
+    // A data real do teste pode vir de subscriptions.current_period_end ou companies.trial_ends_at
+    const candidateTrialEnd = existingSub?.current_period_end || company.trial_ends_at;
+    const isCandidateTrial = existingSub ? (existingSub.status === "trialing" || existingSub.status === "pending") : true;
+
+    if (candidateTrialEnd && isCandidateTrial) {
+      const currentEndMs = new Date(candidateTrialEnd).getTime();
+      const remainingMs = currentEndMs - now;
+
+      if (remainingMs > 0) {
+        if (remainingMs < 48 * 60 * 60 * 1000) {
+          // CASO CRÍTICO: Menos de 48 horas restantes no trial.
+          // A API do Stripe Checkout não aceita trial_end inferior a 48h (exige timestamp >= 48h à frente).
+          // NÃO ignoramos o prazo concedido nem cobramos antes dele!
+          const hoursLeft = Math.max(1, Math.ceil(remainingMs / (3600 * 1000)));
+          const dateFormatted = new Date(currentEndMs).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+          
+          throw new HttpError(400, {
+            error: "trial_active_under_48h",
+            hours_remaining: hoursLeft,
+            trial_ends_at: new Date(currentEndMs).toISOString(),
+            message: `Seu período de teste gratuito ainda está ativo (restam aproximadamente ${hoursLeft}h até ${dateFormatted}). Para garantir que você aproveite 100% do seu teste sem nenhuma cobrança antecipada, a contratação poderá ser concluída ao término desse prazo, mantendo seu acesso 100% liberado até lá.`
+          });
+        } else {
+          // Prazo de teste preservado com primeira cobrança agendada na data exata
           stripeTrialEndTimestamp = Math.floor(currentEndMs / 1000);
-          trialEndIsoString = existingSub.current_period_end;
+          trialEndIsoString = new Date(currentEndMs).toISOString();
         }
       }
     }
@@ -152,6 +186,7 @@ serve(async (req) => {
 
     // 7. Validação de Cupons e Campanhas do Admin no Servidor
     let appliedStripeCouponId: string | null = null;
+    let appliedCouponDbId: string | null = null;
     let appliedCampaignInfo: any = null;
 
     if (couponCode) {
@@ -162,101 +197,102 @@ serve(async (req) => {
         .eq("is_active", true)
         .maybeSingle();
 
-      if (dbCoupon) {
-        // Valida limites de resgate e data de expiração
-        const isExpired = dbCoupon.valid_until && new Date(dbCoupon.valid_until).getTime() < now;
-        const limitReached = dbCoupon.max_redemptions && dbCoupon.redemption_count >= dbCoupon.max_redemptions;
+      if (!dbCoupon) {
+        throw new HttpError(400, { error: "coupon_not_found", message: `Cupom "${couponCode}" inválido ou inexistente.` });
+      }
 
-        if (isExpired) {
-          throw new HttpError(400, { error: "coupon_expired", message: `O cupom ${couponCode} está expirado.` });
+      // Validação de datas
+      if (dbCoupon.valid_from && new Date(dbCoupon.valid_from).getTime() > now) {
+        throw new HttpError(400, { error: "coupon_not_started", message: `A campanha ${couponCode} ainda não foi iniciada.` });
+      }
+      if (dbCoupon.valid_until && new Date(dbCoupon.valid_until).getTime() < now) {
+        throw new HttpError(400, { error: "coupon_expired", message: `O cupom ${couponCode} está expirado.` });
+      }
+      if (dbCoupon.max_redemptions && dbCoupon.redemption_count >= dbCoupon.max_redemptions) {
+        throw new HttpError(400, { error: "coupon_limit_reached", message: `O cupom ${couponCode} atingiu o limite máximo de resgates.` });
+      }
+
+      // Verifica se a empresa já resgatou este cupom anteriormente
+      const { data: previousRedemption } = await supabase
+        .from("coupon_redemptions")
+        .select("id")
+        .eq("coupon_id", dbCoupon.id)
+        .eq("company_id", companyId)
+        .maybeSingle();
+
+      if (previousRedemption) {
+        throw new HttpError(400, { error: "coupon_already_used", message: `Este escritório já utilizou o cupom ${couponCode}.` });
+      }
+
+      // Validação de elegibilidade por plano
+      if (Array.isArray(dbCoupon.applicable_plans) && dbCoupon.applicable_plans.length > 0) {
+        if (!dbCoupon.applicable_plans.includes(planSlug)) {
+          throw new HttpError(400, { error: "coupon_not_applicable_plan", message: `O cupom ${couponCode} não é aplicável ao plano selecionado.` });
         }
-        if (limitReached) {
-          throw new HttpError(400, { error: "coupon_limit_reached", message: `O cupom ${couponCode} atingiu o limite máximo de resgates.` });
+      }
+
+      // Validação de elegibilidade por ciclo
+      if (Array.isArray(dbCoupon.applicable_billing_cycles) && dbCoupon.applicable_billing_cycles.length > 0) {
+        if (!dbCoupon.applicable_billing_cycles.includes(billingCycle)) {
+          throw new HttpError(400, { error: "coupon_not_applicable_cycle", message: `O cupom ${couponCode} não é aplicável ao ciclo de faturamento selecionado.` });
         }
+      }
 
-        // Verifica se a empresa já resgatou este cupom anteriormente
-        const { data: previousRedemption } = await supabase
-          .from("coupon_redemptions")
-          .select("id")
-          .eq("coupon_id", dbCoupon.id)
-          .eq("company_id", companyId)
-          .maybeSingle();
+      if (dbCoupon.type === "trial_extension") {
+        throw new HttpError(400, {
+          error: "coupon_is_trial_extension",
+          message: `O código "${couponCode}" é uma extensão de teste gratuito de ${dbCoupon.trial_days || 60} dias e não requer cartão de crédito. Resgate-o diretamente no painel de sua conta.`
+        });
+      } else if (dbCoupon.type === "percent" || dbCoupon.type === "fixed") {
+        appliedCouponDbId = dbCoupon.id;
+        let stripeCoupId = dbCoupon.stripe_coupon_id;
 
-        if (previousRedemption) {
-          throw new HttpError(400, { error: "coupon_already_used", message: `Este escritório já utilizou o cupom ${couponCode}.` });
-        }
+        // Se o cupom ainda não foi criado na Stripe, cria agora
+        if (!stripeCoupId) {
+          const coupParams = new URLSearchParams();
+          coupParams.append("name", dbCoupon.name);
+          coupParams.append("id", `COUP_${dbCoupon.code}_${Date.now().toString(36)}`);
+          if (dbCoupon.type === "percent" && dbCoupon.discount_percent) {
+            coupParams.append("percent_off", Number(dbCoupon.discount_percent).toString());
+          } else if (dbCoupon.type === "fixed" && dbCoupon.discount_fixed) {
+            coupParams.append("amount_off", Math.round(Number(dbCoupon.discount_fixed) * 100).toString());
+            coupParams.append("currency", "brl");
+          }
+          
+          const duration = dbCoupon.discount_duration || "once";
+          coupParams.append("duration", duration);
+          if (duration === "repeating" && dbCoupon.duration_in_months) {
+            coupParams.append("duration_in_months", dbCoupon.duration_in_months.toString());
+          }
 
-        if (dbCoupon.type === "trial_extension") {
-          // Extensão de teste para 60 dias totais a partir da criação original da empresa
-          const companyCreatedMs = company.created_at ? new Date(company.created_at).getTime() : now;
-          const totalTrialMs = (dbCoupon.trial_days || 60) * 24 * 60 * 60 * 1000;
-          const extendedEndMs = companyCreatedMs + totalTrialMs;
+          const stripeCoupRes = await fetch("https://api.stripe.com/v1/coupons", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${stripeSecretKey}`,
+              "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: coupParams.toString()
+          });
 
-          if (extendedEndMs > now + (48 * 60 * 60 * 1000)) {
-            stripeTrialEndTimestamp = Math.floor(extendedEndMs / 1000);
-            trialEndIsoString = new Date(extendedEndMs).toISOString();
-
-            // Atualiza o término do teste da empresa no banco
-            await supabase.from("subscriptions").upsert({
-              company_id: companyId,
-              status: "trialing",
-              current_period_end: trialEndIsoString,
-              updated_at: new Date().toISOString()
-            }, { onConflict: "company_id" });
-
-            // Registra o resgate da campanha
-            await supabase.from("coupon_redemptions").insert({
-              coupon_id: dbCoupon.id,
-              company_id: companyId,
-              user_id: ctx.userId,
-              metadata: { extended_to: trialEndIsoString, trial_days: dbCoupon.trial_days }
-            });
-
+          const coupData = await stripeCoupRes.json();
+          if (stripeCoupRes.ok && coupData.id) {
+            stripeCoupId = coupData.id;
             await supabase.from("coupons").update({
-              redemption_count: (dbCoupon.redemption_count || 0) + 1,
+              stripe_coupon_id: stripeCoupId,
               updated_at: new Date().toISOString()
             }).eq("id", dbCoupon.id);
-
-            appliedCampaignInfo = { code: couponCode, type: "trial_extension", trialDays: dbCoupon.trial_days };
           }
-        } else if (dbCoupon.type === "percent" || dbCoupon.type === "fixed") {
-          // Cria ou reutiliza cupom na API da Stripe
-          let stripeCoupId = dbCoupon.stripe_coupon_id;
-          if (!stripeCoupId) {
-            const coupParams = new URLSearchParams();
-            coupParams.append("name", dbCoupon.name);
-            coupParams.append("id", `COUP_${dbCoupon.code}_${Date.now().toString(36)}`);
-            if (dbCoupon.type === "percent" && dbCoupon.discount_percent) {
-              coupParams.append("percent_off", dbCoupon.discount_percent.toString());
-            } else if (dbCoupon.type === "fixed" && dbCoupon.discount_fixed) {
-              coupParams.append("amount_off", Math.round(Number(dbCoupon.discount_fixed) * 100).toString());
-              coupParams.append("currency", "brl");
-            }
-            coupParams.append("duration", "once");
+        }
 
-            const stripeCoupRes = await fetch("https://api.stripe.com/v1/coupons", {
-              method: "POST",
-              headers: {
-                "Authorization": `Bearer ${stripeSecretKey}`,
-                "Content-Type": "application/x-www-form-urlencoded"
-              },
-              body: coupParams.toString()
-            });
-
-            const coupData = await stripeCoupRes.json();
-            if (stripeCoupRes.ok && coupData.id) {
-              stripeCoupId = coupData.id;
-              await supabase.from("coupons").update({
-                stripe_coupon_id: stripeCoupId,
-                updated_at: new Date().toISOString()
-              }).eq("id", dbCoupon.id);
-            }
-          }
-
-          if (stripeCoupId) {
-            appliedStripeCouponId = stripeCoupId;
-            appliedCampaignInfo = { code: couponCode, type: dbCoupon.type, discount: dbCoupon.discount_percent || dbCoupon.discount_fixed };
-          }
+        if (stripeCoupId) {
+          appliedStripeCouponId = stripeCoupId;
+          appliedCampaignInfo = { 
+            coupon_id: dbCoupon.id,
+            code: couponCode, 
+            type: dbCoupon.type, 
+            discount: dbCoupon.discount_percent || dbCoupon.discount_fixed,
+            duration: dbCoupon.discount_duration || "once"
+          };
         }
       }
     }
@@ -297,6 +333,7 @@ serve(async (req) => {
     params.append("metadata[company_id]", companyId);
     params.append("metadata[plan_slug]", planSlug);
     params.append("metadata[billing_cycle]", billingCycle);
+    if (appliedCouponDbId) params.append("metadata[applied_coupon_id]", appliedCouponDbId);
     if (trialEndIsoString) params.append("metadata[preserved_trial_end]", trialEndIsoString);
     if (appliedCampaignInfo) params.append("metadata[applied_campaign]", JSON.stringify(appliedCampaignInfo));
 
@@ -352,4 +389,3 @@ serve(async (req) => {
     );
   }
 });
-

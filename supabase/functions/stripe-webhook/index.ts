@@ -333,6 +333,42 @@ serve(async (req) => {
               updated_at: new Date().toISOString()
             }).eq("id", companyId);
           }
+
+          // Se um cupom de desconto foi aplicado no checkout, registra o resgate definitivamente no banco
+          const appliedCouponId = session.metadata?.applied_coupon_id;
+          if (appliedCouponId && (subStatus === "active" || subStatus === "trialing")) {
+            const { data: existingRedemption } = await supabase
+              .from("coupon_redemptions")
+              .select("id")
+              .eq("coupon_id", appliedCouponId)
+              .eq("company_id", companyId)
+              .maybeSingle();
+
+            if (!existingRedemption) {
+              await supabase.from("coupon_redemptions").insert({
+                coupon_id: appliedCouponId,
+                company_id: companyId,
+                metadata: {
+                  session_id: session.id,
+                  applied_at: new Date().toISOString(),
+                  source: "stripe_checkout_completed"
+                }
+              });
+
+              const { data: coup } = await supabase
+                .from("coupons")
+                .select("redemption_count")
+                .eq("id", appliedCouponId)
+                .maybeSingle();
+
+              if (coup) {
+                await supabase.from("coupons").update({
+                  redemption_count: (coup.redemption_count || 0) + 1,
+                  updated_at: new Date().toISOString()
+                }).eq("id", appliedCouponId);
+              }
+            }
+          }
         }
         break;
       }
