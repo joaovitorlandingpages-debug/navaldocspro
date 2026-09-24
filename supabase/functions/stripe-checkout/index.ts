@@ -351,7 +351,11 @@ serve(async (req) => {
     params.append("metadata[plan_slug]", planSlug);
     params.append("metadata[billing_cycle]", billingCycle);
     if (appliedCouponDbId) params.append("metadata[applied_coupon_id]", appliedCouponDbId);
-    if (appliedCampaignInfo?.reservation_id) params.append("metadata[coupon_reservation_id]", appliedCampaignInfo.reservation_id);
+    if (appliedCampaignInfo?.reservation_id) {
+      params.append("metadata[coupon_reservation_id]", appliedCampaignInfo.reservation_id);
+      // Sincroniza a expiração da sessão do Stripe com a reserva temporária (30 minutos)
+      params.append("expires_at", Math.floor((Date.now() + 30 * 60 * 1000) / 1000).toString());
+    }
     if (trialEndIsoString) params.append("metadata[preserved_trial_end]", trialEndIsoString);
     if (appliedCampaignInfo) params.append("metadata[applied_campaign]", JSON.stringify(appliedCampaignInfo));
 

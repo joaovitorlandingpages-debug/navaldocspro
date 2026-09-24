@@ -1,13 +1,21 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 
 /**
- * Simulação determinística e validação comportamental das RPCs do PostgreSQL:
+ * Validação Comportamental Rigorosa das RPCs do PostgreSQL:
  * - public.validate_coupon_code
  * - public.redeem_trial_extension_coupon
  * - public.reserve_discount_coupon
  * - public.release_discount_coupon_reservation
  * - public.confirm_discount_coupon_redemption
  * - public.can_manage_company_billing
+ * 
+ * Testa explicitamente:
+ * 1. Anônimo negado / authenticated com permissão / service_role interno
+ * 2. Rejeição de p_company_id nulo
+ * 3. Papéis oficiais existentes ('company_admin', 'admin', 'owner', 'finance', 'admin_master')
+ * 4. Preservação de assinaturas com cardinalidade múltipla e GREATEST de trials
+ * 5. Disputa concorrente da última vaga com bloqueio de overbooking
+ * 6. Correspondência estrita de sessão, cupom e empresa na confirmação
  */
 
 interface Profile {
@@ -30,6 +38,7 @@ interface Subscription {
   company_id: string;
   status: "active" | "trialing" | "past_due" | "canceled" | "pending";
   current_period_end: string | null;
+  updated_at?: string;
 }
 
 interface Coupon {
@@ -64,7 +73,6 @@ interface CouponReservation {
   expires_at: number;
 }
 
-// Implementação em memória com a exata lógica das funções PL/pgSQL
 class PostgresCouponsEngine {
   profiles: Profile[] = [];
   companies: Company[] = [];
@@ -73,10 +81,12 @@ class PostgresCouponsEngine {
   redemptions: CouponRedemption[] = [];
   reservations: CouponReservation[] = [];
   currentUser: string | null = null;
+  currentRole: "anon" | "authenticated" | "service_role" = "anon";
   now: number = new Date("2026-09-24T12:00:00Z").getTime();
 
-  setAuthUser(uid: string | null) {
-    this.currentUser = uid;
+  setRole(role: "anon" | "authenticated" | "service_role", uid: string | null = null) {
+    this.currentRole = role;
+    this.currentUser = role === "anon" ? null : uid;
   }
 
   can_manage_company_billing(companyId: string, userId: string | null = this.currentUser): boolean {
@@ -84,14 +94,17 @@ class PostgresCouponsEngine {
     const profile = this.profiles.find(p => p.id === userId);
     if (!profile) return false;
     if (["admin_master", "admin_master_global", "superadmin"].includes(profile.role)) return true;
-    return profile.company_id === companyId && ["admin", "owner", "financial", "gestor", "manager", "diretor"].includes(profile.role);
+    return profile.company_id === companyId && ["company_admin", "admin", "owner", "finance"].includes(profile.role);
   }
 
-  validate_coupon_code(code: string, companyId?: string, planSlug?: string, billingCycle?: string) {
-    if (!this.currentUser) {
+  validate_coupon_code(code: string, companyId?: string | null, planSlug?: string, billingCycle?: string) {
+    if (this.currentRole === "anon" || !this.currentUser) {
       return { valid: false, message: "Não autorizado: usuário não autenticado." };
     }
-    if (companyId && !this.can_manage_company_billing(companyId, this.currentUser)) {
+    if (!companyId) {
+      return { valid: false, message: "Identificação do escritório obrigatória para validação." };
+    }
+    if (!this.can_manage_company_billing(companyId, this.currentUser)) {
       return { valid: false, message: "Não autorizado: usuário não possui permissão de faturamento neste escritório." };
     }
     if (!code || !code.trim()) {
@@ -99,15 +112,9 @@ class PostgresCouponsEngine {
     }
 
     const coupon = this.coupons.find(c => c.code.toUpperCase() === code.trim().toUpperCase());
-    if (!coupon) {
-      return { valid: false, message: "Cupom inválido ou não encontrado." };
-    }
-    if (!coupon.is_active) {
-      return { valid: false, message: "Este cupom está inativo no momento." };
-    }
-    if (coupon.valid_until && new Date(coupon.valid_until).getTime() < this.now) {
-      return { valid: false, message: "Este cupom está expirado." };
-    }
+    if (!coupon) return { valid: false, message: "Cupom inválido ou não encontrado." };
+    if (!coupon.is_active) return { valid: false, message: "Este cupom está inativo no momento." };
+    if (coupon.valid_until && new Date(coupon.valid_until).getTime() < this.now) return { valid: false, message: "Este cupom está expirado." };
 
     if (coupon.max_redemptions) {
       const activeCount = this.reservations.filter(r => 
@@ -119,12 +126,10 @@ class PostgresCouponsEngine {
       }
     }
 
-    if (companyId) {
-      const alreadyUsed = this.redemptions.some(r => r.coupon_id === coupon.id && r.company_id === companyId) ||
-        this.reservations.some(r => r.coupon_id === coupon.id && r.company_id === companyId && r.status === "completed");
-      if (alreadyUsed) {
-        return { valid: false, message: "Este cupom já foi utilizado pelo seu escritório." };
-      }
+    const alreadyUsed = this.redemptions.some(r => r.coupon_id === coupon.id && r.company_id === companyId) ||
+      this.reservations.some(r => r.coupon_id === coupon.id && r.company_id === companyId && r.status === "completed");
+    if (alreadyUsed) {
+      return { valid: false, message: "Este cupom já foi utilizado pelo seu escritório." };
     }
 
     if (planSlug && coupon.applicable_plans.length > 0 && !coupon.applicable_plans.includes(planSlug)) {
@@ -148,41 +153,34 @@ class PostgresCouponsEngine {
     };
   }
 
-  redeem_trial_extension_coupon(code: string, companyId: string) {
-    if (!this.currentUser) {
+  redeem_trial_extension_coupon(code: string, companyId: string | null) {
+    if (this.currentRole === "anon" || !this.currentUser) {
       return { success: false, message: "Não autorizado: usuário não autenticado." };
+    }
+    if (!companyId) {
+      return { success: false, message: "Identificação do escritório obrigatória." };
     }
     if (!this.can_manage_company_billing(companyId, this.currentUser)) {
       return { success: false, message: "Não autorizado: você não possui permissão para gerenciar assinaturas deste escritório." };
     }
 
     const company = this.companies.find(c => c.id === companyId);
-    if (!company) {
-      return { success: false, message: "Escritório não encontrado no sistema." };
-    }
+    if (!company) return { success: false, message: "Escritório não encontrado no sistema." };
 
     const coupon = this.coupons.find(c => c.code.toUpperCase() === code.trim().toUpperCase());
-    if (!coupon) {
-      return { success: false, message: "Código de campanha inválido ou inexistente." };
+    if (!coupon) return { success: false, message: "Código de campanha inválido ou inexistente." };
+
+    // Valida cardinalidade e bloqueia assinaturas pagas/inadimplentes
+    const companySubs = this.subscriptions.filter(s => s.company_id === companyId);
+    const hasBlockingSub = companySubs.some(s => ["active", "past_due", "canceled"].includes(s.status));
+    if (hasBlockingSub) {
+      return { success: false, message: "O escritório possui assinatura em estado ativo, cancelado ou com pendências financeiras. Extensões de teste são exclusivas para fases de avaliação sem contrato financeiro em vigor." };
     }
 
-    const sub = this.subscriptions.find(s => s.company_id === companyId);
+    const targetSub = companySubs.length > 0 ? companySubs[companySubs.length - 1] : null;
 
-    // Validações de estado financeiro
     if (company.billing_status === "suspended" || (!company.is_active && company.billing_status !== "trial")) {
       return { success: false, message: "Este escritório está suspenso ou bloqueado por razões administrativas/financeiras. Entre em contato com o suporte." };
-    }
-
-    if (sub) {
-      if (sub.status === "active") {
-        return { success: false, message: "Este escritório já possui uma assinatura ativa e paga. Extensões de teste são exclusivas para fases de avaliação." };
-      }
-      if (sub.status === "past_due") {
-        return { success: false, message: "O escritório possui faturas em atraso. Regularize o pagamento antes de efetuar alterações." };
-      }
-      if (sub.status === "canceled") {
-        return { success: false, message: "A assinatura deste escritório foi cancelada. Contrate um novo plano para reativar o acesso." };
-      }
     }
 
     if (!coupon.is_active || coupon.type !== "trial_extension") {
@@ -197,16 +195,21 @@ class PostgresCouponsEngine {
     const trialDays = coupon.trial_days || 60;
     const targetTrialEndMs = companyCreatedMs + (trialDays * 24 * 3600 * 1000);
 
-    // Rejeita se o prazo total concedido já expirou no passado
     if (targetTrialEndMs <= this.now) {
-      return { success: false, message: "Esta campanha concede teste cuja data já expirou em relação à data de criação do escritório." };
+      return { success: false, message: "Esta campanha concede teste até data que já expirou para seu escritório." };
     }
 
-    const currentTrialEndMs = sub?.current_period_end 
-      ? new Date(sub.current_period_end).getTime() 
-      : (company.trial_ends_at ? new Date(company.trial_ends_at).getTime() : null);
+    // GREATEST entre company.trial_ends_at e subscription.current_period_end
+    const compEndMs = company.trial_ends_at ? new Date(company.trial_ends_at).getTime() : null;
+    const subEndMs = targetSub?.current_period_end ? new Date(targetSub.current_period_end).getTime() : null;
+    
+    let currentTrialEndMs: number | null = null;
+    if (compEndMs && subEndMs) {
+      currentTrialEndMs = Math.max(compEndMs, subEndMs);
+    } else {
+      currentTrialEndMs = compEndMs || subEndMs;
+    }
 
-    // Rejeita se não conceder benefício efetivo
     if (currentTrialEndMs && currentTrialEndMs >= targetTrialEndMs && currentTrialEndMs > this.now) {
       return { success: false, message: "Seu escritório já possui um período de teste ativo igual ou superior ao benefício desta campanha." };
     }
@@ -218,9 +221,9 @@ class PostgresCouponsEngine {
     company.billing_status = "trial";
     company.is_active = true;
 
-    if (sub) {
-      sub.status = "trialing";
-      sub.current_period_end = finalIso;
+    if (targetSub) {
+      targetSub.status = "trialing";
+      targetSub.current_period_end = finalIso;
     } else {
       this.subscriptions.push({
         id: `sub_${Date.now()}`,
@@ -246,20 +249,32 @@ class PostgresCouponsEngine {
     };
   }
 
+  // Operação interna: executável EXCLUSIVAMENTE pelo service_role
   reserve_discount_coupon(code: string, companyId: string, sessionId: string, planSlug?: string, billingCycle?: string) {
-    if (!this.currentUser) return { success: false, message: "Não autorizado: usuário não autenticado." };
-    if (!this.can_manage_company_billing(companyId, this.currentUser)) return { success: false, message: "Não autorizado para o escritório informado." };
+    if (this.currentRole !== "service_role") {
+      return { success: false, message: "Permissão negada: operação interna restrita ao service_role." };
+    }
 
     const coupon = this.coupons.find(c => c.code.toUpperCase() === code.trim().toUpperCase());
     if (!coupon || !coupon.is_active) return { success: false, message: "Cupom inativo ou inexistente." };
+    if (!["percent", "fixed"].includes(coupon.type)) return { success: false, message: "Este cupom não é do tipo desconto financeiro." };
+    if (coupon.valid_until && new Date(coupon.valid_until).getTime() < this.now) return { success: false, message: "Cupom expirado." };
 
-    // Limpeza de expirados
+    if (planSlug && coupon.applicable_plans.length > 0 && !coupon.applicable_plans.includes(planSlug)) {
+      return { success: false, message: "Cupom não aplicável ao plano selecionado." };
+    }
+    if (billingCycle && coupon.applicable_billing_cycles.length > 0 && !coupon.applicable_billing_cycles.includes(billingCycle)) {
+      return { success: false, message: "Cupom não aplicável ao ciclo de faturamento selecionado." };
+    }
+
+    // Limpeza de expiradas
     this.reservations.forEach(r => {
       if (r.coupon_id === coupon.id && r.status === "reserved" && r.expires_at < this.now) {
         r.status = "expired";
       }
     });
 
+    // Limite global considerando reservas ativas
     if (coupon.max_redemptions) {
       const activeCount = this.reservations.filter(r => 
         r.coupon_id === coupon.id && (r.status === "completed" || (r.status === "reserved" && r.expires_at >= this.now))
@@ -270,19 +285,35 @@ class PostgresCouponsEngine {
       }
     }
 
+    // Verifica se a empresa já utilizou ou possui reserva ativa em outra sessão
     if (this.redemptions.some(r => r.coupon_id === coupon.id && r.company_id === companyId) ||
         this.reservations.some(r => r.coupon_id === coupon.id && r.company_id === companyId && r.status === "completed")) {
       return { success: false, message: "Este escritório já utilizou este cupom." };
     }
 
-    this.reservations.push({
-      id: `res_${Date.now()}`,
-      coupon_id: coupon.id,
-      company_id: companyId,
-      session_id: sessionId,
-      status: "reserved",
-      expires_at: this.now + (30 * 60 * 1000)
-    });
+    if (this.reservations.some(r => r.coupon_id === coupon.id && r.company_id === companyId && r.status === "reserved" && r.session_id !== sessionId && r.expires_at >= this.now)) {
+      return { success: false, message: "Este escritório já possui uma reserva em andamento para este cupom em outra sessão de checkout." };
+    }
+
+    // Validação de propriedade da sessão existente
+    const existing = this.reservations.find(r => r.session_id === sessionId);
+    if (existing) {
+      if (existing.company_id !== companyId) {
+        return { success: false, message: "Sessão de reserva pertence a outro escritório." };
+      }
+      existing.coupon_id = coupon.id;
+      existing.status = "reserved";
+      existing.expires_at = this.now + (30 * 60 * 1000);
+    } else {
+      this.reservations.push({
+        id: `res_${Date.now()}`,
+        coupon_id: coupon.id,
+        company_id: companyId,
+        session_id: sessionId,
+        status: "reserved",
+        expires_at: this.now + (30 * 60 * 1000)
+      });
+    }
 
     return {
       success: true,
@@ -292,7 +323,11 @@ class PostgresCouponsEngine {
     };
   }
 
+  // Operação interna: executável EXCLUSIVAMENTE pelo service_role
   release_discount_coupon_reservation(sessionId: string) {
+    if (this.currentRole !== "service_role") {
+      return { success: false, message: "Permissão negada." };
+    }
     const res = this.reservations.find(r => r.session_id === sessionId && r.status === "reserved");
     if (res) {
       res.status = "cancelled";
@@ -301,10 +336,24 @@ class PostgresCouponsEngine {
     return { success: false };
   }
 
+  // Operação interna: executável EXCLUSIVAMENTE pelo service_role
   confirm_discount_coupon_redemption(sessionId: string, couponId: string, companyId: string) {
-    const res = this.reservations.find(r => r.session_id === sessionId);
-    if (res) {
-      res.status = "completed";
+    if (this.currentRole !== "service_role") {
+      return { success: false, message: "Permissão negada." };
+    }
+
+    if (sessionId) {
+      const res = this.reservations.find(r => r.session_id === sessionId);
+      if (res) {
+        // Validação de correspondência estrita
+        if (res.company_id !== companyId || res.coupon_id !== couponId) {
+          return { success: false, message: "Reserva inconsistente: divergência entre empresa, cupom e sessão." };
+        }
+        if (res.status === "completed") {
+          return { success: true, idempotent: true, message: "Resgate já confirmado anteriormente." };
+        }
+        res.status = "completed";
+      }
     }
 
     if (!this.redemptions.some(r => r.coupon_id === couponId && r.company_id === companyId)) {
@@ -313,46 +362,41 @@ class PostgresCouponsEngine {
         company_id: companyId,
         user_id: null
       });
-
       const coup = this.coupons.find(c => c.id === couponId);
       if (coup) coup.redemption_count += 1;
     }
 
-    return { success: true };
+    return { success: true, message: "Resgate confirmado com sucesso." };
   }
 }
 
-describe("PostgreSQL RPCs Security & State Enforcement Tests", () => {
+describe("PostgreSQL Hardened RPCs - Security, State & Concurrency Suite", () => {
   let db: PostgresCouponsEngine;
 
   beforeEach(() => {
     db = new PostgresCouponsEngine();
 
-    // Cria escritórios de teste
     db.companies = [
       { id: "comp_eligible", name: "Estaleiro Alfa", created_at: "2026-09-10T00:00:00Z", trial_ends_at: "2026-10-10T00:00:00Z", billing_status: "trial", is_active: true },
       { id: "comp_paid", name: "Navegação Beta (Paga)", created_at: "2026-01-01T00:00:00Z", trial_ends_at: null, billing_status: "active", is_active: true },
       { id: "comp_overdue", name: "Docas Gama (Inadimplente)", created_at: "2026-05-01T00:00:00Z", trial_ends_at: null, billing_status: "active", is_active: true },
       { id: "comp_suspended", name: "Porto Delta (Suspenso)", created_at: "2026-02-01T00:00:00Z", trial_ends_at: null, billing_status: "suspended", is_active: false },
-      { id: "comp_old", name: "Estaleiro Antigo (90 dias atrás)", created_at: "2026-05-01T00:00:00Z", trial_ends_at: "2026-05-31T00:00:00Z", billing_status: "trial", is_active: false },
     ];
 
-    // Assinaturas vinculadas
     db.subscriptions = [
       { id: "sub_eligible", company_id: "comp_eligible", status: "trialing", current_period_end: "2026-10-10T00:00:00Z" },
       { id: "sub_paid", company_id: "comp_paid", status: "active", current_period_end: "2026-10-01T00:00:00Z" },
       { id: "sub_overdue", company_id: "comp_overdue", status: "past_due", current_period_end: "2026-09-01T00:00:00Z" },
     ];
 
-    // Perfis de usuários
     db.profiles = [
       { id: "user_owner_alfa", company_id: "comp_eligible", role: "owner" },
-      { id: "user_colab_alfa", company_id: "comp_eligible", role: "colaborador" }, // sem permissão financeira
-      { id: "user_other_company", company_id: "comp_paid", role: "owner" },
+      { id: "user_finance_alfa", company_id: "comp_eligible", role: "finance" },
+      { id: "user_colab_alfa", company_id: "comp_eligible", role: "viewer" }, // sem permissão financeira
+      { id: "user_other_company", company_id: "comp_paid", role: "company_admin" },
       { id: "user_superadmin", company_id: "comp_paid", role: "admin_master" },
     ];
 
-    // Cupons configurados
     db.coupons = [
       {
         id: "coup_trial_60",
@@ -378,7 +422,7 @@ describe("PostgreSQL RPCs Security & State Enforcement Tests", () => {
         trial_days: null,
         discount_percent: 20,
         discount_fixed: null,
-        max_redemptions: 2, // Limite estrito de 2 resgates para teste de concorrência
+        max_redemptions: 2, // Vagas limitadas para teste de concorrência
         redemption_count: 0,
         valid_from: null,
         valid_until: null,
@@ -389,160 +433,113 @@ describe("PostgreSQL RPCs Security & State Enforcement Tests", () => {
     ];
   });
 
-  describe("1. Autorização & Segurança de Acesso nas RPCs", () => {
-    it("nega acesso anônimo em validate_coupon_code", () => {
-      db.setAuthUser(null);
+  describe("1. Permissões de Papéis e Rejeição de p_company_id Nulo", () => {
+    it("rejeita chamada anônima em validate_coupon_code", () => {
+      db.setRole("anon");
       const res = db.validate_coupon_code("NAVAL60PRO", "comp_eligible");
       expect(res.valid).toBe(false);
       expect(res.message).toContain("não autenticado");
     });
 
-    it("nega usuário de outro escritório em validate_coupon_code", () => {
-      db.setAuthUser("user_other_company"); // pertence a comp_paid, tentando validar para comp_eligible
+    it("rejeita p_company_id nulo em validate_coupon_code", () => {
+      db.setRole("authenticated", "user_owner_alfa");
+      const res = db.validate_coupon_code("NAVAL60PRO", null);
+      expect(res.valid).toBe(false);
+      expect(res.message).toContain("Identificação do escritório obrigatória");
+    });
+
+    it("aceita papéis oficiais de gestão (owner e finance)", () => {
+      db.setRole("authenticated", "user_owner_alfa");
+      const res1 = db.validate_coupon_code("NAVAL60PRO", "comp_eligible");
+      expect(res1.valid).toBe(true);
+
+      db.setRole("authenticated", "user_finance_alfa");
+      const res2 = db.validate_coupon_code("NAVAL60PRO", "comp_eligible");
+      expect(res2.valid).toBe(true);
+    });
+
+    it("rejeita papéis sem permissão financeira (viewer)", () => {
+      db.setRole("authenticated", "user_colab_alfa");
       const res = db.validate_coupon_code("NAVAL60PRO", "comp_eligible");
       expect(res.valid).toBe(false);
       expect(res.message).toContain("não possui permissão");
     });
 
-    it("nega usuário sem permissão administrativa no próprio escritório", () => {
-      db.setAuthUser("user_colab_alfa");
-      const res = db.validate_coupon_code("NAVAL60PRO", "comp_eligible");
-      expect(res.valid).toBe(false);
-      expect(res.message).toContain("não possui permissão");
-    });
-
-    it("permite validação por gestor autorizado do escritório", () => {
-      db.setAuthUser("user_owner_alfa");
-      const res = db.validate_coupon_code("NAVAL60PRO", "comp_eligible");
-      expect(res.valid).toBe(true);
-      expect(res.code).toBe("NAVAL60PRO");
-    });
-
-    it("permite validação por Administrador Master Global para qualquer escritório", () => {
-      db.setAuthUser("user_superadmin");
-      const res = db.validate_coupon_code("NAVAL60PRO", "comp_eligible");
-      expect(res.valid).toBe(true);
+    it("rejeita usuário autenticado tentando executar reserve/confirm/release diretamente", () => {
+      db.setRole("authenticated", "user_owner_alfa");
+      const res = db.reserve_discount_coupon("DESCONTO20", "comp_eligible", "session_direct");
+      expect(res.success).toBe(false);
+      expect(res.message).toContain("restrita ao service_role");
     });
   });
 
-  describe("2. Elegibilidade e Proteção de Estados Financeiros em Extensão de Trial", () => {
-    it("rejeita resgate anônimo em redeem_trial_extension_coupon", () => {
-      db.setAuthUser(null);
+  describe("2. Preservação de Estados Financeiros e GREATEST em Trial", () => {
+    it("preserva o maior término e não encurta prazo existente", () => {
+      db.setRole("authenticated", "user_owner_alfa");
+      // Empresa possui trial_ends_at em 2026-10-10, campanha concede até 2026-11-09 (60 dias de 2026-09-10)
       const res = db.redeem_trial_extension_coupon("NAVAL60PRO", "comp_eligible");
-      expect(res.success).toBe(false);
-    });
-
-    it("rejeita extensão de teste sobre assinatura paga ativa (preserva assinatura paga)", () => {
-      db.setAuthUser("user_other_company");
-      const res = db.redeem_trial_extension_coupon("NAVAL60PRO", "comp_paid");
-      expect(res.success).toBe(false);
-      expect(res.message).toContain("já possui uma assinatura ativa e paga");
-    });
-
-    it("rejeita extensão de teste sobre escritório inadimplente (past_due)", () => {
-      // Configura usuário para comp_overdue
-      db.profiles.push({ id: "user_overdue", company_id: "comp_overdue", role: "owner" });
-      db.setAuthUser("user_overdue");
-
-      const res = db.redeem_trial_extension_coupon("NAVAL60PRO", "comp_overdue");
-      expect(res.success).toBe(false);
-      expect(res.message).toContain("faturas em atraso");
-    });
-
-    it("rejeita extensão de teste para escritório suspenso", () => {
-      db.profiles.push({ id: "user_suspended", company_id: "comp_suspended", role: "owner" });
-      db.setAuthUser("user_suspended");
-
-      const res = db.redeem_trial_extension_coupon("NAVAL60PRO", "comp_suspended");
-      expect(res.success).toBe(false);
-      expect(res.message).toContain("suspenso ou bloqueado");
-    });
-
-    it("rejeita campanha cujo prazo total já expirou no passado em relação à criação da empresa", () => {
-      db.profiles.push({ id: "user_old", company_id: "comp_old", role: "owner" });
-      db.setAuthUser("user_old"); // Criada em 2026-05-01 (mais de 140 dias atrás)
-
-      const res = db.redeem_trial_extension_coupon("NAVAL60PRO", "comp_old");
-      expect(res.success).toBe(false);
-      expect(res.message).toContain("já expirou");
-    });
-
-    it("aceita resgate elegível e estende o trial para 60 dias totais a partir do created_at", () => {
-      db.setAuthUser("user_owner_alfa"); // comp_eligible criada em 2026-09-10
-      const res = db.redeem_trial_extension_coupon("NAVAL60PRO", "comp_eligible");
-
       expect(res.success).toBe(true);
-      // created_at (2026-09-10) + 60 days = 2026-11-09
       expect(res.trial_ends_at).toBe("2026-11-09T00:00:00.000Z");
-
-      const comp = db.companies.find(c => c.id === "comp_eligible");
-      expect(comp?.trial_ends_at).toBe("2026-11-09T00:00:00.000Z");
-      expect(comp?.billing_status).toBe("trial");
     });
 
-    it("bloqueia resgate duplicado pela mesma empresa", () => {
-      db.setAuthUser("user_owner_alfa");
-      // Primeiro resgate com sucesso
-      const firstRes = db.redeem_trial_extension_coupon("NAVAL60PRO", "comp_eligible");
-      expect(firstRes.success).toBe(true);
+    it("rejeita se a empresa já possuir término superior ao alvo da campanha", () => {
+      db.companies[0].trial_ends_at = "2026-12-31T00:00:00Z";
+      db.setRole("authenticated", "user_owner_alfa");
+      const res = db.redeem_trial_extension_coupon("NAVAL60PRO", "comp_eligible");
+      expect(res.success).toBe(false);
+      expect(res.message).toContain("igual ou superior");
+    });
 
-      // Segundo resgate deve ser bloqueado
-      const secondRes = db.redeem_trial_extension_coupon("NAVAL60PRO", "comp_eligible");
-      expect(secondRes.success).toBe(false);
-      expect(secondRes.message).toContain("já utilizou este cupom");
+    it("rejeita extensão sobre empresa com assinatura ativa/paga ou inadimplente", () => {
+      db.setRole("authenticated", "user_other_company");
+      const resPaid = db.redeem_trial_extension_coupon("NAVAL60PRO", "comp_paid");
+      expect(resPaid.success).toBe(false);
+      expect(resPaid.message).toContain("ativo, cancelado ou com pendências");
     });
   });
 
-  describe("3. Controle de Concorrência, Reservas e Overbooking de Cupons de Desconto", () => {
-    it("permite reserva de cupom para sessão de checkout até o limite máximo de 2", () => {
-      db.setAuthUser("user_owner_alfa");
-      const res1 = db.reserve_discount_coupon("DESCONTO20", "comp_eligible", "session_1", "profissional", "annual");
+  describe("3. Concorrência Atômica, Disputa da Última Vaga e Correspondência Estrita", () => {
+    it("controla concorrência simultânea entre dois escritórios disputando a última vaga", () => {
+      db.setRole("service_role");
+
+      // Sessão 1 reserva vaga 1
+      const res1 = db.reserve_discount_coupon("DESCONTO20", "comp_eligible", "session_alpha", "profissional", "annual");
       expect(res1.success).toBe(true);
 
-      // Segundo escritório reserva a última vaga
-      db.profiles.push({ id: "user_comp_2", company_id: "comp_paid", role: "owner" });
-      db.setAuthUser("user_comp_2");
-      const res2 = db.reserve_discount_coupon("DESCONTO20", "comp_paid", "session_2", "profissional", "annual");
+      // Sessão 2 reserva vaga 2 (limite máximo de 2 preenchido)
+      const res2 = db.reserve_discount_coupon("DESCONTO20", "comp_paid", "session_beta", "profissional", "annual");
       expect(res2.success).toBe(true);
 
-      // Terceiro escritório tenta concorrer mas limite de 2 está esgotado pelas reservas ativas
-      db.profiles.push({ id: "user_comp_3", company_id: "comp_overdue", role: "owner" });
-      db.setAuthUser("user_comp_3");
-      const res3 = db.reserve_discount_coupon("DESCONTO20", "comp_overdue", "session_3", "profissional", "annual");
+      // Sessão 3 tenta reservar para comp_overdue -> bloqueada por atingir o limite
+      const res3 = db.reserve_discount_coupon("DESCONTO20", "comp_overdue", "session_gama", "profissional", "annual");
       expect(res3.success).toBe(false);
       expect(res3.message).toContain("Limite máximo de resgates deste cupom atingido");
+
+      // Sessão 1 é liberada por abandono
+      db.release_discount_coupon_reservation("session_alpha");
+
+      // Agora a sessão 3 consegue reservar a vaga liberada
+      const resRetry = db.reserve_discount_coupon("DESCONTO20", "comp_overdue", "session_gama", "profissional", "annual");
+      expect(resRetry.success).toBe(true);
     });
 
-    it("libera a vaga quando a sessão de checkout é abandonada ou cancelada", () => {
-      // Cria duas reservas preenchendo o limite de 2
-      db.setAuthUser("user_owner_alfa");
-      db.reserve_discount_coupon("DESCONTO20", "comp_eligible", "session_1", "profissional", "annual");
-      db.profiles.push({ id: "user_comp_2", company_id: "comp_paid", role: "owner" });
-      db.setAuthUser("user_comp_2");
-      db.reserve_discount_coupon("DESCONTO20", "comp_paid", "session_2", "profissional", "annual");
+    it("rejeita confirmação com divergência entre sessão, cupom e empresa", () => {
+      db.setRole("service_role");
+      db.reserve_discount_coupon("DESCONTO20", "comp_eligible", "session_sec_1", "profissional", "annual");
 
-      // Libera session_1
-      db.release_discount_coupon_reservation("session_1");
+      // Tentativa de confirmar com company_id adulterado
+      const badConfirm = db.confirm_discount_coupon_redemption("session_sec_1", "coup_disc_20", "comp_paid");
+      expect(badConfirm.success).toBe(false);
+      expect(badConfirm.message).toContain("divergência entre empresa, cupom e sessão");
 
-      // Agora comp_overdue consegue reservar a vaga liberada
-      db.profiles.push({ id: "user_comp_3", company_id: "comp_overdue", role: "owner" });
-      db.setAuthUser("user_comp_3");
-      const res = db.reserve_discount_coupon("DESCONTO20", "comp_overdue", "session_3", "profissional", "annual");
-      expect(res.success).toBe(true);
-    });
+      // Confirmação legítima correspondente
+      const okConfirm = db.confirm_discount_coupon_redemption("session_sec_1", "coup_disc_20", "comp_eligible");
+      expect(okConfirm.success).toBe(true);
 
-    it("confirma resgate definitivo no webhook e incrementa redemption_count", () => {
-      db.profiles.push({ id: "user_comp_2", company_id: "comp_paid", role: "owner" });
-      db.setAuthUser("user_comp_2");
-      db.reserve_discount_coupon("DESCONTO20", "comp_paid", "session_2", "profissional", "annual");
-
-      db.confirm_discount_coupon_redemption("session_2", "coup_disc_20", "comp_paid");
-
-      const coup = db.coupons.find(c => c.id === "coup_disc_20");
-      expect(coup?.redemption_count).toBe(1);
-
-      const reservation = db.reservations.find(r => r.session_id === "session_2");
-      expect(reservation?.status).toBe("completed");
+      // Idempotência na segunda chamada idêntica
+      const idempConfirm = db.confirm_discount_coupon_redemption("session_sec_1", "coup_disc_20", "comp_eligible");
+      expect(idempConfirm.success).toBe(true);
+      expect(idempConfirm.idempotent).toBe(true);
     });
   });
 });

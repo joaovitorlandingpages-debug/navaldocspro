@@ -3,13 +3,16 @@
 -- ====================================================================
 -- 1. Criação das tabelas public.coupons, public.coupon_redemptions e public.coupon_reservations
 -- 2. RLS Restrito a Administradores Master
--- 3. Função de permissão public.can_manage_company_billing
--- 4. RPC public.validate_coupon_code com autorização obrigatória e sem acesso anônimo
--- 5. RPC public.redeem_trial_extension_coupon com validação de estados (bloqueia paid/past_due/suspended),
---    bloqueio atômico de concorrência (companies, coupons, subscriptions FOR UPDATE) e cálculo de benefício real
--- 6. Mecanismo de reserva/liberação/confirmação para cupons de desconto concorrentes
--- 7. Revogação explícita de EXECUTE de PUBLIC e anon
--- 8. SEM seeds de teste ou sobrescrita de dados
+-- 3. Função de permissão public.can_manage_company_billing usando papéis oficiais
+-- 4. RPC public.validate_coupon_code: exige p_company_id, valida autenticação e autorização
+-- 5. RPC public.redeem_trial_extension_coupon: valida cardinalidade de assinaturas, usa GREATEST
+--    para evitar encurtamento de prazos, bloqueia empresas suspensas/inadimplentes/pagas
+-- 6. RPC public.reserve_discount_coupon: restrita a service_role, valida propriedade de sessão,
+--    bloqueia overbooking concorrente e valida elegibilidade de plano/ciclo/validade
+-- 7. RPC public.confirm_discount_coupon_redemption: restrita a service_role, valida correspondência
+--    estrita entre reserva, session_id, coupon_id e company_id com idempotência
+-- 8. RPC public.release_discount_coupon_reservation: restrita a service_role
+-- 9. Revogação explícita de EXECUTE de PUBLIC, anon e authenticated para operações internas
 -- ====================================================================
 
 BEGIN;
@@ -61,7 +64,7 @@ CREATE TABLE IF NOT EXISTS public.coupon_reservations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   coupon_id UUID NOT NULL REFERENCES public.coupons(id) ON DELETE CASCADE,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
-  session_id TEXT UNIQUE,
+  session_id TEXT UNIQUE NOT NULL,
   status TEXT NOT NULL DEFAULT 'reserved' CHECK (status IN ('reserved', 'completed', 'cancelled', 'expired')),
   reserved_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   expires_at TIMESTAMP WITH TIME ZONE DEFAULT (timezone('utc'::text, now()) + interval '30 minutes'),
@@ -77,12 +80,11 @@ ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.coupon_redemptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.coupon_reservations ENABLE ROW LEVEL SECURITY;
 
--- Limpeza de políticas
+-- Limpeza de políticas anteriores
 DROP POLICY IF EXISTS "Public can view active coupons" ON public.coupons;
 DROP POLICY IF EXISTS "Admins can manage coupons" ON public.coupons;
 DROP POLICY IF EXISTS "Companies can view their own redemptions" ON public.coupon_redemptions;
 DROP POLICY IF EXISTS "Admins can view all redemptions" ON public.coupon_redemptions;
-DROP POLICY IF EXISTS "Admins can manage all redemptions" ON public.coupon_redemptions;
 DROP POLICY IF EXISTS "Companies can view their own reservations" ON public.coupon_reservations;
 DROP POLICY IF EXISTS "Admins can manage all reservations" ON public.coupon_reservations;
 
@@ -98,7 +100,7 @@ ON public.coupon_redemptions FOR SELECT
 TO authenticated
 USING (company_id = public.current_user_company_id());
 
-CREATE POLICY "Admins can manage all redemptions"
+CREATE POLICY "Admins can view all redemptions"
 ON public.coupon_redemptions FOR ALL
 TO authenticated
 USING (public.is_admin_master())
@@ -116,8 +118,9 @@ USING (public.is_admin_master())
 WITH CHECK (public.is_admin_master());
 
 -- ====================================================================
--- Função Auxiliar: Verificação de Permissão Financeira/Administrativa no Escritório
+-- Função Auxiliar: Verificação de Permissão Financeira no Escritório
 -- ====================================================================
+-- Utiliza estritamente os papéis definidos no projeto (sem 'OR role IS NULL')
 CREATE OR REPLACE FUNCTION public.can_manage_company_billing(
   p_company_id UUID,
   p_user_id UUID DEFAULT auth.uid()
@@ -133,7 +136,7 @@ BEGIN
     RETURN false;
   END IF;
 
-  -- Administradores Master Globais sempre possuem acesso
+  -- 1. Administrador Master Global
   IF EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = p_user_id AND role IN ('admin_master', 'admin_master_global', 'superadmin')
@@ -141,15 +144,12 @@ BEGIN
     RETURN true;
   END IF;
 
-  -- Usuário deve pertencer ao escritório e ter perfil com autorização de faturamento
+  -- 2. Membro da empresa com papel oficial administrativo ou financeiro
   RETURN EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = p_user_id
       AND company_id = p_company_id
-      AND (
-        role IN ('admin', 'owner', 'financial', 'gestor', 'manager', 'diretor')
-        OR role IS NULL
-      )
+      AND role IN ('company_admin', 'admin', 'owner', 'finance')
   );
 END;
 $$;
@@ -158,7 +158,7 @@ REVOKE ALL ON FUNCTION public.can_manage_company_billing(UUID, UUID) FROM PUBLIC
 GRANT EXECUTE ON FUNCTION public.can_manage_company_billing(UUID, UUID) TO authenticated, service_role;
 
 -- ====================================================================
--- RPC 1: Validação Segura de Cupom com Autenticação e Autorização Obrigatórias
+-- RPC 1: Validação Segura de Cupom com Autenticação e p_company_id Obrigatório
 -- ====================================================================
 CREATE OR REPLACE FUNCTION public.validate_coupon_code(
   p_code TEXT,
@@ -175,19 +175,20 @@ DECLARE
   v_uid UUID := auth.uid();
   v_coupon RECORD;
   v_already_redeemed BOOLEAN;
-  v_has_active_reservation BOOLEAN;
   v_now TIMESTAMP WITH TIME ZONE := timezone('utc'::text, now());
   v_active_redemptions_count INTEGER;
 BEGIN
-  -- 1. AUTORIZAÇÃO: Bloqueia acesso não-autenticado ou usuário sem vínculo com a empresa
+  -- 1. Validação de identificação da empresa e autenticação
+  IF p_company_id IS NULL THEN
+    RETURN jsonb_build_object('valid', false, 'message', 'Identificação do escritório obrigatória para validação.');
+  END IF;
+
   IF v_uid IS NULL THEN
     RETURN jsonb_build_object('valid', false, 'message', 'Não autorizado: usuário não autenticado.');
   END IF;
 
-  IF p_company_id IS NOT NULL THEN
-    IF NOT public.can_manage_company_billing(p_company_id, v_uid) THEN
-      RETURN jsonb_build_object('valid', false, 'message', 'Não autorizado: usuário não possui permissão de faturamento neste escritório.');
-    END IF;
+  IF NOT public.can_manage_company_billing(p_company_id, v_uid) THEN
+    RETURN jsonb_build_object('valid', false, 'message', 'Não autorizado: usuário não possui permissão de faturamento neste escritório.');
   END IF;
 
   IF p_code IS NULL OR trim(p_code) = '' THEN
@@ -216,7 +217,7 @@ BEGIN
     RETURN jsonb_build_object('valid', false, 'message', 'Este cupom está expirado.');
   END IF;
 
-  -- 3. Cálculo preciso de resgates concluídos + reservas ativas
+  -- 3. Cálculo de resgates confirmados + reservas ativas
   IF v_coupon.max_redemptions IS NOT NULL THEN
     SELECT COUNT(*) INTO v_active_redemptions_count
     FROM public.coupon_reservations
@@ -228,27 +229,25 @@ BEGIN
     END IF;
   END IF;
 
-  -- 4. Validação de uso prévio por este escritório
-  IF p_company_id IS NOT NULL THEN
-    SELECT EXISTS (
-      SELECT 1 FROM public.coupon_redemptions
-      WHERE coupon_id = v_coupon.id AND company_id = p_company_id
-    ) INTO v_already_redeemed;
+  -- 4. Validação de duplicidade por escritório
+  SELECT EXISTS (
+    SELECT 1 FROM public.coupon_redemptions
+    WHERE coupon_id = v_coupon.id AND company_id = p_company_id
+  ) INTO v_already_redeemed;
 
-    IF v_already_redeemed THEN
-      RETURN jsonb_build_object('valid', false, 'message', 'Este cupom já foi utilizado pelo seu escritório.');
-    END IF;
+  IF v_already_redeemed THEN
+    RETURN jsonb_build_object('valid', false, 'message', 'Este cupom já foi utilizado pelo seu escritório.');
+  END IF;
 
-    SELECT EXISTS (
-      SELECT 1 FROM public.coupon_reservations
-      WHERE coupon_id = v_coupon.id 
-        AND company_id = p_company_id
-        AND status = 'completed'
-    ) INTO v_already_redeemed;
+  SELECT EXISTS (
+    SELECT 1 FROM public.coupon_reservations
+    WHERE coupon_id = v_coupon.id 
+      AND company_id = p_company_id
+      AND status = 'completed'
+  ) INTO v_already_redeemed;
 
-    IF v_already_redeemed THEN
-      RETURN jsonb_build_object('valid', false, 'message', 'Este cupom já foi utilizado pelo seu escritório.');
-    END IF;
+  IF v_already_redeemed THEN
+    RETURN jsonb_build_object('valid', false, 'message', 'Este cupom já foi utilizado pelo seu escritório.');
   END IF;
 
   -- 5. Validação de plano e ciclo
@@ -264,7 +263,7 @@ BEGIN
     END IF;
   END IF;
 
-  -- 6. Retorno sanitizado
+  -- 6. Retorno seguro
   RETURN jsonb_build_object(
     'valid', true,
     'id', v_coupon.id,
@@ -282,7 +281,7 @@ END;
 $$;
 
 -- ====================================================================
--- RPC 2: Resgate de Extensão de Teste Gratuito (Sem Cartão) com Validação Estrita de Estado
+-- RPC 2: Resgate Seguro de Extensão de Teste
 -- ====================================================================
 CREATE OR REPLACE FUNCTION public.redeem_trial_extension_coupon(
   p_code TEXT,
@@ -298,6 +297,8 @@ DECLARE
   v_coupon RECORD;
   v_company RECORD;
   v_subscription RECORD;
+  v_sub_count INTEGER;
+  v_has_blocking_sub BOOLEAN := false;
   v_already_redeemed BOOLEAN;
   v_now TIMESTAMP WITH TIME ZONE := timezone('utc'::text, now());
   v_company_created TIMESTAMP WITH TIME ZONE;
@@ -306,13 +307,13 @@ DECLARE
   v_final_trial_end TIMESTAMP WITH TIME ZONE;
   v_trial_days INTEGER;
 BEGIN
-  -- 1. AUTORIZAÇÃO: Usuário autenticado e com permissão financeira no escritório
+  -- 1. AUTORIZAÇÃO: Usuário autenticado e com papel de gestão financeira
   IF v_uid IS NULL THEN
     RETURN jsonb_build_object('success', false, 'message', 'Não autorizado: usuário não autenticado.');
   END IF;
 
   IF p_company_id IS NULL THEN
-    RETURN jsonb_build_object('success', false, 'message', 'Identificação do escritório não fornecida.');
+    RETURN jsonb_build_object('success', false, 'message', 'Identificação do escritório obrigatória.');
   END IF;
 
   IF NOT public.can_manage_company_billing(p_company_id, v_uid) THEN
@@ -340,32 +341,35 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'message', 'Código de campanha inválido ou inexistente.');
   END IF;
 
-  -- 2.3. Bloqueia a linha da Assinatura (se existir)
-  SELECT * INTO v_subscription
+  -- 2.3. Verificação de cardinalidade e bloqueio de assinaturas vinculadas
+  SELECT COUNT(*) INTO v_sub_count
   FROM public.subscriptions
-  WHERE company_id = p_company_id
-  FOR UPDATE;
+  WHERE company_id = p_company_id;
 
-  -- 3. VALIDAÇÃO DE ESTADO FINANCEIRO: PRESERVAÇÃO DE ASSINATURAS PAGAS E BLOQUEIOS
-  IF v_company.billing_status = 'suspended' OR (v_company.is_active = false AND v_company.billing_status != 'trial' AND v_company.billing_status IS NOT NULL) THEN
-    RETURN jsonb_build_object('success', false, 'message', 'Este escritório está suspenso ou bloqueado por razões administrativas/financeiras. Entre em contato com o suporte.');
+  IF v_sub_count > 0 THEN
+    -- Verifica se existe qualquer assinatura em estado que bloqueie extensão de teste
+    SELECT EXISTS (
+      SELECT 1 FROM public.subscriptions
+      WHERE company_id = p_company_id
+        AND status IN ('active', 'past_due', 'canceled')
+    ) INTO v_has_blocking_sub;
+
+    IF v_has_blocking_sub THEN
+      RETURN jsonb_build_object('success', false, 'message', 'O escritório possui assinatura em estado ativo, cancelado ou com pendências financeiras. Extensões de teste são exclusivas para fases de avaliação sem contrato financeiro em vigor.');
+    END IF;
+
+    -- Bloqueia a assinatura de teste mais recente
+    SELECT * INTO v_subscription
+    FROM public.subscriptions
+    WHERE company_id = p_company_id
+    ORDER BY updated_at DESC
+    LIMIT 1
+    FOR UPDATE;
   END IF;
 
-  IF v_subscription.id IS NOT NULL THEN
-    -- Não pode sobrescrever assinatura paga ativa
-    IF v_subscription.status = 'active' THEN
-      RETURN jsonb_build_object('success', false, 'message', 'Este escritório já possui uma assinatura ativa e paga. Extensões de teste são exclusivas para fases de avaliação.');
-    END IF;
-
-    -- Não pode aplicar sobre inadimplência/carência de pagamento
-    IF v_subscription.status = 'past_due' THEN
-      RETURN jsonb_build_object('success', false, 'message', 'O escritório possui faturas em atraso. Regularize o pagamento antes de efetuar alterações.');
-    END IF;
-
-    -- Não pode aplicar sobre assinatura cancelada
-    IF v_subscription.status = 'canceled' THEN
-      RETURN jsonb_build_object('success', false, 'message', 'A assinatura deste escritório foi cancelada. Contrate um novo plano para reativar o acesso.');
-    END IF;
+  -- 3. VALIDAÇÃO DE BLOQUEIOS DO ESCRITÓRIO
+  IF v_company.billing_status = 'suspended' OR (v_company.is_active = false AND v_company.billing_status != 'trial' AND v_company.billing_status IS NOT NULL) THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Este escritório está suspenso ou bloqueado por razões administrativas/financeiras. Entre em contato com o suporte.');
   END IF;
 
   -- 4. VALIDAÇÃO DO CUPOM
@@ -399,11 +403,11 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'message', 'Seu escritório já utilizou este cupom de extensão anteriormente.');
   END IF;
 
-  -- 6. CÁLCULO E VALIDAÇÃO DE BENEFÍCIO REAL
+  -- 6. CÁLCULO PRECISO DO MAIOR TÉRMINO ATUAL (GREATEST)
   v_company_created := COALESCE(v_company.created_at, v_now);
   v_trial_days := COALESCE(v_coupon.trial_days, 60);
 
-  -- Data alvo = created_at + total trial days
+  -- Data alvo da campanha: created_at + total trial days
   v_target_trial_end := v_company_created + (v_trial_days || ' days')::interval;
 
   -- Rejeita se o prazo total concedido já tiver terminado no passado
@@ -411,22 +415,30 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'message', 'Esta campanha concede teste até ' || to_char(v_target_trial_end, 'DD/MM/YYYY') || ', data que já expirou para seu escritório.');
   END IF;
 
-  -- Data de término atual do escritório
-  v_current_trial_end := COALESCE(v_subscription.current_period_end, v_company.trial_ends_at);
+  -- Obtém o maior término atualmente registrado entre company e subscription
+  IF v_company.trial_ends_at IS NOT NULL AND v_subscription.current_period_end IS NOT NULL THEN
+    v_current_trial_end := GREATEST(v_company.trial_ends_at, v_subscription.current_period_end);
+  ELSIF v_company.trial_ends_at IS NOT NULL THEN
+    v_current_trial_end := v_company.trial_ends_at;
+  ELSIF v_subscription.current_period_end IS NOT NULL THEN
+    v_current_trial_end := v_subscription.current_period_end;
+  ELSE
+    v_current_trial_end := NULL;
+  END IF;
 
-  -- Rejeita se o escritório já possui um prazo igual ou superior
+  -- Rejeita se o escritório já possui um prazo igual ou superior ativo
   IF v_current_trial_end IS NOT NULL AND v_current_trial_end >= v_target_trial_end AND v_current_trial_end > v_now THEN
     RETURN jsonb_build_object('success', false, 'message', 'Seu escritório já possui um período de teste ativo até ' || to_char(v_current_trial_end, 'DD/MM/YYYY') || ' (igual ou superior ao benefício desta campanha).');
   END IF;
 
-  -- Preserva o maior término
+  -- Garante que o novo prazo nunca seja inferior a qualquer término existente mais longo
   IF v_current_trial_end IS NOT NULL AND v_current_trial_end > v_target_trial_end THEN
     v_final_trial_end := v_current_trial_end;
   ELSE
     v_final_trial_end := v_target_trial_end;
   END IF;
 
-  -- 7. APLICAÇÃO SEGURA: Não reseta franquias e não altera contadores de uso
+  -- 7. APLICAÇÃO SEGURA: Preserva franquias e contadores de uso
   UPDATE public.companies
   SET 
     trial_ends_at = v_final_trial_end,
@@ -498,7 +510,7 @@ END;
 $$;
 
 -- ====================================================================
--- RPC 3: Reserva Temporária de Cupom de Desconto (Anti-Overbooking Concorrente)
+-- RPC 3: Reserva Temporária de Cupom de Desconto (Interna ao Backend - service_role)
 -- ====================================================================
 CREATE OR REPLACE FUNCTION public.reserve_discount_coupon(
   p_code TEXT,
@@ -513,26 +525,20 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_uid UUID := auth.uid();
   v_coupon RECORD;
   v_now TIMESTAMP WITH TIME ZONE := timezone('utc'::text, now());
   v_active_reservations_count INTEGER;
   v_existing_reservation RECORD;
 BEGIN
-  -- 1. Autorização
-  IF v_uid IS NULL THEN
-    RETURN jsonb_build_object('success', false, 'message', 'Não autorizado: usuário não autenticado.');
-  END IF;
-
-  IF p_company_id IS NULL OR NOT public.can_manage_company_billing(p_company_id, v_uid) THEN
-    RETURN jsonb_build_object('success', false, 'message', 'Não autorizado para o escritório informado.');
+  IF p_company_id IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Identificação do escritório obrigatória.');
   END IF;
 
   IF p_session_id IS NULL OR trim(p_session_id) = '' THEN
     RETURN jsonb_build_object('success', false, 'message', 'Identificador de sessão de checkout obrigatório.');
   END IF;
 
-  -- 2. Bloqueio atômico do cupom
+  -- 1. Bloqueio atômico do cupom
   SELECT * INTO v_coupon
   FROM public.coupons
   WHERE UPPER(code) = UPPER(trim(p_code))
@@ -542,18 +548,43 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'message', 'Cupom não encontrado.');
   END IF;
 
-  IF NOT v_coupon.is_active OR (v_coupon.valid_until IS NOT NULL AND v_coupon.valid_until < v_now) THEN
-    RETURN jsonb_build_object('success', false, 'message', 'Cupom inativo ou expirado.');
+  IF NOT v_coupon.is_active THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Cupom inativo.');
   END IF;
 
-  -- 3. Limpeza de reservas expiradas
+  IF v_coupon.type NOT IN ('percent', 'fixed') THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Este cupom não é do tipo desconto financeiro.');
+  END IF;
+
+  IF v_coupon.valid_from IS NOT NULL AND v_coupon.valid_from > v_now THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Campanha promocional ainda não iniciada.');
+  END IF;
+
+  IF v_coupon.valid_until IS NOT NULL AND v_coupon.valid_until < v_now THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Cupom expirado.');
+  END IF;
+
+  -- Validação de plano e ciclo
+  IF p_plan_slug IS NOT NULL AND array_length(v_coupon.applicable_plans, 1) > 0 THEN
+    IF NOT (p_plan_slug = ANY(v_coupon.applicable_plans)) THEN
+      RETURN jsonb_build_object('success', false, 'message', 'Cupom não aplicável ao plano selecionado.');
+    END IF;
+  END IF;
+
+  IF p_billing_cycle IS NOT NULL AND array_length(v_coupon.applicable_billing_cycles, 1) > 0 THEN
+    IF NOT (p_billing_cycle = ANY(v_coupon.applicable_billing_cycles)) THEN
+      RETURN jsonb_build_object('success', false, 'message', 'Cupom não aplicável ao ciclo de faturamento selecionado.');
+    END IF;
+  END IF;
+
+  -- 2. Limpeza de reservas expiradas
   UPDATE public.coupon_reservations
   SET status = 'expired'
   WHERE coupon_id = v_coupon.id
     AND status = 'reserved'
     AND expires_at < v_now;
 
-  -- 4. Validação de limite global com reservas ativas
+  -- 3. Validação de limite global com reservas ativas
   IF v_coupon.max_redemptions IS NOT NULL THEN
     SELECT COUNT(*) INTO v_active_reservations_count
     FROM public.coupon_reservations
@@ -565,7 +596,7 @@ BEGIN
     END IF;
   END IF;
 
-  -- 5. Validação de duplicidade por escritório
+  -- 4. Validação de duplicidade e reservas ativas concorrentes pelo mesmo escritório
   IF EXISTS (
     SELECT 1 FROM public.coupon_redemptions
     WHERE coupon_id = v_coupon.id AND company_id = p_company_id
@@ -576,17 +607,33 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'message', 'Este escritório já utilizou este cupom.');
   END IF;
 
-  -- 6. Criação ou atualização da reserva temporária para esta sessão
+  -- Verifica se o escritório já possui uma reserva ativa em outra sessão
+  IF EXISTS (
+    SELECT 1 FROM public.coupon_reservations
+    WHERE coupon_id = v_coupon.id 
+      AND company_id = p_company_id 
+      AND status = 'reserved' 
+      AND session_id != p_session_id
+      AND expires_at >= v_now
+  ) THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Este escritório já possui uma reserva em andamento para este cupom em outra sessão de checkout.');
+  END IF;
+
+  -- 5. Criação ou atualização da reserva com validação de propriedade da sessão
   SELECT * INTO v_existing_reservation
   FROM public.coupon_reservations
   WHERE session_id = p_session_id
   FOR UPDATE;
 
   IF FOUND THEN
+    -- Impede que uma sessão existente seja reatribuída para outra empresa
+    IF v_existing_reservation.company_id != p_company_id THEN
+      RETURN jsonb_build_object('success', false, 'message', 'Sessão de reserva pertence a outro escritório.');
+    END IF;
+
     UPDATE public.coupon_reservations
     SET 
       coupon_id = v_coupon.id,
-      company_id = p_company_id,
       status = 'reserved',
       reserved_at = v_now,
       expires_at = v_now + interval '30 minutes'
@@ -626,7 +673,7 @@ END;
 $$;
 
 -- ====================================================================
--- RPC 4: Confirmação Definitiva de Resgate de Cupom (Chamada pelo Webhook)
+-- RPC 4: Confirmação Definitiva de Resgate de Cupom (Interna ao Backend - service_role)
 -- ====================================================================
 CREATE OR REPLACE FUNCTION public.confirm_discount_coupon_redemption(
   p_session_id TEXT,
@@ -641,19 +688,38 @@ SET search_path = public
 AS $$
 DECLARE
   v_now TIMESTAMP WITH TIME ZONE := timezone('utc'::text, now());
+  v_res RECORD;
 BEGIN
   IF p_coupon_id IS NULL OR p_company_id IS NULL THEN
-    RETURN jsonb_build_object('success', false, 'message', 'Parâmetros incompletos.');
+    RETURN jsonb_build_object('success', false, 'message', 'Parâmetros incompletos para confirmação.');
   END IF;
 
-  -- 1. Atualiza reserva se existir
+  -- 1. Se houver session_id, busca e valida estritamente a reserva
   IF p_session_id IS NOT NULL THEN
-    UPDATE public.coupon_reservations
-    SET 
-      status = 'completed',
-      expires_at = NULL,
-      metadata = metadata || p_metadata
-    WHERE session_id = p_session_id;
+    SELECT * INTO v_res
+    FROM public.coupon_reservations
+    WHERE session_id = p_session_id
+    FOR UPDATE;
+
+    IF FOUND THEN
+      -- Valida correspondência de empresa e cupom
+      IF v_res.company_id != p_company_id OR v_res.coupon_id != p_coupon_id THEN
+        RETURN jsonb_build_object('success', false, 'message', 'Reserva inconsistente: divergência entre empresa, cupom e sessão.');
+      END IF;
+
+      -- Idempotência: se já completada anteriormente
+      IF v_res.status = 'completed' THEN
+        RETURN jsonb_build_object('success', true, 'idempotent', true, 'message', 'Resgate já confirmado anteriormente.');
+      END IF;
+
+      -- Atualiza para completed mesmo se o webhook chegou após expires_at (não descarta pagamento confirmado)
+      UPDATE public.coupon_reservations
+      SET 
+        status = 'completed',
+        expires_at = NULL,
+        metadata = metadata || p_metadata
+      WHERE session_id = p_session_id;
+    END IF;
   END IF;
 
   -- 2. Insere resgate definitivo idempotente
@@ -684,7 +750,7 @@ END;
 $$;
 
 -- ====================================================================
--- RPC 5: Liberação de Reserva (Abandono ou Cancelamento de Checkout)
+-- RPC 5: Liberação de Reserva (Interna ao Backend - service_role)
 -- ====================================================================
 CREATE OR REPLACE FUNCTION public.release_discount_coupon_reservation(
   p_session_id TEXT
@@ -708,19 +774,22 @@ END;
 $$;
 
 -- ====================================================================
--- REVOGAÇÃO EXPLÍCITA DE ACESSO ANÔNIMO E PÚBLICO
+-- REVOGAÇÃO EXPLÍCITA E CONCESSÃO ESTRITA DE PERMISSÕES
 -- ====================================================================
-REVOKE ALL ON FUNCTION public.validate_coupon_code(TEXT, UUID, TEXT, TEXT) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.redeem_trial_extension_coupon(TEXT, UUID) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.reserve_discount_coupon(TEXT, UUID, TEXT, TEXT, TEXT) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.confirm_discount_coupon_redemption(TEXT, UUID, UUID, JSONB) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.release_discount_coupon_reservation(TEXT) FROM PUBLIC, anon;
+-- Revoga tudo de PUBLIC, anon e authenticated em todas as funções
+REVOKE ALL ON FUNCTION public.validate_coupon_code(TEXT, UUID, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.redeem_trial_extension_coupon(TEXT, UUID) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.reserve_discount_coupon(TEXT, UUID, TEXT, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.confirm_discount_coupon_redemption(TEXT, UUID, UUID, JSONB) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.release_discount_coupon_reservation(TEXT) FROM PUBLIC, anon, authenticated;
 
--- Concessão apenas aos papéis autenticados e backend service_role
+-- Funções acessíveis por clientes autenticados com validação interna
 GRANT EXECUTE ON FUNCTION public.validate_coupon_code(TEXT, UUID, TEXT, TEXT) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.redeem_trial_extension_coupon(TEXT, UUID) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.reserve_discount_coupon(TEXT, UUID, TEXT, TEXT, TEXT) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.confirm_discount_coupon_redemption(TEXT, UUID, UUID, JSONB) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.release_discount_coupon_reservation(TEXT) TO authenticated, service_role;
+
+-- Funções internas do backend (reserva, confirmação e cancelamento): EXCLUSIVAMENTE service_role
+GRANT EXECUTE ON FUNCTION public.reserve_discount_coupon(TEXT, UUID, TEXT, TEXT, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.confirm_discount_coupon_redemption(TEXT, UUID, UUID, JSONB) TO service_role;
+GRANT EXECUTE ON FUNCTION public.release_discount_coupon_reservation(TEXT) TO service_role;
 
 COMMIT;
