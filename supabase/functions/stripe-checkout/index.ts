@@ -121,9 +121,9 @@ serve(async (req) => {
       return errorResponse("Empresa já possui uma assinatura ativa. Use o portal para alterar seu plano.", 400);
     }
 
-    // 1. Cálculo de Trial restante: preserva integralmente o período de teste concedido
+    // 1. Cálculo de Trial restante: preserva o período de teste e sincroniza data com a Stripe
     let trialEndTimestamp: number | undefined = undefined;
-    let actualTrialEndIso: string | null = null;
+    let trialExtendedTechnically = false;
 
     const trialDates: number[] = [];
     if (company?.trial_ends_at) {
@@ -144,15 +144,14 @@ serve(async (req) => {
       const remainingSeconds = Math.floor((maxTrialMs - Date.now()) / 1000);
 
       if (remainingSeconds > 0) {
-        actualTrialEndIso = new Date(maxTrialMs).toISOString();
-
         if (remainingSeconds >= 48 * 3600) {
           trialEndTimestamp = Math.floor(maxTrialMs / 1000);
         } else {
           // Stripe exige no mínimo 48h para trial_end. Para preservar o período de teste do cliente
-          // sem cobrar o cartão prematuramente no momento do checkout, definimos o trial_end
-          // com a margem mínima de 48 horas.
+          // sem cobrar o cartão de imediato, alinhamos trial_end à margem técnica mínima da Stripe (48h + 60s).
+          // A data retornada e persistida reflete exatamente esse prazo.
           trialEndTimestamp = Math.floor(Date.now() / 1000) + 48 * 3600 + 60;
+          trialExtendedTechnically = true;
         }
       }
     }
@@ -185,7 +184,6 @@ serve(async (req) => {
       } else if (reservation.stripe_coupon_id) {
         stripeDiscounts = [{ coupon: reservation.stripe_coupon_id }];
       } else {
-        // Cupom local não tem ID correspondente na Stripe. Não cobrar preço cheio silenciosamente!
         await ctx.admin.rpc('release_discount_coupon_reservation', { p_session_id: preSessionId });
         return errorResponse("O cupom promocional informado não possui identificador correspondente configurado na Stripe.", 400);
       }
@@ -215,6 +213,7 @@ serve(async (req) => {
           plan_id: planId,
           billing_cycle: billingCycle,
           coupon_id: reservedCouponId || '',
+          pre_session_id: preSessionId,
         },
         ...(trialEndTimestamp ? { trial_end: trialEndTimestamp } : {}),
       },
@@ -247,6 +246,7 @@ serve(async (req) => {
       return errorResponse(`Erro ao criar checkout no Stripe: ${stripeErr.message}`, 400);
     }
 
+    // 3. Vinculação atômica da reserva à sessão Stripe criada
     if (reservedCouponId) {
       const { error: updateErr } = await ctx.admin
         .from('coupon_redemptions')
@@ -263,15 +263,25 @@ serve(async (req) => {
 
       if (updateErr) {
         console.error("Erro ao associar reserva à sessão de checkout:", updateErr);
+        // Não libera a vaga enquanto a sessão Stripe estiver utilizável!
+        // Encerra/expira a sessão na Stripe primeiro para impedir pagamentos e só então libera a reserva.
+        try {
+          await ctx.stripe.checkout.sessions.expire(session.id);
+        } catch (expireErr: any) {
+          console.error("Erro ao expirar sessão Stripe após falha de vinculação:", expireErr);
+        }
         await ctx.admin.rpc('release_discount_coupon_reservation', { p_session_id: preSessionId });
         return errorResponse("Falha ao vincular reserva promocional à sessão de pagamento.", 500);
       }
     }
 
+    const effectiveTrialIso = trialEndTimestamp ? new Date(trialEndTimestamp * 1000).toISOString() : null;
+
     return jsonResponse({
       sessionId: session.id,
       url: session.url,
-      trialEnd: actualTrialEndIso || (trialEndTimestamp ? new Date(trialEndTimestamp * 1000).toISOString() : null),
+      trialEnd: effectiveTrialIso,
+      trialExtendedTechnically: trialExtendedTechnically,
     });
   } catch (err: any) {
     return errorResponse(err.message || "Erro interno no checkout", 500);
