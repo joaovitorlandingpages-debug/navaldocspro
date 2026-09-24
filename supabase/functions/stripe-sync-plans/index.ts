@@ -106,18 +106,36 @@ serve(async (req) => {
     }
 
     // Ação: Sincronização oficial de plano com a Stripe
-    const { planId, slug, name, description, priceMonthly, priceYearly } = body;
+    const { planId, slug, name: rawName, description, priceMonthly, priceYearly } = body;
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+
+    // Validação e normalização de nome e slug para evitar qualquer "undefined"
+    const defaultCatalogNames: Record<string, string> = {
+      "essencial": "Essencial",
+      "profissional": "Profissional",
+      "equipe": "Equipe",
+      "despachante": "Despachante Naval",
+      "engenharia_pericia": "Engenharia & Perícia"
+    };
+
+    const targetSlug = (slug || "").trim().toLowerCase();
+    const safeName = (rawName && rawName.trim() !== "undefined" && rawName.trim().length > 0)
+      ? rawName.trim()
+      : (defaultCatalogNames[targetSlug] || "Plano NavalDocs Pro");
+
+    if (!targetSlug) {
+      throw new HttpError(400, { error: "missing_slug", message: "Identificador (slug) do plano é obrigatório." });
+    }
 
     if (!stripeSecretKey) {
       const errorMsg = "Configuração pendente: nenhuma credencial da Stripe (STRIPE_SECRET_KEY) configurada no ambiente seguro da hospedagem.";
-      if (slug || planId) {
+      if (targetSlug || planId) {
         const query = supabase.from("plans").update({
           stripe_sync_status: "failed",
           sync_error: errorMsg,
           updated_at: new Date().toISOString()
         });
-        if (slug) query.eq("slug", slug);
+        if (targetSlug) query.eq("slug", targetSlug);
         else query.eq("id", planId);
         await query;
       }
@@ -131,45 +149,81 @@ serve(async (req) => {
       );
     }
 
-    // 1. Criação ou busca de produto na Stripe
-    const prodParams = new URLSearchParams();
-    prodParams.append("name", `NavalDocs Pro - ${name}`);
-    if (description) prodParams.append("description", description);
-    prodParams.append("metadata[slug]", slug);
-    prodParams.append("metadata[plan_id]", planId || slug);
+    // Consulta plano no banco para verificar se já possui stripe_product_id
+    const { data: dbPlan } = await supabase
+      .from("plans")
+      .select("id, slug, name, stripe_product_id, stripe_price_monthly_id, stripe_price_yearly_id")
+      .or(`slug.eq.${targetSlug},id.eq.${planId || targetSlug}`)
+      .maybeSingle();
 
-    const prodRes = await fetch("https://api.stripe.com/v1/products", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${stripeSecretKey}`,
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: prodParams.toString()
-    });
+    let productId = dbPlan?.stripe_product_id || body.stripeProductId || null;
 
-    const product = await prodRes.json();
-    if (!prodRes.ok) {
-      const errText = product.error?.message || "Erro ao criar produto na Stripe.";
-      if (slug || planId) {
+    // 1. Criação ou atualização do produto na Stripe (evita duplicação)
+    if (productId) {
+      // Atualiza produto existente na Stripe
+      const updateParams = new URLSearchParams();
+      updateParams.append("name", `NavalDocs Pro - ${safeName}`);
+      if (description) updateParams.append("description", description);
+      updateParams.append("metadata[slug]", targetSlug);
+      updateParams.append("metadata[plan_id]", planId || targetSlug);
+
+      const updRes = await fetch(`https://api.stripe.com/v1/products/${productId}`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${stripeSecretKey}`,
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: updateParams.toString()
+      });
+
+      if (!updRes.ok) {
+        // Se o produto foi excluído na Stripe, limpa o ID para recriar
+        productId = null;
+      }
+    }
+
+    if (!productId) {
+      // Cria novo produto na Stripe
+      const prodParams = new URLSearchParams();
+      prodParams.append("name", `NavalDocs Pro - ${safeName}`);
+      if (description) prodParams.append("description", description);
+      prodParams.append("metadata[slug]", targetSlug);
+      prodParams.append("metadata[plan_id]", planId || targetSlug);
+
+      const prodRes = await fetch("https://api.stripe.com/v1/products", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${stripeSecretKey}`,
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: prodParams.toString()
+      });
+
+      const product = await prodRes.json();
+      if (!prodRes.ok) {
+        const errText = product.error?.message || "Erro ao criar produto na Stripe.";
         const q = supabase.from("plans").update({
           stripe_sync_status: "failed",
           sync_error: errText,
           updated_at: new Date().toISOString()
         });
-        if (slug) q.eq("slug", slug);
+        if (targetSlug) q.eq("slug", targetSlug);
         else q.eq("id", planId);
         await q;
+        throw new Error(errText);
       }
-      throw new Error(errText);
+      productId = product.id;
     }
 
     // 2. Preço Mensal BRL recorrente
+    const monthlyUnitAmount = Math.round(Number(priceMonthly) * 100);
     const monthlyParams = new URLSearchParams();
-    monthlyParams.append("product", product.id);
+    monthlyParams.append("product", productId);
     monthlyParams.append("currency", "brl");
-    monthlyParams.append("unit_amount", Math.round(Number(priceMonthly) * 100).toString());
+    monthlyParams.append("unit_amount", monthlyUnitAmount.toString());
     monthlyParams.append("recurring[interval]", "month");
     monthlyParams.append("metadata[billing_cycle]", "monthly");
+    monthlyParams.append("metadata[slug]", targetSlug);
 
     const priceMoRes = await fetch("https://api.stripe.com/v1/prices", {
       method: "POST",
@@ -183,12 +237,14 @@ serve(async (req) => {
     if (!priceMoRes.ok) throw new Error(priceMonthlyObj.error?.message || "Erro ao criar preço mensal na Stripe.");
 
     // 3. Preço Anual BRL recorrente
+    const yearlyUnitAmount = Math.round(Number(priceYearly) * 100);
     const yearlyParams = new URLSearchParams();
-    yearlyParams.append("product", product.id);
+    yearlyParams.append("product", productId);
     yearlyParams.append("currency", "brl");
-    yearlyParams.append("unit_amount", Math.round(Number(priceYearly) * 100).toString());
+    yearlyParams.append("unit_amount", yearlyUnitAmount.toString());
     yearlyParams.append("recurring[interval]", "year");
     yearlyParams.append("metadata[billing_cycle]", "annual");
+    yearlyParams.append("metadata[slug]", targetSlug);
 
     const priceYrRes = await fetch("https://api.stripe.com/v1/prices", {
       method: "POST",
@@ -201,34 +257,32 @@ serve(async (req) => {
     const priceYearlyObj = await priceYrRes.json();
     if (!priceYrRes.ok) throw new Error(priceYearlyObj.error?.message || "Erro ao criar preço anual na Stripe.");
 
-    // 4. Persistência dos identificadores oficiais da Stripe no banco
-    if (slug || planId) {
-      const now = new Date().toISOString();
-      const updateData: any = {
-        stripe_product_id: product.id,
-        stripe_price_monthly_id: priceMonthlyObj.id,
-        stripe_price_yearly_id: priceYearlyObj.id,
-        stripe_sync_status: "synced",
-        sync_error: null,
-        last_synced_at: now,
-        price: Number(priceMonthly),
-        price_yearly: Number(priceYearly),
-        updated_at: now
-      };
+    // 4. Persistência dos identificadores oficiais da Stripe no banco public.plans
+    const now = new Date().toISOString();
+    const updateData: any = {
+      stripe_product_id: productId,
+      stripe_price_monthly_id: priceMonthlyObj.id,
+      stripe_price_yearly_id: priceYearlyObj.id,
+      stripe_sync_status: "synced",
+      sync_error: null,
+      last_synced_at: now,
+      price: Number(priceMonthly),
+      price_yearly: Number(priceYearly),
+      updated_at: now
+    };
 
-      const q = supabase.from("plans").update(updateData);
-      if (slug) q.eq("slug", slug);
-      else q.eq("id", planId);
-      await q;
-    }
+    const q = supabase.from("plans").update(updateData);
+    if (targetSlug) q.eq("slug", targetSlug);
+    else q.eq("id", planId);
+    await q;
 
     return new Response(
       JSON.stringify({
         success: true,
-        productId: product.id,
+        productId,
         priceMonthlyId: priceMonthlyObj.id,
         priceYearlyId: priceYearlyObj.id,
-        message: `Plano "${name}" sincronizado com a Stripe com sucesso.`
+        message: `Plano "${safeName}" sincronizado com a Stripe com sucesso.`
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

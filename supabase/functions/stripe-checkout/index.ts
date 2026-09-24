@@ -21,15 +21,35 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const planSlug = body.planSlug || body.plan_slug;
     const billingCycle = body.billingCycle || "monthly"; // 'monthly' | 'annual'
-    const origin = body.origin || req.headers.get("origin") || "https://navaldocspro.com.br";
+    const rawOrigin = body.origin || req.headers.get("origin") || "https://navaldocspro.com.br";
     const supabase = ctx.admin;
+
+    // Validação estrita de origens permitidas (Produção, Previews Lovable e Localhost)
+    function sanitizeOrigin(orig: string): string {
+      try {
+        const parsed = new URL(orig);
+        const host = parsed.hostname;
+        const isProd = host === "navaldocspro.com.br" || host === "www.navaldocspro.com.br";
+        const isLovable = host.endsWith(".lovableproject.com") || host.endsWith(".lovable.app");
+        const isLocal = host === "localhost" || host === "127.0.0.1";
+
+        if (isProd || isLovable || isLocal) {
+          return `${parsed.protocol}//${parsed.host}`;
+        }
+      } catch {
+        // Formato inválido
+      }
+      return "https://navaldocspro.com.br";
+    }
+
+    const origin = sanitizeOrigin(rawOrigin);
 
     const companyId = ctx.companyId || body.companyId;
     if (!companyId) {
       throw new HttpError(403, { error: "no_company_bound", message: "Nenhum escritório vinculado ao usuário autenticado." });
     }
 
-    // 1. Verifica existência do escritório
+    // 1. Verifica existência do escritório e permissão do usuário
     const { data: company, error: companyError } = await supabase
       .from("companies")
       .select("id, name, email")
@@ -38,6 +58,11 @@ serve(async (req) => {
 
     if (companyError || !company) {
       throw new HttpError(404, { error: "company_not_found", message: `Escritório ${companyId} não encontrado.` });
+    }
+
+    // Verifica se o usuário pertence à empresa ou é administrador master
+    if (ctx.companyId !== companyId && !ctx.isAdminMaster) {
+      throw new HttpError(403, { error: "forbidden", message: "Sem permissão para contratar planos por este escritório." });
     }
 
     // 2. Prevenção contra assinatura duplicada ativa
@@ -117,18 +142,27 @@ serve(async (req) => {
     const params = new URLSearchParams();
     params.append("mode", "subscription");
     params.append("success_url", `${origin}/billing/success?session_id={CHECKOUT_SESSION_ID}`);
-    params.append("cancel_url", `${origin}/billing/plans`);
+    params.append("cancel_url", `${origin}/plans`);
     params.append("client_reference_id", `${companyId}:${planSlug}`);
+    params.append("allow_promotion_codes", "true"); // Permite aplicação de cupons e campanhas
     if (company.email) params.append("customer_email", company.email);
 
-    // Linha do item
-    params.append("line_items[0][price_data][currency]", "brl");
-    params.append("line_items[0][price_data][product_data][name]", `NavalDocs Pro - Plano ${targetPlan.name}`);
-    params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
-    params.append("line_items[0][price_data][recurring][interval]", interval);
-    params.append("line_items[0][quantity]", "1");
+    // Se o plano já possuir preço oficial registrado na Stripe correspondente ao ciclo, usa o price ID
+    const stripePriceId = billingCycle === "annual" ? dbPlan?.stripe_price_yearly_id : dbPlan?.stripe_price_monthly_id;
 
-    // Metadados
+    if (stripePriceId && stripePriceId.startsWith("price_")) {
+      params.append("line_items[0][price]", stripePriceId);
+      params.append("line_items[0][quantity]", "1");
+    } else {
+      // Preço sob demanda na moeda BRL
+      params.append("line_items[0][price_data][currency]", "brl");
+      params.append("line_items[0][price_data][product_data][name]", `NavalDocs Pro - Plano ${targetPlan.name}`);
+      params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
+      params.append("line_items[0][price_data][recurring][interval]", interval);
+      params.append("line_items[0][quantity]", "1");
+    }
+
+    // Metadados seguros
     params.append("metadata[company_id]", companyId);
     params.append("metadata[plan_slug]", planSlug);
     params.append("metadata[billing_cycle]", billingCycle);

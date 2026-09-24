@@ -204,7 +204,7 @@ export function getPublishedCatalogPlans(): NavalPlan[] {
     const adminCatalog = StripeSyncService.getPlans();
     if (adminCatalog && adminCatalog.length > 0) {
       return adminCatalog
-        .filter(p => p.availableForSale)
+        .filter(p => p.status === 'published' && p.availableForSale !== false)
         .map(p => {
           const defaultRef = OFFICIAL_NAVAL_PLANS.find(o => o.slug === p.slug);
           return {

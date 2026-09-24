@@ -251,11 +251,58 @@ export default function SubscriptionUsage() {
                     <span className="text-slate-500 font-bold uppercase">Gateway</span>
                     <div className="flex items-center gap-2">
                        <Zap className="h-3 w-3 text-primary" />
-                       <span className="font-black text-navy uppercase">Mercado Pago</span>
+                       <span className="font-black text-navy uppercase">
+                         {(subscription as any)?.metadata?.stripe_subscription_id ? "Stripe (Cartão)" : "Mercado Pago (Pix)"}
+                       </span>
                     </div>
                 </div>
               </div>
-              <Button variant="ghost" className="w-full text-[9px] font-black uppercase tracking-[0.2em] text-rose-500 hover:bg-rose-50">Cancelar Assinatura</Button>
+              
+              {subscription?.status === 'active' && (
+                <Button 
+                  variant="outline" 
+                  onClick={async () => {
+                    if ((subscription as any)?.metadata?.stripe_subscription_id) {
+                      const { stripeCheckoutService } = await import("@/services/billing/stripeCheckoutService");
+                      toast.info("Abrindo portal seguro de gerenciamento da Stripe...");
+                      const res = await stripeCheckoutService.openCustomerPortal(subscription.company_id);
+                      if (res.success && res.url) {
+                        window.location.href = res.url;
+                      } else {
+                        toast.error(res.message || "Não foi possível abrir o portal da Stripe.");
+                      }
+                    } else {
+                      toast.info("Para gerenciar ou alterar sua forma de pagamento Pix / Mercado Pago, selecione um novo plano ou entre em contato com o suporte.");
+                    }
+                  }}
+                  className="w-full text-[10px] font-black uppercase tracking-wider text-[#0d2342] hover:bg-slate-100 border-slate-200 mt-2"
+                >
+                  Gerenciar Assinatura & Cartão
+                </Button>
+              )}
+
+              {subscription?.status === 'active' && (
+                <Button 
+                  variant="ghost" 
+                  onClick={async () => {
+                    if ((subscription as any)?.metadata?.stripe_subscription_id) {
+                      const { stripeCheckoutService } = await import("@/services/billing/stripeCheckoutService");
+                      toast.info("Redirecionando para o portal de cancelamento seguro...");
+                      const res = await stripeCheckoutService.openCustomerPortal(subscription.company_id);
+                      if (res.success && res.url) {
+                        window.location.href = res.url;
+                      } else {
+                        toast.error(res.message || "Não foi possível abrir o portal de cancelamento.");
+                      }
+                    } else {
+                      toast.info("Sua assinatura expira ao final do período pago sem renovação automática forçada.");
+                    }
+                  }}
+                  className="w-full text-[9px] font-black uppercase tracking-[0.2em] text-rose-500 hover:bg-rose-50"
+                >
+                  Cancelar Assinatura
+                </Button>
+              )}
            </Card>
         </div>
       </div>

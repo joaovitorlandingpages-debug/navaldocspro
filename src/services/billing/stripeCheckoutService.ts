@@ -73,5 +73,41 @@ export const stripeCheckoutService = {
         message: err.message || "Falha na comunicação com o backend de checkout."
       };
     }
+  },
+
+  /**
+   * Invoca a Edge Function stripe-portal para redirecionar o cliente para o Stripe Customer Portal.
+   */
+  async openCustomerPortal(companyId?: string): Promise<{ success: boolean; url?: string; message?: string }> {
+    try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "https://navaldocspro.com.br";
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const headers = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : undefined;
+
+      const response = await supabase.functions.invoke("stripe-portal", {
+        body: {
+          companyId,
+          origin
+        },
+        headers
+      });
+
+      if (response.error || response.data?.error) {
+        const msg = response.data?.message || response.error?.message || "Erro ao abrir portal da Stripe.";
+        return { success: false, message: msg };
+      }
+
+      if (response.data?.url) {
+        return { success: true, url: response.data.url };
+      }
+
+      return { success: false, message: "URL do portal não retornada pelo servidor." };
+    } catch (err: any) {
+      return { success: false, message: err.message || "Falha na comunicação com o backend." };
+    }
   }
 };
+
