@@ -1,416 +1,279 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { authContext, rateLimit, jsonResponse, corsHeaders, HttpError } from "../_shared/auth.ts";
+import { initContext, handleCors, jsonResponse, errorResponse } from "../_shared/stripe-client.ts";
+import { resolvePlan } from "../_shared/stripe-plans.ts";
 
-/**
- * Validação e sanitização rigorosa de origens permitidas vinculadas aos domínios oficiais.
- * Domínios autorizados:
- * - https://navaldocspro.lovable.app
- * - https://preview--navaldocspro.lovable.app
- * - https://navaldocspro.com.br
- * - https://www.navaldocspro.com.br
- * - http://localhost:* / http://127.0.0.1:*
- */
-export function sanitizeAllowedOrigin(rawOrigin: string | null | undefined): string {
-  if (!rawOrigin) return "https://navaldocspro.lovable.app";
+const ALLOWED_REDIRECT_ORIGINS = [
+  'https://navaldocspro.lovable.app',
+  'https://preview--navaldocspro.lovable.app',
+  'https://navaldocspro.com.br',
+  'https://www.navaldocspro.com.br',
+];
+
+const DEFAULT_REDIRECT_BASE = 'https://navaldocspro.lovable.app';
+
+function validateRedirectUrl(urlStr?: string): string {
+  if (!urlStr) return DEFAULT_REDIRECT_BASE;
   try {
-    const parsed = new URL(rawOrigin);
-    const host = parsed.hostname.toLowerCase();
-    
-    // Domínios Lovable autorizados expressamente para este projeto
-    const isLovableApp = host === "navaldocspro.lovable.app" || host === "preview--navaldocspro.lovable.app";
-    // Domínios personalizados de produção (confirmados na infraestrutura)
-    const isCustomProd = host === "navaldocspro.com.br" || host === "www.navaldocspro.com.br";
-    // Desenvolvimento local
-    const isLocal = (host === "localhost" || host === "127.0.0.1") && ["5173", "3000", "8080", "5174"].includes(parsed.port);
-
-    if (isLovableApp || isCustomProd || isLocal) {
-      return `${parsed.protocol}//${parsed.host}`;
+    const parsed = new URL(urlStr);
+    if (parsed.protocol === 'http:' && (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1')) {
+      return parsed.origin;
     }
-  } catch {
-    // Formato de URL inválido
+    const match = ALLOWED_REDIRECT_ORIGINS.some(allowed => {
+      return parsed.origin.toLowerCase() === allowed.toLowerCase();
+    });
+    if (match) return parsed.origin;
+  } catch (_e) {
+    // Fallback to strict default
   }
-  return "https://navaldocspro.lovable.app";
+  return DEFAULT_REDIRECT_BASE;
 }
 
-/**
- * Stripe Checkout Edge Function
- * Criação segura de sessão de checkout no servidor com:
- * - Validação de usuário e empresa autenticada
- * - Restrição estrita de URLs de retorno aos domínios autorizados deste projeto
- * - Preservação do término real do trial já concedido (1ª cobrança agendada na data exata)
- * - Tratamento explícito de trials com menos de 48 horas restantes (sem cobrança antecipada indevida)
- * - Validação server-side de cupons e campanhas com preservação de estoque até conclusão do pagamento
- * - Registro em log de auditoria
- */
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+  const cors = handleCors(req);
+  if (cors) return cors;
+
+  let ctx;
+  try {
+    ctx = initContext(req);
+  } catch (err: any) {
+    return errorResponse(err.message, 500);
   }
 
   try {
-    const ctx = await authContext(req);
-    await rateLimit(ctx.admin, `user:${ctx.userId}`, "stripe-checkout", 10, 60);
-
-    const body = await req.json().catch(() => ({}));
-    const planSlug = body.planSlug || body.plan_slug;
-    const billingCycle = body.billingCycle || "monthly"; // 'monthly' | 'annual'
-    const couponCode = (body.couponCode || body.coupon_code || "").toString().trim().toUpperCase();
-    const rawOrigin = body.origin || req.headers.get("origin");
-    const supabase = ctx.admin;
-
-    // 1. Sanitização estrita de URL de retorno
-    const origin = sanitizeAllowedOrigin(rawOrigin);
-
-    const companyId = ctx.companyId || body.companyId;
-    if (!companyId) {
-      throw new HttpError(403, { error: "no_company_bound", message: "Nenhum escritório vinculado ao usuário autenticado." });
+    const user = await ctx.getUser();
+    if (!user) {
+      return errorResponse("Não autenticado", 401);
     }
 
-    // 2. Verifica existência do escritório e permissão do usuário
-    const { data: company, error: companyError } = await supabase
-      .from("companies")
-      .select("id, name, email, created_at, trial_ends_at, metadata")
-      .eq("id", companyId)
-      .maybeSingle();
+    const { planId, billingCycle = 'monthly', couponCode, successUrl, cancelUrl } = await req.json();
 
-    if (companyError || !company) {
-      throw new HttpError(404, { error: "company_not_found", message: `Escritório ${companyId} não encontrado.` });
+    if (!planId) {
+      return errorResponse("planId é obrigatório", 400);
     }
 
-    if (ctx.companyId !== companyId && !ctx.isAdminMaster) {
-      throw new HttpError(403, { error: "forbidden", message: "Sem permissão para contratar planos por este escritório." });
+    const resolved = resolvePlan(planId, billingCycle);
+    if (!resolved) {
+      return errorResponse(`Plano inválido: ${planId} (${billingCycle})`, 400);
     }
 
-    // 3. Prevenção contra assinatura ativa duplicada
-    const { data: existingSub } = await supabase
-      .from("subscriptions")
-      .select("id, status, plan_id, current_period_end, metadata")
-      .eq("company_id", companyId)
-      .maybeSingle();
+    const { data: profile, error: profileErr } = await ctx.admin
+      .from('profiles')
+      .select('company_id, full_name, email, role')
+      .eq('id', user.id)
+      .single();
 
-    if (existingSub && existingSub.status === "active") {
-      throw new HttpError(400, {
-        error: "active_subscription_exists",
-        message: "Este escritório já possui uma assinatura ativa. Acesse o portal de cobrança para alterar o plano ou cartão."
+    if (profileErr || !profile?.company_id) {
+      return errorResponse("Perfil ou empresa não encontrados", 400);
+    }
+
+    const companyId = profile.company_id;
+
+    const { data: canManage, error: permErr } = await ctx.admin
+      .rpc('can_manage_company_billing', {
+        p_user_id: user.id,
+        p_company_id: companyId
       });
+
+    if (permErr || !canManage) {
+      return errorResponse("Você não tem permissão para gerenciar assinaturas desta empresa", 403);
     }
 
-    // 4. Validação do plano no catálogo do banco (bloqueia rascunhos e arquivados)
-    const { data: dbPlan } = await supabase
-      .from("plans")
-      .select("id, name, slug, price, price_yearly, status, is_active, stripe_price_monthly_id, stripe_price_yearly_id")
-      .or(`slug.eq.${planSlug},id.eq.${planSlug}`)
+    const { data: company, error: compErr } = await ctx.admin
+      .from('companies')
+      .select('id, name, cnpj, stripe_customer_id, trial_ends_at')
+      .eq('id', companyId)
+      .single();
+
+    if (compErr || !company) {
+      return errorResponse("Dados da empresa não encontrados", 404);
+    }
+
+    let customerId = company?.stripe_customer_id;
+
+    if (!customerId) {
+      const customer = await ctx.stripe.customers.create({
+        email: user.email,
+        name: company?.name || profile.full_name || undefined,
+        metadata: {
+          company_id: companyId,
+          user_id: user.id,
+          cnpj: company?.cnpj || '',
+        },
+      });
+      customerId = customer.id;
+
+      await ctx.admin
+        .from('companies')
+        .update({ stripe_customer_id: customerId })
+        .eq('id', companyId);
+    }
+
+    const { data: existingSub } = await ctx.admin
+      .from('subscriptions')
+      .select('id, status, current_period_end, trial_ends_at')
+      .eq('company_id', companyId)
+      .in('status', ['active', 'trialing', 'past_due'])
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
-    if (dbPlan) {
-      if (dbPlan.status !== "published" || dbPlan.is_active !== true) {
-        throw new HttpError(400, {
-          error: "plan_not_purchasable",
-          message: `O plano "${dbPlan.name}" não está disponível para novas contratações.`
-        });
+    if (existingSub && existingSub.status === 'active') {
+      return errorResponse("Empresa já possui uma assinatura ativa. Use o portal para alterar seu plano.", 400);
+    }
+
+    // 1. Cálculo de Trial restante: preserva integralmente o período de teste concedido
+    let trialEndTimestamp: number | undefined = undefined;
+    let actualTrialEndIso: string | null = null;
+
+    const trialDates: number[] = [];
+    if (company?.trial_ends_at) {
+      const dt = new Date(company.trial_ends_at).getTime();
+      if (!isNaN(dt)) trialDates.push(dt);
+    }
+    if (existingSub?.trial_ends_at) {
+      const dt = new Date(existingSub.trial_ends_at).getTime();
+      if (!isNaN(dt)) trialDates.push(dt);
+    }
+    if (existingSub?.status === 'trialing' && existingSub?.current_period_end) {
+      const dt = new Date(existingSub.current_period_end).getTime();
+      if (!isNaN(dt)) trialDates.push(dt);
+    }
+
+    if (trialDates.length > 0) {
+      const maxTrialMs = Math.max(...trialDates);
+      const remainingSeconds = Math.floor((maxTrialMs - Date.now()) / 1000);
+
+      if (remainingSeconds > 0) {
+        actualTrialEndIso = new Date(maxTrialMs).toISOString();
+
+        if (remainingSeconds >= 48 * 3600) {
+          trialEndTimestamp = Math.floor(maxTrialMs / 1000);
+        } else {
+          // Stripe exige no mínimo 48h para trial_end. Para preservar o período de teste do cliente
+          // sem cobrar o cartão prematuramente no momento do checkout, definimos o trial_end
+          // com a margem mínima de 48 horas.
+          trialEndTimestamp = Math.floor(Date.now() / 1000) + 48 * 3600 + 60;
+        }
       }
     }
 
-    const planCatalog: Record<string, { name: string; monthlyPrice: number; yearlyPrice: number }> = {
-      "essencial": { name: "Essencial", monthlyPrice: 149, yearlyPrice: 1490 },
-      "profissional": { name: "Profissional", monthlyPrice: 299, yearlyPrice: 2990 },
-      "equipe": { name: "Equipe", monthlyPrice: 599, yearlyPrice: 5990 },
-      "despachante": { name: "Despachante Naval", monthlyPrice: 129, yearlyPrice: 1290 },
-      "engenharia_pericia": { name: "Engenharia & Perícia", monthlyPrice: 179, yearlyPrice: 1790 }
+    // 2. Reserva de cupom de desconto com validação estrita da Stripe
+    let stripeDiscounts: any[] | undefined = undefined;
+    let reservedCouponId: string | null = null;
+    const sessionExpiresAt = Math.floor(Date.now() / 1000) + 1800; // 30 minutos exatos
+    const preSessionId = `res_${companyId.slice(0, 8)}_${Date.now()}`;
+
+    if (couponCode && typeof couponCode === 'string' && couponCode.trim().length > 0) {
+      const { data: reservation, error: resErr } = await ctx.admin
+        .rpc('reserve_discount_coupon', {
+          p_code: couponCode.trim(),
+          p_company_id: companyId,
+          p_session_id: preSessionId,
+          p_plan_id: planId,
+          p_billing_cycle: billingCycle,
+          p_expires_at: new Date(sessionExpiresAt * 1000).toISOString(),
+        });
+
+      if (resErr || !reservation?.success) {
+        return errorResponse(reservation?.error || 'Cupom inválido ou indisponível para esta contratação', 400);
+      }
+
+      reservedCouponId = reservation.coupon_id;
+
+      if (reservation.stripe_promotion_code_id) {
+        stripeDiscounts = [{ promotion_code: reservation.stripe_promotion_code_id }];
+      } else if (reservation.stripe_coupon_id) {
+        stripeDiscounts = [{ coupon: reservation.stripe_coupon_id }];
+      } else {
+        // Cupom local não tem ID correspondente na Stripe. Não cobrar preço cheio silenciosamente!
+        await ctx.admin.rpc('release_discount_coupon_reservation', { p_session_id: preSessionId });
+        return errorResponse("O cupom promocional informado não possui identificador correspondente configurado na Stripe.", 400);
+      }
+    }
+
+    const safeSuccessBase = validateRedirectUrl(successUrl);
+    const safeCancelBase = validateRedirectUrl(cancelUrl);
+
+    const checkoutSessionParams: any = {
+      customer: customerId,
+      customer_update: {
+        address: 'auto',
+        name: 'auto',
+      },
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: resolved.priceId,
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      subscription_data: {
+        metadata: {
+          company_id: companyId,
+          user_id: user.id,
+          plan_id: planId,
+          billing_cycle: billingCycle,
+          coupon_id: reservedCouponId || '',
+        },
+        ...(trialEndTimestamp ? { trial_end: trialEndTimestamp } : {}),
+      },
+      metadata: {
+        company_id: companyId,
+        user_id: user.id,
+        plan_id: planId,
+        billing_cycle: billingCycle,
+        coupon_id: reservedCouponId || '',
+        pre_session_id: preSessionId,
+      },
+      success_url: `${safeSuccessBase}/configuracoes?tab=billing&checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${safeCancelBase}/configuracoes?tab=billing&checkout=cancelled`,
+      expires_at: sessionExpiresAt,
     };
 
-    const targetPlan = dbPlan 
-      ? { name: dbPlan.name, monthlyPrice: Number(dbPlan.price), yearlyPrice: Number(dbPlan.price_yearly || dbPlan.price * 10) }
-      : (planCatalog[planSlug] || planCatalog["profissional"]);
-
-    const amountInCents = billingCycle === "annual" ? targetPlan.yearlyPrice * 100 : targetPlan.monthlyPrice * 100;
-    const interval = billingCycle === "annual" ? "year" : "month";
-
-    // 5. Preservação do Trial End Real e Tratamento de Trials < 48h
-    const now = Date.now();
-    let stripeTrialEndTimestamp: number | null = null;
-    let trialEndIsoString: string | null = null;
-
-    // A data real do teste pode vir de subscriptions.current_period_end ou companies.trial_ends_at
-    const candidateTrialEnd = existingSub?.current_period_end || company.trial_ends_at;
-    const isCandidateTrial = existingSub ? (existingSub.status === "trialing" || existingSub.status === "pending") : true;
-
-    if (candidateTrialEnd && isCandidateTrial) {
-      const currentEndMs = new Date(candidateTrialEnd).getTime();
-      const remainingMs = currentEndMs - now;
-
-      if (remainingMs > 0) {
-        if (remainingMs < 48 * 60 * 60 * 1000) {
-          // CASO CRÍTICO: Menos de 48 horas restantes no trial.
-          // A API do Stripe Checkout não aceita trial_end inferior a 48h (exige timestamp >= 48h à frente).
-          // NÃO ignoramos o prazo concedido nem cobramos antes dele!
-          const hoursLeft = Math.max(1, Math.ceil(remainingMs / (3600 * 1000)));
-          const dateFormatted = new Date(currentEndMs).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-          
-          throw new HttpError(400, {
-            error: "trial_active_under_48h",
-            hours_remaining: hoursLeft,
-            trial_ends_at: new Date(currentEndMs).toISOString(),
-            message: `Seu período de teste gratuito ainda está ativo (restam aproximadamente ${hoursLeft}h até ${dateFormatted}). Para garantir que você aproveite 100% do seu teste sem nenhuma cobrança antecipada, a contratação poderá ser concluída ao término desse prazo, mantendo seu acesso 100% liberado até lá.`
-          });
-        } else {
-          // Prazo de teste preservado com primeira cobrança agendada na data exata
-          stripeTrialEndTimestamp = Math.floor(currentEndMs / 1000);
-          trialEndIsoString = new Date(currentEndMs).toISOString();
-        }
-      }
-    }
-
-    // 6. Verificação de Chave Secreta da Stripe
-    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeSecretKey) {
-      await supabase.from("payment_logs").insert({
-        company_id: companyId,
-        event_type: "checkout_blocked_missing_credentials",
-        status: "pending",
-        payload: {
-          planSlug,
-          billingCycle,
-          message: "Configuração pendente: STRIPE_SECRET_KEY não encontrada nas variáveis de ambiente seguras da hospedagem."
-        }
-      });
-
-      return new Response(
-        JSON.stringify({
-          error: "stripe_not_configured",
-          message: "A integração com o Stripe está em status 'Configuração pendente'. Configure a variável STRIPE_SECRET_KEY no ambiente seguro para ativar checkouts reais."
-        }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // 7. Validação de Cupons e Campanhas do Admin no Servidor
-    let appliedStripeCouponId: string | null = null;
-    let appliedCouponDbId: string | null = null;
-    let appliedCampaignInfo: any = null;
-
-    if (couponCode) {
-      const { data: dbCoupon } = await supabase
-        .from("coupons")
-        .select("*")
-        .eq("code", couponCode)
-        .eq("is_active", true)
-        .maybeSingle();
-
-      if (!dbCoupon) {
-        throw new HttpError(400, { error: "coupon_not_found", message: `Cupom "${couponCode}" inválido ou inexistente.` });
-      }
-
-      // Validação de datas
-      if (dbCoupon.valid_from && new Date(dbCoupon.valid_from).getTime() > now) {
-        throw new HttpError(400, { error: "coupon_not_started", message: `A campanha ${couponCode} ainda não foi iniciada.` });
-      }
-      if (dbCoupon.valid_until && new Date(dbCoupon.valid_until).getTime() < now) {
-        throw new HttpError(400, { error: "coupon_expired", message: `O cupom ${couponCode} está expirado.` });
-      }
-      if (dbCoupon.max_redemptions && dbCoupon.redemption_count >= dbCoupon.max_redemptions) {
-        throw new HttpError(400, { error: "coupon_limit_reached", message: `O cupom ${couponCode} atingiu o limite máximo de resgates.` });
-      }
-
-      // Verifica se a empresa já resgatou este cupom anteriormente
-      const { data: previousRedemption } = await supabase
-        .from("coupon_redemptions")
-        .select("id")
-        .eq("coupon_id", dbCoupon.id)
-        .eq("company_id", companyId)
-        .maybeSingle();
-
-      if (previousRedemption) {
-        throw new HttpError(400, { error: "coupon_already_used", message: `Este escritório já utilizou o cupom ${couponCode}.` });
-      }
-
-      // Validação de elegibilidade por plano
-      if (Array.isArray(dbCoupon.applicable_plans) && dbCoupon.applicable_plans.length > 0) {
-        if (!dbCoupon.applicable_plans.includes(planSlug)) {
-          throw new HttpError(400, { error: "coupon_not_applicable_plan", message: `O cupom ${couponCode} não é aplicável ao plano selecionado.` });
-        }
-      }
-
-      // Validação de elegibilidade por ciclo
-      if (Array.isArray(dbCoupon.applicable_billing_cycles) && dbCoupon.applicable_billing_cycles.length > 0) {
-        if (!dbCoupon.applicable_billing_cycles.includes(billingCycle)) {
-          throw new HttpError(400, { error: "coupon_not_applicable_cycle", message: `O cupom ${couponCode} não é aplicável ao ciclo de faturamento selecionado.` });
-        }
-      }
-
-      if (dbCoupon.type === "trial_extension") {
-        throw new HttpError(400, {
-          error: "coupon_is_trial_extension",
-          message: `O código "${couponCode}" é uma extensão de teste gratuito de ${dbCoupon.trial_days || 60} dias e não requer cartão de crédito. Resgate-o diretamente no painel de sua conta.`
-        });
-        // 7.1. Reserva Temporária no Banco (Garante concorrência e evita overbooking)
-        const reservationSessionId = `res_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-        const { data: reserveData, error: reserveErr } = await supabase.rpc("reserve_discount_coupon", {
-          p_code: couponCode,
-          p_company_id: companyId,
-          p_session_id: reservationSessionId,
-          p_plan_slug: planSlug,
-          p_billing_cycle: billingCycle
-        });
-
-        if (reserveErr || !reserveData?.success) {
-          throw new HttpError(400, {
-            error: "coupon_reservation_failed",
-            message: reserveData?.message || reserveErr?.message || "Não foi possível reservar o cupom no momento."
-          });
-        }
-
-        appliedCouponDbId = reserveData.coupon_id;
-        let stripeCoupId = reserveData.stripe_coupon_id;
-
-        // Se o cupom ainda não foi criado na Stripe, cria agora
-        if (!stripeCoupId) {
-          const coupParams = new URLSearchParams();
-          coupParams.append("name", dbCoupon.name);
-          coupParams.append("id", `COUP_${dbCoupon.code}_${Date.now().toString(36)}`);
-          if (dbCoupon.type === "percent" && dbCoupon.discount_percent) {
-            coupParams.append("percent_off", Number(dbCoupon.discount_percent).toString());
-          } else if (dbCoupon.type === "fixed" && dbCoupon.discount_fixed) {
-            coupParams.append("amount_off", Math.round(Number(dbCoupon.discount_fixed) * 100).toString());
-            coupParams.append("currency", "brl");
-          }
-          
-          const duration = dbCoupon.discount_duration || "once";
-          coupParams.append("duration", duration);
-          if (duration === "repeating" && dbCoupon.duration_in_months) {
-            coupParams.append("duration_in_months", dbCoupon.duration_in_months.toString());
-          }
-
-          const stripeCoupRes = await fetch("https://api.stripe.com/v1/coupons", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${stripeSecretKey}`,
-              "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: coupParams.toString()
-          });
-
-          const coupData = await stripeCoupRes.json();
-          if (stripeCoupRes.ok && coupData.id) {
-            stripeCoupId = coupData.id;
-            await supabase.from("coupons").update({
-              stripe_coupon_id: stripeCoupId,
-              updated_at: new Date().toISOString()
-            }).eq("id", dbCoupon.id);
-          }
-        }
-
-        if (stripeCoupId) {
-          appliedStripeCouponId = stripeCoupId;
-          appliedCampaignInfo = { 
-            coupon_id: dbCoupon.id,
-            reservation_id: reservationSessionId,
-            code: couponCode, 
-            type: dbCoupon.type, 
-            discount: dbCoupon.discount_percent || dbCoupon.discount_fixed,
-            duration: dbCoupon.discount_duration || "once"
-          };
-        }
-      }
-    }
-
-    // 8. Chamada oficial à API Stripe Checkout Session
-    const params = new URLSearchParams();
-    params.append("mode", "subscription");
-    params.append("success_url", `${origin}/billing/success?session_id={CHECKOUT_SESSION_ID}`);
-    params.append("cancel_url", `${origin}/plans`);
-    params.append("client_reference_id", `${companyId}:${planSlug}`);
-    params.append("allow_promotion_codes", "true");
-    if (company.email) params.append("customer_email", company.email);
-
-    // Se houver término de trial preservado
-    if (stripeTrialEndTimestamp) {
-      params.append("subscription_data[trial_end]", stripeTrialEndTimestamp.toString());
-    }
-
-    // Se houver cupom validado no servidor
-    if (appliedStripeCouponId) {
-      params.append("discounts[0][coupon]", appliedStripeCouponId);
-    }
-
-    // Preço oficial ou dinâmico
-    const stripePriceId = billingCycle === "annual" ? dbPlan?.stripe_price_yearly_id : dbPlan?.stripe_price_monthly_id;
-    if (stripePriceId && stripePriceId.startsWith("price_")) {
-      params.append("line_items[0][price]", stripePriceId);
-      params.append("line_items[0][quantity]", "1");
+    if (stripeDiscounts && stripeDiscounts.length > 0) {
+      checkoutSessionParams.discounts = stripeDiscounts;
     } else {
-      params.append("line_items[0][price_data][currency]", "brl");
-      params.append("line_items[0][price_data][product_data][name]", `NavalDocs Pro - Plano ${targetPlan.name}`);
-      params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
-      params.append("line_items[0][price_data][recurring][interval]", interval);
-      params.append("line_items[0][quantity]", "1");
+      checkoutSessionParams.allow_promotion_codes = true;
     }
 
-    // Metadados seguros da sessão
-    params.append("metadata[company_id]", companyId);
-    params.append("metadata[plan_slug]", planSlug);
-    params.append("metadata[billing_cycle]", billingCycle);
-    if (appliedCouponDbId) params.append("metadata[applied_coupon_id]", appliedCouponDbId);
-    if (appliedCampaignInfo?.reservation_id) {
-      params.append("metadata[coupon_reservation_id]", appliedCampaignInfo.reservation_id);
-      // Sincroniza a expiração da sessão do Stripe com a reserva temporária (30 minutos)
-      params.append("expires_at", Math.floor((Date.now() + 30 * 60 * 1000) / 1000).toString());
-    }
-    if (trialEndIsoString) params.append("metadata[preserved_trial_end]", trialEndIsoString);
-    if (appliedCampaignInfo) params.append("metadata[applied_campaign]", JSON.stringify(appliedCampaignInfo));
-
-    const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${stripeSecretKey}`,
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: params.toString()
-    });
-
-    const sessionData = await stripeRes.json();
-
-    if (!stripeRes.ok) {
-      if (appliedCampaignInfo?.reservation_id) {
-        await supabase.rpc("release_discount_coupon_reservation", { p_session_id: appliedCampaignInfo.reservation_id });
+    let session;
+    try {
+      session = await ctx.stripe.checkout.sessions.create(checkoutSessionParams);
+    } catch (stripeErr: any) {
+      if (reservedCouponId) {
+        await ctx.admin.rpc('release_discount_coupon_reservation', { p_session_id: preSessionId });
       }
-      await supabase.from("payment_logs").insert({
-        company_id: companyId,
-        event_type: "stripe_checkout_error",
-        status: "error",
-        payload: sessionData
-      });
-      throw new Error(sessionData.error?.message || "Erro ao gerar sessão de checkout na Stripe.");
+      return errorResponse(`Erro ao criar checkout no Stripe: ${stripeErr.message}`, 400);
     }
 
-    await supabase.from("payment_logs").insert({
-      company_id: companyId,
-      event_type: "stripe_checkout_created",
-      status: "success",
-      payload: { 
-        sessionId: sessionData.id, 
-        url: sessionData.url, 
-        trialEnd: trialEndIsoString, 
-        campaign: appliedCampaignInfo 
+    if (reservedCouponId) {
+      const { error: updateErr } = await ctx.admin
+        .from('coupon_redemptions')
+        .update({
+          stripe_session_id: session.id,
+          expires_at: new Date(session.expires_at * 1000).toISOString(),
+          metadata: {
+            plan_id: planId,
+            billing_cycle: billingCycle,
+            pre_session_id: preSessionId,
+          }
+        })
+        .eq('stripe_session_id', preSessionId);
+
+      if (updateErr) {
+        console.error("Erro ao associar reserva à sessão de checkout:", updateErr);
+        await ctx.admin.rpc('release_discount_coupon_reservation', { p_session_id: preSessionId });
+        return errorResponse("Falha ao vincular reserva promocional à sessão de pagamento.", 500);
       }
+    }
+
+    return jsonResponse({
+      sessionId: session.id,
+      url: session.url,
+      trialEnd: actualTrialEndIso || (trialEndTimestamp ? new Date(trialEndTimestamp * 1000).toISOString() : null),
     });
-
-    return new Response(
-      JSON.stringify({
-        sessionId: sessionData.id,
-        url: sessionData.url,
-        trialEnd: trialEndIsoString,
-        appliedCampaign: appliedCampaignInfo
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-
-  } catch (error: any) {
-    if (error instanceof HttpError) return jsonResponse(error.body, error.status);
-    console.error("Erro no checkout Stripe:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+  } catch (err: any) {
+    return errorResponse(err.message || "Erro interno no checkout", 500);
   }
 });

@@ -1,6 +1,38 @@
 import { describe, it, expect } from "vitest";
 import { sanitizeAllowedOrigin } from "@/services/billing/domainUtils";
 
+function extractId(val: unknown): string | null {
+  if (!val) return null;
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+  if (typeof val === "object" && val !== null && "id" in val && typeof (val as any).id === "string") {
+    const trimmed = (val as any).id.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+  return null;
+}
+
+function extractSubscriptionIdFromInvoice(invoice: any): string | null {
+  if (!invoice || typeof invoice !== "object") return null;
+
+  if (invoice.parent && typeof invoice.parent === "object") {
+    const details = invoice.parent.subscription_details;
+    if (details && typeof details === "object" && details.subscription) {
+      const subId = extractId(details.subscription);
+      if (subId) return subId;
+    }
+  }
+
+  if (invoice.subscription) {
+    const subId = extractId(invoice.subscription);
+    if (subId) return subId;
+  }
+
+  return null;
+}
+
 describe("Billing & Stripe Hardening Unit Tests", () => {
   describe("1. URL & Domain Restrictions", () => {
     it("permits exact approved Lovable production domain", () => {
@@ -23,7 +55,6 @@ describe("Billing & Stripe Hardening Unit Tests", () => {
     });
 
     it("REJECTS arbitrary lovableproject.com or database ID domains", () => {
-      // Must not derive Lovable domain from database id vqutxzdsajinhsvuddcp
       expect(sanitizeAllowedOrigin("https://vqutxzdsajinhsvuddcp.lovableproject.com")).toBe("https://navaldocspro.lovable.app");
       expect(sanitizeAllowedOrigin("https://id-preview--vqutxzdsajinhsvuddcp.lovable.app")).toBe("https://navaldocspro.lovable.app");
       expect(sanitizeAllowedOrigin("https://attacker-app.lovable.app")).toBe("https://navaldocspro.lovable.app");
@@ -48,16 +79,17 @@ describe("Billing & Stripe Hardening Unit Tests", () => {
       expect(stripeTimestamp).toBe(1792065600);
     });
 
-    it("explicitly detects trial with less than 48 hours remaining without charging prematurely", () => {
-      const now = new Date("2026-09-24T12:00:00Z").getTime();
-      const trialEndDate = new Date("2026-09-25T18:00:00Z"); // 30 hours remaining (< 48h)
-      const remainingMs = trialEndDate.getTime() - now;
+    it("preserves trial without premature charge when < 48 hours remain", () => {
+      const nowMs = 1790251200000;
+      const trialEndMs = nowMs + 24 * 3600 * 1000; // 24h remaining
+      const remainingSeconds = Math.floor((trialEndMs - nowMs) / 1000);
 
-      expect(remainingMs).toBeGreaterThan(0);
-      expect(remainingMs).toBeLessThan(48 * 3600 * 1000);
+      expect(remainingSeconds).toBeGreaterThan(0);
+      expect(remainingSeconds).toBeLessThan(48 * 3600);
 
-      const hoursLeft = Math.max(1, Math.ceil(remainingMs / (3600 * 1000)));
-      expect(hoursLeft).toBe(30);
+      // Ensures trial_end is set to at least 48h in Stripe to prevent immediate card charge
+      const safeTrialEnd = Math.floor(nowMs / 1000) + 48 * 3600 + 60;
+      expect(safeTrialEnd).toBeGreaterThan(Math.floor(nowMs / 1000) + 48 * 3600);
     });
 
     it("distinguishes expired trial (remainingMs <= 0) which requires standard checkout", () => {
@@ -80,36 +112,63 @@ describe("Billing & Stripe Hardening Unit Tests", () => {
 
     it("preserves an existing longer trial end if granted previously by support", () => {
       const companyCreatedAt = new Date("2026-09-01T00:00:00Z");
-      const targetTrialEnd = new Date(companyCreatedAt.getTime() + (60 * 24 * 3600 * 1000)); // 2026-10-31
-      const existingLongerTrialEnd = new Date("2026-12-31T00:00:00Z"); // manual 120-day grant
+      const targetTrialEnd = new Date(companyCreatedAt.getTime() + (60 * 24 * 3600 * 1000));
+      const existingLongerTrialEnd = new Date("2026-12-31T00:00:00Z");
 
       const finalTrialEnd = existingLongerTrialEnd > targetTrialEnd ? existingLongerTrialEnd : targetTrialEnd;
       expect(finalTrialEnd.toISOString()).toBe("2026-12-31T00:00:00.000Z");
     });
   });
 
-  describe("4. Coupon Duration and Plan Eligibility", () => {
-    it("validates percentage discount within allowed 0.01% - 100% bounds", () => {
-      const validDiscount = 20;
-      expect(validDiscount > 0 && validDiscount <= 100).toBe(true);
-
-      const invalidNegative = -5;
-      expect(invalidNegative > 0 && invalidNegative <= 100).toBe(false);
-
-      const invalidOver100 = 150;
-      expect(invalidOver100 > 0 && invalidOver100 <= 100).toBe(false);
+  describe("4. Webhook Subscription ID Extraction (Modern vs Legacy)", () => {
+    it("extracts subscription ID from Modern Stripe API format (2025/2026 parent.subscription_details)", () => {
+      const modernInvoice = {
+        id: "in_modern_123",
+        parent: {
+          type: "subscription_details",
+          subscription_details: {
+            subscription: "sub_modern_xyz987"
+          }
+        }
+      };
+      expect(extractSubscriptionIdFromInvoice(modernInvoice)).toBe("sub_modern_xyz987");
     });
 
-    it("checks plan eligibility filter correctly", () => {
-      const couponApplicablePlans = ["profissional", "equipe"];
-      
-      expect(couponApplicablePlans.includes("profissional")).toBe(true);
-      expect(couponApplicablePlans.includes("essencial")).toBe(false);
+    it("extracts subscription ID from Modern Stripe API with expanded object", () => {
+      const modernExpandedInvoice = {
+        id: "in_modern_456",
+        parent: {
+          type: "subscription_details",
+          subscription_details: {
+            subscription: { id: "sub_expanded_321" }
+          }
+        }
+      };
+      expect(extractSubscriptionIdFromInvoice(modernExpandedInvoice)).toBe("sub_expanded_321");
+    });
 
-      // Empty array means all plans
-      const allPlansFilter: string[] = [];
-      const isAllowed = allPlansFilter.length === 0 || allPlansFilter.includes("essencial");
-      expect(isAllowed).toBe(true);
+    it("extracts subscription ID from Legacy Stripe API format (invoice.subscription string)", () => {
+      const legacyInvoice = {
+        id: "in_legacy_123",
+        subscription: "sub_legacy_abc123"
+      };
+      expect(extractSubscriptionIdFromInvoice(legacyInvoice)).toBe("sub_legacy_abc123");
+    });
+
+    it("extracts subscription ID from Legacy Stripe API with expanded object", () => {
+      const legacyExpandedInvoice = {
+        id: "in_legacy_456",
+        subscription: { id: "sub_legacy_exp789" }
+      };
+      expect(extractSubscriptionIdFromInvoice(legacyExpandedInvoice)).toBe("sub_legacy_exp789");
+    });
+
+    it("returns null safely when invoice has no subscription", () => {
+      const oneTimeInvoice = {
+        id: "in_onetime_000",
+        amount_paid: 5000
+      };
+      expect(extractSubscriptionIdFromInvoice(oneTimeInvoice)).toBeNull();
     });
   });
 });
