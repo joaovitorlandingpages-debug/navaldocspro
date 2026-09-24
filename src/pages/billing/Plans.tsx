@@ -48,12 +48,13 @@ export default function Plans() {
     setIsCheckoutModalOpen(true);
   };
 
-  const handleConfirmCheckout = (provider: "stripe" | "mercadopago") => {
+  const handleConfirmCheckout = (provider: "stripe" | "mercadopago", couponCode?: string) => {
     if (!checkoutPlan) return;
     createPreference.mutate({
       planSlug: checkoutPlan.slug,
       billingCycle: billingCycle === "yearly" ? "annual" : "monthly",
-      provider
+      provider,
+      couponCode
     });
   };
 

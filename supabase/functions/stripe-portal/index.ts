@@ -18,16 +18,16 @@ serve(async (req) => {
     const rawOrigin = body.origin || req.headers.get("origin") || "https://navaldocspro.com.br";
     const supabase = ctx.admin;
 
-    // Validação estrita de origens permitidas
+    // Validação estrita de origens permitidas vinculadas exclusivamente a este projeto
     function sanitizeOrigin(orig: string): string {
       try {
         const parsed = new URL(orig);
-        const host = parsed.hostname;
-        const isProd = host === "navaldocspro.com.br" || host === "www.navaldocspro.com.br";
-        const isLovable = host.endsWith(".lovableproject.com") || host.endsWith(".lovable.app");
-        const isLocal = host === "localhost" || host === "127.0.0.1";
+        const host = parsed.hostname.toLowerCase();
+        const isOfficialProd = host === "navaldocspro.com.br" || host === "www.navaldocspro.com.br";
+        const isProjectPreview = host.includes("vqutxzdsajinhsvuddcp") && (host.endsWith(".lovableproject.com") || host.endsWith(".lovable.app"));
+        const isLocal = (host === "localhost" || host === "127.0.0.1") && (parsed.port === "5173" || parsed.port === "3000" || parsed.port === "8080");
 
-        if (isProd || isLovable || isLocal) {
+        if (isOfficialProd || isProjectPreview || isLocal) {
           return `${parsed.protocol}//${parsed.host}`;
         }
       } catch {

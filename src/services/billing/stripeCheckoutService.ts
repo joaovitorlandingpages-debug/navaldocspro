@@ -4,6 +4,7 @@ export interface CreateStripeCheckoutParams {
   planSlug: string;
   billingCycle: "monthly" | "annual";
   companyId?: string;
+  couponCode?: string;
   origin?: string;
 }
 
@@ -35,6 +36,7 @@ export const stripeCheckoutService = {
           planSlug: params.planSlug,
           billingCycle: params.billingCycle,
           companyId: params.companyId,
+          couponCode: params.couponCode,
           origin
         },
         headers

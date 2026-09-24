@@ -338,7 +338,7 @@ export const useSubscription = () => {
 
   // 4. Mutação para Checkout Oficial (Stripe e Mercado Pago)
   const createPreference = useMutation({
-    mutationFn: async (arg: string | { planSlug: string; billingCycle?: "monthly" | "annual"; provider?: "stripe" | "mercadopago" }) => {
+    mutationFn: async (arg: string | { planSlug: string; billingCycle?: "monthly" | "annual"; provider?: "stripe" | "mercadopago"; couponCode?: string }) => {
       if (!companyId) {
         throw new Error("Identificação da empresa não encontrada. Verifique seu login antes de prosseguir.");
       }
@@ -346,6 +346,7 @@ export const useSubscription = () => {
       const planSlug = typeof arg === "string" ? arg : arg.planSlug;
       const billingCycle = typeof arg === "string" ? "monthly" : arg.billingCycle || "monthly";
       const provider = typeof arg === "string" ? "stripe" : arg.provider || "stripe";
+      const couponCode = typeof arg === "object" ? arg.couponCode : undefined;
 
       const selectedPlan = NAVAL_PLANS.find(p => p.slug === planSlug) || NAVAL_PLANS[1];
       const amount = billingCycle === "annual" ? selectedPlan.priceYearly : selectedPlan.priceMonthly;
@@ -356,7 +357,8 @@ export const useSubscription = () => {
         const stripeRes = await stripeCheckoutService.createCheckoutSession({
           planSlug: selectedPlan.slug,
           billingCycle,
-          companyId
+          companyId,
+          couponCode
         });
 
         if (stripeRes.pendingConfiguration) {

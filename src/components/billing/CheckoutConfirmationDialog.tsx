@@ -28,7 +28,7 @@ import { NavalPlan, calculateAnnualSavings } from "@/services/billing/plansConfi
 export interface CheckoutConfirmationDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (provider: "stripe" | "mercadopago") => void;
+  onConfirm: (provider: "stripe" | "mercadopago", couponCode?: string) => void;
   plan: NavalPlan | null;
   billingCycle: "monthly" | "yearly";
   isTrial: boolean;
@@ -49,6 +49,7 @@ export const CheckoutConfirmationDialog: React.FC<CheckoutConfirmationDialogProp
   isSubmitting = false,
 }) => {
   const [selectedProvider, setSelectedProvider] = useState<"stripe" | "mercadopago">("stripe");
+  const [couponCode, setCouponCode] = useState("");
 
   if (!plan) return null;
 
@@ -57,6 +58,7 @@ export const CheckoutConfirmationDialog: React.FC<CheckoutConfirmationDialogProp
   const annualSavings = calculateAnnualSavings(plan);
 
   const todayFormatted = new Intl.DateTimeFormat("pt-BR").format(new Date());
+  const hasValidTrialLeft = isTrial && trialDaysLeft > 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isSubmitting && onClose()}>
@@ -103,7 +105,7 @@ export const CheckoutConfirmationDialog: React.FC<CheckoutConfirmationDialogProp
             </div>
           </div>
 
-          {/* Destaque Obrigatório: Data da 1ª Cobrança e Valor */}
+          {/* Destaque Obrigatório: Data da 1ª Cobrança e Valor Cobrado Hoje */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="bg-blue-50/70 border border-blue-200/60 rounded-2xl p-3.5">
               <div className="flex items-center gap-2 text-xs font-bold text-[#0d2342] mb-1">
@@ -111,25 +113,29 @@ export const CheckoutConfirmationDialog: React.FC<CheckoutConfirmationDialogProp
                 <span>Data da 1ª Cobrança</span>
               </div>
               <p className="text-sm font-black text-primary">
-                Hoje ({todayFormatted})
+                {hasValidTrialLeft 
+                  ? `${trialEndDateFormatted || "Ao término do teste"} (em ${trialDaysLeft} ${trialDaysLeft === 1 ? 'dia' : 'dias'})`
+                  : `Hoje (${todayFormatted})`}
               </p>
               <p className="text-[11px] text-slate-500 mt-0.5">
-                Cobrado no ato da confirmação do pagamento
+                {hasValidTrialLeft 
+                  ? `Cobrança de R$ ${amountToCharge.toLocaleString("pt-BR")} apenas ao término do teste gratuito`
+                  : "Cobrado no ato da confirmação do pagamento"}
               </p>
             </div>
 
             <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5">
               <div className="flex items-center gap-2 text-xs font-bold text-[#0d2342] mb-1">
                 <Clock className="h-4 w-4 text-slate-600" />
-                <span>Próxima Renovação</span>
+                <span>Valor Cobrado Hoje</span>
               </div>
               <p className="text-sm font-black text-navy">
-                {isYearly ? "Em 1 ano" : "Em 30 dias"}
+                {hasValidTrialLeft ? "R$ 0,00 (Gratuito)" : `R$ ${amountToCharge.toLocaleString("pt-BR")}`}
               </p>
               <p className="text-[11px] text-slate-500 mt-0.5">
-                {isYearly 
-                  ? "Economia de R$ " + annualSavings.toLocaleString("pt-BR") + " garantida" 
-                  : "Renovação automática mensal"}
+                {hasValidTrialLeft 
+                  ? "Apenas validação do cartão sem débito imediato" 
+                  : (isYearly ? `Economia de R$ ${annualSavings.toLocaleString("pt-BR")} no ciclo anual` : "Renovação automática mensal")}
               </p>
             </div>
           </div>
@@ -176,6 +182,30 @@ export const CheckoutConfirmationDialog: React.FC<CheckoutConfirmationDialogProp
               </span>
             </div>
           )}
+
+          {/* Campo de Cupom ou Campanha Promocional */}
+          <div className="space-y-1.5 pt-1">
+            <Label className="text-xs font-bold text-navy uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-primary" /> Possui Cupom ou Código de Parceiro?
+            </Label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase().replace(/\s+/g, ""))}
+                placeholder="Ex: NAVAL60 ou BEMVINDO2026"
+                className="flex-1 h-9 px-3 text-xs font-mono uppercase font-bold border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              {couponCode.trim().length > 0 && (
+                <Badge className="bg-blue-50 text-primary border-blue-200 text-[10px] font-bold">
+                  Código Inserido
+                </Badge>
+              )}
+            </div>
+            <p className="text-[10px] text-slate-400">
+              Códigos de parceria e cupons de desconto serão validados e aplicados no faturamento.
+            </p>
+          </div>
 
           {/* Seleção do Gateway / Provedor de Pagamento */}
           <div className="space-y-2.5 pt-1">
@@ -246,7 +276,7 @@ export const CheckoutConfirmationDialog: React.FC<CheckoutConfirmationDialogProp
             </Button>
             <Button
               type="button"
-              onClick={() => onConfirm(selectedProvider)}
+              onClick={() => onConfirm(selectedProvider, couponCode.trim())}
               disabled={isSubmitting}
               className="w-1/2 sm:w-auto rounded-xl text-xs font-black uppercase tracking-wider bg-navy hover:bg-navy/90 text-white shadow-md gap-1.5"
             >
