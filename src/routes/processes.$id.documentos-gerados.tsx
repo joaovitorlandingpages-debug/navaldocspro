@@ -646,14 +646,18 @@ function DocumentosGeradosPage() {
                             <span>Baixar PDF</span>
                           </button>
 
-                          {/* Menu com Opções Extras */}
+                          {/* Anexar versão assinada */}
                           <button
                             type="button"
-                            onClick={() => setDocToAttach(doc)}
-                            className="p-1 text-slate-400 hover:text-[#075BFF] hover:bg-blue-50 rounded cursor-pointer"
+                            onClick={() => navigate({
+                              to: "/processes/$id/anexar-versao-assinada",
+                              params: { id },
+                              search: { docId: doc.id }
+                            })}
+                            className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded cursor-pointer"
                             title="Anexar versão assinada"
                           >
-                            <MoreVertical className="h-4 w-4" />
+                            <PenTool className="h-4 w-4" />
                           </button>
                         </div>
                       </td>

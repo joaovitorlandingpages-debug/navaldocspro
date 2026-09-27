@@ -155,6 +155,7 @@ import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
 import { Route as ProcessesIdAnexarDocumentoEmitidoRouteImport } from './routes/processes.$id.anexar-documento-emitido'
 import { Route as ProcessesIdAnexarProtocoloRouteImport } from './routes/processes.$id.anexar-protocolo'
+import { Route as ProcessesIdAnexarVersaoAssinadaRouteImport } from './routes/processes.$id.anexar-versao-assinada'
 import { Route as ProcessesIdDocumentosEmitidosRouteImport } from './routes/processes.$id.documentos-emitidos'
 import { Route as ProcessesIdDocumentosGeradosRouteImport } from './routes/processes.$id.documentos-gerados'
 import { Route as ProcessesIdGerarDocumentoRouteImport } from './routes/processes.$id.gerar-documento'
@@ -908,6 +909,12 @@ const ProcessesIdAnexarProtocoloRoute =
     path: '/anexar-protocolo',
     getParentRoute: () => ProcessesIdRoute,
   } as any)
+const ProcessesIdAnexarVersaoAssinadaRoute =
+  ProcessesIdAnexarVersaoAssinadaRouteImport.update({
+    id: '/anexar-versao-assinada',
+    path: '/anexar-versao-assinada',
+    getParentRoute: () => ProcessesIdRoute,
+  } as any)
 const ProcessesIdDocumentosEmitidosRoute =
   ProcessesIdDocumentosEmitidosRouteImport.update({
     id: '/documentos-emitidos',
@@ -1090,6 +1097,7 @@ export interface FileRoutesByFullPath {
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/processes/$id/anexar-documento-emitido': typeof ProcessesIdAnexarDocumentoEmitidoRoute
   '/processes/$id/anexar-protocolo': typeof ProcessesIdAnexarProtocoloRoute
+  '/processes/$id/anexar-versao-assinada': typeof ProcessesIdAnexarVersaoAssinadaRoute
   '/processes/$id/documentos-emitidos': typeof ProcessesIdDocumentosEmitidosRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
   '/processes/$id/gerar-documento': typeof ProcessesIdGerarDocumentoRoute
@@ -1240,6 +1248,7 @@ export interface FileRoutesByTo {
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/processes/$id/anexar-documento-emitido': typeof ProcessesIdAnexarDocumentoEmitidoRoute
   '/processes/$id/anexar-protocolo': typeof ProcessesIdAnexarProtocoloRoute
+  '/processes/$id/anexar-versao-assinada': typeof ProcessesIdAnexarVersaoAssinadaRoute
   '/processes/$id/documentos-emitidos': typeof ProcessesIdDocumentosEmitidosRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
   '/processes/$id/gerar-documento': typeof ProcessesIdGerarDocumentoRoute
@@ -1395,6 +1404,7 @@ export interface FileRoutesById {
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/processes/$id/anexar-documento-emitido': typeof ProcessesIdAnexarDocumentoEmitidoRoute
   '/processes/$id/anexar-protocolo': typeof ProcessesIdAnexarProtocoloRoute
+  '/processes/$id/anexar-versao-assinada': typeof ProcessesIdAnexarVersaoAssinadaRoute
   '/processes/$id/documentos-emitidos': typeof ProcessesIdDocumentosEmitidosRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
   '/processes/$id/gerar-documento': typeof ProcessesIdGerarDocumentoRoute
@@ -1551,6 +1561,7 @@ export interface FileRouteTypes {
     | '/admin/templates/pfw'
     | '/processes/$id/anexar-documento-emitido'
     | '/processes/$id/anexar-protocolo'
+    | '/processes/$id/anexar-versao-assinada'
     | '/processes/$id/documentos-emitidos'
     | '/processes/$id/documentos-gerados'
     | '/processes/$id/gerar-documento'
@@ -1701,6 +1712,7 @@ export interface FileRouteTypes {
     | '/admin/templates/pfw'
     | '/processes/$id/anexar-documento-emitido'
     | '/processes/$id/anexar-protocolo'
+    | '/processes/$id/anexar-versao-assinada'
     | '/processes/$id/documentos-emitidos'
     | '/processes/$id/documentos-gerados'
     | '/processes/$id/gerar-documento'
@@ -1855,6 +1867,7 @@ export interface FileRouteTypes {
     | '/admin/templates/pfw'
     | '/processes/$id/anexar-documento-emitido'
     | '/processes/$id/anexar-protocolo'
+    | '/processes/$id/anexar-versao-assinada'
     | '/processes/$id/documentos-emitidos'
     | '/processes/$id/documentos-gerados'
     | '/processes/$id/gerar-documento'
@@ -2961,6 +2974,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProcessesIdAnexarProtocoloRouteImport
       parentRoute: typeof ProcessesIdRoute
     }
+    '/processes/$id/anexar-versao-assinada': {
+      id: '/processes/$id/anexar-versao-assinada'
+      path: '/anexar-versao-assinada'
+      fullPath: '/processes/$id/anexar-versao-assinada'
+      preLoaderRoute: typeof ProcessesIdAnexarVersaoAssinadaRouteImport
+      parentRoute: typeof ProcessesIdRoute
+    }
     '/processes/$id/documentos-emitidos': {
       id: '/processes/$id/documentos-emitidos'
       path: '/documentos-emitidos'
@@ -3245,6 +3265,7 @@ const VesselsRouteWithChildren =
 interface ProcessesIdRouteChildren {
   ProcessesIdAnexarDocumentoEmitidoRoute: typeof ProcessesIdAnexarDocumentoEmitidoRoute
   ProcessesIdAnexarProtocoloRoute: typeof ProcessesIdAnexarProtocoloRoute
+  ProcessesIdAnexarVersaoAssinadaRoute: typeof ProcessesIdAnexarVersaoAssinadaRoute
   ProcessesIdDocumentosEmitidosRoute: typeof ProcessesIdDocumentosEmitidosRoute
   ProcessesIdDocumentosGeradosRoute: typeof ProcessesIdDocumentosGeradosRoute
   ProcessesIdGerarDocumentoRoute: typeof ProcessesIdGerarDocumentoRoute
@@ -3257,6 +3278,7 @@ const ProcessesIdRouteChildren: ProcessesIdRouteChildren = {
   ProcessesIdAnexarDocumentoEmitidoRoute:
     ProcessesIdAnexarDocumentoEmitidoRoute,
   ProcessesIdAnexarProtocoloRoute: ProcessesIdAnexarProtocoloRoute,
+  ProcessesIdAnexarVersaoAssinadaRoute: ProcessesIdAnexarVersaoAssinadaRoute,
   ProcessesIdDocumentosEmitidosRoute: ProcessesIdDocumentosEmitidosRoute,
   ProcessesIdDocumentosGeradosRoute: ProcessesIdDocumentosGeradosRoute,
   ProcessesIdGerarDocumentoRoute: ProcessesIdGerarDocumentoRoute,

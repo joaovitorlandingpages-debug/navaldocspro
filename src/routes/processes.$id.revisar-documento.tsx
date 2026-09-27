@@ -593,6 +593,19 @@ function RevisarDocumentoGeradoPage() {
 
               <button
                 type="button"
+                onClick={() => navigate({
+                  to: "/processes/$id/anexar-versao-assinada",
+                  params: { id },
+                  search: { docId: document?.id }
+                })}
+                className="w-full py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer border border-emerald-200/80"
+              >
+                <PenTool className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Anexar versão assinada</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setIsNewVersionModalOpen(true)}
                 className="w-full py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
@@ -612,7 +625,7 @@ function RevisarDocumentoGeradoPage() {
             </div>
 
             {/* CARD 3: ORIENTAÇÃO SOBRE ASSINATURA EXTERNA */}
-            <div className="bg-[#F0FDF4] border border-[#BBF7D0] rounded-2xl p-4 sm:p-5 shadow-xs space-y-2">
+            <div className="bg-[#F0FDF4] border border-[#BBF7D0] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
               <div className="flex items-start gap-2.5 text-emerald-800">
                 <PenTool className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
                 <h3 className="text-xs font-bold">
@@ -622,6 +635,18 @@ function RevisarDocumentoGeradoPage() {
               <p className="text-[11px] text-emerald-900/80 leading-relaxed">
                 Para assinar, baixe o PDF e utilize o portal <strong>GOV.BR</strong>. Depois, anexe a versão assinada na seção de documentos gerados.
               </p>
+              <button
+                type="button"
+                onClick={() => navigate({
+                  to: "/processes/$id/anexar-versao-assinada",
+                  params: { id },
+                  search: { docId: document?.id }
+                })}
+                className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                <PenTool className="h-3.5 w-3.5" />
+                <span>Anexar arquivo assinado</span>
+              </button>
             </div>
 
             {/* CARD 4: HISTÓRICO DE VERSÕES RECOLHÍVEL */}
