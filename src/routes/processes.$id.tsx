@@ -593,6 +593,13 @@ function ProcessDetailsPage() {
                 <span>Ver documentos</span>
                 <ChevronRight className="h-3.5 w-3.5" />
               </Link>
+              <Link
+                to="/processes/$id/gerar-documento"
+                params={{ id }}
+                className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-[#075BFF] text-[11px] font-semibold transition-colors"
+              >
+                Gerar
+              </Link>
             </div>
           </div>
 
@@ -808,6 +815,24 @@ function ProcessDetailsPage() {
                   </p>
                   <p className="text-[11px] text-slate-400 mt-0.5">
                     Adicionar comprovante e código de protocolo
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigate({
+                      to: "/processes/$id/gerar-documento",
+                      params: { id },
+                    });
+                  }}
+                  className="p-3 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 text-left transition-all cursor-pointer group"
+                >
+                  <p className="text-xs font-bold text-[#0B1739] group-hover:text-[#075BFF]">
+                    Gerar documento
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Emitir requerimentos e procurações em PDF
                   </p>
                 </button>
 

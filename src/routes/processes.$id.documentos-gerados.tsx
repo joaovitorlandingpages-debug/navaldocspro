@@ -396,7 +396,7 @@ function DocumentosGeradosPage() {
 
         <button
           type="button"
-          onClick={handleOpenGenerateModal}
+          onClick={() => navigate({ to: "/processes/$id/gerar-documento", params: { id } })}
           className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors shrink-0 cursor-pointer"
         >
           <Plus className="h-4 w-4" />
