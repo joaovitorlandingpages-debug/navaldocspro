@@ -124,6 +124,7 @@ import { Route as ProcessesNovoPedidoRouteImport } from './routes/processes.novo
 import { Route as ProcessesPrepararAssinaturasRouteImport } from './routes/processes.preparar-assinaturas'
 import { Route as ProcessesTrashRouteImport } from './routes/processes.trash'
 import { Route as ProcessesVisualizarEEditarRouteImport } from './routes/processes.visualizar-e-editar'
+import { Route as ServicosDocumentosRouteImport } from './routes/servicos.documentos'
 import { Route as ServicosSelecionarRouteImport } from './routes/servicos.selecionar'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as TemplatesIdRouteImport } from './routes/templates.$id'
@@ -740,6 +741,11 @@ const ProcessesVisualizarEEditarRoute =
     path: '/processes/visualizar-e-editar',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ServicosDocumentosRoute = ServicosDocumentosRouteImport.update({
+  id: '/documentos',
+  path: '/documentos',
+  getParentRoute: () => ServicosRoute,
+} as any)
 const ServicosSelecionarRoute = ServicosSelecionarRouteImport.update({
   id: '/selecionar',
   path: '/selecionar',
@@ -1032,6 +1038,7 @@ export interface FileRoutesByFullPath {
   '/processes/preparar-assinaturas': typeof ProcessesPrepararAssinaturasRoute
   '/processes/trash': typeof ProcessesTrashRoute
   '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
+  '/servicos/documentos': typeof ServicosDocumentosRoute
   '/servicos/selecionar': typeof ServicosSelecionarRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
@@ -1178,6 +1185,7 @@ export interface FileRoutesByTo {
   '/processes/preparar-assinaturas': typeof ProcessesPrepararAssinaturasRoute
   '/processes/trash': typeof ProcessesTrashRoute
   '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
+  '/servicos/documentos': typeof ServicosDocumentosRoute
   '/servicos/selecionar': typeof ServicosSelecionarRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
@@ -1329,6 +1337,7 @@ export interface FileRoutesById {
   '/processes/preparar-assinaturas': typeof ProcessesPrepararAssinaturasRoute
   '/processes/trash': typeof ProcessesTrashRoute
   '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
+  '/servicos/documentos': typeof ServicosDocumentosRoute
   '/servicos/selecionar': typeof ServicosSelecionarRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
@@ -1481,6 +1490,7 @@ export interface FileRouteTypes {
     | '/processes/preparar-assinaturas'
     | '/processes/trash'
     | '/processes/visualizar-e-editar'
+    | '/servicos/documentos'
     | '/servicos/selecionar'
     | '/templates/$id'
     | '/templates/gratuitos'
@@ -1627,6 +1637,7 @@ export interface FileRouteTypes {
     | '/processes/preparar-assinaturas'
     | '/processes/trash'
     | '/processes/visualizar-e-editar'
+    | '/servicos/documentos'
     | '/servicos/selecionar'
     | '/templates/$id'
     | '/templates/gratuitos'
@@ -1777,6 +1788,7 @@ export interface FileRouteTypes {
     | '/processes/preparar-assinaturas'
     | '/processes/trash'
     | '/processes/visualizar-e-editar'
+    | '/servicos/documentos'
     | '/servicos/selecionar'
     | '/templates/$id'
     | '/templates/gratuitos'
@@ -2694,6 +2706,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProcessesVisualizarEEditarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/servicos/documentos': {
+      id: '/servicos/documentos'
+      path: '/documentos'
+      fullPath: '/servicos/documentos'
+      preLoaderRoute: typeof ServicosDocumentosRouteImport
+      parentRoute: typeof ServicosRoute
+    }
     '/servicos/selecionar': {
       id: '/servicos/selecionar'
       path: '/selecionar'
@@ -3116,10 +3135,12 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 )
 
 interface ServicosRouteChildren {
+  ServicosDocumentosRoute: typeof ServicosDocumentosRoute
   ServicosSelecionarRoute: typeof ServicosSelecionarRoute
 }
 
 const ServicosRouteChildren: ServicosRouteChildren = {
+  ServicosDocumentosRoute: ServicosDocumentosRoute,
   ServicosSelecionarRoute: ServicosSelecionarRoute,
 }
 

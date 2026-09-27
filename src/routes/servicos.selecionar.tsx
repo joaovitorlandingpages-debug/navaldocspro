@@ -288,52 +288,18 @@ function SelecionarServicosPage() {
     return selectedCustomerId !== "" && selectedVesselId !== "" && selectedServiceIds.length > 0;
   }, [selectedCustomerId, selectedVesselId, selectedServiceIds]);
 
-  // Execução da Criação do Processo / Serviços
-  const handleConfirmCreateProcess = async () => {
-    if (!companyId || !selectedCustomerId || !selectedVesselId || selectedServiceIds.length === 0) return;
-
-    setIsCreatingProcess(true);
-    try {
-      const primaryService = selectedServicesList[0]?.name || "Serviço Náutico";
-      const count = selectedServicesList.length;
-      const processTitle = count > 1 
-        ? `${primaryService} (+${count - 1} ${count - 1 === 1 ? "serviço" : "serviços"})`
-        : primaryService;
-
-      const randomCode = Math.floor(100 + Math.random() * 900);
-      const generatedProtocol = `PROC-${randomCode}`;
-
-      // Inserir registro na tabela `processes`
-      const { data: newProc, error: procError } = await supabase
-        .from("processes")
-        .insert({
-          company_id: companyId,
-          customer_id: selectedCustomerId,
-          vessel_id: selectedVesselId,
-          title: processTitle,
-          process_type: primaryService,
-          status: "in_progress",
-          protocol_number: generatedProtocol,
-        })
-        .select()
-        .single();
-
-      if (procError) throw procError;
-
-      toast.success("Processo e serviços iniciados com sucesso!");
-      setIsReviewModalOpen(false);
-      
-      // Navega para a Tela 07 (Detalhes do Serviço) do novo processo criado
-      navigate({
-        to: "/processes/$id",
-        params: { id: newProc.id },
-      });
-    } catch (err: any) {
-      console.error("Erro ao criar processo:", err);
-      toast.error(err?.message || "Não foi possível criar o processo. Tente novamente.");
-    } finally {
-      setIsCreatingProcess(false);
-    }
+  // Avançar para a Tela 18 (Documentos do serviço)
+  const handleContinueToDocuments = () => {
+    if (!canReview) return;
+    navigate({
+      to: "/servicos/documentos",
+      search: {
+        category: currentCategory,
+        customerId: selectedCustomerId,
+        vesselId: selectedVesselId,
+        services: selectedServiceIds.join(","),
+      },
+    });
   };
 
   // Estados de Carregamento e Erro Inicial
@@ -584,10 +550,22 @@ function SelecionarServicosPage() {
           <button
             type="button"
             disabled={!canReview}
-            onClick={() => setIsReviewModalOpen(true)}
+            onClick={() => {
+              const servicesParam = selectedServices.join(",");
+              navigate({
+                to: "/servicos/documentos",
+                search: {
+                  category,
+                  customerId: selectedCustomerId || "",
+                  vesselId: selectedVesselId || "",
+                  services: servicesParam,
+                  activeServiceId: selectedServices[0] || "",
+                },
+              });
+            }}
             className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
-            <span>Revisar seleção</span>
+            <span>Continuar para documentos</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>
