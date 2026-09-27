@@ -51,6 +51,7 @@ import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PredictionsRouteImport } from './routes/predictions'
 import { Route as QaChecklistRouteImport } from './routes/qa-checklist'
 import { Route as SalesCenterRouteImport } from './routes/sales-center'
+import { Route as ServicosRouteImport } from './routes/servicos'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SugestoesRouteImport } from './routes/sugestoes'
@@ -364,6 +365,11 @@ const QaChecklistRoute = QaChecklistRouteImport.update({
 const SalesCenterRoute = SalesCenterRouteImport.update({
   id: '/sales-center',
   path: '/sales-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicosRoute = ServicosRouteImport.update({
+  id: '/servicos',
+  path: '/servicos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -950,6 +956,7 @@ export interface FileRoutesByFullPath {
   '/predictions': typeof PredictionsRoute
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
+  '/servicos': typeof ServicosRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/sugestoes': typeof SugestoesRoute
@@ -1096,6 +1103,7 @@ export interface FileRoutesByTo {
   '/predictions': typeof PredictionsRoute
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
+  '/servicos': typeof ServicosRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/sugestoes': typeof SugestoesRoute
@@ -1243,6 +1251,7 @@ export interface FileRoutesById {
   '/predictions': typeof PredictionsRoute
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
+  '/servicos': typeof ServicosRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/sugestoes': typeof SugestoesRoute
@@ -1393,6 +1402,7 @@ export interface FileRouteTypes {
     | '/predictions'
     | '/qa-checklist'
     | '/sales-center'
+    | '/servicos'
     | '/settings'
     | '/status'
     | '/sugestoes'
@@ -1539,6 +1549,7 @@ export interface FileRouteTypes {
     | '/predictions'
     | '/qa-checklist'
     | '/sales-center'
+    | '/servicos'
     | '/settings'
     | '/status'
     | '/sugestoes'
@@ -1685,6 +1696,7 @@ export interface FileRouteTypes {
     | '/predictions'
     | '/qa-checklist'
     | '/sales-center'
+    | '/servicos'
     | '/settings'
     | '/status'
     | '/sugestoes'
@@ -1834,6 +1846,7 @@ export interface RootRouteChildren {
   PredictionsRoute: typeof PredictionsRoute
   QaChecklistRoute: typeof QaChecklistRoute
   SalesCenterRoute: typeof SalesCenterRoute
+  ServicosRoute: typeof ServicosRoute
   SettingsRoute: typeof SettingsRoute
   StatusRoute: typeof StatusRoute
   SugestoesRoute: typeof SugestoesRoute
@@ -2156,6 +2169,13 @@ declare module '@tanstack/react-router' {
       path: '/sales-center'
       fullPath: '/sales-center'
       preLoaderRoute: typeof SalesCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/servicos': {
+      id: '/servicos'
+      path: '/servicos'
+      fullPath: '/servicos'
+      preLoaderRoute: typeof ServicosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -3175,6 +3195,7 @@ const rootRouteChildren: RootRouteChildren = {
   PredictionsRoute: PredictionsRoute,
   QaChecklistRoute: QaChecklistRoute,
   SalesCenterRoute: SalesCenterRoute,
+  ServicosRoute: ServicosRoute,
   SettingsRoute: SettingsRoute,
   StatusRoute: StatusRoute,
   SugestoesRoute: SugestoesRoute,

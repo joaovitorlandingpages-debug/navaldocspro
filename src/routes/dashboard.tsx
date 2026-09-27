@@ -214,7 +214,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
           <nav className="space-y-1.5 flex-1">
             {navItems.map((item) => {
               const isActive = item.exact 
-                ? (location.pathname === "/dashboard" || location.pathname === "/dashboard/")
+                ? (location.pathname === "/dashboard" || location.pathname === "/dashboard/" || location.pathname.startsWith("/servicos"))
                 : location.pathname.startsWith(item.path);
 
               return (
@@ -416,11 +416,11 @@ export function RouteContent() {
         <div
           role="button"
           tabIndex={0}
-          onClick={() => setIsServicesModalOpen(true)}
+          onClick={() => navigate({ to: "/servicos" })}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              setIsServicesModalOpen(true);
+              navigate({ to: "/servicos" });
             }
           }}
           className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 flex flex-col justify-between hover:border-blue-200 hover:shadow-md transition-all duration-200 cursor-pointer group text-left min-h-[300px] focus:outline-none focus:ring-2 focus:ring-[#075BFF]/30"
