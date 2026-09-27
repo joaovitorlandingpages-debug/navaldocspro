@@ -35,7 +35,8 @@ import {
   Sliders,
   Layers,
   LogOut,
-  FolderOpen
+  FolderOpen,
+  DollarSign
 } from "lucide-react";
 import { useState, useEffect, useMemo, Component, ErrorInfo, ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -107,6 +108,7 @@ function AdminLayout() {
     { name: "Aplicativos", icon: Layers, path: "/admin/applications" },
     { name: "Planos e assinaturas", icon: CreditCard, path: "/admin/billing" },
     { name: "Consumo e créditos", icon: BarChart3, path: "/admin/saas-metrics" },
+    { name: "Financeiro da plataforma", icon: DollarSign, path: "/admin/financeiro" },
     { name: "Catálogo de serviços", icon: FolderOpen, path: "/admin/services" },
     { name: "Modelos de documentos", icon: FileText, path: "/admin/templates" },
     { name: "Sugestões", icon: MessageSquare, path: "/admin/sugestoes" },
