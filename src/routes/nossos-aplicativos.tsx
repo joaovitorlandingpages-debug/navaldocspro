@@ -56,7 +56,7 @@ function NossosAplicativosPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isError, setIsError] = useState<boolean>(false);
   const [isRetrying, setIsRetrying] = useState<boolean>(false);
-  const [companyPlan, setCompanyPlan] = useState<string>("pro");
+  const [companyAppsAccess, setCompanyAppsAccess] = useState<Record<string, any>>({});
 
   // Carregar dados de assinatura/permissões da empresa
   const loadAppData = useCallback(async () => {
@@ -73,7 +73,7 @@ function NossosAplicativosPage() {
     try {
       const { data: compData, error: compErr } = await supabase
         .from("companies")
-        .select("id, name, fantasy_name, plan, metadata")
+        .select("id, name, fantasy_name, plan, is_pilot, metadata")
         .eq("id", companyId)
         .maybeSingle();
 
@@ -86,9 +86,9 @@ function NossosAplicativosPage() {
         throw compErr;
       }
 
-      if (compData?.plan) {
-        setCompanyPlan(compData.plan.toLowerCase());
-      }
+      const meta = (compData?.metadata || {}) as Record<string, any>;
+      const appAccess = (meta.applications_access || {}) as Record<string, any>;
+      setCompanyAppsAccess(appAccess);
     } catch (err) {
       console.error("[NossosAplicativos] Falha ao consultar produtos da empresa:", err);
       setIsError(true);
@@ -107,57 +107,66 @@ function NossosAplicativosPage() {
     loadAppData();
   };
 
-  // Lista oficial dos 3 aplicativos da plataforma
-  const apps: AppItem[] = [
-    {
-      id: "navaldocs-pro",
-      title: "NavalDocs Pro",
-      description: "Geração e organização de documentos para embarcações.",
-      status: "current",
-      statusLabel: "Aplicativo atual",
-      badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-      features: [
-        "Cadastro completo de clientes e embarcações",
-        "Geração de requerimentos, procurações e termos",
-        "Acompanhamento de processos e protocolos",
-        "Leitor inteligente e validação documental",
-      ],
-      actionLabel: "Abrir aplicativo",
-      actionUrl: "/home",
-      icon: FileSpreadsheet,
-    },
-    {
-      id: "app-arrais",
-      title: "App Arrais",
-      description: "Organização de documentos para habilitação de amadores.",
-      status: "soon",
-      statusLabel: "Em breve",
-      badgeColor: "bg-slate-100 text-slate-600 border-slate-200",
-      features: [
-        "Controle de alunos e turmas náuticas",
-        "Atestados de embarque e declarações de aulas",
-        "Fluxo guiado para Capitania e agendamento de provas",
-      ],
-      actionLabel: "Em breve",
-      icon: Award,
-    },
-    {
-      id: "central-vencimentos",
-      title: "Central de Vencimentos",
-      description: "Acompanhe prazos e vencimentos de documentos.",
-      status: "available",
-      statusLabel: "Disponível",
-      badgeColor: "bg-blue-50 text-[#075BFF] border-blue-200",
-      features: [
-        "Painel unificado de prazos por cliente e embarcação",
-        "Monitoramento de certificados, vistorias e DPEM",
-        "Alertas preventivos para evitar perda de validade",
-      ],
-      actionLabel: "Acessar",
-      actionUrl: "/dashboard/deadlines",
-      icon: CalendarClock,
-    },
-  ];
+  // Lista oficial dos 3 aplicativos da plataforma com base nos direitos reais
+  const apps: AppItem[] = useMemo(() => {
+    const arraisAccess = companyAppsAccess["app-arrais"];
+    const hasArraisActive = arraisAccess?.status === "active";
+
+    const centralAccess = companyAppsAccess["central-vencimentos"];
+    const hasCentralActive = centralAccess?.status === "active";
+
+    return [
+      {
+        id: "navaldocs-pro",
+        title: "NavalDocs Pro",
+        description: "Geração e organização de documentos para embarcações.",
+        status: "current",
+        statusLabel: "Aplicativo atual",
+        badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        features: [
+          "Cadastro completo de clientes e embarcações",
+          "Geração de requerimentos, procurações e termos",
+          "Acompanhamento de processos e protocolos",
+          "Leitor inteligente e validação documental",
+        ],
+        actionLabel: "Abrir aplicativo",
+        actionUrl: "/home",
+        icon: FileSpreadsheet,
+      },
+      {
+        id: "app-arrais",
+        title: "App Arrais",
+        description: "Organização de documentos para habilitação de amadores.",
+        status: hasArraisActive ? "available" : "soon",
+        statusLabel: hasArraisActive ? "Acesso Piloto Liberado" : "Em breve",
+        badgeColor: hasArraisActive ? "bg-purple-50 text-purple-700 border-purple-200" : "bg-slate-100 text-slate-600 border-slate-200",
+        features: [
+          "Controle de alunos e turmas náuticas",
+          "Atestados de embarque e declarações de aulas",
+          "Fluxo guiado para Capitania e agendamento de provas",
+        ],
+        actionLabel: hasArraisActive ? "Acesso Antecipado" : "Em breve",
+        actionUrl: hasArraisActive ? "/home" : undefined,
+        icon: Award,
+      },
+      {
+        id: "central-vencimentos",
+        title: "Central de Vencimentos",
+        description: "Acompanhe prazos e vencimentos de documentos.",
+        status: hasCentralActive ? "available" : "soon",
+        statusLabel: hasCentralActive ? "Disponível" : "Em preparação",
+        badgeColor: hasCentralActive ? "bg-blue-50 text-[#075BFF] border-blue-200" : "bg-slate-100 text-slate-600 border-slate-200",
+        features: [
+          "Painel unificado de prazos por cliente e embarcação",
+          "Monitoramento de certificados, vistorias e DPEM",
+          "Alertas preventivos para evitar perda de validade",
+        ],
+        actionLabel: hasCentralActive ? "Acessar" : "Em breve",
+        actionUrl: hasCentralActive ? "/dashboard/deadlines" : undefined,
+        icon: CalendarClock,
+      },
+    ];
+  }, [companyAppsAccess]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0B1739] font-sans pb-16">

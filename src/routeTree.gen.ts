@@ -62,6 +62,7 @@ import { Route as TemplatesRouteImport } from './routes/templates'
 import { Route as VesselsRouteImport } from './routes/vessels'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAiCommandCenterRouteImport } from './routes/admin/ai-command-center'
+import { Route as AdminApplicationsRouteImport } from './routes/admin/applications'
 import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
 import { Route as AdminBillingRouteImport } from './routes/admin/billing'
 import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
@@ -429,6 +430,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminAiCommandCenterRoute = AdminAiCommandCenterRouteImport.update({
   id: '/ai-command-center',
   path: '/ai-command-center',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminApplicationsRoute = AdminApplicationsRouteImport.update({
+  id: '/applications',
+  path: '/applications',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAutomationRoute = AdminAutomationRouteImport.update({
@@ -1025,6 +1031,7 @@ export interface FileRoutesByFullPath {
   '/templates': typeof TemplatesRouteWithChildren
   '/vessels': typeof VesselsRouteWithChildren
   '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
+  '/admin/applications': typeof AdminApplicationsRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/commercial': typeof AdminCommercialRoute
@@ -1180,6 +1187,7 @@ export interface FileRoutesByTo {
   '/system-monitor': typeof SystemMonitorRoute
   '/vessels': typeof VesselsRouteWithChildren
   '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
+  '/admin/applications': typeof AdminApplicationsRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/commercial': typeof AdminCommercialRoute
@@ -1338,6 +1346,7 @@ export interface FileRoutesById {
   '/templates': typeof TemplatesRouteWithChildren
   '/vessels': typeof VesselsRouteWithChildren
   '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
+  '/admin/applications': typeof AdminApplicationsRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/commercial': typeof AdminCommercialRoute
@@ -1498,6 +1507,7 @@ export interface FileRouteTypes {
     | '/templates'
     | '/vessels'
     | '/admin/ai-command-center'
+    | '/admin/applications'
     | '/admin/automation'
     | '/admin/billing'
     | '/admin/commercial'
@@ -1653,6 +1663,7 @@ export interface FileRouteTypes {
     | '/system-monitor'
     | '/vessels'
     | '/admin/ai-command-center'
+    | '/admin/applications'
     | '/admin/automation'
     | '/admin/billing'
     | '/admin/commercial'
@@ -1810,6 +1821,7 @@ export interface FileRouteTypes {
     | '/templates'
     | '/vessels'
     | '/admin/ai-command-center'
+    | '/admin/applications'
     | '/admin/automation'
     | '/admin/billing'
     | '/admin/commercial'
@@ -2361,6 +2373,13 @@ declare module '@tanstack/react-router' {
       path: '/ai-command-center'
       fullPath: '/admin/ai-command-center'
       preLoaderRoute: typeof AdminAiCommandCenterRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/applications': {
+      id: '/admin/applications'
+      path: '/applications'
+      fullPath: '/admin/applications'
+      preLoaderRoute: typeof AdminApplicationsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/automation': {
@@ -3152,6 +3171,7 @@ const AdminTemplatesRouteWithChildren = AdminTemplatesRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminAiCommandCenterRoute: typeof AdminAiCommandCenterRoute
+  AdminApplicationsRoute: typeof AdminApplicationsRoute
   AdminAutomationRoute: typeof AdminAutomationRoute
   AdminBillingRoute: typeof AdminBillingRoute
   AdminCommercialRoute: typeof AdminCommercialRoute
@@ -3193,6 +3213,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAiCommandCenterRoute: AdminAiCommandCenterRoute,
+  AdminApplicationsRoute: AdminApplicationsRoute,
   AdminAutomationRoute: AdminAutomationRoute,
   AdminBillingRoute: AdminBillingRoute,
   AdminCommercialRoute: AdminCommercialRoute,

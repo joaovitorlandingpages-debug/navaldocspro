@@ -104,7 +104,7 @@ function AdminLayout() {
     { name: "Visão geral", icon: LayoutDashboard, path: "/admin" },
     { name: "Empresas", icon: Building, path: "/admin/companies" },
     { name: "Usuários e funcionários", icon: Users, path: "/admin/users" },
-    { name: "Aplicativos", icon: Layers, path: "/nossos-aplicativos" },
+    { name: "Aplicativos", icon: Layers, path: "/admin/applications" },
     { name: "Planos e assinaturas", icon: CreditCard, path: "/admin/billing" },
     { name: "Consumo e créditos", icon: BarChart3, path: "/admin/saas-metrics" },
     { name: "Catálogo de serviços", icon: FolderOpen, path: "/servicos" },
