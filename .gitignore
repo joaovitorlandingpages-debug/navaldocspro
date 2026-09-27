@@ -33,3 +33,5 @@ test-results/
 .playwright/
 scratch/
 supabase/.temp/
+*.zip
+*.patch

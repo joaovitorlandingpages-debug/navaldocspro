@@ -56,3 +56,28 @@ export async function getStoredFileSignedUrl(file: any) {
   if (error) throw error;
   return data.signedUrl;
 }
+
+export async function downloadStoredFile(file: any, defaultName?: string) {
+  try {
+    const url = await getStoredFileSignedUrl(file);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Falha ao baixar arquivo do servidor");
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    let fileName = defaultName || file?.name || file?.file_name || "documento.pdf";
+    if (!fileName.toLowerCase().endsWith(".pdf") && !fileName.includes(".")) {
+      fileName += ".pdf";
+    }
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(blobUrl);
+    toast.success("Download iniciado com sucesso.");
+  } catch (err: any) {
+    console.error("[DOWNLOAD_FAILED]", err);
+    toast.error(err?.message || "Não foi possível baixar o documento.");
+  }
+}

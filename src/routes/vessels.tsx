@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { 
   Ship, Search, Plus, MoreHorizontal, Settings, 
   Info, Anchor, X, User, Hash, Zap, Shield, 
@@ -22,17 +22,37 @@ import { PageHeader } from "@/components/navigation/PageHeader";
 import { openStoredFile } from "@/utils/file-preview";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { DashboardLayout } from "@/routes/dashboard";
 
 export const Route = createFileRoute("/vessels")({
-  component: Vessels,
+  validateSearch: (search: Record<string, unknown>) => ({
+    action: (search.action as string) || undefined,
+  }),
+  component: () => (
+    <ProtectedRoute>
+      <DashboardLayout>
+        <Vessels />
+      </DashboardLayout>
+    </ProtectedRoute>
+  ),
 });
 
 function Vessels() {
+  const navigate = useNavigate();
   const [showDeleteVesselConfirm, setShowDeleteVesselConfirm] = useState(false);
   const [isDeletingVessel, setIsDeletingVessel] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<{ id: string; name: string } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("action") === "new") {
+        setIsModalOpen(true);
+      }
+    }
+  }, []);
   const [selectedVessel, setSelectedVessel] = useState<any | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [vessels, setVessels] = useState<any[]>([]);
@@ -73,8 +93,11 @@ function Vessels() {
   });
 
   const handleOpenDetails = (vessel: any) => {
-    setSelectedVessel(vessel);
-    setIsDetailsOpen(true);
+    navigate({
+      to: "/vessels/$id",
+      params: { id: vessel.id },
+      search: { from: "vessels" },
+    });
   };
 
   useEffect(() => {
@@ -241,7 +264,7 @@ function Vessels() {
                   setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
                   return;
                 }
-                setIsModalOpen(true);
+                window.location.href = "/vessels/novo";
               }}
 
               className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"

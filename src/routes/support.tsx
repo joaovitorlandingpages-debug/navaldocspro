@@ -10,9 +10,17 @@ import {
   LifeBuoy, BookOpen, Clock, CheckCircle2,
   AlertCircle, Activity
 } from "lucide-react";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { DashboardLayout } from "@/routes/dashboard";
 
 export const Route = createFileRoute("/support")({
-  component: SupportPage,
+  component: () => (
+    <ProtectedRoute>
+      <DashboardLayout>
+        <SupportPage />
+      </DashboardLayout>
+    </ProtectedRoute>
+  ),
 });
 
 function SupportPage() {

@@ -37,6 +37,7 @@ import { Route as GettingStartedRouteImport } from './routes/getting-started'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as IdentidadeRouteImport } from './routes/identidade'
 import { Route as LogsRouteImport } from './routes/logs'
+import { Route as NossosAplicativosRouteImport } from './routes/nossos-aplicativos'
 import { Route as OcrCenterRouteImport } from './routes/ocr-center'
 import { Route as OcrReviewCenterRouteImport } from './routes/ocr-review-center'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -52,6 +53,7 @@ import { Route as QaChecklistRouteImport } from './routes/qa-checklist'
 import { Route as SalesCenterRouteImport } from './routes/sales-center'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatusRouteImport } from './routes/status'
+import { Route as SugestoesRouteImport } from './routes/sugestoes'
 import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SystemMonitorRouteImport } from './routes/system-monitor'
@@ -102,6 +104,8 @@ import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as BillingFailureRouteImport } from './routes/billing.failure'
 import { Route as BillingSubscriptionRouteImport } from './routes/billing.subscription'
 import { Route as BillingSuccessRouteImport } from './routes/billing.success'
+import { Route as CustomersIdRouteImport } from './routes/customers.$id'
+import { Route as CustomersNovoRouteImport } from './routes/customers.novo'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardComplianceCenterRouteImport } from './routes/dashboard/compliance-center'
 import { Route as DashboardDeadlinesRouteImport } from './routes/dashboard.deadlines'
@@ -125,6 +129,8 @@ import { Route as TemplatesGratuitosRouteImport } from './routes/templates.gratu
 import { Route as TemplatesMarketplaceRouteImport } from './routes/templates.marketplace'
 import { Route as TemplatesMeusRouteImport } from './routes/templates.meus'
 import { Route as VerificarAssinaturaCodeRouteImport } from './routes/verificar-assinatura.$code'
+import { Route as VesselsIdRouteImport } from './routes/vessels.$id'
+import { Route as VesselsNovoRouteImport } from './routes/vessels.novo'
 import { Route as AdminDocsCentralIndexRouteImport } from './routes/admin/docs-central/index'
 import { Route as AdminDocsCentralAuditRouteImport } from './routes/admin/docs-central/audit'
 import { Route as AdminDocsCentralCoverageRouteImport } from './routes/admin/docs-central/coverage'
@@ -143,6 +149,7 @@ import { Route as AdminProcessCenterIndexRouteImport } from './routes/admin/proc
 import { Route as AdminProcessCenterIdRouteImport } from './routes/admin/process-center.$id'
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
+import { Route as ProcessesIdDocumentosGeradosRouteImport } from './routes/processes.$id.documentos-gerados'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -284,6 +291,11 @@ const LogsRoute = LogsRouteImport.update({
   path: '/logs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NossosAplicativosRoute = NossosAplicativosRouteImport.update({
+  id: '/nossos-aplicativos',
+  path: '/nossos-aplicativos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OcrCenterRoute = OcrCenterRouteImport.update({
   id: '/ocr-center',
   path: '/ocr-center',
@@ -357,6 +369,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const StatusRoute = StatusRouteImport.update({
   id: '/status',
   path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SugestoesRoute = SugestoesRouteImport.update({
+  id: '/sugestoes',
+  path: '/sugestoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SuperAdminRoute = SuperAdminRouteImport.update({
@@ -612,6 +629,16 @@ const BillingSuccessRoute = BillingSuccessRouteImport.update({
   path: '/billing/success',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CustomersIdRoute = CustomersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CustomersRoute,
+} as any)
+const CustomersNovoRoute = CustomersNovoRouteImport.update({
+  id: '/novo',
+  path: '/novo',
+  getParentRoute: () => CustomersRoute,
+} as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -731,6 +758,16 @@ const VerificarAssinaturaCodeRoute = VerificarAssinaturaCodeRouteImport.update({
   path: '/verificar-assinatura/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VesselsIdRoute = VesselsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => VesselsRoute,
+} as any)
+const VesselsNovoRoute = VesselsNovoRouteImport.update({
+  id: '/novo',
+  path: '/novo',
+  getParentRoute: () => VesselsRoute,
+} as any)
 const AdminDocsCentralIndexRoute = AdminDocsCentralIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -828,6 +865,12 @@ const AdminTemplatesPfwRoute = AdminTemplatesPfwRouteImport.update({
   path: '/pfw',
   getParentRoute: () => AdminTemplatesRoute,
 } as any)
+const ProcessesIdDocumentosGeradosRoute =
+  ProcessesIdDocumentosGeradosRouteImport.update({
+    id: '/documentos-gerados',
+    path: '/documentos-gerados',
+    getParentRoute: () => ProcessesIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -845,7 +888,7 @@ export interface FileRoutesByFullPath {
   '/client-portal': typeof ClientPortalRoute
   '/compliance-ai': typeof ComplianceAiRoute
   '/consumo': typeof ConsumoRoute
-  '/customers': typeof CustomersRoute
+  '/customers': typeof CustomersRouteWithChildren
   '/dashboard': typeof DashboardRouteWithChildren
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
@@ -858,6 +901,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof HomeRoute
   '/identidade': typeof IdentidadeRoute
   '/logs': typeof LogsRoute
+  '/nossos-aplicativos': typeof NossosAplicativosRoute
   '/ocr-center': typeof OcrCenterRoute
   '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
@@ -873,11 +917,12 @@ export interface FileRoutesByFullPath {
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
+  '/sugestoes': typeof SugestoesRoute
   '/super-admin': typeof SuperAdminRoute
   '/support': typeof SupportRoute
   '/system-monitor': typeof SystemMonitorRoute
   '/templates': typeof TemplatesRouteWithChildren
-  '/vessels': typeof VesselsRoute
+  '/vessels': typeof VesselsRouteWithChildren
   '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
@@ -922,6 +967,8 @@ export interface FileRoutesByFullPath {
   '/billing/failure': typeof BillingFailureRoute
   '/billing/subscription': typeof BillingSubscriptionRoute
   '/billing/success': typeof BillingSuccessRoute
+  '/customers/$id': typeof CustomersIdRoute
+  '/customers/novo': typeof CustomersNovoRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
   '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
@@ -930,7 +977,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/security': typeof DashboardSecurityRoute
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
-  '/processes/$id': typeof ProcessesIdRoute
+  '/processes/$id': typeof ProcessesIdRouteWithChildren
   '/processes/archived': typeof ProcessesArchivedRoute
   '/processes/arquivos-gerados': typeof ProcessesArquivosGeradosRoute
   '/processes/novo-pedido': typeof ProcessesNovoPedidoRoute
@@ -942,6 +989,8 @@ export interface FileRoutesByFullPath {
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
   '/templates/meus': typeof TemplatesMeusRoute
   '/verificar-assinatura/$code': typeof VerificarAssinaturaCodeRoute
+  '/vessels/$id': typeof VesselsIdRoute
+  '/vessels/novo': typeof VesselsNovoRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
@@ -962,6 +1011,7 @@ export interface FileRoutesByFullPath {
   '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
   '/admin/process-center/': typeof AdminProcessCenterIndexRoute
 }
@@ -980,7 +1030,7 @@ export interface FileRoutesByTo {
   '/client-portal': typeof ClientPortalRoute
   '/compliance-ai': typeof ComplianceAiRoute
   '/consumo': typeof ConsumoRoute
-  '/customers': typeof CustomersRoute
+  '/customers': typeof CustomersRouteWithChildren
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
@@ -992,6 +1042,7 @@ export interface FileRoutesByTo {
   '/home': typeof HomeRoute
   '/identidade': typeof IdentidadeRoute
   '/logs': typeof LogsRoute
+  '/nossos-aplicativos': typeof NossosAplicativosRoute
   '/ocr-center': typeof OcrCenterRoute
   '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
@@ -1007,10 +1058,11 @@ export interface FileRoutesByTo {
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
+  '/sugestoes': typeof SugestoesRoute
   '/super-admin': typeof SuperAdminRoute
   '/support': typeof SupportRoute
   '/system-monitor': typeof SystemMonitorRoute
-  '/vessels': typeof VesselsRoute
+  '/vessels': typeof VesselsRouteWithChildren
   '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
@@ -1054,6 +1106,8 @@ export interface FileRoutesByTo {
   '/billing/failure': typeof BillingFailureRoute
   '/billing/subscription': typeof BillingSubscriptionRoute
   '/billing/success': typeof BillingSuccessRoute
+  '/customers/$id': typeof CustomersIdRoute
+  '/customers/novo': typeof CustomersNovoRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
   '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
@@ -1062,7 +1116,7 @@ export interface FileRoutesByTo {
   '/dashboard/security': typeof DashboardSecurityRoute
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
-  '/processes/$id': typeof ProcessesIdRoute
+  '/processes/$id': typeof ProcessesIdRouteWithChildren
   '/processes/archived': typeof ProcessesArchivedRoute
   '/processes/arquivos-gerados': typeof ProcessesArquivosGeradosRoute
   '/processes/novo-pedido': typeof ProcessesNovoPedidoRoute
@@ -1074,6 +1128,8 @@ export interface FileRoutesByTo {
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
   '/templates/meus': typeof TemplatesMeusRoute
   '/verificar-assinatura/$code': typeof VerificarAssinaturaCodeRoute
+  '/vessels/$id': typeof VesselsIdRoute
+  '/vessels/novo': typeof VesselsNovoRoute
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/processes': typeof ProcessesIndexRoute
@@ -1094,6 +1150,7 @@ export interface FileRoutesByTo {
   '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
   '/admin/docs-central': typeof AdminDocsCentralIndexRoute
   '/admin/process-center': typeof AdminProcessCenterIndexRoute
 }
@@ -1114,7 +1171,7 @@ export interface FileRoutesById {
   '/client-portal': typeof ClientPortalRoute
   '/compliance-ai': typeof ComplianceAiRoute
   '/consumo': typeof ConsumoRoute
-  '/customers': typeof CustomersRoute
+  '/customers': typeof CustomersRouteWithChildren
   '/dashboard': typeof DashboardRouteWithChildren
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
@@ -1127,6 +1184,7 @@ export interface FileRoutesById {
   '/home': typeof HomeRoute
   '/identidade': typeof IdentidadeRoute
   '/logs': typeof LogsRoute
+  '/nossos-aplicativos': typeof NossosAplicativosRoute
   '/ocr-center': typeof OcrCenterRoute
   '/ocr-review-center': typeof OcrReviewCenterRoute
   '/onboarding': typeof OnboardingRoute
@@ -1142,11 +1200,12 @@ export interface FileRoutesById {
   '/sales-center': typeof SalesCenterRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
+  '/sugestoes': typeof SugestoesRoute
   '/super-admin': typeof SuperAdminRoute
   '/support': typeof SupportRoute
   '/system-monitor': typeof SystemMonitorRoute
   '/templates': typeof TemplatesRouteWithChildren
-  '/vessels': typeof VesselsRoute
+  '/vessels': typeof VesselsRouteWithChildren
   '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
@@ -1191,6 +1250,8 @@ export interface FileRoutesById {
   '/billing/failure': typeof BillingFailureRoute
   '/billing/subscription': typeof BillingSubscriptionRoute
   '/billing/success': typeof BillingSuccessRoute
+  '/customers/$id': typeof CustomersIdRoute
+  '/customers/novo': typeof CustomersNovoRoute
   '/dashboard/compliance-center': typeof DashboardComplianceCenterRoute
   '/dashboard/deadlines': typeof DashboardDeadlinesRoute
   '/dashboard/document-center': typeof DashboardDocumentCenterRoute
@@ -1199,7 +1260,7 @@ export interface FileRoutesById {
   '/dashboard/security': typeof DashboardSecurityRoute
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
-  '/processes/$id': typeof ProcessesIdRoute
+  '/processes/$id': typeof ProcessesIdRouteWithChildren
   '/processes/archived': typeof ProcessesArchivedRoute
   '/processes/arquivos-gerados': typeof ProcessesArquivosGeradosRoute
   '/processes/novo-pedido': typeof ProcessesNovoPedidoRoute
@@ -1211,6 +1272,8 @@ export interface FileRoutesById {
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
   '/templates/meus': typeof TemplatesMeusRoute
   '/verificar-assinatura/$code': typeof VerificarAssinaturaCodeRoute
+  '/vessels/$id': typeof VesselsIdRoute
+  '/vessels/novo': typeof VesselsNovoRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
@@ -1231,6 +1294,7 @@ export interface FileRoutesById {
   '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
   '/admin/process-center/': typeof AdminProcessCenterIndexRoute
 }
@@ -1265,6 +1329,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/identidade'
     | '/logs'
+    | '/nossos-aplicativos'
     | '/ocr-center'
     | '/ocr-review-center'
     | '/onboarding'
@@ -1280,6 +1345,7 @@ export interface FileRouteTypes {
     | '/sales-center'
     | '/settings'
     | '/status'
+    | '/sugestoes'
     | '/super-admin'
     | '/support'
     | '/system-monitor'
@@ -1329,6 +1395,8 @@ export interface FileRouteTypes {
     | '/billing/failure'
     | '/billing/subscription'
     | '/billing/success'
+    | '/customers/$id'
+    | '/customers/novo'
     | '/dashboard/compliance-center'
     | '/dashboard/deadlines'
     | '/dashboard/document-center'
@@ -1349,6 +1417,8 @@ export interface FileRouteTypes {
     | '/templates/marketplace'
     | '/templates/meus'
     | '/verificar-assinatura/$code'
+    | '/vessels/$id'
+    | '/vessels/novo'
     | '/admin/'
     | '/dashboard/'
     | '/processes/'
@@ -1369,6 +1439,7 @@ export interface FileRouteTypes {
     | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/processes/$id/documentos-gerados'
     | '/admin/docs-central/'
     | '/admin/process-center/'
   fileRoutesByTo: FileRoutesByTo
@@ -1399,6 +1470,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/identidade'
     | '/logs'
+    | '/nossos-aplicativos'
     | '/ocr-center'
     | '/ocr-review-center'
     | '/onboarding'
@@ -1414,6 +1486,7 @@ export interface FileRouteTypes {
     | '/sales-center'
     | '/settings'
     | '/status'
+    | '/sugestoes'
     | '/super-admin'
     | '/support'
     | '/system-monitor'
@@ -1461,6 +1534,8 @@ export interface FileRouteTypes {
     | '/billing/failure'
     | '/billing/subscription'
     | '/billing/success'
+    | '/customers/$id'
+    | '/customers/novo'
     | '/dashboard/compliance-center'
     | '/dashboard/deadlines'
     | '/dashboard/document-center'
@@ -1481,6 +1556,8 @@ export interface FileRouteTypes {
     | '/templates/marketplace'
     | '/templates/meus'
     | '/verificar-assinatura/$code'
+    | '/vessels/$id'
+    | '/vessels/novo'
     | '/admin'
     | '/dashboard'
     | '/processes'
@@ -1501,6 +1578,7 @@ export interface FileRouteTypes {
     | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/processes/$id/documentos-gerados'
     | '/admin/docs-central'
     | '/admin/process-center'
   id:
@@ -1533,6 +1611,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/identidade'
     | '/logs'
+    | '/nossos-aplicativos'
     | '/ocr-center'
     | '/ocr-review-center'
     | '/onboarding'
@@ -1548,6 +1627,7 @@ export interface FileRouteTypes {
     | '/sales-center'
     | '/settings'
     | '/status'
+    | '/sugestoes'
     | '/super-admin'
     | '/support'
     | '/system-monitor'
@@ -1597,6 +1677,8 @@ export interface FileRouteTypes {
     | '/billing/failure'
     | '/billing/subscription'
     | '/billing/success'
+    | '/customers/$id'
+    | '/customers/novo'
     | '/dashboard/compliance-center'
     | '/dashboard/deadlines'
     | '/dashboard/document-center'
@@ -1617,6 +1699,8 @@ export interface FileRouteTypes {
     | '/templates/marketplace'
     | '/templates/meus'
     | '/verificar-assinatura/$code'
+    | '/vessels/$id'
+    | '/vessels/novo'
     | '/admin/'
     | '/dashboard/'
     | '/processes/'
@@ -1637,6 +1721,7 @@ export interface FileRouteTypes {
     | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/processes/$id/documentos-gerados'
     | '/admin/docs-central/'
     | '/admin/process-center/'
   fileRoutesById: FileRoutesById
@@ -1657,7 +1742,7 @@ export interface RootRouteChildren {
   ClientPortalRoute: typeof ClientPortalRoute
   ComplianceAiRoute: typeof ComplianceAiRoute
   ConsumoRoute: typeof ConsumoRoute
-  CustomersRoute: typeof CustomersRoute
+  CustomersRoute: typeof CustomersRouteWithChildren
   DashboardRoute: typeof DashboardRouteWithChildren
   DemoRoute: typeof DemoRoute
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
@@ -1670,6 +1755,7 @@ export interface RootRouteChildren {
   HomeRoute: typeof HomeRoute
   IdentidadeRoute: typeof IdentidadeRoute
   LogsRoute: typeof LogsRoute
+  NossosAplicativosRoute: typeof NossosAplicativosRoute
   OcrCenterRoute: typeof OcrCenterRoute
   OcrReviewCenterRoute: typeof OcrReviewCenterRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -1685,11 +1771,12 @@ export interface RootRouteChildren {
   SalesCenterRoute: typeof SalesCenterRoute
   SettingsRoute: typeof SettingsRoute
   StatusRoute: typeof StatusRoute
+  SugestoesRoute: typeof SugestoesRoute
   SuperAdminRoute: typeof SuperAdminRoute
   SupportRoute: typeof SupportRoute
   SystemMonitorRoute: typeof SystemMonitorRoute
   TemplatesRoute: typeof TemplatesRouteWithChildren
-  VesselsRoute: typeof VesselsRoute
+  VesselsRoute: typeof VesselsRouteWithChildren
   AssinarTokenRoute: typeof AssinarTokenRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthResetRoute: typeof AuthResetRoute
@@ -1699,7 +1786,7 @@ export interface RootRouteChildren {
   BillingSuccessRoute: typeof BillingSuccessRoute
   DocumentosBibliotecaRoute: typeof DocumentosBibliotecaRoute
   PortalTokenRoute: typeof PortalTokenRoute
-  ProcessesIdRoute: typeof ProcessesIdRoute
+  ProcessesIdRoute: typeof ProcessesIdRouteWithChildren
   ProcessesArchivedRoute: typeof ProcessesArchivedRoute
   ProcessesArquivosGeradosRoute: typeof ProcessesArquivosGeradosRoute
   ProcessesNovoPedidoRoute: typeof ProcessesNovoPedidoRoute
@@ -1908,6 +1995,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LogsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/nossos-aplicativos': {
+      id: '/nossos-aplicativos'
+      path: '/nossos-aplicativos'
+      fullPath: '/nossos-aplicativos'
+      preLoaderRoute: typeof NossosAplicativosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ocr-center': {
       id: '/ocr-center'
       path: '/ocr-center'
@@ -2011,6 +2105,13 @@ declare module '@tanstack/react-router' {
       path: '/status'
       fullPath: '/status'
       preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sugestoes': {
+      id: '/sugestoes'
+      path: '/sugestoes'
+      fullPath: '/sugestoes'
+      preLoaderRoute: typeof SugestoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/super-admin': {
@@ -2363,6 +2464,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BillingSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/customers/$id': {
+      id: '/customers/$id'
+      path: '/$id'
+      fullPath: '/customers/$id'
+      preLoaderRoute: typeof CustomersIdRouteImport
+      parentRoute: typeof CustomersRoute
+    }
+    '/customers/novo': {
+      id: '/customers/novo'
+      path: '/novo'
+      fullPath: '/customers/novo'
+      preLoaderRoute: typeof CustomersNovoRouteImport
+      parentRoute: typeof CustomersRoute
+    }
     '/dashboard/': {
       id: '/dashboard/'
       path: '/'
@@ -2524,6 +2639,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerificarAssinaturaCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/vessels/$id': {
+      id: '/vessels/$id'
+      path: '/$id'
+      fullPath: '/vessels/$id'
+      preLoaderRoute: typeof VesselsIdRouteImport
+      parentRoute: typeof VesselsRoute
+    }
+    '/vessels/novo': {
+      id: '/vessels/novo'
+      path: '/novo'
+      fullPath: '/vessels/novo'
+      preLoaderRoute: typeof VesselsNovoRouteImport
+      parentRoute: typeof VesselsRoute
+    }
     '/admin/docs-central/': {
       id: '/admin/docs-central/'
       path: '/'
@@ -2649,6 +2778,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/templates/pfw'
       preLoaderRoute: typeof AdminTemplatesPfwRouteImport
       parentRoute: typeof AdminTemplatesRoute
+    }
+    '/processes/$id/documentos-gerados': {
+      id: '/processes/$id/documentos-gerados'
+      path: '/documentos-gerados'
+      fullPath: '/processes/$id/documentos-gerados'
+      preLoaderRoute: typeof ProcessesIdDocumentosGeradosRouteImport
+      parentRoute: typeof ProcessesIdRoute
     }
   }
 }
@@ -2802,6 +2938,20 @@ const AnalyticsRouteWithChildren = AnalyticsRoute._addFileChildren(
   AnalyticsRouteChildren,
 )
 
+interface CustomersRouteChildren {
+  CustomersIdRoute: typeof CustomersIdRoute
+  CustomersNovoRoute: typeof CustomersNovoRoute
+}
+
+const CustomersRouteChildren: CustomersRouteChildren = {
+  CustomersIdRoute: CustomersIdRoute,
+  CustomersNovoRoute: CustomersNovoRoute,
+}
+
+const CustomersRouteWithChildren = CustomersRoute._addFileChildren(
+  CustomersRouteChildren,
+)
+
 interface DashboardRouteChildren {
   DashboardComplianceCenterRoute: typeof DashboardComplianceCenterRoute
   DashboardDeadlinesRoute: typeof DashboardDeadlinesRoute
@@ -2846,6 +2996,31 @@ const TemplatesRouteWithChildren = TemplatesRoute._addFileChildren(
   TemplatesRouteChildren,
 )
 
+interface VesselsRouteChildren {
+  VesselsIdRoute: typeof VesselsIdRoute
+  VesselsNovoRoute: typeof VesselsNovoRoute
+}
+
+const VesselsRouteChildren: VesselsRouteChildren = {
+  VesselsIdRoute: VesselsIdRoute,
+  VesselsNovoRoute: VesselsNovoRoute,
+}
+
+const VesselsRouteWithChildren =
+  VesselsRoute._addFileChildren(VesselsRouteChildren)
+
+interface ProcessesIdRouteChildren {
+  ProcessesIdDocumentosGeradosRoute: typeof ProcessesIdDocumentosGeradosRoute
+}
+
+const ProcessesIdRouteChildren: ProcessesIdRouteChildren = {
+  ProcessesIdDocumentosGeradosRoute: ProcessesIdDocumentosGeradosRoute,
+}
+
+const ProcessesIdRouteWithChildren = ProcessesIdRoute._addFileChildren(
+  ProcessesIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
@@ -2862,7 +3037,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClientPortalRoute: ClientPortalRoute,
   ComplianceAiRoute: ComplianceAiRoute,
   ConsumoRoute: ConsumoRoute,
-  CustomersRoute: CustomersRoute,
+  CustomersRoute: CustomersRouteWithChildren,
   DashboardRoute: DashboardRouteWithChildren,
   DemoRoute: DemoRoute,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
@@ -2875,6 +3050,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeRoute: HomeRoute,
   IdentidadeRoute: IdentidadeRoute,
   LogsRoute: LogsRoute,
+  NossosAplicativosRoute: NossosAplicativosRoute,
   OcrCenterRoute: OcrCenterRoute,
   OcrReviewCenterRoute: OcrReviewCenterRoute,
   OnboardingRoute: OnboardingRoute,
@@ -2890,11 +3066,12 @@ const rootRouteChildren: RootRouteChildren = {
   SalesCenterRoute: SalesCenterRoute,
   SettingsRoute: SettingsRoute,
   StatusRoute: StatusRoute,
+  SugestoesRoute: SugestoesRoute,
   SuperAdminRoute: SuperAdminRoute,
   SupportRoute: SupportRoute,
   SystemMonitorRoute: SystemMonitorRoute,
   TemplatesRoute: TemplatesRouteWithChildren,
-  VesselsRoute: VesselsRoute,
+  VesselsRoute: VesselsRouteWithChildren,
   AssinarTokenRoute: AssinarTokenRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthResetRoute: AuthResetRoute,
@@ -2904,7 +3081,7 @@ const rootRouteChildren: RootRouteChildren = {
   BillingSuccessRoute: BillingSuccessRoute,
   DocumentosBibliotecaRoute: DocumentosBibliotecaRoute,
   PortalTokenRoute: PortalTokenRoute,
-  ProcessesIdRoute: ProcessesIdRoute,
+  ProcessesIdRoute: ProcessesIdRouteWithChildren,
   ProcessesArchivedRoute: ProcessesArchivedRoute,
   ProcessesArquivosGeradosRoute: ProcessesArquivosGeradosRoute,
   ProcessesNovoPedidoRoute: ProcessesNovoPedidoRoute,

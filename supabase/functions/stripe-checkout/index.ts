@@ -52,9 +52,22 @@ serve(async (req) => {
     }
 
     // 1. Consulta dinâmica do catálogo no banco public.plans
+    // Valida o ciclo antes de resolver o plano
+    if (billingCycle && billingCycle !== 'monthly' && billingCycle !== 'annual' && billingCycle !== 'yearly') {
+      return errorResponse(`Ciclo de cobrança inválido: "${billingCycle}". Use monthly, annual ou yearly.`, 400);
+    }
+
     const resolved = await resolvePlanFromDatabase(ctx.admin, planId, billingCycle);
     if (!resolved) {
-      return errorResponse(`Plano não encontrado no catálogo: ${planId} (${billingCycle})`, 404);
+      return errorResponse(`Plano não encontrado, inativo ou indisponível para contratação: ${planId} (${billingCycle})`, 404);
+    }
+
+    // Garante que o plano está sincronizado com a Stripe (price_id obrigatório)
+    if (!resolved.priceId) {
+      return errorResponse(
+        `O plano "${resolved.name}" ainda não está sincronizado com a Stripe. Acesse o painel de administração e execute a sincronização antes de contratar.`,
+        400
+      );
     }
 
     const { data: profile, error: profileErr } = await ctx.admin
@@ -204,22 +217,8 @@ serve(async (req) => {
     const safeSuccessBase = validateRedirectUrl(successUrl);
     const safeCancelBase = validateRedirectUrl(cancelUrl);
 
-    // Montagem dos line_items (usa price oficial da Stripe ou price_data se o plano não estiver pré-sincronizado)
-    const lineItems = resolved.priceId
-      ? [{ price: resolved.priceId, quantity: 1 }]
-      : [{
-          price_data: {
-            currency: 'brl',
-            product_data: {
-              name: `NavalDocs Pro - Plano ${resolved.name}`,
-            },
-            unit_amount: resolved.unitAmount,
-            recurring: {
-              interval: resolved.billingCycle === 'annual' ? 'year' : 'month',
-            },
-          },
-          quantity: 1,
-        }];
+    // Montagem dos line_items — usa EXCLUSIVAMENTE o price oficial da Stripe (pré-sincronizado)
+    const lineItems = [{ price: resolved.priceId, quantity: 1 }];
 
     const checkoutSessionParams: any = {
       customer: customerId,

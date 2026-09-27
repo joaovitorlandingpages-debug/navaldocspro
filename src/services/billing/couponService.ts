@@ -234,5 +234,84 @@ export const couponService = {
     }
 
     return !currentStatus;
-  }
+  },
+
+  // ==========================================
+  // SINCRONIZAÇÃO COM STRIPE (Admin Master)
+  // ==========================================
+
+  /**
+   * Sincroniza um cupom com a Stripe pelo backend:
+   * cria/verifica o Stripe Coupon + Promotion Code e grava os IDs retornados no banco.
+   * Erros da Stripe são propagados visivelmente para o admin.
+   */
+  async syncCouponWithStripe(couponId: string): Promise<{
+    success: boolean;
+    stripe_coupon_id?: string;
+    stripe_promotion_code_id?: string;
+    message?: string;
+  }> {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    if (!token) {
+      throw new Error("Sessão expirada. Faça login novamente para sincronizar com a Stripe.");
+    }
+
+    const supabaseUrl = (supabase as any).supabaseUrl as string;
+    const functionUrl = `${supabaseUrl}/functions/v1/stripe-sync-coupons`;
+
+    const res = await fetch(functionUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({ couponId, action: "sync" }),
+    });
+
+    const body = await res.json().catch(() => ({ error: "Resposta inválida do servidor." }));
+
+    if (!res.ok) {
+      const msg = body?.message || body?.error || `Erro ${res.status} ao sincronizar com a Stripe.`;
+      throw new Error(msg);
+    }
+
+    return body as { success: boolean; stripe_coupon_id?: string; stripe_promotion_code_id?: string; message?: string };
+  },
+
+  /**
+   * Desativa um cupom na Stripe (deleta o coupon object).
+   * Atualiza is_active=false no banco.
+   * Erros da Stripe são propagados visivelmente para o admin.
+   */
+  async deactivateCouponInStripe(couponId: string): Promise<{ success: boolean; message?: string }> {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    if (!token) {
+      throw new Error("Sessão expirada. Faça login novamente.");
+    }
+
+    const supabaseUrl = (supabase as any).supabaseUrl as string;
+    const functionUrl = `${supabaseUrl}/functions/v1/stripe-sync-coupons`;
+
+    const res = await fetch(functionUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({ couponId, action: "deactivate" }),
+    });
+
+    const body = await res.json().catch(() => ({ error: "Resposta inválida do servidor." }));
+
+    if (!res.ok) {
+      const msg = body?.message || body?.error || `Erro ${res.status} ao desativar na Stripe.`;
+      throw new Error(msg);
+    }
+
+    return body as { success: boolean; message?: string };
+  },
 };

@@ -10,9 +10,16 @@ export interface ResolvedPlan {
   currency: string;
 }
 
+// UUID v4 regex (PostgreSQL format)
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
- * Consulta dinâmica de plano diretamente da tabela public.plans.
- * Novos planos criados no painel de administração e sincronizados com a Stripe funcionam sem editar código.
+ * Tenta localizar o plano primeiro pelo tipo real de plans.id (UUID),
+ * e em seguida pelo slug. Separa as buscas para evitar cast implícito do
+ * Supabase ao usar .or() com tipos incompatíveis (uuid vs text).
+ *
+ * Rejeita planos arquivados, inativos ou rascunhos.
+ * Rejeita ciclos de cobrança inválidos em vez de silenciosamente usar 'monthly'.
  */
 export async function resolvePlanFromDatabase(
   adminClient: SupabaseClient,
@@ -21,23 +28,57 @@ export async function resolvePlanFromDatabase(
 ): Promise<ResolvedPlan | null> {
   if (!planIdentifier) return null;
 
-  const cycle = (billingCycle === 'annual' || billingCycle === 'yearly') ? 'annual' : 'monthly';
-  const cleanId = planIdentifier.trim().toLowerCase();
+  // Validação explícita de ciclo — rejeita ciclos desconhecidos
+  if (billingCycle !== 'monthly' && billingCycle !== 'annual' && billingCycle !== 'yearly') {
+    console.error(`resolvePlanFromDatabase: ciclo de cobrança inválido recebido: "${billingCycle}". Esperado: monthly | annual | yearly.`);
+    return null;
+  }
 
-  // Busca plano no banco por slug ou id
-  const { data: plan, error } = await adminClient
-    .from('plans')
-    .select('id, slug, name, price, price_yearly, stripe_product_id, stripe_price_monthly_id, stripe_price_yearly_id, is_active, status')
-    .or(`slug.eq.${cleanId},id.eq.${cleanId}`)
-    .maybeSingle();
+  const cycle: 'monthly' | 'annual' = (billingCycle === 'annual' || billingCycle === 'yearly') ? 'annual' : 'monthly';
+  const cleanId = planIdentifier.trim();
+  const cleanIdLower = cleanId.toLowerCase();
 
-  if (error || !plan) {
+  const PLAN_FIELDS = 'id, slug, name, price, price_yearly, stripe_product_id, stripe_price_monthly_id, stripe_price_yearly_id, is_active, status';
+
+  let plan: any = null;
+
+  // 1. Se for UUID, busca por id
+  if (UUID_RE.test(cleanId)) {
+    const { data, error } = await adminClient
+      .from('plans')
+      .select(PLAN_FIELDS)
+      .eq('id', cleanId)
+      .maybeSingle();
+    if (!error) plan = data;
+  }
+
+  // 2. Busca por slug (always try, fallback para identificadores não-UUID)
+  if (!plan) {
+    const { data, error } = await adminClient
+      .from('plans')
+      .select(PLAN_FIELDS)
+      .eq('slug', cleanIdLower)
+      .maybeSingle();
+    if (!error) plan = data;
+  }
+
+  if (!plan) return null;
+
+  // Bloqueia planos arquivados, inativos ou rascunhos
+  if (plan.is_active === false) {
+    console.error(`resolvePlanFromDatabase: plano "${plan.name}" está inativo (is_active=false). Contratação bloqueada.`);
+    return null;
+  }
+  if (plan.status && plan.status !== 'published') {
+    console.error(`resolvePlanFromDatabase: plano "${plan.name}" tem status "${plan.status}". Apenas planos publicados podem ser contratados.`);
     return null;
   }
 
   const isAnnual = cycle === 'annual';
   const priceId = isAnnual ? plan.stripe_price_yearly_id : plan.stripe_price_monthly_id;
-  const rawPrice = isAnnual ? (plan.price_yearly || (plan.price ? plan.price * 10 : 0)) : (plan.price || 0);
+  const rawPrice = isAnnual
+    ? (plan.price_yearly || (plan.price ? plan.price * 10 : 0))
+    : (plan.price || 0);
   const unitAmount = Math.round(Number(rawPrice) * 100);
 
   return {
@@ -57,18 +98,34 @@ export async function findPlanByPriceIdInDatabase(
 ): Promise<{ planId: string; billingCycle: string; planDbId: string } | null> {
   if (!priceId) return null;
 
-  const { data: plan } = await adminClient
+  // Busca por price_id mensal ou anual — dois .eq() separados para evitar cast entre tipos
+  const { data: planMonthly } = await adminClient
     .from('plans')
     .select('id, slug, stripe_price_monthly_id, stripe_price_yearly_id')
-    .or(`stripe_price_monthly_id.eq.${priceId},stripe_price_yearly_id.eq.${priceId}`)
+    .eq('stripe_price_monthly_id', priceId)
     .maybeSingle();
 
-  if (!plan) return null;
+  if (planMonthly) {
+    return {
+      planId: planMonthly.slug || planMonthly.id,
+      planDbId: planMonthly.id,
+      billingCycle: 'monthly',
+    };
+  }
 
-  const isAnnual = plan.stripe_price_yearly_id === priceId;
-  return {
-    planId: plan.slug || plan.id,
-    planDbId: plan.id,
-    billingCycle: isAnnual ? 'annual' : 'monthly',
-  };
+  const { data: planYearly } = await adminClient
+    .from('plans')
+    .select('id, slug, stripe_price_monthly_id, stripe_price_yearly_id')
+    .eq('stripe_price_yearly_id', priceId)
+    .maybeSingle();
+
+  if (planYearly) {
+    return {
+      planId: planYearly.slug || planYearly.id,
+      planDbId: planYearly.id,
+      billingCycle: 'annual',
+    };
+  }
+
+  return null;
 }

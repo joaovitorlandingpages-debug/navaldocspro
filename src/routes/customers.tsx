@@ -1,661 +1,498 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { 
-   Users, Search, Plus, MoreHorizontal, Mail, 
-   MapPin, Filter, X, Loader2, FileText, 
-   Download, Trash2, Eye, Zap, Image as ImageIcon,
-   Ship, Smartphone, Globe, User, Edit2, Save
-
+  Users, 
+  Search, 
+  Plus, 
+  Pencil, 
+  ChevronRight, 
+  ChevronDown, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  FolderOpen, 
+  Ship, 
+  FileText, 
+  Loader2, 
+  Check, 
+  X, 
+  Eye, 
+  Download, 
+  Trash2, 
+  AlertCircle,
+  Folder,
+  User
 } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useNewProcess } from "@/hooks/useNewProcess";
-import { telemetry } from "@/utils/telemetry";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { DashboardLayout } from "@/routes/dashboard";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { safeString } from "@/utils/safe-string";
+import { maskCpfCnpj } from "@/lib/br-format";
+import { CustomerEditModal } from "@/components/customers/CustomerEditModal";
+import { ModalLayout } from "@/components/ui/ModalLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CustomerSignaturesTab } from "@/components/customers/CustomerSignaturesTab";
-import { Button } from "@/components/ui/button";
 import { FileUploader } from "@/components/FileUploader";
 import { useFiles } from "@/hooks/useFiles";
-import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { Badge } from "@/components/ui/badge";
-import { UpgradeModal } from "@/components/billing/UpgradeModal";
-import { PageHeader } from "@/components/navigation/PageHeader";
-import { TrialBanner } from "@/components/dashboard/TrialBanner";
-import { ModalLayout } from "@/components/ui/ModalLayout";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { safeString } from "@/utils/safe-string";
 import { openStoredFile } from "@/utils/file-preview";
-import { 
-  validateUpload, 
-  MAX_LOGO_BYTES, 
-  MAX_ATTACHMENT_BYTES, 
-  LOGO_ALLOWED_EXTENSIONS, 
-  removeFromBucket, 
-  parseStorageError 
-} from "@/lib/storage";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/customers")({
-  component: Customers,
+  validateSearch: (search: Record<string, unknown>) => ({
+    search: (search.search as string) || undefined,
+    type: (search.type as string) || undefined,
+    page: (search.page as number) || undefined,
+  }),
+  component: () => (
+    <ProtectedRoute>
+      <DashboardLayout>
+        <RelacaoClientesPage />
+      </DashboardLayout>
+    </ProtectedRoute>
+  ),
 });
 
-function Customers() {
-  const [showDeleteCustomerConfirm, setShowDeleteCustomerConfirm] = useState(false);
-  const [showRemoveLogoConfirm, setShowRemoveLogoConfirm] = useState(false);
-  const [isRemovingLogo, setIsRemovingLogo] = useState(false);
-  const [fileToDelete, setFileToDelete] = useState<{ id: string; name: string } | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+type CustomerFilterType = "all" | "pf" | "pj";
+
+function RelacaoClientesPage() {
+  const navigate = useNavigate();
+  const { profile } = useAuth();
+  const companyId = profile?.company_id;
+
+  // Estado de listagem
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Pesquisa, filtro e paginação
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState<CustomerFilterType>("all");
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
+  // Modais de Edição e Detalhes
+  const [customerToEdit, setCustomerToEdit] = useState<any | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
-  const [customers, setCustomers] = useState<any[]>([]);
+
+  // Sub-dados para a visualização de detalhes
   const [customerVessels, setCustomerVessels] = useState<any[]>([]);
   const [customerProcesses, setCustomerProcesses] = useState<any[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const pageSize = 12;
-  const [searchTerm, setSearchTerm] = useState("");
-  const [companyId, setCompanyId] = useState<string | null>(null);
-  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
-  const [upgradeModal, setUpgradeModal] = useState<{ isOpen: boolean; current: number; limit: number | null }>({
-    isOpen: false,
-    current: 0,
-    limit: null
-  });
+  const [fileToDelete, setFileToDelete] = useState<{ id: string; name: string } | null>(null);
 
-  const { setIsNewProcessOpen } = useNewProcess();
-  const { checkLimit } = usePlanLimits();
   const { files, deleteFile } = useFiles(selectedCustomer ? { customerId: selectedCustomer.id } : undefined);
 
-  // Form State
-  const [formData, setFormData] = useState({
-    name: "",
-    cpf_cnpj: "",
-    rg: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    state: "",
-    notes: ""
-  });
+  // Consulta e Busca no Banco de Dados
+  const fetchCustomers = useCallback(async () => {
+    if (!companyId) return;
+    setIsLoading(true);
+    setIsError(false);
 
-  const handleOpenDetails = (customer: any) => {
-    setSelectedCustomer(customer);
-    setLogoPreviewUrl(null);
-    setIsDetailsOpen(true);
-    setIsEditing(false);
-    setFormData({
-      name: customer.name || "",
-      cpf_cnpj: customer.cpf_cnpj || "",
-      rg: customer.rg || "",
-      email: customer.email || "",
-      phone: customer.phone || "",
-      address: customer.address || "",
-      city: customer.city || "",
-      state: customer.state || "",
-      notes: customer.notes || ""
-    });
-  };
+    try {
+      let query = supabase
+        .from("customers")
+        .select("*, vessels(count), processes(count)", { count: "exact" })
+        .eq("company_id", companyId);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
-
-      if (profile?.company_id) {
-        setCompanyId(profile.company_id);
-        let query = supabase
-          .from('customers')
-          .select('*, vessels(count)', { count: 'exact' })
-          .eq('company_id', profile.company_id);
-
-        if (searchTerm) {
-          const safeSearch = safeString(searchTerm).toLowerCase();
-          query = query.or(`name.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%,cpf_cnpj.ilike.%${safeSearch}%`);
+      // Busca por nome, email ou CPF/CNPJ
+      if (searchTerm.trim()) {
+        const cleanTerm = safeString(searchTerm).trim();
+        const digitsOnly = cleanTerm.replace(/\D/g, "");
+        if (digitsOnly.length > 2) {
+          query = query.or(`name.ilike.%${cleanTerm}%,email.ilike.%${cleanTerm}%,cpf_cnpj.ilike.%${cleanTerm}%,cpf_cnpj.ilike.%${digitsOnly}%`);
+        } else {
+          query = query.or(`name.ilike.%${cleanTerm}%,email.ilike.%${cleanTerm}%,cpf_cnpj.ilike.%${cleanTerm}%`);
         }
-
-        const { data: customerData, count, error } = await query
-          .order('name', { ascending: true })
-          .range((page - 1) * pageSize, page * pageSize - 1);
-        
-        if (customerData) setCustomers(customerData);
-        if (count !== null) setTotalCount(count);
-        if (error) console.error("Error fetching customers:", error);
       }
+
+      // Ordenação alfabética pelo nome
+      query = query.order("name", { ascending: true });
+
+      // Paginação no servidor (20 por página)
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
+      const { data, count, error } = await query;
+      if (error) throw error;
+
+      // Filtro por tipo (PF / PJ)
+      let list = data || [];
+      if (filterType === "pf") {
+        list = list.filter((c) => (c.cpf_cnpj || "").replace(/\D/g, "").length <= 11);
+      } else if (filterType === "pj") {
+        list = list.filter((c) => (c.cpf_cnpj || "").replace(/\D/g, "").length > 11);
+      }
+
+      setCustomers(list);
+      setTotalCount(count !== null ? count : list.length);
+    } catch (err) {
+      console.error("Erro ao carregar clientes:", err);
+      setIsError(true);
+      toast.error("Erro ao carregar lista de clientes.");
+    } finally {
       setIsLoading(false);
-    };
+    }
+  }, [companyId, searchTerm, filterType, page]);
 
-    const debounceTimer = setTimeout(() => {
-      fetchData();
-    }, 300);
-
-    return () => clearTimeout(debounceTimer);
-  }, [page, searchTerm]);
-
+  // Debounce para a busca
   useEffect(() => {
-    console.log("GLOBAL_UX_REFINED");
-    console.log("CACHE_SYSTEM_OK");
-  }, []);
+    const timer = setTimeout(() => {
+      fetchCustomers();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [fetchCustomers]);
 
+  // Carrega embarcações e processos vinculados quando o cliente selecionado abre
   useEffect(() => {
     if (!selectedCustomer?.id) {
       setCustomerVessels([]);
       setCustomerProcesses([]);
       return;
     }
+
     (async () => {
       const [{ data: vs }, { data: ps }] = await Promise.all([
-        supabase.from("vessels").select("id, name, registration_number, vessel_type, current_owner_name").eq("customer_id", selectedCustomer.id).order("created_at", { ascending: false }),
-        supabase.from("processes").select("id, process_type, status, created_at").eq("customer_id", selectedCustomer.id).order("created_at", { ascending: false }).limit(20),
+        supabase
+          .from("vessels")
+          .select("id, name, registration_number, vessel_type, current_owner_name, status")
+          .eq("customer_id", selectedCustomer.id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("processes")
+          .select("id, process_type, status, created_at")
+          .eq("customer_id", selectedCustomer.id)
+          .order("created_at", { ascending: false })
+          .limit(20),
       ]);
       setCustomerVessels(vs || []);
       setCustomerProcesses(ps || []);
-      console.log("[CUSTOMER_VESSEL_RELATION_FIXED]", { customerId: selectedCustomer.id, vessels: vs?.length || 0 });
     })();
   }, [selectedCustomer?.id]);
 
-  const handleCreateCustomer = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("CLIENT_SAVE_CLICKED");
-
-    if (!formData.name?.trim() || !formData.cpf_cnpj?.trim()) {
-      toast.error("Nome e CPF/CNPJ são obrigatórios.");
-      console.log("CLIENT_VALIDATION_FAILED");
-      telemetry.track('error', 'customers', { errorName: 'validation_failed', message: 'Name or CPF/CNPJ missing' });
-      return;
-    }
-    console.log("CLIENT_VALIDATION_OK");
-
-    let effectiveCompanyId = companyId;
-
-    if (!effectiveCompanyId) {
-      console.log("WORKSPACE_NOT_FOUND_IN_CONTEXT_RECOVERING");
-      telemetry.track('workspace_recovery_started', 'customers');
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: currentProfile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-        const { ensureWorkspace } = await import("@/utils/workspace-recovery");
-        effectiveCompanyId = (await ensureWorkspace(user, currentProfile)) ?? null;
-        setCompanyId(effectiveCompanyId);
-        telemetry.track('workspace_recovered', 'customers', { companyId: effectiveCompanyId });
-      }
-    }
-
-    if (!effectiveCompanyId) {
-      console.log("WORKSPACE_RECOVERY_FAILED_FINAL");
-      telemetry.track('error', 'customers', { errorName: 'workspace_recovery_failed', message: 'Company ID still null' });
-      toast.error("Não foi possível carregar seu workspace. Tente recarregar a página.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    const clientType = formData.cpf_cnpj.length > 14 ? 'pessoa_juridica' : (formData.cpf_cnpj.length > 11 ? 'mei' : 'pessoa_fisica');
-    console.log("CLIENT_INSERT_STARTED", { clientType, companyId: effectiveCompanyId });
-    const loadingToast = toast.loading("Salvando cliente...");
-
-    try {
-      const { data, error } = await supabase
-        .from('customers')
-        .insert({
-          company_id: effectiveCompanyId,
-          name: safeString(formData.name).trim(),
-          cpf_cnpj: safeString(formData.cpf_cnpj).trim(),
-          email: safeString(formData.email).trim() || null,
-          phone: safeString(formData.phone).trim() || null,
-          address: safeString(formData.address).trim() || null,
-          city: safeString(formData.city).trim() || null,
-          state: safeString(formData.state).trim() || null,
-          rg: safeString(formData.rg).trim() || null,
-          notes: safeString(formData.notes).trim() || null
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      console.log("CLIENT_INSERT_SUCCESS", data.id);
-
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        await supabase.from('activity_logs').insert({
-          company_id: effectiveCompanyId,
-          user_id: user?.id,
-          action: 'client_created',
-          resource_type: 'client',
-          resource_id: data.id,
-          description: `Novo cliente cadastrado: ${data.name}`,
-          module: 'clients',
-          category: 'creation',
-          metadata: { client_type: clientType }
-        });
-      } catch (logError) {
-        console.warn("LOG_FAILURE_SAFE", logError);
-      }
-
-      setCustomers((prev) => [{ ...data, vessels: [{ count: 0 }] }, ...prev]);
-      setSelectedCustomer({ ...data, vessels: [{ count: 0 }] });
-      setIsModalOpen(false);
-      setFormData({ name: "", cpf_cnpj: "", rg: "", email: "", phone: "", address: "", city: "", state: "", notes: "" });
-      toast.dismiss(loadingToast);
-      toast.success(`Cliente "${data.name}" cadastrado com sucesso!`);
-
-    } catch (error: any) {
-      console.error("CLIENT_INSERT_FAILED", error);
-      toast.dismiss(loadingToast);
-      toast.error(error?.message || "Erro ao cadastrar cliente. Verifique os dados e tente novamente.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleUpdateCustomer = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedCustomer) return;
-    
-    setIsSubmitting(true);
-    const loadingToast = toast.loading("Atualizando cliente...");
-
-    try {
-      const { data, error } = await supabase
-        .from('customers')
-        .update({
-          name: safeString(formData.name).trim(),
-          cpf_cnpj: safeString(formData.cpf_cnpj).trim(),
-          email: safeString(formData.email).trim() || null,
-          phone: safeString(formData.phone).trim() || null,
-          address: safeString(formData.address).trim() || null,
-          city: safeString(formData.city).trim() || null,
-          state: safeString(formData.state).trim() || null,
-          rg: safeString(formData.rg).trim() || null,
-          notes: safeString(formData.notes).trim() || null
-        })
-        .eq('id', selectedCustomer.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setCustomers(prev => prev.map(c => c.id === data.id ? { ...c, ...data } : c));
-      setSelectedCustomer({ ...selectedCustomer, ...data });
-      setIsEditing(false);
-      toast.dismiss(loadingToast);
-      toast.success("Cliente atualizado com sucesso!");
-    } catch (error: any) {
-      console.error("UPDATE_FAILED", error);
-      toast.dismiss(loadingToast);
-      toast.error("Erro ao atualizar cliente.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const [logoUploading, setLogoUploading] = useState(false);
-  const handleCustomerLogoUpload = async (file: File) => {
-    if (!selectedCustomer || !companyId) return;
-
-    const validation = validateUpload(file, {
-      maxSize: MAX_LOGO_BYTES,
-      allowedExtensions: LOGO_ALLOWED_EXTENSIONS,
+  const handleOpenDetails = (c: any) => {
+    navigate({
+      to: "/customers/$id",
+      params: { id: c.id },
+      search: {
+        from: "customers",
+        search: searchTerm || undefined,
+        page: page > 1 ? page : undefined,
+        type: filterType !== "all" ? filterType : undefined,
+      },
     });
-    if (!validation.isValid) {
-      toast.error(validation.error || "Arquivo de imagem inválido.");
-      return;
-    }
-
-    const previousLogo = selectedCustomer.logo_url;
-    const objectUrl = URL.createObjectURL(file);
-    setLogoPreviewUrl(objectUrl);
-    setLogoUploading(true);
-    const loadingToast = toast.loading("Enviando logo do cliente...");
-
-    try {
-      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
-      const path = `${companyId}/customers/${selectedCustomer.id}-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("company-logos")
-        .upload(path, file, { upsert: true, contentType: file.type });
-      if (upErr) throw upErr;
-
-      const { data: pub } = supabase.storage.from("company-logos").getPublicUrl(path);
-      const publicUrl = pub.publicUrl;
-
-      // Clean up previous logo from storage to avoid orphan files
-      if (previousLogo && previousLogo !== publicUrl) {
-        await removeFromBucket("company-logos", previousLogo);
-      }
-
-      const { error: updErr } = await supabase
-        .from("customers")
-        .update({ logo_url: publicUrl } as any)
-        .eq("id", selectedCustomer.id);
-      if (updErr) throw updErr;
-
-      setSelectedCustomer({ ...selectedCustomer, logo_url: publicUrl });
-      setCustomers((prev) => prev.map((c) => (c.id === selectedCustomer.id ? { ...c, logo_url: publicUrl } : c)));
-      toast.dismiss(loadingToast);
-      toast.success("Logo do cliente atualizado.");
-    } catch (err: any) {
-      toast.dismiss(loadingToast);
-      toast.error(parseStorageError(err));
-      setLogoPreviewUrl(null);
-    } finally {
-      setLogoUploading(false);
-    }
   };
 
-  const handleCustomerLogoRemove = async () => {
-    if (!selectedCustomer) return;
-    setIsRemovingLogo(true);
-    const previousLogo = selectedCustomer.logo_url;
-    try {
-      if (previousLogo) {
-        await removeFromBucket("company-logos", previousLogo);
-      }
-      const { error } = await supabase
-        .from("customers")
-        .update({ logo_url: null } as any)
-        .eq("id", selectedCustomer.id);
-      if (error) throw error;
-      setLogoPreviewUrl(null);
-      setSelectedCustomer({ ...selectedCustomer, logo_url: null });
-      setCustomers((prev) => prev.map((c) => (c.id === selectedCustomer.id ? { ...c, logo_url: null } : c)));
-      toast.success("Logo removido.");
-      setShowRemoveLogoConfirm(false);
-    } catch (err: any) {
-      toast.error(parseStorageError(err));
-    } finally {
-      setIsRemovingLogo(false);
-    }
+  const getInitials = (name?: string) => {
+    if (!name) return "CL";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
-  const handleDeleteCustomer = async () => {
-    if (!selectedCustomer) return;
-
-    setIsDeleting(true);
-    const loadingToast = toast.loading("Excluindo cliente...");
-
-    try {
-      const { error } = await supabase
-        .from('customers')
-        .delete()
-        .eq('id', selectedCustomer.id);
-
-      if (error) throw error;
-
-      setCustomers(prev => prev.filter(c => c.id !== selectedCustomer.id));
-      setShowDeleteCustomerConfirm(false);
-      setIsDetailsOpen(false);
-      setSelectedCustomer(null);
-      toast.dismiss(loadingToast);
-      toast.success("Cliente excluído com sucesso!");
-    } catch (error: any) {
-      console.error("DELETE_FAILED", error);
-      toast.dismiss(loadingToast);
-      toast.error("Erro ao excluir cliente. Verifique se ele possui processos ou embarcações vinculadas.");
-    } finally {
-      setIsDeleting(false);
-    }
+  const getClientType = (cpfCnpj?: string) => {
+    const digits = (cpfCnpj || "").replace(/\D/g, "");
+    return digits.length > 11 ? "Pessoa jurídica" : "Pessoa física";
   };
 
-  const handleOcrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // Reset input so same file can be re-selected
-    if (!file || !companyId) return;
-
-    const validation = validateUpload(file, {
-      maxSize: MAX_ATTACHMENT_BYTES,
-      allowedExtensions: [...LOGO_ALLOWED_EXTENSIONS, "pdf"],
-    });
-    if (!validation.isValid) {
-      toast.error(validation.error || "Arquivo inválido para OCR.");
-      return;
-    }
-
-    setIsOcrProcessing(true);
-    const loadingToast = toast.loading("Processando documento...");
-
-    try {
-      const fileExt = file.name.split('.').pop()?.toLowerCase() || "pdf";
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      const filePath = `${companyId}/ocr/${fileName}`;
-
-      const { error: upErr } = await supabase.storage.from('ocr-documents').upload(filePath, file, {
-        contentType: file.type
-      });
-      if (upErr) throw upErr;
-
-      const { data: fileData, error: dbError } = await supabase
-        .from('uploaded_files')
-        .insert({
-          company_id: companyId,
-          file_name: file.name,
-          file_url: filePath,
-          category: 'ocr_analysis',
-          file_type: file.type,
-          file_size: file.size,
-          status: 'pending'
-        })
-        .select().single();
-
-      if (dbError) throw dbError;
-
-      const { data: jobData, error: jobError } = await supabase
-        .from("ocr_jobs")
-        .insert({ company_id: companyId, file_id: fileData.id, status: 'pending' })
-        .select().single();
-
-      if (jobError) throw jobError;
-
-      await supabase.functions.invoke('process-ocr', { body: { jobId: jobData.id } });
-
-      let attempts = 0;
-      const poll = setInterval(async () => {
-        attempts++;
-        const { data: job } = await supabase.from("ocr_jobs").select("*").eq("id", jobData.id).single();
-        if (job?.status === 'completed') {
-          clearInterval(poll);
-          const p = job.extracted_data?.person || job.extracted_data;
-          setFormData(prev => ({
-            ...prev,
-            name: p?.nome || p?.name || prev.name,
-            cpf_cnpj: p?.cpf || p?.doc_number || prev.cpf_cnpj,
-            rg: p?.rg || prev.rg,
-            address: p?.address || p?.endereco || prev.address,
-            city: p?.city || p?.cidade || prev.city,
-            state: p?.state || p?.uf || p?.estado || prev.state
-          }));
-          setIsOcrProcessing(false);
-          toast.dismiss(loadingToast);
-          toast.success("Dados extraídos com sucesso!");
-        } else if (job?.status === 'failed' || attempts > 15) {
-          clearInterval(poll);
-          setIsOcrProcessing(false);
-          toast.dismiss(loadingToast);
-          toast.error("Falha no OCR ou tempo esgotado.");
-        }
-      }, 2000);
-    } catch (error) {
-      console.error("OCR_ERROR", error);
-      setIsOcrProcessing(false);
-      toast.dismiss(loadingToast);
-      toast.error(parseStorageError(error));
-    }
-  };
-
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   return (
-    <div className="animate-in fade-in duration-500 pb-20">
-      <TrialBanner onlyAlerts={true} />
-      <PageHeader 
-        title="Clientes"
-        description="Gerencie sua base de clientes e contatos."
-        actions={
-          <>
-            <button 
-              onClick={() => setIsNewProcessOpen(true)}
-              className="flex-grow sm:flex-initial bg-navy text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
-            >
-              <Plus className="h-4 w-4" /> Novo Processo
-            </button>
-            <button 
-              onClick={async () => {
-                const limit = await checkLimit('customers');
-                if (limit.reached) {
-                  setUpgradeModal({ isOpen: true, current: limit.current, limit: limit.limit });
-                  return;
-                }
-                setIsModalOpen(true);
-              }}
+    <div className="max-w-6xl mx-auto py-2 sm:py-6 px-2 sm:px-4">
+      {/* 1. CABEÇALHO DA PÁGINA */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#0B1739] tracking-tight">
+            Relação de clientes
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Encontre um cliente e acesse suas embarcações, processos e documentos.
+          </p>
+        </div>
 
-              className="flex-grow sm:flex-initial bg-primary text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
-            >
-              <Plus className="h-4 w-4" /> Novo Cliente
-            </button>
-          </>
-        }
-      />
+        <Link
+          to="/customers/novo"
+          className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Cadastrar cliente</span>
+        </Link>
+      </div>
 
-      <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-4 md:p-6 border-b bg-slate-50/50 flex flex-col md:flex-row gap-4 items-center justify-between">
-
-          <div className="relative w-full md:max-w-md">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-            <input 
-              placeholder="Buscar por nome, e-mail ou documento..." 
+      {/* 2. CARTÃO PRINCIPAL: PESQUISA, FILTROS E TABELA */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-6 shadow-xs mb-8">
+        {/* Barra Superior: Campo de Pesquisa + Dropdown de Filtro */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Campo de Busca */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+              placeholder="Pesquisar por nome, CPF ou CNPJ..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF] transition-all"
             />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("");
+                  setPage(1);
+                }}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 p-0.5"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
-          <button className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest bg-white hover:bg-slate-50 transition-all">
-            <Filter className="h-4 w-4" /> Filtros Avançados
-          </button>
+
+          {/* Filtro por Tipo */}
+          <div className="relative shrink-0 sm:w-48">
+            <select
+              value={filterType}
+              onChange={(e) => {
+                setFilterType(e.target.value as CustomerFilterType);
+                setPage(1);
+              }}
+              className="w-full appearance-none px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF] transition-all pr-8 cursor-pointer"
+            >
+              <option value="all">Todos os clientes</option>
+              <option value="pf">Pessoa física</option>
+              <option value="pj">Pessoa jurídica</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
+          </div>
         </div>
 
-        {/* Desktop Table View */}
+        {/* Subtítulo da Ordem */}
+        <p className="text-xs text-slate-400 font-medium mt-3 mb-4 sm:mb-6 pl-1">
+          Ordem alfabética • A–Z
+        </p>
+
+        {/* TABELA DESKTOP */}
         <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                <th className="px-6 py-4">CLIENTE / DOC</th>
-                <th className="px-6 py-4">TIPO</th>
-                <th className="px-6 py-4">CONTATO</th>
-                <th className="px-6 py-4">EMBARCAÇÕES</th>
-                <th className="px-6 py-4"></th>
+              <tr className="border-b border-slate-100 text-xs font-semibold text-slate-500">
+                <th className="pb-3 px-3 font-semibold">Cliente</th>
+                <th className="pb-3 px-3 font-semibold">Tipo</th>
+                <th className="pb-3 px-3 font-semibold text-center">Embarcações</th>
+                <th className="pb-3 px-3 font-semibold text-center">Processos</th>
+                <th className="pb-3 px-3 font-semibold text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-medium">
+            <tbody className="divide-y divide-slate-100/80">
               {isLoading ? (
+                // Skeleton de Carregamento
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <tr key={idx} className="animate-pulse">
+                    <td className="py-4 px-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-slate-100" />
+                        <div className="space-y-1.5">
+                          <div className="h-4 w-36 bg-slate-100 rounded" />
+                          <div className="h-3 w-24 bg-slate-50 rounded" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-3"><div className="h-3.5 w-20 bg-slate-100 rounded" /></td>
+                    <td className="py-4 px-3 text-center"><div className="h-3.5 w-6 bg-slate-100 rounded mx-auto" /></td>
+                    <td className="py-4 px-3 text-center"><div className="h-3.5 w-6 bg-slate-100 rounded mx-auto" /></td>
+                    <td className="py-4 px-3 text-right"><div className="h-3.5 w-16 bg-slate-100 rounded ml-auto" /></td>
+                  </tr>
+                ))
+              ) : isError ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-20 text-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-                    <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Carregando clientes...</p>
+                  <td colSpan={5} className="py-12 text-center text-xs text-red-500">
+                    <AlertCircle className="h-8 w-8 text-red-400 mx-auto mb-2" />
+                    <p className="font-semibold">Erro ao carregar clientes</p>
+                    <button
+                      type="button"
+                      onClick={() => fetchCustomers()}
+                      className="mt-3 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold"
+                    >
+                      Tentar novamente
+                    </button>
                   </td>
                 </tr>
               ) : customers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-20 text-center">
-                    <Users className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-                    <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Nenhum cliente encontrado</p>
+                  <td colSpan={5} className="py-16 text-center text-slate-400">
+                    <Users className="h-10 w-10 text-slate-200 mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-slate-700">
+                      {searchTerm ? "Nenhum cliente encontrado" : "Nenhum cliente cadastrado"}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                      {searchTerm
+                        ? "Tente buscar por outro termo ou limpe a pesquisa."
+                        : "Cadastre seu primeiro cliente para começar a vincular embarcações e processos."}
+                    </p>
+                    {searchTerm ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchTerm("");
+                          setPage(1);
+                        }}
+                        className="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold"
+                      >
+                        Limpar pesquisa
+                      </button>
+                    ) : (
+                      <Link
+                        to="/customers/novo"
+                        className="inline-flex items-center gap-1.5 mt-4 px-5 py-2.5 rounded-xl bg-[#075BFF] text-white text-xs font-semibold shadow-xs"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>Cadastrar cliente</span>
+                      </Link>
+                    )}
                   </td>
                 </tr>
-              ) : customers.map((c, i) => (
-                <tr 
-                  key={i} 
-                  onClick={() => handleOpenDetails(c)}
-                  className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
-                >
-                  <td className="px-6 py-4">
-                    <div className="font-bold text-navy group-hover:text-primary transition-colors">{c.name}</div>
-                    <div className="text-[10px] text-slate-400 font-mono tracking-tighter">{c.cpf_cnpj}</div>
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${c.cpf_cnpj?.length > 14 ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-600'}`}>
-                      {c.cpf_cnpj?.length > 14 ? 'Empresa' : 'Individual'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-500">
-                    <div className="flex items-center gap-1.5 mb-1 font-bold truncate max-w-[200px]">
-                      <Mail className="h-3.5 w-3.5" /> {c.email}
-                    </div>
-                    <div className="text-[11px] flex items-center gap-1.5 opacity-70 font-medium truncate max-w-[200px]">
-                      <MapPin className="h-3 w-3" /> {c.address}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-1.5 w-16 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary" style={{ width: `${Math.min((c.vessels?.[0]?.count || 0) * 10, 100)}%` }} />
-                      </div>
-                      <span className="text-xs font-black text-navy">{c.vessels?.[0]?.count || 0}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 hover:bg-slate-100 rounded-lg text-slate-300 transition-colors">
-                      <MoreHorizontal className="h-5 w-5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              ) : (
+                customers.map((c) => {
+                  const vesselCount = c.vessels?.[0]?.count || (Array.isArray(c.vessels) ? c.vessels.length : 0);
+                  const processCount = c.processes?.[0]?.count || (Array.isArray(c.processes) ? c.processes.length : 0);
+                  const initials = getInitials(c.name);
+                  const typeLabel = getClientType(c.cpf_cnpj);
+
+                  return (
+                    <tr
+                      key={c.id}
+                      className="hover:bg-slate-50/70 transition-colors group"
+                    >
+                      {/* Cliente */}
+                      <td className="py-4 px-3">
+                        <div 
+                          className="flex items-center gap-3 cursor-pointer"
+                          onClick={() => handleOpenDetails(c)}
+                        >
+                          <div className="w-9 h-9 rounded-full bg-[#EEF4FF] text-[#075BFF] font-bold text-xs flex items-center justify-center shrink-0 border border-blue-100">
+                            {initials}
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-[#0B1739] group-hover:text-[#075BFF] transition-colors">
+                              {c.name}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Tipo */}
+                      <td className="py-4 px-3 text-xs text-slate-500">
+                        {typeLabel}
+                      </td>
+
+                      {/* Embarcações */}
+                      <td className="py-4 px-3 text-xs text-slate-700 font-medium text-center">
+                        {vesselCount}
+                      </td>
+
+                      {/* Processos */}
+                      <td className="py-4 px-3 text-xs text-slate-700 font-medium text-center">
+                        {processCount}
+                      </td>
+
+                      {/* Ações */}
+                      <td className="py-4 px-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCustomerToEdit(c);
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-[#075BFF] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                            title="Editar cliente"
+                            aria-label={`Editar ${c.name}`}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDetails(c)}
+                            className="text-xs font-semibold text-[#075BFF] hover:underline flex items-center gap-0.5 cursor-pointer pl-2"
+                          >
+                            <span>Abrir</span>
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* Mobile Card View */}
+        {/* LISTA EM CARDS MOBILE */}
         <div className="md:hidden divide-y divide-slate-100">
           {isLoading ? (
-            <div className="px-6 py-20 text-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Carregando clientes...</p>
+            <div className="py-12 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+              <Loader2 className="h-5 w-5 text-[#075BFF] animate-spin" />
+              <span>Carregando clientes...</span>
             </div>
           ) : customers.length === 0 ? (
-            <div className="px-6 py-20 text-center">
-              <Users className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Nenhum cliente encontrado</p>
+            <div className="py-12 text-center text-slate-400 text-xs">
+              <Users className="h-8 w-8 text-slate-200 mx-auto mb-2" />
+              <p className="font-semibold text-slate-700">Nenhum cliente encontrado</p>
             </div>
           ) : (
-            customers.map((c, i) => {
+            customers.map((c) => {
+              const vesselCount = c.vessels?.[0]?.count || 0;
+              const processCount = c.processes?.[0]?.count || 0;
+              const initials = getInitials(c.name);
+              const typeLabel = getClientType(c.cpf_cnpj);
+
               return (
-                <div 
-                  key={i} 
+                <div
+                  key={c.id}
+                  className="py-4 space-y-3 cursor-pointer"
                   onClick={() => handleOpenDetails(c)}
-                  className="p-4 active:bg-slate-50 transition-colors space-y-3 cursor-pointer"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-bold text-navy">{c.name}</div>
-                      <div className="text-[10px] text-slate-400 font-mono tracking-tighter">{c.cpf_cnpj}</div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-full bg-[#EEF4FF] text-[#075BFF] font-bold text-xs flex items-center justify-center shrink-0 border border-blue-100">
+                        {initials}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-sm text-[#0B1739] truncate">{c.name}</p>
+                        <p className="text-[11px] text-slate-400">{typeLabel}</p>
+                      </div>
                     </div>
-                    <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest ${c.cpf_cnpj?.length > 14 ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-600'}`}>
-                      {c.cpf_cnpj?.length > 14 ? 'Empresa' : 'Individual'}
-                    </span>
+
+                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => setCustomerToEdit(c)}
+                        className="p-1.5 text-slate-400 hover:text-[#075BFF] rounded-lg"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
-                    <div className="flex items-center gap-1.5 text-slate-500 truncate">
-                      <Mail className="h-3 w-3" /> {c.email || "Sem e-mail"}
-                    </div>
-                    <div className="flex items-center gap-1.5 text-slate-500 justify-end">
-                      <Ship className="h-3 w-3" /> {c.vessels?.[0]?.count || 0} Embarcações
-                    </div>
+
+                  <div className="flex items-center justify-between pt-2 text-xs text-slate-600 bg-slate-50/70 p-2.5 rounded-xl">
+                    <span><strong>{vesselCount}</strong> embarcações</span>
+                    <span><strong>{processCount}</strong> processos</span>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenDetails(c)}
+                      className="text-xs font-semibold text-[#075BFF] flex items-center gap-0.5"
+                    >
+                      <span>Abrir</span>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
               );
@@ -663,171 +500,55 @@ function Customers() {
           )}
         </div>
 
-        
-        <div className="p-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-          <span>Mostrando {customers.length} de {totalCount} clientes</span>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200 bg-white"
-              onClick={() => setPage(prev => Math.max(1, prev - 1))}
-              disabled={page === 1}
-            >
-              Anterior
-            </Button>
-            <div className="flex items-center gap-1">
-              <span className="px-3 h-8 flex items-center bg-primary text-white rounded-lg shadow-sm">{page}</span>
-              <span className="text-slate-300">/</span>
-              <span className="px-3 h-8 flex items-center text-navy font-bold">{Math.ceil(totalCount / pageSize) || 1}</span>
+        {/* Rodapé da Listagem com Contagem e Paginação */}
+        <div className="pt-4 mt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-slate-400">
+            {totalCount === 1 ? "1 cliente encontrado" : `${totalCount} clientes encontrados`}
+          </p>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+              <span className="text-xs font-semibold text-slate-700">
+                Página {page} de {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Próxima
+              </button>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 rounded-lg text-[9px] uppercase font-black tracking-widest border-slate-200 bg-white"
-              onClick={() => setPage(prev => prev + 1)}
-              disabled={page >= Math.ceil(totalCount / pageSize)}
-            >
-              Próximo
-            </Button>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Modal Novo Cliente */}
-      <ModalLayout
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Cadastrar Novo Cliente"
-        description="Preencha os dados básicos para iniciar."
-        maxWidth="2xl"
-        footer={
-          <>
-            <button 
-              type="button" 
-              onClick={() => setIsModalOpen(false)} 
-              className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all"
-            >
-              Cancelar
-            </button>
-            <button 
-              form="create-customer-form"
-              type="submit" 
-              disabled={isSubmitting}
-              className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-primary/20 transition-all flex items-center gap-2 min-h-[44px]"
-            >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              {isSubmitting ? "Salvando..." : "Salvar Cliente"}
-            </button>
-          </>
-        }
-      >
-        <form id="create-customer-form" onSubmit={handleCreateCustomer} className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome / Razão Social</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                <Input 
-                  className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                  placeholder="Ex: João Silva ou Empresa LTDA" 
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">CPF / CNPJ</Label>
-              <div className="relative">
-                <FileText className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                <Input 
-                  className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                  placeholder="000.000.000-00" 
-                  value={formData.cpf_cnpj}
-                  onChange={(e) => setFormData({ ...formData, cpf_cnpj: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">RG (Opcional)</Label>
-              <Input 
-                className="h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                placeholder="00.000.000-0" 
-                value={formData.rg}
-                onChange={(e) => setFormData({ ...formData, rg: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">E-mail</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                <Input 
-                  type="email"
-                  className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                  placeholder="contato@cliente.com" 
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Telefone</Label>
-              <div className="relative">
-                <Smartphone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                <Input 
-                  className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                  placeholder="(00) 00000-0000" 
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cidade/UF</Label>
-              <div className="grid grid-cols-3 gap-2">
-                <Input 
-                  className="col-span-2 h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
-                  placeholder="Cidade" 
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                />
-                <Input 
-                  className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm uppercase" 
-                  placeholder="UF" 
-                  maxLength={2}
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Endereço Completo</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                <Input 
-                  className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm transition-all" 
-                  placeholder="Rua, Número, Bairro..." 
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Observações Internas</label>
-            <textarea 
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none h-24 resize-none font-medium text-sm transition-all" 
-              placeholder="Notas adicionais sobre este cliente..." 
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            />
-          </div>
-        </form>
-      </ModalLayout>
+      {/* 3. MENSAGEM INFORMATIVA INFERIOR COM ÍCONE DE PASTA */}
+      <div className="text-center py-6">
+        <Folder className="h-8 w-8 text-slate-300 mx-auto mb-2" strokeWidth={1.5} />
+        <p className="text-xs text-slate-400">
+          Abra um cliente para consultar suas embarcações e documentos.
+        </p>
+      </div>
 
-      {/* Modal Detalhes do Cliente */}
+      {/* MODAL DE EDIÇÃO DE CLIENTE */}
+      <CustomerEditModal
+        isOpen={customerToEdit !== null}
+        onClose={() => setCustomerToEdit(null)}
+        customer={customerToEdit}
+        onCustomerUpdated={() => fetchCustomers()}
+      />
+
+      {/* MODAL DE DETALHES DO CLIENTE */}
       <ModalLayout
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
@@ -835,415 +556,206 @@ function Customers() {
         maxWidth="4xl"
         footer={
           <div className="flex justify-between items-center w-full">
-            <div className="flex gap-3">
-              <button 
-                type="button" 
-                onClick={() => setShowDeleteCustomerConfirm(true)}
-                disabled={isDeleting}
-                className="px-6 py-2.5 bg-rose-50 text-rose-600 rounded-xl font-black uppercase text-[9px] tracking-widest hover:bg-rose-100 transition-all flex items-center gap-2 min-h-[44px] min-w-[44px]"
-              >
-                {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                {isDeleting ? "Excluindo..." : "Excluir Cliente"}
-              </button>
-            </div>
-            <div className="flex gap-3">
-              <button 
-                type="button" 
-                onClick={() => {
-                  setIsDetailsOpen(false);
-                  setIsEditing(false);
-                }} 
-                className="px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-200 transition-all min-h-[44px]"
-              >
-                Fechar
-              </button>
-              {isEditing ? (
-                <button 
-                  type="submit"
-                  form="edit-customer-form"
-                  disabled={isSubmitting}
-                  className="px-10 py-3 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-xl shadow-primary/20 transition-all flex items-center gap-2 min-h-[44px]"
-                >
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  {isSubmitting ? "Salvando..." : "Salvar Alterações"}
-                </button>
-              ) : (
-                <button 
-                  type="button" 
-                  onClick={() => setIsEditing(true)}
-                  className="px-10 py-3 bg-navy text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 transition-all flex items-center gap-2 min-h-[44px]"
-                >
-                  <Edit2 className="h-4 w-4" /> Editar Cliente
-                </button>
-              )}
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setCustomerToEdit(selectedCustomer);
+                setIsDetailsOpen(false);
+              }}
+              className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-1.5"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              <span>Editar cadastro</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsDetailsOpen(false)}
+              className="px-6 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-700"
+            >
+              Fechar
+            </button>
           </div>
         }
       >
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-          <div className="flex gap-6">
-            <div className="h-16 w-16 bg-white border border-slate-200 rounded-2xl flex items-center justify-center text-2xl font-black shadow-xl shrink-0 overflow-hidden">
-              {selectedCustomer?.logo_url ? (
-                <img src={selectedCustomer.logo_url} alt={selectedCustomer.name} className="h-full w-full object-contain p-1" />
-              ) : (
-                <span className="text-white bg-navy h-full w-full flex items-center justify-center">{selectedCustomer?.name?.charAt(0)}</span>
-              )}
-            </div>
-            <div>
-              <h3 className="text-2xl font-semibold text-navy">{selectedCustomer?.name}</h3>
-              <div className="flex flex-wrap gap-4 mt-1 text-slate-500 text-xs font-bold">
-                <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> {selectedCustomer?.email || "Sem e-mail"}</span>
-                <span className="flex items-center gap-1.5 font-mono tracking-tighter">{selectedCustomer?.cpf_cnpj}</span>
-              </div>
-            </div>
-          </div>
-          
-          {isEditing && (
-            <div className="flex shrink-0">
-               <label className="cursor-pointer bg-primary/10 text-primary hover:bg-primary/20 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all">
-                  <Zap className="h-4 w-4" /> OCR: Auto-preencher via Doc
-                  <input type="file" className="hidden" accept="image/*,application/pdf" onChange={handleOcrUpload} disabled={isOcrProcessing} />
-               </label>
-            </div>
-          )}
-        </div>
+        <div className="p-1 space-y-6">
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid grid-cols-4 w-full bg-slate-100 p-1 rounded-xl mb-6">
+              <TabsTrigger value="overview" className="text-xs font-semibold rounded-lg">Visão Geral</TabsTrigger>
+              <TabsTrigger value="vessels" className="text-xs font-semibold rounded-lg">
+                Embarcações ({customerVessels.length})
+              </TabsTrigger>
+              <TabsTrigger value="processes" className="text-xs font-semibold rounded-lg">
+                Processos ({customerProcesses.length})
+              </TabsTrigger>
+              <TabsTrigger value="documents" className="text-xs font-semibold rounded-lg">
+                Documentos ({files?.length || 0})
+              </TabsTrigger>
+            </TabsList>
 
-
-
-          <div className="w-full">
-            <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="bg-slate-100 p-1 rounded-xl mb-8">
-                <TabsTrigger value="overview" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Visão Geral</TabsTrigger>
-                <TabsTrigger value="documents" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Documentos</TabsTrigger>
-                <TabsTrigger value="vessels" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Embarcações</TabsTrigger>
-                <TabsTrigger value="history" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Histórico</TabsTrigger>
-                <TabsTrigger value="signatures" className="rounded-lg font-bold text-xs uppercase tracking-widest px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Assinaturas</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="overview" className="space-y-6">
-                {isEditing ? (
-                  <form id="edit-customer-form" onSubmit={handleUpdateCustomer} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="md:col-span-2 p-4 rounded-2xl border border-slate-200 bg-slate-50/60 flex items-center gap-4">
-                        <div className="h-20 w-20 rounded-xl bg-white border border-slate-200 grid place-items-center overflow-hidden shrink-0">
-                          {logoPreviewUrl || selectedCustomer?.logo_url ? (
-                            <img 
-                              src={logoPreviewUrl || selectedCustomer.logo_url} 
-                              alt="Logo do cliente" 
-                              className="max-h-full max-w-full object-contain" 
-                            />
-                          ) : (
-                            <ImageIcon className="h-7 w-7 text-slate-300" />
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Logo do Cliente</p>
-                          <p className="text-xs text-slate-500 mt-1">PNG, JPG ou WEBP (até 5MB). Proporção mantida automaticamente sem distorção.</p>
-                          <div className="flex gap-2 mt-3">
-                            <label className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest cursor-pointer hover:opacity-90 ${logoUploading ? "opacity-60 pointer-events-none" : ""}`}>
-                              {logoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImageIcon className="h-3.5 w-3.5" />}
-                              {logoPreviewUrl || selectedCustomer?.logo_url ? "Substituir" : "Enviar logo"}
-                              <input
-                                type="file"
-                                accept="image/png,image/jpeg,image/webp"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const f = e.target.files?.[0];
-                                  e.target.value = "";
-                                  if (f) handleCustomerLogoUpload(f);
-                                }}
-                              />
-                            </label>
-                            {(logoPreviewUrl || selectedCustomer?.logo_url) && (
-                              <button
-                                type="button"
-                                onClick={() => setShowRemoveLogoConfirm(true)}
-                                disabled={logoUploading || isRemovingLogo}
-                                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-navy text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 disabled:opacity-50 min-h-[44px]"
-                              >
-                                {isRemovingLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                                Remover
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome / Razão Social</Label>
-                        <Input 
-                          className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
-                          value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">CPF / CNPJ</Label>
-                        <Input 
-                          className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
-                          value={formData.cpf_cnpj}
-                          onChange={(e) => setFormData({ ...formData, cpf_cnpj: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">RG</Label>
-                        <Input 
-                          className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
-                          value={formData.rg}
-                          onChange={(e) => setFormData({ ...formData, rg: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">E-mail</Label>
-                        <Input 
-                          className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
-                          value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Telefone</Label>
-                        <Input 
-                          className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
-                          value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cidade/UF</Label>
-                        <div className="grid grid-cols-3 gap-2">
-                          <Input 
-                            className="col-span-2 h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
-                            placeholder="Cidade" 
-                            value={formData.city}
-                            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                          />
-                          <Input 
-                            className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm uppercase" 
-                            placeholder="UF" 
-                            maxLength={2}
-                            value={formData.state}
-                            onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Endereço Completo</Label>
-                        <Input 
-                          className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm" 
-                          value={formData.address}
-                          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Observações</Label>
-                        <textarea 
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl h-24 resize-none font-medium text-sm transition-all" 
-                          value={formData.notes}
-                          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  </form>
-                ) : (
-                  <div className="grid grid-cols-2 gap-8 animate-in fade-in duration-300">
-                    <div className="space-y-4">
-                       <h4 className="text-[10px] font-semibold text-slate-400">Informações de Contato</h4>
-                       <div className="space-y-3">
-                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                             <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Endereço</p>
-                             <p className="text-sm font-bold text-navy">{selectedCustomer?.address || "Não informado"}</p>
-                             {selectedCustomer?.city && (
-                               <p className="text-xs text-slate-500 mt-1">{selectedCustomer.city} - {selectedCustomer.state}</p>
-                             )}
-                          </div>
-                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                             <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Telefone</p>
-                             <p className="text-sm font-bold text-navy">{selectedCustomer?.phone || "Não informado"}</p>
-                          </div>
-                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                             <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">E-mail</p>
-                             <p className="text-sm font-bold text-navy">{selectedCustomer?.email || "Não informado"}</p>
-                          </div>
-                       </div>
-                    </div>
-                    <div className="space-y-4">
-                       <h4 className="text-[10px] font-semibold text-slate-400">Observações</h4>
-                       <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl min-h-[120px]">
-                          <p className="text-sm text-amber-900 font-medium leading-relaxed">{selectedCustomer?.notes || "Sem observações adicionais."}</p>
-                       </div>
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-
-
-              <TabsContent value="documents" className="space-y-8">
-                 <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-[10px] font-semibold text-slate-400">Documentação do Cliente</h4>
-                    <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-widest">{files?.length || 0} Arquivos</Badge>
-                 </div>
-
-                 <div className="grid md:grid-cols-2 gap-8">
-                    <div className="space-y-6">
-                       <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                          <h5 className="text-xs font-black text-navy uppercase mb-4">Enviar Novo Arquivo</h5>
-                          <FileUploader 
-                            bucket="customer-documents" 
-                            category="client_id" 
-                            customerId={selectedCustomer?.id}
-                          />
-                       </div>
-                    </div>
-
-                    <div className="space-y-4">
-                       {files?.map((file) => (
-                         <div key={file.id} className="p-4 bg-white border border-slate-100 rounded-2xl flex items-center justify-between group hover:border-primary/20 transition-all">
-                            <div className="flex items-center gap-3">
-                               <div className="h-10 w-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-primary/5 group-hover:text-primary transition-colors">
-                                  {file.file_type.includes('image') ? <ImageIcon className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
-                               </div>
-                               <div>
-                                  <p className="text-xs font-bold text-navy truncate max-w-[150px]">{file.file_name}</p>
-                                  <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest">{file.category}</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                               <button 
-                                 type="button"
-                                 onClick={() => openStoredFile(file)} 
-                                 aria-label="Visualizar arquivo"
-                                 className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 text-slate-400 hover:text-navy rounded-lg transition-colors"
-                               >
-                                 <Eye className="h-4 w-4" />
-                               </button>
-                               <button 
-                                 type="button"
-                                 onClick={() => setFileToDelete({ id: file.id, name: file.file_name })} 
-                                 aria-label="Excluir arquivo"
-                                 className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
-                               >
-                                 <Trash2 className="h-4 w-4" />
-                               </button>
-                            </div>
-                         </div>
-                       ))}
-                       
-                       {(!files || files.length === 0) && (
-                         <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-2xl">
-                            <FileText className="h-12 w-12 text-slate-100 mx-auto mb-2" />
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhum documento</p>
-                         </div>
-                       )}
-                    </div>
-                  </div>
-               </TabsContent>
-
-              <TabsContent value="vessels" className="space-y-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-[10px] font-semibold text-slate-400">Embarcações vinculadas</h4>
-                  <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-widest">{customerVessels.length}</Badge>
+            {/* ABA 1: VISÃO GERAL */}
+            <TabsContent value="overview" className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Documento</p>
+                  <p className="text-sm font-bold text-[#0B1739]">{selectedCustomer?.cpf_cnpj || "Não informado"}</p>
+                  {selectedCustomer?.rg && (
+                    <p className="text-xs text-slate-500">RG: {selectedCustomer.rg}</p>
+                  )}
                 </div>
-                {customerVessels.length === 0 ? (
-                  <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-2xl">
-                    <Ship className="h-12 w-12 text-slate-200 mx-auto mb-2" />
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Nenhuma embarcação vinculada a este cliente.</p>
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {customerVessels.map((v) => (
-                      <div key={v.id} className="p-5 bg-white border border-slate-100 rounded-2xl hover:border-primary/30 hover:shadow-md transition-all">
-                        <div className="flex items-start justify-between gap-3 mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-navy/5 text-navy rounded-xl flex items-center justify-center"><Ship className="h-5 w-5" /></div>
-                            <div>
-                              <p className="font-black text-navy text-sm uppercase tracking-tight">{v.name || 'Sem nome'}</p>
-                              <p className="text-[10px] text-slate-400 font-mono">{v.registration_number || '—'}</p>
-                            </div>
-                          </div>
-                          {v.status && <Badge className="bg-slate-100 text-slate-600 border-none text-[9px] uppercase">{v.status}</Badge>}
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500">
-                          <div><span className="font-bold text-slate-400">Tipo:</span> {v.vessel_type || '—'}</div>
-                          <div className="truncate"><span className="font-bold text-slate-400">Proprietário:</span> {v.current_owner_name || '—'}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
 
-              <TabsContent value="history" className="space-y-3">
-                <h4 className="text-[10px] font-semibold text-slate-400 mb-2">Histórico de processos</h4>
-                {customerProcesses.length === 0 ? (
-                  <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-2xl">
-                    <FileText className="h-12 w-12 text-slate-200 mx-auto mb-2" />
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Sem histórico de processos</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {customerProcesses.map((p) => (
-                      <div key={p.id} className="p-4 bg-white border border-slate-100 rounded-xl flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-bold text-navy">{p.process_type}</p>
-                          <p className="text-[10px] text-slate-400">{new Date(p.created_at).toLocaleDateString('pt-BR')}</p>
-                        </div>
-                        <Badge className="bg-slate-100 text-slate-600 border-none text-[9px] uppercase">{p.status}</Badge>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Contato</p>
+                  <p className="text-xs text-slate-700 font-medium">
+                    <strong>E-mail:</strong> {selectedCustomer?.email || "Não informado"}
+                  </p>
+                  <p className="text-xs text-slate-700 font-medium">
+                    <strong>Telefone:</strong> {selectedCustomer?.phone || "Não informado"}
+                  </p>
+                </div>
+              </div>
 
-              <TabsContent value="signatures">
-                {companyId && selectedCustomer?.id && (
-                  <CustomerSignaturesTab companyId={companyId} customerId={selectedCustomer.id} />
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase">Endereço</p>
+                <p className="text-sm font-semibold text-[#0B1739]">{selectedCustomer?.address || "Não informado"}</p>
+                {selectedCustomer?.city && (
+                  <p className="text-xs text-slate-500">{selectedCustomer.city} - {selectedCustomer.state}</p>
                 )}
-              </TabsContent>
-            </Tabs>
-          </div>
+              </div>
+
+              {selectedCustomer?.notes && (
+                <div className="p-4 bg-blue-50/60 rounded-2xl border border-blue-100/80">
+                  <p className="text-[10px] font-bold text-blue-700 uppercase mb-1">Observações</p>
+                  <p className="text-xs text-slate-700 whitespace-pre-wrap">{selectedCustomer.notes}</p>
+                </div>
+              )}
+            </TabsContent>
+
+            {/* ABA 2: EMBARCAÇÕES VINCULADAS */}
+            <TabsContent value="vessels" className="space-y-4">
+              <div className="flex justify-between items-center">
+                <p className="text-xs font-semibold text-slate-600">Embarcações vinculadas a este cliente</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedCustomer?.id) {
+                      setIsDetailsOpen(false);
+                      window.location.href = `/vessels/novo?customerId=${selectedCustomer.id}`;
+                    }
+                  }}
+                  className="text-xs font-semibold text-[#075BFF] hover:underline flex items-center gap-1"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Cadastrar embarcação</span>
+                </button>
+              </div>
+
+              {customerVessels.length === 0 ? (
+                <div className="text-center py-10 border-2 border-dashed border-slate-100 rounded-2xl text-slate-400 text-xs">
+                  <Ship className="h-8 w-8 text-slate-200 mx-auto mb-2" />
+                  <p className="font-semibold text-slate-600">Nenhuma embarcação vinculada</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedCustomer?.id) {
+                        setIsDetailsOpen(false);
+                        window.location.href = `/vessels/novo?customerId=${selectedCustomer.id}`;
+                      }
+                    }}
+                    className="mt-3 text-xs text-[#075BFF] font-semibold hover:underline"
+                  >
+                    + Vincular nova embarcação agora
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {customerVessels.map((v) => (
+                    <div key={v.id} className="p-4 bg-white border border-slate-200/80 rounded-xl space-y-1.5 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <p className="font-bold text-sm text-[#0B1739]">{v.name}</p>
+                        {v.status && <Badge className="bg-slate-100 text-slate-600 border-none text-[9px] uppercase">{v.status}</Badge>}
+                      </div>
+                      <p className="text-xs text-slate-500">Inscrição: {v.registration_number || "—"}</p>
+                      <p className="text-xs text-slate-400">Tipo: {v.vessel_type || "—"}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* ABA 3: PROCESSOS */}
+            <TabsContent value="processes" className="space-y-4">
+              <p className="text-xs font-semibold text-slate-600">Histórico de processos</p>
+              {customerProcesses.length === 0 ? (
+                <div className="text-center py-10 border-2 border-dashed border-slate-100 rounded-2xl text-slate-400 text-xs">
+                  <FileText className="h-8 w-8 text-slate-200 mx-auto mb-2" />
+                  <p className="font-semibold text-slate-600">Nenhum processo iniciado</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {customerProcesses.map((p) => (
+                    <div key={p.id} className="p-3.5 bg-white border border-slate-200/80 rounded-xl flex items-center justify-between text-xs">
+                      <div>
+                        <p className="font-bold text-slate-900">{p.process_type || "Processo Náutico"}</p>
+                        <p className="text-[10px] text-slate-400">{new Date(p.created_at).toLocaleDateString("pt-BR")}</p>
+                      </div>
+                      <Badge className="bg-slate-100 text-slate-600 border-none text-[9px] uppercase">{p.status}</Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* ABA 4: DOCUMENTOS */}
+            <TabsContent value="documents" className="space-y-4">
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <p className="text-xs font-bold text-[#0B1739] mb-3">Enviar novo documento</p>
+                <FileUploader
+                  bucket="customer-documents"
+                  category="client_id"
+                  customerId={selectedCustomer?.id}
+                />
+              </div>
+
+              {files && files.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  {files.map((file) => (
+                    <div key={file.id} className="p-3 bg-white border border-slate-200/80 rounded-xl flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2.5 truncate">
+                        <FileText className="h-4 w-4 text-[#075BFF] shrink-0" />
+                        <span className="font-medium text-slate-800 truncate">{file.file_name}</span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => openStoredFile(file)}
+                          className="p-1.5 text-slate-400 hover:text-slate-700"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFileToDelete({ id: file.id, name: file.file_name })}
+                          className="p-1.5 text-slate-400 hover:text-red-500"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
       </ModalLayout>
 
-      <UpgradeModal 
-        isOpen={upgradeModal.isOpen} 
-        onClose={() => setUpgradeModal({ ...upgradeModal, isOpen: false })} 
-        resource="customers"
-        limit={upgradeModal.limit}
-        current={upgradeModal.current}
-      />
-
-      <ConfirmDialog
-        open={showDeleteCustomerConfirm}
-        onOpenChange={setShowDeleteCustomerConfirm}
-        title="Excluir Cliente"
-        description={`Tem certeza que deseja excluir o cliente "${selectedCustomer?.name}"? Esta ação não pode ser desfeita e removerá os dados vinculados.`}
-        confirmText="Excluir Cliente"
-        cancelText="Cancelar"
-        variant="destructive"
-        loading={isDeleting}
-        onConfirm={handleDeleteCustomer}
-      />
-
-      <ConfirmDialog
-        open={showRemoveLogoConfirm}
-        onOpenChange={setShowRemoveLogoConfirm}
-        title="Remover Logotipo"
-        description="Tem certeza que deseja remover o logotipo deste cliente?"
-        confirmText="Remover"
-        cancelText="Cancelar"
-        variant="destructive"
-        loading={isRemovingLogo}
-        onConfirm={handleCustomerLogoRemove}
-      />
-
+      {/* DIÁLOGO DE EXCLUSÃO DE ARQUIVO */}
       <ConfirmDialog
         open={fileToDelete !== null}
         onOpenChange={(open) => { if (!open) setFileToDelete(null); }}
-        title="Excluir Arquivo Anexo"
-        description={`Deseja realmente remover o arquivo "${fileToDelete?.name}"?`}
-        confirmText="Excluir Arquivo"
+        title="Excluir Documento"
+        description={`Deseja realmente excluir o documento "${fileToDelete?.name}"?`}
+        confirmText="Excluir"
         cancelText="Cancelar"
         variant="destructive"
         loading={deleteFile.isPending}

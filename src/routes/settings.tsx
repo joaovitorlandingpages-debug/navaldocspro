@@ -11,9 +11,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BackNavigation } from "@/components/navigation/BackNavigation";
 import { PageHeader } from "@/components/navigation/PageHeader";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { DashboardLayout } from "@/routes/dashboard";
 
 export const Route = createFileRoute("/settings")({
-  component: CompanyTeamPage,
+  component: () => (
+    <ProtectedRoute>
+      <DashboardLayout>
+        <CompanyTeamPage />
+      </DashboardLayout>
+    </ProtectedRoute>
+  ),
 });
 
 function CompanyTeamPage() {

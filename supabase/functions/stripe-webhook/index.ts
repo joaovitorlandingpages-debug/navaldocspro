@@ -92,6 +92,11 @@ function extractId(val: unknown): string | null {
 function extractSubscriptionIdFromInvoice(invoice: any): string | null {
   if (!invoice || typeof invoice !== "object") return null;
 
+  if (invoice.subscription) {
+    const subId = extractId(invoice.subscription);
+    if (subId) return subId;
+  }
+
   if (invoice.parent && typeof invoice.parent === "object") {
     const details = invoice.parent.subscription_details;
     if (details && typeof details === "object" && details.subscription) {
@@ -100,9 +105,17 @@ function extractSubscriptionIdFromInvoice(invoice: any): string | null {
     }
   }
 
-  if (invoice.subscription) {
-    const subId = extractId(invoice.subscription);
-    if (subId) return subId;
+  if (invoice.lines?.data && Array.isArray(invoice.lines.data)) {
+    for (const line of invoice.lines.data) {
+      if (line.subscription) {
+        const subId = extractId(line.subscription);
+        if (subId) return subId;
+      }
+      if (line.parent?.subscription_details?.subscription) {
+        const subId = extractId(line.parent.subscription_details.subscription);
+        if (subId) return subId;
+      }
+    }
   }
 
   return null;
@@ -113,6 +126,33 @@ function extractCustomerId(obj: any): string | null {
   if (obj.customer) return extractId(obj.customer);
   if (obj.customer_id) return extractId(obj.customer_id);
   return null;
+}
+
+function extractTargetIdsForEvent(eventType: string, evObj: any): {
+  subscriptionId: string | null;
+  customerId: string | null;
+  invoiceId: string | null;
+} {
+  let subscriptionId: string | null = null;
+  let invoiceId: string | null = null;
+  const customerId = extractCustomerId(evObj);
+
+  if (eventType.startsWith("invoice.")) {
+    // Para faturas: evObj.id é in_... (ID da fatura), NUNCA a assinatura!
+    invoiceId = extractId(evObj.id);
+    subscriptionId = extractSubscriptionIdFromInvoice(evObj);
+  } else if (eventType.startsWith("customer.subscription")) {
+    // Para assinaturas: evObj.id é sub_...
+    subscriptionId = extractId(evObj.id);
+  } else if (eventType === "checkout.session.completed") {
+    subscriptionId = extractId(evObj.subscription);
+    invoiceId = extractId(evObj.invoice);
+  } else {
+    subscriptionId = extractId(evObj.subscription);
+    invoiceId = extractId(evObj.invoice);
+  }
+
+  return { subscriptionId, customerId, invoiceId };
 }
 
 async function fetchStripeSubscription(subscriptionId: string | null, secretKey?: string | null): Promise<any | null> {
@@ -132,75 +172,288 @@ async function fetchStripeSubscription(subscriptionId: string | null, secretKey?
   }
 }
 
-serve(async (req) => {
+async function fetchStripeInvoice(invoiceId: string | null, secretKey?: string | null): Promise<any | null> {
+  if (!invoiceId || !secretKey) return null;
+  try {
+    const res = await fetch(`https://api.stripe.com/v1/invoices/${invoiceId}`, {
+      headers: { "Authorization": `Bearer ${secretKey}` }
+    });
+    if (!res.ok) {
+      console.warn(`Não foi possível consultar fatura Stripe ${invoiceId}: status ${res.status}`);
+      return null;
+    }
+    return await res.json();
+  } catch (err) {
+    console.error(`Erro ao consultar fatura Stripe ${invoiceId}:`, err);
+    return null;
+  }
+}
+
+export async function handleStripeWebhook(req: Request, options?: {
+  supabase?: any;
+  webhookSecret?: string;
+  stripeSecretKey?: string;
+  workerId?: string;
+  skipSignatureCheck?: boolean;
+}): Promise<Response> {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
-  const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+  const supabaseUrl = (typeof Deno !== "undefined" && Deno.env?.get ? Deno.env.get("SUPABASE_URL") : process.env.SUPABASE_URL) || "";
+  const supabaseServiceKey = (typeof Deno !== "undefined" && Deno.env?.get ? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") : process.env.SUPABASE_SERVICE_ROLE_KEY) || "";
+  const webhookSecret = options?.webhookSecret || (typeof Deno !== "undefined" && Deno.env?.get ? Deno.env.get("STRIPE_WEBHOOK_SECRET") : process.env.STRIPE_WEBHOOK_SECRET) || "";
+  const stripeSecretKey = options?.stripeSecretKey || (typeof Deno !== "undefined" && Deno.env?.get ? Deno.env.get("STRIPE_SECRET_KEY") : process.env.STRIPE_SECRET_KEY) || "";
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const supabase = options?.supabase || createClient(supabaseUrl, supabaseServiceKey);
+
+  const workerId = options?.workerId || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `w_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`);
+  const nowIso = new Date().toISOString();
+  const PROCESSING_TIMEOUT_SECONDS = 300; // 5 minutos para abandono de worker
 
   let eventId = "unknown";
   let eventType = "unknown";
 
   try {
-    const signature = req.headers.get("stripe-signature");
     const rawBody = await req.text();
 
-    if (!webhookSecret) {
-      console.error("STRIPE_WEBHOOK_SECRET não configurado.");
-      return new Response(
-        JSON.stringify({ error: "webhook_secret_missing" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    if (!options?.skipSignatureCheck) {
+      const signature = req.headers.get("stripe-signature");
 
-    if (!signature) {
-      return new Response(
-        JSON.stringify({ error: "missing_signature" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+      if (!webhookSecret) {
+        console.error("STRIPE_WEBHOOK_SECRET não configurado.");
+        return new Response(
+          JSON.stringify({ error: "webhook_secret_missing" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
-    const sigCheck = await verifyStripeSignature(rawBody, signature, webhookSecret, 300);
-    if (!sigCheck.valid) {
-      console.error(`Assinatura Stripe inválida: ${sigCheck.reason}`);
-      return new Response(
-        JSON.stringify({ error: "invalid_signature", reason: sigCheck.reason }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      if (!signature) {
+        return new Response(
+          JSON.stringify({ error: "missing_signature" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const sigCheck = await verifyStripeSignature(rawBody, signature, webhookSecret, 300);
+      if (!sigCheck.valid) {
+        console.error(`Assinatura Stripe inválida: ${sigCheck.reason}`);
+        return new Response(
+          JSON.stringify({ error: "invalid_signature", reason: sigCheck.reason }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     const event = JSON.parse(rawBody);
     eventId = event.id;
     eventType = event.type;
 
-    // 1. Idempotência por evento
-    const { data: existingLog, error: logCheckErr } = await supabase
-      .from("payment_logs")
-      .select("id")
-      .eq("event_type", `stripe_${eventType}`)
-      .eq("status", "success")
-      .contains("payload", { eventId })
-      .maybeSingle();
+    // 1. Idempotência com sentinela pré-efeitos e identificação do worker.
+    const { error: sentinelErr } = await supabase.from("payment_logs").insert({
+      event_type: `stripe_${eventType}`,
+      status: "processing",
+      stripe_event_id: eventId,
+      worker_id: workerId,
+      processing_started_at: nowIso,
+      payload: { eventId, type: eventType }
+    });
 
-    if (logCheckErr) {
-      throw new Error(`Falha no banco ao verificar idempotência: ${logCheckErr.message}`);
+    // Se houve conflito de unicidade (23505):
+    if (sentinelErr) {
+      if (sentinelErr.code === '23505' || sentinelErr.message?.includes('unique')) {
+        const { data: existingLog, error: fetchLogErr } = await supabase
+          .from("payment_logs")
+          .select("id, status, worker_id, processing_started_at, created_at, metadata")
+          .eq("stripe_event_id", eventId)
+          .eq("event_type", `stripe_${eventType}`)
+          .maybeSingle();
+
+        if (fetchLogErr) {
+          throw new Error(`Falha ao ler sentinela de idempotência existente para ${eventId}: ${fetchLogErr.message}`);
+        }
+
+        if (!existingLog) {
+          throw new Error(`Conflito 23505 mas sentinela não encontrada para evento ${eventId}.`);
+        }
+
+        // Cenário A: Evento já concluído com sucesso definitivo
+        if (existingLog.status === 'success') {
+          console.log(`Evento Stripe já concluído (idempotente): ${eventId}`);
+          return new Response(JSON.stringify({ received: true, idempotent_skip: true }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+
+        // Cenário B: Evento comprovadamente externo
+        if (existingLog.status === 'skipped_external') {
+          console.log(`Evento Stripe comprovadamente externo já descartado: ${eventId}`);
+          return new Response(JSON.stringify({ received: true, skipped: 'external_event' }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+
+        // Cenário C: Evento anterior terminou em 'error' -> Retomada atômica pelo novo worker!
+        if (existingLog.status === 'error') {
+          console.log(`Retomada atômica de evento anterior com erro: ${eventId} (worker: ${workerId})`);
+          const { data: reclaimed, error: reclaimErr } = await supabase
+            .from("payment_logs")
+            .update({
+              status: "processing",
+              worker_id: workerId,
+              processing_started_at: nowIso,
+              error_message: null
+            })
+            .eq("id", existingLog.id)
+            .eq("status", "error")
+            .select("id");
+
+          if (reclaimErr) {
+            throw new Error(`Falha ao retomar atomicamente evento com erro ${eventId}: ${reclaimErr.message}`);
+          }
+
+          if (reclaimed && reclaimed.length > 0) {
+            // Este worker assumiu com sucesso a retomada! Prossegue execução.
+          } else {
+            console.log(`Outro worker já assumiu o retry do evento ${eventId}`);
+            return new Response(JSON.stringify({ received: true, concurrent_skip: true }), {
+              status: 200,
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          }
+        }
+        // Cenário D: Sentinela está em 'processing'
+        else if (existingLog.status === 'processing') {
+          const startedAtTime = new Date(existingLog.processing_started_at || existingLog.created_at || nowIso).getTime();
+          const elapsedSeconds = (Date.now() - startedAtTime) / 1000;
+
+          if (elapsedSeconds > PROCESSING_TIMEOUT_SECONDS) {
+            // Worker anterior abandonou o processamento (crash / timeout)
+            console.warn(`Worker anterior ${existingLog.worker_id} abandonou processamento (${elapsedSeconds}s). Recuperando atomicamente evento ${eventId}...`);
+            const { data: takenOver, error: takeErr } = await supabase
+              .from("payment_logs")
+              .update({
+                status: "processing",
+                worker_id: workerId,
+                processing_started_at: nowIso,
+                metadata: {
+                  ...(existingLog.metadata || {}),
+                  recovered_from_abandoned_worker: existingLog.worker_id,
+                  recovered_at: nowIso
+                }
+              })
+              .eq("id", existingLog.id)
+              .eq("status", "processing")
+              .eq("worker_id", existingLog.worker_id)
+              .select("id");
+
+            if (takeErr) {
+              throw new Error(`Falha ao recuperar processamento abandonado ${eventId}: ${takeErr.message}`);
+            }
+
+            if (takenOver && takenOver.length > 0) {
+              // Recuperado com sucesso! Prossegue.
+            } else {
+              return new Response(JSON.stringify({ received: true, concurrent_skip: true }), {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+              });
+            }
+          } else {
+            // Processamento concorrente ativo e recente dentro do prazo -> retorna 200 para evitar retry
+            console.log(`Evento Stripe em processamento concorrente ativo pelo worker ${existingLog.worker_id}: ${eventId}`);
+            return new Response(JSON.stringify({ received: true, concurrent_skip: true }), {
+              status: 200,
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          }
+        } else {
+          throw new Error(`Sentinela com status inesperado '${existingLog.status}' para evento ${eventId}`);
+        }
+      } else {
+        throw new Error(`Falha ao gravar sentinela de idempotência: ${sentinelErr.message}`);
+      }
     }
 
-    if (existingLog) {
-      console.log(`Evento Stripe duplicado ignorado de forma idempotente: ${eventId}`);
-      return new Response(JSON.stringify({ received: true, idempotent_skip: true }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
+    // 2. Identificação de origem do evento por tipo específico de ID
+    const evObj = event.data?.object || {};
+
+    const hasMetadataMarker = Boolean(
+      evObj.metadata?.company_id ||
+      evObj.metadata?.plan_id ||
+      evObj.metadata?.plan_slug ||
+      (evObj.client_reference_id && evObj.client_reference_id.includes(':')) ||
+      evObj.subscription_details?.metadata?.company_id ||
+      evObj.parent?.subscription_details?.metadata?.company_id
+    );
+
+    const COMPANY_ID_BEARING_TYPES = new Set([
+      'checkout.session.completed',
+      'invoice.payment_succeeded',
+      'invoice.payment_failed',
+      'customer.subscription.updated',
+      'customer.subscription.deleted',
+    ]);
+
+    let confirmedNavalDocs = hasMetadataMarker;
+
+    if (!confirmedNavalDocs && COMPANY_ID_BEARING_TYPES.has(eventType)) {
+      const { subscriptionId: targetSubId, customerId: evCustId } = extractTargetIdsForEvent(eventType, evObj);
+
+      if (targetSubId) {
+        const { data: linkedSub, error: subQueryErr } = await supabase
+          .from('subscriptions')
+          .select('id')
+          .or(`stripe_subscription_id.eq.${targetSubId},metadata->>stripe_subscription_id.eq.${targetSubId}`)
+          .maybeSingle();
+
+        if (subQueryErr) {
+          // Erro de consulta ao banco NÃO comprova evento externo! Lança para retry
+          throw new Error(`Falha ao consultar vínculo de assinatura para evento ${eventId}: ${subQueryErr.message}`);
+        }
+        if (linkedSub) confirmedNavalDocs = true;
+      }
+
+      if (!confirmedNavalDocs && evCustId) {
+        const { data: linkedByCust, error: custQueryErr } = await supabase
+          .from('subscriptions')
+          .select('id')
+          .or(`stripe_customer_id.eq.${evCustId},metadata->>stripe_customer_id.eq.${evCustId}`)
+          .maybeSingle();
+
+        if (custQueryErr) {
+          throw new Error(`Falha ao consultar vínculo de cliente para evento ${eventId}: ${custQueryErr.message}`);
+        }
+        if (linkedByCust) confirmedNavalDocs = true;
+      }
+
+      // Se ainda não encontrou vínculo no banco:
+      // Verifica se é COMPROVADAMENTE EXTERNO (marcador explícito de outro aplicativo)
+      const isExplicitlyOtherApp = Boolean(
+        (evObj.metadata?.app && evObj.metadata.app !== 'navaldocspro') ||
+        (evObj.metadata?.system && evObj.metadata.system !== 'navaldocspro')
+      );
+
+      if (isExplicitlyOtherApp) {
+        console.log(`Evento ${eventType} (${eventId}) comprovadamente externo (app: ${evObj.metadata?.app || evObj.metadata?.system}).`);
+        await supabase.from("payment_logs").update({
+          status: 'skipped_external',
+          payload: { eventId, type: eventType, reason: 'explicitly_other_app' }
+        }).eq("stripe_event_id", eventId).eq("event_type", `stripe_${eventType}`);
+
+        return new Response(JSON.stringify({ received: true, skipped: 'external_event' }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      // Ausência temporária de vínculo (ex: checkout ainda persistindo dados) NÃO comprova evento externo.
+      // O fluxo prossegue para os handlers de eventos individuais, que gerenciam a espera e retry com precisão.
     }
 
-    // 2. Processamento dos eventos
+    // 3. Processamento dos eventos
     switch (eventType) {
       // -------------------------------------------------------------
       // EVENTO 1: checkout.session.completed
@@ -216,11 +469,26 @@ serve(async (req) => {
         const preSessionId = session.metadata?.pre_session_id || null;
 
         if (companyId) {
-          const { data: plan } = await supabase
-            .from("plans")
-            .select("id, name")
-            .or(`slug.eq.${planSlug},id.eq.${planSlug}`)
-            .maybeSingle();
+          // Busca por slug (texto) e, se for UUID, por id separadamente
+          const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          let plan: any = null;
+
+          if (planSlug && UUID_RE.test(planSlug)) {
+            const { data: p } = await supabase
+              .from('plans')
+              .select('id, name')
+              .eq('id', planSlug)
+              .maybeSingle();
+            if (p) plan = p;
+          }
+          if (!plan && planSlug) {
+            const { data: p } = await supabase
+              .from('plans')
+              .select('id, name')
+              .eq('slug', planSlug.toLowerCase())
+              .maybeSingle();
+            if (p) plan = p;
+          }
 
           let subStatus = "pending";
           let activateCompany = false;
@@ -548,11 +816,39 @@ serve(async (req) => {
         const amountDue = rawDue / 100;
         const currency = (invoice.currency || "brl").toLowerCase();
 
+        // 1. Respeita pagamentos já aprovados no banco:
+        // Se a fatura já possui registro com status 'approved', a assinatura já se recuperou.
+        const { data: approvedPayment } = await supabase
+          .from("payments")
+          .select("id, status, paid_at")
+          .eq("status", "approved")
+          .contains("metadata", { stripe_invoice_id: invoiceId })
+          .maybeSingle();
+
+        if (approvedPayment) {
+          console.log(`invoice.payment_failed (${invoiceId}) ignorado: fatura já possui pagamento aprovado no banco (${approvedPayment.id}). Assinatura preservada.`);
+          break;
+        }
+
+        // 2. Consulta o estado ATUAL da fatura na Stripe API (não confia no payload antigo)
+        let currentStripeInvoice: any = null;
+        if (invoiceId && stripeSecretKey) {
+          currentStripeInvoice = await fetchStripeInvoice(invoiceId, stripeSecretKey);
+        }
+
+        const effectiveInvoiceStatus = currentStripeInvoice?.status || invoice.status;
+        const isInvoicePaid = currentStripeInvoice?.paid === true || effectiveInvoiceStatus === "paid";
+
+        if (isInvoicePaid) {
+          console.log(`invoice.payment_failed (${invoiceId}) ignorado: fatura atual na Stripe está PAGA (status=${effectiveInvoiceStatus}). Evento de falha antigo.`);
+          break;
+        }
+
         let sub: any = null;
         if (subscriptionId) {
           const { data } = await supabase
             .from("subscriptions")
-            .select("id, company_id, metadata")
+            .select("id, company_id, metadata, status")
             .or(`stripe_subscription_id.eq.${subscriptionId},metadata->>stripe_subscription_id.eq.${subscriptionId}`)
             .maybeSingle();
           sub = data;
@@ -561,21 +857,48 @@ serve(async (req) => {
         if (!sub && invoice.metadata?.company_id) {
           const { data } = await supabase
             .from("subscriptions")
-            .select("id, company_id, metadata")
+            .select("id, company_id, metadata, status")
             .eq("company_id", invoice.metadata.company_id)
             .maybeSingle();
           sub = data;
         }
 
         if (sub?.company_id) {
+          // Confirma também o estado atual da assinatura na Stripe
+          let currentStripeSub: any = null;
+          if (subscriptionId && stripeSecretKey) {
+            currentStripeSub = await fetchStripeSubscription(subscriptionId, stripeSecretKey);
+          }
+
+          const billingReason = currentStripeInvoice?.billing_reason || invoice.billing_reason;
+          const isCycleRenewal = billingReason === 'subscription_cycle' || billingReason === 'subscription_update';
+
+          // Registra ou atualiza pagamento de recusa
           const { data: existingPayment } = await supabase
             .from("payments")
-            .select("id")
+            .select("id, status")
             .contains("metadata", { stripe_invoice_id: invoiceId })
             .maybeSingle();
 
-          if (!existingPayment && amountDue > 0) {
-            const { error: payErr } = await supabase.from("payments").insert({
+          if (existingPayment) {
+            if (existingPayment.status !== "approved") {
+              await supabase
+                .from("payments")
+                .update({
+                  status: "rejected",
+                  metadata: {
+                    stripe_invoice_id: invoiceId,
+                    stripe_subscription_id: subscriptionId,
+                    stripe_customer_id: customerId,
+                    currency: currency,
+                    billing_reason: billingReason,
+                    failure_message: currentStripeInvoice?.last_finalization_error?.message || invoice.last_finalization_error?.message || "Pagamento recusado"
+                  }
+                })
+                .eq("id", existingPayment.id);
+            }
+          } else if (amountDue > 0) {
+            await supabase.from("payments").insert({
               company_id: sub.company_id,
               subscription_id: sub.id,
               amount: amountDue,
@@ -586,29 +909,40 @@ serve(async (req) => {
                 stripe_subscription_id: subscriptionId,
                 stripe_customer_id: customerId,
                 currency: currency,
-                failure_recorded: true,
-                attempt_count: invoice.attempt_count,
-                next_payment_attempt: invoice.next_payment_attempt,
-                failure_message: invoice.last_finalization_error?.message || "Pagamento recusado"
+                billing_reason: billingReason,
+                failure_message: currentStripeInvoice?.last_finalization_error?.message || invoice.last_finalization_error?.message || "Pagamento recusado"
               },
               created_at: new Date().toISOString()
             });
-
-            if (payErr) {
-              console.error("Erro ao registrar recusa de pagamento:", payErr);
-            }
           }
 
-          const { error: subUpErr } = await supabase
-            .from("subscriptions")
-            .update({
-              status: "past_due",
-              updated_at: new Date().toISOString()
-            })
-            .eq("company_id", sub.company_id);
+          // Se a assinatura na Stripe ainda está 'active' e não é uma renovação de ciclo aberta não-paga, não rebaixa
+          if (currentStripeSub?.status === 'active' && !isCycleRenewal) {
+            console.log(`invoice.payment_failed (${invoiceId}): assinatura Stripe permanece ativa, falha não-cíclica. Status preservado.`);
+            break;
+          }
 
-          if (subUpErr) {
-            throw new Error(`Falha ao atualizar status para past_due: ${subUpErr.message}`);
+          // Rebaixa apenas se a fatura atual na Stripe estiver aberta/não-paga ou se a assinatura na Stripe estiver past_due/unpaid
+          if (effectiveInvoiceStatus === 'open' || currentStripeSub?.status === 'past_due' || currentStripeSub?.status === 'unpaid') {
+            const { error: subUpErr } = await supabase
+              .from("subscriptions")
+              .update({
+                status: "past_due",
+                updated_at: new Date().toISOString()
+              })
+              .eq("company_id", sub.company_id);
+
+            if (subUpErr) {
+              throw new Error(`Falha ao atualizar status para past_due: ${subUpErr.message}`);
+            }
+
+            await supabase
+              .from("companies")
+              .update({
+                is_active: false,
+                updated_at: new Date().toISOString()
+              })
+              .eq("id", sub.company_id);
           }
         }
         break;
@@ -756,15 +1090,20 @@ serve(async (req) => {
         console.log(`Evento Stripe não manipulado diretamente: ${eventType}`);
     }
 
-    // 3. Log de auditoria persistido com status success
-    const { error: logErr } = await supabase.from("payment_logs").insert({
-      event_type: `stripe_${eventType}`,
-      status: "success",
-      payload: { eventId, type: eventType, data: event.data?.object }
-    });
+    // 3. Atualiza o sentinela 'processing' → 'success' ao concluir sem erros.
+    //    Não usa INSERT (conflitaria com o sentinela já inserido no step 1).
+    const { error: logErr } = await supabase
+      .from("payment_logs")
+      .update({
+        status: "success",
+        payload: { eventId, type: eventType, data: event.data?.object }
+      })
+      .eq("stripe_event_id", eventId)
+      .eq("event_type", `stripe_${eventType}`);
 
     if (logErr) {
-      console.warn("Aviso: falha ao salvar log de pagamento com sucesso:", logErr);
+      // Erro ao marcar sucesso é crítico: força retry do Stripe
+      throw new Error(`Falha ao atualizar log de evento ${eventId} para success: ${logErr.message}`);
     }
 
     return new Response(JSON.stringify({ received: true }), {
@@ -776,19 +1115,50 @@ serve(async (req) => {
     console.error("Erro no processamento do webhook Stripe:", err);
 
     try {
-      await supabase.from("payment_logs").insert({
-        event_type: `stripe_${eventType || "unknown"}`,
-        status: "error",
-        error_message: err.message || "Erro desconhecido",
-        payload: { eventId, type: eventType, error: err.stack || err.message }
-      });
-    } catch (_logErr) {
-      // Ignora erro secundário
+      // Atualiza sentinela para 'error' (se já existe) ou insere novo registro de erro
+      const { error: upErr } = await supabase
+        .from("payment_logs")
+        .update({
+          status: "error",
+          error_message: err.message || "Erro desconhecido",
+          payload: { eventId, type: eventType }
+        })
+        .eq("stripe_event_id", eventId)
+        .eq("event_type", `stripe_${eventType}`);
+
+      // Se não havia sentinela ainda (ex: erro antes do INSERT), insere
+      if (upErr) {
+        await supabase.from("payment_logs").insert({
+          event_type: `stripe_${eventType || "unknown"}`,
+          status: "error",
+          stripe_event_id: eventId !== "unknown" ? eventId : null,
+          worker_id: workerId,
+          error_message: err.message || "Erro desconhecido",
+          payload: { eventId, type: eventType }
+        });
+      }
+    } catch (logFallbackErr) {
+      console.error("Falha ao registrar erro de webhook no banco:", logFallbackErr);
     }
 
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: err.message || "webhook_error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
-});
+}
+
+if (typeof serve === "function") {
+  serve((req: Request) => handleStripeWebhook(req));
+}
+
+export {
+  verifyStripeSignature,
+  extractId,
+  extractSubscriptionIdFromInvoice,
+  extractCustomerId,
+  extractTargetIdsForEvent,
+  fetchStripeSubscription,
+  fetchStripeInvoice
+};
+
