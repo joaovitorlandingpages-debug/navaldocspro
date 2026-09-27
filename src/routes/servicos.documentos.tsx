@@ -739,8 +739,18 @@ function DocumentosDoServicoPage() {
 
           <button
             type="button"
-            onClick={() => setIsReviewBlockedModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-600 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            onClick={() => {
+              navigate({
+                to: "/servicos/revisar",
+                search: {
+                  category,
+                  customerId,
+                  vesselId,
+                  services: rawServices.join(","),
+                },
+              });
+            }}
+            className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <span>Revisar processo</span>
           </button>

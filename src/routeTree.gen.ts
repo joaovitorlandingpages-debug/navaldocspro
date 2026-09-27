@@ -125,6 +125,7 @@ import { Route as ProcessesPrepararAssinaturasRouteImport } from './routes/proce
 import { Route as ProcessesTrashRouteImport } from './routes/processes.trash'
 import { Route as ProcessesVisualizarEEditarRouteImport } from './routes/processes.visualizar-e-editar'
 import { Route as ServicosDocumentosRouteImport } from './routes/servicos.documentos'
+import { Route as ServicosRevisarRouteImport } from './routes/servicos.revisar'
 import { Route as ServicosSelecionarRouteImport } from './routes/servicos.selecionar'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as TemplatesIdRouteImport } from './routes/templates.$id'
@@ -746,6 +747,11 @@ const ServicosDocumentosRoute = ServicosDocumentosRouteImport.update({
   path: '/documentos',
   getParentRoute: () => ServicosRoute,
 } as any)
+const ServicosRevisarRoute = ServicosRevisarRouteImport.update({
+  id: '/revisar',
+  path: '/revisar',
+  getParentRoute: () => ServicosRoute,
+} as any)
 const ServicosSelecionarRoute = ServicosSelecionarRouteImport.update({
   id: '/selecionar',
   path: '/selecionar',
@@ -1039,6 +1045,7 @@ export interface FileRoutesByFullPath {
   '/processes/trash': typeof ProcessesTrashRoute
   '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
   '/servicos/documentos': typeof ServicosDocumentosRoute
+  '/servicos/revisar': typeof ServicosRevisarRoute
   '/servicos/selecionar': typeof ServicosSelecionarRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
@@ -1186,6 +1193,7 @@ export interface FileRoutesByTo {
   '/processes/trash': typeof ProcessesTrashRoute
   '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
   '/servicos/documentos': typeof ServicosDocumentosRoute
+  '/servicos/revisar': typeof ServicosRevisarRoute
   '/servicos/selecionar': typeof ServicosSelecionarRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
@@ -1338,6 +1346,7 @@ export interface FileRoutesById {
   '/processes/trash': typeof ProcessesTrashRoute
   '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
   '/servicos/documentos': typeof ServicosDocumentosRoute
+  '/servicos/revisar': typeof ServicosRevisarRoute
   '/servicos/selecionar': typeof ServicosSelecionarRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
@@ -1491,6 +1500,7 @@ export interface FileRouteTypes {
     | '/processes/trash'
     | '/processes/visualizar-e-editar'
     | '/servicos/documentos'
+    | '/servicos/revisar'
     | '/servicos/selecionar'
     | '/templates/$id'
     | '/templates/gratuitos'
@@ -1638,6 +1648,7 @@ export interface FileRouteTypes {
     | '/processes/trash'
     | '/processes/visualizar-e-editar'
     | '/servicos/documentos'
+    | '/servicos/revisar'
     | '/servicos/selecionar'
     | '/templates/$id'
     | '/templates/gratuitos'
@@ -1789,6 +1800,7 @@ export interface FileRouteTypes {
     | '/processes/trash'
     | '/processes/visualizar-e-editar'
     | '/servicos/documentos'
+    | '/servicos/revisar'
     | '/servicos/selecionar'
     | '/templates/$id'
     | '/templates/gratuitos'
@@ -2713,6 +2725,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicosDocumentosRouteImport
       parentRoute: typeof ServicosRoute
     }
+    '/servicos/revisar': {
+      id: '/servicos/revisar'
+      path: '/revisar'
+      fullPath: '/servicos/revisar'
+      preLoaderRoute: typeof ServicosRevisarRouteImport
+      parentRoute: typeof ServicosRoute
+    }
     '/servicos/selecionar': {
       id: '/servicos/selecionar'
       path: '/selecionar'
@@ -3136,11 +3155,13 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 
 interface ServicosRouteChildren {
   ServicosDocumentosRoute: typeof ServicosDocumentosRoute
+  ServicosRevisarRoute: typeof ServicosRevisarRoute
   ServicosSelecionarRoute: typeof ServicosSelecionarRoute
 }
 
 const ServicosRouteChildren: ServicosRouteChildren = {
   ServicosDocumentosRoute: ServicosDocumentosRoute,
+  ServicosRevisarRoute: ServicosRevisarRoute,
   ServicosSelecionarRoute: ServicosSelecionarRoute,
 }
 
