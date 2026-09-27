@@ -80,6 +80,7 @@ import { Route as AdminGlobalRouteImport } from './routes/admin/global'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminMaintenanceRouteImport } from './routes/admin/maintenance'
 import { Route as AdminModelosProcessoRouteImport } from './routes/admin/modelos-processo'
+import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminOcrRouteImport } from './routes/admin/ocr'
 import { Route as AdminOperationalFeedbackRouteImport } from './routes/admin/operational-feedback'
 import { Route as AdminPilotDashboardRouteImport } from './routes/admin/pilot-dashboard'
@@ -523,6 +524,11 @@ const AdminMaintenanceRoute = AdminMaintenanceRouteImport.update({
 const AdminModelosProcessoRoute = AdminModelosProcessoRouteImport.update({
   id: '/modelos-processo',
   path: '/modelos-processo',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminOcrRoute = AdminOcrRouteImport.update({
@@ -1061,6 +1067,7 @@ export interface FileRoutesByFullPath {
   '/admin/logs': typeof AdminLogsRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/modelos-processo': typeof AdminModelosProcessoRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
   '/admin/pilot-dashboard': typeof AdminPilotDashboardRoute
@@ -1218,6 +1225,7 @@ export interface FileRoutesByTo {
   '/admin/logs': typeof AdminLogsRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/modelos-processo': typeof AdminModelosProcessoRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
   '/admin/pilot-dashboard': typeof AdminPilotDashboardRoute
@@ -1380,6 +1388,7 @@ export interface FileRoutesById {
   '/admin/logs': typeof AdminLogsRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/modelos-processo': typeof AdminModelosProcessoRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/ocr': typeof AdminOcrRoute
   '/admin/operational-feedback': typeof AdminOperationalFeedbackRoute
   '/admin/pilot-dashboard': typeof AdminPilotDashboardRoute
@@ -1543,6 +1552,7 @@ export interface FileRouteTypes {
     | '/admin/logs'
     | '/admin/maintenance'
     | '/admin/modelos-processo'
+    | '/admin/notifications'
     | '/admin/ocr'
     | '/admin/operational-feedback'
     | '/admin/pilot-dashboard'
@@ -1700,6 +1710,7 @@ export interface FileRouteTypes {
     | '/admin/logs'
     | '/admin/maintenance'
     | '/admin/modelos-processo'
+    | '/admin/notifications'
     | '/admin/ocr'
     | '/admin/operational-feedback'
     | '/admin/pilot-dashboard'
@@ -1861,6 +1872,7 @@ export interface FileRouteTypes {
     | '/admin/logs'
     | '/admin/maintenance'
     | '/admin/modelos-processo'
+    | '/admin/notifications'
     | '/admin/ocr'
     | '/admin/operational-feedback'
     | '/admin/pilot-dashboard'
@@ -2523,6 +2535,13 @@ declare module '@tanstack/react-router' {
       path: '/modelos-processo'
       fullPath: '/admin/modelos-processo'
       preLoaderRoute: typeof AdminModelosProcessoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/ocr': {
@@ -3227,6 +3246,7 @@ interface AdminRouteChildren {
   AdminLogsRoute: typeof AdminLogsRoute
   AdminMaintenanceRoute: typeof AdminMaintenanceRoute
   AdminModelosProcessoRoute: typeof AdminModelosProcessoRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOcrRoute: typeof AdminOcrRoute
   AdminOperationalFeedbackRoute: typeof AdminOperationalFeedbackRoute
   AdminPilotDashboardRoute: typeof AdminPilotDashboardRoute
@@ -3271,6 +3291,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLogsRoute: AdminLogsRoute,
   AdminMaintenanceRoute: AdminMaintenanceRoute,
   AdminModelosProcessoRoute: AdminModelosProcessoRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOcrRoute: AdminOcrRoute,
   AdminOperationalFeedbackRoute: AdminOperationalFeedbackRoute,
   AdminPilotDashboardRoute: AdminPilotDashboardRoute,

@@ -110,7 +110,7 @@ function AdminLayout() {
     { name: "Catálogo de serviços", icon: FolderOpen, path: "/admin/services" },
     { name: "Modelos de documentos", icon: FileText, path: "/admin/templates" },
     { name: "Sugestões", icon: MessageSquare, path: "/admin/sugestoes" },
-    { name: "Notificações", icon: Bell, path: "/admin/system-health" },
+    { name: "Notificações", icon: Bell, path: "/admin/notifications" },
     { name: "Configurações administrativas", icon: Sliders, path: "/admin/settings" },
   ], []);
 
