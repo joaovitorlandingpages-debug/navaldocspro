@@ -1,5 +1,4 @@
 import { createFileRoute, Outlet, Link, Navigate, useRouterState } from "@tanstack/react-router";
-import AdminCompanies from "@/pages/admin/Companies";
 import { 
   ShieldCheck, 
   Users, 
@@ -8,12 +7,10 @@ import {
   Activity, 
   ArrowLeft,
   LayoutDashboard,
-  Bot,
   CreditCard,
   History,
   FileText,
   Zap,
-  Globe,
   CheckCircle2,
   TrendingUp,
   Menu,
@@ -33,7 +30,12 @@ import {
   Gift,
   Link2,
   Wrench,
-  X
+  X,
+  Bell,
+  Sliders,
+  Layers,
+  LogOut,
+  FolderOpen
 } from "lucide-react";
 import { useState, useEffect, useMemo, Component, ErrorInfo, ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,7 +49,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminLayout,
 });
 
-// Error Boundary para proteger as abas do Admin contra telas brancas
+// Error Boundary para proteger as abas do Admin
 class AdminErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
   constructor(props: { children: ReactNode }) {
     super(props);
@@ -65,17 +67,17 @@ class AdminErrorBoundary extends Component<{ children: ReactNode }, { hasError: 
   render() {
     if (this.state.hasError) {
       return (
-        <Card className="p-8 border-rose-200 bg-rose-50/40 text-center max-w-xl mx-auto my-12 shadow-md rounded-2xl">
-          <AlertTriangle className="h-12 w-12 text-rose-500 mx-auto mb-4 animate-bounce" />
-          <h3 className="text-lg font-bold text-[#0d2342] uppercase tracking-tight">Ops! Erro ao carregar este módulo</h3>
-          <p className="text-xs text-slate-600 mt-2 font-medium">
-            {this.state.error?.message || "Ocorreu uma instabilidade pontual neste módulo do Admin."}
+        <Card className="p-8 border-red-200 bg-red-50/40 text-center max-w-xl mx-auto my-12 shadow-md rounded-2xl">
+          <AlertTriangle className="h-10 w-10 text-red-500 mx-auto mb-3" />
+          <h3 className="text-base font-bold text-[#0B1739]">Instabilidade ao carregar módulo administrativo</h3>
+          <p className="text-xs text-slate-600 mt-1 font-medium">
+            {this.state.error?.message || "Ocorreu uma instabilidade pontual nesta seção."}
           </p>
           <Button 
             onClick={() => this.setState({ hasError: false, error: null })} 
-            className="mt-6 gap-2 bg-[#1868db] hover:bg-[#1557b8] text-white text-xs font-bold uppercase tracking-wider"
+            className="mt-5 gap-2 bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold rounded-xl cursor-pointer"
           >
-            <RefreshCw className="h-4 w-4" /> Tentar Novamente
+            <RefreshCw className="h-4 w-4" /> Tentar novamente
           </Button>
         </Card>
       );
@@ -91,28 +93,26 @@ interface NavItem {
 }
 
 function AdminLayout() {
-  const { profile, loading } = useAuth();
+  const { profile, user, loading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
   useTelemetry("Admin Portal");
 
-  // Itens de navegação principais (idênticos à imagem de referência)
+  // Menu lateral do Painel Administrativo (conforme item 2 dos requisitos)
   const navItems: NavItem[] = useMemo(() => [
-    { name: "Visão geral", icon: Home, path: "/admin" },
-    { name: "Escritórios", icon: Building, path: "/admin/companies" },
-    { name: "Assinaturas", icon: CreditCard, path: "/admin/billing" },
-    { name: "Planos e preços", icon: Tag, path: "/admin/plans" },
-    { name: "Cupons e campanhas", icon: Gift, path: "/admin/commercial" },
-    { name: "Testes gratuitos", icon: FlaskConical, path: "/admin/tests" },
-    { name: "Consumo e custos", icon: BarChart3, path: "/admin/saas-metrics" },
+    { name: "Visão geral", icon: LayoutDashboard, path: "/admin" },
+    { name: "Empresas", icon: Building, path: "/admin/companies" },
+    { name: "Usuários e funcionários", icon: Users, path: "/admin/users" },
+    { name: "Aplicativos", icon: Layers, path: "/nossos-aplicativos" },
+    { name: "Planos e assinaturas", icon: CreditCard, path: "/admin/billing" },
+    { name: "Consumo e créditos", icon: BarChart3, path: "/admin/saas-metrics" },
+    { name: "Catálogo de serviços", icon: FolderOpen, path: "/servicos" },
     { name: "Modelos de documentos", icon: FileText, path: "/admin/templates" },
-    { name: "Integrações", icon: Link2, path: "/admin/settings" },
-    { name: "Histórico", icon: History, path: "/admin/logs" },
-    ...(profile?.role === 'admin_master_global' || profile?.email === 'joaovitor.f0725@gmail.com' ? [
-      { name: "Manutenção", icon: Wrench, path: "/admin/maintenance" }
-    ] : [])
-  ], [profile]);
+    { name: "Sugestões", icon: MessageSquare, path: "/sugestoes" },
+    { name: "Notificações", icon: Bell, path: "/admin/system-health" },
+    { name: "Configurações administrativas", icon: Sliders, path: "/admin/settings" },
+  ], []);
 
   // Fechar menu mobile ao navegar
   useEffect(() => {
@@ -121,29 +121,21 @@ function AdminLayout() {
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-[#f8fafc] gap-4">
-        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#1868db] to-[#0d47a1] flex items-center justify-center text-white shadow-xs animate-spin">
-          <svg viewBox="0 0 24 24" className="h-6 w-6 fill-current">
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-[#F8FAFC] gap-3 font-sans">
+        <div className="h-10 w-10 rounded-xl bg-[#075BFF] flex items-center justify-center text-white shadow-xs animate-spin">
+          <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
             <path d="M4 19h16c.6 0 1-.4 1-1 0-.3-.1-.5-.3-.7L16 12l4-7c.2-.3.1-.7-.1-.9-.3-.2-.7-.2-.9.1L4.3 17.1c-.2.2-.3.5-.3.9 0 .6.4 1 1 1z" />
           </svg>
         </div>
-        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest animate-pulse">
+        <p className="text-slate-500 text-xs font-bold uppercase tracking-wider animate-pulse">
           Carregando Painel Administrativo...
         </p>
       </div>
     );
   }
 
-  const isDevPreview = typeof window !== "undefined" && window.localStorage.getItem("navaldocs_admin_preview") === "true";
-
-  // Verificação de permissões do admin
-  if (!profile && !isDevPreview) {
-    return <Navigate to="/auth/login" search={{ redirect: "/admin" }} />;
-  }
-
-  // Permite papéis administrativos (ou modo de preview/teste)
+  // Validação de acesso administrativo
   const isAuthorized = 
-    isDevPreview ||
     profile?.role === 'admin' ||
     profile?.role === 'admin_master' || 
     profile?.role === 'admin_master_global' || 
@@ -152,44 +144,65 @@ function AdminLayout() {
     profile?.email?.includes("admin") ||
     profile?.email?.includes("joao");
 
-  if (!isAuthorized && profile?.role !== 'company_admin') {
-    return <Navigate to="/dashboard" />;
+  // Se não autorizado, renderiza mensagem de acesso restrito
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6 text-center font-sans">
+        <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-500 border border-red-100 flex items-center justify-center mb-4">
+          <Shield className="h-8 w-8" />
+        </div>
+        <h1 className="text-2xl font-bold text-[#0B1739]">Acesso restrito</h1>
+        <p className="text-sm text-slate-500 mt-2 max-w-md">
+          Você não possui privilégios de administrador global da plataforma para acessar esta área.
+        </p>
+        <div className="mt-6 flex gap-3">
+          <Link
+            to="/home"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Voltar ao painel da empresa</span>
+          </Link>
+        </div>
+      </div>
+    );
   }
 
-  const userName = profile?.full_name || "João Vitor";
+  const userName = profile?.name || profile?.full_name || user?.email?.split("@")[0] || "Administrador";
   const userInitials = userName
     .split(" ")
     .map((n: string) => n[0])
     .join("")
     .substring(0, 2)
-    .toUpperCase() || "JV";
+    .toUpperCase() || "AD";
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] overflow-hidden font-sans text-slate-800 antialiased">
-      {/* 1. SIDEBAR DESKTOP (Fixa à esquerda, fundo branco, limpo) */}
-      <aside className="hidden lg:flex w-64 bg-white border-r border-slate-200/80 flex-col shrink-0 z-30 select-none">
-        {/* Topo da Sidebar: Logo Original NavalDocs Pro + Badge ADMIN */}
+    <div className="flex h-screen bg-[#F8FAFC] overflow-hidden font-sans text-slate-800 antialiased">
+      {/* ========================================================================= */}
+      {/* 1. SIDEBAR DESKTOP (Fixa à esquerda) */}
+      {/* ========================================================================= */}
+      <aside className="hidden lg:flex w-64 bg-white border-r border-slate-200/90 flex-col shrink-0 z-30 select-none">
+        {/* Topo da Sidebar: Logo NavalDocs Pro + Badge ADMIN */}
         <div className="p-5 flex items-center justify-between border-b border-slate-100">
           <Link to="/admin" className="flex items-center gap-2.5">
-            {/* Símbolo do Veleiro NavalDocs */}
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-[#1868db] to-[#0d47a1] flex items-center justify-center text-white shadow-2xs shrink-0">
+            <div className="h-8 w-8 rounded-xl bg-[#075BFF] flex items-center justify-center text-white shadow-2xs shrink-0">
               <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 fill-current">
                 <path d="M4 19h16c.6 0 1-.4 1-1 0-.3-.1-.5-.3-.7L16 12l4-7c.2-.3.1-.7-.1-.9-.3-.2-.7-.2-.9.1L4.3 17.1c-.2.2-.3.5-.3.9 0 .6.4 1 1 1z" />
               </svg>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-[#0d2342] text-base tracking-tight">
-                NavalDocs <span className="text-[#1868db]">Pro</span>
+              <span className="font-extrabold text-[#0B1739] text-base tracking-tight">
+                NavalDocs <span className="text-[#075BFF]">Pro</span>
               </span>
-              <Badge className="bg-blue-50 hover:bg-blue-50 text-[#1868db] border border-blue-100 text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded-md uppercase">
+              <span className="bg-blue-50 text-[#075BFF] border border-blue-200 text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded-md uppercase">
                 ADMIN
-              </Badge>
+              </span>
             </div>
           </Link>
         </div>
 
-        {/* Links de Navegação */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
+        {/* Links de Navegação do Admin */}
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = 
               (item.path === "/admin" && (currentPath === "/admin" || currentPath === "/admin/")) ||
@@ -201,62 +214,69 @@ function AdminLayout() {
                 to={item.path}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                   isActive
-                    ? "bg-[#e8f0fe] text-[#1868db]"
+                    ? "bg-[#EEF4FF] text-[#075BFF] font-bold"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
-                <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-[#1868db]" : "text-slate-400"}`} />
-                <span>{item.name}</span>
+                <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-[#075BFF]" : "text-slate-400"}`} />
+                <span className="truncate">{item.name}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* Rodapé da Sidebar: Usuário Logado */}
-        <div className="p-3 border-t border-slate-100">
-          <div className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group">
-            <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-full bg-[#1868db]/15 text-[#1868db] font-bold text-xs flex items-center justify-center shrink-0">
+        {/* Rodapé da Sidebar: Usuário Logado + Voltar à Empresa */}
+        <div className="p-3 border-t border-slate-100 space-y-2">
+          <Link
+            to="/home"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-[#075BFF] transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Voltar ao painel da empresa</span>
+          </Link>
+
+          <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50/70 border border-slate-100">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="h-8 w-8 rounded-full bg-blue-100 text-[#075BFF] font-bold text-xs flex items-center justify-center shrink-0">
                 {userInitials}
               </div>
               <div className="truncate">
-                <span className="text-xs font-bold text-[#0d2342] block truncate">
+                <span className="text-xs font-bold text-[#0B1739] block truncate">
                   {userName}
                 </span>
                 <span className="text-[10px] text-slate-400 font-medium block">
-                  Administrador
+                  Administrador Global
                 </span>
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#1868db] group-hover:translate-x-0.5 transition-all" />
           </div>
         </div>
       </aside>
 
+      {/* ========================================================================= */}
       {/* 2. SIDEBAR MOBILE (DRAWER RESPONSIVO) */}
+      {/* ========================================================================= */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
-          {/* Overlay escuro */}
           <div 
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
           />
 
-          {/* Conteúdo Drawer */}
           <div className="relative w-4/5 max-w-xs bg-white h-full flex flex-col z-50 shadow-xl">
             <div className="p-4 flex items-center justify-between border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-[#1868db] to-[#0d47a1] flex items-center justify-center text-white shadow-2xs">
+                <div className="h-8 w-8 rounded-xl bg-[#075BFF] flex items-center justify-center text-white shadow-2xs">
                   <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
                     <path d="M4 19h16c.6 0 1-.4 1-1 0-.3-.1-.5-.3-.7L16 12l4-7c.2-.3.1-.7-.1-.9-.3-.2-.7-.2-.9.1L4.3 17.1c-.2.2-.3.5-.3.9 0 .6.4 1 1 1z" />
                   </svg>
                 </div>
-                <span className="font-extrabold text-[#0d2342] text-sm">
-                  NavalDocs <span className="text-[#1868db]">Pro</span>
+                <span className="font-extrabold text-[#0B1739] text-sm">
+                  NavalDocs <span className="text-[#075BFF]">Pro</span>
                 </span>
-                <Badge className="bg-blue-50 text-[#1868db] text-[9px] font-bold px-1.5 py-0.5">
+                <span className="bg-blue-50 text-[#075BFF] text-[9px] font-bold px-1.5 py-0.5 rounded-sm">
                   ADMIN
-                </Badge>
+                </span>
               </div>
               <button 
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -276,13 +296,13 @@ function AdminLayout() {
                   <Link
                     key={item.name}
                     to={item.path}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                       isActive
-                        ? "bg-[#e8f0fe] text-[#1868db]"
+                        ? "bg-[#EEF4FF] text-[#075BFF] font-bold"
                         : "text-slate-600 hover:bg-slate-50"
                     }`}
                   >
-                    <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-[#1868db]" : "text-slate-400"}`} />
+                    <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-[#075BFF]" : "text-slate-400"}`} />
                     <span>{item.name}</span>
                   </Link>
                 );
@@ -290,13 +310,20 @@ function AdminLayout() {
             </nav>
 
             <div className="p-3 border-t border-slate-100">
-              <div className="flex items-center gap-2.5 p-2">
-                <div className="h-8 w-8 rounded-full bg-[#1868db]/15 text-[#1868db] font-bold text-xs flex items-center justify-center">
+              <Link
+                to="/home"
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 mb-2"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Voltar ao painel da empresa</span>
+              </Link>
+              <div className="flex items-center gap-2.5 p-2 bg-slate-50 rounded-xl">
+                <div className="h-8 w-8 rounded-full bg-blue-100 text-[#075BFF] font-bold text-xs flex items-center justify-center">
                   {userInitials}
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-[#0d2342] block">{userName}</span>
-                  <span className="text-[10px] text-slate-400 block">Administrador</span>
+                  <span className="text-xs font-bold text-[#0B1739] block">{userName}</span>
+                  <span className="text-[10px] text-slate-400 block">Administrador Global</span>
                 </div>
               </div>
             </div>
@@ -304,12 +331,13 @@ function AdminLayout() {
         </div>
       )}
 
+      {/* ========================================================================= */}
       {/* 3. ÁREA DE CONTEÚDO PRINCIPAL */}
+      {/* ========================================================================= */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* HEADER SUPERIOR */}
-        <header className="h-14 bg-white/90 backdrop-blur-md border-b border-slate-200/70 flex items-center justify-between px-4 sm:px-8 shrink-0 z-20">
+        <header className="h-14 bg-white border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-8 shrink-0 z-20 shadow-2xs">
           <div className="flex items-center gap-3">
-            {/* Botão Hambúrguer Mobile */}
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="lg:hidden p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
@@ -318,40 +346,28 @@ function AdminLayout() {
               <Menu className="h-5 w-5" />
             </button>
 
-            {/* Logo compacto no mobile */}
-            <div className="lg:hidden flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-[#1868db] to-[#0d47a1] flex items-center justify-center text-white">
-                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current">
-                  <path d="M4 19h16c.6 0 1-.4 1-1 0-.3-.1-.5-.3-.7L16 12l4-7c.2-.3.1-.7-.1-.9-.3-.2-.7-.2-.9.1L4.3 17.1c-.2.2-.3.5-.3.9 0 .6.4 1 1 1z" />
-                </svg>
-              </div>
-              <span className="font-extrabold text-[#0d2342] text-sm">
-                NavalDocs <span className="text-[#1868db]">Pro</span>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-[#075BFF]" />
+              <span className="text-xs font-bold text-[#0B1739]">
+                Painel administrativo da plataforma
               </span>
             </div>
-
-            {/* Subtítulo desktop */}
-            <span className="hidden lg:inline text-xs font-semibold text-slate-500">
-              Administração da plataforma
-            </span>
           </div>
 
-          {/* Pill de Demonstração / Dados Ilustrativos */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50/90 border border-amber-200/80 text-amber-800 text-[10px] sm:text-[11px] font-medium shadow-2xs">
-              <span className="h-4 w-4 rounded-full bg-amber-500 text-white font-bold text-[10px] flex items-center justify-center shrink-0">
-                !
-              </span>
-              <span className="font-bold">Demonstração</span>
-              <span className="text-amber-700/80 text-[9px] sm:text-[11px] hidden xs:inline">Todos os dados são ilustrativos.</span>
-            </div>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/home"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Painel da empresa</span>
+            </Link>
           </div>
         </header>
 
-        {/* CONTEÚDO DA PÁGINA (Com scroll suave) */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
+        {/* CONTEÚDO DA PÁGINA */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8">
           <AdminErrorBoundary>
-            {/* Se estiver na rota raiz /admin ou /admin/, renderiza o AdminOverviewDashboard */}
             {currentPath === "/admin" || currentPath === "/admin/" ? (
               <AdminOverviewDashboard />
             ) : (
