@@ -150,6 +150,7 @@ import { Route as AdminProcessCenterIdRouteImport } from './routes/admin/process
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
 import { Route as ProcessesIdDocumentosGeradosRouteImport } from './routes/processes.$id.documentos-gerados'
+import { Route as ProcessesIdProtocolosRealizadosRouteImport } from './routes/processes.$id.protocolos-realizados'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -871,6 +872,12 @@ const ProcessesIdDocumentosGeradosRoute =
     path: '/documentos-gerados',
     getParentRoute: () => ProcessesIdRoute,
   } as any)
+const ProcessesIdProtocolosRealizadosRoute =
+  ProcessesIdProtocolosRealizadosRouteImport.update({
+    id: '/protocolos-realizados',
+    path: '/protocolos-realizados',
+    getParentRoute: () => ProcessesIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -1012,6 +1019,7 @@ export interface FileRoutesByFullPath {
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
+  '/processes/$id/protocolos-realizados': typeof ProcessesIdProtocolosRealizadosRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
   '/admin/process-center/': typeof AdminProcessCenterIndexRoute
 }
@@ -1151,6 +1159,7 @@ export interface FileRoutesByTo {
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
+  '/processes/$id/protocolos-realizados': typeof ProcessesIdProtocolosRealizadosRoute
   '/admin/docs-central': typeof AdminDocsCentralIndexRoute
   '/admin/process-center': typeof AdminProcessCenterIndexRoute
 }
@@ -1295,6 +1304,7 @@ export interface FileRoutesById {
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
+  '/processes/$id/protocolos-realizados': typeof ProcessesIdProtocolosRealizadosRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
   '/admin/process-center/': typeof AdminProcessCenterIndexRoute
 }
@@ -1440,6 +1450,7 @@ export interface FileRouteTypes {
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/processes/$id/documentos-gerados'
+    | '/processes/$id/protocolos-realizados'
     | '/admin/docs-central/'
     | '/admin/process-center/'
   fileRoutesByTo: FileRoutesByTo
@@ -1579,6 +1590,7 @@ export interface FileRouteTypes {
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/processes/$id/documentos-gerados'
+    | '/processes/$id/protocolos-realizados'
     | '/admin/docs-central'
     | '/admin/process-center'
   id:
@@ -1722,6 +1734,7 @@ export interface FileRouteTypes {
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
     | '/processes/$id/documentos-gerados'
+    | '/processes/$id/protocolos-realizados'
     | '/admin/docs-central/'
     | '/admin/process-center/'
   fileRoutesById: FileRoutesById
@@ -2786,6 +2799,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProcessesIdDocumentosGeradosRouteImport
       parentRoute: typeof ProcessesIdRoute
     }
+    '/processes/$id/protocolos-realizados': {
+      id: '/processes/$id/protocolos-realizados'
+      path: '/protocolos-realizados'
+      fullPath: '/processes/$id/protocolos-realizados'
+      preLoaderRoute: typeof ProcessesIdProtocolosRealizadosRouteImport
+      parentRoute: typeof ProcessesIdRoute
+    }
   }
 }
 
@@ -3011,10 +3031,12 @@ const VesselsRouteWithChildren =
 
 interface ProcessesIdRouteChildren {
   ProcessesIdDocumentosGeradosRoute: typeof ProcessesIdDocumentosGeradosRoute
+  ProcessesIdProtocolosRealizadosRoute: typeof ProcessesIdProtocolosRealizadosRoute
 }
 
 const ProcessesIdRouteChildren: ProcessesIdRouteChildren = {
   ProcessesIdDocumentosGeradosRoute: ProcessesIdDocumentosGeradosRoute,
+  ProcessesIdProtocolosRealizadosRoute: ProcessesIdProtocolosRealizadosRoute,
 }
 
 const ProcessesIdRouteWithChildren = ProcessesIdRoute._addFileChildren(
