@@ -135,6 +135,7 @@ import { Route as TemplatesMeusRouteImport } from './routes/templates.meus'
 import { Route as VerificarAssinaturaCodeRouteImport } from './routes/verificar-assinatura.$code'
 import { Route as VesselsIdRouteImport } from './routes/vessels.$id'
 import { Route as VesselsNovoRouteImport } from './routes/vessels.novo'
+import { Route as AdminCompaniesIdRouteImport } from './routes/admin/companies.$id'
 import { Route as AdminDocsCentralIndexRouteImport } from './routes/admin/docs-central/index'
 import { Route as AdminDocsCentralAuditRouteImport } from './routes/admin/docs-central/audit'
 import { Route as AdminDocsCentralCoverageRouteImport } from './routes/admin/docs-central/coverage'
@@ -802,6 +803,11 @@ const VesselsNovoRoute = VesselsNovoRouteImport.update({
   path: '/novo',
   getParentRoute: () => VesselsRoute,
 } as any)
+const AdminCompaniesIdRoute = AdminCompaniesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminCompaniesRoute,
+} as any)
 const AdminDocsCentralIndexRoute = AdminDocsCentralIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -1022,7 +1028,7 @@ export interface FileRoutesByFullPath {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/commercial': typeof AdminCommercialRoute
-  '/admin/companies': typeof AdminCompaniesRoute
+  '/admin/companies': typeof AdminCompaniesRouteWithChildren
   '/admin/diagnostico': typeof AdminDiagnosticoRoute
   '/admin/docs-central': typeof AdminDocsCentralRouteWithChildren
   '/admin/document-library': typeof AdminDocumentLibraryRoute
@@ -1093,6 +1099,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/admin/companies/$id': typeof AdminCompaniesIdRoute
   '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
   '/admin/docs-central/coverage': typeof AdminDocsCentralCoverageRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
@@ -1176,7 +1183,7 @@ export interface FileRoutesByTo {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/commercial': typeof AdminCommercialRoute
-  '/admin/companies': typeof AdminCompaniesRoute
+  '/admin/companies': typeof AdminCompaniesRouteWithChildren
   '/admin/diagnostico': typeof AdminDiagnosticoRoute
   '/admin/document-library': typeof AdminDocumentLibraryRoute
   '/admin/documentos': typeof AdminDocumentosRoute
@@ -1246,6 +1253,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/processes': typeof ProcessesIndexRoute
   '/templates': typeof TemplatesIndexRoute
+  '/admin/companies/$id': typeof AdminCompaniesIdRoute
   '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
   '/admin/docs-central/coverage': typeof AdminDocsCentralCoverageRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
@@ -1333,7 +1341,7 @@ export interface FileRoutesById {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/billing': typeof AdminBillingRoute
   '/admin/commercial': typeof AdminCommercialRoute
-  '/admin/companies': typeof AdminCompaniesRoute
+  '/admin/companies': typeof AdminCompaniesRouteWithChildren
   '/admin/diagnostico': typeof AdminDiagnosticoRoute
   '/admin/docs-central': typeof AdminDocsCentralRouteWithChildren
   '/admin/document-library': typeof AdminDocumentLibraryRoute
@@ -1404,6 +1412,7 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/admin/companies/$id': typeof AdminCompaniesIdRoute
   '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
   '/admin/docs-central/coverage': typeof AdminDocsCentralCoverageRoute
   '/admin/docs-central/fields': typeof AdminDocsCentralFieldsRoute
@@ -1563,6 +1572,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/processes/'
     | '/templates/'
+    | '/admin/companies/$id'
     | '/admin/docs-central/audit'
     | '/admin/docs-central/coverage'
     | '/admin/docs-central/fields'
@@ -1716,6 +1726,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/processes'
     | '/templates'
+    | '/admin/companies/$id'
     | '/admin/docs-central/audit'
     | '/admin/docs-central/coverage'
     | '/admin/docs-central/fields'
@@ -1873,6 +1884,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/processes/'
     | '/templates/'
+    | '/admin/companies/$id'
     | '/admin/docs-central/audit'
     | '/admin/docs-central/coverage'
     | '/admin/docs-central/fields'
@@ -2862,6 +2874,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VesselsNovoRouteImport
       parentRoute: typeof VesselsRoute
     }
+    '/admin/companies/$id': {
+      id: '/admin/companies/$id'
+      path: '/$id'
+      fullPath: '/admin/companies/$id'
+      preLoaderRoute: typeof AdminCompaniesIdRouteImport
+      parentRoute: typeof AdminCompaniesRoute
+    }
     '/admin/docs-central/': {
       id: '/admin/docs-central/'
       path: '/'
@@ -3068,6 +3087,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminCompaniesRouteChildren {
+  AdminCompaniesIdRoute: typeof AdminCompaniesIdRoute
+}
+
+const AdminCompaniesRouteChildren: AdminCompaniesRouteChildren = {
+  AdminCompaniesIdRoute: AdminCompaniesIdRoute,
+}
+
+const AdminCompaniesRouteWithChildren = AdminCompaniesRoute._addFileChildren(
+  AdminCompaniesRouteChildren,
+)
+
 interface AdminDocsCentralRouteChildren {
   AdminDocsCentralAuditRoute: typeof AdminDocsCentralAuditRoute
   AdminDocsCentralCoverageRoute: typeof AdminDocsCentralCoverageRoute
@@ -3124,7 +3155,7 @@ interface AdminRouteChildren {
   AdminAutomationRoute: typeof AdminAutomationRoute
   AdminBillingRoute: typeof AdminBillingRoute
   AdminCommercialRoute: typeof AdminCommercialRoute
-  AdminCompaniesRoute: typeof AdminCompaniesRoute
+  AdminCompaniesRoute: typeof AdminCompaniesRouteWithChildren
   AdminDiagnosticoRoute: typeof AdminDiagnosticoRoute
   AdminDocsCentralRoute: typeof AdminDocsCentralRouteWithChildren
   AdminDocumentLibraryRoute: typeof AdminDocumentLibraryRoute
@@ -3165,7 +3196,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAutomationRoute: AdminAutomationRoute,
   AdminBillingRoute: AdminBillingRoute,
   AdminCommercialRoute: AdminCommercialRoute,
-  AdminCompaniesRoute: AdminCompaniesRoute,
+  AdminCompaniesRoute: AdminCompaniesRouteWithChildren,
   AdminDiagnosticoRoute: AdminDiagnosticoRoute,
   AdminDocsCentralRoute: AdminDocsCentralRouteWithChildren,
   AdminDocumentLibraryRoute: AdminDocumentLibraryRoute,

@@ -676,7 +676,8 @@ function AdminCompaniesPage() {
         </Card>
       ) : (
         <Card className="bg-white rounded-2xl border-slate-200/90 shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* VISUALIZAÇÃO DESKTOP: TABELA */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="bg-slate-50/80 text-slate-400 font-bold uppercase tracking-wider text-[10px] border-b border-slate-100">
@@ -712,15 +713,19 @@ function AdminCompaniesPage() {
                     <tr key={comp.id} className="hover:bg-slate-50/60 transition-colors">
                       {/* Empresa */}
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#075BFF] font-bold flex items-center justify-center shrink-0 border border-blue-100 uppercase text-xs">
+                        <Link 
+                          to="/admin/companies/$id"
+                          params={{ id: comp.id }}
+                          className="flex items-center gap-3 group/item cursor-pointer"
+                        >
+                          <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#075BFF] font-bold flex items-center justify-center shrink-0 border border-blue-100 uppercase text-xs group-hover/item:bg-[#075BFF] group-hover/item:text-white transition-colors">
                             {(comp.fantasy_name || comp.name).slice(0, 2)}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-bold text-xs truncate">{comp.fantasy_name || comp.name}</p>
+                            <p className="font-bold text-xs truncate text-[#0B1739] group-hover/item:text-[#075BFF] transition-colors">{comp.fantasy_name || comp.name}</p>
                             <p className="text-[11px] text-slate-400 truncate">{comp.name}</p>
                           </div>
-                        </div>
+                        </Link>
                       </td>
 
                       {/* CNPJ */}
@@ -768,6 +773,17 @@ function AdminCompaniesPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48 bg-white border-slate-200 shadow-md rounded-xl text-xs">
+                            <DropdownMenuItem asChild>
+                              <Link 
+                                to="/admin/companies/$id"
+                                params={{ id: comp.id }}
+                                className="gap-2 cursor-pointer font-bold text-[#075BFF] flex items-center"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                <span>Abrir empresa</span>
+                              </Link>
+                            </DropdownMenuItem>
+
                             <DropdownMenuItem 
                               onClick={() => openEditModal(comp)}
                               className="gap-2 cursor-pointer"
@@ -831,6 +847,150 @@ function AdminCompaniesPage() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* VISUALIZAÇÃO MOBILE: CARTÕES */}
+          <div className="block md:hidden divide-y divide-slate-100">
+            {paginatedCompanies.map((comp) => {
+              const statusColors = {
+                active: "bg-emerald-50 text-emerald-700 border-emerald-200",
+                trial: "bg-blue-50 text-[#075BFF] border-blue-200",
+                suspended: "bg-red-50 text-red-700 border-red-200",
+                canceled: "bg-slate-100 text-slate-600 border-slate-200",
+                blocked: "bg-rose-50 text-rose-800 border-rose-200",
+              };
+
+              const statusLabels = {
+                active: "Ativa",
+                trial: "Em avaliação",
+                suspended: "Suspensa",
+                canceled: "Cancelada",
+                blocked: "Bloqueada",
+              };
+
+              return (
+                <div key={comp.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <Link
+                      to="/admin/companies/$id"
+                      params={{ id: comp.id }}
+                      className="flex items-center gap-2.5 flex-1 min-w-0"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#075BFF] font-bold flex items-center justify-center shrink-0 border border-blue-100 uppercase text-xs">
+                        {(comp.fantasy_name || comp.name).slice(0, 2)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-xs text-[#0B1739] truncate">{comp.fantasy_name || comp.name}</p>
+                        <p className="text-[10px] text-slate-400 font-mono truncate">{comp.cnpj ? formatCnpj(comp.cnpj) : "Sem CNPJ"}</p>
+                      </div>
+                    </Link>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-slate-700">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48 bg-white border-slate-200 shadow-md rounded-xl text-xs">
+                        <DropdownMenuItem asChild>
+                          <Link 
+                            to="/admin/companies/$id"
+                            params={{ id: comp.id }}
+                            className="gap-2 cursor-pointer font-bold text-[#075BFF] flex items-center"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            <span>Abrir empresa</span>
+                          </Link>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem 
+                          onClick={() => openEditModal(comp)}
+                          className="gap-2 cursor-pointer"
+                        >
+                          <Edit2 className="h-3.5 w-3.5 text-slate-500" />
+                          <span>Editar empresa</span>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin/users" className="gap-2 cursor-pointer flex items-center">
+                            <Users className="h-3.5 w-3.5 text-slate-500" />
+                            <span>Ver usuários</span>
+                          </Link>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin/saas-metrics" className="gap-2 cursor-pointer flex items-center">
+                            <BarChart3 className="h-3.5 w-3.5 text-slate-500" />
+                            <span>Ver consumo</span>
+                          </Link>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin/billing" className="gap-2 cursor-pointer flex items-center">
+                            <CreditCard className="h-3.5 w-3.5 text-slate-500" />
+                            <span>Ver assinatura</span>
+                          </Link>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuSeparator />
+
+                        {comp.status === "suspended" ? (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedCompany(comp);
+                              setIsReactivateModalOpen(true);
+                            }}
+                            className="gap-2 text-emerald-600 hover:text-emerald-700 cursor-pointer font-bold"
+                          >
+                            <Unlock className="h-3.5 w-3.5" />
+                            <span>Reativar empresa</span>
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedCompany(comp);
+                              setSuspendReason("");
+                              setIsSuspendModalOpen(true);
+                            }}
+                            className="gap-2 text-red-600 hover:text-red-700 cursor-pointer font-bold"
+                          >
+                            <Lock className="h-3.5 w-3.5" />
+                            <span>Suspender empresa</span>
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusColors[comp.status as keyof typeof statusColors]}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${comp.status === "active" ? "bg-emerald-500" : comp.status === "trial" ? "bg-blue-500" : "bg-red-500"}`} />
+                      {statusLabels[comp.status as keyof typeof statusLabels]}
+                    </span>
+
+                    <Badge className="bg-slate-100 text-slate-700 border-slate-200 text-[10px] font-bold capitalize">
+                      Plano {comp.displayPlan}
+                    </Badge>
+
+                    <span className="text-[10px] text-slate-400 font-medium">
+                      {comp.usersCount} {comp.usersCount === 1 ? "usuário" : "usuários"} • {comp.processesCount} proc.
+                    </span>
+                  </div>
+
+                  <div className="text-[11px] text-slate-500 flex items-center justify-between border-t border-slate-50 pt-2">
+                    <span className="truncate">Admin: {comp.responsible_name}</span>
+                    <Link
+                      to="/admin/companies/$id"
+                      params={{ id: comp.id }}
+                      className="text-[#075BFF] font-bold hover:underline shrink-0 text-[11px] flex items-center gap-0.5"
+                    >
+                      <span>Detalhes</span>
+                      <ChevronRight className="h-3 w-3" />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Paginação */}
