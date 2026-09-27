@@ -107,7 +107,7 @@ function AdminLayout() {
     { name: "Aplicativos", icon: Layers, path: "/admin/applications" },
     { name: "Planos e assinaturas", icon: CreditCard, path: "/admin/billing" },
     { name: "Consumo e créditos", icon: BarChart3, path: "/admin/saas-metrics" },
-    { name: "Catálogo de serviços", icon: FolderOpen, path: "/servicos" },
+    { name: "Catálogo de serviços", icon: FolderOpen, path: "/admin/services" },
     { name: "Modelos de documentos", icon: FileText, path: "/admin/templates" },
     { name: "Sugestões", icon: MessageSquare, path: "/sugestoes" },
     { name: "Notificações", icon: Bell, path: "/admin/system-health" },
