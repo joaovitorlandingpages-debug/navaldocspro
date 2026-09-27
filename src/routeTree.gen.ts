@@ -149,6 +149,7 @@ import { Route as AdminProcessCenterIndexRouteImport } from './routes/admin/proc
 import { Route as AdminProcessCenterIdRouteImport } from './routes/admin/process-center.$id'
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
+import { Route as ProcessesIdAnexarProtocoloRouteImport } from './routes/processes.$id.anexar-protocolo'
 import { Route as ProcessesIdDocumentosGeradosRouteImport } from './routes/processes.$id.documentos-gerados'
 import { Route as ProcessesIdProtocolosRealizadosRouteImport } from './routes/processes.$id.protocolos-realizados'
 
@@ -866,6 +867,12 @@ const AdminTemplatesPfwRoute = AdminTemplatesPfwRouteImport.update({
   path: '/pfw',
   getParentRoute: () => AdminTemplatesRoute,
 } as any)
+const ProcessesIdAnexarProtocoloRoute =
+  ProcessesIdAnexarProtocoloRouteImport.update({
+    id: '/anexar-protocolo',
+    path: '/anexar-protocolo',
+    getParentRoute: () => ProcessesIdRoute,
+  } as any)
 const ProcessesIdDocumentosGeradosRoute =
   ProcessesIdDocumentosGeradosRouteImport.update({
     id: '/documentos-gerados',
@@ -1018,6 +1025,7 @@ export interface FileRoutesByFullPath {
   '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/processes/$id/anexar-protocolo': typeof ProcessesIdAnexarProtocoloRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
   '/processes/$id/protocolos-realizados': typeof ProcessesIdProtocolosRealizadosRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
@@ -1158,6 +1166,7 @@ export interface FileRoutesByTo {
   '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/processes/$id/anexar-protocolo': typeof ProcessesIdAnexarProtocoloRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
   '/processes/$id/protocolos-realizados': typeof ProcessesIdProtocolosRealizadosRoute
   '/admin/docs-central': typeof AdminDocsCentralIndexRoute
@@ -1303,6 +1312,7 @@ export interface FileRoutesById {
   '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/processes/$id/anexar-protocolo': typeof ProcessesIdAnexarProtocoloRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
   '/processes/$id/protocolos-realizados': typeof ProcessesIdProtocolosRealizadosRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
@@ -1449,6 +1459,7 @@ export interface FileRouteTypes {
     | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/processes/$id/anexar-protocolo'
     | '/processes/$id/documentos-gerados'
     | '/processes/$id/protocolos-realizados'
     | '/admin/docs-central/'
@@ -1589,6 +1600,7 @@ export interface FileRouteTypes {
     | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/processes/$id/anexar-protocolo'
     | '/processes/$id/documentos-gerados'
     | '/processes/$id/protocolos-realizados'
     | '/admin/docs-central'
@@ -1733,6 +1745,7 @@ export interface FileRouteTypes {
     | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/processes/$id/anexar-protocolo'
     | '/processes/$id/documentos-gerados'
     | '/processes/$id/protocolos-realizados'
     | '/admin/docs-central/'
@@ -2792,6 +2805,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTemplatesPfwRouteImport
       parentRoute: typeof AdminTemplatesRoute
     }
+    '/processes/$id/anexar-protocolo': {
+      id: '/processes/$id/anexar-protocolo'
+      path: '/anexar-protocolo'
+      fullPath: '/processes/$id/anexar-protocolo'
+      preLoaderRoute: typeof ProcessesIdAnexarProtocoloRouteImport
+      parentRoute: typeof ProcessesIdRoute
+    }
     '/processes/$id/documentos-gerados': {
       id: '/processes/$id/documentos-gerados'
       path: '/documentos-gerados'
@@ -3030,11 +3050,13 @@ const VesselsRouteWithChildren =
   VesselsRoute._addFileChildren(VesselsRouteChildren)
 
 interface ProcessesIdRouteChildren {
+  ProcessesIdAnexarProtocoloRoute: typeof ProcessesIdAnexarProtocoloRoute
   ProcessesIdDocumentosGeradosRoute: typeof ProcessesIdDocumentosGeradosRoute
   ProcessesIdProtocolosRealizadosRoute: typeof ProcessesIdProtocolosRealizadosRoute
 }
 
 const ProcessesIdRouteChildren: ProcessesIdRouteChildren = {
+  ProcessesIdAnexarProtocoloRoute: ProcessesIdAnexarProtocoloRoute,
   ProcessesIdDocumentosGeradosRoute: ProcessesIdDocumentosGeradosRoute,
   ProcessesIdProtocolosRealizadosRoute: ProcessesIdProtocolosRealizadosRoute,
 }
