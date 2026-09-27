@@ -56,7 +56,7 @@ function NauticalBoatIcon({ className = "w-6 h-6 text-[#0B1739]" }: { className?
 function ProcessesMainPage() {
   const searchParams = Route.useSearch();
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const companyId = profile?.company_id;
 
   // Estados de navegação e filtros
@@ -70,7 +70,9 @@ function ProcessesMainPage() {
   const [vessels, setVessels] = useState<any[]>([]);
   const [processes, setProcesses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [errorType, setErrorType] = useState<"none" | "no_company" | "permission" | "temporary">("none");
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   // Sincronizar parâmetros na URL
   const updateQueryParams = useCallback((newTab: "clients" | "vessels", query: string, sort: "asc" | "desc") => {
@@ -85,58 +87,116 @@ function ProcessesMainPage() {
     });
   }, [navigate]);
 
-  // Carregar dados gerais do Supabase
+  // Carregar dados gerais do Supabase com tratamento robusto e resiliente
   const loadData = useCallback(async () => {
-    if (!companyId) return;
+    if (authLoading) return;
+
+    if (!companyId) {
+      setErrorType("no_company");
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
-    setIsError(false);
+    setErrorType("none");
+    setErrorMessage("");
 
     try {
       // 1. Carregar Clientes da empresa
       const { data: custData, error: custError } = await supabase
         .from("customers")
-        .select("id, name, fantasy_name, cpf_cnpj, customer_type, status")
+        .select("id, name, fantasy_name, cpf_cnpj, customer_type, status, company_id")
         .eq("company_id", companyId);
 
-      if (custError) throw custError;
+      if (custError) {
+        console.error("[Processes] Erro ao carregar customers do Supabase:", {
+          code: custError.code,
+          message: custError.message,
+          details: custError.details,
+          hint: custError.hint,
+        });
+        if (custError.code === "42501" || custError.code === "PGRST301") {
+          setErrorType("permission");
+          return;
+        }
+        throw custError;
+      }
 
-      // 2. Carregar Embarcações da empresa com vínculo do cliente
+      // 2. Carregar Embarcações da empresa
       const { data: vesData, error: vesError } = await supabase
         .from("vessels")
-        .select(`
-          id, 
-          name, 
-          registration_number, 
-          category, 
-          customer_id,
-          customer:customers!vessels_customer_id_fkey(id, name, fantasy_name)
-        `)
+        .select("id, name, registration_number, category, customer_id, company_id")
         .eq("company_id", companyId);
 
-      if (vesError) throw vesError;
+      if (vesError) {
+        console.error("[Processes] Erro ao carregar vessels do Supabase:", {
+          code: vesError.code,
+          message: vesError.message,
+          details: vesError.details,
+          hint: vesError.hint,
+        });
+        if (vesError.code === "42501" || vesError.code === "PGRST301") {
+          setErrorType("permission");
+          return;
+        }
+        throw vesError;
+      }
 
-      // 3. Carregar Processos / Serviços da empresa
+      // 3. Carregar Processos da empresa
       const { data: procData, error: procError } = await supabase
         .from("processes")
-        .select("id, title, process_type, customer_id, vessel_id, status, created_at")
+        .select("id, title, process_type, customer_id, vessel_id, status, created_at, company_id")
         .eq("company_id", companyId);
 
-      if (procError) throw procError;
+      if (procError) {
+        console.error("[Processes] Erro ao carregar processes do Supabase:", {
+          code: procError.code,
+          message: procError.message,
+          details: procError.details,
+          hint: procError.hint,
+        });
+        if (procError.code === "42501" || procError.code === "PGRST301") {
+          setErrorType("permission");
+          return;
+        }
+        throw procError;
+      }
 
-      setCustomers(custData || []);
-      setVessels(vesData || []);
+      // Mapear clientes em vessels de forma segura em memória
+      const customersList = custData || [];
+      const customersMap = new Map(customersList.map((c) => [c.id, c]));
+
+      const enrichedVessels = (vesData || []).map((v) => ({
+        ...v,
+        customer: v.customer_id ? customersMap.get(v.customer_id) || null : null,
+      }));
+
+      setCustomers(customersList);
+      setVessels(enrichedVessels);
       setProcesses(procData || []);
-    } catch (err) {
-      console.error("Erro ao carregar dados de processos:", err);
-      setIsError(true);
+    } catch (err: any) {
+      console.error("[Processes] Falha inesperada ao carregar processos:", {
+        message: err?.message,
+        code: err?.code,
+        details: err?.details,
+      });
+      setErrorType("temporary");
+      setErrorMessage(err?.message || "Não foi possível carregar os processos agora.");
     } finally {
       setIsLoading(false);
+      setIsRetrying(false);
     }
-  }, [companyId]);
+  }, [authLoading, companyId]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Ação de Tentar Novamente sem perder filtros
+  const handleRetry = () => {
+    setIsRetrying(true);
+    loadData();
+  };
 
   // -------------------------------------------------------------
   // MAPEAMENTO DA ABA CLIENTES
@@ -267,24 +327,81 @@ function ProcessesMainPage() {
     handleSearchInput("");
   };
 
-  // Renderização de Erro Geral
-  if (isError) {
+  // 1. Estado: Usuário Sem Empresa Vinculada
+  if (errorType === "no_company") {
     return (
-      <div className="max-w-6xl mx-auto py-16 px-4 text-center space-y-4">
+      <div className="max-w-4xl mx-auto py-16 px-4 text-center space-y-4">
+        <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto border border-amber-200">
+          <Building2 className="h-7 w-7" />
+        </div>
+        <h2 className="text-xl font-bold text-[#0B1739]">
+          Seu usuário ainda não está vinculado a uma empresa.
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+          Para visualizar ou emitir processos náuticos, você precisa estar associado a uma empresa cadastrada no NavalDocs Pro.
+        </p>
+        <div className="pt-2 flex justify-center gap-3">
+          <Link
+            to="/settings"
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors"
+          >
+            <span>Configurações da empresa</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Estado: Erro de Permissão
+  if (errorType === "permission") {
+    return (
+      <div className="max-w-4xl mx-auto py-16 px-4 text-center space-y-4">
         <div className="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto border border-red-100">
           <AlertCircle className="h-7 w-7" />
         </div>
-        <h2 className="text-xl font-bold text-[#0B1739]">Erro ao carregar processos</h2>
-        <p className="text-sm text-slate-500">
-          Não foi possível carregar a relação de processos desta empresa.
+        <h2 className="text-xl font-bold text-[#0B1739]">
+          Você não possui permissão para consultar os processos desta empresa.
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+          Seu perfil de acesso atual não possui privilégios suficientes para listar os processos e clientes desta organização.
         </p>
         <div className="pt-2">
           <button
             type="button"
-            onClick={loadData}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#075BFF] text-white text-xs font-semibold hover:bg-blue-600 transition-colors shadow-xs cursor-pointer"
+            onClick={handleRetry}
+            disabled={isRetrying}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
           >
+            {isRetrying && <Loader2 className="h-4 w-4 animate-spin" />}
             <span>Tentar novamente</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Estado: Erro Temporário
+  if (errorType === "temporary") {
+    return (
+      <div className="max-w-4xl mx-auto py-16 px-4 text-center space-y-4">
+        <div className="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto border border-red-100">
+          <AlertCircle className="h-7 w-7" />
+        </div>
+        <h2 className="text-xl font-bold text-[#0B1739]">
+          Não foi possível carregar os processos agora.
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+          Ocorreu uma instabilidade na conexão com o servidor. Verifique sua conexão e tente novamente.
+        </p>
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={handleRetry}
+            disabled={isRetrying}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold transition-colors shadow-xs cursor-pointer disabled:opacity-50"
+          >
+            {isRetrying ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            <span>{isRetrying ? "Recarregando..." : "Tentar novamente"}</span>
           </button>
         </div>
       </div>
@@ -410,9 +527,9 @@ function ProcessesMainPage() {
 
       {/* 4. LISTAGEM PRINCIPAL CONFORME A ABA ATIVA */}
       {isLoading ? (
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-16 flex flex-col items-center justify-center gap-3 text-xs text-slate-400 shadow-xs">
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-16 flex flex-col items-center justify-center gap-3 text-xs text-slate-500 shadow-xs">
           <Loader2 className="h-6 w-6 animate-spin text-[#075BFF]" />
-          <span>Carregando dados dos processos...</span>
+          <span className="font-medium">Carregando processos...</span>
         </div>
       ) : activeTab === "clients" ? (
         /* ========================================================================= */
@@ -436,28 +553,34 @@ function ProcessesMainPage() {
               <p className="font-bold text-slate-800 text-sm">
                 {clientSearch 
                   ? "Nenhum cliente encontrado com os termos pesquisados" 
-                  : "Nenhum cliente cadastrado nesta empresa"}
+                  : "Nenhum processo cadastrado nesta empresa."}
               </p>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
                 {clientSearch
                   ? "Tente buscar por outro nome ou limpe o filtro de pesquisa."
-                  : "Cadastre novos clientes para gerenciar processos, embarcações e serviços."}
+                  : "Inicie um novo processo náutico para começar a gerenciar serviços e documentos."}
               </p>
               {clientSearch ? (
                 <div className="pt-2">
                   <button
                     type="button"
                     onClick={handleClearSearch}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
                   >
                     <span>Limpar pesquisa</span>
                   </button>
                 </div>
               ) : (
-                <div className="pt-2">
+                <div className="pt-2 flex justify-center gap-3">
+                  <Link
+                    to="/servicos"
+                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs"
+                  >
+                    <span>Criar processo</span>
+                  </Link>
                   <Link
                     to="/customers/novo"
-                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold"
                   >
                     <span>Cadastrar cliente</span>
                   </Link>
@@ -550,11 +673,11 @@ function ProcessesMainPage() {
               <p className="font-bold text-slate-800 text-sm">
                 {vesselSearch 
                   ? "Nenhuma embarcação encontrada com os termos pesquisados" 
-                  : "Nenhuma embarcação cadastrada nesta empresa"}
+                  : "Nenhum processo cadastrado nesta empresa."}
               </p>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
                 {vesselSearch
-                  ? "Tente buscar por outro nome ou inscrição, ou limpe o filtro."
+                  ? "Tente buscar por outro nome ou inscrição, ou limpe o filtro de pesquisa."
                   : "Cadastre embarcações vinculadas a clientes para gerenciar os serviços náuticos."}
               </p>
               {vesselSearch ? (
@@ -562,16 +685,22 @@ function ProcessesMainPage() {
                   <button
                     type="button"
                     onClick={handleClearSearch}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
                   >
                     <span>Limpar pesquisa</span>
                   </button>
                 </div>
               ) : (
-                <div className="pt-2">
+                <div className="pt-2 flex justify-center gap-3">
+                  <Link
+                    to="/servicos"
+                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs"
+                  >
+                    <span>Criar processo</span>
+                  </Link>
                   <Link
                     to="/vessels/novo"
-                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold"
                   >
                     <span>Cadastrar embarcação</span>
                   </Link>
