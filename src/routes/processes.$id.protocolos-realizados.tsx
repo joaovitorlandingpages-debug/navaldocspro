@@ -432,14 +432,14 @@ function ProtocolosRealizadosPage() {
           </div>
 
           <div>
-            <button
-              type="button"
-              onClick={() => setIsListModalOpen(true)}
+            <Link
+              to="/processes/$id/protocolos-gerados"
+              params={{ id }}
               className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-[#075BFF] bg-white hover:bg-blue-50/40 text-[#075BFF] text-xs sm:text-sm font-bold shadow-2xs transition-all cursor-pointer"
             >
               <span>Ver protocolos</span>
               <ArrowRight className="h-4 w-4" />
-            </button>
+            </Link>
           </div>
         </div>
 

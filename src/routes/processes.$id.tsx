@@ -528,7 +528,12 @@ function ServiceDetailsPage() {
 
           {/* CARD 3 — Documentos emitidos */}
           <div
-            onClick={() => setActiveModal("issued")}
+            onClick={() => {
+              navigate({
+                to: "/processes/$id/documentos-emitidos",
+                params: { id },
+              });
+            }}
             className="group flex flex-col justify-between p-6 rounded-2xl bg-white border border-slate-200/90 hover:border-[#075BFF]/60 transition-all cursor-pointer shadow-2xs hover:shadow-md"
           >
             <div className="space-y-3">
