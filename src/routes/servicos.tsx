@@ -91,9 +91,9 @@ function ServicosCategoriaPage() {
 
   const handleSelectCategory = (categoryKey: "profissional" | "esporte_recreio") => {
     navigate({
-      to: "/processes/novo-pedido",
+      to: "/servicos/selecionar",
       search: {
-        step: "selection",
+        category: categoryKey,
         customerId: searchParams.customerId,
         vesselId: searchParams.vesselId,
       },

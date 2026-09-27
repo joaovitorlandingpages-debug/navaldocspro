@@ -124,6 +124,7 @@ import { Route as ProcessesNovoPedidoRouteImport } from './routes/processes.novo
 import { Route as ProcessesPrepararAssinaturasRouteImport } from './routes/processes.preparar-assinaturas'
 import { Route as ProcessesTrashRouteImport } from './routes/processes.trash'
 import { Route as ProcessesVisualizarEEditarRouteImport } from './routes/processes.visualizar-e-editar'
+import { Route as ServicosSelecionarRouteImport } from './routes/servicos.selecionar'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as TemplatesIdRouteImport } from './routes/templates.$id'
 import { Route as TemplatesGratuitosRouteImport } from './routes/templates.gratuitos'
@@ -739,6 +740,11 @@ const ProcessesVisualizarEEditarRoute =
     path: '/processes/visualizar-e-editar',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ServicosSelecionarRoute = ServicosSelecionarRouteImport.update({
+  id: '/selecionar',
+  path: '/selecionar',
+  getParentRoute: () => ServicosRoute,
+} as any)
 const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -956,7 +962,7 @@ export interface FileRoutesByFullPath {
   '/predictions': typeof PredictionsRoute
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
-  '/servicos': typeof ServicosRoute
+  '/servicos': typeof ServicosRouteWithChildren
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/sugestoes': typeof SugestoesRoute
@@ -1026,6 +1032,7 @@ export interface FileRoutesByFullPath {
   '/processes/preparar-assinaturas': typeof ProcessesPrepararAssinaturasRoute
   '/processes/trash': typeof ProcessesTrashRoute
   '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
+  '/servicos/selecionar': typeof ServicosSelecionarRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
@@ -1103,7 +1110,7 @@ export interface FileRoutesByTo {
   '/predictions': typeof PredictionsRoute
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
-  '/servicos': typeof ServicosRoute
+  '/servicos': typeof ServicosRouteWithChildren
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/sugestoes': typeof SugestoesRoute
@@ -1171,6 +1178,7 @@ export interface FileRoutesByTo {
   '/processes/preparar-assinaturas': typeof ProcessesPrepararAssinaturasRoute
   '/processes/trash': typeof ProcessesTrashRoute
   '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
+  '/servicos/selecionar': typeof ServicosSelecionarRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
@@ -1251,7 +1259,7 @@ export interface FileRoutesById {
   '/predictions': typeof PredictionsRoute
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
-  '/servicos': typeof ServicosRoute
+  '/servicos': typeof ServicosRouteWithChildren
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/sugestoes': typeof SugestoesRoute
@@ -1321,6 +1329,7 @@ export interface FileRoutesById {
   '/processes/preparar-assinaturas': typeof ProcessesPrepararAssinaturasRoute
   '/processes/trash': typeof ProcessesTrashRoute
   '/processes/visualizar-e-editar': typeof ProcessesVisualizarEEditarRoute
+  '/servicos/selecionar': typeof ServicosSelecionarRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/gratuitos': typeof TemplatesGratuitosRoute
   '/templates/marketplace': typeof TemplatesMarketplaceRoute
@@ -1472,6 +1481,7 @@ export interface FileRouteTypes {
     | '/processes/preparar-assinaturas'
     | '/processes/trash'
     | '/processes/visualizar-e-editar'
+    | '/servicos/selecionar'
     | '/templates/$id'
     | '/templates/gratuitos'
     | '/templates/marketplace'
@@ -1617,6 +1627,7 @@ export interface FileRouteTypes {
     | '/processes/preparar-assinaturas'
     | '/processes/trash'
     | '/processes/visualizar-e-editar'
+    | '/servicos/selecionar'
     | '/templates/$id'
     | '/templates/gratuitos'
     | '/templates/marketplace'
@@ -1766,6 +1777,7 @@ export interface FileRouteTypes {
     | '/processes/preparar-assinaturas'
     | '/processes/trash'
     | '/processes/visualizar-e-editar'
+    | '/servicos/selecionar'
     | '/templates/$id'
     | '/templates/gratuitos'
     | '/templates/marketplace'
@@ -1846,7 +1858,7 @@ export interface RootRouteChildren {
   PredictionsRoute: typeof PredictionsRoute
   QaChecklistRoute: typeof QaChecklistRoute
   SalesCenterRoute: typeof SalesCenterRoute
-  ServicosRoute: typeof ServicosRoute
+  ServicosRoute: typeof ServicosRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   StatusRoute: typeof StatusRoute
   SugestoesRoute: typeof SugestoesRoute
@@ -2682,6 +2694,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProcessesVisualizarEEditarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/servicos/selecionar': {
+      id: '/servicos/selecionar'
+      path: '/selecionar'
+      fullPath: '/servicos/selecionar'
+      preLoaderRoute: typeof ServicosSelecionarRouteImport
+      parentRoute: typeof ServicosRoute
+    }
     '/templates/': {
       id: '/templates/'
       path: '/'
@@ -3096,6 +3115,18 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
   DashboardRouteChildren,
 )
 
+interface ServicosRouteChildren {
+  ServicosSelecionarRoute: typeof ServicosSelecionarRoute
+}
+
+const ServicosRouteChildren: ServicosRouteChildren = {
+  ServicosSelecionarRoute: ServicosSelecionarRoute,
+}
+
+const ServicosRouteWithChildren = ServicosRoute._addFileChildren(
+  ServicosRouteChildren,
+)
+
 interface TemplatesRouteChildren {
   TemplatesIdRoute: typeof TemplatesIdRoute
   TemplatesGratuitosRoute: typeof TemplatesGratuitosRoute
@@ -3195,7 +3226,7 @@ const rootRouteChildren: RootRouteChildren = {
   PredictionsRoute: PredictionsRoute,
   QaChecklistRoute: QaChecklistRoute,
   SalesCenterRoute: SalesCenterRoute,
-  ServicosRoute: ServicosRoute,
+  ServicosRoute: ServicosRouteWithChildren,
   SettingsRoute: SettingsRoute,
   StatusRoute: StatusRoute,
   SugestoesRoute: SugestoesRoute,
