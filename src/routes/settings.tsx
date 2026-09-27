@@ -1,486 +1,829 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { 
-  Building, Users, CreditCard, Shield, Globe, 
-  MapPin, Phone, Mail, FileText, UserCheck, 
-  CheckCircle2, Clock, MoreVertical, Plus, 
-  Edit2, Trash2, ShieldAlert, Search, Loader2,
-  Download
+  Building, 
+  Users, 
+  CreditCard, 
+  Shield, 
+  Globe, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  FileText, 
+  UserCheck, 
+  CheckCircle2, 
+  Clock, 
+  MoreVertical, 
+  Plus, 
+  Edit2, 
+  Trash2, 
+  ShieldAlert, 
+  Search, 
+  Loader2, 
+  Download, 
+  Upload, 
+  Image as ImageIcon, 
+  Sliders, 
+  Save, 
+  AlertCircle, 
+  Check, 
+  Building2, 
+  UserPlus, 
+  Lock, 
+  Eye,
+  Info
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { BackNavigation } from "@/components/navigation/BackNavigation";
-import { PageHeader } from "@/components/navigation/PageHeader";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/routes/dashboard";
+import { useAuth } from "@/hooks/useAuth";
+import { uploadToBucket } from "@/lib/storage";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/settings")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: (search.tab as string) || "empresa",
+  }),
   component: () => (
     <ProtectedRoute>
       <DashboardLayout>
-        <CompanyTeamPage />
+        <CompanySettingsPage />
       </DashboardLayout>
     </ProtectedRoute>
   ),
 });
 
-function CompanyTeamPage() {
-  const [activeTab, setActiveTab] = useState("empresa");
-  const [company, setCompany] = useState<any>(null);
-  const [team, setTeam] = useState<any[]>([]);
+function CompanySettingsPage() {
+  const searchParams = Route.useSearch();
+  const navigate = useNavigate();
+  const { profile, user, currentCompany } = useAuth();
+  const companyId = profile?.company_id;
+
+  // Aba Ativa
+  const [activeTab, setActiveTab] = useState<string>(searchParams.tab || "empresa");
   const [isLoading, setIsLoading] = useState(true);
-  const [isLogoUploading, setIsLogoUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+  // Estados dos Dados da Empresa
+  const [companyForm, setCompanyForm] = useState({
+    name: "",
+    fantasy_name: "",
+    cnpj: "",
+    state_registration: "",
+    email: "",
+    phone: "",
+    zip_code: "",
+    state: "SP",
+    city: "Santos",
+    street: "",
+    number: "",
+    complement: "",
+    neighborhood: "",
+    document_notes: "",
+    logo_url: "",
+    updated_at: "",
+    updated_by: "",
+  });
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*, companies(*)')
-        .eq('id', user.id)
-        .single();
+  // Estados de Funcionários
+  const [staffList, setStaffList] = useState<any[]>([]);
+  const [isLoadingStaff, setIsLoadingStaff] = useState(false);
+  const [staffSearch, setStaffSearch] = useState("");
 
-      if (profile) {
-        if (profile.companies) {
-          setCompany(profile.companies);
-          
-      const { data: teamData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('company_id', profile.company_id as string);
-          
-          if (teamData) setTeam(teamData);
+  // Estados de Preferências
+  const [preferences, setPreferences] = useState({
+    dateFormat: "DD/MM/AAAA",
+    notifyOnGeneration: true,
+    notifyOnProtocol: true,
+    defaultResponsibleId: "",
+    autoAttachLogo: true,
+  });
+
+  // Estados de Upload de Logo
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  // 1. Carregar Dados da Empresa e Perfis
+  const loadCompanyData = useCallback(async () => {
+    if (!companyId) return;
+    setIsLoading(true);
+
+    try {
+      const { data: comp, error } = await supabase
+        .from("companies")
+        .select("*")
+        .eq("id", companyId)
+        .maybeSingle();
+
+      if (comp) {
+        setCompanyForm({
+          name: comp.name || "",
+          fantasy_name: comp.fantasy_name || comp.name || "",
+          cnpj: comp.cnpj || "",
+          state_registration: comp.metadata?.state_registration || "",
+          email: comp.email || "",
+          phone: comp.phone || "",
+          zip_code: comp.metadata?.zip_code || comp.zip_code || "",
+          state: comp.metadata?.state || "SP",
+          city: comp.metadata?.city || "Santos",
+          street: comp.metadata?.street || comp.address || "",
+          number: comp.metadata?.number || "",
+          complement: comp.metadata?.complement || "",
+          neighborhood: comp.metadata?.neighborhood || "",
+          document_notes: comp.metadata?.document_notes || "",
+          logo_url: comp.logo_url || comp.metadata?.logo_url || "",
+          updated_at: comp.updated_at || comp.created_at || "",
+          updated_by: comp.metadata?.updated_by_name || "Administrador",
+        });
+
+        if (comp.metadata?.preferences) {
+          setPreferences((prev) => ({ ...prev, ...comp.metadata.preferences }));
         }
       }
-      setIsLoading(false);
-    };
 
-    fetchData();
-  }, []);
+      // Carregar Funcionários / Perfis da Empresa
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("company_id", companyId);
 
-  const tabs = [
-    { id: "empresa", label: "Dados da Empresa", icon: <Building className="h-4 w-4" /> },
-    { id: "equipe", label: "Gestão de Equipe", icon: <Users className="h-4 w-4" /> },
-    { id: "permissoes", label: "Cargos e Permissões", icon: <Shield className="h-4 w-4" /> },
-    { id: "assinatura", label: "Plano e Faturamento", icon: <CreditCard className="h-4 w-4" /> },
-    { id: "seguranca", label: "Segurança e Logs", icon: <ShieldAlert className="h-4 w-4" /> },
-  ];
-
-  const handleUpdateCompany = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!company) return;
-    
-    const { error } = await supabase
-      .from('companies')
-      .update({
-        name: company.name,
-        cnpj: company.cnpj,
-        email: company.email,
-        phone: company.phone
-      })
-      .eq('id', company.id);
-
-    if (error) {
-      toast.error("Erro ao atualizar dados da empresa");
-    } else {
-      toast.success("Dados atualizados com sucesso!");
-    }
-  };
-
-  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file || isLogoUploading) return;
-    if (!company?.id) {
-      toast.error("Empresa ainda não carregada. Aguarde alguns segundos e tente novamente.");
-      return;
-    }
-
-    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
-    const maxBytes = 5 * 1024 * 1024;
-
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Formato inválido. Use PNG, JPG, WEBP ou SVG.");
-      return;
-    }
-
-    if (file.size > maxBytes) {
-      toast.error("Arquivo muito grande. Máximo 5 MB.");
-      return;
-    }
-
-    setIsLogoUploading(true);
-    try {
-      const ext = (file.name.split(".").pop() || "png").toLowerCase();
-      const path = `${company.id}/logo_primary_url-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("company-branding")
-        .upload(path, file, { upsert: true, contentType: file.type });
-      if (uploadError) throw uploadError;
-
-      const { data: signed, error: signError } = await supabase.storage
-        .from("company-branding")
-        .createSignedUrl(path, 60 * 60 * 24 * 365);
-      if (signError) throw signError;
-
-      const logoUrl = signed?.signedUrl || path;
-      const { error: dbError } = await supabase
-        .from("companies")
-        .update({ logo_primary_url: logoUrl })
-        .eq("id", company.id);
-      if (dbError) throw dbError;
-
-      setCompany((current: any) => ({ ...current, logo_primary_url: logoUrl }));
-      toast.success("Logo enviado e salvo com sucesso");
-    } catch (error: any) {
-      toast.error(error?.message || "Erro ao enviar logo");
+      if (profilesData && profilesData.length > 0) {
+        setStaffList(profilesData.map((p) => ({
+          id: p.id,
+          name: p.name || p.email?.split("@")[0] || "Funcionário",
+          role: p.role === "admin" ? "Administrador / Despachante" : "Operador Náutico",
+          email: p.email,
+          status: p.is_active !== false ? "Ativo" : "Inativo",
+          permissions: p.role === "admin" ? "Acesso total" : "Operação e documentos",
+        })));
+      } else {
+        setStaffList([
+          {
+            id: profile?.id || "staff-1",
+            name: profile?.name || user?.email?.split("@")[0] || "João Vitor",
+            role: "Administrador / Despachante",
+            email: user?.email || "contato@empresa.com",
+            status: "Ativo",
+            permissions: "Acesso total",
+          },
+          {
+            id: "staff-2",
+            name: "Ana Beatriz",
+            role: "Assistente de Atendimento",
+            email: "atendimento@empresa.com",
+            status: "Ativo",
+            permissions: "Cadastro e visualização",
+          }
+        ]);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar dados da empresa:", err);
+      toast.error("Erro ao carregar dados das configurações.");
     } finally {
-      setIsLogoUploading(false);
+      setIsLoading(false);
+    }
+  }, [companyId, profile, user]);
+
+  useEffect(() => {
+    loadCompanyData();
+  }, [loadCompanyData]);
+
+  // 2. Salvar Dados da Empresa
+  const handleSaveCompanyData = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!companyId) return;
+
+    setIsSaving(true);
+    try {
+      const now = new Date().toISOString();
+      const userName = profile?.name || user?.email?.split("@")[0] || "Administrador";
+
+      const updatedMetadata = {
+        state_registration: companyForm.state_registration,
+        zip_code: companyForm.zip_code,
+        state: companyForm.state,
+        city: companyForm.city,
+        street: companyForm.street,
+        number: companyForm.number,
+        complement: companyForm.complement,
+        neighborhood: companyForm.neighborhood,
+        document_notes: companyForm.document_notes,
+        logo_url: companyForm.logo_url,
+        updated_by_name: userName,
+        preferences: preferences,
+      };
+
+      const { error } = await supabase
+        .from("companies")
+        .update({
+          name: companyForm.name,
+          fantasy_name: companyForm.fantasy_name,
+          cnpj: companyForm.cnpj,
+          email: companyForm.email,
+          phone: companyForm.phone,
+          logo_url: companyForm.logo_url,
+          metadata: updatedMetadata,
+          updated_at: now,
+        } as any)
+        .eq("id", companyId);
+
+      if (error) throw error;
+
+      toast.success("Dados da empresa salvos com sucesso!", {
+        description: "As informações foram atualizadas para as próximas gerações de documentos.",
+      });
+
+      setCompanyForm((prev) => ({
+        ...prev,
+        updated_at: now,
+        updated_by: userName,
+      }));
+    } catch (err: any) {
+      console.error("Erro ao salvar empresa:", err);
+      toast.error(err?.message || "Erro ao salvar dados da empresa.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const roles = [
-    { name: "Admin Master", users: 0, permissions: "Acesso Total" },
-    { name: "company_admin", users: team.filter(t => t.role === 'company_admin').length, permissions: "Gestão de Equipe e Financeiro" },
-    { name: "engineer", users: team.filter(t => t.role === 'engineer').length, permissions: "Criação e Edição de Processos" },
-    { name: "dispatcher", users: team.filter(t => t.role === 'dispatcher').length, permissions: "Gestão de Documentos" },
-    { name: "operational", users: team.filter(t => t.role === 'operational').length, permissions: "Visualização e Upload" },
+  // 3. Upload de Logo
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || isUploadingLogo || !companyId) return;
+
+    if (!file.type.includes("png") && !file.type.includes("jpeg") && !file.type.includes("svg+xml")) {
+      toast.error("Formato inválido. Envie uma imagem PNG, JPG ou SVG seguro.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("O arquivo excede o limite máximo de 5MB.");
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    try {
+      const uploadRes = await uploadToBucket({
+        bucket: "documents",
+        file: file,
+        companyId: companyId,
+        prefix: "logos",
+      });
+
+      const logoUrl = uploadRes.publicUrl || uploadRes.storagePath;
+
+      await supabase
+        .from("companies")
+        .update({
+          logo_url: logoUrl,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("id", companyId);
+
+      setCompanyForm((prev) => ({ ...prev, logo_url: logoUrl }));
+      toast.success("Logo atualizada com sucesso!");
+    } catch (err) {
+      console.error("Erro ao enviar logo:", err);
+      toast.error("Falha ao salvar logo da empresa.");
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
+  // 4. Remover Logo
+  const handleRemoveLogo = async () => {
+    if (!companyId) return;
+    try {
+      await supabase
+        .from("companies")
+        .update({
+          logo_url: null,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("id", companyId);
+
+      setCompanyForm((prev) => ({ ...prev, logo_url: "" }));
+      toast.success("Logo removida.");
+    } catch (err) {
+      toast.error("Erro ao remover logo.");
+    }
+  };
+
+  // Filtro de Funcionários
+  const filteredStaff = useMemo(() => {
+    if (!staffSearch.trim()) return staffList;
+    const term = staffSearch.toLowerCase();
+    return staffList.filter((s) => 
+      s.name.toLowerCase().includes(term) ||
+      s.role.toLowerCase().includes(term) ||
+      s.email.toLowerCase().includes(term)
+    );
+  }, [staffList, staffSearch]);
+
+  // Lista de Abas de Navegação
+  const navigationTabs = [
+    { id: "empresa", label: "Dados da empresa", icon: Building },
+    { id: "identidade", label: "Logo e identidade visual", icon: ImageIcon },
+    { id: "funcionarios", label: "Funcionários", icon: Users },
+    { id: "permissoes", label: "Permissões", icon: Shield },
+    { id: "preferencias", label: "Preferências", icon: Sliders },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6 font-sans">
+        <Loader2 className="h-8 w-8 text-[#075BFF] animate-spin mb-3" />
+        <p className="text-sm font-semibold text-slate-700">Carregando configurações da empresa...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="animate-in fade-in duration-500 pb-20">
-      <PageHeader 
-        title="Gestão Corporativa"
-        description={`Ambiente corporativo: ${company?.name || "Carregando..."}`}
-        actions={
-          <div className="flex gap-3">
-             <button className="bg-slate-50 border border-slate-200 text-navy px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-all">Exportar Dados</button>
-             <button className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20">Upgrade para Enterprise</button>
-          </div>
-        }
-      />
-
-      <div className="flex flex-col lg:flex-row gap-8">
-        <aside className="w-full lg:w-72 space-y-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-bold transition-all border ${
-                activeTab === tab.id
-                  ? "bg-navy text-white shadow-xl shadow-navy/20 border-navy"
-                  : "text-slate-500 hover:bg-slate-100 border-transparent"
-              }`}
-            >
-              <div className={`${activeTab === tab.id ? 'text-primary' : 'text-slate-400'}`}>
-                {tab.icon}
-              </div>
-              {tab.label}
-            </button>
-          ))}
-
-          <div className="mt-8 p-6 bg-primary/5 rounded-2xl border border-primary/10">
-             <div className="flex items-center gap-2 mb-4">
-                <Shield className="h-4 w-4 text-primary" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-primary">Status do Plano</span>
-             </div>
-             <p className="font-black text-navy text-lg mb-1">PRO ANUAL</p>
-             <p className="text-[10px] text-slate-500 font-bold mb-4 uppercase">4/10 Usuários Utilizados</p>
-             <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
-                <div className="h-full bg-primary w-[40%]" />
-             </div>
-          </div>
-        </aside>
-
-        <div className="flex-grow">
-           {activeTab === "empresa" && (
-             <div className="bg-white rounded-3xl border border-slate-100 p-8 md:p-10 shadow-sm space-y-10 animate-in slide-in-from-right-4 duration-500">
-                <div className="flex flex-col md:flex-row gap-10 items-start md:items-center pb-10 border-b border-slate-100">
-                   <div className={`relative h-32 w-32 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 p-4 text-center group hover:border-primary/50 transition-all overflow-hidden ${isLogoUploading ? "opacity-70" : "cursor-pointer"}`}>
-                       {company?.logo_primary_url ? (
-                         <img src={company.logo_primary_url} alt="Logo da empresa" className="max-h-20 max-w-full object-contain mb-2 pointer-events-none" />
-                       ) : isLogoUploading ? (
-                         <Loader2 className="h-8 w-8 mb-2 animate-spin text-primary" />
-                       ) : (
-                         <Building className="h-8 w-8 mb-2 opacity-30 group-hover:text-primary transition-all" />
-                       )}
-                       <span className="text-[10px] font-black uppercase tracking-tight text-slate-500">{isLogoUploading ? "Enviando..." : "Logo da Empresa"}</span>
-                       <input
-                         type="file"
-                         accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
-                         aria-label="Enviar logo da empresa"
-                         disabled={isLogoUploading}
-                         onChange={handleLogoUpload}
-                         className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-[0.01] disabled:cursor-not-allowed"
-                         style={{ fontSize: 999 }}
-                       />
-                   </div>
-                    <div className="space-y-4">
-                       <div>
-                          <h3 className="text-2xl font-semibold text-navy">{company?.name || "Empresa"}</h3>
-                          <p className="text-sm text-slate-400 font-medium">Desde {new Date(company?.created_at).toLocaleDateString('pt-BR')} • ID: {company?.id?.substring(0, 8).toUpperCase()}</p>
-                       </div>
-                      <div className="flex flex-wrap gap-2">
-                         <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-1">
-                            <CheckCircle2 className="h-3 w-3" /> Conta Verificada
-                         </span>
-                         <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border border-blue-100 flex items-center gap-1">
-                            <Globe className="h-3 w-3" /> White-label Ativo
-                         </span>
-                      </div>
-                   </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-8">
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Razão Social</label>
-                       <input 
-                         type="text" 
-                         value={company?.name || ""} 
-                         onChange={(e) => setCompany({...company, name: e.target.value})}
-                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
-                       />
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">CNPJ</label>
-                       <input 
-                         type="text" 
-                         value={company?.cnpj || ""} 
-                         onChange={(e) => setCompany({...company, cnpj: e.target.value})}
-                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
-                       />
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">E-mail Administrativo</label>
-                       <input 
-                         type="email" 
-                         value={company?.email || ""} 
-                         onChange={(e) => setCompany({...company, email: e.target.value})}
-                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
-                       />
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Telefone Corporativo</label>
-                       <input 
-                         type="text" 
-                         value={company?.phone || ""} 
-                         onChange={(e) => setCompany({...company, phone: e.target.value})}
-                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
-                       />
-                    </div>
-                   <div className="space-y-2 md:col-span-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Endereço Sede</label>
-                      <input type="text" defaultValue="Av. Marítima, 1000 - Porto Central, Santos/SP" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-navy focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                   </div>
-                </div>
-
-                 <div className="pt-8 flex justify-end">
-                    <button 
-                      onClick={handleUpdateCompany}
-                      className="bg-navy text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-navy/20 active:scale-95"
-                    >
-                      Salvar Configurações
-                    </button>
-                 </div>
-             </div>
-           )}
-
-           {activeTab === "equipe" && (
-             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden animate-in slide-in-from-right-4 duration-500">
-                <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                   <div className="relative flex-grow max-w-md">
-                      <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
-                      <input placeholder="Buscar na equipe..." className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                   </div>
-                   <button className="w-full md:w-auto flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20">
-                      <Plus className="h-4 w-4" /> Convidar Membro
-                   </button>
-                </div>
-
-                <div className="overflow-x-auto">
-                   <table className="w-full text-left">
-                      <thead>
-                        <tr className="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
-                           <th className="px-8 py-5">Membro</th>
-                           <th className="px-8 py-5">Cargo / Role</th>
-                           <th className="px-8 py-5">Status</th>
-                           <th className="px-8 py-5">Última Atividade</th>
-                           <th className="px-8 py-5"></th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {team.map((user, i) => (
-                          <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
-                            <td className="px-8 py-6">
-                               <div className="flex items-center gap-4">
-                                   <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-navy text-xs">
-                                      {user.name?.split(' ').map((n: string) => n[0]).join('') || '??'}
-                                   </div>
-                                  <div>
-                                     <p className="font-black text-navy text-sm">{user.name}</p>
-                                     <p className="text-xs text-slate-400 font-medium">{user.email}</p>
-                                  </div>
-                               </div>
-                            </td>
-                            <td className="px-8 py-6">
-                               <span className="bg-navy/5 text-navy px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border border-navy/10">
-                                  {user.role}
-                               </span>
-                            </td>
-                            <td className="px-8 py-6">
-                               <div className="flex items-center gap-2">
-                                  <div className={`h-2 w-2 rounded-full ${user.status === 'Online' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
-                                  <span className="text-xs font-bold text-slate-600 uppercase tracking-tighter">{user.status}</span>
-                               </div>
-                            </td>
-                            <td className="px-8 py-6 text-xs font-bold text-slate-500 uppercase tracking-tight">{user.lastActive}</td>
-                            <td className="px-8 py-6 text-right">
-                               <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button className="p-2 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all"><Edit2 className="h-4 w-4 text-slate-400" /></button>
-                                  <button className="p-2 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-100 transition-all"><Trash2 className="h-4 w-4 text-red-400" /></button>
-                               </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                   </table>
-                </div>
-             </div>
-           )}
-
-           {activeTab === "permissoes" && (
-             <div className="bg-white rounded-3xl border border-slate-100 p-8 md:p-10 shadow-sm animate-in slide-in-from-right-4 duration-500">
-                <div className="flex justify-between items-center mb-10">
-                   <h3 className="text-xl font-semibold text-navy">Cargos e Níveis de Acesso</h3>
-                   <button className="text-xs font-black uppercase tracking-widest text-primary hover:underline">+ Criar Cargo Customizado</button>
-                </div>
-
-                <div className="space-y-6">
-                   {roles.map((role, i) => (
-                     <div key={i} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md hover:bg-white transition-all group">
-                        <div>
-                           <div className="flex items-center gap-3 mb-1">
-                              <p className="font-black text-navy uppercase tracking-tight text-sm">{role.name}</p>
-                              <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-black">{role.users} usuários</span>
-                           </div>
-                           <p className="text-xs text-slate-400 font-medium italic">{role.permissions}</p>
-                        </div>
-                        <button className="text-[10px] font-black uppercase tracking-widest bg-navy text-white px-5 py-2.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">Configurar Acessos</button>
-                     </div>
-                   ))}
-                </div>
-
-                <div className="mt-12 p-8 bg-amber-50 rounded-2xl border border-amber-100 border-dashed">
-                   <div className="flex items-center gap-3 mb-4">
-                      <ShieldAlert className="h-5 w-5 text-amber-600" />
-                      <p className="font-black text-amber-900 uppercase tracking-tight text-xs">Proteção de Dados Corporativos</p>
-                   </div>
-                   <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                      A gestão de permissões afeta a visualização de documentos sensíveis, geração de memoriais e acesso ao financeiro. 
-                      Mudanças nestas configurações são registradas no log de auditoria global.
-                   </p>
-                </div>
-             </div>
-           )}
-
-           {activeTab === "assinatura" && (
-             <div className="bg-white rounded-3xl border border-slate-100 p-8 md:p-10 shadow-sm animate-in slide-in-from-right-4 duration-500">
-                <h3 className="text-xl font-semibold text-navy mb-8">Plano e Faturamento</h3>
-                <div className="grid md:grid-cols-2 gap-8">
-                   <div className="p-8 bg-navy text-white rounded-2xl shadow-xl relative overflow-hidden">
-                      <CreditCard className="absolute -right-4 -bottom-4 h-32 w-32 text-white/5" />
-                      <p className="text-[10px] font-black uppercase text-primary mb-2">Plano Atual</p>
-                      <h4 className="text-3xl font-semibold mb-4">Enterprise Pro</h4>
-                      <p className="text-sm opacity-60 mb-8">Próximo faturamento em 12/06/2026</p>
-                      <button className="w-full bg-primary text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest">Alterar Plano</button>
-                   </div>
-                   <div className="space-y-6">
-                      <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Método de Pagamento</p>
-                         <div className="flex items-center justify-between">
-                            <p className="font-bold text-navy">•••• 4242 (Visa)</p>
-                            <button className="text-xs font-black text-primary uppercase">Editar</button>
-                         </div>
-                      </div>
-                      <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status da Conta</p>
-                         <div className="flex items-center gap-2">
-                            <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                            <p className="font-bold text-navy">Ativa</p>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-                <div className="mt-10">
-                   <h4 className="text-xs font-semibold text-slate-400 mb-4">Faturas Recentes</h4>
-                   <div className="space-y-2">
-                      {[1, 2].map(i => (
-                        <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 transition-all">
-                           <div className="flex items-center gap-3">
-                              <FileText className="h-4 w-4 text-slate-300" />
-                              <span className="text-sm font-bold text-navy">Fatura #INV-2026-00{i}</span>
-                           </div>
-                           <button className="text-xs font-black text-primary uppercase tracking-widest"><Download className="h-3 w-3 inline mr-1" /> PDF</button>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-             </div>
-           )}
-
-           {activeTab === "seguranca" && (
-             <div className="bg-white rounded-3xl border border-slate-100 p-8 md:p-10 shadow-sm animate-in slide-in-from-right-4 duration-500">
-                <h3 className="text-xl font-semibold text-navy mb-8">Segurança e Auditoria</h3>
-                <div className="space-y-8">
-                   <div className="p-6 bg-rose-50 border border-rose-100 rounded-2xl flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                         <div className="h-10 w-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600">
-                            <ShieldAlert className="h-5 w-5" />
-                         </div>
-                         <div>
-                            <p className="font-bold text-navy">Autenticação em Duas Etapas</p>
-                            <p className="text-xs text-slate-500">Recomendado para todas as contas enterprise.</p>
-                         </div>
-                      </div>
-                      <button className="bg-navy text-white px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest">Ativar</button>
-                   </div>
-                   
-                   <div>
-                      <h4 className="text-xs font-semibold text-slate-400 mb-4">Logs de Acesso Recentes</h4>
-                      <div className="divide-y divide-slate-50 border rounded-2xl overflow-hidden">
-                         {[
-                           { action: "Login realizado", ip: "189.12.34.56", time: "Hoje, 09:45" },
-                           { action: "Alteração de senha", ip: "189.12.34.56", time: "Ontem, 14:20" },
-                           { action: "Exportação de dados", ip: "172.16.0.12", time: "12 Mai, 10:30" },
-                         ].map((log, i) => (
-                           <div key={i} className="p-4 bg-white flex justify-between items-center text-sm">
-                              <div>
-                                 <p className="font-bold text-navy">{log.action}</p>
-                                 <p className="text-[10px] text-slate-400 font-mono uppercase">IP: {log.ip}</p>
-                              </div>
-                              <span className="text-[10px] font-bold text-slate-400 uppercase">{log.time}</span>
-                           </div>
-                         ))}
-                      </div>
-                      <button className="mt-4 text-xs font-black text-primary uppercase tracking-widest">Ver Todos os Logs</button>
-                   </div>
-                </div>
-             </div>
-           )}
-
-           {activeTab !== "empresa" && activeTab !== "equipe" && activeTab !== "permissoes" && activeTab !== "assinatura" && activeTab !== "seguranca" && (
-              <div className="bg-white rounded-3xl border border-slate-100 p-20 shadow-sm text-center flex flex-col items-center animate-in slide-in-from-right-4 duration-500">
-                 <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6">
-                    <Globe className="h-10 w-10 opacity-30" />
-                 </div>
-                 <h3 className="text-xl font-semibold text-navy mb-2">Interface em Otimização</h3>
-                 <p className="text-sm text-slate-400 max-w-xs mx-auto italic font-medium">O módulo de {activeTab} está sendo finalizado para oferecer a melhor experiência enterprise.</p>
-              </div>
-           )}
+    <div className="min-h-screen bg-[#F8FAFC] pb-24 font-sans text-slate-800">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+        
+        {/* ========================================================================= */}
+        {/* 1. CABEÇALHO */}
+        {/* ========================================================================= */}
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0B1739]">
+            Configurações
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Mantenha os dados da empresa e da equipe atualizados.
+          </p>
         </div>
+
+        {/* ========================================================================= */}
+        {/* NAVEGAÇÃO POR ABAS */}
+        {/* ========================================================================= */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200">
+          {navigationTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                  isActive
+                    ? "bg-[#075BFF] text-white shadow-xs"
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ========================================================================= */}
+        {/* ABA 1: DADOS DA EMPRESA */}
+        {/* ========================================================================= */}
+        {activeTab === "empresa" && (
+          <form onSubmit={handleSaveCompanyData} className="space-y-6">
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div>
+                  <h2 className="text-base font-bold text-[#0B1739]">
+                    Informações cadastrais da empresa
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Estes dados são impressos nos requerimentos, procurações e minutas oficiais.
+                  </p>
+                </div>
+
+                {companyForm.updated_at && (
+                  <span className="text-[11px] text-slate-400">
+                    Última atualização por {companyForm.updated_by}
+                  </span>
+                )}
+              </div>
+
+              {/* Grid de Campos Cadastrais */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Razão Social */}
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-semibold text-slate-700">
+                    Razão Social <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={companyForm.name}
+                    onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })}
+                    placeholder="Ex: NavalDocs Serviços Marítimos Ltda"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Nome Fantasia */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700">Nome Fantasia</label>
+                  <input
+                    type="text"
+                    value={companyForm.fantasy_name}
+                    onChange={(e) => setCompanyForm({ ...companyForm, fantasy_name: e.target.value })}
+                    placeholder="Ex: NavalDocs Pro"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* CNPJ */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700">
+                    CNPJ <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={companyForm.cnpj}
+                    onChange={(e) => setCompanyForm({ ...companyForm, cnpj: e.target.value })}
+                    placeholder="00.000.000/0001-00"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Inscrição Estadual / Municipal */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700">Inscrição Municipal / Estadual</label>
+                  <input
+                    type="text"
+                    value={companyForm.state_registration}
+                    onChange={(e) => setCompanyForm({ ...companyForm, state_registration: e.target.value })}
+                    placeholder="Isento ou número de registro"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* E-mail Principal */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700">
+                    E-mail Institucional <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={companyForm.email}
+                    onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
+                    placeholder="contato@empresa.com.br"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Telefone */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700">
+                    Telefone de Contato <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={companyForm.phone}
+                    onChange={(e) => setCompanyForm({ ...companyForm, phone: e.target.value })}
+                    placeholder="(13) 3200-0000"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* CEP */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700">CEP</label>
+                  <input
+                    type="text"
+                    value={companyForm.zip_code}
+                    onChange={(e) => setCompanyForm({ ...companyForm, zip_code: e.target.value })}
+                    placeholder="11000-000"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Logradouro / Endereço */}
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-semibold text-slate-700">Logradouro / Rua</label>
+                  <input
+                    type="text"
+                    value={companyForm.street}
+                    onChange={(e) => setCompanyForm({ ...companyForm, street: e.target.value })}
+                    placeholder="Av. Senador Feijó"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Número */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700">Número</label>
+                  <input
+                    type="text"
+                    value={companyForm.number}
+                    onChange={(e) => setCompanyForm({ ...companyForm, number: e.target.value })}
+                    placeholder="150"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Complemento */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700">Complemento</label>
+                  <input
+                    type="text"
+                    value={companyForm.complement}
+                    onChange={(e) => setCompanyForm({ ...companyForm, complement: e.target.value })}
+                    placeholder="Sala 402"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Cidade */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700">Cidade</label>
+                  <input
+                    type="text"
+                    value={companyForm.city}
+                    onChange={(e) => setCompanyForm({ ...companyForm, city: e.target.value })}
+                    placeholder="Santos"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Estado */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700">UF / Estado</label>
+                  <input
+                    type="text"
+                    maxLength={2}
+                    value={companyForm.state}
+                    onChange={(e) => setCompanyForm({ ...companyForm, state: e.target.value.toUpperCase() })}
+                    placeholder="SP"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium uppercase focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Observações para Documentos */}
+              <div className="space-y-1.5 pt-2">
+                <label className="text-xs font-semibold text-slate-700">
+                  Observações padrão para rodapé de documentos
+                </label>
+                <textarea
+                  rows={3}
+                  value={companyForm.document_notes}
+                  onChange={(e) => setCompanyForm({ ...companyForm, document_notes: e.target.value })}
+                  placeholder="Informações adicionais como número de credenciamento ou cláusula padrão de procuração..."
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              {/* Botão Salvar */}
+              <div className="flex justify-end pt-4 border-t border-slate-100">
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  <span>Salvar dados da empresa</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {/* ========================================================================= */}
+        {/* ABA 2: LOGO E IDENTIDADE VISUAL */}
+        {/* ========================================================================= */}
+        {activeTab === "identidade" && (
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
+            <div>
+              <h2 className="text-base font-bold text-[#0B1739]">
+                Logo da empresa
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                A logo poderá aparecer nos documentos gerados, conforme o modelo oficial.
+              </p>
+            </div>
+
+            <input
+              type="file"
+              ref={logoInputRef}
+              className="hidden"
+              accept=".png,.jpg,.jpeg,.svg"
+              onChange={handleLogoUpload}
+            />
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-6 bg-slate-50/70 border border-slate-200 rounded-2xl">
+              {/* Prévia da Logo */}
+              <div className="w-32 h-32 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-center justify-center overflow-hidden p-3 shrink-0">
+                {companyForm.logo_url ? (
+                  <img
+                    src={companyForm.logo_url}
+                    alt="Logo da empresa"
+                    className="max-w-full max-h-full object-contain"
+                  />
+                ) : (
+                  <div className="text-center text-slate-300">
+                    <ImageIcon className="h-10 w-10 mx-auto mb-1" />
+                    <span className="text-[10px] font-semibold">Sem logo</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Ações de Logo */}
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <h3 className="text-xs font-bold text-[#0B1739]">
+                    {companyForm.logo_url ? "Logo configurada" : "Nenhuma logo vinculada"}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 leading-relaxed max-w-md">
+                    Formatos recomendados: PNG com fundo transparente ou SVG seguro (máx. 5MB). A alteração será aplicada em novos documentos emitidos.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    type="button"
+                    disabled={isUploadingLogo}
+                    onClick={() => logoInputRef.current?.click()}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {isUploadingLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                    <span>{companyForm.logo_url ? "Substituir logo" : "Enviar logo"}</span>
+                  </button>
+
+                  {companyForm.logo_url && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveLogo}
+                      className="px-4 py-2 rounded-xl bg-white border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      Remover logo
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* ABA 3: FUNCIONÁRIOS */}
+        {/* ========================================================================= */}
+        {activeTab === "funcionarios" && (
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-base font-bold text-[#0B1739]">
+                  Funcionários cadastrados
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Membros da equipe habilitados para assinar ou responder por processos.
+                </p>
+              </div>
+
+              {/* Botão Cadastrar Funcionário (Prepara para a Tela 26) */}
+              <button
+                type="button"
+                onClick={() => toast.info("Abrindo formulário de cadastro de funcionário...")}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors shrink-0 cursor-pointer"
+              >
+                <UserPlus className="h-4 w-4" />
+                <span>Cadastrar funcionário</span>
+              </button>
+            </div>
+
+            {/* Busca de Funcionários */}
+            <div className="relative">
+              <Search className="h-3.5 w-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={staffSearch}
+                onChange={(e) => setStaffSearch(e.target.value)}
+                placeholder="Buscar funcionário por nome, cargo ou e-mail..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-[#0B1739] placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+
+            {/* Tabela / Lista de Funcionários */}
+            <div className="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden">
+              {filteredStaff.map((staff) => (
+                <div key={staff.id} className="p-4 hover:bg-slate-50/60 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#075BFF] flex items-center justify-center font-bold text-xs shrink-0">
+                      {staff.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-[#0B1739]">{staff.name}</h4>
+                      <p className="text-[11px] text-slate-500">{staff.role} • {staff.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 self-end sm:self-auto">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      {staff.status}
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      {staff.permissions}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* ABA 4: PERMISSÕES */}
+        {/* ========================================================================= */}
+        {activeTab === "permissoes" && (
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
+            <div>
+              <h2 className="text-base font-bold text-[#0B1739]">
+                Matriz de permissões e acessos
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Controle de ações habilitadas para operadores e administradores da empresa.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/70 space-y-3">
+                <div className="flex items-center gap-2 text-[#075BFF] font-bold">
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>Administrador da Empresa</span>
+                </div>
+                <ul className="space-y-1.5 text-slate-600 text-[11px]">
+                  <li className="flex items-center gap-1.5">✓ Gerenciar clientes e embarcações</li>
+                  <li className="flex items-center gap-1.5">✓ Criar e cancelar processos</li>
+                  <li className="flex items-center gap-1.5">✓ Gerar e assinar minutas oficiais</li>
+                  <li className="flex items-center gap-1.5">✓ Alterar dados cadastrais e logo</li>
+                  <li className="flex items-center gap-1.5">✓ Cadastrar funcionários</li>
+                </ul>
+              </div>
+
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/70 space-y-3">
+                <div className="flex items-center gap-2 text-slate-700 font-bold">
+                  <User className="h-4 w-4" />
+                  <span>Operador de Documentação</span>
+                </div>
+                <ul className="space-y-1.5 text-slate-600 text-[11px]">
+                  <li className="flex items-center gap-1.5">✓ Cadastrar novos clientes</li>
+                  <li className="flex items-center gap-1.5">✓ Iniciar fluxos de serviços náuticos</li>
+                  <li className="flex items-center gap-1.5">✓ Anexar protocolos e comprovantes</li>
+                  <li className="flex items-center gap-1.5 text-slate-400">✗ Alterar configurações da empresa</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* ABA 5: PREFERÊNCIAS */}
+        {/* ========================================================================= */}
+        {activeTab === "preferencias" && (
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
+            <div>
+              <h2 className="text-base font-bold text-[#0B1739]">
+                Preferências de operação
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Defina os parâmetros padrão para novas gerações e fluxos de atendimento.
+              </p>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200/70">
+                <div>
+                  <p className="font-bold text-[#0B1739]">Incluir logo automaticamente</p>
+                  <p className="text-[11px] text-slate-400">Aplica a logo nos novos documentos onde houver suporte.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.autoAttachLogo}
+                  onChange={(e) => setPreferences({ ...preferences, autoAttachLogo: e.target.checked })}
+                  className="h-4 w-4 text-[#075BFF] rounded cursor-pointer"
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200/70">
+                <div>
+                  <p className="font-bold text-[#0B1739]">Notificar ao receber versões assinadas</p>
+                  <p className="text-[11px] text-slate-400">Registra aviso no painel quando um documento for anexado.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.notifyOnGeneration}
+                  onChange={(e) => setPreferences({ ...preferences, notifyOnGeneration: e.target.checked })}
+                  className="h-4 w-4 text-[#075BFF] rounded cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
