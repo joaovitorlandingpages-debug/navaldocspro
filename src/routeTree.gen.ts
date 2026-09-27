@@ -149,6 +149,7 @@ import { Route as AdminProcessCenterIndexRouteImport } from './routes/admin/proc
 import { Route as AdminProcessCenterIdRouteImport } from './routes/admin/process-center.$id'
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
+import { Route as ProcessesIdAnexarDocumentoEmitidoRouteImport } from './routes/processes.$id.anexar-documento-emitido'
 import { Route as ProcessesIdAnexarProtocoloRouteImport } from './routes/processes.$id.anexar-protocolo'
 import { Route as ProcessesIdDocumentosEmitidosRouteImport } from './routes/processes.$id.documentos-emitidos'
 import { Route as ProcessesIdDocumentosGeradosRouteImport } from './routes/processes.$id.documentos-gerados'
@@ -869,6 +870,12 @@ const AdminTemplatesPfwRoute = AdminTemplatesPfwRouteImport.update({
   path: '/pfw',
   getParentRoute: () => AdminTemplatesRoute,
 } as any)
+const ProcessesIdAnexarDocumentoEmitidoRoute =
+  ProcessesIdAnexarDocumentoEmitidoRouteImport.update({
+    id: '/anexar-documento-emitido',
+    path: '/anexar-documento-emitido',
+    getParentRoute: () => ProcessesIdRoute,
+  } as any)
 const ProcessesIdAnexarProtocoloRoute =
   ProcessesIdAnexarProtocoloRouteImport.update({
     id: '/anexar-protocolo',
@@ -1039,6 +1046,7 @@ export interface FileRoutesByFullPath {
   '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/processes/$id/anexar-documento-emitido': typeof ProcessesIdAnexarDocumentoEmitidoRoute
   '/processes/$id/anexar-protocolo': typeof ProcessesIdAnexarProtocoloRoute
   '/processes/$id/documentos-emitidos': typeof ProcessesIdDocumentosEmitidosRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
@@ -1182,6 +1190,7 @@ export interface FileRoutesByTo {
   '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/processes/$id/anexar-documento-emitido': typeof ProcessesIdAnexarDocumentoEmitidoRoute
   '/processes/$id/anexar-protocolo': typeof ProcessesIdAnexarProtocoloRoute
   '/processes/$id/documentos-emitidos': typeof ProcessesIdDocumentosEmitidosRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
@@ -1330,6 +1339,7 @@ export interface FileRoutesById {
   '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/processes/$id/anexar-documento-emitido': typeof ProcessesIdAnexarDocumentoEmitidoRoute
   '/processes/$id/anexar-protocolo': typeof ProcessesIdAnexarProtocoloRoute
   '/processes/$id/documentos-emitidos': typeof ProcessesIdDocumentosEmitidosRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
@@ -1479,6 +1489,7 @@ export interface FileRouteTypes {
     | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/processes/$id/anexar-documento-emitido'
     | '/processes/$id/anexar-protocolo'
     | '/processes/$id/documentos-emitidos'
     | '/processes/$id/documentos-gerados'
@@ -1622,6 +1633,7 @@ export interface FileRouteTypes {
     | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/processes/$id/anexar-documento-emitido'
     | '/processes/$id/anexar-protocolo'
     | '/processes/$id/documentos-emitidos'
     | '/processes/$id/documentos-gerados'
@@ -1769,6 +1781,7 @@ export interface FileRouteTypes {
     | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/processes/$id/anexar-documento-emitido'
     | '/processes/$id/anexar-protocolo'
     | '/processes/$id/documentos-emitidos'
     | '/processes/$id/documentos-gerados'
@@ -2831,6 +2844,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTemplatesPfwRouteImport
       parentRoute: typeof AdminTemplatesRoute
     }
+    '/processes/$id/anexar-documento-emitido': {
+      id: '/processes/$id/anexar-documento-emitido'
+      path: '/anexar-documento-emitido'
+      fullPath: '/processes/$id/anexar-documento-emitido'
+      preLoaderRoute: typeof ProcessesIdAnexarDocumentoEmitidoRouteImport
+      parentRoute: typeof ProcessesIdRoute
+    }
     '/processes/$id/anexar-protocolo': {
       id: '/processes/$id/anexar-protocolo'
       path: '/anexar-protocolo'
@@ -3090,6 +3110,7 @@ const VesselsRouteWithChildren =
   VesselsRoute._addFileChildren(VesselsRouteChildren)
 
 interface ProcessesIdRouteChildren {
+  ProcessesIdAnexarDocumentoEmitidoRoute: typeof ProcessesIdAnexarDocumentoEmitidoRoute
   ProcessesIdAnexarProtocoloRoute: typeof ProcessesIdAnexarProtocoloRoute
   ProcessesIdDocumentosEmitidosRoute: typeof ProcessesIdDocumentosEmitidosRoute
   ProcessesIdDocumentosGeradosRoute: typeof ProcessesIdDocumentosGeradosRoute
@@ -3098,6 +3119,8 @@ interface ProcessesIdRouteChildren {
 }
 
 const ProcessesIdRouteChildren: ProcessesIdRouteChildren = {
+  ProcessesIdAnexarDocumentoEmitidoRoute:
+    ProcessesIdAnexarDocumentoEmitidoRoute,
   ProcessesIdAnexarProtocoloRoute: ProcessesIdAnexarProtocoloRoute,
   ProcessesIdDocumentosEmitidosRoute: ProcessesIdDocumentosEmitidosRoute,
   ProcessesIdDocumentosGeradosRoute: ProcessesIdDocumentosGeradosRoute,

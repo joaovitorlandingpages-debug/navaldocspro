@@ -405,14 +405,14 @@ function DocumentosEmitidosPage() {
         </div>
 
         <div>
-          <button
-            type="button"
-            onClick={() => setIsAttachModalOpen(true)}
+          <Link
+            to="/processes/$id/anexar-documento-emitido"
+            params={{ id }}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             <span>Anexar documento</span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -517,14 +517,14 @@ function DocumentosEmitidosPage() {
               Quando o órgão responsável emitir o documento final (ex: TIE, TIEM, certidão), anexe-o aqui.
             </p>
             <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => setIsAttachModalOpen(true)}
+              <Link
+                to="/processes/$id/anexar-documento-emitido"
+                params={{ id }}
                 className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
                 <span>Anexar documento</span>
-              </button>
+              </Link>
             </div>
           </div>
         ) : (
