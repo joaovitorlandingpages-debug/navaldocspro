@@ -89,7 +89,7 @@ function ProtocolosRealizadosPage() {
         .from("processes")
         .select(`
           *,
-          customer:customers!processes_customer_id_fkey(id, name, fantasy_name, cpf_cnpj, email, phone),
+          customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone),
           vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type)
         `)
         .eq("id", id)

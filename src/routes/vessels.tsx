@@ -147,7 +147,7 @@ function VesselsListPage() {
         .from("vessels")
         .select(`
           *,
-          customer:customers!vessels_customer_id_fkey(id, name, fantasy_name, cpf_cnpj, email, phone)
+          customer:customers!vessels_customer_id_fkey(id, name, cpf_cnpj, email, phone)
         `)
         .eq("company_id", companyId);
 

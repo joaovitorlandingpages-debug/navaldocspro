@@ -124,8 +124,8 @@ function ProcessDetailsPage() {
         .from("processes")
         .select(`
           *,
-          customer:customers!processes_customer_id_fkey(id, name, fantasy_name, cpf_cnpj, document, email, phone),
-          vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length_overall, port_of_registry)
+          customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone),
+          vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length)
         `)
         .eq("id", id)
         .eq("company_id", companyId)

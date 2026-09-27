@@ -115,7 +115,7 @@ function VesselDetailsPage() {
       if (vesselData.customer_id) {
         const { data: custData } = await supabase
           .from("customers")
-          .select("id, name, fantasy_name, cpf_cnpj, email, phone")
+          .select("id, name, cpf_cnpj, email, phone")
           .eq("id", vesselData.customer_id)
           .eq("company_id", companyId)
           .maybeSingle();

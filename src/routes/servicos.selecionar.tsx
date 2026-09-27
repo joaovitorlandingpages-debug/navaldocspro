@@ -182,7 +182,7 @@ function SelecionarServicosPage() {
       // Clientes
       const { data: custData, error: custError } = await supabase
         .from("customers")
-        .select("id, name, fantasy_name, cpf_cnpj, customer_type")
+        .select("id, name, cpf_cnpj, email, phone")
         .eq("company_id", companyId)
         .order("name", { ascending: true });
 

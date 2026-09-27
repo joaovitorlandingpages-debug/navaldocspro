@@ -56,7 +56,7 @@ function NauticalBoatIcon({ className = "w-6 h-6 text-[#0B1739]" }: { className?
 function ProcessesMainPage() {
   const searchParams = Route.useSearch();
   const navigate = useNavigate();
-  const { profile, loading: authLoading } = useAuth();
+  const { profile, user, loading: authLoading } = useAuth();
   const companyId = profile?.company_id;
 
   // Estados de navegação e filtros
@@ -91,89 +91,129 @@ function ProcessesMainPage() {
   const loadData = useCallback(async () => {
     if (authLoading) return;
 
-    if (!companyId) {
-      setErrorType("no_company");
-      setIsLoading(false);
-      return;
-    }
-
     setIsLoading(true);
     setErrorType("none");
     setErrorMessage("");
 
     try {
-      // 1. Carregar Clientes da empresa
-      const { data: custData, error: custError } = await supabase
-        .from("customers")
-        .select("id, name, fantasy_name, cpf_cnpj, customer_type, status, company_id")
-        .eq("company_id", companyId);
-
-      if (custError) {
-        console.error("[Processes] Erro ao carregar customers do Supabase:", {
-          code: custError.code,
-          message: custError.message,
-          details: custError.details,
-          hint: custError.hint,
-        });
-        if (custError.code === "42501" || custError.code === "PGRST301") {
-          setErrorType("permission");
-          return;
-        }
-        throw custError;
+      // Resolução segura do company_id ativo
+      let activeCompanyId = companyId;
+      if (!activeCompanyId) {
+        const { getCurrentCompanyId, peekCachedCompanyId } = await import("@/lib/currentCompany");
+        activeCompanyId = peekCachedCompanyId() || (await getCurrentCompanyId());
       }
+
+      if (!activeCompanyId && user) {
+        try {
+          const { ensureWorkspace } = await import("@/utils/workspace-recovery");
+          await ensureWorkspace(user, profile);
+          const { getCurrentCompanyId } = await import("@/lib/currentCompany");
+          activeCompanyId = await getCurrentCompanyId();
+        } catch (recErr) {
+          console.warn("[Processes] Tentativa de recuperação de workspace falhou:", recErr);
+        }
+      }
+
+      if (!activeCompanyId) {
+        setErrorType("no_company");
+        setIsLoading(false);
+        return;
+      }
+
+      // 1. Carregar Clientes da empresa (usando apenas colunas existentes no schema real)
+      const custPromise = supabase
+        .from("customers")
+        .select("id, name, cpf_cnpj, email, phone, city, state, address, company_id")
+        .eq("company_id", activeCompanyId);
 
       // 2. Carregar Embarcações da empresa
-      const { data: vesData, error: vesError } = await supabase
+      const vesPromise = supabase
         .from("vessels")
         .select("id, name, registration_number, category, customer_id, company_id")
-        .eq("company_id", companyId);
-
-      if (vesError) {
-        console.error("[Processes] Erro ao carregar vessels do Supabase:", {
-          code: vesError.code,
-          message: vesError.message,
-          details: vesError.details,
-          hint: vesError.hint,
-        });
-        if (vesError.code === "42501" || vesError.code === "PGRST301") {
-          setErrorType("permission");
-          return;
-        }
-        throw vesError;
-      }
+        .eq("company_id", activeCompanyId);
 
       // 3. Carregar Processos da empresa
-      const { data: procData, error: procError } = await supabase
+      const procPromise = supabase
         .from("processes")
         .select("id, title, process_type, customer_id, vessel_id, status, created_at, company_id")
-        .eq("company_id", companyId);
+        .eq("company_id", activeCompanyId);
 
-      if (procError) {
-        console.error("[Processes] Erro ao carregar processes do Supabase:", {
-          code: procError.code,
-          message: procError.message,
-          details: procError.details,
-          hint: procError.hint,
-        });
-        if (procError.code === "42501" || procError.code === "PGRST301") {
-          setErrorType("permission");
-          return;
+      const [custResult, vesResult, procResult] = await Promise.allSettled([
+        custPromise,
+        vesPromise,
+        procPromise,
+      ]);
+
+      let loadedCustomers: any[] = [];
+      let loadedVessels: any[] = [];
+      let loadedProcesses: any[] = [];
+
+      // Tratar resultado de Clientes
+      if (custResult.status === "fulfilled") {
+        if (custResult.value.error) {
+          console.error("[Processes] Erro ao carregar customers:", {
+            code: custResult.value.error.code,
+            message: custResult.value.error.message,
+            details: custResult.value.error.details,
+            hint: custResult.value.error.hint,
+          });
+          if (custResult.value.error.code === "42501" || custResult.value.error.code === "PGRST301") {
+            setErrorType("permission");
+            return;
+          }
+        } else {
+          loadedCustomers = custResult.value.data || [];
         }
-        throw procError;
+      }
+
+      // Tratar resultado de Embarcações
+      if (vesResult.status === "fulfilled") {
+        if (vesResult.value.error) {
+          console.error("[Processes] Erro ao carregar vessels:", {
+            code: vesResult.value.error.code,
+            message: vesResult.value.error.message,
+            details: vesResult.value.error.details,
+            hint: vesResult.value.error.hint,
+          });
+          if (vesResult.value.error.code === "42501" || vesResult.value.error.code === "PGRST301") {
+            setErrorType("permission");
+            return;
+          }
+        } else {
+          loadedVessels = vesResult.value.data || [];
+        }
+      }
+
+      // Tratar resultado de Processos
+      if (procResult.status === "fulfilled") {
+        if (procResult.value.error) {
+          console.error("[Processes] Erro ao carregar processes:", {
+            code: procResult.value.error.code,
+            message: procResult.value.error.message,
+            details: procResult.value.error.details,
+            hint: procResult.value.error.hint,
+          });
+          if (procResult.value.error.code === "42501" || procResult.value.error.code === "PGRST301") {
+            setErrorType("permission");
+            return;
+          }
+          throw procResult.value.error;
+        } else {
+          loadedProcesses = procResult.value.data || [];
+        }
       }
 
       // Mapear clientes em vessels de forma segura em memória
-      const customersList = custData || [];
-      const customersMap = new Map(customersList.map((c) => [c.id, c]));
+      const customersMap = new Map(loadedCustomers.map((c) => [c.id, c]));
 
-      const enrichedVessels = (vesData || []).map((v) => ({
+      const enrichedVessels = loadedVessels.map((v) => ({
         ...v,
         customer: v.customer_id ? customersMap.get(v.customer_id) || null : null,
       }));
 
-      setCustomers(customersList);
+      setCustomers(loadedCustomers);
       setVessels(enrichedVessels);
-      setProcesses(procData || []);
+      setProcesses(loadedProcesses);
     } catch (err: any) {
       console.error("[Processes] Falha inesperada ao carregar processos:", {
         message: err?.message,
@@ -186,7 +226,7 @@ function ProcessesMainPage() {
       setIsLoading(false);
       setIsRetrying(false);
     }
-  }, [authLoading, companyId]);
+  }, [authLoading, companyId, user, profile]);
 
   useEffect(() => {
     loadData();
@@ -204,7 +244,7 @@ function ProcessesMainPage() {
   const clientsList = useMemo(() => {
     // Mapear cada cliente com contagem de embarcações vinculadas e contagem de serviços
     const mapped = customers.map((c) => {
-      const clientName = c.fantasy_name || c.name || "Cliente sem nome";
+      const clientName = c.name || "Cliente sem nome";
       
       // Contagem de processos/serviços deste cliente
       const clientProcesses = processes.filter((p) => p.customer_id === c.id);
@@ -218,7 +258,7 @@ function ProcessesMainPage() {
 
       // Tipo de pessoa (Física ou Jurídica)
       const cleanDoc = (c.cpf_cnpj || "").replace(/\D/g, "");
-      const isPJ = c.customer_type === "PJ" || cleanDoc.length > 11;
+      const isPJ = cleanDoc.length > 11;
       const personTypeLabel = isPJ ? "Pessoa jurídica" : "Pessoa física";
 
       return {
@@ -261,7 +301,7 @@ function ProcessesMainPage() {
       const categoryLabel = v.category || "Não informada";
 
       // Proprietário / Cliente atual
-      const currentCustomer = v.customer?.fantasy_name || v.customer?.name || (v.customer_id ? "Cliente vinculado" : "Vínculo pendente");
+      const currentCustomer = v.customer?.name || (v.customer_id ? "Cliente vinculado" : "Vínculo pendente");
 
       // Contagem de serviços vinculados a esta embarcação
       const servicesCount = processes.filter((p) => p.vessel_id === v.id).length;
