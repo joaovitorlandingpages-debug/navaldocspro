@@ -180,7 +180,7 @@ export const AdminOverviewDashboard: React.FC = () => {
           id: "alert-sug",
           title: `${pendingSuggestions} sugestões pendentes de análise`,
           description: "Usuários enviaram ideias e relatos que aguardam resposta da equipe.",
-          link: "/sugestoes",
+          link: "/admin/sugestoes",
           actionText: "Analisar sugestões",
           severity: "warning",
         });

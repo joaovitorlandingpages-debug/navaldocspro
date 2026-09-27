@@ -92,6 +92,7 @@ import { Route as AdminServicesRouteImport } from './routes/admin/services'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSignatureAnchorsRouteImport } from './routes/admin.signature-anchors'
 import { Route as AdminStorageRouteImport } from './routes/admin/storage'
+import { Route as AdminSugestoesRouteImport } from './routes/admin/sugestoes'
 import { Route as AdminSupportRouteImport } from './routes/admin/support'
 import { Route as AdminSystemHealthRouteImport } from './routes/admin/system-health'
 import { Route as AdminSystemReportRouteImport } from './routes/admin/system-report'
@@ -586,6 +587,11 @@ const AdminStorageRoute = AdminStorageRouteImport.update({
   path: '/storage',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSugestoesRoute = AdminSugestoesRouteImport.update({
+  id: '/sugestoes',
+  path: '/sugestoes',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSupportRoute = AdminSupportRouteImport.update({
   id: '/support',
   path: '/support',
@@ -1067,6 +1073,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/signature-anchors': typeof AdminSignatureAnchorsRoute
   '/admin/storage': typeof AdminStorageRoute
+  '/admin/sugestoes': typeof AdminSugestoesRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
@@ -1223,6 +1230,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/signature-anchors': typeof AdminSignatureAnchorsRoute
   '/admin/storage': typeof AdminStorageRoute
+  '/admin/sugestoes': typeof AdminSugestoesRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
@@ -1384,6 +1392,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/signature-anchors': typeof AdminSignatureAnchorsRoute
   '/admin/storage': typeof AdminStorageRoute
+  '/admin/sugestoes': typeof AdminSugestoesRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/system-report': typeof AdminSystemReportRoute
@@ -1546,6 +1555,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/signature-anchors'
     | '/admin/storage'
+    | '/admin/sugestoes'
     | '/admin/support'
     | '/admin/system-health'
     | '/admin/system-report'
@@ -1702,6 +1712,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/signature-anchors'
     | '/admin/storage'
+    | '/admin/sugestoes'
     | '/admin/support'
     | '/admin/system-health'
     | '/admin/system-report'
@@ -1862,6 +1873,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/signature-anchors'
     | '/admin/storage'
+    | '/admin/sugestoes'
     | '/admin/support'
     | '/admin/system-health'
     | '/admin/system-report'
@@ -2597,6 +2609,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminStorageRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/sugestoes': {
+      id: '/admin/sugestoes'
+      path: '/sugestoes'
+      fullPath: '/admin/sugestoes'
+      preLoaderRoute: typeof AdminSugestoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/support': {
       id: '/admin/support'
       path: '/support'
@@ -3220,6 +3239,7 @@ interface AdminRouteChildren {
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSignatureAnchorsRoute: typeof AdminSignatureAnchorsRoute
   AdminStorageRoute: typeof AdminStorageRoute
+  AdminSugestoesRoute: typeof AdminSugestoesRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminSystemHealthRoute: typeof AdminSystemHealthRoute
   AdminSystemReportRoute: typeof AdminSystemReportRoute
@@ -3263,6 +3283,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSignatureAnchorsRoute: AdminSignatureAnchorsRoute,
   AdminStorageRoute: AdminStorageRoute,
+  AdminSugestoesRoute: AdminSugestoesRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminSystemHealthRoute: AdminSystemHealthRoute,
   AdminSystemReportRoute: AdminSystemReportRoute,
