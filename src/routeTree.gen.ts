@@ -160,6 +160,7 @@ import { Route as ProcessesIdDocumentosGeradosRouteImport } from './routes/proce
 import { Route as ProcessesIdGerarDocumentoRouteImport } from './routes/processes.$id.gerar-documento'
 import { Route as ProcessesIdProtocolosGeradosRouteImport } from './routes/processes.$id.protocolos-gerados'
 import { Route as ProcessesIdProtocolosRealizadosRouteImport } from './routes/processes.$id.protocolos-realizados'
+import { Route as ProcessesIdRevisarDocumentoRouteImport } from './routes/processes.$id.revisar-documento'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -937,6 +938,12 @@ const ProcessesIdProtocolosRealizadosRoute =
     path: '/protocolos-realizados',
     getParentRoute: () => ProcessesIdRoute,
   } as any)
+const ProcessesIdRevisarDocumentoRoute =
+  ProcessesIdRevisarDocumentoRouteImport.update({
+    id: '/revisar-documento',
+    path: '/revisar-documento',
+    getParentRoute: () => ProcessesIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -1088,6 +1095,7 @@ export interface FileRoutesByFullPath {
   '/processes/$id/gerar-documento': typeof ProcessesIdGerarDocumentoRoute
   '/processes/$id/protocolos-gerados': typeof ProcessesIdProtocolosGeradosRoute
   '/processes/$id/protocolos-realizados': typeof ProcessesIdProtocolosRealizadosRoute
+  '/processes/$id/revisar-documento': typeof ProcessesIdRevisarDocumentoRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
   '/admin/process-center/': typeof AdminProcessCenterIndexRoute
 }
@@ -1237,6 +1245,7 @@ export interface FileRoutesByTo {
   '/processes/$id/gerar-documento': typeof ProcessesIdGerarDocumentoRoute
   '/processes/$id/protocolos-gerados': typeof ProcessesIdProtocolosGeradosRoute
   '/processes/$id/protocolos-realizados': typeof ProcessesIdProtocolosRealizadosRoute
+  '/processes/$id/revisar-documento': typeof ProcessesIdRevisarDocumentoRoute
   '/admin/docs-central': typeof AdminDocsCentralIndexRoute
   '/admin/process-center': typeof AdminProcessCenterIndexRoute
 }
@@ -1391,6 +1400,7 @@ export interface FileRoutesById {
   '/processes/$id/gerar-documento': typeof ProcessesIdGerarDocumentoRoute
   '/processes/$id/protocolos-gerados': typeof ProcessesIdProtocolosGeradosRoute
   '/processes/$id/protocolos-realizados': typeof ProcessesIdProtocolosRealizadosRoute
+  '/processes/$id/revisar-documento': typeof ProcessesIdRevisarDocumentoRoute
   '/admin/docs-central/': typeof AdminDocsCentralIndexRoute
   '/admin/process-center/': typeof AdminProcessCenterIndexRoute
 }
@@ -1546,6 +1556,7 @@ export interface FileRouteTypes {
     | '/processes/$id/gerar-documento'
     | '/processes/$id/protocolos-gerados'
     | '/processes/$id/protocolos-realizados'
+    | '/processes/$id/revisar-documento'
     | '/admin/docs-central/'
     | '/admin/process-center/'
   fileRoutesByTo: FileRoutesByTo
@@ -1695,6 +1706,7 @@ export interface FileRouteTypes {
     | '/processes/$id/gerar-documento'
     | '/processes/$id/protocolos-gerados'
     | '/processes/$id/protocolos-realizados'
+    | '/processes/$id/revisar-documento'
     | '/admin/docs-central'
     | '/admin/process-center'
   id:
@@ -1848,6 +1860,7 @@ export interface FileRouteTypes {
     | '/processes/$id/gerar-documento'
     | '/processes/$id/protocolos-gerados'
     | '/processes/$id/protocolos-realizados'
+    | '/processes/$id/revisar-documento'
     | '/admin/docs-central/'
     | '/admin/process-center/'
   fileRoutesById: FileRoutesById
@@ -2983,6 +2996,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProcessesIdProtocolosRealizadosRouteImport
       parentRoute: typeof ProcessesIdRoute
     }
+    '/processes/$id/revisar-documento': {
+      id: '/processes/$id/revisar-documento'
+      path: '/revisar-documento'
+      fullPath: '/processes/$id/revisar-documento'
+      preLoaderRoute: typeof ProcessesIdRevisarDocumentoRouteImport
+      parentRoute: typeof ProcessesIdRoute
+    }
   }
 }
 
@@ -3230,6 +3250,7 @@ interface ProcessesIdRouteChildren {
   ProcessesIdGerarDocumentoRoute: typeof ProcessesIdGerarDocumentoRoute
   ProcessesIdProtocolosGeradosRoute: typeof ProcessesIdProtocolosGeradosRoute
   ProcessesIdProtocolosRealizadosRoute: typeof ProcessesIdProtocolosRealizadosRoute
+  ProcessesIdRevisarDocumentoRoute: typeof ProcessesIdRevisarDocumentoRoute
 }
 
 const ProcessesIdRouteChildren: ProcessesIdRouteChildren = {
@@ -3241,6 +3262,7 @@ const ProcessesIdRouteChildren: ProcessesIdRouteChildren = {
   ProcessesIdGerarDocumentoRoute: ProcessesIdGerarDocumentoRoute,
   ProcessesIdProtocolosGeradosRoute: ProcessesIdProtocolosGeradosRoute,
   ProcessesIdProtocolosRealizadosRoute: ProcessesIdProtocolosRealizadosRoute,
+  ProcessesIdRevisarDocumentoRoute: ProcessesIdRevisarDocumentoRoute,
 }
 
 const ProcessesIdRouteWithChildren = ProcessesIdRoute._addFileChildren(

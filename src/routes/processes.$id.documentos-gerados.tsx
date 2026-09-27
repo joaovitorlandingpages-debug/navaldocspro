@@ -627,7 +627,7 @@ function DocumentosGeradosPage() {
                           {/* Visualizar */}
                           <button
                             type="button"
-                            onClick={() => openStoredFile(doc)}
+                            onClick={() => navigate({ to: "/processes/$id/revisar-documento", params: { id }, search: { docId: doc.id } })}
                             className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
                             title="Visualizar PDF"
                           >

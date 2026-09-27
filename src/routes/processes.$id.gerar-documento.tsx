@@ -366,10 +366,11 @@ function GerarDocumentoPage() {
         description: "O arquivo PDF foi criado e está pronto para download ou assinatura.",
       });
 
-      // Redirecionar para a Tela 08 (Documentos Gerados)
+      // Redirecionar para a Tela 22 (Revisar Documento Gerado)
       navigate({
-        to: "/processes/$id/documentos-gerados",
+        to: "/processes/$id/revisar-documento",
         params: { id },
+        search: { docId: newDoc.id },
       });
     } catch (err: any) {
       console.error("Erro ao gerar documento:", err);
