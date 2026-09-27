@@ -140,42 +140,63 @@ function CompanySettingsPage() {
         if (comp.metadata?.preferences) {
           setPreferences((prev) => ({ ...prev, ...comp.metadata.preferences }));
         }
-      }
 
-      // Carregar Funcionários / Perfis da Empresa
-      const { data: profilesData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("company_id", companyId);
+        // Carregar funcionários salvos em metadata.employees
+        const savedEmployees = (comp.metadata?.employees as any[]) || [];
 
-      if (profilesData && profilesData.length > 0) {
-        setStaffList(profilesData.map((p) => ({
-          id: p.id,
-          name: p.name || p.email?.split("@")[0] || "Funcionário",
-          role: p.role === "admin" ? "Administrador / Despachante" : "Operador Náutico",
-          email: p.email,
-          status: p.is_active !== false ? "Ativo" : "Inativo",
-          permissions: p.role === "admin" ? "Acesso total" : "Operação e documentos",
-        })));
-      } else {
-        setStaffList([
-          {
-            id: profile?.id || "staff-1",
-            name: profile?.name || user?.email?.split("@")[0] || "João Vitor",
-            role: "Administrador / Despachante",
-            email: user?.email || "contato@empresa.com",
-            status: "Ativo",
-            permissions: "Acesso total",
-          },
-          {
-            id: "staff-2",
-            name: "Ana Beatriz",
-            role: "Assistente de Atendimento",
-            email: "atendimento@empresa.com",
-            status: "Ativo",
-            permissions: "Cadastro e visualização",
-          }
-        ]);
+        // Carregar Funcionários / Perfis da Empresa
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("company_id", companyId);
+
+        const combinedStaff: StaffMember[] = [];
+
+        // Adicionar do metadata
+        savedEmployees.forEach((emp: any) => {
+          combinedStaff.push({
+            id: emp.id,
+            name: emp.name,
+            role: emp.role,
+            email: emp.email || "Sem e-mail",
+            status: emp.status === "inactive" ? "Inativo" : "Ativo",
+            permissions: emp.permissions?.can_generate_docs ? "Geração e revisão" : "Consulta",
+          });
+        });
+
+        // Adicionar do profiles caso não esteja no metadata
+        if (profilesData && profilesData.length > 0) {
+          profilesData.forEach((p) => {
+            const alreadyExists = combinedStaff.some(
+              (s) => s.id === p.id || (p.email && s.email.toLowerCase() === p.email.toLowerCase())
+            );
+            if (!alreadyExists) {
+              combinedStaff.push({
+                id: p.id,
+                name: p.name || p.email?.split("@")[0] || "Funcionário",
+                role: p.role === "admin" ? "Administrador / Despachante" : "Operador Náutico",
+                email: p.email || "Sem e-mail",
+                status: (p as any).is_active !== false ? "Ativo" : "Inativo",
+                permissions: p.role === "admin" ? "Acesso total" : "Operação e documentos",
+              });
+            }
+          });
+        }
+
+        if (combinedStaff.length > 0) {
+          setStaffList(combinedStaff);
+        } else {
+          setStaffList([
+            {
+              id: profile?.id || "staff-1",
+              name: profile?.name || user?.email?.split("@")[0] || "João Vitor",
+              role: "Administrador / Despachante",
+              email: user?.email || "contato@empresa.com",
+              status: "Ativo",
+              permissions: "Acesso total",
+            },
+          ]);
+        }
       }
     } catch (err) {
       console.error("Erro ao carregar dados da empresa:", err);
@@ -684,15 +705,14 @@ function CompanySettingsPage() {
                 </p>
               </div>
 
-              {/* Botão Cadastrar Funcionário (Prepara para a Tela 26) */}
-              <button
-                type="button"
-                onClick={() => toast.info("Abrindo formulário de cadastro de funcionário...")}
+              {/* Botão Cadastrar Funcionário (Tela 26) */}
+              <Link
+                to="/configuracoes/funcionarios/novo"
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors shrink-0 cursor-pointer"
               >
                 <UserPlus className="h-4 w-4" />
                 <span>Cadastrar funcionário</span>
-              </button>
+              </Link>
             </div>
 
             {/* Busca de Funcionários */}
@@ -722,12 +742,25 @@ function CompanySettingsPage() {
                   </div>
 
                   <div className="flex items-center gap-3 self-end sm:self-auto">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
+                        staff.status === "Ativo"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-slate-100 text-slate-600 border-slate-200"
+                      }`}
+                    >
                       {staff.status}
                     </span>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] text-slate-400 hidden sm:inline">
                       {staff.permissions}
                     </span>
+                    <Link
+                      to="/configuracoes/funcionarios/$id"
+                      params={{ id: staff.id }}
+                      className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-blue-400 text-slate-700 text-xs font-medium transition-colors"
+                    >
+                      Editar
+                    </Link>
                   </div>
                 </div>
               ))}

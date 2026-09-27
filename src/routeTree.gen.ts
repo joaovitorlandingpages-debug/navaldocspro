@@ -153,6 +153,8 @@ import { Route as AdminProcessCenterIndexRouteImport } from './routes/admin/proc
 import { Route as AdminProcessCenterIdRouteImport } from './routes/admin/process-center.$id'
 import { Route as AdminTemplatesIdRouteImport } from './routes/admin/templates.$id'
 import { Route as AdminTemplatesPfwRouteImport } from './routes/admin/templates.pfw'
+import { Route as ConfiguracoesFuncionariosIdRouteImport } from './routes/configuracoes.funcionarios.$id'
+import { Route as ConfiguracoesFuncionariosNovoRouteImport } from './routes/configuracoes.funcionarios.novo'
 import { Route as ProcessesIdAnexarDocumentoEmitidoRouteImport } from './routes/processes.$id.anexar-documento-emitido'
 import { Route as ProcessesIdAnexarProtocoloRouteImport } from './routes/processes.$id.anexar-protocolo'
 import { Route as ProcessesIdAnexarVersaoAssinadaRouteImport } from './routes/processes.$id.anexar-versao-assinada'
@@ -897,6 +899,18 @@ const AdminTemplatesPfwRoute = AdminTemplatesPfwRouteImport.update({
   path: '/pfw',
   getParentRoute: () => AdminTemplatesRoute,
 } as any)
+const ConfiguracoesFuncionariosIdRoute =
+  ConfiguracoesFuncionariosIdRouteImport.update({
+    id: '/configuracoes/funcionarios/$id',
+    path: '/configuracoes/funcionarios/$id',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ConfiguracoesFuncionariosNovoRoute =
+  ConfiguracoesFuncionariosNovoRouteImport.update({
+    id: '/configuracoes/funcionarios/novo',
+    path: '/configuracoes/funcionarios/novo',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ProcessesIdAnexarDocumentoEmitidoRoute =
   ProcessesIdAnexarDocumentoEmitidoRouteImport.update({
     id: '/anexar-documento-emitido',
@@ -1095,6 +1109,8 @@ export interface FileRoutesByFullPath {
   '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/configuracoes/funcionarios/$id': typeof ConfiguracoesFuncionariosIdRoute
+  '/configuracoes/funcionarios/novo': typeof ConfiguracoesFuncionariosNovoRoute
   '/processes/$id/anexar-documento-emitido': typeof ProcessesIdAnexarDocumentoEmitidoRoute
   '/processes/$id/anexar-protocolo': typeof ProcessesIdAnexarProtocoloRoute
   '/processes/$id/anexar-versao-assinada': typeof ProcessesIdAnexarVersaoAssinadaRoute
@@ -1246,6 +1262,8 @@ export interface FileRoutesByTo {
   '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/configuracoes/funcionarios/$id': typeof ConfiguracoesFuncionariosIdRoute
+  '/configuracoes/funcionarios/novo': typeof ConfiguracoesFuncionariosNovoRoute
   '/processes/$id/anexar-documento-emitido': typeof ProcessesIdAnexarDocumentoEmitidoRoute
   '/processes/$id/anexar-protocolo': typeof ProcessesIdAnexarProtocoloRoute
   '/processes/$id/anexar-versao-assinada': typeof ProcessesIdAnexarVersaoAssinadaRoute
@@ -1402,6 +1420,8 @@ export interface FileRoutesById {
   '/admin/process-center/$id': typeof AdminProcessCenterIdRoute
   '/admin/templates/$id': typeof AdminTemplatesIdRoute
   '/admin/templates/pfw': typeof AdminTemplatesPfwRoute
+  '/configuracoes/funcionarios/$id': typeof ConfiguracoesFuncionariosIdRoute
+  '/configuracoes/funcionarios/novo': typeof ConfiguracoesFuncionariosNovoRoute
   '/processes/$id/anexar-documento-emitido': typeof ProcessesIdAnexarDocumentoEmitidoRoute
   '/processes/$id/anexar-protocolo': typeof ProcessesIdAnexarProtocoloRoute
   '/processes/$id/anexar-versao-assinada': typeof ProcessesIdAnexarVersaoAssinadaRoute
@@ -1559,6 +1579,8 @@ export interface FileRouteTypes {
     | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/configuracoes/funcionarios/$id'
+    | '/configuracoes/funcionarios/novo'
     | '/processes/$id/anexar-documento-emitido'
     | '/processes/$id/anexar-protocolo'
     | '/processes/$id/anexar-versao-assinada'
@@ -1710,6 +1732,8 @@ export interface FileRouteTypes {
     | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/configuracoes/funcionarios/$id'
+    | '/configuracoes/funcionarios/novo'
     | '/processes/$id/anexar-documento-emitido'
     | '/processes/$id/anexar-protocolo'
     | '/processes/$id/anexar-versao-assinada'
@@ -1865,6 +1889,8 @@ export interface FileRouteTypes {
     | '/admin/process-center/$id'
     | '/admin/templates/$id'
     | '/admin/templates/pfw'
+    | '/configuracoes/funcionarios/$id'
+    | '/configuracoes/funcionarios/novo'
     | '/processes/$id/anexar-documento-emitido'
     | '/processes/$id/anexar-protocolo'
     | '/processes/$id/anexar-versao-assinada'
@@ -1948,6 +1974,8 @@ export interface RootRouteChildren {
   ProcessesVisualizarEEditarRoute: typeof ProcessesVisualizarEEditarRoute
   VerificarAssinaturaCodeRoute: typeof VerificarAssinaturaCodeRoute
   ProcessesIndexRoute: typeof ProcessesIndexRoute
+  ConfiguracoesFuncionariosIdRoute: typeof ConfiguracoesFuncionariosIdRoute
+  ConfiguracoesFuncionariosNovoRoute: typeof ConfiguracoesFuncionariosNovoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2960,6 +2988,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTemplatesPfwRouteImport
       parentRoute: typeof AdminTemplatesRoute
     }
+    '/configuracoes/funcionarios/$id': {
+      id: '/configuracoes/funcionarios/$id'
+      path: '/configuracoes/funcionarios/$id'
+      fullPath: '/configuracoes/funcionarios/$id'
+      preLoaderRoute: typeof ConfiguracoesFuncionariosIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuracoes/funcionarios/novo': {
+      id: '/configuracoes/funcionarios/novo'
+      path: '/configuracoes/funcionarios/novo'
+      fullPath: '/configuracoes/funcionarios/novo'
+      preLoaderRoute: typeof ConfiguracoesFuncionariosNovoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/processes/$id/anexar-documento-emitido': {
       id: '/processes/$id/anexar-documento-emitido'
       path: '/anexar-documento-emitido'
@@ -3361,6 +3403,8 @@ const rootRouteChildren: RootRouteChildren = {
   ProcessesVisualizarEEditarRoute: ProcessesVisualizarEEditarRoute,
   VerificarAssinaturaCodeRoute: VerificarAssinaturaCodeRoute,
   ProcessesIndexRoute: ProcessesIndexRoute,
+  ConfiguracoesFuncionariosIdRoute: ConfiguracoesFuncionariosIdRoute,
+  ConfiguracoesFuncionariosNovoRoute: ConfiguracoesFuncionariosNovoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
