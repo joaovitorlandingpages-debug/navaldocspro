@@ -327,10 +327,19 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
 }
 
 export function RouteContent() {
+  const location = useLocation();
+  const isDashboardHome = location.pathname === "/dashboard" || location.pathname === "/dashboard/";
+
+  if (!isDashboardHome) {
+    return <Outlet />;
+  }
+
+  return <DashboardHomeContent />;
+}
+
+function DashboardHomeContent() {
   const { profile, companyId: authCompanyId } = useAuth();
   const companyId = profile?.company_id || authCompanyId;
-  const navigate = useNavigate();
-  const location = useLocation();
   const [isServicesModalOpen, setIsServicesModalOpen] = useState(false);
 
   // Consulta do progresso real de primeiros passos
@@ -343,11 +352,6 @@ export function RouteContent() {
     enabled: Boolean(companyId),
     staleTime: 1000 * 15,
   });
-
-  // Se for sub-rota de dashboard (ex: /dashboard/deadlines), renderiza o Outlet
-  if (location.pathname !== "/dashboard" && location.pathname !== "/dashboard/") {
-    return <Outlet />;
-  }
 
   const isPreview = typeof window !== "undefined" && window.location.search.includes("preview=true");
 

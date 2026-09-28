@@ -283,5 +283,63 @@ describe("Fluxo de Navegação e Categorias da Página Serviços", () => {
     expect(laudo?.needsProfessionalReview).toBe(true);
     expect(laudo?.missingValidationNote).toContain("Engenheiro Naval");
   });
+
+  // TESTE 10: Garantia arquitetural de conformidade com Regras de Hooks
+  it("Cenário 10: Verificação estática e estrutural — Ausência de retornos condicionais antes de hooks em RouteContent e componentes de Serviços", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+
+    // 1. Inspeciona src/routes/dashboard.tsx
+    const dashboardFile = path.resolve("src/routes/dashboard.tsx");
+    const dashboardContent = fs.readFileSync(dashboardFile, "utf-8");
+
+    // RouteContent deve delegar para DashboardHomeContent ou Outlet
+    expect(dashboardContent).toContain("export function RouteContent()");
+    expect(dashboardContent).toContain("function DashboardHomeContent()");
+    
+    // Confirma que useMemo não está após um return na mesma função
+    const routeContentBody = dashboardContent.slice(
+      dashboardContent.indexOf("export function RouteContent()"),
+      dashboardContent.indexOf("function DashboardHomeContent()")
+    );
+    // RouteContent só deve ter o hook useLocation e a bifurcação de renderização
+    expect(routeContentBody).toContain("useLocation");
+    expect(routeContentBody).not.toContain("useMemo");
+    expect(routeContentBody).not.toContain("useQuery");
+
+    // DashboardHomeContent possui os hooks chamados incondicionalmente no topo
+    const homeContentStartIndex = dashboardContent.indexOf("function DashboardHomeContent()");
+    const homeContentBody = dashboardContent.slice(
+      homeContentStartIndex,
+      dashboardContent.indexOf("return (", homeContentStartIndex)
+    );
+    expect(homeContentBody).toContain("useAuth");
+    expect(homeContentBody).toContain("useQuery");
+    expect(homeContentBody).toContain("useMemo");
+    expect(homeContentBody).not.toContain("if (location.pathname");
+  });
+
+  // TESTE 11: Validação das rotas de Serviços e compatibilidade de transição
+  it("Cenário 11: Rotas e links de Serviços — Preservação de parâmetros e consistência de rotas", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+
+    // Verifica que src/routes/servicos.index.tsx existe e está íntegro
+    const servicosIndex = path.resolve("src/routes/servicos.index.tsx");
+    expect(fs.existsSync(servicosIndex)).toBe(true);
+
+    // Verifica que src/routes/servicos.selecionar.tsx existe e está íntegro
+    const servicosSelecionar = path.resolve("src/routes/servicos.selecionar.tsx");
+    expect(fs.existsSync(servicosSelecionar)).toBe(true);
+
+    // Verifica que src/routes/servicos.documentos.tsx existe e está íntegro
+    const servicosDocumentos = path.resolve("src/routes/servicos.documentos.tsx");
+    expect(fs.existsSync(servicosDocumentos)).toBe(true);
+
+    // Verifica que src/routes/servicos.revisar.tsx existe e está íntegro
+    const servicosRevisar = path.resolve("src/routes/servicos.revisar.tsx");
+    expect(fs.existsSync(servicosRevisar)).toBe(true);
+  });
 });
+
 

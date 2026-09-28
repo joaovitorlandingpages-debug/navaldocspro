@@ -143,40 +143,14 @@ function AdminCompanyDetailPage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // 1. Verificação de Autorização Global
-  if (authLoading) {
-    return (
-      <div className="h-96 flex flex-col items-center justify-center gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-[#075BFF]" />
-        <p className="text-xs text-slate-500 font-medium">Validando permissões de administrador...</p>
-      </div>
-    );
-  }
-
-  const isAuthorized = 
+  const isAuthorized = !authLoading && (
     profile?.role === 'admin_master_global' || 
     profile?.role === 'admin_master' || 
     profile?.role === 'superadmin' ||
     profile?.role === 'admin' ||
     profile?.email === 'joaovitor.f0725@gmail.com' ||
-    profile?.email === 'douglas_faresi@hotmail.com';
-
-  if (!isAuthorized) {
-    return (
-      <Card className="p-8 border-red-200 bg-red-50/40 text-center max-w-lg mx-auto my-12 shadow-md rounded-2xl">
-        <Shield className="h-10 w-10 text-red-500 mx-auto mb-3" />
-        <h3 className="text-base font-bold text-[#0B1739]">Acesso Restrito</h3>
-        <p className="text-xs text-slate-600 mt-1 font-medium">
-          Apenas administradores globais autorizados da plataforma podem acessar o detalhe de empresas.
-        </p>
-        <Button 
-          onClick={() => navigate({ to: "/dashboard" })}
-          className="mt-5 bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold rounded-xl"
-        >
-          Voltar ao início
-        </Button>
-      </Card>
-    );
-  }
+    profile?.email === 'douglas_faresi@hotmail.com'
+  );
 
   // 2. Consulta da Empresa
   const { 
@@ -581,6 +555,33 @@ function AdminCompanyDetailPage() {
       toast.error(err.message || "Erro ao reativar empresa");
     }
   });
+
+  if (authLoading) {
+    return (
+      <div className="h-96 flex flex-col items-center justify-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-[#075BFF]" />
+        <p className="text-xs text-slate-500 font-medium">Validando permissões de administrador...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <Card className="p-8 border-red-200 bg-red-50/40 text-center max-w-lg mx-auto my-12 shadow-md rounded-2xl">
+        <Shield className="h-10 w-10 text-red-500 mx-auto mb-3" />
+        <h3 className="text-base font-bold text-[#0B1739]">Acesso Restrito</h3>
+        <p className="text-xs text-slate-600 mt-1 font-medium">
+          Apenas administradores globais autorizados da plataforma podem acessar o detalhe de empresas.
+        </p>
+        <Button 
+          onClick={() => navigate({ to: "/dashboard" })}
+          className="mt-5 bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold rounded-xl"
+        >
+          Voltar ao início
+        </Button>
+      </Card>
+    );
+  }
 
   // Render: 404 Empresa não encontrada
   if (isErrorCompany || (!isLoadingCompany && !company)) {

@@ -103,22 +103,19 @@ function AdminCompaniesPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Permissão de acesso administrativo global
-  if (authLoading) return null;
-  const isAuthorized = 
+  const isAuthorized = !authLoading && (
     profile?.role === 'admin_master_global' || 
     profile?.role === 'admin_master' || 
     profile?.role === 'superadmin' ||
     profile?.role === 'admin' ||
     profile?.email === 'joaovitor.f0725@gmail.com' ||
-    profile?.email === 'douglas_faresi@hotmail.com';
-
-  if (!isAuthorized) {
-    return <Navigate to="/dashboard" />;
-  }
+    profile?.email === 'douglas_faresi@hotmail.com'
+  );
 
   // 1. Consulta Consolidada de Empresas do Supabase
   const { data: companiesData, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-companies-list"],
+    enabled: isAuthorized,
     queryFn: async () => {
       // Buscar empresas
       const { data: companies, error: compErr } = await supabase
@@ -264,6 +261,11 @@ function AdminCompaniesPage() {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredCompanies.slice(start, start + itemsPerPage);
   }, [filteredCompanies, currentPage]);
+
+  if (authLoading) return null;
+  if (!isAuthorized) {
+    return <Navigate to="/dashboard" />;
+  }
 
   // 3. Mutação: Salvar / Cadastrar Empresa com Auditoria
   const handleSaveCompany = async (e: React.FormEvent) => {

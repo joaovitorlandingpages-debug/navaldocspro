@@ -31,13 +31,16 @@ function AdminOCR() {
     console.log("OCR_ADMIN_OK");
   }, []);
 
-  if (loading) return null;
-  if (profile?.role !== 'admin_master_global' && profile?.role !== 'admin_master' && profile?.email !== 'joaovitor.f0725@gmail.com' && profile?.email !== 'douglas_faresi@hotmail.com') {
-    return <Navigate to="/dashboard" />;
-  }
+  const isAuthorized = !loading && (
+    profile?.role === 'admin_master_global' || 
+    profile?.role === 'admin_master' || 
+    profile?.email === 'joaovitor.f0725@gmail.com' || 
+    profile?.email === 'douglas_faresi@hotmail.com'
+  );
 
   const { data: ocrStats, isLoading } = useQuery({
     queryKey: ["admin-ocr-stats"],
+    enabled: isAuthorized,
     queryFn: async () => {
       // Aggregate real OCR stats if available, otherwise simulation
       const { count: totalJobs } = await supabase.from("ocr_jobs").select("*", { count: "exact", head: true });
@@ -62,6 +65,11 @@ function AdminOCR() {
       };
     }
   });
+
+  if (loading) return null;
+  if (!isAuthorized) {
+    return <Navigate to="/dashboard" />;
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">

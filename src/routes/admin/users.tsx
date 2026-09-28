@@ -179,30 +179,10 @@ function AdminUsersPage() {
     return profile?.role === "admin" || isGlobalAdmin;
   }, [profile, isGlobalAdmin]);
 
-  // Se o usuário não tiver privilégio de administrador
-  if (!authLoading && !isCompanyAdmin) {
-    return (
-      <div className="max-w-md mx-auto py-16 px-4 text-center font-sans">
-        <Card className="p-8 border-red-200 bg-red-50/50 rounded-2xl shadow-xs space-y-3">
-          <Shield className="h-10 w-10 text-red-500 mx-auto" />
-          <h2 className="text-base font-bold text-[#0B1739]">Acesso Restrito</h2>
-          <p className="text-xs text-slate-600">
-            Você não possui privilégios de administrador para gerenciar usuários e acessos da plataforma.
-          </p>
-          <Button
-            onClick={() => navigate({ to: "/dashboard" })}
-            className="mt-3 bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold rounded-xl"
-          >
-            Voltar ao painel
-          </Button>
-        </Card>
-      </div>
-    );
-  }
-
   // 2. Consulta de Empresas no escopo autorizado
   const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
     queryKey: ["admin-users-companies-list", isGlobalAdmin, profile?.company_id],
+    enabled: !authLoading && isCompanyAdmin,
     queryFn: async () => {
       let query = supabase.from("companies").select("id, name, fantasy_name, plan, is_active");
       if (!isGlobalAdmin && profile?.company_id) {
@@ -212,7 +192,6 @@ function AdminUsersPage() {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!profile
   });
 
   // 3. Consulta Consolidada de Usuários / Profiles
@@ -648,6 +627,26 @@ function AdminUsersPage() {
     setStatusReason("");
     setIsToggleStatusModalOpen(true);
   };
+
+  if (!authLoading && !isCompanyAdmin) {
+    return (
+      <div className="max-w-md mx-auto py-16 px-4 text-center font-sans">
+        <Card className="p-8 border-red-200 bg-red-50/50 rounded-2xl shadow-xs space-y-3">
+          <Shield className="h-10 w-10 text-red-500 mx-auto" />
+          <h2 className="text-base font-bold text-[#0B1739]">Acesso Restrito</h2>
+          <p className="text-xs text-slate-600">
+            Você não possui privilégios de administrador para gerenciar usuários e acessos da plataforma.
+          </p>
+          <Button
+            onClick={() => navigate({ to: "/dashboard" })}
+            className="mt-3 bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold rounded-xl"
+          >
+            Voltar ao painel
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider>

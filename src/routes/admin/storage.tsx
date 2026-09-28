@@ -33,13 +33,16 @@ function AdminStorage() {
     console.log("STORAGE_ADMIN_OK");
   }, []);
 
-  if (loading) return null;
-  if (profile?.role !== 'admin_master_global' && profile?.role !== 'admin_master' && profile?.email !== 'joaovitor.f0725@gmail.com' && profile?.email !== 'douglas_faresi@hotmail.com') {
-    return <Navigate to="/dashboard" />;
-  }
+  const isAuthorized = !loading && (
+    profile?.role === 'admin_master_global' || 
+    profile?.role === 'admin_master' || 
+    profile?.email === 'joaovitor.f0725@gmail.com' || 
+    profile?.email === 'douglas_faresi@hotmail.com'
+  );
 
   const { data: storageStats } = useQuery({
     queryKey: ["admin-storage-global"],
+    enabled: isAuthorized,
     queryFn: async () => {
       const { data: files } = await supabase.from("uploaded_files").select("file_size, bucket_name");
       
@@ -53,6 +56,11 @@ function AdminStorage() {
       };
     }
   });
+
+  if (loading) return null;
+  if (!isAuthorized) {
+    return <Navigate to="/dashboard" />;
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">

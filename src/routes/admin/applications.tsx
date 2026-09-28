@@ -167,29 +167,10 @@ function AdminApplicationsPage() {
     return profile?.role === "admin" || isGlobalAdmin;
   }, [profile, isGlobalAdmin]);
 
-  if (!authLoading && !isCompanyAdmin) {
-    return (
-      <div className="max-w-md mx-auto py-16 px-4 text-center font-sans">
-        <Card className="p-8 border-red-200 bg-red-50/50 rounded-2xl shadow-xs space-y-3">
-          <Shield className="h-10 w-10 text-red-500 mx-auto" />
-          <h2 className="text-base font-bold text-[#0B1739]">Acesso Restrito</h2>
-          <p className="text-xs text-slate-600">
-            Você não possui privilégios de administrador para gerenciar direitos de acesso a aplicativos.
-          </p>
-          <Button
-            onClick={() => navigate({ to: "/dashboard" })}
-            className="mt-3 bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold rounded-xl"
-          >
-            Voltar ao painel
-          </Button>
-        </Card>
-      </div>
-    );
-  }
-
   // 2. Consulta de Empresas e Direitos de Aplicativos
   const { data: companies = [], isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-applications-companies-list", isGlobalAdmin, profile?.company_id],
+    enabled: !authLoading && isCompanyAdmin,
     queryFn: async () => {
       let query = supabase
         .from("companies")
@@ -265,7 +246,6 @@ function AdminApplicationsPage() {
         };
       });
     },
-    enabled: !!profile
   });
 
   // 3. Métricas de Cobertura de Acesso por Aplicativo
@@ -513,6 +493,26 @@ function AdminApplicationsPage() {
     setGrantReason("");
     setIsRevokeModalOpen(true);
   };
+
+  if (!authLoading && !isCompanyAdmin) {
+    return (
+      <div className="max-w-md mx-auto py-16 px-4 text-center font-sans">
+        <Card className="p-8 border-red-200 bg-red-50/50 rounded-2xl shadow-xs space-y-3">
+          <Shield className="h-10 w-10 text-red-500 mx-auto" />
+          <h2 className="text-base font-bold text-[#0B1739]">Acesso Restrito</h2>
+          <p className="text-xs text-slate-600">
+            Você não possui privilégios de administrador para gerenciar direitos de acesso a aplicativos.
+          </p>
+          <Button
+            onClick={() => navigate({ to: "/dashboard" })}
+            className="mt-3 bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold rounded-xl"
+          >
+            Voltar ao painel
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider>
