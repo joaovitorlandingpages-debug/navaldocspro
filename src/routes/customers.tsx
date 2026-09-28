@@ -20,7 +20,8 @@ import {
   Trash2, 
   AlertCircle,
   Folder,
-  User
+  User,
+  ArrowUpDown
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -59,8 +60,8 @@ type CustomerFilterType = "all" | "pf" | "pj";
 
 function RelacaoClientesPage() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
-  const companyId = profile?.company_id;
+  const { profile, companyId: authCompanyId, isGlobalAdmin, loading: authLoading } = useAuth();
+  const companyId = profile?.company_id || authCompanyId;
 
   // Estado de listagem
   const [customers, setCustomers] = useState<any[]>([]);
@@ -68,11 +69,17 @@ function RelacaoClientesPage() {
   const [isError, setIsError] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Pesquisa, filtro e paginação
+  // Pesquisa, filtro, ordenação e paginação
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<CustomerFilterType>("all");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(1);
   const pageSize = 20;
+
+  const toggleSort = () => {
+    setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    setPage(1);
+  };
 
   // Modais de Edição e Detalhes
   const [customerToEdit, setCustomerToEdit] = useState<any | null>(null);
@@ -88,15 +95,23 @@ function RelacaoClientesPage() {
 
   // Consulta e Busca no Banco de Dados
   const fetchCustomers = useCallback(async () => {
-    if (!companyId) return;
+    if (authLoading) return;
+    if (!companyId && !isGlobalAdmin) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setIsError(false);
 
     try {
+      // Usar a chave estrangeira explícita 'processes!processes_customer_id_fkey' para evitar erro PGRST201 de ambiguidade
       let query = supabase
         .from("customers")
-        .select("*, vessels(count), processes(count)", { count: "exact" })
-        .eq("company_id", companyId);
+        .select("*, vessels(count), processes:processes!processes_customer_id_fkey(count)", { count: "exact" });
+
+      if (companyId) {
+        query = query.eq("company_id", companyId);
+      }
 
       // Busca por nome, email ou CPF/CNPJ
       if (searchTerm.trim()) {
@@ -110,7 +125,7 @@ function RelacaoClientesPage() {
       }
 
       // Ordenação alfabética pelo nome
-      query = query.order("name", { ascending: true });
+      query = query.order("name", { ascending: sortDirection === "asc" });
 
       // Paginação no servidor (20 por página)
       const from = (page - 1) * pageSize;
@@ -123,9 +138,9 @@ function RelacaoClientesPage() {
       // Filtro por tipo (PF / PJ)
       let list = data || [];
       if (filterType === "pf") {
-        list = list.filter((c) => (c.cpf_cnpj || "").replace(/\D/g, "").length <= 11);
+        list = list.filter((c: any) => (c.cpf_cnpj || "").replace(/\D/g, "").length <= 11);
       } else if (filterType === "pj") {
-        list = list.filter((c) => (c.cpf_cnpj || "").replace(/\D/g, "").length > 11);
+        list = list.filter((c: any) => (c.cpf_cnpj || "").replace(/\D/g, "").length > 11);
       }
 
       setCustomers(list);
@@ -137,7 +152,7 @@ function RelacaoClientesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [companyId, searchTerm, filterType, page]);
+  }, [companyId, isGlobalAdmin, authLoading, searchTerm, filterType, sortDirection, page]);
 
   // Debounce para a busca
   useEffect(() => {
@@ -216,6 +231,7 @@ function RelacaoClientesPage() {
 
         <Link
           to="/customers/novo"
+          search={{ search: undefined, type: undefined, page: undefined }}
           className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
         >
           <Plus className="h-4 w-4" />
@@ -272,17 +288,38 @@ function RelacaoClientesPage() {
           </div>
         </div>
 
-        {/* Subtítulo da Ordem */}
-        <p className="text-xs text-slate-400 font-medium mt-3 mb-4 sm:mb-6 pl-1">
-          Ordem alfabética • A–Z
-        </p>
+        {/* Subtítulo da Ordem e Ações Rápidas */}
+        <div className="flex flex-wrap items-center justify-between gap-2 mt-3 mb-4 sm:mb-6 pl-1">
+          <button
+            type="button"
+            onClick={toggleSort}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-[#075BFF] transition-colors cursor-pointer py-1 px-2 -ml-2 rounded-lg hover:bg-slate-100"
+            title="Alternar ordem alfabética"
+          >
+            <ArrowUpDown className="h-3.5 w-3.5 text-slate-400 group-hover:text-[#075BFF]" />
+            <span>Ordem alfabética • {sortDirection === "asc" ? "A–Z (Crescente)" : "Z–A (Decrescente)"}</span>
+          </button>
+          <span className="text-xs text-slate-400">
+            {totalCount === 1 ? "1 cliente" : `${totalCount} clientes`}
+          </span>
+        </div>
 
         {/* TABELA DESKTOP */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-100 text-xs font-semibold text-slate-500">
-                <th className="pb-3 px-3 font-semibold">Cliente</th>
+                <th 
+                  className="pb-3 px-3 font-semibold cursor-pointer select-none hover:text-[#075BFF] transition-colors"
+                  onClick={toggleSort}
+                  title="Clique para alternar ordenação alfabética"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Cliente</span>
+                    <ArrowUpDown className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="text-[10px] text-slate-400 font-normal">({sortDirection === "asc" ? "A-Z" : "Z-A"})</span>
+                  </div>
+                </th>
                 <th className="pb-3 px-3 font-semibold">Tipo</th>
                 <th className="pb-3 px-3 font-semibold text-center">Embarcações</th>
                 <th className="pb-3 px-3 font-semibold text-center">Processos</th>
@@ -313,11 +350,14 @@ function RelacaoClientesPage() {
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-xs text-red-500">
                     <AlertCircle className="h-8 w-8 text-red-400 mx-auto mb-2" />
-                    <p className="font-semibold">Erro ao carregar clientes</p>
+                    <p className="font-semibold text-sm text-red-600">Erro ao carregar lista de clientes</p>
+                    <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                      Ocorreu um erro ao carregar os clientes. Verifique sua conexão e tente novamente.
+                    </p>
                     <button
                       type="button"
                       onClick={() => fetchCustomers()}
-                      className="mt-3 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold"
+                      className="mt-3 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
                     >
                       Tentar novamente
                     </button>
@@ -349,6 +389,7 @@ function RelacaoClientesPage() {
                     ) : (
                       <Link
                         to="/customers/novo"
+                        search={{ search: undefined, type: undefined, page: undefined }}
                         className="inline-flex items-center gap-1.5 mt-4 px-5 py-2.5 rounded-xl bg-[#075BFF] text-white text-xs font-semibold shadow-xs"
                       >
                         <Plus className="h-4 w-4" />
@@ -442,10 +483,44 @@ function RelacaoClientesPage() {
               <Loader2 className="h-5 w-5 text-[#075BFF] animate-spin" />
               <span>Carregando clientes...</span>
             </div>
+          ) : isError ? (
+            <div className="py-12 text-center text-xs text-red-500">
+              <AlertCircle className="h-8 w-8 text-red-400 mx-auto mb-2" />
+              <p className="font-semibold text-sm text-red-600">Erro ao carregar lista de clientes</p>
+              <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                Ocorreu um erro ao carregar os clientes. Verifique sua conexão e tente novamente.
+              </p>
+              <button
+                type="button"
+                onClick={() => fetchCustomers()}
+                className="mt-3 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
+              >
+                Tentar novamente
+              </button>
+            </div>
           ) : customers.length === 0 ? (
             <div className="py-12 text-center text-slate-400 text-xs">
               <Users className="h-8 w-8 text-slate-200 mx-auto mb-2" />
-              <p className="font-semibold text-slate-700">Nenhum cliente encontrado</p>
+              <p className="font-semibold text-slate-700">
+                {searchTerm ? "Nenhum cliente encontrado" : "Nenhum cliente cadastrado"}
+              </p>
+              <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
+                {searchTerm
+                  ? "Tente buscar por outro termo ou limpe a pesquisa."
+                  : "Cadastre seu primeiro cliente para começar a vincular embarcações e processos."}
+              </p>
+              {searchTerm ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setPage(1);
+                  }}
+                  className="mt-3 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold cursor-pointer"
+                >
+                  Limpar pesquisa
+                </button>
+              ) : null}
             </div>
           ) : (
             customers.map((c) => {
