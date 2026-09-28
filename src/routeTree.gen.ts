@@ -169,6 +169,7 @@ import { Route as ProcessesIdAnexarVersaoAssinadaRouteImport } from './routes/pr
 import { Route as ProcessesIdDocumentosEmitidosRouteImport } from './routes/processes.$id.documentos-emitidos'
 import { Route as ProcessesIdDocumentosGeradosRouteImport } from './routes/processes.$id.documentos-gerados'
 import { Route as ProcessesIdGerarDocumentoRouteImport } from './routes/processes.$id.gerar-documento'
+import { Route as ProcessesIdHistoricoRouteImport } from './routes/processes.$id.historico'
 import { Route as ProcessesIdProtocolosGeradosRouteImport } from './routes/processes.$id.protocolos-gerados'
 import { Route as ProcessesIdProtocolosRealizadosRouteImport } from './routes/processes.$id.protocolos-realizados'
 import { Route as ProcessesIdRevisarDocumentoRouteImport } from './routes/processes.$id.revisar-documento'
@@ -995,6 +996,11 @@ const ProcessesIdGerarDocumentoRoute =
     path: '/gerar-documento',
     getParentRoute: () => ProcessesIdRoute,
   } as any)
+const ProcessesIdHistoricoRoute = ProcessesIdHistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => ProcessesIdRoute,
+} as any)
 const ProcessesIdProtocolosGeradosRoute =
   ProcessesIdProtocolosGeradosRouteImport.update({
     id: '/protocolos-gerados',
@@ -1173,6 +1179,7 @@ export interface FileRoutesByFullPath {
   '/processes/$id/documentos-emitidos': typeof ProcessesIdDocumentosEmitidosRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
   '/processes/$id/gerar-documento': typeof ProcessesIdGerarDocumentoRoute
+  '/processes/$id/historico': typeof ProcessesIdHistoricoRoute
   '/processes/$id/protocolos-gerados': typeof ProcessesIdProtocolosGeradosRoute
   '/processes/$id/protocolos-realizados': typeof ProcessesIdProtocolosRealizadosRoute
   '/processes/$id/revisar-documento': typeof ProcessesIdRevisarDocumentoRoute
@@ -1334,6 +1341,7 @@ export interface FileRoutesByTo {
   '/processes/$id/documentos-emitidos': typeof ProcessesIdDocumentosEmitidosRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
   '/processes/$id/gerar-documento': typeof ProcessesIdGerarDocumentoRoute
+  '/processes/$id/historico': typeof ProcessesIdHistoricoRoute
   '/processes/$id/protocolos-gerados': typeof ProcessesIdProtocolosGeradosRoute
   '/processes/$id/protocolos-realizados': typeof ProcessesIdProtocolosRealizadosRoute
   '/processes/$id/revisar-documento': typeof ProcessesIdRevisarDocumentoRoute
@@ -1500,6 +1508,7 @@ export interface FileRoutesById {
   '/processes/$id/documentos-emitidos': typeof ProcessesIdDocumentosEmitidosRoute
   '/processes/$id/documentos-gerados': typeof ProcessesIdDocumentosGeradosRoute
   '/processes/$id/gerar-documento': typeof ProcessesIdGerarDocumentoRoute
+  '/processes/$id/historico': typeof ProcessesIdHistoricoRoute
   '/processes/$id/protocolos-gerados': typeof ProcessesIdProtocolosGeradosRoute
   '/processes/$id/protocolos-realizados': typeof ProcessesIdProtocolosRealizadosRoute
   '/processes/$id/revisar-documento': typeof ProcessesIdRevisarDocumentoRoute
@@ -1667,6 +1676,7 @@ export interface FileRouteTypes {
     | '/processes/$id/documentos-emitidos'
     | '/processes/$id/documentos-gerados'
     | '/processes/$id/gerar-documento'
+    | '/processes/$id/historico'
     | '/processes/$id/protocolos-gerados'
     | '/processes/$id/protocolos-realizados'
     | '/processes/$id/revisar-documento'
@@ -1828,6 +1838,7 @@ export interface FileRouteTypes {
     | '/processes/$id/documentos-emitidos'
     | '/processes/$id/documentos-gerados'
     | '/processes/$id/gerar-documento'
+    | '/processes/$id/historico'
     | '/processes/$id/protocolos-gerados'
     | '/processes/$id/protocolos-realizados'
     | '/processes/$id/revisar-documento'
@@ -1993,6 +2004,7 @@ export interface FileRouteTypes {
     | '/processes/$id/documentos-emitidos'
     | '/processes/$id/documentos-gerados'
     | '/processes/$id/gerar-documento'
+    | '/processes/$id/historico'
     | '/processes/$id/protocolos-gerados'
     | '/processes/$id/protocolos-realizados'
     | '/processes/$id/revisar-documento'
@@ -3198,6 +3210,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProcessesIdGerarDocumentoRouteImport
       parentRoute: typeof ProcessesIdRoute
     }
+    '/processes/$id/historico': {
+      id: '/processes/$id/historico'
+      path: '/historico'
+      fullPath: '/processes/$id/historico'
+      preLoaderRoute: typeof ProcessesIdHistoricoRouteImport
+      parentRoute: typeof ProcessesIdRoute
+    }
     '/processes/$id/protocolos-gerados': {
       id: '/processes/$id/protocolos-gerados'
       path: '/protocolos-gerados'
@@ -3487,6 +3506,7 @@ interface ProcessesIdRouteChildren {
   ProcessesIdDocumentosEmitidosRoute: typeof ProcessesIdDocumentosEmitidosRoute
   ProcessesIdDocumentosGeradosRoute: typeof ProcessesIdDocumentosGeradosRoute
   ProcessesIdGerarDocumentoRoute: typeof ProcessesIdGerarDocumentoRoute
+  ProcessesIdHistoricoRoute: typeof ProcessesIdHistoricoRoute
   ProcessesIdProtocolosGeradosRoute: typeof ProcessesIdProtocolosGeradosRoute
   ProcessesIdProtocolosRealizadosRoute: typeof ProcessesIdProtocolosRealizadosRoute
   ProcessesIdRevisarDocumentoRoute: typeof ProcessesIdRevisarDocumentoRoute
@@ -3500,6 +3520,7 @@ const ProcessesIdRouteChildren: ProcessesIdRouteChildren = {
   ProcessesIdDocumentosEmitidosRoute: ProcessesIdDocumentosEmitidosRoute,
   ProcessesIdDocumentosGeradosRoute: ProcessesIdDocumentosGeradosRoute,
   ProcessesIdGerarDocumentoRoute: ProcessesIdGerarDocumentoRoute,
+  ProcessesIdHistoricoRoute: ProcessesIdHistoricoRoute,
   ProcessesIdProtocolosGeradosRoute: ProcessesIdProtocolosGeradosRoute,
   ProcessesIdProtocolosRealizadosRoute: ProcessesIdProtocolosRealizadosRoute,
   ProcessesIdRevisarDocumentoRoute: ProcessesIdRevisarDocumentoRoute,

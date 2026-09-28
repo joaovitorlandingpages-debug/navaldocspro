@@ -875,11 +875,20 @@ function ProcessDetailsPage() {
           <div className="lg:col-span-5 space-y-6">
             
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-              <div className="flex items-center gap-2">
-                <History className="h-4 w-4 text-[#075BFF]" />
-                <h2 className="text-base font-bold text-[#0B1739]">
-                  Histórico do processo
-                </h2>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <History className="h-4 w-4 text-[#075BFF]" />
+                  <h2 className="text-base font-bold text-[#0B1739]">
+                    Histórico do processo
+                  </h2>
+                </div>
+                <Link
+                  to="/processes/$id/historico"
+                  params={{ id }}
+                  className="text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
+                >
+                  Ver histórico completo
+                </Link>
               </div>
 
               {historyEvents.length === 0 ? (
