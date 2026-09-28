@@ -143,7 +143,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
               <PlanLimitProvider>
                 <NewProcessProvider>
                   {children}
-                  <SafeFloatingWidgets />
                   <div className="hidden">
                     <GlobalSearch />
                   </div>
@@ -156,25 +155,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
-  );
-}
-
-
-const NavalCopilotDrawer = React.lazy(() =>
-  import("@/components/copilot/NavalCopilotDrawer").then((m) => ({ default: m.NavalCopilotDrawer })),
-);
-
-// Separate component to safely handle floating widgets
-function SafeFloatingWidgets() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  if (pathname === "/" || pathname === "/home" || pathname.startsWith("/auth") || pathname === "/onboarding") {
-    return null;
-  }
-
-  return (
-    <React.Suspense fallback={null}>
-      <NavalCopilotDrawer />
-    </React.Suspense>
   );
 }
 

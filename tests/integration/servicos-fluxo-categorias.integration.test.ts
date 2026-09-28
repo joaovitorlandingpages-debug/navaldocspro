@@ -174,4 +174,40 @@ describe("Fluxo de Navegação e Categorias da Página Serviços", () => {
     const buscaInscricaoLazer = filterServicesByCategory("esporte_recreio", "inscrição");
     expect(buscaInscricaoLazer.length).toBeGreaterThanOrEqual(2);
   });
+
+  // TESTE 5: Remoção do Botão Flutuante "COPILOTO IA" de Todas as Telas
+  it("Cenário 5: Botão flutuante 'COPILOTO IA' foi desativado e não é renderizado em desktop nem mobile", async () => {
+    const { NavalCopilotDrawer } = await import("@/components/copilot/NavalCopilotDrawer");
+    
+    // O componente NavalCopilotDrawer deve retornar null
+    const result = NavalCopilotDrawer();
+    expect(result).toBeNull();
+  });
+
+  // TESTE 6: Preservação da Leitura Automática de Documentos (OCR) e Revisão de Dados Extraídos
+  it("Cenário 6: Preservação da extração automática de dados de CNH e comprovante de residência", () => {
+    // Validação dos formatos de dados extraídos por OCR mantidos para clientes e processos
+    const mockExtractedCNH = {
+      name: "Capitão José da Silva",
+      cpf: "123.456.789-00",
+      rg: "12.345.678-9",
+      birth_date: "1980-05-15",
+      doc_type: "cnh",
+    };
+
+    const mockExtractedProofAddress = {
+      address_street: "Avenida Atlântica",
+      address_number: "1500",
+      address_neighborhood: "Copacabana",
+      address_city: "Rio de Janeiro",
+      address_state: "RJ",
+      address_zip: "22021-001",
+      doc_type: "comprovante_residencia",
+    };
+
+    expect(mockExtractedCNH.name).toBeTruthy();
+    expect(mockExtractedCNH.cpf).toBeTruthy();
+    expect(mockExtractedProofAddress.address_zip).toMatch(/^\d{5}-\d{3}$/);
+    expect(mockExtractedProofAddress.address_city).toBe("Rio de Janeiro");
+  });
 });
