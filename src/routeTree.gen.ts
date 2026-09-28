@@ -61,6 +61,7 @@ import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SystemMonitorRouteImport } from './routes/system-monitor'
 import { Route as TemplatesRouteImport } from './routes/templates'
+import { Route as UsoDoPlanoRouteImport } from './routes/uso-do-plano'
 import { Route as VesselsRouteImport } from './routes/vessels'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAiCommandCenterRouteImport } from './routes/admin/ai-command-center'
@@ -433,6 +434,11 @@ const SystemMonitorRoute = SystemMonitorRouteImport.update({
 const TemplatesRoute = TemplatesRouteImport.update({
   id: '/templates',
   path: '/templates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UsoDoPlanoRoute = UsoDoPlanoRouteImport.update({
+  id: '/uso-do-plano',
+  path: '/uso-do-plano',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VesselsRoute = VesselsRouteImport.update({
@@ -1079,6 +1085,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/system-monitor': typeof SystemMonitorRoute
   '/templates': typeof TemplatesRouteWithChildren
+  '/uso-do-plano': typeof UsoDoPlanoRoute
   '/vessels': typeof VesselsRouteWithChildren
   '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
   '/admin/applications': typeof AdminApplicationsRoute
@@ -1243,6 +1250,7 @@ export interface FileRoutesByTo {
   '/super-admin': typeof SuperAdminRoute
   '/support': typeof SupportRoute
   '/system-monitor': typeof SystemMonitorRoute
+  '/uso-do-plano': typeof UsoDoPlanoRoute
   '/vessels': typeof VesselsRouteWithChildren
   '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
   '/admin/applications': typeof AdminApplicationsRoute
@@ -1410,6 +1418,7 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/system-monitor': typeof SystemMonitorRoute
   '/templates': typeof TemplatesRouteWithChildren
+  '/uso-do-plano': typeof UsoDoPlanoRoute
   '/vessels': typeof VesselsRouteWithChildren
   '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
   '/admin/applications': typeof AdminApplicationsRoute
@@ -1579,6 +1588,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/system-monitor'
     | '/templates'
+    | '/uso-do-plano'
     | '/vessels'
     | '/admin/ai-command-center'
     | '/admin/applications'
@@ -1743,6 +1753,7 @@ export interface FileRouteTypes {
     | '/super-admin'
     | '/support'
     | '/system-monitor'
+    | '/uso-do-plano'
     | '/vessels'
     | '/admin/ai-command-center'
     | '/admin/applications'
@@ -1909,6 +1920,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/system-monitor'
     | '/templates'
+    | '/uso-do-plano'
     | '/vessels'
     | '/admin/ai-command-center'
     | '/admin/applications'
@@ -2077,6 +2089,7 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   SystemMonitorRoute: typeof SystemMonitorRoute
   TemplatesRoute: typeof TemplatesRouteWithChildren
+  UsoDoPlanoRoute: typeof UsoDoPlanoRoute
   VesselsRoute: typeof VesselsRouteWithChildren
   AssinarTokenRoute: typeof AssinarTokenRoute
   AuthLoginRoute: typeof AuthLoginRoute
@@ -2464,6 +2477,13 @@ declare module '@tanstack/react-router' {
       path: '/templates'
       fullPath: '/templates'
       preLoaderRoute: typeof TemplatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/uso-do-plano': {
+      id: '/uso-do-plano'
+      path: '/uso-do-plano'
+      fullPath: '/uso-do-plano'
+      preLoaderRoute: typeof UsoDoPlanoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vessels': {
@@ -3604,6 +3624,7 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   SystemMonitorRoute: SystemMonitorRoute,
   TemplatesRoute: TemplatesRouteWithChildren,
+  UsoDoPlanoRoute: UsoDoPlanoRoute,
   VesselsRoute: VesselsRouteWithChildren,
   AssinarTokenRoute: AssinarTokenRoute,
   AuthLoginRoute: AuthLoginRoute,
