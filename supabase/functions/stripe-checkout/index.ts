@@ -45,7 +45,9 @@ serve(async (req) => {
       return errorResponse("Não autenticado", 401);
     }
 
-    const { planId, billingCycle = 'monthly', couponCode, successUrl, cancelUrl } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const planId = body.planId || body.planSlug;
+    const { billingCycle = 'monthly', couponCode, successUrl, cancelUrl } = body;
 
     if (!planId) {
       return errorResponse("planId é obrigatório", 400);
@@ -254,8 +256,8 @@ serve(async (req) => {
         coupon_id: reservedCouponId || '',
         pre_session_id: preSessionId,
       },
-      success_url: `${safeSuccessBase}/configuracoes?tab=billing&checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${safeCancelBase}/configuracoes?tab=billing&checkout=cancelled`,
+      success_url: successUrl || `${safeSuccessBase}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancelUrl || `${safeCancelBase}/billing/failure`,
       expires_at: sessionExpiresAt,
     };
 

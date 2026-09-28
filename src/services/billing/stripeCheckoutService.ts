@@ -33,6 +33,7 @@ export const stripeCheckoutService = {
 
       const response = await supabase.functions.invoke("stripe-checkout", {
         body: {
+          planId: params.planSlug,
           planSlug: params.planSlug,
           billingCycle: params.billingCycle,
           companyId: params.companyId,
