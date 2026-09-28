@@ -302,6 +302,54 @@ function SelecionarServicosPage() {
     });
   };
 
+  // Ação de Criar Processo diretamente do modal de revisão
+  const handleConfirmCreateProcess = async () => {
+    if (!companyId || !selectedCustomerId || !selectedVesselId || selectedServiceIds.length === 0) {
+      toast.error("Selecione o cliente, a embarcação e ao menos um serviço.");
+      return;
+    }
+
+    setIsCreatingProcess(true);
+    try {
+      const primaryService = selectedServicesList[0];
+      const title = `${primaryService?.name || "Processo Náutico"} - ${selectedVessel?.name || "Embarcação"}`;
+
+      const { data: newProc, error } = await supabase
+        .from("processes")
+        .insert({
+          company_id: companyId,
+          customer_id: selectedCustomerId,
+          vessel_id: selectedVesselId,
+          title: title,
+          status: "in_progress",
+          metadata: {
+            selected_services: selectedServiceIds,
+            category: currentCategory,
+            created_via: "servicos_selecionar",
+          }
+        } as any)
+        .select("id")
+        .single();
+
+      if (error) throw error;
+
+      toast.success("Processo criado com sucesso!", {
+        description: "Você será direcionado para os detalhes do processo."
+      });
+      setIsReviewModalOpen(false);
+
+      navigate({
+        to: "/processes/$id",
+        params: { id: newProc.id },
+      });
+    } catch (err: any) {
+      console.error("Erro ao criar processo:", err);
+      toast.error(err?.message || "Não foi possível criar o processo.");
+    } finally {
+      setIsCreatingProcess(false);
+    }
+  };
+
   // Estados de Carregamento e Erro Inicial
   if (isLoadingData) {
     return (
