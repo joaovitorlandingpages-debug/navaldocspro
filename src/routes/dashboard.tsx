@@ -84,7 +84,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
     { name: "Relação de embarcações", path: "/vessels", icon: Ship },
     { name: "Processos", path: "/processes", icon: FileText },
     { name: "Uso do plano", path: "/uso-do-plano", icon: Gauge },
-    { name: "Sugestões", path: "/sugestoes", icon: MessageSquare },
+    { name: "Ajuda e sugestões", path: "/sugestoes", icon: HelpCircle },
     { name: "Meus aplicativos", path: "/meus-aplicativos", icon: LayoutGrid },
     { name: "Configurações", path: "/settings", icon: Settings },
   ];

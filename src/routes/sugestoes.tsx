@@ -1,665 +1,772 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { 
-  Plus, 
-  Search, 
+  HelpCircle, 
   Lightbulb, 
   Bug, 
-  HelpCircle, 
-  MoreHorizontal, 
   Send, 
   Clock, 
   CheckCircle2, 
-  Check,
-  AlertCircle, 
-  Filter, 
+  MessageSquare, 
+  ChevronRight, 
+  ChevronDown,
   Paperclip, 
   X, 
   Loader2, 
-  MessageSquare, 
-  Sparkles, 
-  Folder, 
-  ChevronRight, 
-  FileText, 
-  Eye, 
-  Download, 
-  User, 
+  ExternalLink,
   ShieldCheck, 
   RefreshCw,
-  ExternalLink,
-  ChevronDown
+  Search,
+  User,
+  Building,
+  Image as ImageIcon,
+  Check,
+  AlertTriangle,
+  ArrowRight,
+  FileText
 } from "lucide-react";
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/routes/dashboard";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { uploadToBucket } from "@/lib/storage";
-import { openStoredFile, downloadStoredFile } from "@/utils/file-preview";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { 
+  getCompanySuggestions, 
+  createSuggestion, 
+  SuggestionType, 
+  SuggestionStatus,
+  ParsedSuggestion 
+} from "@/services/suggestionsService";
 
 export const Route = createFileRoute("/sugestoes")({
   validateSearch: (search: Record<string, unknown>) => ({
-    context: (search.context as string) || undefined,
-    type: (search.type as string) || undefined,
+    tipo: (search.tipo as string) || undefined,
   }),
   component: () => (
     <ProtectedRoute>
       <DashboardLayout>
-        <SugestoesPage />
+        <AjudaESugestoesPage />
       </DashboardLayout>
     </ProtectedRoute>
   ),
 });
 
-// Tipos de Sugestão
-const SUGGESTION_TYPES = [
-  { value: "ideia", label: "Ideia de melhoria", icon: Lightbulb, color: "bg-amber-50 text-amber-700 border-amber-200" },
-  { value: "problema", label: "Problema encontrado", icon: Bug, color: "bg-red-50 text-red-700 border-red-200" },
-  { value: "duvida", label: "Dúvida", icon: HelpCircle, color: "bg-blue-50 text-blue-700 border-blue-200" },
-  { value: "outro", label: "Outro", icon: MessageSquare, color: "bg-slate-50 text-slate-700 border-slate-200" },
-];
-
-// Contextos / Áreas Relacionadas
-const CONTEXT_AREAS = [
-  { value: "geral", label: "Geral" },
-  { value: "clientes", label: "Clientes" },
-  { value: "embarcacoes", label: "Embarcações" },
-  { value: "processos", label: "Processos" },
-  { value: "documentos", label: "Documentos" },
-  { value: "protocolos", label: "Protocolos" },
-  { value: "configuracoes", label: "Configurações" },
-  { value: "outro", label: "Outro" },
-];
-
-// Estados Oficiais Suportados
-const SUGGESTION_STATUSES: Record<string, { label: string; color: string; icon: any }> = {
-  recebida: { label: "Recebida", color: "bg-slate-100 text-slate-700 border-slate-200", icon: Clock },
-  em_analise: { label: "Em análise", color: "bg-blue-50 text-blue-700 border-blue-200", icon: Clock },
-  planejada: { label: "Planejada", color: "bg-indigo-50 text-indigo-700 border-indigo-200", icon: Sparkles },
-  em_desenvolvimento: { label: "Em desenvolvimento", color: "bg-amber-50 text-amber-700 border-amber-200", icon: RefreshCw },
-  implementada: { label: "Implementada", color: "bg-emerald-50 text-emerald-700 border-emerald-200", icon: CheckCircle2 },
-  nao_prevista: { label: "Não prevista", color: "bg-slate-100 text-slate-500 border-slate-200", icon: AlertCircle },
-  encerrada: { label: "Encerrada", color: "bg-slate-100 text-slate-600 border-slate-200", icon: Check },
+// Configuração visual dos 4 estados oficiais
+const STATUS_CONFIG: Record<SuggestionStatus, { label: string; color: string; icon: any }> = {
+  recebida: {
+    label: "Recebida",
+    color: "bg-slate-100 text-slate-700 border-slate-200",
+    icon: Clock,
+  },
+  em_analise: {
+    label: "Em análise",
+    color: "bg-blue-50 text-[#075BFF] border-blue-200",
+    icon: Clock,
+  },
+  respondida: {
+    label: "Respondida",
+    color: "bg-purple-50 text-purple-700 border-purple-200",
+    icon: MessageSquare,
+  },
+  concluida: {
+    label: "Concluída",
+    color: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    icon: CheckCircle2,
+  },
 };
 
-function SugestoesPage() {
+// Dúvidas comuns da Ajuda Rápida
+interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+  actionText?: string;
+  actionPath?: string;
+}
+
+const FAQS: FaqItem[] = [
+  {
+    id: "cadastrar-cliente",
+    question: "Como cadastrar cliente",
+    answer: "Acesse a opção 'Cadastrar cliente' no menu ou na página inicial. Você pode preencher os dados do cliente manualmente ou enviar uma CNH/comprovante de endereço para preenchimento com extração inteligente.",
+    actionText: "Cadastrar cliente",
+    actionPath: "/customers/novo",
+  },
+  {
+    id: "cadastrar-embarcacao",
+    question: "Como cadastrar embarcação",
+    answer: "Acesse 'Cadastrar embarcação' na página inicial ou na relação de embarcações. Selecione o cliente proprietário, informe o nome, número de inscrição, tipo de navegação e as especificações de casco e motor.",
+    actionText: "Cadastrar embarcação",
+    actionPath: "/vessels/novo",
+  },
+  {
+    id: "iniciar-servico",
+    question: "Como iniciar um serviço",
+    answer: "Na página inicial, clique no card 'Serviços' e selecione a categoria da embarcação (Esporte e Recreio ou Comercial). Em seguida, escolha o serviço náutico desejado, como Inscrição, Transferência de Propriedade ou Renovação de TIE.",
+    actionText: "Iniciar serviço",
+    actionPath: "/servicos",
+  },
+  {
+    id: "leitura-automatica",
+    question: "Como enviar documentos para leitura automática",
+    answer: "Ao criar um novo processo ou cadastrar um cliente/embarcação, anexe fotos ou PDFs dos documentos de origem (como CNH ou comprovante de endereço). O sistema extrai automaticamente os dados cadastrais para poupar tempo de digitação.",
+    actionText: "Ver processos",
+    actionPath: "/processes",
+  },
+  {
+    id: "corrigir-dados",
+    question: "Como corrigir dados extraídos",
+    answer: "Todos os dados lidos pela inteligência artificial ficam abertos para conferência antes de salvar. Você também pode revisar e editar qualquer dado diretamente na tela de revisão do processo náutico.",
+    actionText: "Ver processos",
+    actionPath: "/processes",
+  },
+  {
+    id: "gerar-baixar-pdf",
+    question: "Como gerar e baixar PDF",
+    answer: "No fluxo do processo náutico (Cliente → Embarcação → Serviço → Documentos), selecione o funcionário responsável e clique em 'Gerar prévia'. Revise o documento formatado nos padrões oficiais da Marinha com a marca da sua empresa e clique em 'Baixar PDF'.",
+    actionText: "Ver processos",
+    actionPath: "/processes",
+  },
+  {
+    id: "anexar-assinado-govbr",
+    question: "Como anexar um arquivo assinado pelo gov.br",
+    answer: "Baixe o PDF gerado pelo NavalDocs Pro e solicite a assinatura digital do cliente pelo portal oficial gov.br. Com o documento assinado em mãos, volte ao processo da embarcação e anexe o arquivo final assinado na aba de documentos do processo. (Nota: o processo de assinatura é realizado externamente no portal oficial gov.br).",
+    actionText: "Ver processos",
+    actionPath: "/processes",
+  },
+  {
+    id: "acompanhar-protocolos",
+    question: "Como acompanhar protocolos",
+    answer: "Após dar entrada no pedido na Capitania dos Portos, Delegacia ou Agência, registre o número e a data do protocolo no histórico do processo. Você poderá consultar a tramitação e resolver pendências até a emissão da documentação final.",
+    actionText: "Ver processos",
+    actionPath: "/processes",
+  },
+];
+
+export function AjudaESugestoesPage() {
+  const queryClient = useQueryClient();
   const searchParams = Route.useSearch();
-  const { profile, user, companyId: authCompanyId, isGlobalAdmin, loading: authLoading } = useAuth();
+  const { profile, companyId: authCompanyId, user } = useAuth();
   const companyId = profile?.company_id || authCompanyId;
 
-  // Estados de Listagem e Filtros
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [filterContext, setFilterContext] = useState<string>("all");
+  // Estado da Ajuda Rápida (Acordeão)
+  const [openFaqId, setOpenFaqId] = useState<string | null>("cadastrar-cliente");
+  const [faqSearch, setFaqSearch] = useState("");
 
-  // Modal de Envio de Sugestão
-  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newType, setNewType] = useState<string>(searchParams.type || "ideia");
-  const [newDescription, setNewDescription] = useState("");
-  const [newPriority, setNewPriority] = useState<"baixa" | "media" | "alta">("media");
-  const [newContext, setNewContext] = useState<string>(searchParams.context || "geral");
-  const [selectedAttachment, setSelectedAttachment] = useState<File | null>(null);
+  // Estado do Formulário de Sugestão/Problema
+  const initialType: SuggestionType = searchParams.tipo === "problema" ? "problema" : "sugestao";
+  const [selectedType, setSelectedType] = useState<SuggestionType>(initialType);
+  const [subject, setSubject] = useState("");
+  const [description, setDescription] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Modal de Detalhes da Sugestão
-  const [selectedSuggestion, setSelectedSuggestion] = useState<any | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  // Modal de Confirmação com Número de Referência
+  const [confirmationData, setConfirmationData] = useState<{ referenceNumber: string; type: SuggestionType } | null>(null);
 
-  // Carregar Sugestões da Empresa / Usuário
-  const loadSuggestions = useCallback(async () => {
-    if (authLoading) return;
-    if (!companyId && !isGlobalAdmin) {
-      setIsLoading(false);
+  // Modal de Detalhes da Solicitação
+  const [detailModalItem, setDetailModalItem] = useState<ParsedSuggestion | null>(null);
+
+  // 1. Consulta das próprias solicitações da empresa
+  const { 
+    data: mySuggestions = [], 
+    isLoading: isLoadingSuggestions,
+    refetch: refetchSuggestions 
+  } = useQuery({
+    queryKey: ["company-suggestions-list", companyId],
+    queryFn: async () => {
+      if (!companyId) return [];
+      return await getCompanySuggestions(companyId);
+    },
+    enabled: Boolean(companyId),
+  });
+
+  // Filtragem de FAQs da Ajuda Rápida
+  const filteredFaqs = useMemo(() => {
+    if (!faqSearch.trim()) return FAQS;
+    const term = faqSearch.toLowerCase();
+    return FAQS.filter(
+      (f) => f.question.toLowerCase().includes(term) || f.answer.toLowerCase().includes(term)
+    );
+  }, [faqSearch]);
+
+  // Manipular anexo de imagem
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("A imagem deve ter no máximo 10 MB.");
+        return;
+      }
+      setImageFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+      setImagePreview(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // Envio da Sugestão / Problema
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!companyId) {
+      toast.error("Identificação da empresa não encontrada. Verifique seu login.");
       return;
     }
-    setIsLoading(true);
 
-    try {
-      let query = supabase
-        .from("tickets")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (companyId) {
-        query = query.eq("company_id", companyId);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      setSuggestions(data || []);
-    } catch (err) {
-      console.error("Erro ao carregar sugestões:", err);
-      toast.error("Não foi possível carregar a lista de sugestões.");
-    } finally {
-      setIsLoading(false);
+    if (!subject.trim()) {
+      toast.error("Informe o assunto da sua solicitação.");
+      return;
     }
-  }, [companyId, isGlobalAdmin, authLoading]);
 
-  useEffect(() => {
-    loadSuggestions();
-  }, [loadSuggestions]);
-
-  // Enviar Nova Sugestão
-  const handleCreateSuggestion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim() || !newDescription.trim() || (!companyId && !isGlobalAdmin)) {
-      toast.error("Por favor, preencha o título e a descrição da sugestão.");
+    if (!description.trim()) {
+      toast.error("Por favor, descreva os detalhes da sua sugestão ou problema.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      let attachmentUrl = null;
-      let attachmentName = null;
+      let attachmentUrl: string | null = null;
 
-      // 1. Upload do Anexo Opcional
-      if (selectedAttachment) {
-        const fileExt = (selectedAttachment.name.split(".").pop() || "pdf").toLowerCase();
+      // Upload de imagem se houver
+      if (imageFile) {
+        const fileExt = (imageFile.name.split(".").pop() || "png").toLowerCase();
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const storagePath = `${companyId || "global"}/suggestions/${fileName}`;
-        await uploadToBucket("process-attachments", storagePath, selectedAttachment);
+        const storagePath = `${companyId}/feedback/${fileName}`;
+        await uploadToBucket("process-attachments", storagePath, imageFile);
         attachmentUrl = storagePath;
-        attachmentName = selectedAttachment.name;
       }
 
-      let fullDescription = newDescription.trim();
-      if (newContext && newContext !== "geral") {
-        fullDescription = `[Área: ${newContext}]\n\n${fullDescription}`;
-      }
-      if (attachmentUrl) {
-        fullDescription = `${fullDescription}\n\n[Anexo: ${attachmentName || "arquivo"} - ${attachmentUrl}]`;
-      }
-
-      const priorityMap: Record<string, string> = {
-        baixa: "low",
-        media: "medium",
-        alta: "high",
-      };
-
-      const { error } = await supabase
-        .from("tickets")
-        .insert({
-          company_id: companyId || undefined,
-          user_id: user?.id || profile?.id,
-          title: newTitle.trim(),
-          description: fullDescription,
-          type: newType || "suggestion",
-          priority: priorityMap[newPriority] || "medium",
-          status: "recebida",
-        } as any)
-        .select("*")
-        .single();
-
-      if (error) throw error;
-
-      toast.success("Sugestão enviada com sucesso!", {
-        description: "Nossa equipe irá analisar sua contribuição com atenção.",
+      const result = await createSuggestion({
+        companyId,
+        userId: user?.id || profile?.id,
+        userName: profile?.name || user?.email || "Usuário",
+        type: selectedType,
+        title: subject.trim(),
+        description: description.trim(),
+        attachmentUrl,
       });
 
-      // Resetar Formulário
-      setNewTitle("");
-      setNewDescription("");
-      setSelectedAttachment(null);
-      setIsNewModalOpen(false);
-      loadSuggestions();
+      // Sucesso: exibe modal de confirmação com número de referência
+      setConfirmationData({
+        referenceNumber: result.referenceNumber,
+        type: selectedType,
+      });
+
+      // Limpar formulário
+      setSubject("");
+      setDescription("");
+      handleRemoveImage();
+
+      // Atualizar lista
+      queryClient.invalidateQueries({ queryKey: ["company-suggestions-list", companyId] });
+      toast.success("Solicitação enviada com sucesso!");
     } catch (err: any) {
       console.error("Erro ao enviar sugestão:", err);
-      toast.error(err?.message || "Falha ao enviar sugestão. Tente novamente.");
+      toast.error(err?.message || "Não foi possível enviar sua solicitação.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Filtros Aplicados
-  const filteredSuggestions = useMemo(() => {
-    return suggestions.filter((s) => {
-      const type = s.metadata?.suggestion_type || (s.type === "suggestion" ? "ideia" : s.type) || "ideia";
-      const status = s.status || "recebida";
-      const parsedContext = s.description?.match(/\[Área:\s*([^\]]+)\]/)?.[1];
-      const context = s.metadata?.context_area || s.category || parsedContext || "geral";
-
-      if (filterType !== "all" && type !== filterType) return false;
-      if (filterStatus !== "all" && status !== filterStatus) return false;
-      if (filterContext !== "all" && context !== filterContext) return false;
-
-      if (searchTerm.trim()) {
-        const term = searchTerm.toLowerCase();
-        const matchTitle = (s.title || "").toLowerCase().includes(term);
-        const matchDesc = (s.description || "").toLowerCase().includes(term);
-        if (!matchTitle && !matchDesc) return false;
-      }
-
-      return true;
-    });
-  }, [suggestions, filterType, filterStatus, filterContext, searchTerm]);
-
-  // Formatação de Data
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    return new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(d);
-  };
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24 font-sans text-slate-800">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-        
-        {/* ========================================================================= */}
-        {/* 1. CABEÇALHO */}
-        {/* ========================================================================= */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="max-w-6xl mx-auto py-3 sm:py-6 px-3 sm:px-6 space-y-8">
+      
+      {/* ========================================================================= */}
+      {/* CABEÇALHO UNIFICADO */}
+      {/* ========================================================================= */}
+      <div>
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#075BFF] flex items-center justify-center">
+            <HelpCircle className="h-5 w-5" />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0B1739]">
+            Ajuda e sugestões
+          </h1>
+        </div>
+        <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-3xl leading-relaxed">
+          Tire dúvidas frequentes sobre as operações náuticas do sistema ou envie suas sugestões e relatos diretamente para a nossa equipe.
+        </p>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* ÁREA 1: AJUDA RÁPIDA (DÚVIDAS COMUNS) */}
+      {/* ========================================================================= */}
+      <section className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-7 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0B1739]">
-              Sugestões
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Envie uma ideia ou informe algo que pode melhorar o sistema.
+            <h2 className="text-base sm:text-lg font-bold text-[#0B1739]">
+              1. Ajuda rápida
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Respostas práticas para as principais ações do NavalDocs Pro.
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsNewModalOpen(true)}
-            className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors shrink-0 cursor-pointer"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Enviar sugestão</span>
-          </button>
-        </div>
-
-        {/* ========================================================================= */}
-        {/* BARRA DE PESQUISA E FILTROS */}
-        {/* ========================================================================= */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs flex flex-wrap items-center gap-3">
-          {/* Busca */}
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
+          <div className="relative w-full sm:w-72">
+            <Search className="h-4 w-4 absolute left-3 top-2.5 text-slate-400" />
+            <Input
               type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar por título ou descrição..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-[#0B1739] placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+              placeholder="Buscar dúvida..."
+              value={faqSearch}
+              onChange={(e) => setFaqSearch(e.target.value)}
+              className="pl-9 h-9 text-xs rounded-xl bg-slate-50 border-slate-200"
             />
           </div>
-
-          {/* Filtro de Tipo */}
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
-          >
-            <option value="all">Todos os tipos</option>
-            {SUGGESTION_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
-            ))}
-          </select>
-
-          {/* Filtro de Situação */}
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
-          >
-            <option value="all">Todas as situações</option>
-            {Object.entries(SUGGESTION_STATUSES).map(([k, v]) => (
-              <option key={k} value={k}>{v.label}</option>
-            ))}
-          </select>
-
-          {/* Filtro de Contexto */}
-          <select
-            value={filterContext}
-            onChange={(e) => setFilterContext(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
-          >
-            <option value="all">Todas as áreas</option>
-            {CONTEXT_AREAS.map((c) => (
-              <option key={c.value} value={c.value}>{c.label}</option>
-            ))}
-          </select>
         </div>
 
-        {/* ========================================================================= */}
-        {/* LISTAGEM DAS SUGESTÕES */}
-        {/* ========================================================================= */}
-        {isLoading ? (
-          <div className="bg-white border border-slate-200/90 rounded-2xl p-12 text-center shadow-xs">
-            <Loader2 className="h-7 w-7 text-[#075BFF] animate-spin mx-auto mb-2" />
-            <p className="text-xs font-semibold text-slate-600">Carregando sugestões...</p>
-          </div>
-        ) : filteredSuggestions.length === 0 ? (
-          <div className="bg-white border border-slate-200/90 rounded-2xl p-12 text-center shadow-xs space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#075BFF] flex items-center justify-center mx-auto">
-              <Lightbulb className="h-6 w-6" />
-            </div>
-            <h3 className="text-base font-bold text-[#0B1739]">
-              {suggestions.length === 0 ? "Nenhuma sugestão enviada ainda" : "Nenhuma sugestão encontrada"}
-            </h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              {suggestions.length === 0 
-                ? "Sua opinião é fundamental para a evolução contínua do NavalDocs Pro. Compartilhe sua ideia ou relate um problema."
-                : "Tente ajustar os filtros ou termos da busca para encontrar o registro desejado."}
+        {/* Lista de Acordeões */}
+        <div className="space-y-2.5">
+          {filteredFaqs.length === 0 ? (
+            <p className="text-xs text-slate-400 text-center py-6">
+              Nenhuma dúvida encontrada para a busca informada.
             </p>
-            {suggestions.length === 0 && (
-              <button
-                type="button"
-                onClick={() => setIsNewModalOpen(true)}
-                className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#075BFF] text-white text-xs font-semibold hover:bg-blue-600 cursor-pointer shadow-xs"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Enviar primeira sugestão</span>
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredSuggestions.map((sug) => {
-              const typeKey = sug.metadata?.suggestion_type || "ideia";
-              const typeConfig = SUGGESTION_TYPES.find((t) => t.value === typeKey) || SUGGESTION_TYPES[0];
-              const TypeIcon = typeConfig.icon;
-              
-              const statusKey = sug.status || "recebida";
-              const statusConfig = SUGGESTION_STATUSES[statusKey] || SUGGESTION_STATUSES.recebida;
-              const StatusIcon = statusConfig.icon;
-
-              const contextLabel = CONTEXT_AREAS.find((c) => c.value === (sug.metadata?.context_area || sug.category))?.label || "Geral";
-              const hasResponse = !!sug.metadata?.team_response;
+          ) : (
+            filteredFaqs.map((faq) => {
+              const isOpen = openFaqId === faq.id;
 
               return (
                 <div
-                  key={sug.id}
-                  onClick={() => {
-                    setSelectedSuggestion(sug);
-                    setIsDetailModalOpen(true);
-                  }}
-                  className="bg-white border border-slate-200/90 hover:border-blue-400 rounded-2xl p-5 shadow-xs transition-all cursor-pointer space-y-3 group"
+                  key={faq.id}
+                  className={`border rounded-xl transition-all duration-200 overflow-hidden ${
+                    isOpen ? "border-blue-200 bg-blue-50/20" : "border-slate-200/80 bg-white hover:border-slate-300"
+                  }`}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${typeConfig.color}`}>
-                        <TypeIcon className="h-3 w-3" />
-                        <span>{typeConfig.label}</span>
-                      </span>
-
-                      <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[11px] font-medium">
-                        {contextLabel}
-                      </span>
-
-                      <span className="text-[11px] text-slate-400">
-                        Enviada em {formatDate(sug.created_at)}
-                      </span>
-                    </div>
-
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border self-start sm:self-auto ${statusConfig.color}`}>
-                      <StatusIcon className="h-3 w-3" />
-                      <span>{statusConfig.label}</span>
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaqId(isOpen ? null : faq.id)}
+                    className="w-full px-4 py-3.5 flex items-center justify-between text-left text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer focus:outline-none"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#075BFF]" />
+                      <span>{faq.question}</span>
                     </span>
-                  </div>
+                    <ChevronDown
+                      className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${
+                        isOpen ? "rotate-180 text-[#075BFF]" : ""
+                      }`}
+                    />
+                  </button>
 
-                  <div>
-                    <h3 className="text-sm font-bold text-[#0B1739] group-hover:text-[#075BFF] transition-colors">
-                      {sug.title}
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
-                      {sug.description}
-                    </p>
-                  </div>
-
-                  {hasResponse && (
-                    <div className="p-3 bg-blue-50/60 border border-blue-100 rounded-xl text-xs space-y-1">
-                      <div className="flex items-center justify-between text-[#075BFF] font-bold text-[11px]">
-                        <span>Resposta da Equipe NavalDocs:</span>
-                        <span className="text-slate-400 font-normal">
-                          {formatDate(sug.metadata.team_response_date)}
-                        </span>
-                      </div>
-                      <p className="text-slate-700 text-[11px] line-clamp-1">
-                        {sug.metadata.team_response}
-                      </p>
+                  {isOpen && (
+                    <div className="px-4 pb-4 pt-1 border-t border-blue-100/60 text-xs text-slate-600 leading-relaxed space-y-3 animate-in fade-in-50 duration-150">
+                      <p>{faq.answer}</p>
+                      
+                      {faq.actionPath && (
+                        <div className="pt-1">
+                          <Link
+                            to={faq.actionPath}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-[#075BFF] text-xs font-semibold transition-colors"
+                          >
+                            <span>{faq.actionText}</span>
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               );
-            })}
-          </div>
-        )}
-
-      </div>
+            })
+          )}
+        </div>
+      </section>
 
       {/* ========================================================================= */}
-      {/* MODAL: ENVIAR SUGESTÃO */}
+      {/* ÁREA 2: ENVIAR SUGESTÃO OU RELATAR PROBLEMA */}
       {/* ========================================================================= */}
-      <Dialog open={isNewModalOpen} onOpenChange={setIsNewModalOpen}>
-        <DialogContent className="max-w-lg p-0 overflow-hidden rounded-2xl bg-white border border-slate-200">
-          <DialogHeader className="p-5 border-b border-slate-100">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0">
-                <Lightbulb className="h-5 w-5" />
-              </div>
-              <div>
-                <DialogTitle className="text-base font-bold text-[#0B1739]">
-                  Enviar sugestão ou melhoria
-                </DialogTitle>
-                <DialogDescription className="text-xs text-slate-500">
-                  Compartilhe sua ideia ou relate uma dificuldade no sistema.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
+      <section className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-7 shadow-xs space-y-6">
+        <div>
+          <h2 className="text-base sm:text-lg font-bold text-[#0B1739]">
+            2. Enviar sugestão ou relatar problema
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Sua opinião direciona a evolução do NavalDocs Pro. Toda mensagem é lida e respondida diretamente pela equipe.
+          </p>
+        </div>
 
-          <form onSubmit={handleCreateSuggestion} className="p-5 space-y-4">
-            {/* Título */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700">
-                Título da sugestão <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Ex: Adicionar exportação de relatório em Excel..."
-                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              />
-            </div>
-
-            {/* Tipo e Área */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">
-                  Tipo de contribuição <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={newType}
-                  onChange={(e) => setNewType(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
-                >
-                  {SUGGESTION_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">
-                  Área relacionada
-                </label>
-                <select
-                  value={newContext}
-                  onChange={(e) => setNewContext(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
-                >
-                  {CONTEXT_AREAS.map((c) => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Descrição */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center">
-                <label className="text-xs font-semibold text-slate-700">
-                  Descrição detalhada <span className="text-red-500">*</span>
-                </label>
-                <span className="text-[10px] text-slate-400">
-                  {newDescription.length}/1000 caracteres
-                </span>
-              </div>
-              <textarea
-                required
-                maxLength={1000}
-                rows={4}
-                value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                placeholder="Descreva sua sugestão com detalhes, explicando o que facilitaria sua rotina ou o problema encontrado..."
-                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-[#0B1739] placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              />
-            </div>
-
-            {/* Anexo Opcional */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700">
-                Anexo (opcional - PDF ou imagem máx. 10MB)
-              </label>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept=".pdf,.png,.jpg,.jpeg"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    setSelectedAttachment(e.target.files[0]);
-                  }
-                }}
-              />
-
-              {!selectedAttachment ? (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-2.5 px-3 rounded-xl border border-dashed border-slate-300 hover:border-[#075BFF] bg-slate-50/50 hover:bg-blue-50/20 text-xs font-medium text-slate-600 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Paperclip className="h-3.5 w-3.5 text-[#075BFF]" />
-                  <span>Anexar imagem de captura ou documento PDF</span>
-                </button>
-              ) : (
-                <div className="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/50 flex items-center justify-between text-xs">
-                  <span className="font-semibold text-emerald-800 truncate max-w-[280px]">
-                    {selectedAttachment.name}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedAttachment(null)}
-                    className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Aviso de Privacidade */}
-            <p className="text-[10px] text-slate-400">
-              Não compartilhe dados sensíveis de clientes ou documentos com CPF/CNPJ nos anexos de sugestão.
-            </p>
-
-            <DialogFooter className="pt-2 border-t border-slate-100 flex gap-2">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Seleção do Tipo: Sugestão ou Problema */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-2">
+              Tipo de solicitação
+            </label>
+            <div className="grid grid-cols-2 gap-3 max-w-md">
               <button
                 type="button"
-                onClick={() => setIsNewModalOpen(false)}
-                className="flex-1 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                onClick={() => setSelectedType("sugestao")}
+                className={`py-3 px-4 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  selectedType === "sugestao"
+                    ? "border-[#075BFF] bg-blue-50 text-[#075BFF] shadow-xs"
+                    : "border-slate-200 hover:border-slate-300 text-slate-700 bg-white"
+                }`}
               >
-                Cancelar
+                <Lightbulb className="h-4 w-4" />
+                <span>Sugestão</span>
               </button>
+
               <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                type="button"
+                onClick={() => setSelectedType("problema")}
+                className={`py-3 px-4 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  selectedType === "problema"
+                    ? "border-red-600 bg-red-50 text-red-700 shadow-xs"
+                    : "border-slate-200 hover:border-slate-300 text-slate-700 bg-white"
+                }`}
               >
-                {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-                <span>Enviar sugestão</span>
+                <Bug className="h-4 w-4" />
+                <span>Problema</span>
               </button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+            </div>
+          </div>
 
-      {/* ========================================================================= */}
-      {/* MODAL: DETALHES DA SUGESTÃO E RESPOSTA */}
-      {/* ========================================================================= */}
-      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="max-w-lg p-0 overflow-hidden rounded-2xl bg-white border border-slate-200">
-          <DialogHeader className="p-5 border-b border-slate-100">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0">
-                <MessageSquare className="h-5 w-5" />
+          {/* Campo: Assunto */}
+          <div>
+            <label htmlFor="ticket-subject" className="block text-xs font-semibold text-slate-700 mb-1">
+              Assunto
+            </label>
+            <Input
+              id="ticket-subject"
+              type="text"
+              placeholder={
+                selectedType === "sugestao" 
+                  ? "Ex.: Sugestão de novo modelo de termo de entrega" 
+                  : "Ex.: Erro ao tentar baixar PDF do requerimento"
+              }
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="text-xs rounded-xl h-10 border-slate-200"
+              required
+            />
+          </div>
+
+          {/* Campo: Descrição */}
+          <div>
+            <label htmlFor="ticket-description" className="block text-xs font-semibold text-slate-700 mb-1">
+              Descrição detalhada
+            </label>
+            <Textarea
+              id="ticket-description"
+              rows={4}
+              placeholder={
+                selectedType === "sugestao"
+                  ? "Conte-nos como essa melhoria ajudaria na rotina do seu escritório náutico..."
+                  : "Descreva o que aconteceu, em qual tela ou processo ocorreu e o resultado esperado..."
+              }
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="text-xs rounded-xl border-slate-200 leading-relaxed resize-y"
+              required
+            />
+          </div>
+
+          {/* Anexo Opcional de Imagem */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Anexo de imagem (opcional)
+            </label>
+            
+            {imagePreview ? (
+              <div className="relative inline-block mt-1">
+                <img
+                  src={imagePreview}
+                  alt="Anexo selecionado"
+                  className="h-28 w-auto rounded-xl object-contain border border-slate-200 bg-slate-50"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute -top-2 -right-2 p-1 rounded-full bg-slate-800 text-white hover:bg-red-600 transition-colors shadow-xs"
+                  title="Remover anexo"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
               </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-base font-bold text-[#0B1739] truncate">
-                  {selectedSuggestion?.title}
-                </DialogTitle>
-                <DialogDescription className="text-xs text-slate-500">
-                  Enviada em {formatDate(selectedSuggestion?.created_at)}
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className="p-5 space-y-4 text-xs">
-            {/* Situação e Tipo */}
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-              <span className="text-slate-500 font-semibold">Situação:</span>
-              <span className="font-bold text-[#075BFF]">
-                {SUGGESTION_STATUSES[selectedSuggestion?.status || "recebida"]?.label || "Recebida"}
-              </span>
-            </div>
-
-            {/* Descrição */}
-            <div className="space-y-1">
-              <label className="font-bold text-slate-700 uppercase tracking-wider text-[10px]">Descrição</label>
-              <p className="p-3 bg-white rounded-xl border border-slate-200/80 leading-relaxed text-slate-700 whitespace-pre-wrap">
-                {selectedSuggestion?.description}
-              </p>
-            </div>
-
-            {/* Resposta da Equipe se houver */}
-            {selectedSuggestion?.metadata?.team_response && (
-              <div className="p-4 bg-blue-50/70 border border-blue-100 rounded-xl space-y-2">
-                <div className="flex items-center justify-between text-[#075BFF] font-bold">
-                  <span>Resposta da Equipe NavalDocs</span>
-                  <span className="text-[10px] text-slate-400 font-normal">
-                    {formatDate(selectedSuggestion.metadata.team_response_date)}
-                  </span>
-                </div>
-                <p className="text-slate-800 leading-relaxed">
-                  {selectedSuggestion.metadata.team_response}
+            ) : (
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,application/pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="image-attachment-input"
+                />
+                <label
+                  htmlFor="image-attachment-input"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-medium cursor-pointer transition-colors"
+                >
+                  <Paperclip className="h-3.5 w-3.5 text-slate-400" />
+                  <span>Anexar captura de tela ou foto</span>
+                </label>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Formatos aceitos: PNG, JPG ou PDF (máx. 10 MB)
                 </p>
               </div>
             )}
           </div>
 
-          <DialogFooter className="p-4 bg-slate-50 border-t border-slate-100">
+          {/* Botão de Envio */}
+          <div className="pt-2 flex justify-end">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold px-6 py-2.5 rounded-xl shadow-xs transition-colors flex items-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Enviando...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="h-3.5 w-3.5" />
+                  <span>Enviar solicitação</span>
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+
+        {/* ======================================================================= */}
+        {/* CONSULTA DAS PRÓPRIAS SOLICITAÇÕES */}
+        {/* ======================================================================= */}
+        <div className="pt-6 border-t border-slate-100 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="text-sm font-bold text-[#0B1739]">
+                Minhas solicitações enviadas
+              </h3>
+              <p className="text-xs text-slate-500">
+                Acompanhe o andamento e as respostas da nossa equipe.
+              </p>
+            </div>
+
             <button
               type="button"
-              onClick={() => setIsDetailModalOpen(false)}
-              className="w-full py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              onClick={() => refetchSuggestions()}
+              className="inline-flex items-center gap-1.5 text-xs text-[#075BFF] hover:underline font-semibold"
             >
-              Fechar
+              <RefreshCw className="h-3.5 w-3.5" />
+              <span>Atualizar lista</span>
             </button>
+          </div>
+
+          {isLoadingSuggestions ? (
+            <div className="py-8 text-center text-slate-400 text-xs">
+              <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-[#075BFF]" />
+              <span>Carregando suas solicitações...</span>
+            </div>
+          ) : mySuggestions.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 text-xs bg-slate-50/50 rounded-xl border border-slate-200/60">
+              <MessageSquare className="h-6 w-6 text-slate-300 mx-auto mb-2" />
+              <p className="font-semibold text-slate-600">Nenhuma solicitação enviada ainda</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Envie uma sugestão ou relate um problema no formulário acima.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-xl overflow-hidden bg-white">
+              {mySuggestions.map((item) => {
+                const statusMeta = STATUS_CONFIG[item.status] || STATUS_CONFIG.recebida;
+                const StatusIcon = statusMeta.icon;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="p-4 hover:bg-slate-50/60 transition-colors space-y-2.5 cursor-pointer"
+                    onClick={() => setDetailModalItem(item)}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        {item.type === "problema" ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-red-50 text-red-700 border border-red-200">
+                            <Bug className="h-3 w-3" />
+                            Problema
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            <Lightbulb className="h-3 w-3" />
+                            Sugestão
+                          </span>
+                        )}
+
+                        <span className="text-xs font-bold text-slate-900 line-clamp-1">
+                          {item.title}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2.5 shrink-0">
+                        <span className="text-[11px] font-mono text-slate-400">
+                          {item.referenceNumber}
+                        </span>
+
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${statusMeta.color}`}>
+                          <StatusIcon className="h-3 w-3" />
+                          <span>{statusMeta.label}</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                      {item.cleanDescription}
+                    </p>
+
+                    {/* Resposta do Administrador se houver */}
+                    {item.adminResponse && (
+                      <div className="p-3 rounded-lg bg-purple-50/60 border border-purple-100 text-xs text-slate-700 space-y-1">
+                        <div className="flex items-center justify-between font-semibold text-purple-900 text-[11px]">
+                          <span>Resposta da Equipe ({item.adminResponse.respondedBy}):</span>
+                          <span className="text-slate-400 font-normal">{item.adminResponse.respondedAt}</span>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed">
+                          {item.adminResponse.text}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* MODAL DE CONFIRMAÇÃO COM NÚMERO DE REFERÊNCIA */}
+      {/* ========================================================================= */}
+      <Dialog open={Boolean(confirmationData)} onOpenChange={(open) => !open && setConfirmationData(null)}>
+        <DialogContent className="max-w-md bg-white rounded-2xl p-6">
+          <DialogHeader className="text-center sm:text-center">
+            <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3 border border-emerald-100">
+              <Check className="h-6 w-6" />
+            </div>
+            <DialogTitle className="text-lg font-bold text-[#0B1739]">
+              {confirmationData?.type === "problema" ? "Relato de problema recebido" : "Sugestão enviada com sucesso"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 mt-1">
+              Sua solicitação foi registrada em nossos sistemas e já está na fila de atendimento da equipe técnica.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-3">
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/90 text-center space-y-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                Número de Referência
+              </span>
+              <p className="text-xl font-bold font-mono text-[#075BFF] tracking-wide">
+                {confirmationData?.referenceNumber}
+              </p>
+            </div>
+
+            <p className="text-xs text-slate-600 text-center leading-relaxed">
+              Você pode acompanhar o estado da sua solicitação diretamente na seção <strong>Minhas solicitações enviadas</strong> nesta tela.
+            </p>
+          </div>
+
+          <DialogFooter className="sm:justify-center">
+            <Button
+              type="button"
+              onClick={() => setConfirmationData(null)}
+              className="w-full bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold rounded-xl"
+            >
+              Entendido
+            </Button>
           </DialogFooter>
         </DialogContent>
+      </Dialog>
+
+      {/* ========================================================================= */}
+      {/* MODAL DE DETALHES DA SOLICITAÇÃO */}
+      {/* ========================================================================= */}
+      <Dialog open={Boolean(detailModalItem)} onOpenChange={(open) => !open && setDetailModalItem(null)}>
+        {detailModalItem && (
+          <DialogContent className="max-w-lg bg-white rounded-2xl p-6">
+            <DialogHeader>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-mono text-slate-400 font-semibold">
+                  {detailModalItem.referenceNumber}
+                </span>
+                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${STATUS_CONFIG[detailModalItem.status]?.color}`}>
+                  {STATUS_CONFIG[detailModalItem.status]?.label}
+                </span>
+              </div>
+              <DialogTitle className="text-base font-bold text-[#0B1739]">
+                {detailModalItem.title}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="py-3 space-y-4 text-xs">
+              <div className="space-y-1">
+                <span className="font-semibold text-slate-700 block">Sua mensagem:</span>
+                <p className="text-slate-600 whitespace-pre-wrap leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                  {detailModalItem.cleanDescription}
+                </p>
+              </div>
+
+              {detailModalItem.attachmentUrl && (
+                <div>
+                  <span className="font-semibold text-slate-700 block mb-1">Anexo enviado:</span>
+                  <a
+                    href={detailModalItem.attachmentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-[#075BFF] hover:underline"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>Visualizar arquivo anexo</span>
+                  </a>
+                </div>
+              )}
+
+              {/* Resposta do Administrador */}
+              {detailModalItem.adminResponse ? (
+                <div className="p-4 rounded-xl bg-purple-50/70 border border-purple-200 text-slate-800 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-purple-900 border-b border-purple-200/80 pb-2">
+                    <span>Resposta da Equipe ({detailModalItem.adminResponse.respondedBy})</span>
+                    <span className="font-normal text-[11px] text-slate-500">{detailModalItem.adminResponse.respondedAt}</span>
+                  </div>
+                  <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                    {detailModalItem.adminResponse.text}
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 text-slate-500 text-xs">
+                  Sua solicitação está em análise. Assim que a nossa equipe responder, a resposta aparecerá aqui.
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setDetailModalItem(null)}
+                className="text-xs"
+              >
+                Fechar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        )}
       </Dialog>
 
     </div>
