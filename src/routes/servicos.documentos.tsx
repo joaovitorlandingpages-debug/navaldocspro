@@ -41,6 +41,7 @@ export const Route = createFileRoute("/servicos/documentos")({
     services: (search.services as string) || "",
     activeServiceId: (search.activeServiceId as string) || "",
     from: (search.from as string) || undefined,
+    preview: (search.preview as string) || undefined,
   }),
   component: () => (
     <ProtectedRoute>
@@ -280,6 +281,7 @@ function DocumentosDoServicoPage() {
                   category,
                   customerId,
                   vesselId,
+                  ...(search.preview ? { preview: search.preview } : {}),
                 },
               });
             }}

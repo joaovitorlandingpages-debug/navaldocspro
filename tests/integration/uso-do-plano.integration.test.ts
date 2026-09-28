@@ -202,21 +202,21 @@ describe("TELA — Uso do Plano: Testes de Saldo, Ações, Isenção e Idempotê
 
       const essencial = OFFICIAL_NAVAL_PLANS.find(p => p.slug === "essencial");
       expect(essencial).toBeDefined();
-      expect(essencial?.processLimit).toBe(20);
-      expect(essencial?.ocrLimit).toBe(200);
-      expect(essencial?.priceMonthly).toBe(149);
+      expect(essencial?.processLimit).toBe(30);
+      expect(essencial?.ocrLimit).toBe(15);
+      expect(essencial?.priceMonthly).toBe(249);
 
       const profissional = OFFICIAL_NAVAL_PLANS.find(p => p.slug === "profissional");
       expect(profissional).toBeDefined();
-      expect(profissional?.processLimit).toBe(60);
-      expect(profissional?.ocrLimit).toBe(600);
-      expect(profissional?.priceMonthly).toBe(299);
+      expect(profissional?.processLimit).toBe(100);
+      expect(profissional?.ocrLimit).toBe(50);
+      expect(profissional?.priceMonthly).toBe(549);
 
       const equipe = OFFICIAL_NAVAL_PLANS.find(p => p.slug === "equipe");
       expect(equipe).toBeDefined();
-      expect(equipe?.processLimit).toBe(150);
-      expect(equipe?.ocrLimit).toBe(1500);
-      expect(equipe?.priceMonthly).toBe(599);
+      expect(equipe?.processLimit).toBe(300);
+      expect(equipe?.ocrLimit).toBe(150);
+      expect(equipe?.priceMonthly).toBe(1099);
     });
 
     it("verifica que a consulta oficial busca no backend (tabela plans, processes, company_resource_addons)", async () => {

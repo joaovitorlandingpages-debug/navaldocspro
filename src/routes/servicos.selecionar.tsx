@@ -29,6 +29,7 @@ export const Route = createFileRoute("/servicos/selecionar")({
     customerId: (search.customerId as string) || undefined,
     vesselId: (search.vesselId as string) || undefined,
     from: (search.from as string) || undefined,
+    preview: (search.preview as string) || undefined,
   }),
   component: () => (
     <ProtectedRoute>
@@ -298,6 +299,8 @@ function SelecionarServicosPage() {
         customerId: selectedCustomerId,
         vesselId: selectedVesselId,
         services: selectedServiceIds.join(","),
+        activeServiceId: selectedServiceIds[0] || "",
+        ...(searchParams.preview ? { preview: searchParams.preview } : {}),
       },
     });
   };
@@ -598,19 +601,7 @@ function SelecionarServicosPage() {
           <button
             type="button"
             disabled={!canReview}
-            onClick={() => {
-              const servicesParam = selectedServices.join(",");
-              navigate({
-                to: "/servicos/documentos",
-                search: {
-                  category,
-                  customerId: selectedCustomerId || "",
-                  vesselId: selectedVesselId || "",
-                  services: servicesParam,
-                  activeServiceId: selectedServices[0] || "",
-                },
-              });
-            }}
+            onClick={handleContinueToDocuments}
             className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             <span>Continuar para documentos</span>

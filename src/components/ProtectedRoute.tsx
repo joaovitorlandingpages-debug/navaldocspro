@@ -9,7 +9,21 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
-  const isPreview = typeof window !== 'undefined' && window.location.search.includes('preview=true');
+  const isPreview = typeof window !== 'undefined' && (
+    window.location.search.includes('preview=true') ||
+    window.localStorage.getItem('preview_mode') === 'true'
+  );
+
+  if (typeof window !== 'undefined') {
+    console.log("DEBUG_PROTECTED:", {
+      search: window.location.search,
+      previewInStorage: window.localStorage.getItem('preview_mode'),
+      isPreview,
+      loading,
+      hasSession: !!session,
+      pathname: window.location.pathname
+    });
+  }
 
   useEffect(() => {
     if (!loading && !isPreview) {

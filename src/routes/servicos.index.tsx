@@ -3,11 +3,12 @@ import { ArrowLeft, ArrowRight, Info } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/routes/dashboard";
 
-export const Route = createFileRoute("/servicos")({
+export const Route = createFileRoute("/servicos/")({
   validateSearch: (search: Record<string, unknown>) => ({
     from: (search.from as string) || undefined,
     vesselId: (search.vesselId as string) || undefined,
     customerId: (search.customerId as string) || undefined,
+    preview: (search.preview as string) || undefined,
   }),
   component: () => (
     <ProtectedRoute>
@@ -96,6 +97,7 @@ function ServicosCategoriaPage() {
         category: categoryKey,
         customerId: searchParams.customerId,
         vesselId: searchParams.vesselId,
+        preview: searchParams.preview,
       },
     });
   };
@@ -126,7 +128,19 @@ function ServicosCategoriaPage() {
       {/* 3. DOIS GRANDES CARTÕES DE CATEGORIA */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
         {/* CARTÃO 1: EMBARCAÇÕES PROFISSIONAIS */}
-        <div className="bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-10 flex flex-col items-center text-center justify-between shadow-xs hover:shadow-md hover:border-[#075BFF]/40 transition-all duration-200 min-h-[420px] group">
+        <div 
+          role="button"
+          tabIndex={0}
+          aria-label="Selecionar categoria Embarcações profissionais"
+          onClick={() => handleSelectCategory("profissional")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleSelectCategory("profissional");
+            }
+          }}
+          className="bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-10 flex flex-col items-center text-center justify-between shadow-xs hover:shadow-md hover:border-[#075BFF]/50 active:scale-[0.99] transition-all duration-200 min-h-[420px] group cursor-pointer select-none touch-manipulation"
+        >
           {/* Caixa do Ícone */}
           <div className="w-48 h-36 rounded-3xl bg-[#EEF4FF] flex items-center justify-center p-4 mb-6 group-hover:scale-105 transition-transform duration-200 border border-blue-100">
             <ProfessionalVesselIllustration className="w-36 h-28 text-[#075BFF]" />
@@ -145,8 +159,11 @@ function ServicosCategoriaPage() {
           {/* Botão de Ação */}
           <button
             type="button"
-            onClick={() => handleSelectCategory("profissional")}
-            className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSelectCategory("profissional");
+            }}
+            className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-[#075BFF] hover:bg-blue-600 active:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
           >
             <span>Selecionar categoria</span>
             <ArrowRight className="h-4 w-4" />
@@ -154,7 +171,19 @@ function ServicosCategoriaPage() {
         </div>
 
         {/* CARTÃO 2: EMBARCAÇÕES DE ESPORTE E RECREIO */}
-        <div className="bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-10 flex flex-col items-center text-center justify-between shadow-xs hover:shadow-md hover:border-[#075BFF]/40 transition-all duration-200 min-h-[420px] group">
+        <div 
+          role="button"
+          tabIndex={0}
+          aria-label="Selecionar categoria Embarcações de esporte e recreio"
+          onClick={() => handleSelectCategory("esporte_recreio")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleSelectCategory("esporte_recreio");
+            }
+          }}
+          className="bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-10 flex flex-col items-center text-center justify-between shadow-xs hover:shadow-md hover:border-[#075BFF]/50 active:scale-[0.99] transition-all duration-200 min-h-[420px] group cursor-pointer select-none touch-manipulation"
+        >
           {/* Caixa do Ícone */}
           <div className="w-48 h-36 rounded-3xl bg-[#EEF4FF] flex items-center justify-center p-4 mb-6 group-hover:scale-105 transition-transform duration-200 border border-blue-100">
             <RecreationVesselIllustration className="w-36 h-28 text-[#075BFF]" />
@@ -173,8 +202,11 @@ function ServicosCategoriaPage() {
           {/* Botão de Ação */}
           <button
             type="button"
-            onClick={() => handleSelectCategory("esporte_recreio")}
-            className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSelectCategory("esporte_recreio");
+            }}
+            className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-[#075BFF] hover:bg-blue-600 active:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
           >
             <span>Selecionar categoria</span>
             <ArrowRight className="h-4 w-4" />

@@ -3,8 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { OFFICIAL_NAVAL_PLANS } from "@/services/billing/plansConfig";
 
 describe("TELA 40 — Consumo e Franquias do Plano Integration Suite", () => {
-  const essencialPlan = OFFICIAL_NAVAL_PLANS[0]; // 20 processos, 200 OCR, 5 GB
-  const profissionalPlan = OFFICIAL_NAVAL_PLANS[1]; // 60 processos, 600 OCR, 15 GB
+  const essencialPlan = OFFICIAL_NAVAL_PLANS[0]; // 30 processos, 15 OCR, 2 GB
+  const profissionalPlan = OFFICIAL_NAVAL_PLANS[1]; // 100 processos, 50 OCR, 8 GB
 
   // Helper para simular cálculos da tela
   function calculateConsumptionState({
@@ -28,15 +28,15 @@ describe("TELA 40 — Consumo e Franquias do Plano Integration Suite", () => {
       .filter((a) => a.resource_key === "ocr")
       .reduce((sum, a) => sum + (Number(a.extra_monthly) || Number(a.extra_daily) || 0), 0);
 
-    const limitProcesses = (plan.processLimit || 20) + extraProcesses;
+    const limitProcesses = (plan.processLimit || 30) + extraProcesses;
     const availableProcesses = Math.max(0, limitProcesses - processesCount);
     const percentProcesses = Math.min(100, Math.round((processesCount / limitProcesses) * 100));
 
-    const limitOcr = (plan.ocrLimit || 200) + extraOcr;
+    const limitOcr = (plan.ocrLimit || 15) + extraOcr;
     const availableOcr = Math.max(0, limitOcr - ocrCount);
     const percentOcr = Math.min(100, Math.round((ocrCount / limitOcr) * 100));
 
-    const limitStorageGb = plan.storageGb || 5;
+    const limitStorageGb = plan.storageGb || 2;
     const usedStorageGb = storageBytes / (1024 * 1024 * 1024);
     const percentStorage = Math.min(100, Math.round((usedStorageGb / limitStorageGb) * 100));
     const availableStorageGb = Math.max(0, limitStorageGb - usedStorageGb);
@@ -75,68 +75,68 @@ describe("TELA 40 — Consumo e Franquias do Plano Integration Suite", () => {
     });
 
     expect(state.processes.used).toBe(0);
-    expect(state.processes.available).toBe(20);
+    expect(state.processes.available).toBe(30);
     expect(state.processes.percent).toBe(0);
     expect(state.processes.isExhausted).toBe(false);
 
     expect(state.ocr.used).toBe(0);
-    expect(state.ocr.available).toBe(200);
+    expect(state.ocr.available).toBe(15);
     expect(state.ocr.percent).toBe(0);
     expect(state.ocr.isExhausted).toBe(false);
 
     expect(state.storage.usedGb).toBe(0);
-    expect(state.storage.availableGb).toBe(5);
+    expect(state.storage.availableGb).toBe(2);
     expect(state.storage.percent).toBe(0);
     expect(state.storage.isExhausted).toBe(false);
   });
 
   it("Cenário 2: Empresa com consumo parcial (calcula proporções, saldos e adicionais corretamente)", () => {
     const state = calculateConsumptionState({
-      plan: profissionalPlan, // 60 processos, 600 OCR, 15 GB
+      plan: profissionalPlan, // 100 processos, 50 OCR, 8 GB
       processesCount: 18,
-      ocrCount: 150,
+      ocrCount: 20,
       storageBytes: 3.5 * 1024 * 1024 * 1024, // 3.5 GB
       addons: [
         { resource_key: "processes", extra_monthly: 10 },
-        { resource_key: "ocr", extra_monthly: 100 },
+        { resource_key: "ocr", extra_monthly: 10 },
       ],
     });
 
-    // Limite de processos: 60 + 10 = 70
-    expect(state.processes.limit).toBe(70);
+    // Limite de processos: 100 + 10 = 110
+    expect(state.processes.limit).toBe(110);
     expect(state.processes.used).toBe(18);
-    expect(state.processes.available).toBe(52);
-    expect(state.processes.percent).toBe(26);
+    expect(state.processes.available).toBe(92);
+    expect(state.processes.percent).toBe(16);
     expect(state.processes.isExhausted).toBe(false);
 
-    // Limite de OCR: 600 + 100 = 700
-    expect(state.ocr.limit).toBe(700);
-    expect(state.ocr.used).toBe(150);
-    expect(state.ocr.available).toBe(550);
-    expect(state.ocr.percent).toBe(21);
+    // Limite de OCR: 50 + 10 = 60
+    expect(state.ocr.limit).toBe(60);
+    expect(state.ocr.used).toBe(20);
+    expect(state.ocr.available).toBe(40);
+    expect(state.ocr.percent).toBe(33);
     expect(state.ocr.isExhausted).toBe(false);
 
-    // Armazenamento: 3.5 GB de 15 GB
-    expect(state.storage.limitGb).toBe(15);
+    // Armazenamento: 3.5 GB de 8 GB
+    expect(state.storage.limitGb).toBe(8);
     expect(state.storage.usedGb).toBeCloseTo(3.5, 1);
-    expect(state.storage.availableGb).toBeCloseTo(11.5, 1);
-    expect(state.storage.percent).toBe(23);
+    expect(state.storage.availableGb).toBeCloseTo(4.5, 1);
+    expect(state.storage.percent).toBe(44);
   });
 
   it("Cenário 3: Empresa com franquia esgotada (sinaliza esgotamento sem valores negativos)", () => {
     const state = calculateConsumptionState({
-      plan: essencialPlan, // 20 processos, 200 OCR, 5 GB
-      processesCount: 22, // Excedeu 20
-      ocrCount: 200, // Atingiu limite exato
-      storageBytes: 5.2 * 1024 * 1024 * 1024,
+      plan: essencialPlan, // 30 processos, 15 OCR, 2 GB
+      processesCount: 32, // Excedeu 30
+      ocrCount: 15, // Atingiu limite exato
+      storageBytes: 2.2 * 1024 * 1024 * 1024,
     });
 
-    expect(state.processes.used).toBe(22);
+    expect(state.processes.used).toBe(32);
     expect(state.processes.available).toBe(0); // Não deve ser negativo
     expect(state.processes.percent).toBe(100);
     expect(state.processes.isExhausted).toBe(true);
 
-    expect(state.ocr.used).toBe(200);
+    expect(state.ocr.used).toBe(15);
     expect(state.ocr.available).toBe(0);
     expect(state.ocr.percent).toBe(100);
     expect(state.ocr.isExhausted).toBe(true);

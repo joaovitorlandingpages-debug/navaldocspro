@@ -54,7 +54,6 @@ import { Route as PredictionsRouteImport } from './routes/predictions'
 import { Route as PrimeirosPassosRouteImport } from './routes/primeiros-passos'
 import { Route as QaChecklistRouteImport } from './routes/qa-checklist'
 import { Route as SalesCenterRouteImport } from './routes/sales-center'
-import { Route as ServicosRouteImport } from './routes/servicos'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SugestoesRouteImport } from './routes/sugestoes'
@@ -133,6 +132,7 @@ import { Route as ProcessesNovoPedidoRouteImport } from './routes/processes.novo
 import { Route as ProcessesPrepararAssinaturasRouteImport } from './routes/processes.preparar-assinaturas'
 import { Route as ProcessesTrashRouteImport } from './routes/processes.trash'
 import { Route as ProcessesVisualizarEEditarRouteImport } from './routes/processes.visualizar-e-editar'
+import { Route as ServicosIndexRouteImport } from './routes/servicos.index'
 import { Route as ServicosDocumentosRouteImport } from './routes/servicos.documentos'
 import { Route as ServicosRevisarRouteImport } from './routes/servicos.revisar'
 import { Route as ServicosSelecionarRouteImport } from './routes/servicos.selecionar'
@@ -400,11 +400,6 @@ const QaChecklistRoute = QaChecklistRouteImport.update({
 const SalesCenterRoute = SalesCenterRouteImport.update({
   id: '/sales-center',
   path: '/sales-center',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ServicosRoute = ServicosRouteImport.update({
-  id: '/servicos',
-  path: '/servicos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -804,20 +799,25 @@ const ProcessesVisualizarEEditarRoute =
     path: '/processes/visualizar-e-editar',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ServicosIndexRoute = ServicosIndexRouteImport.update({
+  id: '/servicos/',
+  path: '/servicos/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServicosDocumentosRoute = ServicosDocumentosRouteImport.update({
-  id: '/documentos',
-  path: '/documentos',
-  getParentRoute: () => ServicosRoute,
+  id: '/servicos/documentos',
+  path: '/servicos/documentos',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ServicosRevisarRoute = ServicosRevisarRouteImport.update({
-  id: '/revisar',
-  path: '/revisar',
-  getParentRoute: () => ServicosRoute,
+  id: '/servicos/revisar',
+  path: '/servicos/revisar',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ServicosSelecionarRoute = ServicosSelecionarRouteImport.update({
-  id: '/selecionar',
-  path: '/selecionar',
-  getParentRoute: () => ServicosRoute,
+  id: '/servicos/selecionar',
+  path: '/servicos/selecionar',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
   id: '/',
@@ -1084,7 +1084,6 @@ export interface FileRoutesByFullPath {
   '/primeiros-passos': typeof PrimeirosPassosRoute
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
-  '/servicos': typeof ServicosRouteWithChildren
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/sugestoes': typeof SugestoesRoute
@@ -1173,6 +1172,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
+  '/servicos/': typeof ServicosIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/admin/companies/$id': typeof AdminCompaniesIdRoute
   '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
@@ -1251,7 +1251,6 @@ export interface FileRoutesByTo {
   '/primeiros-passos': typeof PrimeirosPassosRoute
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
-  '/servicos': typeof ServicosRouteWithChildren
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/sugestoes': typeof SugestoesRoute
@@ -1338,6 +1337,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/processes': typeof ProcessesIndexRoute
+  '/servicos': typeof ServicosIndexRoute
   '/templates': typeof TemplatesIndexRoute
   '/admin/companies/$id': typeof AdminCompaniesIdRoute
   '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
@@ -1419,7 +1419,6 @@ export interface FileRoutesById {
   '/primeiros-passos': typeof PrimeirosPassosRoute
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
-  '/servicos': typeof ServicosRouteWithChildren
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/sugestoes': typeof SugestoesRoute
@@ -1508,6 +1507,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
+  '/servicos/': typeof ServicosIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/admin/companies/$id': typeof AdminCompaniesIdRoute
   '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
@@ -1590,7 +1590,6 @@ export interface FileRouteTypes {
     | '/primeiros-passos'
     | '/qa-checklist'
     | '/sales-center'
-    | '/servicos'
     | '/settings'
     | '/status'
     | '/sugestoes'
@@ -1679,6 +1678,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/dashboard/'
     | '/processes/'
+    | '/servicos/'
     | '/templates/'
     | '/admin/companies/$id'
     | '/admin/docs-central/audit'
@@ -1757,7 +1757,6 @@ export interface FileRouteTypes {
     | '/primeiros-passos'
     | '/qa-checklist'
     | '/sales-center'
-    | '/servicos'
     | '/settings'
     | '/status'
     | '/sugestoes'
@@ -1844,6 +1843,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/processes'
+    | '/servicos'
     | '/templates'
     | '/admin/companies/$id'
     | '/admin/docs-central/audit'
@@ -1924,7 +1924,6 @@ export interface FileRouteTypes {
     | '/primeiros-passos'
     | '/qa-checklist'
     | '/sales-center'
-    | '/servicos'
     | '/settings'
     | '/status'
     | '/sugestoes'
@@ -2013,6 +2012,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/dashboard/'
     | '/processes/'
+    | '/servicos/'
     | '/templates/'
     | '/admin/companies/$id'
     | '/admin/docs-central/audit'
@@ -2094,7 +2094,6 @@ export interface RootRouteChildren {
   PrimeirosPassosRoute: typeof PrimeirosPassosRoute
   QaChecklistRoute: typeof QaChecklistRoute
   SalesCenterRoute: typeof SalesCenterRoute
-  ServicosRoute: typeof ServicosRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   StatusRoute: typeof StatusRoute
   SugestoesRoute: typeof SugestoesRoute
@@ -2120,8 +2119,12 @@ export interface RootRouteChildren {
   ProcessesPrepararAssinaturasRoute: typeof ProcessesPrepararAssinaturasRoute
   ProcessesTrashRoute: typeof ProcessesTrashRoute
   ProcessesVisualizarEEditarRoute: typeof ProcessesVisualizarEEditarRoute
+  ServicosDocumentosRoute: typeof ServicosDocumentosRoute
+  ServicosRevisarRoute: typeof ServicosRevisarRoute
+  ServicosSelecionarRoute: typeof ServicosSelecionarRoute
   VerificarAssinaturaCodeRoute: typeof VerificarAssinaturaCodeRoute
   ProcessesIndexRoute: typeof ProcessesIndexRoute
+  ServicosIndexRoute: typeof ServicosIndexRoute
   ConfiguracoesFuncionariosIdRoute: typeof ConfiguracoesFuncionariosIdRoute
   ConfiguracoesFuncionariosNovoRoute: typeof ConfiguracoesFuncionariosNovoRoute
 }
@@ -2441,13 +2444,6 @@ declare module '@tanstack/react-router' {
       path: '/sales-center'
       fullPath: '/sales-center'
       preLoaderRoute: typeof SalesCenterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/servicos': {
-      id: '/servicos'
-      path: '/servicos'
-      fullPath: '/servicos'
-      preLoaderRoute: typeof ServicosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -2996,26 +2992,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProcessesVisualizarEEditarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/servicos/': {
+      id: '/servicos/'
+      path: '/servicos'
+      fullPath: '/servicos/'
+      preLoaderRoute: typeof ServicosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/servicos/documentos': {
       id: '/servicos/documentos'
-      path: '/documentos'
+      path: '/servicos/documentos'
       fullPath: '/servicos/documentos'
       preLoaderRoute: typeof ServicosDocumentosRouteImport
-      parentRoute: typeof ServicosRoute
+      parentRoute: typeof rootRouteImport
     }
     '/servicos/revisar': {
       id: '/servicos/revisar'
-      path: '/revisar'
+      path: '/servicos/revisar'
       fullPath: '/servicos/revisar'
       preLoaderRoute: typeof ServicosRevisarRouteImport
-      parentRoute: typeof ServicosRoute
+      parentRoute: typeof rootRouteImport
     }
     '/servicos/selecionar': {
       id: '/servicos/selecionar'
-      path: '/selecionar'
+      path: '/servicos/selecionar'
       fullPath: '/servicos/selecionar'
       preLoaderRoute: typeof ServicosSelecionarRouteImport
-      parentRoute: typeof ServicosRoute
+      parentRoute: typeof rootRouteImport
     }
     '/templates/': {
       id: '/templates/'
@@ -3509,22 +3512,6 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
   DashboardRouteChildren,
 )
 
-interface ServicosRouteChildren {
-  ServicosDocumentosRoute: typeof ServicosDocumentosRoute
-  ServicosRevisarRoute: typeof ServicosRevisarRoute
-  ServicosSelecionarRoute: typeof ServicosSelecionarRoute
-}
-
-const ServicosRouteChildren: ServicosRouteChildren = {
-  ServicosDocumentosRoute: ServicosDocumentosRoute,
-  ServicosRevisarRoute: ServicosRevisarRoute,
-  ServicosSelecionarRoute: ServicosSelecionarRoute,
-}
-
-const ServicosRouteWithChildren = ServicosRoute._addFileChildren(
-  ServicosRouteChildren,
-)
-
 interface TemplatesRouteChildren {
   TemplatesIdRoute: typeof TemplatesIdRoute
   TemplatesGratuitosRoute: typeof TemplatesGratuitosRoute
@@ -3637,7 +3624,6 @@ const rootRouteChildren: RootRouteChildren = {
   PrimeirosPassosRoute: PrimeirosPassosRoute,
   QaChecklistRoute: QaChecklistRoute,
   SalesCenterRoute: SalesCenterRoute,
-  ServicosRoute: ServicosRouteWithChildren,
   SettingsRoute: SettingsRoute,
   StatusRoute: StatusRoute,
   SugestoesRoute: SugestoesRoute,
@@ -3663,8 +3649,12 @@ const rootRouteChildren: RootRouteChildren = {
   ProcessesPrepararAssinaturasRoute: ProcessesPrepararAssinaturasRoute,
   ProcessesTrashRoute: ProcessesTrashRoute,
   ProcessesVisualizarEEditarRoute: ProcessesVisualizarEEditarRoute,
+  ServicosDocumentosRoute: ServicosDocumentosRoute,
+  ServicosRevisarRoute: ServicosRevisarRoute,
+  ServicosSelecionarRoute: ServicosSelecionarRoute,
   VerificarAssinaturaCodeRoute: VerificarAssinaturaCodeRoute,
   ProcessesIndexRoute: ProcessesIndexRoute,
+  ServicosIndexRoute: ServicosIndexRoute,
   ConfiguracoesFuncionariosIdRoute: ConfiguracoesFuncionariosIdRoute,
   ConfiguracoesFuncionariosNovoRoute: ConfiguracoesFuncionariosNovoRoute,
 }
