@@ -37,6 +37,7 @@ import { Route as GettingStartedRouteImport } from './routes/getting-started'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as IdentidadeRouteImport } from './routes/identidade'
 import { Route as LogsRouteImport } from './routes/logs'
+import { Route as MeusAplicativosRouteImport } from './routes/meus-aplicativos'
 import { Route as MinhaAssinaturaRouteImport } from './routes/minha-assinatura'
 import { Route as NossosAplicativosRouteImport } from './routes/nossos-aplicativos'
 import { Route as OcrCenterRouteImport } from './routes/ocr-center'
@@ -310,6 +311,11 @@ const IdentidadeRoute = IdentidadeRouteImport.update({
 const LogsRoute = LogsRouteImport.update({
   id: '/logs',
   path: '/logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeusAplicativosRoute = MeusAplicativosRouteImport.update({
+  id: '/meus-aplicativos',
+  path: '/meus-aplicativos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MinhaAssinaturaRoute = MinhaAssinaturaRouteImport.update({
@@ -1037,6 +1043,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof HomeRoute
   '/identidade': typeof IdentidadeRoute
   '/logs': typeof LogsRoute
+  '/meus-aplicativos': typeof MeusAplicativosRoute
   '/minha-assinatura': typeof MinhaAssinaturaRoute
   '/nossos-aplicativos': typeof NossosAplicativosRoute
   '/ocr-center': typeof OcrCenterRoute
@@ -1199,6 +1206,7 @@ export interface FileRoutesByTo {
   '/home': typeof HomeRoute
   '/identidade': typeof IdentidadeRoute
   '/logs': typeof LogsRoute
+  '/meus-aplicativos': typeof MeusAplicativosRoute
   '/minha-assinatura': typeof MinhaAssinaturaRoute
   '/nossos-aplicativos': typeof NossosAplicativosRoute
   '/ocr-center': typeof OcrCenterRoute
@@ -1362,6 +1370,7 @@ export interface FileRoutesById {
   '/home': typeof HomeRoute
   '/identidade': typeof IdentidadeRoute
   '/logs': typeof LogsRoute
+  '/meus-aplicativos': typeof MeusAplicativosRoute
   '/minha-assinatura': typeof MinhaAssinaturaRoute
   '/nossos-aplicativos': typeof NossosAplicativosRoute
   '/ocr-center': typeof OcrCenterRoute
@@ -1528,6 +1537,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/identidade'
     | '/logs'
+    | '/meus-aplicativos'
     | '/minha-assinatura'
     | '/nossos-aplicativos'
     | '/ocr-center'
@@ -1690,6 +1700,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/identidade'
     | '/logs'
+    | '/meus-aplicativos'
     | '/minha-assinatura'
     | '/nossos-aplicativos'
     | '/ocr-center'
@@ -1852,6 +1863,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/identidade'
     | '/logs'
+    | '/meus-aplicativos'
     | '/minha-assinatura'
     | '/nossos-aplicativos'
     | '/ocr-center'
@@ -2017,6 +2029,7 @@ export interface RootRouteChildren {
   HomeRoute: typeof HomeRoute
   IdentidadeRoute: typeof IdentidadeRoute
   LogsRoute: typeof LogsRoute
+  MeusAplicativosRoute: typeof MeusAplicativosRoute
   MinhaAssinaturaRoute: typeof MinhaAssinaturaRoute
   NossosAplicativosRoute: typeof NossosAplicativosRoute
   OcrCenterRoute: typeof OcrCenterRoute
@@ -2259,6 +2272,13 @@ declare module '@tanstack/react-router' {
       path: '/logs'
       fullPath: '/logs'
       preLoaderRoute: typeof LogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meus-aplicativos': {
+      id: '/meus-aplicativos'
+      path: '/meus-aplicativos'
+      fullPath: '/meus-aplicativos'
+      preLoaderRoute: typeof MeusAplicativosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/minha-assinatura': {
@@ -3518,6 +3538,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeRoute: HomeRoute,
   IdentidadeRoute: IdentidadeRoute,
   LogsRoute: LogsRoute,
+  MeusAplicativosRoute: MeusAplicativosRoute,
   MinhaAssinaturaRoute: MinhaAssinaturaRoute,
   NossosAplicativosRoute: NossosAplicativosRoute,
   OcrCenterRoute: OcrCenterRoute,

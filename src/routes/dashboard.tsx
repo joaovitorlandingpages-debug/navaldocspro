@@ -84,7 +84,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
     { name: "Processos", path: "/processes", icon: FileText },
     { name: "Consumo e franquias", path: "/consumo", icon: Gauge },
     { name: "Sugestões", path: "/sugestoes", icon: MessageSquare },
-    { name: "Nossos aplicativos", path: "/nossos-aplicativos", icon: LayoutGrid },
+    { name: "Meus aplicativos", path: "/meus-aplicativos", icon: LayoutGrid },
     { name: "Configurações", path: "/settings", icon: Settings },
   ];
 
