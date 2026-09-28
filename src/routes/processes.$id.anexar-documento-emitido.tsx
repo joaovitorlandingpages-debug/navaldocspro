@@ -48,6 +48,7 @@ function AnexarDocumentoEmitidoPage() {
 
   // Estados do Formulário
   const [documentName, setDocumentName] = useState("");
+  const [documentType, setDocumentType] = useState("tie");
   const [documentNumber, setDocumentNumber] = useState("");
   const [issuingAgency, setIssuingAgency] = useState("");
   const [issueDate, setIssueDate] = useState("");
@@ -227,18 +228,35 @@ function AnexarDocumentoEmitidoPage() {
         allowedExtensions: [".pdf", ".png", ".jpg", ".jpeg"],
       });
 
-      // 2. Salvar registro na tabela uploaded_files
+      // 2. Salvar registro na tabela uploaded_files com metadados estruturados
+      let calculatedStatus = "unspecified";
+      if (validityType === "sem_vencimento") {
+        calculatedStatus = "no_expiration";
+      } else if (validityType === "com_vencimento" && expirationDate) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const expDate = new Date(expirationDate);
+        calculatedStatus = expDate < today ? "expired" : "active";
+      }
+
+      const now = new Date().toISOString();
       const metadataPayload = {
         document_name: documentName.trim(),
+        document_type: documentType || "outro",
         document_number: documentNumber.trim() || null,
         issuing_agency: issuingAgency.trim() || null,
         issue_date: issueDate || null,
         validity_type: validityType,
         expiration_date: validityType === "com_vencimento" ? expirationDate : null,
+        has_expiration: validityType === "com_vencimento" && Boolean(expirationDate),
+        status: calculatedStatus,
         notes: notes.trim() || null,
+        version: 1,
+        version_history: [],
         registered_by_name: profile?.name || "Usuário",
         registered_by_id: profile?.id,
-        registered_at: new Date().toISOString(),
+        registered_at: now,
+        last_modified_at: now,
       };
 
       const { error: insertError } = await supabase
@@ -313,16 +331,47 @@ function AnexarDocumentoEmitidoPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-2 sm:py-6 px-2 sm:px-4 space-y-6">
-      {/* 1. NAVEGAÇÃO SUPERIOR: VOLTAR */}
-      <div>
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-[#075BFF] hover:underline cursor-pointer"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Voltar aos documentos emitidos</span>
-        </button>
+      {/* 1. NAVEGAÇÃO SUPERIOR: VOLTAR + BREADCRUMBS */}
+      <div className="space-y-2">
+        <div>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-[#075BFF] hover:underline cursor-pointer"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Voltar aos documentos emitidos</span>
+          </button>
+        </div>
+
+        {/* Caminho estruturado Cliente → Embarcação → Serviço → Documentos emitidos → Anexar */}
+        <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium overflow-x-auto whitespace-nowrap">
+          {customer ? (
+            <Link to="/customers/$id" params={{ id: customer.id }} className="hover:text-slate-600 hover:underline truncate max-w-[160px]">
+              {customerName}
+            </Link>
+          ) : (
+            <span>{customerName}</span>
+          )}
+          <span>/</span>
+          {vessel ? (
+            <Link to="/vessels/$id" params={{ id: vessel.id }} className="hover:text-slate-600 hover:underline truncate max-w-[160px] font-bold text-slate-700">
+              {vesselName}
+            </Link>
+          ) : (
+            <span className="font-bold text-slate-700">{vesselName}</span>
+          )}
+          <span>/</span>
+          <Link to="/processes/$id" params={{ id }} className="hover:text-slate-600 hover:underline">
+            {serviceTitle}
+          </Link>
+          <span>/</span>
+          <Link to="/processes/$id/documentos-emitidos" params={{ id }} className="hover:text-slate-600 hover:underline">
+            Documentos emitidos
+          </Link>
+          <span>/</span>
+          <span className="text-slate-700 font-semibold">Anexar documento</span>
+        </div>
       </div>
 
       {/* 2. CABEÇALHO DA PÁGINA */}
@@ -482,23 +531,45 @@ function AnexarDocumentoEmitidoPage() {
           </h2>
 
           <div className="space-y-4">
-            {/* Nome do Documento */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Nome do documento <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={documentName}
-                onChange={(e) => setDocumentName(e.target.value)}
-                placeholder="Ex.: Documento de inscrição"
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF] transition-all ${
-                  errors.documentName ? "border-red-400 bg-red-50/20" : "border-slate-200"
-                }`}
-              />
-              {errors.documentName && (
-                <p className="text-[11px] text-red-500 mt-1">{errors.documentName}</p>
-              )}
+            {/* Tipo do Documento & Nome */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Nome do documento <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={documentName}
+                  onChange={(e) => setDocumentName(e.target.value)}
+                  placeholder="Ex.: TIE - Termo de Inscrição da Embarcação"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF] transition-all ${
+                    errors.documentName ? "border-red-400 bg-red-50/20" : "border-slate-200"
+                  }`}
+                />
+                {errors.documentName && (
+                  <p className="text-[11px] text-red-500 mt-1">{errors.documentName}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Tipo oficial do documento
+                </label>
+                <select
+                  value={documentType}
+                  onChange={(e) => setDocumentType(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF] transition-all"
+                >
+                  <option value="tie">TIE — Termo de Inscrição de Embarcação</option>
+                  <option value="tiem">TIEM — Termo de Inscrição de Embarcação Miúda</option>
+                  <option value="csn">CSN — Certificado de Segurança da Navegação</option>
+                  <option value="cts">CTS — Certificado de Tripulação de Segurança</option>
+                  <option value="licenca_pesca">Licença / Autorização de Pesca</option>
+                  <option value="termo_vistoria">Termo ou Laudo de Vistoria Oficial</option>
+                  <option value="certidao_quitacao">Certidão de Quitação ou Regularidade</option>
+                  <option value="outro">Outro documento oficial emitido</option>
+                </select>
+              </div>
             </div>
 
             {/* Número do Documento & Órgão Emissor */}
@@ -561,14 +632,16 @@ function AnexarDocumentoEmitidoPage() {
                   }}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF] transition-all"
                 >
-                  <option value="nao_informada">Não informada</option>
-                  <option value="com_vencimento">Com vencimento</option>
-                  <option value="sem_vencimento">Sem vencimento</option>
+                  <option value="nao_informada">Vencimento não informado / A confirmar</option>
+                  <option value="com_vencimento">Sim, possui data de vencimento</option>
+                  <option value="sem_vencimento">Não possui vencimento (Vitalício / Indeterminado)</option>
                 </select>
                 <p className="text-[11px] text-slate-400 mt-1">
                   {validityType === "com_vencimento" 
-                    ? "Informe a data de vencimento abaixo." 
-                    : 'Selecione "Com vencimento" para informar a data.'}
+                    ? "Informe a data de vencimento confirmada no campo abaixo." 
+                    : validityType === "sem_vencimento"
+                    ? "Documento vitalício ou sem prazo de expiração."
+                    : "Sem data de validade confirmada; será registrado como 'Vencimento não informado'."}
                 </p>
               </div>
             </div>
