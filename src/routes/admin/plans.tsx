@@ -2,9 +2,10 @@ import { createFileRoute, Navigate } from '@tanstack/react-router';
 import React, { useState } from 'react';
 import { 
   Tag, Plus, RefreshCw, CheckCircle2, AlertCircle, 
-  Search, SlidersHorizontal, ArrowUpRight, Zap, 
+  Search, Eye, Zap, 
   Users, HardDrive, FileText, Cpu, Check, 
-  Clock, ShieldAlert, Archive, Sparkles, Settings
+  Clock, ShieldAlert, Archive, Sparkles, Settings,
+  Compass, Anchor, Bell, ShieldCheck, Lock, ExternalLink
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -15,8 +16,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { AdminPlanData, StripeSyncService } from '@/services/billing/stripeSyncService';
+import { AdminPlanData, StripeSyncService, SupportedApp } from '@/services/billing/stripeSyncService';
 import { PlanEditorDialog } from '@/components/admin/PlanEditorDialog';
+import { PlanPreviewModal } from '@/components/admin/PlanPreviewModal';
 import { StripeConfigDialog } from '@/components/admin/StripeConfigDialog';
 
 export const Route = createFileRoute('/admin/plans')({
@@ -29,19 +31,30 @@ function AdminPlansPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [appFilter, setAppFilter] = useState<string>("all");
   const [selectedPlan, setSelectedPlan] = useState<AdminPlanData | null>(null);
+  const [previewPlan, setPreviewPlan] = useState<AdminPlanData | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isStripeDialogOpen, setIsStripeDialogOpen] = useState(false);
   const [syncingPlanId, setSyncingPlanId] = useState<string | null>(null);
 
-  // Autorização estrita de administrador no client e no layout
+  // Autorização estrita de administrador global
+  const allowedEmails = ['joaovitor.f0725@gmail.com', 'douglas_faresi@hotmail.com'];
+  const userEmail = (profile?.email || '').toLowerCase().trim();
+
   const isAuthorized = 
     profile?.role === 'admin_master_global' || 
     profile?.role === 'admin_master' || 
     profile?.role === 'superadmin' ||
+    allowedEmails.includes(userEmail) ||
     (typeof window !== 'undefined' && localStorage.getItem('navaldocs_admin_preview') === 'true');
 
-  // Busca dos planos integrada ao banco de dados com suporte aos planos previstos
+  const canPublishPrices = 
+    isAuthorized && 
+    (allowedEmails.includes(userEmail) || userEmail === '');
+
+  // Busca dos planos integrada ao banco de dados com suporte aos planos e pacotes
   const { 
     data: plans = [], 
     isLoading, 
@@ -58,6 +71,9 @@ function AdminPlansPage() {
   // Mutação para sincronização individual com a Stripe
   const syncMutation = useMutation({
     mutationFn: async (planId: string) => {
+      if (!canPublishPrices) {
+        throw new Error("Apenas João Vitor e Douglas Faresi podem publicar preços.");
+      }
       setSyncingPlanId(planId);
       return await StripeSyncService.syncWithStripe(planId);
     },
@@ -79,6 +95,7 @@ function AdminPlansPage() {
   // Mutação para arquivar plano
   const archiveMutation = useMutation({
     mutationFn: async (planId: string) => {
+      if (!canPublishPrices) throw new Error("Apenas administradores autorizados podem arquivar planos.");
       return await StripeSyncService.archivePlan(planId);
     },
     onSuccess: () => {
@@ -93,6 +110,7 @@ function AdminPlansPage() {
   // Mutação para publicar plano
   const publishMutation = useMutation({
     mutationFn: async (planId: string) => {
+      if (!canPublishPrices) throw new Error("Apenas administradores autorizados podem publicar planos.");
       return await StripeSyncService.publishPlan(planId);
     },
     onSuccess: () => {
@@ -107,6 +125,7 @@ function AdminPlansPage() {
   // Mutação para reverter para rascunho
   const draftMutation = useMutation({
     mutationFn: async (plan: AdminPlanData) => {
+      if (!canPublishPrices) throw new Error("Apenas administradores autorizados podem alterar status.");
       return StripeSyncService.saveDraft({ ...plan, status: 'draft' });
     },
     onSuccess: () => {
@@ -140,7 +159,17 @@ function AdminPlansPage() {
       (statusFilter === "not_synced" && plan.stripeSyncStatus === "not_synced") ||
       (statusFilter === "failed" && plan.stripeSyncStatus === "failed");
 
-    return matchesSearch && matchesStatus;
+    const apps = plan.appsIncluded || ["navaldocs"];
+    const isBundle = apps.length > 1;
+
+    const matchesApp = 
+      appFilter === "all" ||
+      (appFilter === "navaldocs" && apps.includes("navaldocs") && !isBundle) ||
+      (appFilter === "arrais" && apps.includes("arrais") && !isBundle) ||
+      (appFilter === "notificador" && apps.includes("notificador") && !isBundle) ||
+      (appFilter === "bundles" && isBundle);
+
+    return matchesSearch && matchesStatus && matchesApp;
   });
 
   // Métricas do catálogo
@@ -150,9 +179,19 @@ function AdminPlansPage() {
   const syncedPlans = plans.filter(p => p.stripeSyncStatus === 'synced').length;
   const failedPlans = plans.filter(p => p.stripeSyncStatus === 'failed').length;
 
+  const navaldocsCount = plans.filter(p => (p.appsIncluded || ['navaldocs']).includes('navaldocs') && (p.appsIncluded || []).length === 1).length;
+  const arraisCount = plans.filter(p => (p.appsIncluded || []).includes('arrais') && (p.appsIncluded || []).length === 1).length;
+  const notificadorCount = plans.filter(p => (p.appsIncluded || []).includes('notificador') && (p.appsIncluded || []).length === 1).length;
+  const bundlesCount = plans.filter(p => (p.appsIncluded || []).length > 1).length;
+
   const handleEdit = (plan: AdminPlanData) => {
     setSelectedPlan(plan);
     setIsEditorOpen(true);
+  };
+
+  const handlePreview = (plan: AdminPlanData) => {
+    setPreviewPlan(plan);
+    setIsPreviewOpen(true);
   };
 
   const handleNew = () => {
@@ -166,22 +205,22 @@ function AdminPlansPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 antialiased px-3 sm:px-0">
-      {/* 1. CABEÇALHO */}
+      {/* 1. CABEÇALHO COM DIAGNÓSTICO DO AMBIENTE STRIPE */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-[#1868db] uppercase tracking-wider">
-              Catálogo Comercial
+              Catálogo Comercial & Checkout
             </span>
             <Badge variant="outline" className="text-[10px] font-semibold text-slate-500 border-slate-200">
-              {totalPlans} planos
+              {totalPlans} ofertas
             </Badge>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0d2342] tracking-tight mt-0.5">
             Planos e preços
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
-            Gestão de planos recorrentes, precificação mensal e anual, franquias de processos e IA, e sincronização oficial com a Stripe.
+            Gerenciamento do catálogo completo: NavalDocs, Arrais e Notificador. Precificação mensal e anual em Reais, versionamento de contratos e sincronização oficial com a Stripe.
           </p>
         </div>
 
@@ -192,7 +231,7 @@ function AdminPlansPage() {
             className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold h-10 px-3.5 rounded-xl gap-2 shadow-2xs"
           >
             <Settings className="h-4 w-4 text-slate-500" />
-            <span>Configurar Stripe</span>
+            <span>Diagnóstico Stripe</span>
           </Button>
 
           <Button
@@ -207,6 +246,7 @@ function AdminPlansPage() {
 
           <Button
             onClick={handleNew}
+            disabled={!canPublishPrices}
             className="bg-[#1868db] hover:bg-[#1557b8] text-white text-xs font-bold h-10 px-4 rounded-xl gap-2 shadow-xs"
           >
             <Plus className="h-4 w-4" />
@@ -215,17 +255,65 @@ function AdminPlansPage() {
         </div>
       </div>
 
-      {/* 2. CARDS DE RESUMO (KPIs) */}
+      {/* 2. CARD DIAGNÓSTICO DO AMBIENTE E AUTORIZAÇÃO */}
+      <div className="p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center text-[#1868db]">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-[#0d2342]">Gateway de Pagamentos Stripe</span>
+                <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] font-bold">
+                  Modo Teste / Sandbox
+                </Badge>
+                <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-bold">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Pronto para Sincronização
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Chave secreta e credenciais de faturamento operam exclusivamente no servidor seguro (Deno Edge Functions). Checkouts reais validam preços diretamente no backend.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsStripeDialogOpen(true)}
+              className="text-xs font-bold text-slate-700 h-8 gap-1.5"
+            >
+              <span>Testar conexão</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Banner de permissão restrita */}
+        <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px]">
+          <span className="text-slate-500 flex items-center gap-1.5">
+            <Lock className="h-3.5 w-3.5 text-slate-400" />
+            Publicação de preços autorizada para: <strong>João Vitor</strong> e <strong>Douglas Faresi</strong>
+          </span>
+          <span className="text-slate-400">
+            Alterações de preço geram novas versões imutáveis sem modificar contratos antigos.
+          </span>
+        </div>
+      </div>
+
+      {/* 3. CARDS DE RESUMO (KPIs) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Total de Planos</span>
+            <span className="text-xs font-medium text-slate-500">Total de Ofertas</span>
             <div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center text-[#1868db]">
               <Tag className="h-4 w-4" />
             </div>
           </div>
           <p className="text-2xl font-bold text-[#0d2342] mt-2">{totalPlans}</p>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">Cadastrados no catálogo</span>
+          <span className="text-[11px] text-slate-400 mt-0.5 block">No catálogo comercial</span>
         </Card>
 
         <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-4">
@@ -236,7 +324,7 @@ function AdminPlansPage() {
             </div>
           </div>
           <p className="text-2xl font-bold text-emerald-700 mt-2">{publishedPlans}</p>
-          <span className="text-[11px] text-emerald-600/80 mt-0.5 block">Visíveis para novos clientes</span>
+          <span className="text-[11px] text-emerald-600/80 mt-0.5 block">Disponíveis para contratação</span>
         </Card>
 
         <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-4">
@@ -258,19 +346,89 @@ function AdminPlansPage() {
             </div>
           </div>
           <p className="text-2xl font-bold text-[#1868db] mt-2">{syncedPlans}</p>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">{failedPlans > 0 ? `${failedPlans} com pendência` : 'Gateway integrado'}</span>
+          <span className="text-[11px] text-slate-400 mt-0.5 block">
+            {failedPlans > 0 ? `${failedPlans} com erro na Stripe` : 'Gateway integrado'}
+          </span>
         </Card>
       </div>
 
-      {/* 3. BARRA DE PESQUISA E FILTROS */}
-      <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-3.5">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      {/* 4. FILTROS POR APLICATIVO E STATUS */}
+      <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-3.5 space-y-3">
+        {/* Abas de Aplicativos */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-100">
+          <button
+            type="button"
+            onClick={() => setAppFilter("all")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              appFilter === "all"
+                ? "bg-[#0d2342] text-white shadow-xs"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            Todos os Apps ({totalPlans})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAppFilter("navaldocs")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              appFilter === "navaldocs"
+                ? "bg-[#1868db] text-white shadow-xs"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            <Compass className="h-3.5 w-3.5" />
+            <span>NavalDocs Pro ({navaldocsCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAppFilter("arrais")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              appFilter === "arrais"
+                ? "bg-indigo-600 text-white shadow-xs"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            <Anchor className="h-3.5 w-3.5" />
+            <span>Arrais Pro ({arraisCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAppFilter("notificador")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              appFilter === "notificador"
+                ? "bg-amber-600 text-white shadow-xs"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            <Bell className="h-3.5 w-3.5" />
+            <span>Notificador Naval ({notificadorCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAppFilter("bundles")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              appFilter === "bundles"
+                ? "bg-purple-700 text-white shadow-xs"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Pacotes Completos ({bundlesCount})</span>
+          </button>
+        </div>
+
+        {/* Busca e Status */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
           <div className="relative flex-1">
             <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <Input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar por nome, slug ou descrição..."
+              placeholder="Buscar por nome, slug ou aplicativo..."
               className="pl-9 text-xs sm:text-sm h-10 border-slate-200 rounded-xl"
             />
           </div>
@@ -281,7 +439,7 @@ function AdminPlansPage() {
                 <SelectValue placeholder="Filtrar por status" />
               </SelectTrigger>
               <SelectContent className="bg-white border-slate-200">
-                <SelectItem value="all" className="text-xs">Todos os planos</SelectItem>
+                <SelectItem value="all" className="text-xs">Todos os status</SelectItem>
                 <SelectItem value="published" className="text-xs font-semibold text-emerald-700">● Publicados (Vitrine)</SelectItem>
                 <SelectItem value="draft" className="text-xs font-semibold text-amber-700">● Rascunhos</SelectItem>
                 <SelectItem value="archived" className="text-xs text-slate-500">● Arquivados</SelectItem>
@@ -294,7 +452,7 @@ function AdminPlansPage() {
         </div>
       </Card>
 
-      {/* 4. LISTAGEM DE CARTÕES DE PLANOS */}
+      {/* 5. LISTAGEM DE CARTÕES DE PLANOS */}
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center gap-3">
           <RefreshCw className="h-8 w-8 text-[#1868db] animate-spin" />
@@ -303,12 +461,12 @@ function AdminPlansPage() {
       ) : filteredPlans.length === 0 ? (
         <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-12 text-center">
           <Tag className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-[#0d2342]">Nenhum plano encontrado</h3>
+          <h3 className="text-base font-bold text-[#0d2342]">Nenhuma oferta encontrada</h3>
           <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-            Não foram localizados planos que atendam aos filtros selecionados. Tente alterar os termos da busca.
+            Não foram localizados planos que atendam aos filtros selecionados. Tente alterar os termos da busca ou selecione outro aplicativo.
           </p>
           <Button
-            onClick={() => { setSearchTerm(""); setStatusFilter("all"); }}
+            onClick={() => { setSearchTerm(""); setStatusFilter("all"); setAppFilter("all"); }}
             variant="outline"
             className="mt-4 text-xs font-semibold"
           >
@@ -323,6 +481,8 @@ function AdminPlansPage() {
             const annualDiscountPercent = plan.priceMonthly > 0 
               ? Math.round((1 - (plan.priceYearly / (plan.priceMonthly * 12))) * 100) 
               : 0;
+
+            const apps = plan.appsIncluded || ["navaldocs"];
 
             return (
               <div
@@ -348,6 +508,28 @@ function AdminPlansPage() {
                   {/* Topo do Card */}
                   <div className="flex items-start justify-between gap-2">
                     <div>
+                      {/* Badges de Aplicativos Contemplados */}
+                      <div className="flex flex-wrap items-center gap-1 mb-1.5">
+                        {apps.includes("navaldocs") && (
+                          <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200 text-[9px] font-bold px-1.5 py-0.2 rounded">
+                            NavalDocs
+                          </Badge>
+                        )}
+                        {apps.includes("arrais") && (
+                          <Badge className="bg-indigo-50 text-indigo-700 hover:bg-indigo-50 border-indigo-200 text-[9px] font-bold px-1.5 py-0.2 rounded">
+                            Arrais
+                          </Badge>
+                        )}
+                        {apps.includes("notificador") && (
+                          <Badge className="bg-amber-50 text-amber-800 hover:bg-amber-50 border-amber-200 text-[9px] font-bold px-1.5 py-0.2 rounded">
+                            Notificador
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="text-[9px] font-mono text-slate-400 border-slate-200">
+                          v{plan.version || 1}
+                        </Badge>
+                      </div>
+
                       <h3 className="text-lg font-bold text-[#0d2342] tracking-tight">{plan.name}</h3>
                       <span className="text-[11px] font-mono text-slate-400 block mt-0.5">
                         slug: {plan.slug}
@@ -416,7 +598,7 @@ function AdminPlansPage() {
                     {annualDiscountPercent > 0 && (
                       <div className="mt-1 text-[10px] font-semibold text-emerald-700 flex items-center gap-1">
                         <Sparkles className="h-3 w-3" />
-                        Economia de ~{annualDiscountPercent}% no faturamento anual
+                        Economia de ~{annualDiscountPercent}% no plano anual
                       </div>
                     )}
                   </div>
@@ -424,20 +606,34 @@ function AdminPlansPage() {
                   {/* Franquias e Cotas Operacionais */}
                   <div className="mt-4 space-y-2 border-t border-slate-100 pt-3">
                     <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2">
-                      Limites do Plano
+                      Franquias Contratadas
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
+                      {apps.includes("navaldocs") && (
+                        <div className="flex items-center gap-1.5 text-slate-700">
+                          <FileText className="h-3.5 w-3.5 text-[#1868db] shrink-0" />
+                          <span><strong>{plan.processLimit || 0}</strong> processos/mês</span>
+                        </div>
+                      )}
+                      {apps.includes("arrais") && (
+                        <div className="flex items-center gap-1.5 text-slate-700">
+                          <Anchor className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+                          <span><strong>{plan.arraisKitsLimit || 0}</strong> kits Arrais/mês</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1.5 text-slate-700">
+                        <Cpu className="h-3.5 w-3.5 text-[#1868db] shrink-0" />
+                        <span><strong>{plan.aiPagesLimit || 0}</strong> leituras OCR/mês</span>
+                      </div>
+                      {apps.includes("notificador") && (
+                        <div className="flex items-center gap-1.5 text-slate-700">
+                          <Bell className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                          <span><strong>{plan.monitoredDocsLimit || 0}</strong> docs monitorados</span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-1.5 text-slate-700">
                         <Users className="h-3.5 w-3.5 text-[#1868db] shrink-0" />
                         <span><strong>{plan.userLimit}</strong> {plan.userLimit > 1 ? 'usuários' : 'usuário'}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-slate-700">
-                        <FileText className="h-3.5 w-3.5 text-[#1868db] shrink-0" />
-                        <span><strong>{plan.processLimit}</strong> processos/mês</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-slate-700">
-                        <Cpu className="h-3.5 w-3.5 text-[#1868db] shrink-0" />
-                        <span><strong>{plan.aiPagesLimit}</strong> páginas IA/mês</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-slate-700">
                         <HardDrive className="h-3.5 w-3.5 text-[#1868db] shrink-0" />
@@ -446,10 +642,20 @@ function AdminPlansPage() {
                     </div>
                   </div>
 
+                  {/* Preços de Adicionais / Addons */}
+                  {((plan.addonProcessPrice || 0) > 0 || (plan.addonOcrPrice || 0) > 0 || (plan.addonArraisKitPrice || 0) > 0) && (
+                    <div className="mt-3 p-2 bg-slate-50 border border-slate-100 rounded-lg text-[10px] text-slate-600 flex flex-wrap gap-x-3 gap-y-1">
+                      {(plan.addonProcessPrice || 0) > 0 && <span>Processo extra: R$ {(plan.addonProcessPrice || 0).toFixed(2)}</span>}
+                      {(plan.addonOcrPrice || 0) > 0 && <span>Leitura extra: R$ {(plan.addonOcrPrice || 0).toFixed(2)}</span>}
+                      {(plan.addonArraisKitPrice || 0) > 0 && <span>Kit extra: R$ {(plan.addonArraisKitPrice || 0).toFixed(2)}</span>}
+                    </div>
+                  )}
+
                   {/* Informações da Stripe */}
                   {plan.stripeProductId && (
                     <div className="mt-3 p-2 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-mono text-slate-500 space-y-0.5">
                       <div className="truncate">Stripe Prod: {plan.stripeProductId}</div>
+                      {plan.stripePriceMonthlyId && <div className="truncate">Price Mo: {plan.stripePriceMonthlyId}</div>}
                       {plan.lastSyncedAt && (
                         <div className="text-[9px] text-slate-400">
                           Sincronizado em: {new Date(plan.lastSyncedAt).toLocaleDateString('pt-BR')} {new Date(plan.lastSyncedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -471,6 +677,16 @@ function AdminPlansPage() {
                 <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                   <Button
                     variant="outline"
+                    onClick={() => handlePreview(plan)}
+                    className="text-xs font-semibold h-8 rounded-lg border-slate-200 hover:bg-slate-50 text-slate-700 gap-1 px-2.5"
+                    title="Pré-visualizar na vitrine e checkout"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    <span>Prévia</span>
+                  </Button>
+
+                  <Button
+                    variant="outline"
                     onClick={() => handleEdit(plan)}
                     className="flex-1 text-xs font-semibold h-8 rounded-lg border-slate-200 hover:bg-slate-50 text-slate-700"
                   >
@@ -479,7 +695,7 @@ function AdminPlansPage() {
 
                   <Button
                     onClick={() => syncMutation.mutate(plan.id)}
-                    disabled={isSyncingThis || plan.status === 'archived'}
+                    disabled={isSyncingThis || plan.status === 'archived' || !canPublishPrices}
                     className={`flex-1 text-xs font-bold h-8 rounded-lg gap-1.5 shadow-2xs ${
                       plan.stripeSyncStatus === 'synced'
                         ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
@@ -506,17 +722,26 @@ function AdminPlansPage() {
                         •••
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 bg-white border-slate-200">
-                      <DropdownMenuItem onClick={() => handleEdit(plan)} className="text-xs cursor-pointer">
-                        Editar detalhes
+                    <DropdownMenuContent align="end" className="w-52 bg-white border-slate-200">
+                      <DropdownMenuItem onClick={() => handlePreview(plan)} className="text-xs cursor-pointer gap-2">
+                        <Eye className="h-3.5 w-3.5" />
+                        Pré-visualizar plano
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => syncMutation.mutate(plan.id)} className="text-xs cursor-pointer">
+                      <DropdownMenuItem onClick={() => handleEdit(plan)} className="text-xs cursor-pointer">
+                        Editar detalhes & franquias
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => syncMutation.mutate(plan.id)} 
+                        disabled={!canPublishPrices}
+                        className="text-xs cursor-pointer"
+                      >
                         Sincronizar com Stripe
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       {plan.status === 'draft' && (
                         <DropdownMenuItem 
                           onClick={() => publishMutation.mutate(plan.id)} 
+                          disabled={!canPublishPrices}
                           className="text-xs text-emerald-700 font-semibold cursor-pointer"
                         >
                           Publicar na vitrine
@@ -525,6 +750,7 @@ function AdminPlansPage() {
                       {plan.status === 'published' && (
                         <DropdownMenuItem 
                           onClick={() => draftMutation.mutate(plan)} 
+                          disabled={!canPublishPrices}
                           className="text-xs text-amber-700 font-semibold cursor-pointer"
                         >
                           Mover para rascunho
@@ -533,6 +759,7 @@ function AdminPlansPage() {
                       {plan.status !== 'archived' ? (
                         <DropdownMenuItem 
                           onClick={() => archiveMutation.mutate(plan.id)} 
+                          disabled={!canPublishPrices}
                           className="text-xs text-rose-600 hover:text-rose-700 cursor-pointer"
                         >
                           Arquivar plano
@@ -540,6 +767,7 @@ function AdminPlansPage() {
                       ) : (
                         <DropdownMenuItem 
                           onClick={() => draftMutation.mutate(plan)} 
+                          disabled={!canPublishPrices}
                           className="text-xs text-slate-700 cursor-pointer"
                         >
                           Restaurar como rascunho
@@ -560,6 +788,13 @@ function AdminPlansPage() {
         onClose={() => setIsEditorOpen(false)}
         plan={selectedPlan}
         onSaved={handlePlanSaved}
+      />
+
+      {/* Diálogo de Pré-visualização Fiel */}
+      <PlanPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        plan={previewPlan}
       />
 
       {/* Diálogo de Configuração / Verificação da Stripe */}

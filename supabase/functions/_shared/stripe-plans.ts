@@ -8,18 +8,22 @@ export interface ResolvedPlan {
   priceId?: string;
   unitAmount: number;
   currency: string;
+  version: number;
+  appsIncluded: string[];
 }
 
 // UUID v4 regex (PostgreSQL format)
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Tenta localizar o plano primeiro pelo tipo real de plans.id (UUID),
- * e em seguida pelo slug. Separa as buscas para evitar cast implícito do
- * Supabase ao usar .or() com tipos incompatíveis (uuid vs text).
- *
- * Rejeita planos arquivados, inativos ou rascunhos.
- * Rejeita ciclos de cobrança inválidos em vez de silenciosamente usar 'monthly'.
+ * Localiza o plano de forma segura no catálogo public.plans.
+ * 
+ * Blindagem rigorosa de checkout:
+ * - Rejeita planos arquivados, inativos ou rascunhos.
+ * - Rejeita planos sem sincronização confirmada pela Stripe (stripe_sync_status != 'synced').
+ * - Rejeita ciclos de cobrança inválidos.
+ * - Rejeita planos sem Price ID oficial da Stripe correspondente ao ciclo escolhido.
+ * - Retorna versão imutável da oferta comercial para preservação em subscriptions.metadata.
  */
 export async function resolvePlanFromDatabase(
   adminClient: SupabaseClient,
@@ -38,7 +42,7 @@ export async function resolvePlanFromDatabase(
   const cleanId = planIdentifier.trim();
   const cleanIdLower = cleanId.toLowerCase();
 
-  const PLAN_FIELDS = 'id, slug, name, price, price_yearly, stripe_product_id, stripe_price_monthly_id, stripe_price_yearly_id, is_active, status';
+  const PLAN_FIELDS = 'id, slug, name, price, price_yearly, stripe_product_id, stripe_price_monthly_id, stripe_price_yearly_id, is_active, status, stripe_sync_status, features';
 
   let plan: any = null;
 
@@ -52,7 +56,7 @@ export async function resolvePlanFromDatabase(
     if (!error) plan = data;
   }
 
-  // 2. Busca por slug (always try, fallback para identificadores não-UUID)
+  // 2. Busca por slug (fallback para identificadores não-UUID)
   if (!plan) {
     const { data, error } = await adminClient
       .from('plans')
@@ -64,7 +68,7 @@ export async function resolvePlanFromDatabase(
 
   if (!plan) return null;
 
-  // Bloqueia planos arquivados, inativos ou rascunhos
+  // 1. Bloqueia planos arquivados, inativos ou rascunhos
   if (plan.is_active === false) {
     console.error(`resolvePlanFromDatabase: plano "${plan.name}" está inativo (is_active=false). Contratação bloqueada.`);
     return null;
@@ -74,21 +78,42 @@ export async function resolvePlanFromDatabase(
     return null;
   }
 
+  // 2. Bloqueia planos pendentes de sincronização ou com falha
+  if (plan.stripe_sync_status && plan.stripe_sync_status !== 'synced') {
+    console.error(`resolvePlanFromDatabase: plano "${plan.name}" está com stripe_sync_status="${plan.stripe_sync_status}". Contratação bloqueada até sincronização concluída.`);
+    return null;
+  }
+
   const isAnnual = cycle === 'annual';
   const priceId = isAnnual ? plan.stripe_price_yearly_id : plan.stripe_price_monthly_id;
+
+  // 3. Bloqueia se o Price ID não existir ou for inválido
+  if (!priceId || !priceId.startsWith('price_')) {
+    console.error(`resolvePlanFromDatabase: plano "${plan.name}" não possui Price ID da Stripe para ciclo ${cycle}.`);
+    return null;
+  }
+
   const rawPrice = isAnnual
     ? (plan.price_yearly || (plan.price ? plan.price * 10 : 0))
     : (plan.price || 0);
   const unitAmount = Math.round(Number(rawPrice) * 100);
+
+  const feat = plan.features || {};
+  const version = Number(plan.version ?? feat?.version ?? 1);
+  const apps = Array.isArray(plan.apps_included) 
+    ? plan.apps_included 
+    : (Array.isArray(feat?.appsIncluded) ? feat.appsIncluded : ['navaldocs']);
 
   return {
     planId: plan.slug || plan.id,
     planDbId: plan.id,
     name: plan.name || 'Plano NavalDocs Pro',
     billingCycle: cycle,
-    priceId: (priceId && priceId.startsWith('price_')) ? priceId : undefined,
+    priceId,
     unitAmount,
     currency: 'brl',
+    version,
+    appsIncluded: apps
   };
 }
 
@@ -98,7 +123,7 @@ export async function findPlanByPriceIdInDatabase(
 ): Promise<{ planId: string; billingCycle: string; planDbId: string } | null> {
   if (!priceId) return null;
 
-  // Busca por price_id mensal ou anual — dois .eq() separados para evitar cast entre tipos
+  // Busca por price_id mensal ou anual
   const { data: planMonthly } = await adminClient
     .from('plans')
     .select('id, slug, stripe_price_monthly_id, stripe_price_yearly_id')

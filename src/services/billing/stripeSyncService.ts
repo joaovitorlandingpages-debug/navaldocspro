@@ -2,9 +2,10 @@
  * Stripe Sync Service & Catálogo de Planos Administrativo
  * 
  * Gerencia o ciclo de vida comercial dos planos no NavalDocs Pro:
+ * - Suporte a múltiplos aplicativos: NavalDocs, Arrais e Notificador (individuais e pacotes)
  * - Leitura e persistência no banco Supabase (tabela public.plans)
  * - Rascunhos locais e sincronização oficial com a Stripe
- * - Versionamento e preservação de contratos ativos
+ * - Versionamento de ofertas e preservação estrita de contratos ativos
  * - Sincronização idempotente de produtos e preços recorrentes BRL com a Stripe
  * - Feedback real de erros e status sem simulações falsas
  */
@@ -13,25 +14,58 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type PlanPublicationStatus = 'draft' | 'published' | 'archived';
 export type StripeSyncStatus = 'not_synced' | 'syncing' | 'synced' | 'failed';
+export type SupportedApp = 'navaldocs' | 'arrais' | 'notificador';
+
+export interface PlanPriceHistoryItem {
+  version: number;
+  priceMonthly: number;
+  priceYearly: number;
+  stripePriceMonthlyId?: string | null;
+  stripePriceYearlyId?: string | null;
+  changedAt: string;
+  changedBy?: string;
+  notes?: string;
+}
 
 export interface AdminPlanData {
   id: string;
   slug: string;
   name: string;
   description: string;
-  priceMonthly: number; // em Reais (BRL)
-  priceYearly: number; // em Reais (BRL) - cobrança única anual
+  /** Aplicativos contemplados na oferta comercial */
+  appsIncluded: SupportedApp[];
+  /** Preço mensal em Reais (BRL) */
+  priceMonthly: number;
+  /** Preço anual em Reais (BRL) - cobrança única anual */
+  priceYearly: number;
+  /** Limite de funcionários ou usuários */
   userLimit: number;
+  /** Franquia mensal de novos processos NavalDocs */
   processLimit: number;
+  /** Franquia mensal de kits Arrais */
+  arraisKitsLimit: number;
+  /** Franquia mensal de documentos anexados lidos automaticamente (OCR) */
   aiPagesLimit: number;
+  /** Quantidade de documentos monitorados no Notificador */
+  monitoredDocsLimit: number;
+  /** Limite de armazenamento em nuvem (GB) */
   storageGb: number;
+  /** Preços unitários de adicionais / extras (em Reais BRL) */
+  addonProcessPrice: number;
+  addonArraisKitPrice: number;
+  addonOcrPrice: number;
+  addonMonitoredDocPrice: number;
+  /** Destaque visual */
   isPopular?: boolean;
   highlightBadge?: string;
   /** Status de publicação comercial / visibilidade aos clientes */
   status: PlanPublicationStatus;
   /** Status técnico de integração com o gateway Stripe */
   stripeSyncStatus: StripeSyncStatus;
+  /** Versão da oferta comercial */
   version: number;
+  /** Histórico imutável de preços anteriores para preservar contratos antigos */
+  priceHistory?: PlanPriceHistoryItem[];
   order: number;
   availableForSale: boolean;
   stripeProductId?: string | null;
@@ -39,35 +73,46 @@ export interface AdminPlanData {
   stripePriceYearlyId?: string | null;
   lastSyncedAt?: string | null;
   syncError?: string | null;
+  /** Lista de benefícios exibidos na vitrine para o cliente */
   features?: string[];
   createdAt: string;
   updatedAt: string;
 }
 
-// 3 Planos Oficiais Previstos pelo NavalDocs Pro
+// Planos Oficiais do Catálogo NavalDocs Pro (Individuais e Pacotes)
 export const OFFICIAL_DEFAULT_PLANS: AdminPlanData[] = [
   {
     id: "plan-essencial",
     slug: "essencial",
-    name: "Essencial",
+    name: "NavalDocs Essencial",
     description: "Ideal para profissionais autônomos e pequenos escritórios náuticos em início de operação.",
+    appsIncluded: ["navaldocs"],
     priceMonthly: 149,
     priceYearly: 1490,
     userLimit: 1,
     processLimit: 20,
+    arraisKitsLimit: 0,
     aiPagesLimit: 200,
+    monitoredDocsLimit: 0,
     storageGb: 5,
+    addonProcessPrice: 5.0,
+    addonArraisKitPrice: 0.0,
+    addonOcrPrice: 0.5,
+    addonMonitoredDocPrice: 0.0,
     isPopular: false,
     highlightBadge: undefined,
     status: "draft",
     stripeSyncStatus: "not_synced",
     features: [
-      "1 usuário",
-      "20 processos/mês",
-      "200 páginas IA/mês",
-      "5GB de armazenamento"
+      "1 usuário titular",
+      "20 processos navais/mês",
+      "200 leituras automáticas de anexos (OCR)/mês",
+      "5GB de armazenamento seguro em nuvem",
+      "Geração automática e ilimitada de documentos finais",
+      "Modelos oficiais DPC / NORMAM atualizados"
     ],
     version: 1,
+    priceHistory: [],
     order: 1,
     availableForSale: true,
     stripeProductId: null,
@@ -81,25 +126,36 @@ export const OFFICIAL_DEFAULT_PLANS: AdminPlanData[] = [
   {
     id: "plan-profissional",
     slug: "profissional",
-    name: "Profissional",
+    name: "NavalDocs Profissional",
     description: "Para escritórios em crescimento que exigem mais capacidade analítica com IA e múltiplos usuários.",
+    appsIncluded: ["navaldocs"],
     priceMonthly: 299,
     priceYearly: 2990,
     userLimit: 3,
     processLimit: 60,
+    arraisKitsLimit: 0,
     aiPagesLimit: 600,
+    monitoredDocsLimit: 0,
     storageGb: 15,
+    addonProcessPrice: 4.5,
+    addonArraisKitPrice: 0.0,
+    addonOcrPrice: 0.45,
+    addonMonitoredDocPrice: 0.0,
     isPopular: true,
     highlightBadge: "Recomendado",
     status: "draft",
     stripeSyncStatus: "not_synced",
     features: [
-      "3 usuários",
-      "60 processos/mês",
-      "600 páginas IA/mês",
-      "15GB de armazenamento"
+      "3 usuários com perfis e permissões",
+      "60 processos navais/mês",
+      "600 leituras automáticas de anexos (OCR)/mês",
+      "15GB de armazenamento seguro em nuvem",
+      "Geração automática e ilimitada de documentos finais",
+      "Modelos oficiais DPC / NORMAM atualizados",
+      "Suporte prioritário"
     ],
     version: 1,
+    priceHistory: [],
     order: 2,
     availableForSale: true,
     stripeProductId: null,
@@ -113,26 +169,164 @@ export const OFFICIAL_DEFAULT_PLANS: AdminPlanData[] = [
   {
     id: "plan-equipe",
     slug: "equipe",
-    name: "Equipe",
+    name: "NavalDocs Equipe",
     description: "Solução completa para grandes empresas marítimas, estaleiros e consultorias com alta demanda.",
+    appsIncluded: ["navaldocs"],
     priceMonthly: 599,
     priceYearly: 5990,
     userLimit: 10,
     processLimit: 150,
+    arraisKitsLimit: 0,
     aiPagesLimit: 1500,
+    monitoredDocsLimit: 0,
     storageGb: 40,
+    addonProcessPrice: 3.8,
+    addonArraisKitPrice: 0.0,
+    addonOcrPrice: 0.4,
+    addonMonitoredDocPrice: 0.0,
     isPopular: false,
     highlightBadge: undefined,
     status: "draft",
     stripeSyncStatus: "not_synced",
     features: [
-      "10 usuários",
-      "150 processos/mês",
-      "1.500 páginas IA/mês",
-      "40GB de armazenamento"
+      "10 usuários simultâneos",
+      "150 processos navais/mês",
+      "1.500 leituras automáticas de anexos (OCR)/mês",
+      "40GB de armazenamento em nuvem",
+      "Geração automática e ilimitada de documentos finais",
+      "Modelos oficiais DPC / NORMAM atualizados",
+      "Suporte VIP dedicado com SLA"
     ],
     version: 1,
+    priceHistory: [],
     order: 3,
+    availableForSale: true,
+    stripeProductId: null,
+    stripePriceMonthlyId: null,
+    stripePriceYearlyId: null,
+    lastSyncedAt: null,
+    syncError: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "plan-arrais-pro",
+    slug: "arrais-pro",
+    name: "Arrais Pro (Individual)",
+    description: "Sistema especializado na emissão de kits, requerimentos e cadastros para condutores amadores (Arrais, Motonauta, Mestre).",
+    appsIncluded: ["arrais"],
+    priceMonthly: 189,
+    priceYearly: 1890,
+    userLimit: 2,
+    processLimit: 0,
+    arraisKitsLimit: 50,
+    aiPagesLimit: 250,
+    monitoredDocsLimit: 0,
+    storageGb: 10,
+    addonProcessPrice: 0.0,
+    addonArraisKitPrice: 4.0,
+    addonOcrPrice: 0.5,
+    addonMonitoredDocPrice: 0.0,
+    isPopular: false,
+    highlightBadge: "Novo",
+    status: "draft",
+    stripeSyncStatus: "not_synced",
+    features: [
+      "2 usuários incluídos",
+      "50 kits Arrais / Amadores por mês",
+      "250 leituras automáticas de anexos (CNH, RG, atestado)",
+      "Geração automática e ilimitada dos dossiês de habilitação",
+      "10GB de armazenamento em nuvem"
+    ],
+    version: 1,
+    priceHistory: [],
+    order: 4,
+    availableForSale: true,
+    stripeProductId: null,
+    stripePriceMonthlyId: null,
+    stripePriceYearlyId: null,
+    lastSyncedAt: null,
+    syncError: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "plan-notificador-naval",
+    slug: "notificador-naval",
+    name: "Notificador Naval (Individual)",
+    description: "Monitoramento automatizado de vencimentos de habilitações, laudos de engenharia, vistorias e alvarás náuticos com alertas multicanal.",
+    appsIncluded: ["notificador"],
+    priceMonthly: 119,
+    priceYearly: 1190,
+    userLimit: 2,
+    processLimit: 0,
+    arraisKitsLimit: 0,
+    aiPagesLimit: 100,
+    monitoredDocsLimit: 150,
+    storageGb: 5,
+    addonProcessPrice: 0.0,
+    addonArraisKitPrice: 0.0,
+    addonOcrPrice: 0.5,
+    addonMonitoredDocPrice: 1.0,
+    isPopular: false,
+    highlightBadge: undefined,
+    status: "draft",
+    stripeSyncStatus: "not_synced",
+    features: [
+      "2 usuários incluídos",
+      "150 documentos navais monitorados em tempo real",
+      "Alertas automáticos via WhatsApp e E-mail",
+      "100 leituras de certificados por OCR",
+      "5GB de armazenamento"
+    ],
+    version: 1,
+    priceHistory: [],
+    order: 5,
+    availableForSale: true,
+    stripeProductId: null,
+    stripePriceMonthlyId: null,
+    stripePriceYearlyId: null,
+    lastSyncedAt: null,
+    syncError: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "plan-pacote-completo",
+    slug: "pacote-completo",
+    name: "Pacote Completo (3 Apps)",
+    description: "A suíte naval definitiva: NavalDocs Pro + Arrais Pro + Notificador Naval com capacidade máxima e economia unificada.",
+    appsIncluded: ["navaldocs", "arrais", "notificador"],
+    priceMonthly: 699,
+    priceYearly: 6990,
+    userLimit: 15,
+    processLimit: 180,
+    arraisKitsLimit: 80,
+    aiPagesLimit: 2000,
+    monitoredDocsLimit: 500,
+    storageGb: 60,
+    addonProcessPrice: 3.5,
+    addonArraisKitPrice: 3.5,
+    addonOcrPrice: 0.35,
+    addonMonitoredDocPrice: 0.8,
+    isPopular: true,
+    highlightBadge: "Melhor Custo-Benefício",
+    status: "draft",
+    stripeSyncStatus: "not_synced",
+    features: [
+      "Acesso completo aos 3 sistemas integrados (NavalDocs + Arrais + Notificador)",
+      "15 usuários unificados",
+      "180 processos NavalDocs por mês",
+      "80 kits Arrais por mês",
+      "2.000 leituras automáticas de anexos (OCR)/mês",
+      "500 documentos monitorados com alertas",
+      "60GB de armazenamento total",
+      "Geração automática e ilimitada de documentos e laudos",
+      "Suporte VIP prioritário 24/7"
+    ],
+    version: 1,
+    priceHistory: [],
+    order: 6,
     availableForSale: true,
     stripeProductId: null,
     stripePriceMonthlyId: null,
@@ -153,6 +347,7 @@ function isUuid(val: string): boolean {
 export class StripeSyncService {
   /**
    * Converte linha do banco de dados na interface AdminPlanData
+   * com suporte a apps_included, addons e histórico de preços
    */
   static mapDbToAdminPlan(row: any, order = 1): AdminPlanData {
     const feat = row.features || {};
@@ -170,8 +365,7 @@ export class StripeSyncService {
     } else if (row.is_active === false) {
       statusVal = 'archived';
     } else {
-      // Planos legados ativos por padrão são published
-      statusVal = row.slug && ['essencial', 'profissional', 'equipe'].includes(row.slug.toLowerCase())
+      statusVal = row.slug && ['essencial', 'profissional', 'equipe', 'arrais-pro', 'notificador-naval', 'pacote-completo'].includes(row.slug.toLowerCase())
         ? 'draft'
         : 'published';
     }
@@ -186,40 +380,83 @@ export class StripeSyncService {
       syncStatusVal = 'failed';
     }
 
+    // Aplicativos incluídos
+    let apps: SupportedApp[] = ['navaldocs'];
+    if (Array.isArray(row.apps_included) && row.apps_included.length > 0) {
+      apps = row.apps_included;
+    } else if (Array.isArray(feat?.appsIncluded) && feat.appsIncluded.length > 0) {
+      apps = feat.appsIncluded;
+    } else {
+      const slugLower = (row.slug || '').toLowerCase();
+      if (slugLower.includes('combo') || slugLower.includes('completo') || slugLower.includes('pacote')) {
+        apps = ['navaldocs', 'arrais', 'notificador'];
+      } else if (slugLower.includes('arrais')) {
+        apps = ['arrais'];
+      } else if (slugLower.includes('notificador')) {
+        apps = ['notificador'];
+      } else {
+        apps = ['navaldocs'];
+      }
+    }
+
+    // Lista de benefícios
     let featuresList: string[] = [];
     if (Array.isArray(feat)) {
       featuresList = feat;
     } else if (Array.isArray(feat?.highlightFeatures)) {
       featuresList = feat.highlightFeatures;
+    } else if (Array.isArray(feat?.features)) {
+      featuresList = feat.features;
     } else {
       featuresList = [
         `${row.user_limit ?? 1} ${(row.user_limit ?? 1) > 1 ? 'usuários' : 'usuário'}`,
         `${row.process_limit ?? 20} processos/mês`,
-        `${row.ocr_limit ?? 200} páginas IA/mês`,
+        `${row.ocr_limit ?? 200} leituras automáticas de anexos (OCR)/mês`,
         `${row.storage_limit_gb ?? 5}GB de armazenamento`
       ];
     }
 
-    const isPop = Boolean(row.is_popular ?? feat?.isPopular ?? (row.slug === 'profissional' || row.slug === 'pro'));
+    const isPop = Boolean(row.is_popular ?? feat?.isPopular ?? (row.slug === 'profissional' || row.slug === 'pacote-completo'));
     const badge = row.highlight_badge || feat?.highlightBadge || (isPop ? "Recomendado" : undefined);
+
+    const arraisLimit = Number(row.arrais_kits_limit ?? feat?.arraisKitsLimit ?? 0);
+    const monitoredLimit = Number(row.monitored_docs_limit ?? feat?.monitoredDocsLimit ?? 0);
+
+    const addonProc = Number(row.addon_process_price ?? feat?.addonProcessPrice ?? 0);
+    const addonArr = Number(row.addon_arrais_kit_price ?? feat?.addonArraisKitPrice ?? 0);
+    const addonOcr = Number(row.addon_ocr_price ?? feat?.addonOcrPrice ?? 0);
+    const addonMon = Number(row.addon_monitored_doc_price ?? feat?.addonMonitoredDocPrice ?? 0);
+
+    const versionNum = Number(row.version ?? feat?.version ?? 1);
+    const historyList: PlanPriceHistoryItem[] = Array.isArray(row.price_history) 
+      ? row.price_history 
+      : (Array.isArray(feat?.priceHistory) ? feat.priceHistory : []);
 
     return {
       id: row.id,
       slug: row.slug || `plano-${row.id}`,
       name: row.name || "Plano sem nome",
       description: row.description || "",
+      appsIncluded: apps,
       priceMonthly: priceMo,
       priceYearly: priceYr,
-      userLimit: row.user_limit ?? 1,
-      processLimit: row.process_limit ?? 20,
-      aiPagesLimit: row.ocr_limit ?? 200,
-      storageGb: row.storage_limit_gb ?? 5,
+      userLimit: Number(row.user_limit ?? 1),
+      processLimit: Number(row.process_limit ?? 20),
+      arraisKitsLimit: arraisLimit,
+      aiPagesLimit: Number(row.ocr_limit ?? 200),
+      monitoredDocsLimit: monitoredLimit,
+      storageGb: Number(row.storage_limit_gb ?? 5),
+      addonProcessPrice: addonProc,
+      addonArraisKitPrice: addonArr,
+      addonOcrPrice: addonOcr,
+      addonMonitoredDocPrice: addonMon,
       isPopular: isPop,
       highlightBadge: badge,
       status: statusVal,
       stripeSyncStatus: syncStatusVal,
       features: featuresList,
-      version: row.version || 1,
+      version: versionNum,
+      priceHistory: historyList,
       order,
       availableForSale: row.is_active !== false && statusVal === 'published',
       stripeProductId: row.stripe_product_id || feat?.stripeProductId || null,
@@ -284,14 +521,13 @@ export class StripeSyncService {
         result.push(this.mapDbToAdminPlan(row, idx + 1));
       });
 
-      // 2. Se os planos oficiais (Essencial, Profissional, Equipe) não existirem, cadastra como rascunhos sem duplicar
+      // 2. Se algum dos planos oficiais não existir no banco, registra como rascunho
       const missingDefaults = OFFICIAL_DEFAULT_PLANS.filter(p => !existingSlugs.has(p.slug.toLowerCase()));
 
       if (missingDefaults.length > 0) {
         for (const p of missingDefaults) {
-          // Tenta persistir no banco o rascunho
           try {
-            const { data: inserted, error: insErr } = await supabase
+            const { data: inserted } = await supabase
               .from('plans')
               .insert({
                 name: p.name,
@@ -308,12 +544,18 @@ export class StripeSyncService {
                 is_popular: p.isPopular || false,
                 highlight_badge: p.highlightBadge || null,
                 is_active: true,
-                features: p.features || [
-                  `${p.userLimit} ${p.userLimit > 1 ? 'usuários' : 'usuário'}`,
-                  `${p.processLimit} processos/mês`,
-                  `${p.aiPagesLimit} páginas IA/mês`,
-                  `${p.storageGb}GB de armazenamento`
-                ]
+                features: {
+                  appsIncluded: p.appsIncluded,
+                  arraisKitsLimit: p.arraisKitsLimit,
+                  monitoredDocsLimit: p.monitoredDocsLimit,
+                  addonProcessPrice: p.addonProcessPrice,
+                  addonArraisKitPrice: p.addonArraisKitPrice,
+                  addonOcrPrice: p.addonOcrPrice,
+                  addonMonitoredDocPrice: p.addonMonitoredDocPrice,
+                  version: p.version,
+                  priceHistory: p.priceHistory || [],
+                  features: p.features
+                }
               })
               .select()
               .maybeSingle();
@@ -339,42 +581,87 @@ export class StripeSyncService {
 
   /**
    * Salva ou atualiza um plano no banco de dados e no catálogo local
+   * Trata versionamento: se o preço mudou num plano já sincronizado, arquiva no priceHistory e incrementa versão!
    */
   static async savePlan(plan: Partial<AdminPlanData> & { id?: string }): Promise<AdminPlanData> {
     const plans = this.getPlans();
     const now = new Date().toISOString();
     const targetSlug = plan.slug || `plano-${Date.now().toString(36)}`;
 
+    // Identificar plano pré-existente
+    const existingIndex = plans.findIndex(p => p.id === plan.id || p.slug === targetSlug);
+    const existing = existingIndex >= 0 ? plans[existingIndex] : null;
+
+    let version = plan.version || existing?.version || 1;
+    let priceHistory: PlanPriceHistoryItem[] = [...(plan.priceHistory || existing?.priceHistory || [])];
+    let syncStatus: StripeSyncStatus = plan.stripeSyncStatus || existing?.stripeSyncStatus || 'not_synced';
+    let stripePriceMonthlyId = plan.stripePriceMonthlyId ?? existing?.stripePriceMonthlyId ?? null;
+    let stripePriceYearlyId = plan.stripePriceYearlyId ?? existing?.stripePriceYearlyId ?? null;
+
+    // Detecção de mudança de preço em plano já sincronizado com a Stripe
+    if (existing && existing.stripeProductId) {
+      const priceMonthlyChanged = plan.priceMonthly !== undefined && plan.priceMonthly !== existing.priceMonthly;
+      const priceYearlyChanged = plan.priceYearly !== undefined && plan.priceYearly !== existing.priceYearly;
+
+      if (priceMonthlyChanged || priceYearlyChanged) {
+        // Arquiva snapshot do preço anterior no histórico
+        const snapshot: PlanPriceHistoryItem = {
+          version: existing.version || 1,
+          priceMonthly: existing.priceMonthly,
+          priceYearly: existing.priceYearly,
+          stripePriceMonthlyId: existing.stripePriceMonthlyId,
+          stripePriceYearlyId: existing.stripePriceYearlyId,
+          changedAt: now,
+          notes: `Preço alterado de R$${existing.priceMonthly}/mês (R$${existing.priceYearly}/ano) para R$${plan.priceMonthly ?? existing.priceMonthly}/mês (R$${plan.priceYearly ?? existing.priceYearly}/ano).`
+        };
+
+        priceHistory = [...priceHistory, snapshot];
+        version = (existing.version || 1) + 1;
+        // Reseta status para exigir nova sincronização com a Stripe gerando novos Price IDs
+        syncStatus = 'not_synced';
+        stripePriceMonthlyId = null;
+        stripePriceYearlyId = null;
+      }
+    }
+
     const planData: AdminPlanData = {
       id: plan.id || `plan-${Date.now()}`,
       slug: targetSlug,
       name: plan.name || "Novo Plano",
       description: plan.description || "",
+      appsIncluded: plan.appsIncluded && plan.appsIncluded.length > 0 ? plan.appsIncluded : ["navaldocs"],
       priceMonthly: plan.priceMonthly || 0,
       priceYearly: plan.priceYearly || 0,
       userLimit: plan.userLimit || 1,
-      processLimit: plan.processLimit || 20,
-      aiPagesLimit: plan.aiPagesLimit || 200,
+      processLimit: plan.processLimit || 0,
+      arraisKitsLimit: plan.arraisKitsLimit || 0,
+      aiPagesLimit: plan.aiPagesLimit || 0,
+      monitoredDocsLimit: plan.monitoredDocsLimit || 0,
       storageGb: plan.storageGb || 5,
+      addonProcessPrice: plan.addonProcessPrice ?? 0,
+      addonArraisKitPrice: plan.addonArraisKitPrice ?? 0,
+      addonOcrPrice: plan.addonOcrPrice ?? 0,
+      addonMonitoredDocPrice: plan.addonMonitoredDocPrice ?? 0,
       isPopular: Boolean(plan.isPopular),
       highlightBadge: plan.highlightBadge || undefined,
       status: plan.status || 'draft',
-      stripeSyncStatus: plan.stripeSyncStatus || 'not_synced',
+      stripeSyncStatus: syncStatus,
+      version,
+      priceHistory,
       features: plan.features || [
         `${plan.userLimit || 1} ${(plan.userLimit || 1) > 1 ? 'usuários' : 'usuário'}`,
         `${plan.processLimit || 20} processos/mês`,
-        `${plan.aiPagesLimit || 200} páginas IA/mês`,
+        `${plan.aiPagesLimit || 200} leituras automáticas de anexos/mês`,
         `${plan.storageGb || 5}GB de armazenamento`
       ],
-      version: plan.version || 1,
       order: plan.order || (plans.length + 1),
       availableForSale: (plan.status ? plan.status === 'published' : (plan.availableForSale ?? false)),
-      stripeProductId: plan.stripeProductId || null,
-      stripePriceMonthlyId: plan.stripePriceMonthlyId || null,
-      stripePriceYearlyId: plan.stripePriceYearlyId || null,
-      lastSyncedAt: plan.lastSyncedAt || null,
+      stripeProductId: plan.stripeProductId || existing?.stripeProductId || null,
+      stripePriceMonthlyId,
+      stripePriceYearlyId,
+      lastSyncedAt: plan.lastSyncedAt || existing?.lastSyncedAt || null,
       syncError: plan.syncError || null,
-      createdAt: plan.createdAt || now,
+      createdAt: plan.createdAt || existing?.createdAt || now,
       updatedAt: now
     };
 
@@ -396,9 +683,31 @@ export class StripeSyncService {
         is_popular: planData.isPopular,
         highlight_badge: planData.highlightBadge || null,
         is_active: planData.status !== 'archived',
-        features: planData.features,
+        features: {
+          appsIncluded: planData.appsIncluded,
+          arraisKitsLimit: planData.arraisKitsLimit,
+          monitoredDocsLimit: planData.monitoredDocsLimit,
+          addonProcessPrice: planData.addonProcessPrice,
+          addonArraisKitPrice: planData.addonArraisKitPrice,
+          addonOcrPrice: planData.addonOcrPrice,
+          addonMonitoredDocPrice: planData.addonMonitoredDocPrice,
+          version: planData.version,
+          priceHistory: planData.priceHistory,
+          features: planData.features
+        },
         updated_at: now
       };
+
+      // Tenta incluir colunas específicas caso já migradas
+      payload.apps_included = planData.appsIncluded;
+      payload.arrais_kits_limit = planData.arraisKitsLimit;
+      payload.monitored_docs_limit = planData.monitoredDocsLimit;
+      payload.addon_process_price = planData.addonProcessPrice;
+      payload.addon_arrais_kit_price = planData.addonArraisKitPrice;
+      payload.addon_ocr_price = planData.addonOcrPrice;
+      payload.addon_monitored_doc_price = planData.addonMonitoredDocPrice;
+      payload.version = planData.version;
+      payload.price_history = planData.priceHistory;
 
       if (plan.id && isUuid(plan.id)) {
         const { data: updated, error } = await supabase
@@ -408,7 +717,34 @@ export class StripeSyncService {
           .select()
           .maybeSingle();
 
-        if (updated) {
+        if (error) {
+          // Se falhou por coluna ausente, tenta payload simplificado com features
+          const simplePayload = {
+            name: planData.name,
+            slug: planData.slug,
+            description: planData.description,
+            price: planData.priceMonthly,
+            price_yearly: planData.priceYearly,
+            user_limit: planData.userLimit,
+            process_limit: planData.processLimit,
+            ocr_limit: planData.aiPagesLimit,
+            storage_limit_gb: planData.storageGb,
+            status: planData.status,
+            stripe_sync_status: planData.stripeSyncStatus,
+            is_popular: planData.isPopular,
+            highlight_badge: planData.highlightBadge || null,
+            is_active: planData.status !== 'archived',
+            features: payload.features,
+            updated_at: now
+          };
+          const { data: fallbackUpdated } = await supabase
+            .from('plans')
+            .update(simplePayload)
+            .eq('id', plan.id)
+            .select()
+            .maybeSingle();
+          if (fallbackUpdated) planData.id = fallbackUpdated.id;
+        } else if (updated) {
           planData.id = updated.id;
         }
       } else {
@@ -419,7 +755,33 @@ export class StripeSyncService {
           .select()
           .maybeSingle();
 
-        if (upserted) {
+        if (error) {
+          const simplePayload = {
+            name: planData.name,
+            slug: planData.slug,
+            description: planData.description,
+            price: planData.priceMonthly,
+            price_yearly: planData.priceYearly,
+            billing_cycle: 'monthly',
+            user_limit: planData.userLimit,
+            process_limit: planData.processLimit,
+            ocr_limit: planData.aiPagesLimit,
+            storage_limit_gb: planData.storageGb,
+            status: planData.status,
+            stripe_sync_status: planData.stripeSyncStatus,
+            is_popular: planData.isPopular,
+            highlight_badge: planData.highlightBadge || null,
+            is_active: planData.status !== 'archived',
+            features: payload.features,
+            updated_at: now
+          };
+          const { data: fallbackUpserted } = await supabase
+            .from('plans')
+            .upsert(simplePayload, { onConflict: 'slug' })
+            .select()
+            .maybeSingle();
+          if (fallbackUpserted) planData.id = fallbackUpserted.id;
+        } else if (upserted) {
           planData.id = upserted.id;
         }
       }
@@ -428,7 +790,6 @@ export class StripeSyncService {
     }
 
     // 2. Atualiza cache local
-    const existingIndex = plans.findIndex(p => p.id === planData.id || p.slug === planData.slug);
     if (existingIndex >= 0) {
       plans[existingIndex] = planData;
     } else {
@@ -445,6 +806,7 @@ export class StripeSyncService {
   static saveDraft(plan: Partial<AdminPlanData> & { id?: string }): AdminPlanData {
     const plans = this.getPlans();
     const now = new Date().toISOString();
+    const targetSlug = plan.slug || `plano-${Date.now().toString(36)}`;
     const isEdit = Boolean(plan.id);
 
     let updated: AdminPlanData;
@@ -462,15 +824,22 @@ export class StripeSyncService {
       } else {
         updated = {
           id: plan.id!,
-          slug: plan.slug || `plano-${Date.now().toString(36)}`,
+          slug: targetSlug,
           name: plan.name || "Novo Rascunho",
           description: plan.description || "",
+          appsIncluded: plan.appsIncluded || ["navaldocs"],
           priceMonthly: plan.priceMonthly || 149,
           priceYearly: plan.priceYearly || 1490,
           userLimit: plan.userLimit || 1,
           processLimit: plan.processLimit || 20,
+          arraisKitsLimit: plan.arraisKitsLimit || 0,
           aiPagesLimit: plan.aiPagesLimit || 200,
+          monitoredDocsLimit: plan.monitoredDocsLimit || 0,
           storageGb: plan.storageGb || 5,
+          addonProcessPrice: plan.addonProcessPrice ?? 0,
+          addonArraisKitPrice: plan.addonArraisKitPrice ?? 0,
+          addonOcrPrice: plan.addonOcrPrice ?? 0,
+          addonMonitoredDocPrice: plan.addonMonitoredDocPrice ?? 0,
           isPopular: Boolean(plan.isPopular),
           highlightBadge: plan.highlightBadge,
           status: 'draft',
@@ -478,10 +847,11 @@ export class StripeSyncService {
           features: plan.features || [
             `${plan.userLimit || 1} ${(plan.userLimit || 1) > 1 ? 'usuários' : 'usuário'}`,
             `${plan.processLimit || 20} processos/mês`,
-            `${plan.aiPagesLimit || 200} páginas IA/mês`,
+            `${plan.aiPagesLimit || 200} leituras automáticas de anexos/mês`,
             `${plan.storageGb || 5}GB de armazenamento`
           ],
-          version: 1,
+          version: plan.version || 1,
+          priceHistory: plan.priceHistory || [],
           order: plans.length + 1,
           availableForSale: false,
           stripeProductId: null,
@@ -497,15 +867,22 @@ export class StripeSyncService {
     } else {
       updated = {
         id: `plan-${Date.now()}`,
-        slug: plan.slug || `plano-${Date.now().toString(36)}`,
+        slug: targetSlug,
         name: plan.name || "Novo Rascunho",
         description: plan.description || "",
+        appsIncluded: plan.appsIncluded || ["navaldocs"],
         priceMonthly: plan.priceMonthly || 149,
         priceYearly: plan.priceYearly || 1490,
         userLimit: plan.userLimit || 1,
         processLimit: plan.processLimit || 20,
+        arraisKitsLimit: plan.arraisKitsLimit || 0,
         aiPagesLimit: plan.aiPagesLimit || 200,
+        monitoredDocsLimit: plan.monitoredDocsLimit || 0,
         storageGb: plan.storageGb || 5,
+        addonProcessPrice: plan.addonProcessPrice ?? 0,
+        addonArraisKitPrice: plan.addonArraisKitPrice ?? 0,
+        addonOcrPrice: plan.addonOcrPrice ?? 0,
+        addonMonitoredDocPrice: plan.addonMonitoredDocPrice ?? 0,
         isPopular: Boolean(plan.isPopular),
         highlightBadge: plan.highlightBadge,
         status: 'draft',
@@ -513,10 +890,11 @@ export class StripeSyncService {
         features: plan.features || [
           `${plan.userLimit || 1} ${(plan.userLimit || 1) > 1 ? 'usuários' : 'usuário'}`,
           `${plan.processLimit || 20} processos/mês`,
-          `${plan.aiPagesLimit || 200} páginas IA/mês`,
+          `${plan.aiPagesLimit || 200} leituras automáticas de anexos/mês`,
           `${plan.storageGb || 5}GB de armazenamento`
         ],
         version: 1,
+        priceHistory: [],
         order: plans.length + 1,
         availableForSale: false,
         stripeProductId: null,
@@ -589,15 +967,24 @@ export class StripeSyncService {
     this.savePlans(plans);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : undefined;
+
       const { data, error } = await supabase.functions.invoke("stripe-sync-plans", {
         body: {
           planId: plan.id,
           slug: plan.slug,
           name: plan.name,
           description: plan.description,
+          appsIncluded: plan.appsIncluded,
           priceMonthly: plan.priceMonthly,
-          priceYearly: plan.priceYearly
-        }
+          priceYearly: plan.priceYearly,
+          version: plan.version || 1,
+          priceHistory: plan.priceHistory || []
+        },
+        headers
       });
 
       if (error || data?.error) {
@@ -620,7 +1007,8 @@ export class StripeSyncService {
       plan.stripeSyncStatus = "synced";
       plan.stripeProductId = data.productId;
       plan.stripePriceMonthlyId = data.priceMonthlyId;
-      plan.stripePriceYearlyId = data.pricePriceYearlyId || data.priceYearlyId;
+      plan.stripePriceYearlyId = data.priceYearlyId || data.pricePriceYearlyId;
+      plan.version = data.version || plan.version;
       plan.lastSyncedAt = new Date().toISOString();
       plan.syncError = null;
       plan.updatedAt = new Date().toISOString();
@@ -631,7 +1019,7 @@ export class StripeSyncService {
 
       return {
         success: true,
-        message: `Plano "${plan.name}" sincronizado com sucesso na Stripe!`,
+        message: `Plano "${plan.name}" sincronizado com sucesso na Stripe (v${plan.version})!`,
         plan
       };
     } catch (err: any) {
@@ -671,6 +1059,22 @@ export class StripeSyncService {
     }
 
     return { total: plans.length, successCount, errors };
+  }
+
+  /**
+   * Helper para rótulo legível dos aplicativos
+   */
+  static getAppsBadgeLabel(apps: SupportedApp[]): string {
+    if (!apps || apps.length === 0) return "NavalDocs Pro";
+    if (apps.length === 3 && apps.includes('navaldocs') && apps.includes('arrais') && apps.includes('notificador')) {
+      return "Pacote Completo (3 Apps)";
+    }
+    const map: Record<SupportedApp, string> = {
+      navaldocs: "NavalDocs Pro",
+      arrais: "Arrais Pro",
+      notificador: "Notificador Naval"
+    };
+    return apps.map(a => map[a] || a).join(" + ");
   }
 
   /**
