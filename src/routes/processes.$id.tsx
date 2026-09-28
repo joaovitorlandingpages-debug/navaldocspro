@@ -466,9 +466,18 @@ function ProcessDetailsPage() {
             </p>
           </div>
 
-          {/* Seletor de Situação Rápida */}
+          {/* Seletor de Situação Rápida e Acesso a Pendências */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500">Situação:</span>
+            <Link
+              to="/processes/$id/pendencias"
+              params={{ id }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 text-xs font-bold transition-all shadow-xs cursor-pointer"
+            >
+              <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+              <span>Pendências</span>
+            </Link>
+
+            <span className="text-xs font-semibold text-slate-500 ml-1">Situação:</span>
             <select
               value={currentStatus}
               disabled={isStatusChanging}
@@ -754,6 +763,14 @@ function ProcessDetailsPage() {
                     </div>
 
                     <div className="flex items-center justify-end gap-2 pt-1">
+                      <Link
+                        to="/processes/$id/pendencias"
+                        params={{ id }}
+                        className="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+                        <span>Ver pendências</span>
+                      </Link>
                       <button
                         type="button"
                         onClick={() => {
@@ -777,6 +794,25 @@ function ProcessDetailsPage() {
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigate({
+                      to: "/processes/$id/pendencias",
+                      params: { id },
+                    });
+                  }}
+                  className="p-3 rounded-xl border border-amber-200 hover:border-amber-400 bg-amber-50/20 hover:bg-amber-50/50 text-left transition-all cursor-pointer group"
+                >
+                  <p className="text-xs font-bold text-amber-900 group-hover:text-amber-800 flex items-center justify-between">
+                    <span>Pendências do serviço</span>
+                    <AlertCircle className="h-4 w-4 text-amber-600" />
+                  </p>
+                  <p className="text-[11px] text-amber-700/80 mt-0.5">
+                    Conferir dados, documentos a enviar e ações
+                  </p>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => {
