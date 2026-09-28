@@ -51,6 +51,7 @@ import { Route as PerformanceCenterRouteImport } from './routes/performance-cent
 import { Route as PilotoRouteImport } from './routes/piloto'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PredictionsRouteImport } from './routes/predictions'
+import { Route as PrimeirosPassosRouteImport } from './routes/primeiros-passos'
 import { Route as QaChecklistRouteImport } from './routes/qa-checklist'
 import { Route as SalesCenterRouteImport } from './routes/sales-center'
 import { Route as ServicosRouteImport } from './routes/servicos'
@@ -384,6 +385,11 @@ const PlansRoute = PlansRouteImport.update({
 const PredictionsRoute = PredictionsRouteImport.update({
   id: '/predictions',
   path: '/predictions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrimeirosPassosRoute = PrimeirosPassosRouteImport.update({
+  id: '/primeiros-passos',
+  path: '/primeiros-passos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QaChecklistRoute = QaChecklistRouteImport.update({
@@ -1075,6 +1081,7 @@ export interface FileRoutesByFullPath {
   '/piloto': typeof PilotoRoute
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
+  '/primeiros-passos': typeof PrimeirosPassosRoute
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
   '/servicos': typeof ServicosRouteWithChildren
@@ -1241,6 +1248,7 @@ export interface FileRoutesByTo {
   '/piloto': typeof PilotoRoute
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
+  '/primeiros-passos': typeof PrimeirosPassosRoute
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
   '/servicos': typeof ServicosRouteWithChildren
@@ -1408,6 +1416,7 @@ export interface FileRoutesById {
   '/piloto': typeof PilotoRoute
   '/plans': typeof PlansRoute
   '/predictions': typeof PredictionsRoute
+  '/primeiros-passos': typeof PrimeirosPassosRoute
   '/qa-checklist': typeof QaChecklistRoute
   '/sales-center': typeof SalesCenterRoute
   '/servicos': typeof ServicosRouteWithChildren
@@ -1578,6 +1587,7 @@ export interface FileRouteTypes {
     | '/piloto'
     | '/plans'
     | '/predictions'
+    | '/primeiros-passos'
     | '/qa-checklist'
     | '/sales-center'
     | '/servicos'
@@ -1744,6 +1754,7 @@ export interface FileRouteTypes {
     | '/piloto'
     | '/plans'
     | '/predictions'
+    | '/primeiros-passos'
     | '/qa-checklist'
     | '/sales-center'
     | '/servicos'
@@ -1910,6 +1921,7 @@ export interface FileRouteTypes {
     | '/piloto'
     | '/plans'
     | '/predictions'
+    | '/primeiros-passos'
     | '/qa-checklist'
     | '/sales-center'
     | '/servicos'
@@ -2079,6 +2091,7 @@ export interface RootRouteChildren {
   PilotoRoute: typeof PilotoRoute
   PlansRoute: typeof PlansRoute
   PredictionsRoute: typeof PredictionsRoute
+  PrimeirosPassosRoute: typeof PrimeirosPassosRoute
   QaChecklistRoute: typeof QaChecklistRoute
   SalesCenterRoute: typeof SalesCenterRoute
   ServicosRoute: typeof ServicosRouteWithChildren
@@ -2407,6 +2420,13 @@ declare module '@tanstack/react-router' {
       path: '/predictions'
       fullPath: '/predictions'
       preLoaderRoute: typeof PredictionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/primeiros-passos': {
+      id: '/primeiros-passos'
+      path: '/primeiros-passos'
+      fullPath: '/primeiros-passos'
+      preLoaderRoute: typeof PrimeirosPassosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/qa-checklist': {
@@ -3614,6 +3634,7 @@ const rootRouteChildren: RootRouteChildren = {
   PilotoRoute: PilotoRoute,
   PlansRoute: PlansRoute,
   PredictionsRoute: PredictionsRoute,
+  PrimeirosPassosRoute: PrimeirosPassosRoute,
   QaChecklistRoute: QaChecklistRoute,
   SalesCenterRoute: SalesCenterRoute,
   ServicosRoute: ServicosRouteWithChildren,

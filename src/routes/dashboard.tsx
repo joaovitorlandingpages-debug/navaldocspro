@@ -18,7 +18,8 @@ import {
   Menu,
   X,
   ChevronDown,
-  Gauge
+  Gauge,
+  Rocket
 } from "lucide-react";
 import {
   DropdownMenu, 
@@ -30,11 +31,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { toast } from "sonner";
 import { ServicesCategoryModal } from "@/components/home/ServicesCategoryModal";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { PrimeirosPassosBanner } from "@/components/home/PrimeirosPassosBanner";
+import { getCompanyOnboardingProgress } from "@/services/onboardingService";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayoutWrapper,
@@ -187,6 +191,12 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
+                <Link to="/getting-started" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                  <Rocket className="h-4 w-4 text-[#075BFF]" />
+                  <span>Primeiros passos</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link to="/support" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                   <HelpCircle className="h-4 w-4 text-slate-400" />
                   <span>Central de Ajuda</span>
@@ -317,10 +327,22 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
 }
 
 export function RouteContent() {
-  const { profile } = useAuth();
+  const { profile, companyId: authCompanyId } = useAuth();
+  const companyId = profile?.company_id || authCompanyId;
   const navigate = useNavigate();
   const location = useLocation();
   const [isServicesModalOpen, setIsServicesModalOpen] = useState(false);
+
+  // Consulta do progresso real de primeiros passos
+  const { data: onboardingProgress, refetch: refetchOnboarding } = useQuery({
+    queryKey: ["company-onboarding-progress", companyId],
+    queryFn: async () => {
+      if (!companyId) return null;
+      return await getCompanyOnboardingProgress(companyId);
+    },
+    enabled: Boolean(companyId),
+    staleTime: 1000 * 15,
+  });
 
   // Se for sub-rota de dashboard (ex: /dashboard/deadlines), renderiza o Outlet
   if (location.pathname !== "/dashboard" && location.pathname !== "/dashboard/") {
@@ -353,6 +375,17 @@ export function RouteContent() {
       <div className="mb-8 sm:mb-10 max-w-5xl">
         <GlobalSearch variant="home" />
       </div>
+
+      {/* 1.2 GUIA DE PRIMEIROS PASSOS (COMPLEMENTA A HOME SEM REMOVER OS ATALHOS) */}
+      {onboardingProgress && companyId && (
+        <div className="max-w-5xl">
+          <PrimeirosPassosBanner 
+            progress={onboardingProgress} 
+            companyId={companyId} 
+            onRefresh={() => refetchOnboarding()} 
+          />
+        </div>
+      )}
 
       {/* 2. TRÊS CARDS PRINCIPAIS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl">

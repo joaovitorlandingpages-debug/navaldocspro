@@ -22,7 +22,8 @@ import {
   Check,
   AlertTriangle,
   ArrowRight,
-  FileText
+  FileText,
+  Rocket
 } from "lucide-react";
 import { useState, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -330,6 +331,31 @@ export function AjudaESugestoesPage() {
               className="pl-9 h-9 text-xs rounded-xl bg-slate-50 border-slate-200"
             />
           </div>
+        </div>
+
+        {/* Banner de Acesso ao Guia de Primeiros Passos */}
+        <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-white text-[#075BFF] flex items-center justify-center shrink-0 shadow-2xs border border-blue-100">
+              <Rocket className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-[#0B1739]">
+                Guia de Primeiros passos na plataforma
+              </p>
+              <p className="text-[11px] text-slate-600">
+                Acompanhe a sequência de 6 etapas essenciais para emitir seu primeiro documento oficial da embarcação.
+              </p>
+            </div>
+          </div>
+
+          <Link
+            to="/getting-started"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold transition-colors shrink-0 shadow-xs cursor-pointer"
+          >
+            <span>Acessar Primeiros passos</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
 
         {/* Lista de Acordeões */}

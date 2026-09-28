@@ -1,161 +1,284 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { 
-  Rocket, Users, Ship, ClipboardList, 
-  Zap, FileText, CheckCircle2, PlayCircle,
-  ArrowRight, Sparkles, BookOpen, ChevronRight
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { useAuth } from '@/hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+  Rocket, 
+  CheckCircle2, 
+  Circle, 
+  ArrowRight, 
+  Building2, 
+  UserCheck, 
+  Users, 
+  Ship, 
+  ClipboardList, 
+  FileText, 
+  ArrowLeft, 
+  RefreshCw, 
+  HelpCircle,
+  ExternalLink,
+  Sparkles,
+  ChevronRight
+} from "lucide-react";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { DashboardLayout } from "@/routes/dashboard";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { 
+  getCompanyOnboardingProgress, 
+  OnboardingStep 
+} from "@/services/onboardingService";
 
-export const Route = createFileRoute('/getting-started')({
-  component: GettingStartedPage,
+export const Route = createFileRoute("/getting-started")({
+  component: () => (
+    <ProtectedRoute>
+      <DashboardLayout>
+        <PrimeirosPassosPage />
+      </DashboardLayout>
+    </ProtectedRoute>
+  ),
+  head: () => ({
+    meta: [
+      { title: "Primeiros passos — NavalDocs Pro" },
+      { name: "description", content: "Guia passo a passo para emitir seu primeiro documento náutico oficial." }
+    ]
+  })
 });
 
-function GettingStartedPage() {
-  const { profile } = useAuth();
-  
-  const { data: onboardingStats } = useQuery({
-    queryKey: ['onboarding-progress', profile?.company_id],
+const STEP_ICONS = {
+  empresa: Building2,
+  funcionario: UserCheck,
+  cliente: Users,
+  embarcacao: Ship,
+  processo: ClipboardList,
+  documento: FileText,
+};
+
+export function PrimeirosPassosPage() {
+  const { profile, companyId: authCompanyId } = useAuth();
+  const companyId = profile?.company_id || authCompanyId;
+  const navigate = useNavigate();
+
+  // Consulta do progresso real verificado no banco de dados
+  const { 
+    data: progress, 
+    isLoading, 
+    refetch, 
+    isFetching 
+  } = useQuery({
+    queryKey: ["company-onboarding-progress", companyId],
     queryFn: async () => {
-      if (!profile?.company_id) return { percent: 0, steps: [] };
-      
-      const [
-        { count: customersCount },
-        { count: vesselsCount },
-        { count: processesCount },
-        { count: documentsCount }
-      ] = await Promise.all([
-        supabase.from('customers').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id),
-        supabase.from('vessels').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id),
-        supabase.from('processes').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id),
-        supabase.from('documents').select('*', { count: 'exact', head: true }).eq('company_id', profile.company_id)
-      ]);
-
-      const steps = [
-        { id: 'company', title: 'Configurar Empresa', completed: !!profile.companies?.name, icon: <Sparkles className="h-4 w-4" /> },
-        { id: 'customer', title: 'Primeiro Cliente', completed: (customersCount || 0) > 0, icon: <Users className="h-4 w-4" /> },
-        { id: 'vessel', title: 'Primeira Embarcação', completed: (vesselsCount || 0) > 0, icon: <Ship className="h-4 w-4" /> },
-        { id: 'process', title: 'Criar Processo', completed: (processesCount || 0) > 0, icon: <ClipboardList className="h-4 w-4" /> },
-        { id: 'ocr', title: 'Testar OCR', completed: (documentsCount || 0) > 0, icon: <Zap className="h-4 w-4" /> },
-      ];
-
-      const completed = steps.filter(s => s.completed).length;
-      return {
-        percent: Math.round((completed / steps.length) * 100),
-        steps
-      };
+      if (!companyId) return null;
+      return await getCompanyOnboardingProgress(companyId);
     },
-    enabled: !!profile?.company_id
+    enabled: Boolean(companyId),
+    staleTime: 1000 * 10, // 10 segundos
   });
 
-  console.log("GETTING_STARTED_READY");
+  const totalSteps = progress?.totalSteps || 6;
+  const completedCount = progress?.completedCount || 0;
+  const percent = progress?.percent || 0;
+  const allCompleted = progress?.allCompleted || false;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in duration-700">
-      <div className="text-center space-y-4">
-        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
-          <Rocket className="h-3 w-3" /> Bem-vindo ao NavalDocs Pro
+    <div className="max-w-4xl mx-auto py-4 sm:py-8 px-2 sm:px-4 space-y-8 font-sans">
+      
+      {/* Botão Voltar */}
+      <div className="flex items-center justify-between">
+        <Link
+          to="/dashboard"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Voltar para o Início</span>
+        </Link>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="h-8 px-3 rounded-xl border-slate-200 text-slate-600 text-xs gap-1.5 cursor-pointer bg-white"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin text-[#075BFF]" : ""}`} />
+          <span>Atualizar progresso</span>
+        </Button>
+      </div>
+
+      {/* Cabeçalho da Tela */}
+      <div className="space-y-3">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-[#075BFF] text-xs font-bold uppercase tracking-wider">
+          <Rocket className="h-3.5 w-3.5" />
+          <span>Guia de Implantação Rápida</span>
         </div>
-        <h1 className="text-4xl font-semibold text-navy">Primeiros Passos</h1>
-        <p className="text-slate-500 font-medium max-w-2xl mx-auto">
-          Preparamos este guia para você dominar a plataforma e automatizar sua operação naval em minutos.
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#0B1739]">
+          Primeiros passos no NavalDocs Pro
+        </h1>
+        <p className="text-sm sm:text-base text-slate-500 max-w-2xl leading-relaxed">
+          Siga esta sequência prática para chegar ao seu primeiro documento gerado. Você não precisa entender todas as áreas do sistema agora: cada etapa salva no banco é reconhecida automaticamente.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <Card className="md:col-span-2 p-8 rounded-3xl border-slate-100 shadow-xl shadow-slate-200/50 bg-white">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-sm font-semibold text-navy">Progresso de Implantação</h3>
-            <span className="text-2xl font-black text-primary">{onboardingStats?.percent || 0}%</span>
-          </div>
-          <Progress value={onboardingStats?.percent || 0} className="h-3 mb-10 bg-slate-100" />
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {onboardingStats?.steps.map((step) => (
-              <div 
-                key={step.id} 
-                className={`p-5 rounded-2xl border transition-all flex items-center justify-between group ${
-                  step.completed 
-                    ? 'bg-emerald-50/50 border-emerald-100 text-emerald-700' 
-                    : 'bg-slate-50 border-slate-100 text-slate-400 grayscale hover:grayscale-0 hover:border-primary/30'
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${
-                    step.completed ? 'bg-emerald-100 text-emerald-600' : 'bg-white text-slate-300'
-                  }`}>
-                    {step.icon}
-                  </div>
-                  <span className="text-xs font-bold uppercase tracking-wider">{step.title}</span>
-                </div>
-                {step.completed ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-all text-primary" />
-                )}
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <div className="space-y-6">
-          <Card className="p-8 bg-navy text-white rounded-3xl relative overflow-hidden shadow-2xl border-none group">
-            <PlayCircle className="absolute -right-4 -bottom-4 h-24 w-24 text-white/5 group-hover:scale-110 transition-transform duration-500" />
-            <h4 className="text-xs font-semibold text-primary mb-4">Tutorial em Vídeo</h4>
-            <p className="text-sm font-bold leading-relaxed mb-6">Aprenda a criar seu primeiro processo em menos de 2 minutos.</p>
-            <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl text-[10px] font-black uppercase tracking-widest py-6">
-              Assistir Agora <PlayCircle className="ml-2 h-4 w-4" />
-            </Button>
-          </Card>
-
-          <Card className="p-8 border-slate-100 rounded-3xl bg-white shadow-lg">
-            <h4 className="text-xs font-semibold text-navy mb-6 flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-primary" /> Base de Conhecimento
-            </h4>
-            <div className="space-y-4">
-              <a href="#" className="block text-[10px] font-bold text-slate-500 hover:text-primary transition-colors uppercase tracking-widest border-b border-slate-50 pb-2">Como funciona o OCR?</a>
-              <a href="#" className="block text-[10px] font-bold text-slate-500 hover:text-primary transition-colors uppercase tracking-widest border-b border-slate-50 pb-2">Gerando documentos PDF</a>
-              <a href="#" className="block text-[10px] font-bold text-slate-500 hover:text-primary transition-colors uppercase tracking-widest">Configurações de Equipe</a>
+      {/* Card de Progresso Global */}
+      <Card className="p-6 sm:p-7 rounded-2xl border-slate-200/90 shadow-2xs bg-white space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              Status da Implantação
+            </span>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-3xl font-extrabold text-[#0B1739]">
+                {completedCount} de {totalSteps}
+              </span>
+              <span className="text-sm font-semibold text-slate-500">
+                etapas concluídas ({percent}%)
+              </span>
             </div>
-          </Card>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-gradient-to-br from-white to-slate-50 p-10 rounded-3xl border border-slate-100 shadow-xl flex flex-col items-center text-center space-y-6">
-          <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center">
-            <FileText className="h-8 w-8 text-primary" />
           </div>
-          <h3 className="text-xl font-semibold text-navy">Criar Primeiro Processo</h3>
-          <p className="text-xs text-slate-500 font-medium leading-relaxed">
-            Inicie o fluxo de automação vinculando um cliente e uma embarcação para gerar sua documentação técnica.
-          </p>
-          <Link to="/processes" className="w-full">
-            <Button className="w-full rounded-2xl py-7 bg-navy hover:bg-slate-800 text-[10px] font-black uppercase tracking-widest">
-              Começar Agora <ArrowRight className="ml-2 h-4 w-4 text-primary" />
-            </Button>
-          </Link>
+
+          {allCompleted ? (
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <span>Todos os passos concluídos com sucesso!</span>
+            </div>
+          ) : progress?.nextStep ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-50 text-[#075BFF] border border-blue-200 text-xs font-semibold">
+              <span className="w-2 h-2 rounded-full bg-[#075BFF] animate-pulse" />
+              <span>Próximo passo: Etapa {progress.nextStep.order}</span>
+            </div>
+          ) : null}
         </div>
 
-        <div className="bg-gradient-to-br from-white to-slate-50 p-10 rounded-3xl border border-slate-100 shadow-xl flex flex-col items-center text-center space-y-6">
-          <div className="h-16 w-16 bg-cyan-50 rounded-2xl flex items-center justify-center">
-            <Zap className="h-8 w-8 text-cyan-500" />
+        {/* Barra de Progresso Visual */}
+        <div className="space-y-1.5">
+          <Progress value={percent} className="h-2.5 bg-slate-100" />
+          <div className="flex justify-between text-[11px] text-slate-400">
+            <span>Início da conta</span>
+            <span>Primeiro documento gerado</span>
           </div>
-          <h3 className="text-xl font-semibold text-navy">Testar Central OCR</h3>
-          <p className="text-xs text-slate-500 font-medium leading-relaxed">
-            Suba um documento (RG, CNH ou TIE) e veja nossa inteligência extrair os dados automaticamente.
-          </p>
-          <Link to="/ocr-center" className="w-full">
-            <Button className="w-full rounded-2xl py-7 bg-cyan-600 hover:bg-cyan-700 text-[10px] font-black uppercase tracking-widest">
-              Acessar Central <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
         </div>
+      </Card>
+
+      {/* Lista das 6 Etapas Detalhadas */}
+      <div className="space-y-4">
+        {progress?.steps.map((step) => {
+          const StepIcon = STEP_ICONS[step.id] || Circle;
+          const isNext = !step.completed && progress.nextStep?.id === step.id;
+
+          return (
+            <Card
+              key={step.id}
+              className={`p-5 sm:p-6 rounded-2xl border transition-all duration-200 ${
+                step.completed
+                  ? "bg-emerald-50/30 border-emerald-200/90 shadow-2xs"
+                  : isNext
+                    ? "bg-white border-[#075BFF] shadow-sm ring-1 ring-[#075BFF]/20"
+                    : "bg-white border-slate-200/80 hover:border-slate-300"
+              }`}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                {/* Lado Esquerdo: Ícone + Textos */}
+                <div className="flex items-start gap-3.5">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                    step.completed
+                      ? "bg-emerald-100 text-emerald-700"
+                      : isNext
+                        ? "bg-blue-50 text-[#075BFF]"
+                        : "bg-slate-100 text-slate-400"
+                  }`}>
+                    {step.completed ? (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                    ) : (
+                      <StepIcon className="h-5 w-5" />
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        Etapa {step.order}
+                      </span>
+                      {step.completed ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100/70 px-2.5 py-0.5 rounded-full">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Salvo no banco
+                        </span>
+                      ) : isNext ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#075BFF] bg-blue-100/70 px-2.5 py-0.5 rounded-full">
+                          Etapa atual recomendada
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                          Pendente
+                        </span>
+                      )}
+                    </div>
+
+                    <h2 className="text-base sm:text-lg font-bold text-[#0B1739]">
+                      {step.title}
+                    </h2>
+
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
+                      {step.description}
+                    </p>
+
+                    {/* Informação detectada no banco */}
+                    {step.detectedInfo && (
+                      <div className="pt-2">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-100/60 border border-emerald-200/60 text-xs font-semibold text-emerald-800">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                          <span>Identificado: {step.detectedInfo}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Lado Direito: Botão de Ação Direta */}
+                <div className="sm:self-center shrink-0 pl-13 sm:pl-0">
+                  <Button
+                    size="sm"
+                    onClick={() => navigate({ to: step.actionPath, search: step.actionSearch as any })}
+                    className={`rounded-xl text-xs font-bold h-9 px-4 gap-1.5 cursor-pointer transition-all ${
+                      step.completed
+                        ? "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                        : isNext
+                          ? "bg-[#075BFF] hover:bg-blue-600 text-white shadow-xs"
+                          : "bg-slate-900 hover:bg-slate-800 text-white"
+                    }`}
+                  >
+                    <span>{step.actionText}</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
       </div>
+
+      {/* Card de Conclusão / Dúvidas */}
+      <Card className="p-6 rounded-2xl border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-bold text-[#0B1739]">
+            Precisa de ajuda com alguma etapa?
+          </h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Consulte respostas rápidas na Central de Ajuda ou envie uma dúvida diretamente para a equipe de suporte náutico.
+          </p>
+        </div>
+
+        <Link
+          to="/sugestoes"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-slate-200 text-[#075BFF] text-xs font-bold hover:bg-blue-50 transition-colors shrink-0 shadow-2xs"
+        >
+          <HelpCircle className="h-4 w-4" />
+          <span>Abrir Ajuda e sugestões</span>
+        </Link>
+      </Card>
+
     </div>
   );
 }
+
+export default PrimeirosPassosPage;
