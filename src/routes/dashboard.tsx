@@ -390,17 +390,9 @@ export function RouteContent() {
       {/* 2. TRÊS CARDS PRINCIPAIS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl">
         {/* CARD 1 — CADASTRAR CLIENTE */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => navigate({ to: "/customers/novo" })}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              navigate({ to: "/customers/novo" });
-            }
-          }}
-          className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 flex flex-col justify-between hover:border-blue-200 hover:shadow-md transition-all duration-200 cursor-pointer group text-left min-h-[300px] focus:outline-none focus:ring-2 focus:ring-[#075BFF]/30"
+        <Link
+          to="/customers/novo"
+          className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 flex flex-col justify-between hover:border-blue-200 hover:shadow-md transition-all duration-200 cursor-pointer group text-left min-h-[300px] focus:outline-none focus:ring-2 focus:ring-[#075BFF]/30 block no-underline"
           aria-label="Cadastrar cliente"
         >
           <div>
@@ -420,22 +412,17 @@ export function RouteContent() {
               <Paperclip className="h-4 w-4 text-slate-400 rotate-[-45deg]" />
               <span>Manual ou por documentos</span>
             </div>
-            <ArrowRight className="h-4 w-4 text-[#075BFF] group-hover:translate-x-1 transition-transform" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-[#075BFF] font-semibold text-xs group-hover:bg-[#075BFF] group-hover:text-white transition-colors">
+              <span>Cadastrar cliente</span>
+              <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </span>
           </div>
-        </div>
+        </Link>
 
         {/* CARD 2 — CADASTRAR EMBARCAÇÃO */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => navigate({ to: "/vessels/novo" })}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              navigate({ to: "/vessels/novo" });
-            }
-          }}
-          className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 flex flex-col justify-between hover:border-blue-200 hover:shadow-md transition-all duration-200 cursor-pointer group text-left min-h-[300px] focus:outline-none focus:ring-2 focus:ring-[#075BFF]/30"
+        <Link
+          to="/vessels/novo"
+          className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 flex flex-col justify-between hover:border-blue-200 hover:shadow-md transition-all duration-200 cursor-pointer group text-left min-h-[300px] focus:outline-none focus:ring-2 focus:ring-[#075BFF]/30 block no-underline"
           aria-label="Cadastrar embarcação"
         >
           <div>
@@ -455,22 +442,17 @@ export function RouteContent() {
               <Paperclip className="h-4 w-4 text-slate-400 rotate-[-45deg]" />
               <span>Manual ou por documentos</span>
             </div>
-            <ArrowRight className="h-4 w-4 text-[#075BFF] group-hover:translate-x-1 transition-transform" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-[#075BFF] font-semibold text-xs group-hover:bg-[#075BFF] group-hover:text-white transition-colors">
+              <span>Cadastrar embarcação</span>
+              <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </span>
           </div>
-        </div>
+        </Link>
 
         {/* CARD 3 — SERVIÇOS */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => navigate({ to: "/servicos" })}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              navigate({ to: "/servicos" });
-            }
-          }}
-          className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 flex flex-col justify-between hover:border-blue-200 hover:shadow-md transition-all duration-200 cursor-pointer group text-left min-h-[300px] focus:outline-none focus:ring-2 focus:ring-[#075BFF]/30"
+        <Link
+          to="/servicos"
+          className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 flex flex-col justify-between hover:border-blue-200 hover:shadow-md transition-all duration-200 cursor-pointer group text-left min-h-[300px] focus:outline-none focus:ring-2 focus:ring-[#075BFF]/30 block no-underline"
           aria-label="Iniciar serviços"
         >
           <div>
@@ -488,11 +470,14 @@ export function RouteContent() {
           <div className="flex items-center justify-between pt-6 border-t border-slate-100 text-xs text-slate-500 font-medium">
             <div className="flex items-center gap-2 text-slate-500">
               <CheckSquare className="h-4 w-4 text-slate-400" />
-              <span>Iniciar serviço</span>
+              <span>Embarcações e serviços</span>
             </div>
-            <ArrowRight className="h-4 w-4 text-[#075BFF] group-hover:translate-x-1 transition-transform" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-[#075BFF] font-semibold text-xs group-hover:bg-[#075BFF] group-hover:text-white transition-colors">
+              <span>Iniciar serviços</span>
+              <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </span>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* 3. TEXTO DISCRETO INFERIOR */}
