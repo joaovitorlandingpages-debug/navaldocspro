@@ -46,32 +46,9 @@ serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const planId = body.planId || body.planSlug;
     const { billingCycle = 'monthly', couponCode, successUrl, cancelUrl } = body;
 
-    if (!planId) {
-      return errorResponse("planId é obrigatório", 400);
-    }
-
-    // 1. Consulta dinâmica do catálogo no banco public.plans
-    // Valida o ciclo antes de resolver o plano
-    if (billingCycle && billingCycle !== 'monthly' && billingCycle !== 'annual' && billingCycle !== 'yearly') {
-      return errorResponse(`Ciclo de cobrança inválido: "${billingCycle}". Use monthly, annual ou yearly.`, 400);
-    }
-
-    const resolved = await resolvePlanFromDatabase(ctx.admin, planId, billingCycle);
-    if (!resolved) {
-      return errorResponse(`Plano não encontrado, inativo ou indisponível para contratação: ${planId} (${billingCycle})`, 404);
-    }
-
-    // Garante que o plano está sincronizado com a Stripe (price_id obrigatório)
-    if (!resolved.priceId) {
-      return errorResponse(
-        `O plano "${resolved.name}" ainda não está sincronizado com a Stripe. Acesse o painel de administração e execute a sincronização antes de contratar.`,
-        400
-      );
-    }
-
+    // 1. Identificação do usuário, empresa e permissões financeiras
     const { data: profile, error: profileErr } = await ctx.admin
       .from('profiles')
       .select('company_id, full_name, email, role')
@@ -84,7 +61,7 @@ serve(async (req) => {
 
     const companyId = profile.company_id;
 
-    // 2. Validação de autorização financeira no servidor
+    // Validação de autorização financeira no servidor
     const { data: canManage, error: permErr } = await ctx.admin
       .rpc('can_manage_company_billing', {
         p_user_id: user.id,
@@ -123,6 +100,102 @@ serve(async (req) => {
         .from('companies')
         .update({ stripe_customer_id: customerId })
         .eq('id', companyId);
+    }
+
+    // 2. SUPORTE A COMPRA DE CAPACIDADE ADICIONAL (ADDON / PAGAMENTO AVULSO)
+    const isAddonPurchase = body.checkoutType === 'addon' || body.mode === 'payment' || Boolean(body.addonType);
+    if (isAddonPurchase) {
+      const addonType = body.addonType;
+      const quantity = Math.max(1, parseInt(body.quantity || '1', 10));
+
+      const validAddonTypes = ['processes', 'arrais_kits', 'ocr', 'monitored_docs'];
+      if (!validAddonTypes.includes(addonType)) {
+        return errorResponse(`Tipo de capacidade adicional inválido: ${addonType}. Use processes, arrais_kits, ocr ou monitored_docs.`, 400);
+      }
+
+      // Consulta preço unitário do catálogo ou do plano ativo da empresa
+      const { data: currentSub } = await ctx.admin
+        .from('subscriptions')
+        .select('*, plan:plans(*)')
+        .eq('company_id', companyId)
+        .in('status', ['active', 'trialing'])
+        .maybeSingle();
+
+      const activePlan = currentSub?.plan;
+      let unitPrice = 5.0;
+      let addonLabel = "Processos Navais Adicionais";
+
+      if (addonType === 'processes') {
+        unitPrice = Number(activePlan?.addon_process_price) || 5.0;
+        addonLabel = "Processos Navais Adicionais";
+      } else if (addonType === 'arrais_kits') {
+        unitPrice = Number(activePlan?.addon_arrais_kit_price) || 4.0;
+        addonLabel = "Kits de Alunos Arrais Adicionais";
+      } else if (addonType === 'ocr') {
+        unitPrice = Number(activePlan?.addon_ocr_price) || 0.5;
+        addonLabel = "Leituras de Anexos (OCR) Adicionais";
+      } else if (addonType === 'monitored_docs') {
+        unitPrice = Number(activePlan?.addon_monitored_doc_price) || 1.5;
+        addonLabel = "Documentos Monitorados Adicionais";
+      }
+
+      const session = await ctx.stripe.checkout.sessions.create({
+        mode: 'payment',
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'brl',
+            unit_amount: Math.round(unitPrice * 100),
+            product_data: {
+              name: `${addonLabel} (${quantity} un)`,
+              description: `Capacidade adicional de ${quantity}x ${addonLabel} para ${company.name}`
+            }
+          },
+          quantity: quantity
+        }],
+        metadata: {
+          company_id: companyId,
+          user_id: user.id,
+          checkout_type: 'addon',
+          addon_type: addonType,
+          addon_quantity: String(quantity),
+          unit_price: String(unitPrice),
+          app: 'navaldocspro'
+        },
+        success_url: successUrl || `${safeSuccessBase}/billing/subscription?addon_success=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: cancelUrl || `${safeCancelBase}/billing/subscription?addon_canceled=true`,
+      });
+
+      return jsonResponse({
+        sessionId: session.id,
+        url: session.url,
+        checkoutType: 'addon'
+      });
+    }
+
+    // 3. FLUXO DE ASSINATURA DE PLANO
+    const planId = body.planId || body.planSlug;
+    if (!planId) {
+      return errorResponse("planId é obrigatório para contratação de planos", 400);
+    }
+
+    // Valida o ciclo antes de resolver o plano
+    if (billingCycle && billingCycle !== 'monthly' && billingCycle !== 'annual' && billingCycle !== 'yearly') {
+      return errorResponse(`Ciclo de cobrança inválido: "${billingCycle}". Use monthly, annual ou yearly.`, 400);
+    }
+
+    const resolved = await resolvePlanFromDatabase(ctx.admin, planId, billingCycle);
+    if (!resolved) {
+      return errorResponse(`Plano não encontrado, inativo ou indisponível para contratação: ${planId} (${billingCycle})`, 404);
+    }
+
+    // Garante que o plano está sincronizado com a Stripe (price_id obrigatório)
+    if (!resolved.priceId) {
+      return errorResponse(
+        `O plano "${resolved.name}" ainda não está sincronizado com a Stripe. Acesse o painel de administração e execute a sincronização antes de contratar.`,
+        400
+      );
     }
 
     // 3. Verificação de assinaturas existentes: impede criação duplicada quando já existe assinatura ativa/trialing na Stripe

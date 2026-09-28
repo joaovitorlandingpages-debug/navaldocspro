@@ -461,6 +461,61 @@ export async function handleStripeWebhook(req: Request, options?: {
       case "checkout.session.completed": {
         const session = event.data.object;
         const companyId = session.metadata?.company_id || (session.client_reference_id ? session.client_reference_id.split(":")[0] : null);
+
+        // Tratamento de Compra Avulsa de Capacidade Adicional (Addon)
+        if (session.metadata?.checkout_type === 'addon' && companyId) {
+          const addonType = session.metadata.addon_type;
+          const addonQty = parseInt(session.metadata.addon_quantity || '1', 10);
+          const rawAmount = session.amount_total != null ? session.amount_total : 0;
+          const amountPaid = rawAmount / 100;
+          const currency = (session.currency || "brl").toLowerCase();
+
+          // 1. Concede a franquia extra no ledger company_resource_addons
+          const { error: addonInsertErr } = await supabase
+            .from("company_resource_addons")
+            .insert({
+              company_id: companyId,
+              resource_key: addonType,
+              extra_monthly: addonQty,
+              status: "active",
+              metadata: {
+                stripe_session_id: session.id,
+                payment_intent: session.payment_intent,
+                amount_paid: amountPaid,
+                purchased_at: new Date().toISOString()
+              }
+            });
+
+          if (addonInsertErr) {
+            console.error("Erro ao registrar addon em company_resource_addons:", addonInsertErr);
+          }
+
+          // 2. Registra o pagamento em payments
+          const { error: payErr } = await supabase.from("payments").insert({
+            company_id: companyId,
+            amount: amountPaid,
+            status: "approved",
+            payment_method: "credit_card",
+            paid_at: new Date().toISOString(),
+            metadata: {
+              type: "addon_purchase",
+              addon_type: addonType,
+              quantity: addonQty,
+              stripe_session_id: session.id,
+              payment_intent: session.payment_intent,
+              currency: currency,
+              description: `Compra adicional de ${addonQty}x ${addonType}`
+            },
+            created_at: new Date().toISOString()
+          });
+
+          if (payErr) {
+            console.error("Erro ao registrar pagamento avulso em payments:", payErr);
+          }
+
+          break;
+        }
+
         const planSlug = session.metadata?.plan_id || session.metadata?.plan_slug || (session.client_reference_id ? session.client_reference_id.split(":")[1] : null);
         const billingCycle = session.metadata?.billing_cycle || "monthly";
         const customerId = extractCustomerId(session);
@@ -749,7 +804,9 @@ export async function handleStripeWebhook(req: Request, options?: {
               stripe_subscription_id: subscriptionId,
               stripe_customer_id: customerId,
               currency: currency,
-              billing_reason: invoice.billing_reason
+              billing_reason: invoice.billing_reason,
+              hosted_invoice_url: invoice.hosted_invoice_url || null,
+              invoice_pdf: invoice.invoice_pdf || null
             },
             created_at: new Date().toISOString()
           });

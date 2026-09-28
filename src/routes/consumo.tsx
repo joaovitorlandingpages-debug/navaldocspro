@@ -412,7 +412,7 @@ function ConsumoEFranquiasPage() {
             </div>
 
             <Link
-              to="/assinaturas"
+              to="/billing/subscription"
               className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition-colors shrink-0"
             >
               <CreditCard className="h-4 w-4 text-slate-500" />
@@ -439,7 +439,7 @@ function ConsumoEFranquiasPage() {
             </div>
 
             <Link
-              to="/assinaturas"
+              to="/plans"
               className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
             >
               <span>Escolher um plano</span>
@@ -896,7 +896,7 @@ function ConsumoEFranquiasPage() {
             </div>
 
             <Link
-              to="/assinaturas"
+              to="/plans"
               className="w-full py-2 px-3 rounded-lg bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs text-center transition-colors flex items-center justify-center gap-1"
             >
               <span>Ver planos disponíveis</span>

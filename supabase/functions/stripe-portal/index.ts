@@ -37,7 +37,15 @@ serve(async (req) => {
     const supabase = ctx.admin;
 
     const origin = sanitizeAllowedOrigin(rawOrigin);
-    const returnUrl = `${origin}/configuracoes?tab=billing`;
+    let returnUrl = `${origin}/billing/subscription`;
+    if (body.returnUrl) {
+      try {
+        const parsed = new URL(body.returnUrl);
+        returnUrl = `${sanitizeAllowedOrigin(parsed.origin)}${parsed.pathname}${parsed.search}`;
+      } catch {
+        // fallback para /billing/subscription
+      }
+    }
 
     const companyId = ctx.companyId || body.companyId;
     if (!companyId) {

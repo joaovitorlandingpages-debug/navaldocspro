@@ -79,9 +79,73 @@ export const stripeCheckoutService = {
   },
 
   /**
+   * Invoca a Edge Function stripe-checkout para compra avulsa de capacidade adicional (mode: payment).
+   */
+  async createAddonCheckoutSession(params: {
+    addonType: 'processes' | 'arrais_kits' | 'ocr' | 'monitored_docs';
+    quantity: number;
+    companyId?: string;
+  }): Promise<StripeCheckoutResult> {
+    try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "https://navaldocspro.com.br";
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const headers = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : undefined;
+
+      const response = await supabase.functions.invoke("stripe-checkout", {
+        body: {
+          checkoutType: "addon",
+          addonType: params.addonType,
+          quantity: params.quantity,
+          companyId: params.companyId,
+          origin,
+          successUrl: `${origin}/billing/subscription?addon_success=true&session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${origin}/billing/subscription?addon_canceled=true`
+        },
+        headers
+      });
+
+      if (response.error) {
+        const errorData = response.data || {};
+        if (errorData.error === "stripe_not_configured" || response.error.message?.includes("503")) {
+          return {
+            success: false,
+            pendingConfiguration: true,
+            message: "A integração Stripe está com 'Configuração pendente' no servidor."
+          };
+        }
+        return {
+          success: false,
+          message: errorData.message || response.error.message || "Erro ao gerar checkout da capacidade adicional."
+        };
+      }
+
+      if (response.data?.url) {
+        return {
+          success: true,
+          url: response.data.url,
+          sessionId: response.data.sessionId
+        };
+      }
+
+      return {
+        success: false,
+        message: "Resposta inesperada do servidor de checkout para adicionais."
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err.message || "Falha na comunicação com o backend de checkout."
+      };
+    }
+  },
+
+  /**
    * Invoca a Edge Function stripe-portal para redirecionar o cliente para o Stripe Customer Portal.
    */
-  async openCustomerPortal(companyId?: string): Promise<{ success: boolean; url?: string; message?: string }> {
+  async openCustomerPortal(companyId?: string, returnUrl?: string): Promise<{ success: boolean; url?: string; message?: string }> {
     try {
       const origin = typeof window !== "undefined" ? window.location.origin : "https://navaldocspro.com.br";
       const { data: { session } } = await supabase.auth.getSession();
@@ -93,7 +157,8 @@ export const stripeCheckoutService = {
       const response = await supabase.functions.invoke("stripe-portal", {
         body: {
           companyId,
-          origin
+          origin,
+          returnUrl: returnUrl || `${origin}/billing/subscription`
         },
         headers
       });
