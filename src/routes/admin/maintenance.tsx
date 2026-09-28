@@ -43,7 +43,8 @@ function AdminMaintenancePage() {
   const isMaster =
     profile?.role === "admin_master_global" ||
     profile?.role === "admin_master" ||
-    profile?.email === "joaovitor.f0725@gmail.com";
+    profile?.email === "joaovitor.f0725@gmail.com" ||
+    profile?.email === "douglas_faresi@hotmail.com";
 
   // Diagnóstico de RPC e Permissões
   const { data: checks } = useQuery({

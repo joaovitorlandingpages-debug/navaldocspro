@@ -110,8 +110,7 @@ function AdminCompaniesPage() {
     profile?.role === 'superadmin' ||
     profile?.role === 'admin' ||
     profile?.email === 'joaovitor.f0725@gmail.com' ||
-    profile?.email?.includes("admin") ||
-    profile?.email?.includes("joao");
+    profile?.email === 'douglas_faresi@hotmail.com';
 
   if (!isAuthorized) {
     return <Navigate to="/dashboard" />;

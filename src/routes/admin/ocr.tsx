@@ -32,7 +32,7 @@ function AdminOCR() {
   }, []);
 
   if (loading) return null;
-  if (profile?.role !== 'admin_master_global' && profile?.role !== 'admin_master' && profile?.email !== 'joaovitor.f0725@gmail.com') {
+  if (profile?.role !== 'admin_master_global' && profile?.role !== 'admin_master' && profile?.email !== 'joaovitor.f0725@gmail.com' && profile?.email !== 'douglas_faresi@hotmail.com') {
     return <Navigate to="/dashboard" />;
   }
 

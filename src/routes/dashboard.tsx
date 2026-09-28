@@ -103,7 +103,8 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
       profile?.role === "admin" ||
       profile?.role === "admin_master" ||
       profile?.role === "admin_master_global" ||
-      profile?.email === "joaovitor.f0725@gmail.com"
+      profile?.email === "joaovitor.f0725@gmail.com" ||
+      profile?.email === "douglas_faresi@hotmail.com"
     );
   }, [profile]);
 

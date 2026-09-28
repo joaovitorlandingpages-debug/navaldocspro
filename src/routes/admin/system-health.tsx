@@ -35,7 +35,8 @@ function SystemHealthDashboard() {
   const isAdmin =
     profile?.role === "admin_master" ||
     profile?.role === "admin_master_global" ||
-    profile?.email === "joaovitor.f0725@gmail.com";
+    profile?.email === "joaovitor.f0725@gmail.com" ||
+    profile?.email === "douglas_faresi@hotmail.com";
 
   const { data, isLoading, refetch, isFetching, dataUpdatedAt } = useQuery({
     queryKey: ["system-health-snapshot"],

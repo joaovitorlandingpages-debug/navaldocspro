@@ -20,12 +20,8 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 
 // Onda 3C.3 — floating widgets são lazy: só entram no bundle quando o usuário
 // interage após idle. Removem ~15KB + deps (sonner/supabase call sites) do main.
-const FeedbackButton = React.lazy(() =>
-  import("@/components/FeedbackButton").then((m) => ({ default: m.FeedbackButton })),
-);
-const IntelligentAssistant = React.lazy(() =>
-  import("@/components/IntelligentAssistant").then((m) => ({ default: m.IntelligentAssistant })),
-);
+
+
 
 function NotFoundComponent() {
   return (
@@ -177,7 +173,6 @@ function SafeFloatingWidgets() {
 
   return (
     <React.Suspense fallback={null}>
-      <FeedbackButton />
       <NavalCopilotDrawer />
     </React.Suspense>
   );

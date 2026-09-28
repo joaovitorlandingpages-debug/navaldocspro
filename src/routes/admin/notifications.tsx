@@ -420,8 +420,7 @@ function AdminNotificationsPage() {
     profile?.role === 'admin_master_global' || 
     profile?.role === 'superadmin' ||
     profile?.email === 'joaovitor.f0725@gmail.com' ||
-    profile?.email?.includes("admin") ||
-    profile?.email?.includes("joao");
+    profile?.email === 'douglas_faresi@hotmail.com';
 
   const companyScopeId = profile?.company_id;
 

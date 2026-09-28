@@ -159,8 +159,7 @@ function AdminApplicationsPage() {
       profile?.role === "superadmin" ||
       profile?.role === "admin_master" ||
       profile?.email === "joaovitor.f0725@gmail.com" ||
-      profile?.email?.includes("admin") ||
-      profile?.email?.includes("joao")
+      profile?.email === "douglas_faresi@hotmail.com"
     );
   }, [profile]);
 

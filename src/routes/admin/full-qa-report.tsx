@@ -38,7 +38,7 @@ function FullQAReportPage() {
 
   if (loading) return <div className="p-8 text-center italic">Gerando relatório de auditoria global...</div>;
   
-  if (profile?.role !== 'admin_master_global' && profile?.role !== 'admin_master' && profile?.email !== 'joaovitor.f0725@gmail.com') {
+  if (profile?.role !== 'admin_master_global' && profile?.role !== 'admin_master' && profile?.email !== 'joaovitor.f0725@gmail.com' && profile?.email !== 'douglas_faresi@hotmail.com') {
     return <Navigate to="/dashboard" />;
   }
 
