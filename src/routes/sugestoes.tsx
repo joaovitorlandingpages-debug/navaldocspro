@@ -9,6 +9,7 @@ import {
   Send, 
   Clock, 
   CheckCircle2, 
+  Check,
   AlertCircle, 
   Filter, 
   Paperclip, 
@@ -84,8 +85,8 @@ const SUGGESTION_STATUSES: Record<string, { label: string; color: string; icon: 
 
 function SugestoesPage() {
   const searchParams = Route.useSearch();
-  const { profile, user, currentCompany } = useAuth();
-  const companyId = profile?.company_id;
+  const { profile, user, companyId: authCompanyId, isGlobalAdmin, loading: authLoading } = useAuth();
+  const companyId = profile?.company_id || authCompanyId;
 
   // Estados de Listagem e Filtros
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -112,16 +113,24 @@ function SugestoesPage() {
 
   // Carregar Sugestões da Empresa / Usuário
   const loadSuggestions = useCallback(async () => {
-    if (!companyId) return;
+    if (authLoading) return;
+    if (!companyId && !isGlobalAdmin) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("tickets")
         .select("*")
-        .eq("company_id", companyId)
         .order("created_at", { ascending: false });
 
+      if (companyId) {
+        query = query.eq("company_id", companyId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       setSuggestions(data || []);
     } catch (err) {
@@ -130,7 +139,7 @@ function SugestoesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [companyId]);
+  }, [companyId, isGlobalAdmin, authLoading]);
 
   useEffect(() => {
     loadSuggestions();
@@ -139,7 +148,7 @@ function SugestoesPage() {
   // Enviar Nova Sugestão
   const handleCreateSuggestion = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim() || !newDescription.trim() || !companyId) {
+    if (!newTitle.trim() || !newDescription.trim() || (!companyId && !isGlobalAdmin)) {
       toast.error("Por favor, preencha o título e a descrição da sugestão.");
       return;
     }
@@ -151,44 +160,38 @@ function SugestoesPage() {
 
       // 1. Upload do Anexo Opcional
       if (selectedAttachment) {
-        const uploadRes = await uploadToBucket({
-          bucket: "documents",
-          file: selectedAttachment,
-          companyId: companyId,
-          prefix: "suggestions",
-        });
-        attachmentUrl = uploadRes.publicUrl || uploadRes.storagePath;
+        const fileExt = (selectedAttachment.name.split(".").pop() || "pdf").toLowerCase();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const storagePath = `${companyId || "global"}/suggestions/${fileName}`;
+        await uploadToBucket("process-attachments", storagePath, selectedAttachment);
+        attachmentUrl = storagePath;
         attachmentName = selectedAttachment.name;
       }
 
-      const now = new Date().toISOString();
-      const userName = profile?.full_name || user?.email?.split("@")[0] || "Operador";
+      let fullDescription = newDescription.trim();
+      if (newContext && newContext !== "geral") {
+        fullDescription = `[Área: ${newContext}]\n\n${fullDescription}`;
+      }
+      if (attachmentUrl) {
+        fullDescription = `${fullDescription}\n\n[Anexo: ${attachmentName || "arquivo"} - ${attachmentUrl}]`;
+      }
 
-      // 2. Persistência na Tabela tickets
-      const metadata = {
-        suggestion_type: newType,
-        context_area: newContext,
-        priority: newPriority,
-        attachment_url: attachmentUrl,
-        attachment_name: attachmentName,
-        submitted_by_name: userName,
-        submitted_by_email: user?.email,
-        status_history: [
-          { status: "recebida", date: now, user: "Sistema", notes: "Sugestão recebida pela plataforma." }
-        ],
+      const priorityMap: Record<string, string> = {
+        baixa: "low",
+        media: "medium",
+        alta: "high",
       };
 
-      const { data: newTicket, error } = await supabase
+      const { error } = await supabase
         .from("tickets")
         .insert({
-          company_id: companyId,
+          company_id: companyId || undefined,
           user_id: user?.id || profile?.id,
           title: newTitle.trim(),
-          description: newDescription.trim(),
-          type: "suggestion",
-          category: newContext,
+          description: fullDescription,
+          type: newType || "suggestion",
+          priority: priorityMap[newPriority] || "medium",
           status: "recebida",
-          metadata: metadata,
         } as any)
         .select("*")
         .single();
@@ -218,7 +221,8 @@ function SugestoesPage() {
     return suggestions.filter((s) => {
       const type = s.metadata?.suggestion_type || (s.type === "suggestion" ? "ideia" : s.type) || "ideia";
       const status = s.status || "recebida";
-      const context = s.metadata?.context_area || s.category || "geral";
+      const parsedContext = s.description?.match(/\[Área:\s*([^\]]+)\]/)?.[1];
+      const context = s.metadata?.context_area || s.category || parsedContext || "geral";
 
       if (filterType !== "all" && type !== filterType) return false;
       if (filterStatus !== "all" && status !== filterStatus) return false;

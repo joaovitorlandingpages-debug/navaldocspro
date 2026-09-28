@@ -216,7 +216,6 @@ function AdminSugestoesPage() {
           company:companies!company_id (
             id,
             name,
-            trade_name,
             cnpj
           )
         `)
@@ -240,7 +239,7 @@ function AdminSugestoesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("companies")
-        .select("id, name, trade_name, cnpj")
+        .select("id, name, cnpj")
         .order("name", { ascending: true });
       if (error) throw error;
       return data || [];
