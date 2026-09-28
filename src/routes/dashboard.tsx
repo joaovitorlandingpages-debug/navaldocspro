@@ -17,7 +17,8 @@ import {
   ShieldCheck,
   Menu,
   X,
-  ChevronDown
+  ChevronDown,
+  Gauge
 } from "lucide-react";
 import {
   DropdownMenu, 
@@ -81,6 +82,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
     { name: "Relação de clientes", path: "/customers", icon: Users },
     { name: "Relação de embarcações", path: "/vessels", icon: Ship },
     { name: "Processos", path: "/processes", icon: FileText },
+    { name: "Consumo e franquias", path: "/consumo", icon: Gauge },
     { name: "Sugestões", path: "/sugestoes", icon: MessageSquare },
     { name: "Nossos aplicativos", path: "/nossos-aplicativos", icon: LayoutGrid },
     { name: "Configurações", path: "/settings", icon: Settings },
