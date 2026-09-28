@@ -210,4 +210,78 @@ describe("Fluxo de Navegação e Categorias da Página Serviços", () => {
     expect(mockExtractedProofAddress.address_zip).toMatch(/^\d{5}-\d{3}$/);
     expect(mockExtractedProofAddress.address_city).toBe("Rio de Janeiro");
   });
+
+  // TESTE 7: Separação estrita entre "Requisitos conferidos" e "Requisitos em revisão"
+  it("Cenário 7: Validação do Catálogo Normativo — Separação estrita entre validados e em revisão sem aprovações fictícias", async () => {
+    const { 
+      VALIDATED_SERVICES, 
+      IN_REVIEW_SERVICES, 
+      UNIDENTIFIED_SERVICES, 
+      getServiceDefinition 
+    } = await import("@/services/catalog/servicesCatalogValidation");
+
+    // Deve haver exatamente 5 serviços com requisitos conferidos na NORMAM-03/DPC
+    expect(VALIDATED_SERVICES).toHaveLength(5);
+    const validatedIds = VALIDATED_SERVICES.map(s => s.id);
+    expect(validatedIds).toContain("transferencia_propriedade");
+    expect(validatedIds).toContain("renovacao_inscricao");
+    expect(validatedIds).toContain("segunda_via");
+    expect(validatedIds).toContain("inscricao_embarcacao");
+    expect(validatedIds).toContain("alteracao_cadastral");
+
+    // Deve haver exatamente 5 serviços com requisitos em revisão técnica/normativa
+    expect(IN_REVIEW_SERVICES).toHaveLength(5);
+    const inReviewIds = IN_REVIEW_SERVICES.map(s => s.id);
+    expect(inReviewIds).toContain("alteracao_motor");
+    expect(inReviewIds).toContain("vistoria_tecnica");
+    expect(inReviewIds).toContain("cancelamento_inscricao");
+    expect(inReviewIds).toContain("laudo_engenharia");
+    expect(inReviewIds).toContain("despacho_maritimo");
+
+    // Todos os serviços possuem fonte identificada
+    expect(UNIDENTIFIED_SERVICES).toHaveLength(0);
+
+    // Conferência do getServiceDefinition
+    const defTransferencia = getServiceDefinition("transferencia-propriedade");
+    expect(defTransferencia.status).toBe("validated");
+    expect(defTransferencia.canFinalizeProtocol).toBe(true);
+
+    const defLaudo = getServiceDefinition("laudo_engenharia");
+    expect(defLaudo.status).toBe("in_review");
+    expect(defLaudo.canFinalizeProtocol).toBe(false);
+  });
+
+  // TESTE 8: Metadados obrigatórios para serviços validados (Data, Fonte oficial e Link)
+  it("Cenário 8: Serviços com 'Requisitos conferidos' exibem fonte oficial DPC, data de conferência e link", async () => {
+    const { VALIDATED_SERVICES } = await import("@/services/catalog/servicesCatalogValidation");
+
+    VALIDATED_SERVICES.forEach(svc => {
+      expect(svc.status).toBe("validated");
+      expect(svc.validationDateFormatted).toMatch(/2026/);
+      expect(svc.officialSource).toContain("NORMAM");
+      expect(svc.sourceUrl).toMatch(/^https:\/\//);
+      expect(svc.requiredDocuments.length).toBeGreaterThan(0);
+      expect(svc.generatedDocuments.length).toBeGreaterThan(0);
+      expect(svc.canFinalizeProtocol).toBe(true);
+    });
+  });
+
+  // TESTE 9: Serviços em revisão bloqueiam protocolo direto e especificam o que falta validar
+  it("Cenário 9: Serviços 'em revisão' salvam como rascunho, bloqueiam protocolo direto e justificam pendência", async () => {
+    const { IN_REVIEW_SERVICES } = await import("@/services/catalog/servicesCatalogValidation");
+
+    IN_REVIEW_SERVICES.forEach(svc => {
+      expect(svc.status).toBe("in_review");
+      expect(svc.canFinalizeProtocol).toBe(false);
+      expect(svc.missingValidationNote).toBeTruthy();
+      expect(svc.missingValidationNote.length).toBeGreaterThan(15);
+    });
+
+    // Laudo de engenharia deve obrigatoriamente exigir revisão de Engenheiro Naval com CREA/ART
+    const laudo = IN_REVIEW_SERVICES.find(s => s.id === "laudo_engenharia");
+    expect(laudo).toBeDefined();
+    expect(laudo?.needsProfessionalReview).toBe(true);
+    expect(laudo?.missingValidationNote).toContain("Engenheiro Naval");
+  });
 });
+

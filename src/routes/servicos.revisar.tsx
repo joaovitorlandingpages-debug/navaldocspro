@@ -35,6 +35,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { getServiceDefinition } from "@/services/catalog/servicesCatalogValidation";
 
 export const Route = createFileRoute("/servicos/revisar")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -52,100 +53,6 @@ export const Route = createFileRoute("/servicos/revisar")({
     </ProtectedRoute>
   ),
 });
-
-// Catálogo de serviços mapeado
-const SERVICE_CATALOG: Record<string, { 
-  title: string; 
-  category: "profissional" | "esporte_recreio" | "moto_aquatica";
-  categoryLabel: string;
-  officialSource: string;
-  sourceUrl: string;
-}> = {
-  "inscricao-inicial": { 
-    title: "Inscrição inicial", 
-    category: "esporte_recreio", 
-    categoryLabel: "Esporte e recreio",
-    officialSource: "CPES • Marinha do Brasil",
-    sourceUrl: "https://www.marinha.mil.br/cpes/node/382"
-  },
-  "renovacao-tie": { 
-    title: "Renovação do TIE", 
-    category: "esporte_recreio", 
-    categoryLabel: "Esporte e recreio",
-    officialSource: "CPES • Marinha do Brasil",
-    sourceUrl: "https://www.marinha.mil.br/cpes/node/382"
-  },
-  "segunda-via-tie": { 
-    title: "Segunda via do TIE", 
-    category: "esporte_recreio", 
-    categoryLabel: "Esporte e recreio",
-    officialSource: "CPES • Marinha do Brasil",
-    sourceUrl: "https://www.marinha.mil.br/cpes/node/382"
-  },
-  "transferencia-propriedade": { 
-    title: "Transferência de propriedade", 
-    category: "esporte_recreio", 
-    categoryLabel: "Esporte e recreio",
-    officialSource: "CPES • Marinha do Brasil",
-    sourceUrl: "https://www.marinha.mil.br/cpes/node/382"
-  },
-  "transferencia-jurisdicao": { 
-    title: "Transferência de jurisdição", 
-    category: "esporte_recreio", 
-    categoryLabel: "Esporte e recreio",
-    officialSource: "CPES • Marinha do Brasil",
-    sourceUrl: "https://www.marinha.mil.br/cpes/node/382"
-  },
-  "transferencia-ambas": { 
-    title: "Transferência de propriedade e jurisdição", 
-    category: "esporte_recreio", 
-    categoryLabel: "Esporte e recreio",
-    officialSource: "CPES • Marinha do Brasil",
-    sourceUrl: "https://www.marinha.mil.br/cpes/node/382"
-  },
-  "comunicacao-venda": { 
-    title: "Comunicação de venda", 
-    category: "esporte_recreio", 
-    categoryLabel: "Esporte e recreio",
-    officialSource: "CPES • Marinha do Brasil",
-    sourceUrl: "https://www.marinha.mil.br/cpes/node/382"
-  },
-  "inscricao-comercial": { 
-    title: "Inscrição comercial inicial", 
-    category: "profissional", 
-    categoryLabel: "Embarcações profissionais",
-    officialSource: "CPES • Marinha do Brasil (Profissional)",
-    sourceUrl: "https://www.marinha.mil.br/cpes/node/388"
-  },
-  "renovacao-tie-prof": { 
-    title: "Renovação de TIE profissional", 
-    category: "profissional", 
-    categoryLabel: "Embarcações profissionais",
-    officialSource: "CPES • Marinha do Brasil (Profissional)",
-    sourceUrl: "https://www.marinha.mil.br/cpes/node/388"
-  },
-  "segunda-via-tie-prof": { 
-    title: "Segunda via de TIE profissional", 
-    category: "profissional", 
-    categoryLabel: "Embarcações profissionais",
-    officialSource: "CPES • Marinha do Brasil (Profissional)",
-    sourceUrl: "https://www.marinha.mil.br/cpes/node/388"
-  },
-  "transferencia-prof": { 
-    title: "Transferência de propriedade profissional", 
-    category: "profissional", 
-    categoryLabel: "Embarcações profissionais",
-    officialSource: "CPES • Marinha do Brasil (Profissional)",
-    sourceUrl: "https://www.marinha.mil.br/cpes/node/388"
-  },
-  "transferencia-jurisdicao-prof": { 
-    title: "Transferência de jurisdição profissional", 
-    category: "profissional", 
-    categoryLabel: "Embarcações profissionais",
-    officialSource: "CPES • Marinha do Brasil (Profissional)",
-    sourceUrl: "https://www.marinha.mil.br/cpes/node/388"
-  },
-};
 
 function RevisarProcessoPage() {
   const navigate = useNavigate();
@@ -227,26 +134,33 @@ function RevisarProcessoPage() {
   // Lista dos serviços com status
   const parsedServices = useMemo(() => {
     return rawServices.map((key) => {
-      const def = SERVICE_CATALOG[key] || {
-        title: key,
-        category: category,
-        categoryLabel: categoryDisplayName,
-        officialSource: isJetSki ? "CPES • Marinha do Brasil (Moto aquática)" : "CPES • Marinha do Brasil",
-        sourceUrl: isJetSki ? "https://www.marinha.mil.br/cpes/node/384" : "https://www.marinha.mil.br/cpes/node/382",
-      };
+      const def = getServiceDefinition(key);
+      const isVal = def.status === "validated";
 
       return {
         key,
+        id: def.id,
         title: def.title,
-        categoryLabel: isJetSki ? "Moto aquática" : def.categoryLabel,
+        categoryLabel: isJetSki ? "Moto aquática" : def.categoryDisplayName,
         officialSource: isJetSki ? "CPES • Marinha do Brasil (Moto aquática)" : def.officialSource,
         sourceUrl: isJetSki ? "https://www.marinha.mil.br/cpes/node/384" : def.sourceUrl,
-        status: "Requisitos em revisão",
-        hasPendingDocs: true,
-        modelsPending: 2,
+        status: isVal ? "Requisitos conferidos" : "Requisitos em revisão",
+        isValidated: isVal,
+        validationDateFormatted: def.validationDateFormatted,
+        missingValidationNote: def.missingValidationNote,
+        needsProfessionalReview: def.needsProfessionalReview,
+        canFinalizeProtocol: def.canFinalizeProtocol,
+        requiredDocuments: def.requiredDocuments,
+        generatedDocuments: def.generatedDocuments,
+        hasPendingDocs: !isVal,
+        modelsPending: isVal ? 0 : 2,
       };
     });
-  }, [rawServices, category, categoryDisplayName, isJetSki]);
+  }, [rawServices, isJetSki]);
+
+  const allServicesValidated = useMemo(() => {
+    return parsedServices.length > 0 && parsedServices.every((s) => s.isValidated);
+  }, [parsedServices]);
 
   // Ação de Salvar como Rascunho
   const handleSaveDraft = async () => {
@@ -287,15 +201,16 @@ function RevisarProcessoPage() {
           vessel_id: vesselId || null,
           title: processTitle,
           process_type: parsedServices[0]?.key || "renovacao-tie",
-          status: "in_progress",
+          status: allServicesValidated ? "in_progress" : "draft",
           priority: "medium",
-          is_draft: false,
+          is_draft: !allServicesValidated,
           metadata: {
             category,
             category_label: categoryDisplayName,
             services: rawServices,
             parsed_services: parsedServices,
             is_jet_ski: isJetSki,
+            all_services_validated: allServicesValidated,
             created_by_user_id: user?.id,
             created_by_email: user?.email,
             created_at_date: new Date().toISOString(),
@@ -308,9 +223,15 @@ function RevisarProcessoPage() {
         throw new Error(procError?.message || "Falha ao registrar processo no servidor.");
       }
 
-      toast.success("Processo criado com sucesso!", {
-        description: `Processo registrado sob o protocolo da empresa.`,
-      });
+      if (allServicesValidated) {
+        toast.success("Processo criado com sucesso!", {
+          description: `Processo registrado e liberado para conferência de documentos e assinaturas.`,
+        });
+      } else {
+        toast.success("Processo salvo como rascunho!", {
+          description: `Requisitos em revisão regulatória. O processo foi salvo como rascunho para acompanhamento sem protocolo direto.`,
+        });
+      }
 
       // Navegar para a Tela 07 - Detalhes do Processo
       navigate({
@@ -318,8 +239,8 @@ function RevisarProcessoPage() {
         params: { id: newProcess.id },
       });
     } catch (err: any) {
-      console.error("Erro ao criar processo:", err);
-      toast.error(err?.message || "Erro ao criar processo. Tente novamente.");
+      console.error("Erro ao registrar processo:", err);
+      toast.error(err?.message || "Erro ao registrar processo. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -457,10 +378,23 @@ function RevisarProcessoPage() {
                     </div>
 
                     <div className="flex items-center gap-3 shrink-0">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
-                        <Clock className="h-3 w-3" />
-                        <span>{srv.status}</span>
-                      </span>
+                      {srv.isValidated ? (
+                        <span
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/70"
+                          title={`Requisitos conferidos em ${srv.validationDateFormatted} (${srv.officialSource})`}
+                        >
+                          <CheckCircle2 className="h-3 w-3 stroke-[2.5]" />
+                          <span>Requisitos conferidos</span>
+                        </span>
+                      ) : (
+                        <span
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/70"
+                          title={srv.missingValidationNote || "Em revisão regulatória"}
+                        >
+                          <Clock className="h-3 w-3 stroke-[2.2]" />
+                          <span>Requisitos em revisão</span>
+                        </span>
+                      )}
 
                       <button
                         type="button"
@@ -548,7 +482,7 @@ function RevisarProcessoPage() {
           </div>
 
           {/* ======================================================================= */}
-          {/* COLUNA DIREITA (5 COLUNAS): RESUMO DO PROCESSO + ALERTA ÂMBAR */}
+          {/* COLUNA DIREITA (5 COLUNAS): RESUMO DO PROCESSO + SITUAÇÃO DOS REQUISITOS */}
           {/* ======================================================================= */}
           <div className="lg:col-span-5 space-y-6">
             
@@ -603,28 +537,69 @@ function RevisarProcessoPage() {
               </div>
             </div>
 
-            {/* CARTÃO 4: ALERTA DE PENDÊNCIAS (ÂMBAR) */}
-            <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#FEF3C7] border border-[#FCD34D] flex items-center justify-center text-[#D97706] shrink-0 mt-0.5">
-                  <AlertTriangle className="h-5 w-5 stroke-[2.2]" />
+            {/* CARTÃO 4: SITUAÇÃO DOS REQUISITOS (CONFERIDOS vs REVISÃO) */}
+            {allServicesValidated ? (
+              <div className="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-700 shrink-0 mt-0.5">
+                    <CheckCircle2 className="h-5 w-5 stroke-[2.5]" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-emerald-900">
+                        Requisitos conferidos
+                      </h3>
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">
+                        Oficial
+                      </span>
+                    </div>
+                    <p className="text-xs text-emerald-800 leading-relaxed">
+                      Todos os serviços selecionados possuem base normativa validada e modelos oficiais conferidos perante a Capitania dos Portos (DPC / Marinha do Brasil).
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <h3 className="text-sm font-bold text-[#92400E]">
-                    Atenção antes de continuar
-                  </h3>
-                  <p className="text-xs text-[#B45309] leading-relaxed">
-                    Há documentos pendentes para um dos serviços. Você poderá salvar o processo e completar depois.
+
+                <div className="pt-2 pl-12 space-y-1.5 border-t border-emerald-200/60">
+                  <p className="text-[11px] text-emerald-700 font-medium flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span>Última conferência regulatória: Setembro de 2026</span>
+                  </p>
+                  <p className="text-[11px] text-emerald-700/90 leading-relaxed">
+                    Documentação necessária e formulários prontos para preenchimento, assinaturas e protocolo.
                   </p>
                 </div>
               </div>
+            ) : (
+              <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-[#FEF3C7] border border-[#FCD34D] flex items-center justify-center text-[#D97706] shrink-0 mt-0.5">
+                    <AlertTriangle className="h-5 w-5 stroke-[2.2]" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-[#92400E]">
+                        Requisitos regulatórios em revisão
+                      </h3>
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md">
+                        Rascunho
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#B45309] leading-relaxed">
+                      Um ou mais serviços possuem requisitos técnicos ou minutas ainda sob conferência. A lista não é apresentada como definitiva ou oficial.
+                    </p>
+                  </div>
+                </div>
 
-              <div className="pt-2 pl-12 space-y-2">
-                <p className="text-[11px] text-[#B45309]/90 leading-relaxed">
-                  Os requisitos e modelos deste serviço estão aguardando validação oficial. Ao criar o processo agora, ele ficará disponível no sistema em status ativo para acompanhamento e anexação gradual dos comprovantes.
-                </p>
+                <div className="pt-2 pl-12 space-y-2 border-t border-amber-200/60">
+                  <p className="text-[11px] text-[#B45309] leading-relaxed">
+                    <strong>Trabalho salvo como rascunho:</strong> Para proteger a segurança jurídica e operacional, o protocolo direto está bloqueado até a conferência técnica das exigências da Capitania.
+                  </p>
+                  <p className="text-[11px] text-[#B45309]/80 leading-relaxed">
+                    Você pode salvar o rascunho e dar andamento ao upload prévio de documentos e triagem.
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
 
@@ -634,9 +609,18 @@ function RevisarProcessoPage() {
         {/* RODAPÉ COM AÇÕES */}
         {/* ========================================================================= */}
         <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
-          <p className="text-xs text-slate-500">
-            O processo será criado somente após sua confirmação.
-          </p>
+          <div className="space-y-0.5">
+            <p className="text-xs font-medium text-slate-700">
+              {allServicesValidated
+                ? "Requisitos conferidos. Pronto para criação e tramitação do processo."
+                : "Serviço com requisitos em revisão: será registrado como rascunho (protocolo final bloqueado)."}
+            </p>
+            <p className="text-[11px] text-slate-400">
+              {allServicesValidated
+                ? "Processos criados ficam imediatamente disponíveis para conferência de documentos e assinaturas."
+                : "A lista de documentos gerados ainda passará por revisão profissional antes do protocolo."}
+            </p>
+          </div>
 
           <div className="flex items-center gap-3">
             <button
@@ -661,27 +645,36 @@ function RevisarProcessoPage() {
               type="button"
               disabled={isDraftSaving || isSubmitting}
               onClick={handleSaveDraft}
-              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#075BFF] text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
             >
               {isDraftSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-              <span>Salvar como rascunho</span>
+              <span>Salvar rascunho</span>
             </button>
 
             <button
               type="button"
               disabled={isSubmitting || isDraftSaving}
               onClick={handleCreateProcess}
-              className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+              className={`inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50 ${
+                allServicesValidated
+                  ? "bg-[#075BFF] hover:bg-blue-600 text-white"
+                  : "bg-amber-600 hover:bg-amber-700 text-white"
+              }`}
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>Criando processo...</span>
+                  <span>Registrando...</span>
                 </>
-              ) : (
+              ) : allServicesValidated ? (
                 <>
                   <span>Criar processo</span>
                   <ArrowRight className="h-3.5 w-3.5" />
+                </>
+              ) : (
+                <>
+                  <Clock className="h-3.5 w-3.5" />
+                  <span>Salvar rascunho do processo</span>
                 </>
               )}
             </button>
@@ -694,7 +687,7 @@ function RevisarProcessoPage() {
       {/* MODAL DE DETALHES DO SERVIÇO */}
       {/* ========================================================================= */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="max-w-md p-0 overflow-hidden rounded-2xl bg-white border border-slate-200">
+        <DialogContent className="max-w-lg p-0 overflow-hidden rounded-2xl bg-white border border-slate-200">
           <DialogHeader className="p-5 border-b border-slate-100">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0">
@@ -711,25 +704,89 @@ function RevisarProcessoPage() {
             </div>
           </DialogHeader>
 
-          <div className="p-5 space-y-3 text-xs">
-            <div className="flex justify-between py-1.5 border-b border-slate-100">
-              <span className="text-slate-500">Situação dos requisitos:</span>
-              <span className="font-semibold text-amber-600">{selectedServiceDetail?.status}</span>
+          <div className="p-5 space-y-4 text-xs max-h-[70vh] overflow-y-auto">
+            {/* Status do serviço */}
+            <div className="flex items-center justify-between py-2 border-b border-slate-100">
+              <span className="text-slate-500 font-medium">Situação dos requisitos:</span>
+              {selectedServiceDetail?.isValidated ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/70">
+                  <CheckCircle2 className="h-3 w-3 stroke-[2.5]" />
+                  <span>Requisitos conferidos</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/70">
+                  <Clock className="h-3 w-3 stroke-[2.2]" />
+                  <span>Requisitos em revisão</span>
+                </span>
+              )}
             </div>
+
+            {/* Data e Fonte */}
             <div className="flex justify-between py-1.5 border-b border-slate-100">
-              <span className="text-slate-500">Fonte oficial:</span>
-              <span className="font-medium text-slate-800">{selectedServiceDetail?.officialSource}</span>
+              <span className="text-slate-500">Última conferência:</span>
+              <span className="font-semibold text-slate-800">{selectedServiceDetail?.validationDateFormatted || "Setembro de 2026"}</span>
             </div>
-            <div className="py-2">
-              <a
-                href={selectedServiceDetail?.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-bold text-[#075BFF] hover:underline"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                <span>Consultar diretrizes na Capitania</span>
-              </a>
+
+            <div className="py-2 border-b border-slate-100">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-slate-500">Fonte oficial:</span>
+                <a
+                  href={selectedServiceDetail?.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#075BFF] hover:underline"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  <span>Consultar diretrizes na Capitania</span>
+                </a>
+              </div>
+              <p className="text-[11px] text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                {selectedServiceDetail?.officialSource}
+              </p>
+            </div>
+
+            {/* Nota de validação pendente caso em revisão */}
+            {!selectedServiceDetail?.isValidated && (
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/80 space-y-1">
+                <div className="flex items-center gap-1.5 text-amber-800 font-bold">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span>O que falta validar neste serviço:</span>
+                </div>
+                <p className="text-[11px] text-amber-900 leading-relaxed">
+                  {selectedServiceDetail?.missingValidationNote}
+                </p>
+                {selectedServiceDetail?.needsProfessionalReview && (
+                  <p className="text-[10px] text-amber-800 font-medium pt-1">
+                    * Requer conferência ou emissão por profissional habilitado (Engenheiro Naval / CREA / Vistoriador).
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Documentos necessários */}
+            <div className="space-y-1.5 pt-1">
+              <span className="text-slate-700 font-bold block">Documentos necessários exigidos:</span>
+              <ul className="space-y-1">
+                {selectedServiceDetail?.requiredDocuments?.map((doc: string, dIdx: number) => (
+                  <li key={dIdx} className="flex items-start gap-2 text-[11px] text-slate-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                    <span>{doc}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Documentos que o sistema gera */}
+            <div className="space-y-1.5 pt-1">
+              <span className="text-slate-700 font-bold block">Documentos gerados pelo sistema:</span>
+              <ul className="space-y-1">
+                {selectedServiceDetail?.generatedDocuments?.map((doc: string, dIdx: number) => (
+                  <li key={dIdx} className="flex items-start gap-2 text-[11px] text-slate-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                    <span>{doc}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 

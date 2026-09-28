@@ -32,6 +32,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { getServiceDefinition } from "@/services/catalog/servicesCatalogValidation";
 
 export const Route = createFileRoute("/servicos/documentos")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -51,22 +52,6 @@ export const Route = createFileRoute("/servicos/documentos")({
     </ProtectedRoute>
   ),
 });
-
-// Catálogo de serviços com seus nomes oficiais e fontes
-const SERVICE_CATALOG: Record<string, { title: string; category: "profissional" | "esporte_recreio" | "moto_aquatica" }> = {
-  "inscricao-inicial": { title: "Inscrição inicial", category: "esporte_recreio" },
-  "renovacao-tie": { title: "Renovação do TIE", category: "esporte_recreio" },
-  "segunda-via-tie": { title: "Segunda via do TIE", category: "esporte_recreio" },
-  "transferencia-propriedade": { title: "Transferência de propriedade", category: "esporte_recreio" },
-  "transferencia-jurisdicao": { title: "Transferência de jurisdição", category: "esporte_recreio" },
-  "transferencia-ambas": { title: "Transferência de propriedade e jurisdição", category: "esporte_recreio" },
-  "comunicacao-venda": { title: "Comunicação de venda", category: "esporte_recreio" },
-  "inscricao-comercial": { title: "Inscrição comercial inicial", category: "profissional" },
-  "renovacao-tie-prof": { title: "Renovação de TIE profissional", category: "profissional" },
-  "segunda-via-tie-prof": { title: "Segunda via de TIE profissional", category: "profissional" },
-  "transferencia-prof": { title: "Transferência de propriedade profissional", category: "profissional" },
-  "transferencia-jurisdicao-prof": { title: "Transferência de jurisdição profissional", category: "profissional" },
-};
 
 function DocumentosDoServicoPage() {
   const navigate = useNavigate();
@@ -173,12 +158,18 @@ function DocumentosDoServicoPage() {
     return typeStr.includes("moto") || typeStr.includes("jet") || typeStr.includes("aquática") || nameStr.includes("jet");
   }, [vesselType, vessel]);
 
-  // Obter link e dados oficiais de orientação conforme categoria e tipo
+  // Obter definição oficial e dados de orientação conforme serviço ativo
+  const serviceDef = useMemo(() => {
+    return getServiceDefinition(activeServiceKey);
+  }, [activeServiceKey]);
+
+  const activeServiceTitle = serviceDef.title;
+
   const officialSourceInfo = useMemo(() => {
     if (category === "profissional") {
       return {
-        label: "CPES • Marinha do Brasil (Profissional)",
-        url: "https://www.marinha.mil.br/cpes/node/388",
+        label: serviceDef.officialSource || "CPES • Marinha do Brasil (Profissional)",
+        url: serviceDef.sourceUrl || "https://www.marinha.mil.br/cpes/node/388",
         categoryName: "Embarcações profissionais",
       };
     }
@@ -190,19 +181,11 @@ function DocumentosDoServicoPage() {
       };
     }
     return {
-      label: "CPES • Marinha do Brasil",
-      url: "https://www.marinha.mil.br/cpes/node/382",
+      label: serviceDef.officialSource || "CPES • Marinha do Brasil",
+      url: serviceDef.sourceUrl || "https://www.marinha.mil.br/cpes/node/382",
       categoryName: "Esporte e recreio",
     };
-  }, [category, isJetSki]);
-
-  // Título do serviço ativo
-  const activeServiceTitle = useMemo(() => {
-    if (SERVICE_CATALOG[activeServiceKey]) {
-      return SERVICE_CATALOG[activeServiceKey].title;
-    }
-    return "Renovação do TIE";
-  }, [activeServiceKey]);
+  }, [category, isJetSki, serviceDef]);
 
   // Ação de upload de documento
   const handleUploadFile = async () => {
@@ -306,7 +289,7 @@ function DocumentosDoServicoPage() {
           <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200">
             <span className="text-xs font-semibold text-slate-500 shrink-0 mr-1">Serviço ativo:</span>
             {rawServices.map((srvKey) => {
-              const srvInfo = SERVICE_CATALOG[srvKey];
+              const srvInfo = getServiceDefinition(srvKey);
               const isCurrent = srvKey === activeServiceKey;
               return (
                 <button
@@ -613,13 +596,23 @@ function DocumentosDoServicoPage() {
 
               {/* Legenda */}
               <p className="text-[11px] text-slate-400 pt-1">
-                Lista ilustrativa — requisitos aguardando validação.
+                {serviceDef.status === "validated" ? (
+                  <span className="text-emerald-700 font-medium inline-flex items-center gap-1">
+                    <Check className="h-3 w-3 stroke-[2.5]" />
+                    Requisitos oficiais conferidos conforme normas da Autoridade Marítima.
+                  </span>
+                ) : (
+                  <span className="text-amber-700 font-medium inline-flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Lista preliminar em revisão regulatória — trabalho mantido como rascunho.
+                  </span>
+                )}
               </p>
             </div>
           </div>
 
           {/* ======================================================================= */}
-          {/* COLUNA DIREITA (5 COLUNAS): FORMULÁRIOS + REQUISITOS EM REVISÃO */}
+          {/* COLUNA DIREITA (5 COLUNAS): FORMULÁRIOS + SITUAÇÃO DOS REQUISITOS */}
           {/* ======================================================================= */}
           <div className="lg:col-span-5 space-y-6">
             
@@ -640,10 +633,17 @@ function DocumentosDoServicoPage() {
                       Requerimento
                     </span>
                   </div>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
-                    <Clock className="h-3 w-3" />
-                    <span>Modelo pendente</span>
-                  </span>
+                  {serviceDef.status === "validated" ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                      <Check className="h-3 w-3 stroke-[2.5]" />
+                      <span>Pronto para gerar</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                      <Clock className="h-3 w-3" />
+                      <span>Minuta em revisão</span>
+                    </span>
+                  )}
                 </div>
 
                 {/* Procuração */}
@@ -656,53 +656,109 @@ function DocumentosDoServicoPage() {
                       Procuração
                     </span>
                   </div>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
-                    <Clock className="h-3 w-3" />
-                    <span>Modelo pendente</span>
-                  </span>
+                  {serviceDef.status === "validated" ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                      <Check className="h-3 w-3 stroke-[2.5]" />
+                      <span>Pronto para gerar</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                      <Clock className="h-3 w-3" />
+                      <span>Minuta em revisão</span>
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* Legenda de liberação */}
               <p className="text-[11px] text-slate-400 pt-1">
-                Os modelos serão liberados após revisão.
+                {serviceDef.status === "validated"
+                  ? "Modelos padronizados pela NORMAM-03/DPC preenchidos automaticamente com os dados cadastrados."
+                  : "Modelos em revisão regulatória. Geração de minuta técnica sem efeito de protocolo final imediato."}
               </p>
             </div>
 
-            {/* CARD 4: REQUISITOS EM REVISÃO (ALERTA ÂMBAR) */}
-            <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#FEF3C7] border border-[#FCD34D] flex items-center justify-center text-[#D97706] shrink-0 mt-0.5">
-                  <Info className="h-5 w-5 stroke-[2.5]" />
+            {/* CARD 4: SITUAÇÃO DOS REQUISITOS (VALIDADO vs EM REVISÃO) */}
+            {serviceDef.status === "validated" ? (
+              <div className="bg-emerald-50/50 border border-emerald-200/70 rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 shrink-0 mt-0.5">
+                    <Check className="h-5 w-5 stroke-[2.5]" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-emerald-900">
+                        Requisitos conferidos
+                      </h3>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        {serviceDef.validationDateFormatted}
+                      </span>
+                    </div>
+                    <p className="text-xs text-emerald-800 leading-relaxed">
+                      Requisitos cadastrados e documentação exigida auditados e conferidos.
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <h3 className="text-sm font-bold text-[#92400E]">
-                    Requisitos em revisão
-                  </h3>
-                  <p className="text-xs text-[#B45309] leading-relaxed">
-                    A lista oficial deste serviço ainda precisa ser validada.
-                  </p>
-                </div>
-              </div>
 
-              <div className="pt-2 pl-12 space-y-2">
-                <p className="text-[11px] font-medium text-[#B45309]/80">
-                  Fonte: {officialSourceInfo.label}
-                </p>
-                
-                <div>
-                  <a
-                    href={officialSourceInfo.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#075BFF] hover:text-blue-700 transition-colors"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    <span>Consultar orientação oficial</span>
-                  </a>
+                <div className="pt-2 pl-12 space-y-2">
+                  <p className="text-[11px] font-medium text-emerald-900/90">
+                    Fonte oficial: {serviceDef.officialSource}
+                  </p>
+                  <div>
+                    <a
+                      href={serviceDef.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-bold text-[#075BFF] hover:text-blue-700 transition-colors"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      <span>Consultar orientação oficial na Capitania</span>
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-[#FEF3C7] border border-[#FCD34D] flex items-center justify-center text-[#D97706] shrink-0 mt-0.5">
+                    <Info className="h-5 w-5 stroke-[2.5]" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-[#92400E]">
+                        Requisitos em revisão
+                      </h3>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                        {serviceDef.validationDateFormatted}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#B45309] leading-relaxed">
+                      {serviceDef.missingValidationNote || "A lista oficial deste serviço ainda precisa ser validada com a Capitania local."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2 pl-12 space-y-2">
+                  <p className="text-[11px] font-medium text-[#B45309]/90">
+                    Fonte: {serviceDef.officialSource}
+                  </p>
+                  <p className="text-[11px] text-[#B45309]/80 font-medium">
+                    Trabalho salvo como rascunho: Este serviço ainda não está liberado para protocolo final automatizado.
+                  </p>
+                  <div>
+                    <a
+                      href={serviceDef.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-bold text-[#075BFF] hover:text-blue-700 transition-colors"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      <span>Consultar diretrizes na Capitania</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
 
           </div>
 

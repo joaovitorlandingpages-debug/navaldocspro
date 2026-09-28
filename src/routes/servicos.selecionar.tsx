@@ -13,7 +13,9 @@ import {
   ChevronDown,
   X,
   FileCheck2,
-  ShieldCheck
+  ShieldCheck,
+  Clock,
+  ExternalLink
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -22,6 +24,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { getServiceDefinition } from "@/services/catalog/servicesCatalogValidation";
 
 export const Route = createFileRoute("/servicos/selecionar")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -562,13 +565,37 @@ function SelecionarServicosPage() {
                     {isSelected && <Check className="h-3.5 w-3.5 stroke-[3]" />}
                   </div>
 
-                  {/* Nome do Serviço */}
-                  <div className="min-w-0 flex-1">
+                  {/* Nome do Serviço e Status de Requisitos */}
+                  <div className="min-w-0 flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-3">
                     <p className={`text-xs sm:text-sm font-semibold truncate ${
                       isSelected ? "text-[#0B1739]" : "text-slate-700"
                     }`}>
                       {svc.name}
                     </p>
+
+                    {(() => {
+                      const serviceDef = getServiceDefinition(svc.id);
+                      if (serviceDef.status === "validated") {
+                        return (
+                          <span
+                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0 self-start sm:self-center"
+                            title={`Conferido em ${serviceDef.validationDateFormatted} • Fonte: ${serviceDef.officialSource}`}
+                          >
+                            <Check className="h-2.5 w-2.5 stroke-[2.5]" />
+                            <span>Requisitos conferidos</span>
+                          </span>
+                        );
+                      }
+                      return (
+                        <span
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80 shrink-0 self-start sm:self-center"
+                          title="Trabalho salvo como rascunho até conferência regulatória oficial"
+                        >
+                          <Clock className="h-2.5 w-2.5" />
+                          <span>Requisitos em revisão</span>
+                        </span>
+                      );
+                    })()}
                   </div>
                 </div>
               );

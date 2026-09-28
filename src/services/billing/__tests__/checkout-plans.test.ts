@@ -23,25 +23,25 @@ describe("Plans and Billing Configuration (NavalPlans Update)", () => {
   it("calculates annual discount equivalent to 2 months free for Plano Profissional", () => {
     const profissional = NAVAL_PLANS.find((p) => p.slug === "profissional")!;
     expect(profissional).toBeDefined();
-    expect(profissional.priceMonthly).toBe(299);
-    expect(profissional.priceYearly).toBe(2990);
+    expect(profissional.priceMonthly).toBe(549);
+    expect(profissional.priceYearly).toBe(5490);
 
     const savings = calculateAnnualSavings(profissional);
-    expect(savings).toBe(299 * 2); // R$ 598 de economia
+    expect(savings).toBe(549 * 2); // R$ 1.098 de economia
 
     const discountPercentage = getAnnualDiscountPercentage(profissional);
     expect(discountPercentage).toBeGreaterThanOrEqual(16);
     expect(discountPercentage).toBeLessThanOrEqual(20);
   });
 
-  it("configures Profissional plan with 60 OS/Laudos and 3 users", () => {
+  it("configures Profissional plan with 100 OS/Laudos and 3 users", () => {
     const profissional = NAVAL_PLANS.find((p) => p.slug === "profissional")!;
     expect(profissional).toBeDefined();
-    expect(profissional.priceMonthly).toBe(299);
-    expect(profissional.priceYearly).toBe(2990);
-    expect(profissional.processLimit).toBe(60);
+    expect(profissional.priceMonthly).toBe(549);
+    expect(profissional.priceYearly).toBe(5490);
+    expect(profissional.processLimit).toBe(100);
     expect(profissional.userLimit).toBe(3);
-    expect(profissional.storageGb).toBe(15);
+    expect(profissional.storageGb).toBe(8);
     expect(profissional.isPopular).toBe(true);
   });
 
@@ -59,9 +59,9 @@ describe("Plans and Billing Configuration (NavalPlans Update)", () => {
 
   it("getPlanPrice returns correct amount according to billing cycle", () => {
     const profissional = NAVAL_PLANS.find((p) => p.slug === "profissional")!;
-    expect(getPlanPrice(profissional, "monthly")).toBe(299);
-    expect(getPlanPrice(profissional, "annual")).toBe(2990);
-    expect(getPlanPrice(profissional, "yearly")).toBe(2990);
+    expect(getPlanPrice(profissional, "monthly")).toBe(549);
+    expect(getPlanPrice(profissional, "annual")).toBe(5490);
+    expect(getPlanPrice(profissional, "yearly")).toBe(5490);
   });
 
   it("parses external_reference tuple with organization_id, plan_id, and billing_cycle", () => {
