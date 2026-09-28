@@ -39,27 +39,20 @@ export default function Plans() {
     staleTime: 1000 * 30, // 30 segundos
   });
 
-  // Filtra planos publicados e ativos. Se ainda nenhum foi publicado no banco (ambiente inicial), permite fallback inteligente
-  const publishedPlans = useMemo(() => {
-    const published = allPlans.filter(p => p.status === 'published' && p.availableForSale !== false);
-    if (published.length > 0) return published;
-    // Fallback: se nenhum plano está marcado como 'published' ainda no banco, exibe os planos base com indicação de catálogo
-    return allPlans;
-  }, [allPlans]);
+  // 3 Novos Planos Oficiais do NavalDocs Pro
+  const NAVALDOCS_NEW_PLAN_SLUGS = ['essencial', 'profissional', 'equipe'];
 
-  // Filtra pelo produto selecionado
+  // Filtra planos publicados e ativos com foco estrito nos 3 novos planos do NavalDocs
   const displayedPlans = useMemo(() => {
-    return publishedPlans.filter(p => {
-      const apps = p.appsIncluded || ["navaldocs"];
-      const isBundle = apps.length > 1;
-
-      if (selectedProduct === "bundles") return isBundle;
-      if (selectedProduct === "navaldocs") return apps.includes("navaldocs") && !isBundle;
-      if (selectedProduct === "arrais") return apps.includes("arrais") && !isBundle;
-      if (selectedProduct === "notificador") return apps.includes("notificador") && !isBundle;
-      return true;
-    }).sort((a, b) => (a.priceMonthly || 0) - (b.priceMonthly || 0));
-  }, [publishedPlans, selectedProduct]);
+    // 1. Prioriza planos vindos do banco de dados correspondentes aos 3 novos slugs
+    const fromDb = allPlans.filter(p => NAVALDOCS_NEW_PLAN_SLUGS.includes(p.slug.toLowerCase()));
+    if (fromDb.length > 0) {
+      return fromDb.sort((a, b) => (a.priceMonthly || 0) - (b.priceMonthly || 0));
+    }
+    // 2. Fallback resiliente para catálogo oficial pré-configurado
+    return OFFICIAL_DEFAULT_PLANS.filter(p => NAVALDOCS_NEW_PLAN_SLUGS.includes(p.slug.toLowerCase()))
+      .sort((a, b) => (a.priceMonthly || 0) - (b.priceMonthly || 0));
+  }, [allPlans]);
 
   // Verifica se o usuário/empresa já possui assinatura ativa
   const hasActiveSubscription = subscription?.status === 'active' || subscription?.status === 'trialing';
@@ -135,13 +128,13 @@ export default function Plans() {
         {/* CABEÇALHO */}
         <div className="text-center space-y-3 max-w-3xl mx-auto">
           <Badge className="bg-blue-50 text-[#1868db] border-blue-200 font-extrabold text-[10px] uppercase tracking-widest px-3 py-1">
-            Plataforma Naval Especializada
+            NavalDocs Pro — Planos Oficiais
           </Badge>
           <h1 className="text-3xl sm:text-5xl font-black text-[#0d2342] tracking-tight uppercase italic">
             Escolha seu Plano <span className="text-[#1868db]">&</span> Franquias
           </h1>
           <p className="text-sm sm:text-base text-slate-600 font-medium">
-            Preços oficiais carregados em tempo real do catálogo. Escolha o aplicativo ideal para sua operação e escale com total flexibilidade.
+            Proposta comercial oficial do NavalDocs Pro. Escolha o ciclo ideal para seu escritório e conte com automação documental náutica de ponta a ponta.
           </p>
 
           {/* BANNER SE JÁ POSSUI ASSINATURA ATIVA */}
@@ -180,72 +173,15 @@ export default function Plans() {
             </div>
           )}
 
-          {/* SELETOR DE PRODUTOS / APLICATIVOS */}
-          <div className="pt-4 flex items-center justify-center">
-            <div className="bg-white p-1 rounded-2xl border border-slate-200 shadow-2xs flex flex-wrap items-center justify-center gap-1">
-              <button
-                type="button"
-                onClick={() => setSelectedProduct("navaldocs")}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                  selectedProduct === "navaldocs"
-                    ? "bg-[#1868db] text-white shadow-xs"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                }`}
-              >
-                <Compass className="h-3.5 w-3.5" />
-                <span>NavalDocs</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedProduct("arrais")}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                  selectedProduct === "arrais"
-                    ? "bg-indigo-600 text-white shadow-xs"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                }`}
-              >
-                <Anchor className="h-3.5 w-3.5" />
-                <span>Arrais</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedProduct("notificador")}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                  selectedProduct === "notificador"
-                    ? "bg-amber-600 text-white shadow-xs"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                }`}
-              >
-                <Bell className="h-3.5 w-3.5" />
-                <span>Notificador</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedProduct("bundles")}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                  selectedProduct === "bundles"
-                    ? "bg-purple-700 text-white shadow-xs"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                }`}
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Pacote Completo (3 Apps)</span>
-              </button>
-            </div>
-          </div>
-
           {/* ALTERNADOR DE CICLO MENSAL / ANUAL */}
-          <div className="flex items-center justify-center pt-2">
-            <div className="bg-slate-200/80 p-1 rounded-2xl flex items-center shadow-inner">
+          <div className="flex items-center justify-center pt-4">
+            <div className="bg-slate-200/80 p-1.5 rounded-2xl flex items-center shadow-inner">
               <button
                 type="button"
                 onClick={() => setBillingCycle("monthly")}
-                className={`px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                   billingCycle === "monthly"
-                    ? "bg-white text-[#0d2342] shadow-xs"
+                    ? "bg-white text-[#0d2342] shadow-sm"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -254,13 +190,13 @@ export default function Plans() {
               <button
                 type="button"
                 onClick={() => setBillingCycle("yearly")}
-                className={`px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
+                className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
                   billingCycle === "yearly"
-                    ? "bg-[#0d2342] text-white shadow-xs"
+                    ? "bg-[#0d2342] text-white shadow-sm"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                <span>Cobrança Anual</span>
+                <span>Cobrança Anual Antecipada</span>
                 <span className="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase">
                   Economia Real
                 </span>
@@ -270,15 +206,15 @@ export default function Plans() {
         </div>
 
         {/* NOTA ESCLARECEDORA OBRIGATÓRIA NO TOPO */}
-        <div className="max-w-4xl mx-auto p-4 bg-blue-50/70 border border-blue-200/80 rounded-2xl text-xs text-blue-900 space-y-1">
-          <div className="flex items-center gap-2 font-bold">
+        <div className="max-w-4xl mx-auto p-4 sm:p-5 bg-blue-50/80 border border-blue-200 rounded-2xl text-xs text-blue-900 space-y-1.5 shadow-2xs">
+          <div className="flex items-center gap-2 font-bold text-sm text-[#0d2342]">
             <Info className="h-4 w-4 text-[#1868db] shrink-0" />
-            <span>Como Funcionam as Franquias e Leituras de Documentos</span>
+            <span>Regras das Franquias, Leituras e Documentos Finais</span>
           </div>
-          <p className="text-[11px] leading-relaxed text-blue-800">
-            A <strong>geração e download dos documentos finais é automática e ilimitada</strong> nos planos NavalDocs e Arrais (não consome leituras). 
-            “Documento lido” é a extração por IA de dados de um anexo (CNH, RG, comprovante). 
-            A leitura de anexos é <strong>opcional</strong>; também é possível preencher ou reutilizar dados já salvos manualmente sem consumir leituras.
+          <p className="text-[12px] leading-relaxed text-blue-950 font-normal">
+            • <strong>Geração de documentos finais automática e ilimitada</strong> nos três planos (não consome leituras).<br />
+            • <strong>“Documento lido”</strong> significa um documento de origem enviado para extração automática de dados (como CNH, RG ou comprovante de endereço). Digitação manual e reutilização de dados já salvos no cadastro <strong>não consomem outra leitura</strong>.<br />
+            • <strong>As franquias são mensais</strong> e renovadas a cada 30 dias (não cumulativas), inclusive para assinantes do plano anual.
           </p>
         </div>
 
@@ -291,27 +227,19 @@ export default function Plans() {
         ) : displayedPlans.length === 0 ? (
           <Card className="bg-white border-slate-200 shadow-2xs rounded-3xl p-12 text-center max-w-lg mx-auto">
             <AlertTriangle className="h-10 w-10 text-amber-500 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-[#0d2342]">Nenhum plano disponível para esta categoria</h3>
+            <h3 className="text-base font-bold text-[#0d2342]">Catálogo em sincronização</h3>
             <p className="text-xs text-slate-500 mt-1">
-              Os planos para este produto ainda estão em fase de homologação e serão liberados em breve pelo administrador global.
+              Os planos comerciais estão sendo validados pelo administrador global.
             </p>
-            <Button
-              onClick={() => setSelectedProduct("navaldocs")}
-              variant="outline"
-              className="mt-4 text-xs font-semibold"
-            >
-              Ver Planos NavalDocs Pro
-            </Button>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch max-w-7xl mx-auto">
             {displayedPlans.map((plan) => {
-              const isPopular = plan.isPopular || plan.slug === "profissional" || plan.slug === "pacote-completo";
+              const isPopular = plan.isPopular || plan.slug === "profissional";
               const currentPrice = billingCycle === "yearly" ? plan.priceYearly : plan.priceMonthly;
               const savings = (plan.priceMonthly * 12) - plan.priceYearly;
               const isCurrentPlan = hasActiveSubscription && currentPlanSlug === plan.slug.toLowerCase();
-              const isSyncReady = plan.stripeSyncStatus === "synced" && (billingCycle === "yearly" ? plan.stripePriceYearlyId : plan.stripePriceMonthlyId);
-              const apps = plan.appsIncluded || ["navaldocs"];
+              const isSyncReady = Boolean(billingCycle === "yearly" ? (plan.stripePriceYearlyId || plan.stripeSyncStatus === "synced") : (plan.stripePriceMonthlyId || plan.stripeSyncStatus === "synced"));
 
               return (
                 <Card
@@ -330,30 +258,20 @@ export default function Plans() {
                   )}
 
                   <CardHeader className="p-6 sm:p-8 pb-4">
-                    {/* Badges de Aplicativos Contemplados */}
-                    <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                      {apps.includes("navaldocs") && (
-                        <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-[9px] font-bold">
-                          NavalDocs
-                        </Badge>
-                      )}
-                      {apps.includes("arrais") && (
-                        <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200 text-[9px] font-bold">
-                          Arrais
-                        </Badge>
-                      )}
-                      {apps.includes("notificador") && (
-                        <Badge className="bg-amber-50 text-amber-800 border-amber-200 text-[9px] font-bold">
-                          Notificador
-                        </Badge>
-                      )}
+                    <div className="flex items-center justify-between gap-1 mb-2">
+                      <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] font-bold">
+                        NavalDocs Pro
+                      </Badge>
+                      <Badge className="bg-slate-100 text-slate-700 text-[9px] font-bold">
+                        {billingCycle === "yearly" ? "Anual Cobrado Antecipado" : "Mensal Recorrente"}
+                      </Badge>
                     </div>
 
                     <CardTitle className="text-2xl font-black text-[#0d2342] tracking-tight">
                       {plan.name}
                     </CardTitle>
                     <CardDescription className="text-xs text-slate-500 font-medium min-h-[36px] mt-1">
-                      {plan.description || "Solução sob medida para escritórios e despachantes náuticos."}
+                      {plan.description || "Solução sob medida para despachantes e escritórios náuticos."}
                     </CardDescription>
 
                     {/* Preço Exibido */}
@@ -366,7 +284,9 @@ export default function Plans() {
                             </span>
                             <span className="text-xs font-bold text-slate-400">/mês</span>
                           </div>
-                          <p className="text-[11px] text-slate-400 mt-1">Cobrança mensal recorrente com renovação automática</p>
+                          <p className="text-[11px] text-slate-500 mt-1">
+                            Cobrança mensal recorrente com renovação a cada 30 dias.
+                          </p>
                         </div>
                       ) : (
                         <div>
@@ -376,13 +296,16 @@ export default function Plans() {
                             </span>
                             <span className="text-xs font-bold text-slate-400">/ano</span>
                           </div>
-                          {savings > 0 && (
-                            <p className="text-xs text-emerald-600 font-bold mt-1">
-                              Economia de R$ {savings.toLocaleString("pt-BR")} no ciclo anual
-                            </p>
-                          )}
-                          <p className="text-[10px] text-slate-400 mt-0.5">
-                            Cobre 12 meses (equivale a ~R$ {Math.round(plan.priceYearly / 12)}/mês). Franquias renovam mensalmente.
+                          <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                            <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold">
+                              Cobrança antecipada
+                            </Badge>
+                            <span className="text-xs text-slate-600 font-semibold">
+                              (equivale a R$ {(plan.priceYearly / 12).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mês)
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-1.5">
+                            Total de <strong>R$ {plan.priceYearly.toLocaleString("pt-BR")}</strong> cobrado no cartão à vista. Franquias renovam mensalmente.
                           </p>
                         </div>
                       )}
@@ -390,39 +313,28 @@ export default function Plans() {
 
                     {/* Franquias e Cotas Operacionais com Ícones */}
                     <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        Franquias Mensais:
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                          Franquias Mensais:
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">Renovam todo mês</span>
+                      </div>
                       <div className="grid grid-cols-2 gap-2 text-xs text-slate-700 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
-                        {apps.includes("navaldocs") && (
-                          <div className="flex items-center gap-1.5">
-                            <FileText className="h-3.5 w-3.5 text-[#1868db] shrink-0" />
-                            <span><strong>{plan.processLimit || 0}</strong> processos/mês</span>
-                          </div>
-                        )}
-                        {apps.includes("arrais") && (
-                          <div className="flex items-center gap-1.5">
-                            <Anchor className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
-                            <span><strong>{plan.arraisKitsLimit || 0}</strong> kits Arrais/mês</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1.5">
+                          <FileText className="h-3.5 w-3.5 text-[#1868db] shrink-0" />
+                          <span><strong>{plan.processLimit}</strong> processos/mês</span>
+                        </div>
                         <div className="flex items-center gap-1.5">
                           <Cpu className="h-3.5 w-3.5 text-[#1868db] shrink-0" />
-                          <span><strong>{plan.aiPagesLimit || 0}</strong> leituras OCR/mês</span>
+                          <span><strong>{plan.aiPagesLimit}</strong> docs de origem lidos/mês</span>
                         </div>
-                        {apps.includes("notificador") && (
-                          <div className="flex items-center gap-1.5">
-                            <Bell className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-                            <span><strong>{plan.monitoredDocsLimit || 0}</strong> docs monitorados</span>
-                          </div>
-                        )}
                         <div className="flex items-center gap-1.5">
                           <Users className="h-3.5 w-3.5 text-[#1868db] shrink-0" />
-                          <span><strong>{plan.userLimit || 1}</strong> {(plan.userLimit || 1) > 1 ? 'usuários' : 'usuário'}</span>
+                          <span><strong>{plan.userLimit}</strong> {plan.userLimit > 1 ? 'usuários' : 'usuário'}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <HardDrive className="h-3.5 w-3.5 text-[#1868db] shrink-0" />
-                          <span><strong>{plan.storageGb || 5} GB</strong> armazenamento</span>
+                          <span><strong>{plan.storageGb} GB</strong> armazenamento</span>
                         </div>
                       </div>
                     </div>

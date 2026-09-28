@@ -68,6 +68,24 @@ function AdminPlansPage() {
     staleTime: 1000 * 30, // 30 segundos
   });
 
+  // Diagnóstico dinâmico do ambiente efetivo do backend Stripe
+  const { data: stripeDiag } = useQuery({
+    queryKey: ['admin-stripe-verify-status'],
+    queryFn: async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) return null;
+        const res = await supabase.functions.invoke("stripe-verify", {
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        });
+        return res.data;
+      } catch (_e) {
+        return null;
+      }
+    },
+    staleTime: 1000 * 60, // 1 minuto
+  });
+
   // Mutação para sincronização individual com a Stripe
   const syncMutation = useMutation({
     mutationFn: async (planId: string) => {
@@ -263,14 +281,24 @@ function AdminPlansPage() {
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-bold text-[#0d2342]">Gateway de Pagamentos Stripe</span>
-                <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] font-bold">
-                  Modo Teste / Sandbox
+                <Badge className={`text-[10px] font-bold ${
+                  stripeDiag?.environment === 'production'
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : stripeDiag?.environment === 'test'
+                    ? "bg-blue-50 text-blue-700 border-blue-200"
+                    : "bg-slate-100 text-slate-700 border-slate-200"
+                }`}>
+                  {stripeDiag?.environment === 'production'
+                    ? "Modo Produção (Live)"
+                    : stripeDiag?.environment === 'test'
+                    ? "Modo Teste (Sandbox)"
+                    : "Conexão Segura Backend"}
                 </Badge>
                 <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-bold">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Pronto para Sincronização
+                  {stripeDiag?.connected ? "Conexão Validada" : "Pronto para Sincronização"}
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 mt-0.5">

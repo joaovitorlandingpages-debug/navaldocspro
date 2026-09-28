@@ -214,14 +214,15 @@ export const CheckoutConfirmationDialog: React.FC<CheckoutConfirmationDialogProp
             </div>
           )}
 
-          {/* DESTAQUE OBRIGATÓRIO: GERAÇÃO ILIMITADA & OCR OPCIONAL */}
-          <div className="p-3.5 bg-blue-50/70 border border-blue-200/90 rounded-2xl text-xs text-blue-900 space-y-1">
+          {/* DESTAQUE OBRIGATÓRIO: GERAÇÃO ILIMITADA & REUTILIZAÇÃO SEM CONSUMO */}
+          <div className="p-3.5 bg-blue-50/80 border border-blue-200 rounded-2xl text-xs text-blue-900 space-y-1">
             <div className="flex items-center gap-1.5 font-bold">
               <Info className="h-4 w-4 text-[#1868db] shrink-0" />
-              <span>Geração Automática e Leitura de Anexos</span>
+              <span>Geração Automática e Leituras de Origem</span>
             </div>
-            <p className="text-[11px] leading-relaxed text-blue-800">
-              A <strong>geração e download dos documentos finais é automática e ilimitada</strong> nos planos NavalDocs e Arrais. A leitura de CNH, comprovante ou outro anexo por IA é <strong>opcional</strong>; também é possível continuar digitando e reutilizando dados manualmente sem consumir leituras.
+            <p className="text-[11px] leading-relaxed text-blue-900">
+              A <strong>geração dos documentos finais é automática e ilimitada nos três planos</strong>.<br />
+              “Documento lido” significa um documento de origem enviado para extração de dados, como CNH ou comprovante de endereço; digitação manual e reutilização de dados já salvos <strong>não consomem outra leitura</strong>. As franquias são mensais, inclusive para quem paga o plano anual.
             </p>
           </div>
 
