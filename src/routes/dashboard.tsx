@@ -34,6 +34,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { toast } from "sonner";
 import { ServicesCategoryModal } from "@/components/home/ServicesCategoryModal";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayoutWrapper,
@@ -139,8 +140,13 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
           </Link>
         </div>
 
+        {/* Centro: Busca Geral no Topo do Sistema */}
+        <div className="flex-1 max-w-sm lg:max-w-md mx-2 sm:mx-6 flex items-center justify-center md:justify-start">
+          <GlobalSearch variant="header" />
+        </div>
+
         {/* Direita: Ajuda e Perfil do Usuário */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           {/* Ícone de Ajuda com Ação Útil */}
           <Link
             to="/support"
@@ -341,6 +347,11 @@ export function RouteContent() {
         <p className="text-sm sm:text-base text-slate-500">
           Cadastre clientes, embarcações ou inicie um serviço.
         </p>
+      </div>
+
+      {/* 1.1 BUSCA GERAL DA PÁGINA INICIAL */}
+      <div className="mb-8 sm:mb-10 max-w-5xl">
+        <GlobalSearch variant="home" />
       </div>
 
       {/* 2. TRÊS CARDS PRINCIPAIS */}
