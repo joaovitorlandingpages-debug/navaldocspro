@@ -73,7 +73,8 @@ function LoginComponent() {
       toast.success("Login realizado com sucesso!");
 
       setTimeout(() => {
-        let target = FALLBACK_REDIRECT;
+        const isPlatformAdmin = cleanEmail === "douglas_faresi@hotmail.com" || cleanEmail === "joaovitor.f0725@gmail.com";
+        let target = isPlatformAdmin ? "/admin" : FALLBACK_REDIRECT;
         try {
           const stored = sessionStorage.getItem("returnTo") || localStorage.getItem("returnTo");
           if (isSafeInternalPath(redirectParam)) target = redirectParam;

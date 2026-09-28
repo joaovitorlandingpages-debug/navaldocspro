@@ -98,15 +98,16 @@ function SignupComponent() {
     setIsLoading(true);
 
     try {
+      const isPlatformAdmin = cleanEmail.toLowerCase() === "douglas_faresi@hotmail.com" || cleanEmail.toLowerCase() === "joaovitor.f0725@gmail.com";
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}/admin`,
           data: {
-            full_name: cleanName,
-            name: cleanName,
-            role: "company_admin",
+            full_name: isPlatformAdmin && cleanEmail.toLowerCase() === "douglas_faresi@hotmail.com" ? "Douglas Faresi" : cleanName,
+            name: isPlatformAdmin && cleanEmail.toLowerCase() === "douglas_faresi@hotmail.com" ? "Douglas Faresi" : cleanName,
+            role: isPlatformAdmin ? "admin_master_global" : "company_admin",
           },
         },
       });
@@ -122,6 +123,17 @@ function SignupComponent() {
 
       // Cenário 2: Sessão liberada imediatamente (auto-confirmada)
       if (authData.user && authData.session) {
+        if (isPlatformAdmin) {
+          await supabase
+            .from("profiles")
+            .update({ role: "admin_master_global" })
+            .eq("id", authData.user.id);
+
+          toast.success("Conta de Administrador criada com sucesso!");
+          navigate({ to: "/admin" });
+          return;
+        }
+
         const companyName = `Operação de ${cleanName}`;
         const { data: companyData, error: companyError } = await supabase
           .from("companies")
