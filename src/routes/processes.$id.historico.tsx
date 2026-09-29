@@ -38,8 +38,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/$id/historico")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    filter: (search.filter as string) || undefined,
+  validateSearch: (search: Record<string, unknown>): { filter?: string } => ({
+    ...(search.filter ? { filter: search.filter as string } : {}),
   }),
   component: () => (
     <ProtectedRoute>
@@ -390,9 +390,9 @@ function HistoricoProcessoPage() {
   const filteredEvents = useMemo(() => {
     return allEvents.filter((evt) => {
       // Filtro por Categoria
-      if (selectedFilter !== "all" && evt.category !== selectedFilter) {
-        return false;
-      }
+      if (selectedFilter === "documentos" && evt.category !== "documento") return false;
+      if (selectedFilter === "protocolos" && evt.category !== "protocolo") return false;
+      if (selectedFilter === "alteracoes" && evt.category !== "alteracao") return false;
 
       // Busca Textual
       if (searchTerm.trim()) {

@@ -4,7 +4,7 @@ import {
   FolderOpen, Search, Plus, SlidersHorizontal, RefreshCw, 
   CheckCircle2, AlertCircle, Clock, Archive, ExternalLink, 
   FileText, ShieldCheck, HelpCircle, Layers, Edit, Eye, 
-  Check, X, AlertTriangle, User, Calendar, ShieldAlert, Sparkles
+  Check, X, AlertTriangle, User, Calendar, ShieldAlert, Sparkles, Info
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";

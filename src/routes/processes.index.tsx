@@ -17,10 +17,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/processes/")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    tab: (search.tab as "clients" | "vessels") || "clients",
+  validateSearch: (search: Record<string, unknown>): {
+    tab?: "clients" | "vessels";
+    q?: string;
+    sort?: "asc" | "desc";
+  } => ({
+    tab: (search.tab as "clients" | "vessels") || undefined,
     q: (search.q as string) || undefined,
-    sort: (search.sort as "asc" | "desc") || "asc",
+    sort: (search.sort as "asc" | "desc") || undefined,
   }),
   component: () => (
     <ProtectedRoute>

@@ -26,8 +26,8 @@ import { openStoredFile, downloadStoredFile } from "@/utils/file-preview";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/$id/protocolos-gerados")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    from: (search.from as string) || undefined,
+  validateSearch: (search: Record<string, unknown>): { from?: string } => ({
+    ...(search.from ? { from: search.from as string } : {}),
   }),
   component: () => (
     <ProtectedRoute>
@@ -138,11 +138,11 @@ function ProtocolosGeradosPage() {
   }, [processData, id]);
 
   const customerName = useMemo(() => {
-    return customer?.fantasy_name || customer?.name || "Ana Oliveira";
+    return customer?.fantasy_name || customer?.name || "Cliente não informado";
   }, [customer]);
 
   const vesselName = useMemo(() => {
-    return vessel?.name || "Aurora";
+    return vessel?.name || "Embarcação não informada";
   }, [vessel]);
 
   // Toggle de expansão de detalhes

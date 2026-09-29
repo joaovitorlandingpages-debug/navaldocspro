@@ -19,6 +19,8 @@ export interface ConfirmDialogProps {
   description: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
   variant?: "destructive" | "default";
   loading?: boolean;
   onConfirm: () => void | Promise<void>;
@@ -30,13 +32,18 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmText = "Confirmar",
-  cancelText = "Cancelar",
+  confirmText,
+  cancelText,
+  confirmLabel,
+  cancelLabel,
   variant = "destructive",
   loading = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const resolvedConfirmText = confirmLabel || confirmText || "Confirmar";
+  const resolvedCancelText = cancelLabel || cancelText || "Cancelar";
+
   const handleConfirm = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (loading) return;
@@ -64,7 +71,7 @@ export function ConfirmDialog({
             disabled={loading}
             className="min-h-[44px] min-w-[44px]"
           >
-            {cancelText}
+            {resolvedCancelText}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
@@ -77,7 +84,7 @@ export function ConfirmDialog({
             )}
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            <span>{loading ? "Processando..." : confirmText}</span>
+            <span>{loading ? "Processando..." : resolvedConfirmText}</span>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

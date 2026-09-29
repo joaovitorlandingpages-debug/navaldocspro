@@ -38,12 +38,22 @@ import { toast } from "sonner";
 import { getServiceDefinition } from "@/services/catalog/servicesCatalogValidation";
 
 export const Route = createFileRoute("/servicos/revisar")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): {
+    category?: "profissional" | "esporte_recreio";
+    customerId?: string;
+    vesselId?: string;
+    services?: string;
+    from?: string;
+    activeServiceId?: string;
+    preview?: string;
+  } => ({
     category: (search.category as "profissional" | "esporte_recreio") || "esporte_recreio",
     customerId: (search.customerId as string) || "",
     vesselId: (search.vesselId as string) || "",
     services: (search.services as string) || "",
     from: (search.from as string) || undefined,
+    activeServiceId: (search.activeServiceId as string) || undefined,
+    preview: (search.preview as string) || undefined,
   }),
   component: () => (
     <ProtectedRoute>
@@ -57,7 +67,8 @@ export const Route = createFileRoute("/servicos/revisar")({
 function RevisarProcessoPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const { currentCompany, user, profile } = useAuth();
+  const { user, profile } = useAuth();
+  const currentCompany = profile?.companies;
 
   const category = search.category || "esporte_recreio";
   const customerId = search.customerId;
@@ -204,7 +215,7 @@ function RevisarProcessoPage() {
           status: allServicesValidated ? "in_progress" : "draft",
           priority: "medium",
           is_draft: !allServicesValidated,
-          metadata: {
+          draft_data: {
             category,
             category_label: categoryDisplayName,
             services: rawServices,
@@ -293,10 +304,10 @@ function RevisarProcessoPage() {
             <div className="min-w-0">
               <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Cliente</span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
-                {customer?.fantasy_name || customer?.name || "Ana Oliveira"}
+                {customer?.fantasy_name || customer?.name || "Cliente não informado"}
               </span>
               <span className="text-[11px] text-slate-400 block truncate">
-                {customer?.document || "CPF: 123.456.789-00"}
+                {customer?.cpf_cnpj || customer?.document || "Sem documento"}
               </span>
             </div>
           </div>
@@ -309,10 +320,10 @@ function RevisarProcessoPage() {
             <div className="min-w-0">
               <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Embarcação</span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
-                {vessel?.name || "Aurora"}
+                {vessel?.name || "Embarcação não informada"}
               </span>
               <span className="text-[11px] text-slate-400 block truncate">
-                {vessel?.registration_number || "381P202400192"}
+                {vessel?.registration_number || "Sem inscrição"}
               </span>
             </div>
           </div>
@@ -496,14 +507,14 @@ function RevisarProcessoPage() {
                 <div className="flex justify-between py-1.5 border-b border-slate-100">
                   <span className="text-slate-500">Cliente:</span>
                   <span className="font-bold text-[#0B1739] text-right truncate max-w-[200px]">
-                    {customer?.fantasy_name || customer?.name || "Ana Oliveira"}
+                    {customer?.fantasy_name || customer?.name || "Cliente não informado"}
                   </span>
                 </div>
 
                 <div className="flex justify-between py-1.5 border-b border-slate-100">
                   <span className="text-slate-500">Embarcação:</span>
                   <span className="font-bold text-[#0B1739] text-right truncate max-w-[200px]">
-                    {vessel?.name || "Aurora"}
+                    {vessel?.name || "Embarcação não informada"}
                   </span>
                 </div>
 

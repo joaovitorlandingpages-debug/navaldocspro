@@ -30,7 +30,9 @@ import {
   UserPlus, 
   Lock, 
   Eye,
-  Info
+  Info,
+  ShieldCheck,
+  User
 } from "lucide-react";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,9 +43,20 @@ import { useAuth } from "@/hooks/useAuth";
 import { uploadToBucket } from "@/lib/storage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
+interface StaffMember {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  status: string;
+  permissions: string;
+}
+
 export const Route = createFileRoute("/settings")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    tab: (search.tab as string) || "empresa",
+  validateSearch: (search: Record<string, unknown>): {
+    tab?: string;
+  } => ({
+    tab: (search.tab as string) || undefined,
   }),
   component: () => (
     <ProtectedRoute>
@@ -57,7 +70,8 @@ export const Route = createFileRoute("/settings")({
 function CompanySettingsPage() {
   const searchParams = Route.useSearch();
   const navigate = useNavigate();
-  const { profile, user, currentCompany } = useAuth();
+  const { profile, user } = useAuth();
+  const currentCompany = profile?.companies;
   const companyId = profile?.company_id;
 
   // Aba Ativa
@@ -166,7 +180,7 @@ function CompanySettingsPage() {
 
         // Adicionar do profiles caso não esteja no metadata
         if (profilesData && profilesData.length > 0) {
-          profilesData.forEach((p) => {
+          profilesData.forEach((p: any) => {
             const alreadyExists = combinedStaff.some(
               (s) => s.id === p.id || (p.email && s.email.toLowerCase() === p.email.toLowerCase())
             );
@@ -286,14 +300,16 @@ function CompanySettingsPage() {
 
     setIsUploadingLogo(true);
     try {
-      const uploadRes = await uploadToBucket({
-        bucket: "documents",
-        file: file,
-        companyId: companyId,
-        prefix: "logos",
-      });
+      const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+      const storagePath = `${companyId}/logo_${Date.now()}_${cleanFileName}`;
+      const uploadRes = await uploadToBucket(
+        "company-branding",
+        storagePath,
+        file,
+        { purpose: "logo" }
+      );
 
-      const logoUrl = uploadRes.publicUrl || uploadRes.storagePath;
+      const logoUrl = uploadRes.path;
 
       await supabase
         .from("companies")

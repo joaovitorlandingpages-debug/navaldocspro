@@ -30,8 +30,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/$id/protocolos-realizados")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    from: (search.from as string) || undefined,
+  validateSearch: (search: Record<string, unknown>): { from?: string } => ({
+    ...(search.from ? { from: search.from as string } : {}),
   }),
   component: () => (
     <ProtectedRoute>
@@ -152,11 +152,11 @@ function ProtocolosRealizadosPage() {
   }, [processData, id]);
 
   const customerName = useMemo(() => {
-    return customer?.fantasy_name || customer?.name || "Ana Oliveira";
+    return customer?.fantasy_name || customer?.name || "Cliente não informado";
   }, [customer]);
 
   const vesselName = useMemo(() => {
-    return vessel?.name || "Aurora";
+    return vessel?.name || "Embarcação não informada";
   }, [vessel]);
 
   // Contagem real de protocolos cadastrados
@@ -326,6 +326,7 @@ function ProtocolosRealizadosPage() {
           <Link
             to="/processes/$id"
             params={{ id }}
+            id="btn-voltar-ao-servico"
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-[#075BFF] hover:underline cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5" />

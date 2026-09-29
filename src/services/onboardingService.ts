@@ -94,7 +94,7 @@ export async function getCompanyOnboardingProgress(companyId: string): Promise<O
 
     // --- ETAPA 2: Funcionário Cadastrado ---
     const activeProfiles = (profilesStaff || []).filter(
-      p => p.role !== "client" && p.role !== "customer"
+      (p: any) => p.role !== "client" && p.role !== "customer"
     );
     const totalStaff = metadataEmployees.length + activeProfiles.length;
     const step2Completed = totalStaff > 0;

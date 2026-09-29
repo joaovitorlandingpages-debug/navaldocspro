@@ -177,7 +177,7 @@ export function GlobalSearch({
 
       // Enriquecimento inteligente: se encontrou clientes ou embarcações, busca processos vinculados se houver poucos
       if (matchedProcesses.length < 5 && matchedCustomers.length > 0) {
-        const custIds = matchedCustomers.map((c) => c.id).slice(0, 4);
+        const custIds = matchedCustomers.map((c: any) => c.id).slice(0, 4);
         const { data: extraProcs } = await supabase
           .from("processes")
           .select(`
@@ -197,7 +197,7 @@ export function GlobalSearch({
           .limit(5);
 
         if (extraProcs && extraProcs.length > 0) {
-          const existingIds = new Set(matchedProcesses.map((p) => p.id));
+          const existingIds = new Set(matchedProcesses.map((p: any) => p.id));
           for (const ep of extraProcs) {
             if (!existingIds.has(ep.id)) {
               matchedProcesses.push(ep);

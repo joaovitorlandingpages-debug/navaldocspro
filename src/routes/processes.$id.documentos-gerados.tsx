@@ -17,7 +17,9 @@ import {
   History, 
   X,
   CheckCircle2,
-  FileText
+  FileText,
+  PenTool,
+  Info
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -30,9 +32,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/$id/documentos-gerados")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    from: (search.from as string) || undefined,
-    selectedDocId: (search.selectedDocId as string) || undefined,
+  validateSearch: (search: Record<string, unknown>): {
+    from?: string;
+    selectedDocId?: string;
+  } => ({
+    ...(search.from ? { from: search.from as string } : {}),
+    ...(search.selectedDocId ? { selectedDocId: search.selectedDocId as string } : {}),
   }),
   component: () => (
     <ProtectedRoute>
@@ -171,7 +176,7 @@ function DocumentosGeradosPage() {
 
       // Se houver algum documento com versão assinada, selecione-o por padrão
       if (list.length > 0) {
-        const withSigned = list.find((d) => d.signed_file_url || d.signature_status === "Anexada" || d.signature_status === "signed");
+        const withSigned = list.find((d: any) => d.signed_file_url || d.signature_status === "Anexada" || d.signature_status === "signed");
         setSelectedDoc(withSigned || list[0]);
       }
     } catch (err) {
@@ -211,11 +216,11 @@ function DocumentosGeradosPage() {
   }, [processData, id]);
 
   const customerName = useMemo(() => {
-    return customer?.fantasy_name || customer?.name || "Ana Oliveira";
+    return customer?.fantasy_name || customer?.name || "Cliente não informado";
   }, [customer]);
 
   const vesselName = useMemo(() => {
-    return vessel?.name || "Aurora";
+    return vessel?.name || "Embarcação não informada";
   }, [vessel]);
 
   // Filtro de Documentos (Pesquisa por nome + filtro de versão assinada)
@@ -352,6 +357,7 @@ function DocumentosGeradosPage() {
           <Link
             to="/processes/$id"
             params={{ id }}
+            id="btn-voltar-ao-servico"
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-[#075BFF] hover:underline cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5" />

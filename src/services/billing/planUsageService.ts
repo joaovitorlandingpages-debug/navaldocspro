@@ -186,7 +186,7 @@ export async function getOfficialPlanUsage(companyId: string): Promise<PlanUsage
 
   let usedOcr = 0;
   if (!lErr && ledgerOcr && ledgerOcr.length > 0) {
-    usedOcr = ledgerOcr.reduce((sum, item) => sum + (Number(item.amount) || 1), 0);
+    usedOcr = ledgerOcr.reduce((sum: number, item: any) => sum + (Number(item.amount) || 1), 0);
   } else {
     // Fallback para contagem real em ocr_jobs
     const { data: ocrJobs } = await supabase

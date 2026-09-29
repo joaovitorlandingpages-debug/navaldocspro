@@ -35,9 +35,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/$id/anexar-versao-assinada")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    docId: (search.docId as string) || undefined,
-    from: (search.from as string) || undefined,
+  validateSearch: (search: Record<string, unknown>): {
+    docId?: string;
+    from?: string;
+  } => ({
+    ...(search.docId ? { docId: search.docId as string } : {}),
+    ...(search.from ? { from: search.from as string } : {}),
   }),
   component: () => (
     <ProtectedRoute>
@@ -52,8 +55,9 @@ function AnexarVersaoAssinadaPage() {
   const { id } = Route.useParams();
   const searchParams = Route.useSearch();
   const navigate = useNavigate();
-  const { profile, user, currentCompany } = useAuth();
+  const { profile, user } = useAuth();
   const companyId = profile?.company_id;
+  const currentCompany = profile?.companies;
 
   // Estados principais
   const [document, setDocument] = useState<any | null>(null);
@@ -180,14 +184,16 @@ function AnexarVersaoAssinadaPage() {
       const userName = profile?.full_name || user?.email?.split("@")[0] || "Operador";
 
       // 1. Upload do Arquivo no Bucket
-      const uploadRes = await uploadToBucket({
-        bucket: "documents",
-        file: selectedFile,
-        companyId: companyId,
-        prefix: `processes/${id}/signed`,
-      });
+      const safeFileName = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const storagePath = `${companyId}/${id}/signed/${Date.now()}_${safeFileName}`;
+      const uploadRes = await uploadToBucket(
+        "signed-documents",
+        storagePath,
+        selectedFile,
+        { upsert: true }
+      );
 
-      const fileUrl = uploadRes.publicUrl || uploadRes.storagePath;
+      const fileUrl = uploadRes.path;
       setUploadedSignedUrl(fileUrl);
 
       // 2. Atualizar o Documento na Tabela generated_documents
@@ -256,7 +262,7 @@ function AnexarVersaoAssinadaPage() {
   };
 
   const processCode = useMemo(() => {
-    if (!processData) return "PROC-001";
+    if (!processData) return "Processo";
     return processData.protocol_number || `PROC-${String(processData.id).slice(0, 4).toUpperCase()}`;
   }, [processData]);
 
@@ -314,7 +320,7 @@ function AnexarVersaoAssinadaPage() {
           <div className="pt-2 sm:pt-0 sm:pr-3">
             <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Cliente</span>
             <span className="text-sm font-bold text-[#0B1739] truncate block">
-              {customer?.fantasy_name || customer?.name || "Ana Oliveira"}
+              {customer?.fantasy_name || customer?.name || "Cliente não informado"}
             </span>
             <span className="text-[11px] text-slate-400 block truncate">
               {customer?.cpf_cnpj || customer?.document || "Sem documento"}
@@ -325,10 +331,10 @@ function AnexarVersaoAssinadaPage() {
           <div className="pt-3 sm:pt-0 sm:px-3">
             <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Embarcação</span>
             <span className="text-sm font-bold text-[#0B1739] truncate block">
-              {vessel?.name || "Aurora"}
+              {vessel?.name || "Embarcação não informada"}
             </span>
             <span className="text-[11px] text-slate-400 block truncate">
-              {vessel?.registration_number || "381P202400192"}
+              {vessel?.registration_number || "Sem inscrição"}
             </span>
           </div>
 

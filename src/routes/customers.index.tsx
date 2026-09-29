@@ -42,10 +42,14 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/customers/")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    search: (search.search as string) || undefined,
-    type: (search.type as string) || undefined,
-    page: (search.page as number) || undefined,
+  validateSearch: (search: Record<string, unknown>): {
+    search?: string;
+    type?: string;
+    page?: number;
+  } => ({
+    ...(search.search ? { search: search.search as string } : {}),
+    ...(search.type ? { type: search.type as string } : {}),
+    ...(search.page ? { page: Number(search.page) } : {}),
   }),
   component: () => (
     <ProtectedRoute>
@@ -231,7 +235,6 @@ function RelacaoClientesPage() {
 
         <Link
           to="/customers/novo"
-          search={{ search: undefined, type: undefined, page: undefined }}
           className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
         >
           <Plus className="h-4 w-4" />
@@ -389,7 +392,6 @@ function RelacaoClientesPage() {
                     ) : (
                       <Link
                         to="/customers/novo"
-                        search={{ search: undefined, type: undefined, page: undefined }}
                         className="inline-flex items-center gap-1.5 mt-4 px-5 py-2.5 rounded-xl bg-[#075BFF] text-white text-xs font-semibold shadow-xs"
                       >
                         <Plus className="h-4 w-4" />

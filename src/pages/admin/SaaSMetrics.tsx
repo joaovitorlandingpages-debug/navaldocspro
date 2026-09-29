@@ -15,7 +15,7 @@ import {
   AlertCircle, CheckCircle2, FileText, Cpu, ArrowUpRight,
   Search, SlidersHorizontal, RefreshCw, Clock, ShieldAlert,
   ShieldCheck, AlertTriangle, XCircle, Info, Plus, ChevronRight,
-  Layers, HardDrive, Check, HelpCircle
+  Layers, HardDrive, Check, HelpCircle, Building
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -140,19 +140,19 @@ export default function AdminSaaSMetrics() {
 
     // Deduplicação de storage por storage_path
     const uniqueFilesByPath = new Map<string, any>();
-    files.forEach(f => {
+    files.forEach((f: any) => {
       const path = f.storage_path || f.id;
       if (!uniqueFilesByPath.has(path)) {
         uniqueFilesByPath.set(path, f);
       }
     });
 
-    const totalBytes = Array.from(uniqueFilesByPath.values()).reduce((acc, f) => acc + (f.file_size || 0), 0);
+    const totalBytes = Array.from(uniqueFilesByPath.values()).reduce((acc: any, f: any) => acc + (f.file_size || 0), 0);
     const totalStorageGb = Number((totalBytes / (1024 ** 3)).toFixed(2));
 
-    const totalDocsCount = generatedDocs.filter(d => d.status === 'completed' || d.status === 'generated' || !d.status).length;
+    const totalDocsCount = generatedDocs.filter((d: any) => d.status === 'completed' || d.status === 'generated' || !d.status).length;
     const totalAiAuditsCount = aiAudits.length;
-    const totalFailuresCount = aiAudits.filter(a => a.status === 'failed' || a.status === 'error').length;
+    const totalFailuresCount = aiAudits.filter((a: any) => a.status === 'failed' || a.status === 'error').length;
     const totalCreditsConsumed = totalDocsCount + Math.ceil(totalAiAuditsCount * 0.5);
 
     // Mapeamento individual por empresa
@@ -161,18 +161,18 @@ export default function AdminSaaSMetrics() {
       const plan = activeSub?.plan || null;
 
       // Documentos da empresa
-      const compDocs = generatedDocs.filter(d => d.company_id === comp.id);
-      const compDocsUsed = compDocs.filter(d => d.status === 'completed' || d.status === 'generated' || !d.status).length;
+      const compDocs = generatedDocs.filter((d: any) => d.company_id === comp.id);
+      const compDocsUsed = compDocs.filter((d: any) => d.status === 'completed' || d.status === 'generated' || !d.status).length;
       const compDocsLimit = plan?.document_limit || plan?.process_limit || (comp.is_pilot ? 50 : 20);
 
       // OCR / IA da empresa
-      const compAi = aiAudits.filter(a => a.company_id === comp.id);
+      const compAi = aiAudits.filter((a: any) => a.company_id === comp.id);
       const compAiUsed = compAi.length;
       const compAiLimit = plan?.ocr_limit || (comp.is_pilot ? 500 : 200);
 
       // Storage da empresa
-      const compFiles = files.filter(f => f.company_id === comp.id);
-      const compBytes = compFiles.reduce((acc, f) => acc + (f.file_size || 0), 0);
+      const compFiles = files.filter((f: any) => f.company_id === comp.id);
+      const compBytes = compFiles.reduce((acc: any, f: any) => acc + (f.file_size || 0), 0);
       const compStorageGb = Number((compBytes / (1024 ** 3)).toFixed(2));
       const compStorageLimitGb = plan?.storage_limit_gb || (comp.is_pilot ? 20 : 5);
 
@@ -236,7 +236,7 @@ export default function AdminSaaSMetrics() {
   // Filtro de Busca e Situação
   const filteredCompanies = useMemo(() => {
     if (!consolidated) return [];
-    return consolidated.companiesList.filter((comp) => {
+    return consolidated.companiesList.filter((comp: any) => {
       const search = searchTerm.toLowerCase().trim();
       const matchSearch = !search || 
         comp.name.toLowerCase().includes(search) || 
@@ -541,7 +541,7 @@ export default function AdminSaaSMetrics() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredCompanies.map((comp) => {
+                {filteredCompanies.map((comp: any) => {
                   return (
                     <tr key={comp.id} className="hover:bg-slate-50/60 transition-colors">
                       {/* EMPRESA */}

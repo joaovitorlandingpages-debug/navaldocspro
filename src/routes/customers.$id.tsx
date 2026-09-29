@@ -29,7 +29,12 @@ import { openStoredFile, downloadStoredFile } from "@/utils/file-preview";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/customers/$id")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): {
+    from?: string;
+    search?: string;
+    page?: number;
+    type?: string;
+  } => ({
     from: (search.from as string) || undefined,
     search: (search.search as string) || undefined,
     page: (search.page as number) || undefined,
@@ -148,7 +153,7 @@ function CustomerDetailsPage() {
       const counts: Record<string, number> = {};
       const processVesselIds = new Set<string>();
 
-      (customerProcesses || []).forEach((p) => {
+      (customerProcesses || []).forEach((p: any) => {
         if (p.vessel_id) {
           counts[p.vessel_id] = (counts[p.vessel_id] || 0) + 1;
           processVesselIds.add(p.vessel_id);
@@ -159,7 +164,7 @@ function CustomerDetailsPage() {
       let allVessels = directVessels || [];
 
       // Verificar se há embarcações de processos com vínculo histórico encerrado
-      const directIds = new Set(allVessels.map((v) => v.id));
+      const directIds = new Set(allVessels.map((v: any) => v.id));
       const historicalIds = Array.from(processVesselIds).filter((vid) => !directIds.has(vid));
 
       if (historicalIds.length > 0) {
@@ -170,7 +175,7 @@ function CustomerDetailsPage() {
           .in("id", historicalIds);
 
         if (histVessels && histVessels.length > 0) {
-          const taggedHistVessels = histVessels.map((hv) => ({
+          const taggedHistVessels = histVessels.map((hv: any) => ({
             ...hv,
             isHistorical: true,
           }));
@@ -179,7 +184,7 @@ function CustomerDetailsPage() {
       }
 
       // Ordenar alfabeticamente
-      allVessels.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+      allVessels.sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
       setVessels(allVessels);
     } catch (err) {
       console.error("Erro ao carregar embarcações:", err);
@@ -201,8 +206,8 @@ function CustomerDetailsPage() {
         .eq("company_id", companyId)
         .eq("customer_id", id);
 
-      const processIds = (pData || []).map((p) => p.id);
-      const processMap = new Map((pData || []).map((p) => [p.id, p]));
+      const processIds = (pData || []).map((p: any) => p.id);
+      const processMap = new Map((pData || []).map((p: any) => [p.id, p]));
 
       // Buscar documentos gerados diretamente para este cliente OU para processos deste cliente
       let query = supabase
@@ -774,8 +779,8 @@ function CustomerDetailsPage() {
           customer={customer}
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
-          onSuccess={(updatedCustomer) => {
-            setCustomer(updatedCustomer);
+          onCustomerUpdated={() => {
+            loadCustomer();
             setIsEditModalOpen(false);
             toast.success("Cliente atualizado com sucesso!");
           }}

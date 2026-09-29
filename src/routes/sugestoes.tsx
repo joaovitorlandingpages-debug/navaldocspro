@@ -45,8 +45,8 @@ import {
 } from "@/services/suggestionsService";
 
 export const Route = createFileRoute("/sugestoes")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    tipo: (search.tipo as string) || undefined,
+  validateSearch: (search: Record<string, unknown>): { tipo?: string } => ({
+    ...(search.tipo ? { tipo: search.tipo as string } : {}),
   }),
   component: () => (
     <ProtectedRoute>

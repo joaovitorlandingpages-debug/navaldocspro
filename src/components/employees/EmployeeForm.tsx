@@ -260,12 +260,12 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
       const ext = file.name.split(".").pop() || "jpg";
       const filePath = `employees/${companyId}/${formData.id}_avatar_${Date.now()}.${ext}`;
 
-      const publicUrl = await uploadToBucket("company-logos", filePath, file, {
+      const uploadRes = await uploadToBucket("company-logos", filePath, file, {
         upsert: true,
         contentType: file.type,
       });
 
-      setFormData((prev) => ({ ...prev, avatar_url: publicUrl }));
+      setFormData((prev) => ({ ...prev, avatar_url: uploadRes.path }));
       toast.success("Foto atualizada com sucesso!");
     } catch (err: any) {
       console.error("Erro ao enviar foto:", err);
@@ -296,12 +296,12 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
       const ext = file.name.split(".").pop() || "png";
       const filePath = `employees/${companyId}/${formData.id}_sig_${Date.now()}.${ext}`;
 
-      const publicUrl = await uploadToBucket("company-logos", filePath, file, {
+      const uploadRes = await uploadToBucket("company-logos", filePath, file, {
         upsert: true,
         contentType: file.type,
       });
 
-      setFormData((prev) => ({ ...prev, signature_url: publicUrl }));
+      setFormData((prev) => ({ ...prev, signature_url: uploadRes.path }));
       toast.success("Assinatura visual enviada.");
     } catch (err: any) {
       console.error("Erro ao enviar assinatura visual:", err);

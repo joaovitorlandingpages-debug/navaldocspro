@@ -11,7 +11,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { StripeSyncService, AdminPlanData, SupportedApp } from "@/services/billing/stripeSyncService";
+import { StripeSyncService, AdminPlanData, SupportedApp, OFFICIAL_DEFAULT_PLANS } from "@/services/billing/stripeSyncService";
 import { stripeCheckoutService } from "@/services/billing/stripeCheckoutService";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
@@ -45,13 +45,13 @@ export default function Plans() {
   // Filtra planos publicados e ativos com foco estrito nos 3 novos planos do NavalDocs
   const displayedPlans = useMemo(() => {
     // 1. Prioriza planos vindos do banco de dados correspondentes aos 3 novos slugs
-    const fromDb = allPlans.filter(p => NAVALDOCS_NEW_PLAN_SLUGS.includes(p.slug.toLowerCase()));
+    const fromDb = allPlans.filter((p: any) => NAVALDOCS_NEW_PLAN_SLUGS.includes(p.slug.toLowerCase()));
     if (fromDb.length > 0) {
-      return fromDb.sort((a, b) => (a.priceMonthly || 0) - (b.priceMonthly || 0));
+      return fromDb.sort((a: any, b: any) => (a.priceMonthly || 0) - (b.priceMonthly || 0));
     }
     // 2. Fallback resiliente para catálogo oficial pré-configurado
-    return OFFICIAL_DEFAULT_PLANS.filter(p => NAVALDOCS_NEW_PLAN_SLUGS.includes(p.slug.toLowerCase()))
-      .sort((a, b) => (a.priceMonthly || 0) - (b.priceMonthly || 0));
+    return OFFICIAL_DEFAULT_PLANS.filter((p: any) => NAVALDOCS_NEW_PLAN_SLUGS.includes(p.slug.toLowerCase()))
+      .sort((a: any, b: any) => (a.priceMonthly || 0) - (b.priceMonthly || 0));
   }, [allPlans]);
 
   // Verifica se o usuário/empresa já possui assinatura ativa
@@ -234,7 +234,7 @@ export default function Plans() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch max-w-7xl mx-auto">
-            {displayedPlans.map((plan) => {
+            {displayedPlans.map((plan: any) => {
               const isPopular = plan.isPopular || plan.slug === "profissional";
               const currentPrice = billingCycle === "yearly" ? plan.priceYearly : plan.priceMonthly;
               const savings = (plan.priceMonthly * 12) - plan.priceYearly;
@@ -347,7 +347,7 @@ export default function Plans() {
                         Benefícios Inclusos:
                       </p>
                       <ul className="space-y-2">
-                        {(plan.features || []).map((feature, idx) => (
+                        {(plan.features || []).map((feature: any, idx: number) => (
                           <li key={idx} className="flex items-start gap-2 text-xs text-slate-700 font-medium">
                             <Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
                             <span>{feature}</span>

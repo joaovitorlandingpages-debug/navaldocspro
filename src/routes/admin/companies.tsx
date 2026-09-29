@@ -154,7 +154,7 @@ function AdminCompaniesPage() {
 
       // Mapear contagens e responsáveis
       const profilesMap = new Map<string, any[]>();
-      (profilesData || []).forEach((p) => {
+      (profilesData || []).forEach((p: any) => {
         if (p.company_id) {
           const list = profilesMap.get(p.company_id) || [];
           list.push(p);
@@ -163,7 +163,7 @@ function AdminCompaniesPage() {
       });
 
       const processesMap = new Map<string, number>();
-      (processesData || []).forEach((pr) => {
+      (processesData || []).forEach((pr: any) => {
         if (pr.company_id) {
           processesMap.set(pr.company_id, (processesMap.get(pr.company_id) || 0) + 1);
         }
@@ -222,7 +222,7 @@ function AdminCompaniesPage() {
   const filteredCompanies = useMemo(() => {
     if (!companiesData) return [];
 
-    let list = companiesData.filter((c) => {
+    let list = companiesData.filter((c: any) => {
       const search = searchTerm.toLowerCase().trim();
       const matchesSearch = 
         !search ||
@@ -245,11 +245,11 @@ function AdminCompaniesPage() {
 
     // Ordenação
     if (sortOrder === "name_asc") {
-      list.sort((a, b) => (a.fantasy_name || a.name).localeCompare(b.fantasy_name || b.name, "pt-BR"));
+      list.sort((a: any, b: any) => (a.fantasy_name || a.name).localeCompare(b.fantasy_name || b.name, "pt-BR"));
     } else if (sortOrder === "name_desc") {
-      list.sort((a, b) => (b.fantasy_name || b.name).localeCompare(a.fantasy_name || a.name, "pt-BR"));
+      list.sort((a: any, b: any) => (b.fantasy_name || b.name).localeCompare(a.fantasy_name || a.name, "pt-BR"));
     } else {
-      list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      list.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
 
     return list;
@@ -693,7 +693,7 @@ function AdminCompaniesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-[#0B1739]">
-                {paginatedCompanies.map((comp) => {
+                {paginatedCompanies.map((comp: any) => {
                   const statusColors = {
                     active: "bg-emerald-50 text-emerald-700 border-emerald-200",
                     trial: "bg-blue-50 text-[#075BFF] border-blue-200",
@@ -852,7 +852,7 @@ function AdminCompaniesPage() {
 
           {/* VISUALIZAÇÃO MOBILE: CARTÕES */}
           <div className="block md:hidden divide-y divide-slate-100">
-            {paginatedCompanies.map((comp) => {
+            {paginatedCompanies.map((comp: any) => {
               const statusColors = {
                 active: "bg-emerald-50 text-emerald-700 border-emerald-200",
                 trial: "bg-blue-50 text-[#075BFF] border-blue-200",

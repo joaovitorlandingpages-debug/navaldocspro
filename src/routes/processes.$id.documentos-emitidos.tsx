@@ -40,8 +40,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/$id/documentos-emitidos")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    from: (search.from as string) || undefined,
+  validateSearch: (search: Record<string, unknown>): { from?: string } => ({
+    ...(search.from ? { from: search.from as string } : {}),
   }),
   component: () => (
     <ProtectedRoute>
@@ -793,6 +793,7 @@ function DocumentosEmitidosPage() {
           <Link
             to="/processes/$id"
             params={{ id }}
+            id="btn-voltar-ao-servico"
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-[#075BFF] hover:underline cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5" />

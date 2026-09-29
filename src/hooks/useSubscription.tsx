@@ -129,7 +129,7 @@ export const useSubscription = () => {
   );
 
   // 3. Consultar a assinatura ativa diretamente da tabela 'subscriptions' no Supabase
-  const { data: subscription, isLoading: isLoadingSubscription } = useQuery({
+  const { data: subscription, isLoading: isLoadingSubscription, refetch: refetchSubscription } = useQuery({
     queryKey: ["subscription", companyId, isLifetimeAdmin, isHomologation],
     queryFn: async () => {
       // 3.1. ADMINS OU TENANTS DE HOMOLOGAÇÃO NUNCA FICAM BLOQUEADOS
@@ -433,6 +433,8 @@ export const useSubscription = () => {
     isCanceled,
     canAccess,
     canCreate,
-    createPreference
+    createPreference,
+    isLoading: isLoadingSubscription,
+    refetchSubscription
   };
 };

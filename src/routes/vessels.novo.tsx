@@ -165,7 +165,7 @@ function NovaEmbarcacaoPage() {
         setCustomers(data || []);
 
         if (search.customerId && data) {
-          const found = data.find((c) => c.id === search.customerId);
+          const found = data.find((c: any) => c.id === search.customerId);
           if (found) setSelectedCustomerId(found.id);
         }
       } catch (err) {

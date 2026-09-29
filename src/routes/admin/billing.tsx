@@ -27,9 +27,12 @@ import { StripeConfigDialog } from '@/components/admin/StripeConfigDialog';
 import { AdminCouponStripePanel } from '@/components/admin/AdminCouponStripePanel';
 
 export const Route = createFileRoute('/admin/billing')({
-  validateSearch: (search: Record<string, unknown>) => ({
-    tab: (search.tab as "plans" | "subscriptions" | "coupons") || "plans",
-    app: (search.app as string) || "all",
+  validateSearch: (search: Record<string, unknown>): {
+    tab?: "plans" | "subscriptions" | "coupons";
+    app?: string;
+  } => ({
+    ...(search.tab ? { tab: search.tab as "plans" | "subscriptions" | "coupons" } : {}),
+    ...(search.app ? { app: search.app as string } : {}),
   }),
   component: AdminBillingPlansPage,
 });

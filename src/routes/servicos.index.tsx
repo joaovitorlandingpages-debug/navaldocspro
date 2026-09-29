@@ -4,7 +4,12 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/routes/dashboard";
 
 export const Route = createFileRoute("/servicos/")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): {
+    from?: string;
+    vesselId?: string;
+    customerId?: string;
+    preview?: string;
+  } => ({
     from: (search.from as string) || undefined,
     vesselId: (search.vesselId as string) || undefined,
     customerId: (search.customerId as string) || undefined,

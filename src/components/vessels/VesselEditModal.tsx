@@ -570,7 +570,7 @@ export function VesselEditModal({ isOpen, onClose, vessel, onSuccess }: Props) {
         description="Você possui alterações não salvas nos dados da embarcação. Deseja realmente sair sem salvar?"
         confirmLabel="Descartar alterações"
         cancelLabel="Continuar editando"
-        variant="danger"
+        variant="destructive"
         onConfirm={() => {
           setShowExitConfirm(false);
           onClose();

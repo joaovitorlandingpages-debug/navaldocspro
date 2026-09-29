@@ -87,9 +87,8 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
     { name: "Relação de clientes", path: "/customers", icon: Users },
     { name: "Relação de embarcações", path: "/vessels", icon: Ship },
     { name: "Processos", path: "/processes", icon: FileText },
-    { name: "Uso do plano", path: "/uso-do-plano", icon: Gauge },
-    { name: "Ajuda e sugestões", path: "/sugestoes", icon: HelpCircle },
-    { name: "Meus aplicativos", path: "/meus-aplicativos", icon: LayoutGrid },
+    { name: "Sugestões", path: "/sugestoes", icon: HelpCircle },
+    { name: "Nossos aplicativos", path: "/nossos-aplicativos", icon: LayoutGrid },
     { name: "Configurações", path: "/settings", icon: Settings },
   ];
 
@@ -458,6 +457,7 @@ function DashboardHomeContent() {
         {/* CARD 3 — SERVIÇOS */}
         <Link
           to="/servicos"
+          id="card-servicos"
           className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 flex flex-col justify-between hover:border-blue-200 hover:shadow-md transition-all duration-200 cursor-pointer group text-left min-h-[300px] focus:outline-none focus:ring-2 focus:ring-[#075BFF]/30 block no-underline"
           aria-label="Iniciar serviços"
         >
@@ -478,7 +478,7 @@ function DashboardHomeContent() {
               <CheckSquare className="h-4 w-4 text-slate-400" />
               <span>Embarcações e serviços</span>
             </div>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-[#075BFF] font-semibold text-xs group-hover:bg-[#075BFF] group-hover:text-white transition-colors">
+            <span id="btn-servicos-home" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-[#075BFF] font-semibold text-xs group-hover:bg-[#075BFF] group-hover:text-white transition-colors">
               <span>Iniciar serviços</span>
               <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
             </span>

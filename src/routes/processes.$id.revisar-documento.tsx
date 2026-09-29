@@ -47,9 +47,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/$id/revisar-documento")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    docId: (search.docId as string) || undefined,
-    from: (search.from as string) || undefined,
+  validateSearch: (search: Record<string, unknown>): {
+    docId?: string;
+    from?: string;
+  } => ({
+    ...(search.docId ? { docId: search.docId as string } : {}),
+    ...(search.from ? { from: search.from as string } : {}),
   }),
   component: () => (
     <ProtectedRoute>
@@ -84,8 +87,9 @@ function RevisarDocumentoGeradoPage() {
   const { id } = Route.useParams();
   const searchParams = Route.useSearch();
   const navigate = useNavigate();
-  const { profile, user, currentCompany } = useAuth();
+  const { profile, user } = useAuth();
   const companyId = profile?.company_id;
+  const currentCompany = profile?.companies;
 
   // Estados principais de dados
   const [document, setDocument] = useState<any | null>(null);
@@ -203,7 +207,7 @@ function RevisarDocumentoGeradoPage() {
           .eq("company_id", companyId);
 
         if (profilesData) {
-          profilesData.forEach((p) => {
+          profilesData.forEach((p: any) => {
             const exists = empList.some(
               (e) => e.id === p.id || (p.email && e.email?.toLowerCase() === p.email.toLowerCase())
             );

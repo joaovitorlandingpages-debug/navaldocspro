@@ -1159,7 +1159,7 @@ function AdminCompanyDetailPage() {
                 <p className="text-xs text-slate-500 py-6 text-center">Nenhum usuário de acesso registrado.</p>
               ) : (
                 <div className="divide-y divide-slate-100">
-                  {systemUsers?.map((u) => (
+                  {systemUsers?.map((u: any) => (
                     <div key={u.id} className="py-3 flex items-center justify-between gap-3 text-xs">
                       <div>
                         <p className="font-bold text-[#0B1739]">{u.name || "Usuário sem nome"}</p>
@@ -1330,7 +1330,7 @@ function AdminCompanyDetailPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {activityLogs?.map((log) => (
+                {activityLogs?.map((log: any) => (
                   <div key={log.id} className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/50 flex items-start justify-between gap-3 text-xs">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">

@@ -14,7 +14,7 @@ export function ServicesCategoryModal({ isOpen, onClose }: ServicesCategoryModal
   const handleSelect = (category: "esporte_recreio" | "profissional") => {
     onClose();
     navigate({
-      to: "/processes/novo-pedido",
+      to: "/servicos/selecionar",
       search: { category },
     });
   };

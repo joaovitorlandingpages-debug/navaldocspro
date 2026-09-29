@@ -126,7 +126,7 @@ export default function BillingSuccessPage() {
               <div className="flex items-center gap-2 p-2 bg-white rounded-xl border border-slate-100">
                 <HardDrive className="h-4 w-4 text-[#1868db] shrink-0" />
                 <div>
-                  <span className="font-extrabold block text-[#0d2342]">{subscription.plan.storage_limit_gb || 5} GB</span>
+                  <span className="font-extrabold block text-[#0d2342]">{subscription.plan.storage_gb || (subscription.plan as any).storage_limit_gb || 5} GB</span>
                   <span className="text-[10px] text-slate-400">Armazenamento</span>
                 </div>
               </div>

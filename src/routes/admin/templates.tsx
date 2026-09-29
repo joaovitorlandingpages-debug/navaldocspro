@@ -24,12 +24,18 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export const Route = createFileRoute("/admin/templates")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    service: (search.service as string) || "all",
-    category: (search.category as string) || "all",
-    status: (search.status as string) || "all",
-    jurisdiction: (search.jurisdiction as string) || "all",
-    q: (search.q as string) || undefined,
+  validateSearch: (search: Record<string, unknown>): {
+    service?: string;
+    category?: string;
+    status?: string;
+    jurisdiction?: string;
+    q?: string;
+  } => ({
+    ...(search.service ? { service: search.service as string } : {}),
+    ...(search.category ? { category: search.category as string } : {}),
+    ...(search.status ? { status: search.status as string } : {}),
+    ...(search.jurisdiction ? { jurisdiction: search.jurisdiction as string } : {}),
+    ...(search.q ? { q: search.q as string } : {}),
   }),
   component: AdminDocumentTemplatesPage,
 });

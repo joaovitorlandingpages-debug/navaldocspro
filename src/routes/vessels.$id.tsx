@@ -25,7 +25,13 @@ import { VesselEditModal } from "@/components/vessels/VesselEditModal";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/vessels/$id")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): {
+    from?: string;
+    customerId?: string;
+    search?: string;
+    page?: number;
+    status?: string;
+  } => ({
     from: (search.from as string) || undefined,
     customerId: (search.customerId as string) || undefined,
     search: (search.search as string) || undefined,
@@ -202,7 +208,7 @@ function VesselDetailsPage() {
       });
 
       // Ordenar alfabeticamente pelo nome do serviço
-      list.sort((a, b) => a.serviceName.localeCompare(b.serviceName));
+      list.sort((a: any, b: any) => a.serviceName.localeCompare(b.serviceName));
 
       setProcesses(list);
     } catch (err) {
@@ -357,7 +363,7 @@ function VesselDetailsPage() {
 
         {/* Caminho de navegação (Breadcrumbs) */}
         <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-          <Link to="/customers" className="hover:text-slate-600 hover:underline">
+          <Link to="/customers" search={{}} className="hover:text-slate-600 hover:underline">
             Clientes
           </Link>
           <span>/</span>

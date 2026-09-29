@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { 
   ArrowLeft,
   Search, 
@@ -43,20 +43,40 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/$id")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    from: (search.from as string) || undefined,
-    customerId: (search.customerId as string) || undefined,
-    vesselId: (search.vesselId as string) || undefined,
-    tab: (search.tab as string) || undefined,
+  validateSearch: (search: Record<string, unknown>): {
+    from?: string;
+    customerId?: string;
+    vesselId?: string;
+    tab?: string;
+    preview?: string | boolean;
+    sub?: string;
+  } => ({
+    ...(search.from ? { from: search.from as string } : {}),
+    ...(search.customerId ? { customerId: search.customerId as string } : {}),
+    ...(search.vesselId ? { vesselId: search.vesselId as string } : {}),
+    ...(search.tab ? { tab: search.tab as string } : {}),
+    ...(search.preview !== undefined ? { preview: search.preview as string | boolean } : {}),
+    ...(search.sub ? { sub: search.sub as string } : {}),
   }),
-  component: () => (
-    <ProtectedRoute>
-      <DashboardLayout>
-        <ProcessDetailsPage />
-      </DashboardLayout>
-    </ProtectedRoute>
-  ),
+  component: ProcessRouteComponent,
 });
+
+function ProcessRouteComponent() {
+  const matchRoute = useMatchRoute();
+  const isExactProcess = matchRoute({ to: "/processes/$id", fuzzy: false });
+
+  if (isExactProcess) {
+    return (
+      <ProtectedRoute>
+        <DashboardLayout>
+          <ProcessDetailsPage />
+        </DashboardLayout>
+      </ProtectedRoute>
+    );
+  }
+
+  return <Outlet />;
+}
 
 // Catálogo de serviços para normalização
 const SERVICE_CATALOG: Record<string, { title: string; categoryLabel: string }> = {
@@ -213,9 +233,9 @@ function ProcessDetailsPage() {
         date: now,
       };
 
-      const existingHistory = processData?.metadata?.history || [];
-      const updatedMetadata = {
-        ...(processData?.metadata || {}),
+      const existingHistory = (processData?.draft_data as any)?.history || [];
+      const updatedDraftData = {
+        ...((processData?.draft_data as any) || {}),
         history: [historyEntry, ...existingHistory],
       };
 
@@ -223,7 +243,7 @@ function ProcessDetailsPage() {
         .from("processes")
         .update({
           status: newStatus,
-          metadata: updatedMetadata,
+          draft_data: updatedDraftData,
           updated_at: now,
         } as any)
         .eq("id", id)
@@ -235,7 +255,7 @@ function ProcessDetailsPage() {
       setProcessData((prev: any) => ({
         ...prev,
         status: newStatus,
-        metadata: updatedMetadata,
+        draft_data: updatedDraftData,
       }));
 
       toast.success(`Situação alterada para "${statusLabel}"`);
@@ -259,9 +279,9 @@ function ProcessDetailsPage() {
         date: now,
       };
 
-      const existingHistory = processData?.metadata?.history || [];
-      const updatedMetadata = {
-        ...(processData?.metadata || {}),
+      const existingHistory = (processData?.draft_data as any)?.history || [];
+      const updatedDraftData = {
+        ...((processData?.draft_data as any) || {}),
         history: [historyEntry, ...existingHistory],
         cancel_reason: cancelReason,
       };
@@ -270,7 +290,7 @@ function ProcessDetailsPage() {
         .from("processes")
         .update({
           status: "cancelled",
-          metadata: updatedMetadata,
+          draft_data: updatedDraftData,
           updated_at: now,
         } as any)
         .eq("id", id)
@@ -285,9 +305,9 @@ function ProcessDetailsPage() {
     }
   };
 
-  // Identificador Formatado do Processo (Ex: PROC-001)
+  // Identificador Formatado do Processo
   const processCode = useMemo(() => {
-    if (!processData) return "PROC-001";
+    if (!processData) return "Processo";
     if (processData.protocol_number) return processData.protocol_number;
     return `PROC-${String(processData.id).slice(0, 4).toUpperCase()}`;
   }, [processData]);
@@ -554,7 +574,7 @@ function ProcessDetailsPage() {
           <div className="pt-3 sm:pt-0 sm:px-3">
             <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Responsável</span>
             <span className="text-sm font-bold text-[#0B1739] truncate block">
-              {profile?.full_name || user?.email || "João Vitor (Operador)"}
+              {profile?.full_name || user?.email || "Operador"}
             </span>
             <span className="text-[11px] text-slate-400 block">
               Equipe NavalDocs

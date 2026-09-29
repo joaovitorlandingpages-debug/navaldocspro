@@ -35,7 +35,15 @@ import { toast } from "sonner";
 import { getServiceDefinition } from "@/services/catalog/servicesCatalogValidation";
 
 export const Route = createFileRoute("/servicos/documentos")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): {
+    category?: "profissional" | "esporte_recreio";
+    customerId?: string;
+    vesselId?: string;
+    services?: string;
+    activeServiceId?: string;
+    from?: string;
+    preview?: string;
+  } => ({
     category: (search.category as "profissional" | "esporte_recreio") || "esporte_recreio",
     customerId: (search.customerId as string) || "",
     vesselId: (search.vesselId as string) || "",
@@ -56,7 +64,8 @@ export const Route = createFileRoute("/servicos/documentos")({
 function DocumentosDoServicoPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const { currentCompany } = useAuth();
+  const { profile } = useAuth();
+  const currentCompany = profile?.companies;
 
   const category = search.category || "esporte_recreio";
   const customerId = search.customerId;
@@ -321,7 +330,7 @@ function DocumentosDoServicoPage() {
             <div className="min-w-0">
               <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Cliente</span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
-                {customer?.fantasy_name || customer?.name || "Ana Oliveira"}
+                {customer?.fantasy_name || customer?.name || "Cliente não informado"}
               </span>
             </div>
           </div>
@@ -334,7 +343,7 @@ function DocumentosDoServicoPage() {
             <div className="min-w-0">
               <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Embarcação</span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
-                {vessel?.name || "Aurora"}
+                {vessel?.name || "Embarcação não informada"}
               </span>
             </div>
           </div>
@@ -840,11 +849,11 @@ function DocumentosDoServicoPage() {
           <div className="p-5 space-y-3 text-xs">
             <div className="flex justify-between py-1.5 border-b border-slate-100">
               <span className="text-slate-500">Nome:</span>
-              <span className="font-bold text-[#0B1739]">{vessel?.name || "Aurora"}</span>
+              <span className="font-bold text-[#0B1739]">{vessel?.name || "Embarcação não informada"}</span>
             </div>
             <div className="flex justify-between py-1.5 border-b border-slate-100">
               <span className="text-slate-500">Número de Inscrição:</span>
-              <span className="font-medium text-slate-800">{vessel?.registration_number || "381P202400192"}</span>
+              <span className="font-medium text-slate-800">{vessel?.registration_number || "Sem inscrição"}</span>
             </div>
             <div className="flex justify-between py-1.5 border-b border-slate-100">
               <span className="text-slate-500">Tipo:</span>
@@ -856,11 +865,11 @@ function DocumentosDoServicoPage() {
             </div>
             <div className="flex justify-between py-1.5 border-b border-slate-100">
               <span className="text-slate-500">Capitania / Jurisdição:</span>
-              <span className="font-medium text-slate-800">{vessel?.port_of_registry || "Capitania dos Portos de São Paulo"}</span>
+              <span className="font-medium text-slate-800">{vessel?.port_of_registry || "Não informada"}</span>
             </div>
             <div className="flex justify-between py-1.5">
               <span className="text-slate-500">Proprietário vinculado:</span>
-              <span className="font-medium text-slate-800">{customer?.fantasy_name || customer?.name || "Ana Oliveira"}</span>
+              <span className="font-medium text-slate-800">{customer?.fantasy_name || customer?.name || "Cliente não informado"}</span>
             </div>
           </div>
 

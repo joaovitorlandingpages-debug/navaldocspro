@@ -34,10 +34,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/$id/gerar-documento")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    serviceKey: (search.serviceKey as string) || undefined,
-    templateId: (search.templateId as string) || undefined,
-    from: (search.from as string) || undefined,
+  validateSearch: (search: Record<string, unknown>): {
+    serviceKey?: string;
+    templateId?: string;
+    from?: string;
+  } => ({
+    ...(search.serviceKey ? { serviceKey: search.serviceKey as string } : {}),
+    ...(search.templateId ? { templateId: search.templateId as string } : {}),
+    ...(search.from ? { from: search.from as string } : {}),
   }),
   component: () => (
     <ProtectedRoute>
@@ -136,8 +140,9 @@ function GerarDocumentoPage() {
   const { id } = Route.useParams();
   const searchParams = Route.useSearch();
   const navigate = useNavigate();
-  const { profile, user, currentCompany } = useAuth();
+  const { profile, user } = useAuth();
   const companyId = profile?.company_id;
+  const currentCompany = profile?.companies;
 
   // Estados do Processo e Contexto
   const [processData, setProcessData] = useState<any | null>(null);
@@ -426,7 +431,7 @@ function GerarDocumentoPage() {
             <div className="min-w-0">
               <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Cliente</span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
-                {customer?.fantasy_name || customer?.name || "Ana Oliveira"}
+                {customer?.fantasy_name || customer?.name || "Cliente não informado"}
               </span>
             </div>
           </div>
@@ -439,7 +444,7 @@ function GerarDocumentoPage() {
             <div className="min-w-0">
               <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Embarcação</span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
-                {vessel?.name || "Aurora"}
+                {vessel?.name || "Embarcação não informada"}
               </span>
             </div>
           </div>

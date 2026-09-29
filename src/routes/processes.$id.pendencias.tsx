@@ -47,8 +47,8 @@ import { toast } from "sonner";
 import { SERVICES, findService, type ServiceDef } from "@/types/service-requirements";
 
 export const Route = createFileRoute("/processes/$id/pendencias")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    group: (search.group as string) || undefined,
+  validateSearch: (search: Record<string, unknown>): { group?: string } => ({
+    ...(search.group ? { group: search.group as string } : {}),
   }),
   component: () => (
     <ProtectedRoute>
@@ -853,10 +853,10 @@ function PendenciasProcessoPage() {
 
     // 4. Rotas do sistema
     if (item.actionTarget?.route) {
-      navigate({
-        to: item.actionTarget.route as any,
+      (navigate as any)({
+        to: item.actionTarget.route,
         params: { id },
-        search: item.actionTarget.docId ? { docId: item.actionTarget.docId } : undefined,
+        search: item.actionTarget.docId ? { docId: item.actionTarget.docId } : {},
       });
       return;
     }

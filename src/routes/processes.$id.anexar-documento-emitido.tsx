@@ -21,8 +21,8 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/$id/anexar-documento-emitido")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    from: (search.from as string) || undefined,
+  validateSearch: (search: Record<string, unknown>): { from?: string } => ({
+    ...(search.from ? { from: search.from as string } : {}),
   }),
   component: () => (
     <ProtectedRoute>
@@ -114,11 +114,11 @@ function AnexarDocumentoEmitidoPage() {
   }, [processData, id]);
 
   const customerName = useMemo(() => {
-    return customer?.fantasy_name || customer?.name || "Ana Oliveira";
+    return customer?.fantasy_name || customer?.name || "Cliente não informado";
   }, [customer]);
 
   const vesselName = useMemo(() => {
-    return vessel?.name || "Aurora";
+    return vessel?.name || "Embarcação não informada";
   }, [vessel]);
 
   // Identificar se há alterações não salvas
@@ -724,7 +724,7 @@ function AnexarDocumentoEmitidoPage() {
         description="Você preencheu dados ou selecionou um arquivo para o documento emitido. Deseja realmente sair sem salvar?"
         confirmLabel="Descartar alterações"
         cancelLabel="Continuar preenchendo"
-        variant="danger"
+        variant="destructive"
         onConfirm={() => {
           setShowCancelConfirm(false);
           navigate({

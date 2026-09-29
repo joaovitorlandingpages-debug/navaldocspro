@@ -27,7 +27,14 @@ import { toast } from "sonner";
 import { getServiceDefinition } from "@/services/catalog/servicesCatalogValidation";
 
 export const Route = createFileRoute("/servicos/selecionar")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): {
+    category?: "profissional" | "esporte_recreio";
+    customerId?: string;
+    vesselId?: string;
+    from?: string;
+    preview?: string;
+    services?: string;
+  } => ({
     category: (search.category as "profissional" | "esporte_recreio") || "esporte_recreio",
     customerId: (search.customerId as string) || undefined,
     vesselId: (search.vesselId as string) || undefined,
@@ -218,7 +225,7 @@ function SelecionarServicosPage() {
       if (searchParams.vesselId) {
         setSelectedVesselId(searchParams.vesselId);
         // Se a embarcação tiver customer_id, seleciona automaticamente o cliente
-        const foundVessel = (vesData || []).find((v) => v.id === searchParams.vesselId);
+        const foundVessel = (vesData || []).find((v: any) => v.id === searchParams.vesselId);
         if (foundVessel?.customer_id && !searchParams.customerId) {
           setSelectedCustomerId(foundVessel.customer_id);
         }
@@ -335,7 +342,7 @@ function SelecionarServicosPage() {
           vessel_id: selectedVesselId,
           title: title,
           status: "in_progress",
-          metadata: {
+          draft_data: {
             selected_services: selectedServiceIds,
             category: currentCategory,
             created_via: "servicos_selecionar",

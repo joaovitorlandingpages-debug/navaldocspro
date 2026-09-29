@@ -134,7 +134,7 @@ export const AdminOverviewDashboard: React.FC = () => {
       // Montar lista de atividades recentes combinada
       const recentActivities: any[] = [];
 
-      (processes || []).slice(0, 4).forEach((p) => {
+      (processes || []).slice(0, 4).forEach((p: any) => {
         recentActivities.push({
           id: `proc-${p.id}`,
           type: "processo",
@@ -146,7 +146,7 @@ export const AdminOverviewDashboard: React.FC = () => {
         });
       });
 
-      (documents || []).slice(0, 3).forEach((d) => {
+      (documents || []).slice(0, 3).forEach((d: any) => {
         recentActivities.push({
           id: `doc-${d.id}`,
           type: "documento",
@@ -158,7 +158,7 @@ export const AdminOverviewDashboard: React.FC = () => {
         });
       });
 
-      (suggestions || []).slice(0, 3).forEach((s) => {
+      (suggestions || []).slice(0, 3).forEach((s: any) => {
         recentActivities.push({
           id: `sug-${s.id}`,
           type: "sugestao",
