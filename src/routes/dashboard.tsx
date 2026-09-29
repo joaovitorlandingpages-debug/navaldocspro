@@ -396,6 +396,7 @@ function DashboardHomeContent() {
         {/* CARD 1 — CADASTRAR CLIENTE */}
         <Link
           to="/customers/novo"
+          id="card-cadastrar-cliente"
           className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 flex flex-col justify-between hover:border-blue-200 hover:shadow-md transition-all duration-200 cursor-pointer group text-left min-h-[300px] focus:outline-none focus:ring-2 focus:ring-[#075BFF]/30 block no-underline"
           aria-label="Cadastrar cliente"
         >
@@ -416,7 +417,7 @@ function DashboardHomeContent() {
               <Paperclip className="h-4 w-4 text-slate-400 rotate-[-45deg]" />
               <span>Manual ou por documentos</span>
             </div>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-[#075BFF] font-semibold text-xs group-hover:bg-[#075BFF] group-hover:text-white transition-colors">
+            <span id="btn-cadastrar-cliente-home" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-[#075BFF] font-semibold text-xs group-hover:bg-[#075BFF] group-hover:text-white transition-colors">
               <span>Cadastrar cliente</span>
               <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
             </span>
@@ -426,6 +427,7 @@ function DashboardHomeContent() {
         {/* CARD 2 — CADASTRAR EMBARCAÇÃO */}
         <Link
           to="/vessels/novo"
+          id="card-cadastrar-embarcacao"
           className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 flex flex-col justify-between hover:border-blue-200 hover:shadow-md transition-all duration-200 cursor-pointer group text-left min-h-[300px] focus:outline-none focus:ring-2 focus:ring-[#075BFF]/30 block no-underline"
           aria-label="Cadastrar embarcação"
         >
@@ -446,7 +448,7 @@ function DashboardHomeContent() {
               <Paperclip className="h-4 w-4 text-slate-400 rotate-[-45deg]" />
               <span>Manual ou por documentos</span>
             </div>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-[#075BFF] font-semibold text-xs group-hover:bg-[#075BFF] group-hover:text-white transition-colors">
+            <span id="btn-cadastrar-embarcacao-home" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-[#075BFF] font-semibold text-xs group-hover:bg-[#075BFF] group-hover:text-white transition-colors">
               <span>Cadastrar embarcação</span>
               <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
             </span>

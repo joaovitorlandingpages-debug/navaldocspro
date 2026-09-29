@@ -457,6 +457,7 @@ function SelecionarServicosPage() {
             </div>
             <button
               type="button"
+              id="btn-cadastrar-cliente-servicos-empty"
               onClick={() =>
                 navigate({
                   to: "/customers/novo",
@@ -483,6 +484,7 @@ function SelecionarServicosPage() {
                 </label>
                 <button
                   type="button"
+                  id="btn-novo-cliente-servicos"
                   onClick={() =>
                     navigate({
                       to: "/customers/novo",
@@ -501,6 +503,7 @@ function SelecionarServicosPage() {
               </div>
               <div className="relative">
                 <select
+                  id="servicos-customer-select"
                   value={selectedCustomerId}
                   onChange={(e) => handleCustomerChange(e.target.value)}
                   className="w-full appearance-none px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF] transition-all cursor-pointer"
@@ -522,29 +525,29 @@ function SelecionarServicosPage() {
                 <label className="block text-xs font-semibold text-slate-700">
                   Embarcação <span className="text-red-500">*</span>
                 </label>
-                {selectedCustomerId && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      navigate({
-                        to: "/vessels/novo",
-                        search: {
-                          customerId: selectedCustomerId,
-                          from: "servicos",
-                          category: currentCategory,
-                          ...(selectedServiceIds.length > 0 ? { services: selectedServiceIds.join(",") } : {}),
-                        } as any,
-                      })
-                    }
-                    className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#075BFF] hover:underline cursor-pointer"
-                  >
-                    <Plus className="h-3 w-3" />
-                    <span>Nova embarcação</span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  id="btn-nova-embarcacao-servicos"
+                  onClick={() =>
+                    navigate({
+                      to: "/vessels/novo",
+                      search: {
+                        ...(selectedCustomerId ? { customerId: selectedCustomerId } : {}),
+                        from: "servicos",
+                        category: currentCategory,
+                        ...(selectedServiceIds.length > 0 ? { services: selectedServiceIds.join(",") } : {}),
+                      } as any,
+                    })
+                  }
+                  className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#075BFF] hover:underline cursor-pointer"
+                >
+                  <Plus className="h-3 w-3" />
+                  <span>Nova embarcação</span>
+                </button>
               </div>
               <div className="relative">
                 <select
+                  id="servicos-vessel-select"
                   disabled={!selectedCustomerId}
                   value={selectedVesselId}
                   onChange={(e) => setSelectedVesselId(e.target.value)}
@@ -577,6 +580,7 @@ function SelecionarServicosPage() {
                     </p>
                     <button
                       type="button"
+                      id="btn-cadastrar-embarcacao-cliente-vazio"
                       onClick={() =>
                         navigate({
                           to: "/vessels/novo",

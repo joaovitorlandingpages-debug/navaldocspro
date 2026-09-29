@@ -371,12 +371,12 @@ function NovaEmbarcacaoPage() {
           category: formData.category,
           registration_number: formData.registration_number.trim() || null,
           vessel_type: formData.vessel_type.trim() || null,
+          construction_year: normalizedYear,
           material: formData.hull_material.trim() || null,
           length: normalizedLength,
           boca: normalizedBoca,
           pontal: normalizedPontal,
           capacity: normalizedCapacity,
-          status: "Operacional",
           current_owner_name: selectedCustomer?.name || null,
           current_owner_cpf_cnpj: selectedCustomer?.cpf_cnpj || null,
           engine: formData.engine_brand
@@ -415,6 +415,7 @@ function NovaEmbarcacaoPage() {
           await supabase.from("activity_logs").insert({
             company_id: companyId,
             user_id: user.id,
+            module: "vessels",
             action: "vessel_created",
             resource_type: "vessel",
             resource_id: newVessel.id,
@@ -486,6 +487,7 @@ function NovaEmbarcacaoPage() {
           </h2>
           <button
             type="button"
+            id="btn-quick-customer"
             onClick={() => setIsQuickCustomerOpen(true)}
             className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:text-blue-700 cursor-pointer"
           >
@@ -493,6 +495,23 @@ function NovaEmbarcacaoPage() {
             <span>Cadastrar cliente</span>
           </button>
         </div>
+
+        {!isLoadingCustomers && customers.length === 0 && (
+          <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 text-amber-800">
+              <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+              <span>Nenhum cliente cadastrado no seu escritório. Cadastre um cliente primeiro para vincular a embarcação.</span>
+            </div>
+            <button
+              type="button"
+              id="btn-cadastrar-cliente-primeiro"
+              onClick={() => navigate({ to: "/customers/novo" })}
+              className="shrink-0 px-3.5 py-1.5 bg-[#075BFF] hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors cursor-pointer text-xs"
+            >
+              Cadastrar cliente primeiro
+            </button>
+          </div>
+        )}
 
         <div className="relative">
           <label className="block text-xs font-semibold text-slate-700 mb-1.5">
@@ -502,6 +521,7 @@ function NovaEmbarcacaoPage() {
           {/* Trigger do Seletor */}
           <button
             type="button"
+            id="customer-select-trigger"
             onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)}
             className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border bg-white text-sm transition-all text-left cursor-pointer focus:outline-none focus:ring-2 ${
               errors.customer
@@ -576,12 +596,14 @@ function NovaEmbarcacaoPage() {
                       <button
                         key={cust.id}
                         type="button"
+                        id={`customer-option-${cust.id}`}
+                        data-customer-id={cust.id}
                         onClick={() => {
                           setSelectedCustomerId(cust.id);
                           setIsCustomerDropdownOpen(false);
                           if (errors.customer) setErrors((p) => ({ ...p, customer: "" }));
                         }}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors text-left ${
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors text-left cursor-pointer ${
                           isSelected
                             ? "bg-[#EEF4FF] text-[#075BFF] font-semibold"
                             : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
@@ -681,6 +703,7 @@ function NovaEmbarcacaoPage() {
                 </label>
                 <input
                   type="text"
+                  id="vessel-name"
                   value={formData.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                   placeholder="Digite o nome"
@@ -701,6 +724,7 @@ function NovaEmbarcacaoPage() {
                 </label>
                 <div className="relative">
                   <select
+                    id="vessel-category"
                     value={formData.category}
                     onChange={(e) => handleChange("category", e.target.value)}
                     className="w-full appearance-none px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF] transition-all pr-8"
@@ -721,6 +745,7 @@ function NovaEmbarcacaoPage() {
                 </label>
                 <input
                   type="text"
+                  id="vessel-registration"
                   value={formData.registration_number}
                   onChange={(e) => handleChange("registration_number", e.target.value)}
                   placeholder="Informe, se disponível"
@@ -1030,8 +1055,9 @@ function NovaEmbarcacaoPage() {
 
             <button
               type="submit"
+              id="btn-save-vessel"
               disabled={isSubmitting}
-              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-xs cursor-pointer"
             >
               {isSubmitting ? (
                 <>

@@ -20,10 +20,14 @@ import { VesselEditModal } from "@/components/vessels/VesselEditModal";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/vessels/")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): {
+    q?: string;
+    category?: string;
+    sort?: "asc" | "desc";
+  } => ({
     q: (search.q as string) || undefined,
     category: (search.category as string) || undefined,
-    sort: (search.sort as "asc" | "desc") || "asc",
+    sort: (search.sort as "asc" | "desc") || undefined,
   }),
   component: () => (
     <ProtectedRoute>
