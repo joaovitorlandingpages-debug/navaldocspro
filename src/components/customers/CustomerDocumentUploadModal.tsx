@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { UploadCloud, FileText, X, CheckCircle2, AlertCircle, Loader2, Sparkles, FileUp } from "lucide-react";
+import { UploadCloud, FileText, X, CheckCircle2, AlertCircle, Loader2, Sparkles, FileUp, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { validateUpload, MAX_ATTACHMENT_BYTES } from "@/lib/storage";
@@ -301,6 +301,16 @@ export function CustomerDocumentUploadModal({ isOpen, onClose, companyId, onData
             </div>
           </div>
         )}
+
+        {/* Nota sobre consumo de franquia OCR */}
+        <div className="flex items-start gap-2 text-[11px] text-slate-500 mt-4 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
+          <Info className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />
+          <span>
+            Cada leitura de documento consome <strong>1 unidade</strong> da franquia OCR do seu plano.
+            Preenchimento manual, correção de campos e reutilização de documentos já salvos{" "}
+            <strong>não consomem</strong> leituras.
+          </span>
+        </div>
 
         {/* Botões do Rodapé do Modal */}
         <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-100">

@@ -19,7 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { VesselEditModal } from "@/components/vessels/VesselEditModal";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/vessels")({
+export const Route = createFileRoute("/vessels/")({
   validateSearch: (search: Record<string, unknown>) => ({
     q: (search.q as string) || undefined,
     category: (search.category as string) || undefined,

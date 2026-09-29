@@ -33,8 +33,11 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/vessels/novo")({
-  validateSearch: (search: Record<string, unknown>): { customerId?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { customerId?: string; from?: string; category?: string; services?: string } => ({
     customerId: (search.customerId as string) || undefined,
+    from: (search.from as string) || undefined,
+    category: (search.category as string) || undefined,
+    services: (search.services as string) || undefined,
   }),
   component: () => (
     <ProtectedRoute>
@@ -85,6 +88,11 @@ function NovaEmbarcacaoPage() {
   const search = useSearch({ from: "/vessels/novo" });
   const { profile } = useAuth();
   const companyId = profile?.company_id;
+
+  // Contexto de retorno aos Serviços
+  const fromServicos = search.from === "servicos";
+  const returnCategory = (search.category as "profissional" | "esporte_recreio") || "esporte_recreio";
+  const returnServices = search.services;
 
   // Lista de clientes da empresa
   const [customers, setCustomers] = useState<any[]>([]);
@@ -211,6 +219,15 @@ function NovaEmbarcacaoPage() {
   const handleBack = () => {
     if (hasUnsavedChanges) {
       setShowExitConfirm(true);
+    } else if (fromServicos) {
+      navigate({
+        to: "/servicos/selecionar",
+        search: {
+          category: returnCategory,
+          ...(search.customerId ? { customerId: search.customerId } : {}),
+          ...(returnServices ? { services: returnServices } : {}),
+        } as any,
+      });
     } else {
       navigate({ to: "/vessels" });
     }
@@ -415,7 +432,20 @@ function NovaEmbarcacaoPage() {
 
       toast.dismiss(loadingToast);
       toast.success("Embarcação cadastrada com sucesso!");
-      navigate({ to: "/vessels" });
+
+      if (fromServicos && newVessel?.id) {
+        navigate({
+          to: "/servicos/selecionar",
+          search: {
+            category: returnCategory,
+            customerId: selectedCustomerId,
+            vesselId: newVessel.id,
+            ...(returnServices ? { services: returnServices } : {}),
+          } as any,
+        });
+      } else {
+        navigate({ to: "/vessels" });
+      }
     } catch (err: any) {
       console.error("Erro ao cadastrar embarcação:", err);
       toast.dismiss(loadingToast);
@@ -432,10 +462,10 @@ function NovaEmbarcacaoPage() {
         type="button"
         onClick={handleBack}
         className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer mb-3 group"
-        aria-label="Voltar para a relação de embarcações"
+        aria-label={fromServicos ? "Voltar aos serviços" : "Voltar para a relação de embarcações"}
       >
         <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
-        <span>Voltar</span>
+        <span>{fromServicos ? "Voltar aos serviços" : "Voltar"}</span>
       </button>
 
       {/* 2. TÍTULO E SUBTÍTULO */}
@@ -612,7 +642,7 @@ function NovaEmbarcacaoPage() {
         <div className="mb-6 p-3.5 rounded-xl bg-blue-50 border border-blue-200/80 flex items-center justify-between text-xs text-blue-900 animate-in fade-in duration-200">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-[#075BFF] shrink-0" />
-            <span>Dados da embarcação extraídos via OCR. Revise os campos antes de salvar.</span>
+            <span>Confira todos os dados extraídos do documento. A leitura automática pode cometer erros. Corrija as informações antes de salvar.</span>
           </div>
           <button
             type="button"
@@ -1047,7 +1077,18 @@ function NovaEmbarcacaoPage() {
         variant="destructive"
         onConfirm={() => {
           setShowExitConfirm(false);
-          navigate({ to: "/vessels" });
+          if (fromServicos) {
+            navigate({
+              to: "/servicos/selecionar",
+              search: {
+                category: returnCategory,
+                ...(search.customerId ? { customerId: search.customerId } : {}),
+                ...(returnServices ? { services: returnServices } : {}),
+              } as any,
+            });
+          } else {
+            navigate({ to: "/vessels" });
+          }
         }}
       />
 

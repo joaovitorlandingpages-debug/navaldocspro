@@ -41,7 +41,7 @@ import { openStoredFile } from "@/utils/file-preview";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/customers")({
+export const Route = createFileRoute("/customers/")({
   validateSearch: (search: Record<string, unknown>) => ({
     search: (search.search as string) || undefined,
     type: (search.type as string) || undefined,

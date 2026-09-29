@@ -24,7 +24,6 @@ import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as ClientPortalRouteImport } from './routes/client-portal'
 import { Route as ComplianceAiRouteImport } from './routes/compliance-ai'
 import { Route as ConsumoRouteImport } from './routes/consumo'
-import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DocumentGeneratorRouteImport } from './routes/document-generator'
@@ -62,7 +61,6 @@ import { Route as SupportRouteImport } from './routes/support'
 import { Route as SystemMonitorRouteImport } from './routes/system-monitor'
 import { Route as TemplatesRouteImport } from './routes/templates'
 import { Route as UsoDoPlanoRouteImport } from './routes/uso-do-plano'
-import { Route as VesselsRouteImport } from './routes/vessels'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAiCommandCenterRouteImport } from './routes/admin/ai-command-center'
 import { Route as AdminApplicationsRouteImport } from './routes/admin/applications'
@@ -113,6 +111,7 @@ import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as BillingFailureRouteImport } from './routes/billing.failure'
 import { Route as BillingSubscriptionRouteImport } from './routes/billing.subscription'
 import { Route as BillingSuccessRouteImport } from './routes/billing.success'
+import { Route as CustomersIndexRouteImport } from './routes/customers.index'
 import { Route as CustomersIdRouteImport } from './routes/customers.$id'
 import { Route as CustomersNovoRouteImport } from './routes/customers.novo'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
@@ -142,6 +141,7 @@ import { Route as TemplatesGratuitosRouteImport } from './routes/templates.gratu
 import { Route as TemplatesMarketplaceRouteImport } from './routes/templates.marketplace'
 import { Route as TemplatesMeusRouteImport } from './routes/templates.meus'
 import { Route as VerificarAssinaturaCodeRouteImport } from './routes/verificar-assinatura.$code'
+import { Route as VesselsIndexRouteImport } from './routes/vessels.index'
 import { Route as VesselsIdRouteImport } from './routes/vessels.$id'
 import { Route as VesselsNovoRouteImport } from './routes/vessels.novo'
 import { Route as AdminCompaniesIdRouteImport } from './routes/admin/companies.$id'
@@ -250,11 +250,6 @@ const ComplianceAiRoute = ComplianceAiRouteImport.update({
 const ConsumoRoute = ConsumoRouteImport.update({
   id: '/consumo',
   path: '/consumo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CustomersRoute = CustomersRouteImport.update({
-  id: '/customers',
-  path: '/customers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -440,11 +435,6 @@ const TemplatesRoute = TemplatesRouteImport.update({
 const UsoDoPlanoRoute = UsoDoPlanoRouteImport.update({
   id: '/uso-do-plano',
   path: '/uso-do-plano',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const VesselsRoute = VesselsRouteImport.update({
-  id: '/vessels',
-  path: '/vessels',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -700,15 +690,20 @@ const BillingSuccessRoute = BillingSuccessRouteImport.update({
   path: '/billing/success',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CustomersIndexRoute = CustomersIndexRouteImport.update({
+  id: '/customers/',
+  path: '/customers/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CustomersIdRoute = CustomersIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => CustomersRoute,
+  id: '/customers/$id',
+  path: '/customers/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CustomersNovoRoute = CustomersNovoRouteImport.update({
-  id: '/novo',
-  path: '/novo',
-  getParentRoute: () => CustomersRoute,
+  id: '/customers/novo',
+  path: '/customers/novo',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
@@ -849,15 +844,20 @@ const VerificarAssinaturaCodeRoute = VerificarAssinaturaCodeRouteImport.update({
   path: '/verificar-assinatura/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VesselsIndexRoute = VesselsIndexRouteImport.update({
+  id: '/vessels/',
+  path: '/vessels/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VesselsIdRoute = VesselsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => VesselsRoute,
+  id: '/vessels/$id',
+  path: '/vessels/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const VesselsNovoRoute = VesselsNovoRouteImport.update({
-  id: '/novo',
-  path: '/novo',
-  getParentRoute: () => VesselsRoute,
+  id: '/vessels/novo',
+  path: '/vessels/novo',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminCompaniesIdRoute = AdminCompaniesIdRouteImport.update({
   id: '/$id',
@@ -1054,7 +1054,6 @@ export interface FileRoutesByFullPath {
   '/client-portal': typeof ClientPortalRoute
   '/compliance-ai': typeof ComplianceAiRoute
   '/consumo': typeof ConsumoRoute
-  '/customers': typeof CustomersRouteWithChildren
   '/dashboard': typeof DashboardRouteWithChildren
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
@@ -1092,7 +1091,6 @@ export interface FileRoutesByFullPath {
   '/system-monitor': typeof SystemMonitorRoute
   '/templates': typeof TemplatesRouteWithChildren
   '/uso-do-plano': typeof UsoDoPlanoRoute
-  '/vessels': typeof VesselsRouteWithChildren
   '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
   '/admin/applications': typeof AdminApplicationsRoute
   '/admin/automation': typeof AdminAutomationRoute
@@ -1170,10 +1168,12 @@ export interface FileRoutesByFullPath {
   '/vessels/$id': typeof VesselsIdRoute
   '/vessels/novo': typeof VesselsNovoRoute
   '/admin/': typeof AdminIndexRoute
+  '/customers/': typeof CustomersIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/servicos/': typeof ServicosIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/vessels/': typeof VesselsIndexRoute
   '/admin/companies/$id': typeof AdminCompaniesIdRoute
   '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
   '/admin/docs-central/coverage': typeof AdminDocsCentralCoverageRoute
@@ -1222,7 +1222,6 @@ export interface FileRoutesByTo {
   '/client-portal': typeof ClientPortalRoute
   '/compliance-ai': typeof ComplianceAiRoute
   '/consumo': typeof ConsumoRoute
-  '/customers': typeof CustomersRouteWithChildren
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
   '/documents': typeof DocumentsRoute
@@ -1258,7 +1257,6 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/system-monitor': typeof SystemMonitorRoute
   '/uso-do-plano': typeof UsoDoPlanoRoute
-  '/vessels': typeof VesselsRouteWithChildren
   '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
   '/admin/applications': typeof AdminApplicationsRoute
   '/admin/automation': typeof AdminAutomationRoute
@@ -1335,10 +1333,12 @@ export interface FileRoutesByTo {
   '/vessels/$id': typeof VesselsIdRoute
   '/vessels/novo': typeof VesselsNovoRoute
   '/admin': typeof AdminIndexRoute
+  '/customers': typeof CustomersIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/processes': typeof ProcessesIndexRoute
   '/servicos': typeof ServicosIndexRoute
   '/templates': typeof TemplatesIndexRoute
+  '/vessels': typeof VesselsIndexRoute
   '/admin/companies/$id': typeof AdminCompaniesIdRoute
   '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
   '/admin/docs-central/coverage': typeof AdminDocsCentralCoverageRoute
@@ -1389,7 +1389,6 @@ export interface FileRoutesById {
   '/client-portal': typeof ClientPortalRoute
   '/compliance-ai': typeof ComplianceAiRoute
   '/consumo': typeof ConsumoRoute
-  '/customers': typeof CustomersRouteWithChildren
   '/dashboard': typeof DashboardRouteWithChildren
   '/demo': typeof DemoRoute
   '/document-generator': typeof DocumentGeneratorRoute
@@ -1427,7 +1426,6 @@ export interface FileRoutesById {
   '/system-monitor': typeof SystemMonitorRoute
   '/templates': typeof TemplatesRouteWithChildren
   '/uso-do-plano': typeof UsoDoPlanoRoute
-  '/vessels': typeof VesselsRouteWithChildren
   '/admin/ai-command-center': typeof AdminAiCommandCenterRoute
   '/admin/applications': typeof AdminApplicationsRoute
   '/admin/automation': typeof AdminAutomationRoute
@@ -1505,10 +1503,12 @@ export interface FileRoutesById {
   '/vessels/$id': typeof VesselsIdRoute
   '/vessels/novo': typeof VesselsNovoRoute
   '/admin/': typeof AdminIndexRoute
+  '/customers/': typeof CustomersIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/processes/': typeof ProcessesIndexRoute
   '/servicos/': typeof ServicosIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/vessels/': typeof VesselsIndexRoute
   '/admin/companies/$id': typeof AdminCompaniesIdRoute
   '/admin/docs-central/audit': typeof AdminDocsCentralAuditRoute
   '/admin/docs-central/coverage': typeof AdminDocsCentralCoverageRoute
@@ -1560,7 +1560,6 @@ export interface FileRouteTypes {
     | '/client-portal'
     | '/compliance-ai'
     | '/consumo'
-    | '/customers'
     | '/dashboard'
     | '/demo'
     | '/document-generator'
@@ -1598,7 +1597,6 @@ export interface FileRouteTypes {
     | '/system-monitor'
     | '/templates'
     | '/uso-do-plano'
-    | '/vessels'
     | '/admin/ai-command-center'
     | '/admin/applications'
     | '/admin/automation'
@@ -1676,10 +1674,12 @@ export interface FileRouteTypes {
     | '/vessels/$id'
     | '/vessels/novo'
     | '/admin/'
+    | '/customers/'
     | '/dashboard/'
     | '/processes/'
     | '/servicos/'
     | '/templates/'
+    | '/vessels/'
     | '/admin/companies/$id'
     | '/admin/docs-central/audit'
     | '/admin/docs-central/coverage'
@@ -1728,7 +1728,6 @@ export interface FileRouteTypes {
     | '/client-portal'
     | '/compliance-ai'
     | '/consumo'
-    | '/customers'
     | '/demo'
     | '/document-generator'
     | '/documents'
@@ -1764,7 +1763,6 @@ export interface FileRouteTypes {
     | '/support'
     | '/system-monitor'
     | '/uso-do-plano'
-    | '/vessels'
     | '/admin/ai-command-center'
     | '/admin/applications'
     | '/admin/automation'
@@ -1841,10 +1839,12 @@ export interface FileRouteTypes {
     | '/vessels/$id'
     | '/vessels/novo'
     | '/admin'
+    | '/customers'
     | '/dashboard'
     | '/processes'
     | '/servicos'
     | '/templates'
+    | '/vessels'
     | '/admin/companies/$id'
     | '/admin/docs-central/audit'
     | '/admin/docs-central/coverage'
@@ -1894,7 +1894,6 @@ export interface FileRouteTypes {
     | '/client-portal'
     | '/compliance-ai'
     | '/consumo'
-    | '/customers'
     | '/dashboard'
     | '/demo'
     | '/document-generator'
@@ -1932,7 +1931,6 @@ export interface FileRouteTypes {
     | '/system-monitor'
     | '/templates'
     | '/uso-do-plano'
-    | '/vessels'
     | '/admin/ai-command-center'
     | '/admin/applications'
     | '/admin/automation'
@@ -2010,10 +2008,12 @@ export interface FileRouteTypes {
     | '/vessels/$id'
     | '/vessels/novo'
     | '/admin/'
+    | '/customers/'
     | '/dashboard/'
     | '/processes/'
     | '/servicos/'
     | '/templates/'
+    | '/vessels/'
     | '/admin/companies/$id'
     | '/admin/docs-central/audit'
     | '/admin/docs-central/coverage'
@@ -2064,7 +2064,6 @@ export interface RootRouteChildren {
   ClientPortalRoute: typeof ClientPortalRoute
   ComplianceAiRoute: typeof ComplianceAiRoute
   ConsumoRoute: typeof ConsumoRoute
-  CustomersRoute: typeof CustomersRouteWithChildren
   DashboardRoute: typeof DashboardRouteWithChildren
   DemoRoute: typeof DemoRoute
   DocumentGeneratorRoute: typeof DocumentGeneratorRoute
@@ -2102,7 +2101,6 @@ export interface RootRouteChildren {
   SystemMonitorRoute: typeof SystemMonitorRoute
   TemplatesRoute: typeof TemplatesRouteWithChildren
   UsoDoPlanoRoute: typeof UsoDoPlanoRoute
-  VesselsRoute: typeof VesselsRouteWithChildren
   AssinarTokenRoute: typeof AssinarTokenRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthResetRoute: typeof AuthResetRoute
@@ -2110,6 +2108,8 @@ export interface RootRouteChildren {
   BillingFailureRoute: typeof BillingFailureRoute
   BillingSubscriptionRoute: typeof BillingSubscriptionRoute
   BillingSuccessRoute: typeof BillingSuccessRoute
+  CustomersIdRoute: typeof CustomersIdRoute
+  CustomersNovoRoute: typeof CustomersNovoRoute
   DocumentosBibliotecaRoute: typeof DocumentosBibliotecaRoute
   PortalTokenRoute: typeof PortalTokenRoute
   ProcessesIdRoute: typeof ProcessesIdRouteWithChildren
@@ -2123,8 +2123,12 @@ export interface RootRouteChildren {
   ServicosRevisarRoute: typeof ServicosRevisarRoute
   ServicosSelecionarRoute: typeof ServicosSelecionarRoute
   VerificarAssinaturaCodeRoute: typeof VerificarAssinaturaCodeRoute
+  VesselsIdRoute: typeof VesselsIdRoute
+  VesselsNovoRoute: typeof VesselsNovoRoute
+  CustomersIndexRoute: typeof CustomersIndexRoute
   ProcessesIndexRoute: typeof ProcessesIndexRoute
   ServicosIndexRoute: typeof ServicosIndexRoute
+  VesselsIndexRoute: typeof VesselsIndexRoute
   ConfiguracoesFuncionariosIdRoute: typeof ConfiguracoesFuncionariosIdRoute
   ConfiguracoesFuncionariosNovoRoute: typeof ConfiguracoesFuncionariosNovoRoute
 }
@@ -2234,13 +2238,6 @@ declare module '@tanstack/react-router' {
       path: '/consumo'
       fullPath: '/consumo'
       preLoaderRoute: typeof ConsumoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/customers': {
-      id: '/customers'
-      path: '/customers'
-      fullPath: '/customers'
-      preLoaderRoute: typeof CustomersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -2500,13 +2497,6 @@ declare module '@tanstack/react-router' {
       path: '/uso-do-plano'
       fullPath: '/uso-do-plano'
       preLoaderRoute: typeof UsoDoPlanoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/vessels': {
-      id: '/vessels'
-      path: '/vessels'
-      fullPath: '/vessels'
-      preLoaderRoute: typeof VesselsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -2859,19 +2849,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BillingSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/customers/': {
+      id: '/customers/'
+      path: '/customers'
+      fullPath: '/customers/'
+      preLoaderRoute: typeof CustomersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/customers/$id': {
       id: '/customers/$id'
-      path: '/$id'
+      path: '/customers/$id'
       fullPath: '/customers/$id'
       preLoaderRoute: typeof CustomersIdRouteImport
-      parentRoute: typeof CustomersRoute
+      parentRoute: typeof rootRouteImport
     }
     '/customers/novo': {
       id: '/customers/novo'
-      path: '/novo'
+      path: '/customers/novo'
       fullPath: '/customers/novo'
       preLoaderRoute: typeof CustomersNovoRouteImport
-      parentRoute: typeof CustomersRoute
+      parentRoute: typeof rootRouteImport
     }
     '/dashboard/': {
       id: '/dashboard/'
@@ -3062,19 +3059,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerificarAssinaturaCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/vessels/': {
+      id: '/vessels/'
+      path: '/vessels'
+      fullPath: '/vessels/'
+      preLoaderRoute: typeof VesselsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/vessels/$id': {
       id: '/vessels/$id'
-      path: '/$id'
+      path: '/vessels/$id'
       fullPath: '/vessels/$id'
       preLoaderRoute: typeof VesselsIdRouteImport
-      parentRoute: typeof VesselsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/vessels/novo': {
       id: '/vessels/novo'
-      path: '/novo'
+      path: '/vessels/novo'
       fullPath: '/vessels/novo'
       preLoaderRoute: typeof VesselsNovoRouteImport
-      parentRoute: typeof VesselsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/admin/companies/$id': {
       id: '/admin/companies/$id'
@@ -3474,20 +3478,6 @@ const AnalyticsRouteWithChildren = AnalyticsRoute._addFileChildren(
   AnalyticsRouteChildren,
 )
 
-interface CustomersRouteChildren {
-  CustomersIdRoute: typeof CustomersIdRoute
-  CustomersNovoRoute: typeof CustomersNovoRoute
-}
-
-const CustomersRouteChildren: CustomersRouteChildren = {
-  CustomersIdRoute: CustomersIdRoute,
-  CustomersNovoRoute: CustomersNovoRoute,
-}
-
-const CustomersRouteWithChildren = CustomersRoute._addFileChildren(
-  CustomersRouteChildren,
-)
-
 interface DashboardRouteChildren {
   DashboardComplianceCenterRoute: typeof DashboardComplianceCenterRoute
   DashboardDeadlinesRoute: typeof DashboardDeadlinesRoute
@@ -3531,19 +3521,6 @@ const TemplatesRouteChildren: TemplatesRouteChildren = {
 const TemplatesRouteWithChildren = TemplatesRoute._addFileChildren(
   TemplatesRouteChildren,
 )
-
-interface VesselsRouteChildren {
-  VesselsIdRoute: typeof VesselsIdRoute
-  VesselsNovoRoute: typeof VesselsNovoRoute
-}
-
-const VesselsRouteChildren: VesselsRouteChildren = {
-  VesselsIdRoute: VesselsIdRoute,
-  VesselsNovoRoute: VesselsNovoRoute,
-}
-
-const VesselsRouteWithChildren =
-  VesselsRoute._addFileChildren(VesselsRouteChildren)
 
 interface ProcessesIdRouteChildren {
   ProcessesIdAnexarDocumentoEmitidoRoute: typeof ProcessesIdAnexarDocumentoEmitidoRoute
@@ -3594,7 +3571,6 @@ const rootRouteChildren: RootRouteChildren = {
   ClientPortalRoute: ClientPortalRoute,
   ComplianceAiRoute: ComplianceAiRoute,
   ConsumoRoute: ConsumoRoute,
-  CustomersRoute: CustomersRouteWithChildren,
   DashboardRoute: DashboardRouteWithChildren,
   DemoRoute: DemoRoute,
   DocumentGeneratorRoute: DocumentGeneratorRoute,
@@ -3632,7 +3608,6 @@ const rootRouteChildren: RootRouteChildren = {
   SystemMonitorRoute: SystemMonitorRoute,
   TemplatesRoute: TemplatesRouteWithChildren,
   UsoDoPlanoRoute: UsoDoPlanoRoute,
-  VesselsRoute: VesselsRouteWithChildren,
   AssinarTokenRoute: AssinarTokenRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthResetRoute: AuthResetRoute,
@@ -3640,6 +3615,8 @@ const rootRouteChildren: RootRouteChildren = {
   BillingFailureRoute: BillingFailureRoute,
   BillingSubscriptionRoute: BillingSubscriptionRoute,
   BillingSuccessRoute: BillingSuccessRoute,
+  CustomersIdRoute: CustomersIdRoute,
+  CustomersNovoRoute: CustomersNovoRoute,
   DocumentosBibliotecaRoute: DocumentosBibliotecaRoute,
   PortalTokenRoute: PortalTokenRoute,
   ProcessesIdRoute: ProcessesIdRouteWithChildren,
@@ -3653,8 +3630,12 @@ const rootRouteChildren: RootRouteChildren = {
   ServicosRevisarRoute: ServicosRevisarRoute,
   ServicosSelecionarRoute: ServicosSelecionarRoute,
   VerificarAssinaturaCodeRoute: VerificarAssinaturaCodeRoute,
+  VesselsIdRoute: VesselsIdRoute,
+  VesselsNovoRoute: VesselsNovoRoute,
+  CustomersIndexRoute: CustomersIndexRoute,
   ProcessesIndexRoute: ProcessesIndexRoute,
   ServicosIndexRoute: ServicosIndexRoute,
+  VesselsIndexRoute: VesselsIndexRoute,
   ConfiguracoesFuncionariosIdRoute: ConfiguracoesFuncionariosIdRoute,
   ConfiguracoesFuncionariosNovoRoute: ConfiguracoesFuncionariosNovoRoute,
 }

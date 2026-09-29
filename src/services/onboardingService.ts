@@ -36,7 +36,7 @@ export async function getCompanyOnboardingProgress(companyId: string): Promise<O
     // 1. Consultar dados da empresa (tabela companies)
     const { data: company } = await supabase
       .from("companies")
-      .select("id, name, cnpj, phone, email, logo_url, metadata")
+      .select("id, name, cnpj, phone, email, logo_url")
       .eq("id", companyId)
       .maybeSingle();
 
@@ -54,7 +54,7 @@ export async function getCompanyOnboardingProgress(companyId: string): Promise<O
         .eq("company_id", companyId),
       supabase
         .from("customers")
-        .select("id, name, document_number, created_at")
+        .select("id, name, cpf_cnpj, created_at")
         .eq("company_id", companyId)
         .order("created_at", { ascending: false })
         .limit(1),
@@ -73,7 +73,7 @@ export async function getCompanyOnboardingProgress(companyId: string): Promise<O
         .limit(1),
       supabase
         .from("documents")
-        .select("id, title, name, process_id, file_url, created_at")
+        .select("id, document_type, file_url, created_at")
         .eq("company_id", companyId)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -111,7 +111,7 @@ export async function getCompanyOnboardingProgress(companyId: string): Promise<O
     const firstCustomer = customersList && customersList[0];
     let step3Detected: string | null = null;
     if (step3Completed && firstCustomer) {
-      step3Detected = `${firstCustomer.name}${firstCustomer.document_number ? ` • ${firstCustomer.document_number}` : ""}`;
+      step3Detected = `${firstCustomer.name}${firstCustomer.cpf_cnpj ? ` • ${firstCustomer.cpf_cnpj}` : ""}`;
     }
 
     // --- ETAPA 4: Embarcação Vinculada ao Cliente ---
@@ -137,7 +137,7 @@ export async function getCompanyOnboardingProgress(companyId: string): Promise<O
     const step6Completed = (documentsCount || 0) > 0 || Boolean(firstDoc) || firstProcess?.status === "concluido";
     let step6Detected: string | null = null;
     if (step6Completed) {
-      step6Detected = firstDoc?.title || firstDoc?.name || "Documento PDF gerado e pronto";
+      step6Detected = firstDoc?.document_type || "Documento PDF gerado e pronto";
     }
 
     // Montagem das 6 etapas

@@ -40,6 +40,11 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/customers/novo")({
+  validateSearch: (search: Record<string, unknown>): { from?: string; category?: string; services?: string } => ({
+    from: (search.from as string) || undefined,
+    category: (search.category as string) || undefined,
+    services: (search.services as string) || undefined,
+  }),
   component: () => (
     <ProtectedRoute>
       <DashboardLayout>
@@ -53,7 +58,13 @@ type ClientType = "pf" | "pj";
 
 function NovoClientePage() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const { profile } = useAuth();
+
+  // Contexto de retorno aos Serviços
+  const fromServicos = search.from === "servicos";
+  const returnCategory = (search.category as "profissional" | "esporte_recreio") || "esporte_recreio";
+  const returnServices = search.services;
 
   // Tipo de cliente (PF ou PJ)
   const [clientType, setClientType] = useState<ClientType>("pf");
@@ -117,6 +128,14 @@ function NovoClientePage() {
   const handleBack = () => {
     if (hasUnsavedChanges) {
       setShowExitConfirm(true);
+    } else if (fromServicos) {
+      navigate({
+        to: "/servicos/selecionar",
+        search: {
+          category: returnCategory,
+          ...(returnServices ? { services: returnServices } : {}),
+        } as any,
+      });
     } else {
       navigate({ to: "/customers" });
     }
@@ -330,10 +349,11 @@ function NovoClientePage() {
           await supabase.from("activity_logs").insert({
             company_id: companyId,
             user_id: user.id,
+            module: "customers",
             action: "client_created",
             resource_type: "client",
             resource_id: newCustomer.id,
-            details: { name: clientName, cpf_cnpj: docNumber, type: clientType },
+            metadata: { name: clientName, cpf_cnpj: docNumber, type: clientType },
           });
         }
       } catch (logErr) {
@@ -342,7 +362,19 @@ function NovoClientePage() {
 
       toast.dismiss(loadingToast);
       toast.success("Cliente cadastrado com sucesso!");
-      navigate({ to: "/customers" });
+
+      if (fromServicos && newCustomer?.id) {
+        navigate({
+          to: "/servicos/selecionar",
+          search: {
+            category: returnCategory,
+            customerId: newCustomer.id,
+            ...(returnServices ? { services: returnServices } : {}),
+          } as any,
+        });
+      } else {
+        navigate({ to: "/customers" });
+      }
     } catch (err: any) {
       console.error("Erro ao cadastrar cliente:", err);
       toast.dismiss(loadingToast);
@@ -359,10 +391,10 @@ function NovoClientePage() {
         type="button"
         onClick={handleBack}
         className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer mb-3 group"
-        aria-label="Voltar para a relação de clientes"
+        aria-label={fromServicos ? "Voltar aos serviços" : "Voltar para a relação de clientes"}
       >
         <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
-        <span>Voltar</span>
+        <span>{fromServicos ? "Voltar aos serviços" : "Voltar"}</span>
       </button>
 
       {/* 2. TÍTULO E SUBTÍTULO */}
@@ -411,7 +443,7 @@ function NovoClientePage() {
         <div className="mb-6 p-3.5 rounded-xl bg-blue-50 border border-blue-200/80 flex items-center justify-between text-xs text-blue-900 animate-in fade-in duration-200">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-[#075BFF] shrink-0" />
-            <span>Dados preenchidos a partir dos documentos anexados. Revise os campos antes de salvar.</span>
+            <span>Confira todos os dados extraídos do documento. A leitura automática pode cometer erros. Corrija as informações antes de salvar.</span>
           </div>
           <button
             type="button"
@@ -468,10 +500,11 @@ function NovoClientePage() {
             <div className="space-y-4">
               {/* Nome completo */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label htmlFor="nome" className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Nome completo <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="nome"
                   type="text"
                   value={formData.nome}
                   onChange={(e) => handleChange("nome", e.target.value)}
@@ -490,10 +523,11 @@ function NovoClientePage() {
               {/* Grid 2 colunas: CPF + Data de nascimento */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label htmlFor="cpf" className="block text-xs font-semibold text-slate-700 mb-1.5">
                     CPF <span className="text-red-500">*</span>
                   </label>
                   <input
+                    id="cpf"
                     type="text"
                     value={formData.cpf}
                     onChange={(e) => handleChange("cpf", e.target.value)}
@@ -511,11 +545,12 @@ function NovoClientePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label htmlFor="dataNascimento" className="block text-xs font-semibold text-slate-700 mb-1.5">
                     Data de nascimento
                   </label>
                   <div className="relative">
                     <input
+                      id="dataNascimento"
                       type="text"
                       value={formData.dataNascimento}
                       onChange={(e) => handleChange("dataNascimento", e.target.value)}
@@ -531,10 +566,11 @@ function NovoClientePage() {
               {/* Grid 2 colunas: E-mail + Telefone / WhatsApp */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1.5">
                     E-mail
                   </label>
                   <input
+                    id="email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
@@ -551,10 +587,11 @@ function NovoClientePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label htmlFor="telefone" className="block text-xs font-semibold text-slate-700 mb-1.5">
                     Telefone / WhatsApp
                   </label>
                   <input
+                    id="telefone"
                     type="text"
                     value={formData.telefone}
                     onChange={(e) => handleChange("telefone", e.target.value)}
@@ -864,7 +901,17 @@ function NovoClientePage() {
         variant="destructive"
         onConfirm={() => {
           setShowExitConfirm(false);
-          navigate({ to: "/customers" });
+          if (fromServicos) {
+            navigate({
+              to: "/servicos/selecionar",
+              search: {
+                category: returnCategory,
+                ...(returnServices ? { services: returnServices } : {}),
+              } as any,
+            });
+          } else {
+            navigate({ to: "/customers" });
+          }
         }}
       />
 
@@ -893,13 +940,24 @@ function NovoClientePage() {
             <button
               type="button"
               onClick={() => {
-                const id = duplicateCustomer?.id;
+                const existingId = duplicateCustomer?.id;
                 setDuplicateCustomer(null);
-                navigate({ to: "/customers" });
+                if (fromServicos && existingId) {
+                  navigate({
+                    to: "/servicos/selecionar",
+                    search: {
+                      category: returnCategory,
+                      customerId: existingId,
+                      ...(returnServices ? { services: returnServices } : {}),
+                    } as any,
+                  });
+                } else {
+                  navigate({ to: "/customers" });
+                }
               }}
               className="px-4 py-2 rounded-xl bg-[#075BFF] text-white text-xs font-semibold hover:bg-blue-600"
             >
-              Ver na relação de clientes
+              {fromServicos ? "Usar este cliente" : "Ver na relação de clientes"}
             </button>
           </DialogFooter>
         </DialogContent>
