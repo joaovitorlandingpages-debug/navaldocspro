@@ -104,6 +104,13 @@ function RevisarDocumentoGeradoPage() {
   const [employees, setEmployees] = useState<EmployeeInfo[]>([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
 
+  // Modal para cadastro rápido de funcionário
+  const [showQuickStaffModal, setShowQuickStaffModal] = useState(false);
+  const [quickStaffName, setQuickStaffName] = useState("");
+  const [quickStaffRole, setQuickStaffRole] = useState("Despachante Náutico");
+  const [quickStaffRegistry, setQuickStaffRegistry] = useState("");
+  const [isSavingQuickStaff, setIsSavingQuickStaff] = useState(false);
+
   // Visualizador do PDF
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -144,8 +151,8 @@ function RevisarDocumentoGeradoPage() {
         .from("processes")
         .select(`
           *,
-          customer:customers!processes_customer_id_fkey(id, name, fantasy_name, cpf_cnpj, document, email, phone, address, city, state, postal_code),
-          vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length, length_overall, port_of_registry)
+          customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone, address, city, state),
+          vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length)
         `)
         .eq("id", id)
         .eq("company_id", companyId)
@@ -181,16 +188,17 @@ function RevisarDocumentoGeradoPage() {
       if (comp) {
         setCompanyDetails(comp);
 
-        // Extrair funcionários cadastrados em Configurações
-        const savedEmployees: any[] = (comp.metadata?.employees as any[]) || [];
+        // Extrair funcionários cadastrados em Configurações (document_template_map)
+        const docMap = (comp.document_template_map as any) || {};
+        const savedEmployees: any[] = docMap.employees || (comp as any)?.metadata?.employees || [];
         const empList: EmployeeInfo[] = [];
 
         savedEmployees.forEach((emp: any) => {
           if (emp.status !== "inactive") {
             empList.push({
               id: emp.id,
-              name: emp.name,
-              role: emp.role || "Colaborador",
+              name: emp.document_name || emp.name,
+              role: emp.document_role || emp.role || "Colaborador",
               email: emp.email,
               phone: emp.phone,
               document_name: emp.document_name,
@@ -468,6 +476,72 @@ function RevisarDocumentoGeradoPage() {
     setIsFinalizeModalOpen(true);
   };
 
+  // Cadastro Rápido de Funcionário inline na revisão
+  const handleCreateQuickStaff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickStaffName.trim() || !companyId) return;
+
+    setIsSavingQuickStaff(true);
+    try {
+      const now = new Date().toISOString();
+      const newStaffId = `emp-${Date.now()}`;
+      const newStaffObj = {
+        id: newStaffId,
+        name: quickStaffName.trim(),
+        role: quickStaffRole.trim() || "Despachante Náutico",
+        document_name: quickStaffName.trim(),
+        document_role: quickStaffRole.trim() || "Despachante Náutico",
+        professional_registry: quickStaffRegistry.trim() || undefined,
+        status: "active",
+        created_at: now,
+      };
+
+      const { data: comp } = await supabase
+        .from("companies")
+        .select("document_template_map")
+        .eq("id", companyId)
+        .single();
+
+      const docMap = (comp?.document_template_map as any) || {};
+      const existingEmployees: any[] = docMap.employees || [];
+      const updatedEmployees = [...existingEmployees, newStaffObj];
+
+      const { error: updErr } = await supabase
+        .from("companies")
+        .update({
+          document_template_map: {
+            ...docMap,
+            employees: updatedEmployees,
+          },
+          updated_at: now,
+        } as any)
+        .eq("id", companyId);
+
+      if (updErr) throw updErr;
+
+      const newInfo: EmployeeInfo = {
+        id: newStaffId,
+        name: newStaffObj.name,
+        role: newStaffObj.role,
+        document_name: newStaffObj.document_name,
+        document_role: newStaffObj.document_role,
+        professional_registry: newStaffObj.professional_registry,
+      };
+
+      setEmployees((prev) => [...prev, newInfo]);
+      setSelectedEmployeeId(newStaffId);
+      setShowQuickStaffModal(false);
+      setQuickStaffName("");
+      setQuickStaffRegistry("");
+      toast.success("Funcionário cadastrado e selecionado com sucesso!");
+    } catch (err: any) {
+      console.error("Erro ao cadastrar funcionário:", err);
+      toast.error("Não foi possível cadastrar o funcionário.");
+    } finally {
+      setIsSavingQuickStaff(false);
+    }
+  };
+
   // =========================================================================
   // AÇÃO 5: REGISTRAR VERSÃO FINAL (ITEM 5)
   // =========================================================================
@@ -501,12 +575,13 @@ function RevisarDocumentoGeradoPage() {
         staff_responsible: staffPayload,
         template_name: documentTitle,
         company_snapshot: {
-          name: currentCompany?.name || companyDetails?.name,
-          cnpj: companyDetails?.cnpj,
-          address: companyDetails?.address,
-          city: companyDetails?.city,
-          state: companyDetails?.state,
-          phone: companyDetails?.phone,
+          name: companyDetails?.name || currentCompany?.name || "Empresa Naval",
+          cnpj: companyDetails?.cnpj || currentCompany?.cnpj || "",
+          address: companyDetails?.contact_address || companyDetails?.address || "",
+          city: companyDetails?.city || "",
+          state: companyDetails?.state || "",
+          phone: companyDetails?.phone || "",
+          logo_url: companyDetails?.logo_url || companyDetails?.logo_primary_url || "",
         },
         version_history: [historyItem, ...existingHistory],
         last_modified_at: now,
@@ -1035,30 +1110,71 @@ function RevisarDocumentoGeradoPage() {
                     Funcionário Responsável
                   </h2>
                 </div>
-                <Link
-                  to="/settings"
-                  className="text-[11px] font-semibold text-[#075BFF] hover:underline"
-                >
-                  Gerenciar equipe
-                </Link>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickStaffModal(true)}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#075BFF] hover:underline cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Cadastrar funcionário</span>
+                  </button>
+                  <span className="text-slate-300">|</span>
+                  <Link
+                    to="/settings"
+                    className="text-[11px] font-medium text-slate-500 hover:text-slate-800"
+                  >
+                    Gerenciar
+                  </Link>
+                </div>
               </div>
 
               <p className="text-xs text-slate-500">
                 Selecione qual colaborador cadastrado em Configurações está preparando este documento:
               </p>
 
-              <div>
-                <select
-                  value={selectedEmployeeId}
-                  onChange={(e) => setSelectedEmployeeId(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF]"
-                >
-                  {employees.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.document_name || emp.name} — {emp.document_role || emp.role}
-                    </option>
-                  ))}
-                </select>
+              {employees.length === 0 ? (
+                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs space-y-2">
+                  <p className="font-semibold flex items-center gap-1.5">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                    Nenhum funcionário cadastrado nesta empresa.
+                  </p>
+                  <p className="text-[11px] text-amber-800">
+                    Cadastre um responsável documental agora para vincular ao documento sem perder os dados revisados.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickStaffModal(true)}
+                    className="w-full py-2 bg-[#075BFF] hover:bg-blue-600 text-white rounded-lg font-bold text-xs shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Cadastrar funcionário</span>
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Funcionário responsável por este documento:
+                  </label>
+                  <select
+                    value={selectedEmployeeId}
+                    onChange={(e) => setSelectedEmployeeId(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF]"
+                  >
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.document_name || emp.name} — {emp.document_role || emp.role}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="p-2.5 bg-blue-50/60 rounded-xl border border-blue-100 flex items-start gap-2 text-[11px] text-blue-900">
+                <Info className="h-4 w-4 text-[#075BFF] shrink-0 mt-0.5" />
+                <p>
+                  <strong>Atenção:</strong> A seleção do responsável apenas define quem consta na minuta técnica do documento. A assinatura digital pelo <strong>GOV.BR</strong> é uma etapa posterior separada.
+                </p>
               </div>
 
               {/* Card de Detalhes do Funcionário Selecionado */}
@@ -1472,6 +1588,105 @@ function RevisarDocumentoGeradoPage() {
               Confirmar nova revisão
             </button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ========================================================================= */}
+      {/* MODAL: CADASTRO RÁPIDO DE FUNCIONÁRIO (SEM PERDER CONTEXTO DO PROCESSO) */}
+      {/* ========================================================================= */}
+      <Dialog open={showQuickStaffModal} onOpenChange={setShowQuickStaffModal}>
+        <DialogContent className="max-w-md p-0 overflow-hidden rounded-2xl bg-white border border-slate-200">
+          <DialogHeader className="p-5 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0">
+                <Briefcase className="h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-bold text-[#0B1739]">
+                  Cadastrar Responsável pelo Documento
+                </DialogTitle>
+                <DialogDescription className="text-xs text-slate-500">
+                  Adiciona o colaborador como responsável técnico sem sair da revisão do documento.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <form onSubmit={handleCreateQuickStaff}>
+            <div className="p-5 space-y-3.5 text-xs">
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-[11px] leading-relaxed">
+                <strong>Nota importante:</strong> Cadastrar alguém como responsável documental não cria login nem concede acesso ao sistema. O funcionário constará apenas nos documentos emitidos.
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Nome Completo <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={quickStaffName}
+                  onChange={(e) => setQuickStaffName(e.target.value)}
+                  placeholder="Ex: Carlos Eduardo de Oliveira"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Cargo ou Função <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={quickStaffRole}
+                  onChange={(e) => setQuickStaffRole(e.target.value)}
+                  placeholder="Ex: Despachante Náutico / Responsável Técnico"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Registro Profissional (Opcional)
+                </label>
+                <input
+                  type="text"
+                  value={quickStaffRegistry}
+                  onChange={(e) => setQuickStaffRegistry(e.target.value)}
+                  placeholder="Ex: CRDD-SP 12345 / Registro Capitania"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF]"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="p-4 bg-slate-50 border-t border-slate-100 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowQuickStaffModal(false)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingQuickStaff}
+                className="px-5 py-2 rounded-xl bg-[#075BFF] text-white font-bold hover:bg-blue-600 transition-colors shadow-xs text-xs disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {isSavingQuickStaff ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Salvando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-3.5 w-3.5" />
+                    <span>Cadastrar e Selecionar</span>
+                  </>
+                )}
+              </button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

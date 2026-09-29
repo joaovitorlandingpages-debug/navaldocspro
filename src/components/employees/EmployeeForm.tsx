@@ -65,9 +65,11 @@ export interface EmployeeData {
 
 interface EmployeeFormProps {
   employeeId?: string; // Se fornecido, modo edição; senão, modo criação
+  returnTo?: string; // Rota para redirecionar após salvar (ex: /processes/:id/revisar-documento)
+  onSuccess?: (employee: EmployeeData) => void;
 }
 
-export function EmployeeForm({ employeeId }: EmployeeFormProps) {
+export function EmployeeForm({ employeeId, returnTo, onSuccess }: EmployeeFormProps) {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
   const companyId = profile?.company_id;
@@ -134,69 +136,95 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
         // 1. Carregar dados da empresa
         const { data: compData, error: compErr } = await supabase
           .from("companies")
-          .select("id, name, fantasy_name, metadata")
+          .select("id, name, document_template_map")
           .eq("id", companyId)
           .single();
 
         if (compErr) throw compErr;
         if (compData) {
-          setCompanyName(compData.fantasy_name || compData.name || "Empresa");
-        }
+          const docMap = (compData.document_template_map as any) || {};
+          setCompanyName(docMap.fantasy_name || compData.name || "Minha Empresa");
 
-        // 2. Se for edição, buscar o funcionário
-        if (employeeId) {
-          let foundEmp: EmployeeData | null = null;
+          // 2. Se for edição, buscar o funcionário
+          if (employeeId) {
+            let foundEmp: EmployeeData | null = null;
 
-          // Verificar no metadata.employees da empresa
-          const employeesList = (compData?.metadata as any)?.employees || [];
-          const matched = employeesList.find((e: any) => e.id === employeeId);
+            // Verificar no document_template_map.employees da empresa
+            const employeesList = docMap.employees || (compData as any)?.metadata?.employees || [];
+            const matched = employeesList.find((e: any) => e.id === employeeId);
 
-          if (matched) {
-            foundEmp = matched;
-          } else {
-            // Tentar buscar na tabela profiles (caso seja um perfil de usuário)
-            const { data: profData } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("id", employeeId)
-              .eq("company_id", companyId)
-              .maybeSingle();
-
-            if (profData) {
+            if (matched) {
               foundEmp = {
-                id: profData.id,
-                name: profData.name || "",
-                role: profData.role === "admin" ? "Administrador / Despachante" : "Operador Náutico",
-                email: profData.email || "",
-                phone: profData.phone || "",
-                cpf: "",
-                notes: "",
-                status: (profData as any).is_active !== false ? "active" : "inactive",
-                document_name: profData.name || "",
-                document_role: profData.role === "admin" ? "Administrador / Despachante" : "Operador Náutico",
-                professional_registry: "",
-                avatar_url: "",
-                permissions: {
+                id: matched.id,
+                name: matched.name || "",
+                role: matched.role || "",
+                email: matched.email || "",
+                phone: matched.phone || "",
+                cpf: matched.cpf || "",
+                notes: matched.notes || "",
+                status: matched.status || "active",
+                document_name: matched.document_name || matched.name || "",
+                document_role: matched.document_role || matched.role || "",
+                professional_registry: matched.professional_registry || "",
+                avatar_url: matched.avatar_url || "",
+                signature_url: matched.signature_url || "",
+                permissions: matched.permissions || {
                   can_generate_docs: true,
                   can_review_docs: true,
                   can_attach_protocols: true,
                   can_attach_issued: true,
                   can_view_customers: true,
                   can_view_vessels: true,
-                  can_view_billing: profData.role === "admin",
+                  can_view_billing: false,
                 },
-                has_system_access: true,
-                user_id: profData.id,
-                created_at: profData.created_at,
+                has_system_access: Boolean(matched.has_system_access),
+                created_at: matched.created_at || new Date().toISOString(),
               };
-            }
-          }
+            } else {
+              // Tentar buscar na tabela profiles (caso seja um perfil de usuário existente)
+              const { data: profData } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", employeeId)
+                .eq("company_id", companyId)
+                .maybeSingle();
 
-          if (foundEmp) {
-            setFormData(foundEmp);
-          } else {
-            toast.error("Funcionário não encontrado.");
-            navigate({ to: "/settings" });
+              if (profData) {
+                foundEmp = {
+                  id: profData.id,
+                  name: profData.name || "",
+                  role: profData.role === "company_admin" || profData.role === "admin" ? "Administrador / Despachante" : "Operador Náutico",
+                  email: profData.email || "",
+                  phone: profData.phone || "",
+                  cpf: "",
+                  notes: "",
+                  status: "active",
+                  document_name: profData.name || "",
+                  document_role: profData.role === "company_admin" || profData.role === "admin" ? "Administrador / Despachante" : "Operador Náutico",
+                  professional_registry: "",
+                  avatar_url: "",
+                  permissions: {
+                    can_generate_docs: true,
+                    can_review_docs: true,
+                    can_attach_protocols: true,
+                    can_attach_issued: true,
+                    can_view_customers: true,
+                    can_view_vessels: true,
+                    can_view_billing: profData.role === "company_admin",
+                  },
+                  has_system_access: true,
+                  user_id: profData.id,
+                  created_at: profData.created_at,
+                };
+              }
+            }
+
+            if (foundEmp) {
+              setFormData(foundEmp);
+            } else {
+              toast.error("Funcionário não encontrado.");
+              navigate({ to: "/settings", search: { tab: "funcionarios" } });
+            }
           }
         }
       } catch (err: any) {
@@ -334,22 +362,22 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) {
+    if (!(formData.name || "").trim()) {
       newErrors.name = "Nome completo é obrigatório.";
     }
 
-    if (!formData.role.trim()) {
+    if (!(formData.role || "").trim()) {
       newErrors.role = "Cargo ou função é obrigatório.";
     }
 
-    if (formData.email.trim()) {
+    if ((formData.email || "").trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+$/;
       if (!emailRegex.test(formData.email.trim())) {
         newErrors.email = "E-mail profissional inválido.";
       }
     }
 
-    if (formData.cpf.trim()) {
+    if ((formData.cpf || "").trim()) {
       const cleanCpf = formData.cpf.replace(/\D/g, "");
       if (cleanCpf.length !== 11) {
         newErrors.cpf = "CPF deve conter 11 dígitos.";
@@ -379,31 +407,34 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
       const now = new Date().toISOString();
       const currentUserName = profile?.name || user?.email?.split("@")[0] || "Administrador";
 
-      // 1. Obter lista atual de funcionários da empresa no metadata
+      // 1. Obter lista atual de funcionários da empresa no document_template_map
       const { data: compData, error: compErr } = await supabase
         .from("companies")
-        .select("id, metadata")
+        .select("id, document_template_map")
         .eq("id", companyId)
         .single();
 
       if (compErr) throw compErr;
 
-      const currentMetadata = compData?.metadata || {};
-      const employees: EmployeeData[] = (currentMetadata as any).employees || [];
+      const currentDocMap = (compData?.document_template_map as any) || {};
+      const employees: EmployeeData[] = currentDocMap.employees || (compData as any)?.metadata?.employees || [];
 
       // 2. Verificar duplicidade de e-mail ou CPF dentro da mesma empresa
+      const cleanEmail = (formData.email || "").trim();
+      const cleanCpf = (formData.cpf || "").trim().replace(/\D/g, "");
+
       const duplicate = employees.find((emp) => {
         if (emp.id === formData.id) return false; // Permite o próprio em edição
-        const emailMatch = Boolean(formData.email.trim() && emp.email?.toLowerCase() === formData.email.trim().toLowerCase());
-        const cpfMatch = Boolean(formData.cpf.trim() && emp.cpf?.replace(/\D/g, "") === formData.cpf.replace(/\D/g, ""));
+        const emailMatch = Boolean(cleanEmail && emp.email?.toLowerCase() === cleanEmail.toLowerCase());
+        const cpfMatch = Boolean(cleanCpf && emp.cpf?.replace(/\D/g, "") === cleanCpf);
         return emailMatch || cpfMatch;
       });
 
       if (duplicate) {
-        if (formData.email.trim() && duplicate.email?.toLowerCase() === formData.email.trim().toLowerCase()) {
+        if (cleanEmail && duplicate.email?.toLowerCase() === cleanEmail.toLowerCase()) {
           setErrors((prev) => ({ ...prev, email: "Já existe outro funcionário cadastrado com este e-mail nesta empresa." }));
         }
-        if (formData.cpf.trim() && duplicate.cpf?.replace(/\D/g, "") === formData.cpf.replace(/\D/g, "")) {
+        if (cleanCpf && duplicate.cpf?.replace(/\D/g, "") === cleanCpf) {
           setErrors((prev) => ({ ...prev, cpf: "Já existe outro funcionário cadastrado com este CPF nesta empresa." }));
         }
         toast.error("Duplicidade detectada: e-mail ou CPF já cadastrado na empresa.");
@@ -414,8 +445,8 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
       // 3. Montar objeto do funcionário atualizado
       const employeePayload: EmployeeData = {
         ...formData,
-        document_name: formData.document_name.trim() || formData.name.trim(),
-        document_role: formData.document_role.trim() || formData.role.trim(),
+        document_name: (formData.document_name || "").trim() || (formData.name || "").trim(),
+        document_role: (formData.document_role || "").trim() || (formData.role || "").trim(),
         created_at: isEditing ? formData.created_at : now,
         created_by_name: isEditing ? formData.created_by_name : currentUserName,
         updated_at: now,
@@ -435,14 +466,16 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
         updatedEmployees = [...employees, employeePayload];
       }
 
-      // 4. Salvar na tabela companies
+      // 4. Salvar na tabela companies em document_template_map (jsonb real do banco)
+      const updatedDocMap = {
+        ...currentDocMap,
+        employees: updatedEmployees,
+      };
+
       const { error: updateErr } = await supabase
         .from("companies")
         .update({
-          metadata: {
-            ...currentMetadata,
-            employees: updatedEmployees,
-          },
+          document_template_map: updatedDocMap,
           updated_at: now,
         } as any)
         .eq("id", companyId);
@@ -456,10 +489,20 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
         }
       );
 
-      // Retornar para a tela de configurações
-      navigate({
-        to: "/settings",
-      });
+      if (onSuccess) {
+        onSuccess(employeePayload);
+      }
+
+      // Se houver returnTo (ex: veio do fluxo de revisão/geração de documento), retornar
+      if (returnTo) {
+        window.location.href = returnTo;
+      } else {
+        // Retornar para a tela de configurações na aba funcionários
+        navigate({
+          to: "/settings",
+          search: { tab: "funcionarios" },
+        });
+      }
     } catch (err: any) {
       console.error("Erro ao salvar funcionário:", err);
       toast.error(err?.message || "Erro ao salvar funcionário. Tente novamente.");
@@ -642,6 +685,7 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
                 </label>
                 <input
                   type="text"
+                  name="name"
                   value={formData.name}
                   onChange={(e) => {
                     setFormData({ ...formData, name: e.target.value });
@@ -664,6 +708,7 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
                 </label>
                 <input
                   type="text"
+                  name="role"
                   value={formData.role}
                   onChange={(e) => {
                     setFormData({ ...formData, role: e.target.value });
@@ -688,6 +733,7 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
                   <Mail className="h-3.5 w-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="email"
+                    name="email"
                     value={formData.email}
                     onChange={(e) => {
                       setFormData({ ...formData, email: e.target.value });
@@ -750,12 +796,26 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
               </div>
             </div>
 
-            {/* Aviso de Segurança de Acesso */}
-            <div className="p-3.5 bg-blue-50/70 border border-blue-100 rounded-xl flex items-start gap-2.5 text-xs text-blue-800">
-              <Info className="h-4 w-4 text-[#075BFF] shrink-0 mt-0.5" />
-              <p>
-                <strong>Atenção:</strong> Funcionário cadastrado não possui acesso automático ao sistema. A concessão de login é realizada separadamente por convite de acesso.
-              </p>
+            {/* Aviso e Distinção Explícita de Responsabilidade Documental */}
+            <div className="p-4 bg-blue-50/80 border border-blue-200/90 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-start gap-3 text-blue-900">
+                <ShieldCheck className="h-5 w-5 text-[#075BFF] shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="font-bold text-[#0B1739]">
+                    Cadastro para Responsabilidade Documental
+                  </p>
+                  <p className="text-[11.5px] text-slate-600 leading-relaxed max-w-2xl">
+                    Este membro será listado como responsável ou preparador ao redigir requerimentos, minutas e declarações da empresa. <strong>Cadastrar um funcionário aqui não cria acesso de login nem envia convites por acidente ao sistema</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="shrink-0 pl-8 sm:pl-0">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-white border border-blue-200 text-[#075BFF] shadow-2xs">
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>Responsável Documental</span>
+                </span>
+              </div>
             </div>
           </div>
 
@@ -866,6 +926,7 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
                 <label className="text-xs font-semibold text-slate-700">Registro profissional (quando aplicável)</label>
                 <input
                   type="text"
+                  name="professional_registry"
                   value={formData.professional_registry}
                   onChange={(e) => setFormData({ ...formData, professional_registry: e.target.value })}
                   placeholder="Ex: Registro CP nº 12345/2024, CREA 00000-D/SP, OAB/SP 000.000"
@@ -997,7 +1058,7 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
                   desc: "Visualização de relatórios financeiros e faturamento da empresa.",
                 },
               ].map((perm) => {
-                const isChecked = formData.permissions[perm.key as keyof EmployeePermissions];
+                const isChecked = Boolean(formData.permissions?.[perm.key as keyof EmployeePermissions]);
                 return (
                   <label
                     key={perm.key}
@@ -1014,7 +1075,15 @@ export function EmployeeForm({ employeeId }: EmployeeFormProps) {
                         setFormData((prev) => ({
                           ...prev,
                           permissions: {
-                            ...prev.permissions,
+                            ...(prev.permissions || {
+                              can_generate_docs: true,
+                              can_review_docs: true,
+                              can_attach_protocols: true,
+                              can_attach_issued: true,
+                              can_view_customers: true,
+                              can_view_vessels: true,
+                              can_view_billing: false,
+                            }),
                             [perm.key]: e.target.checked,
                           },
                         }));
