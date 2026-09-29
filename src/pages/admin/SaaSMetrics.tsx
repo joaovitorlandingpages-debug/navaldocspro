@@ -24,7 +24,7 @@ import { ptBR } from "date-fns/locale";
 
 export default function AdminSaaSMetrics() {
   const queryClient = useQueryClient();
-  const { profile, loading: authLoading, isGlobalAdmin, isAdmin } = useAuth();
+  const { profile, user, loading: authLoading } = useAuth();
 
   // Estados de navegação e filtros
   const [selectedPeriod, setSelectedPeriod] = useState<string>("Este mês");
@@ -39,12 +39,12 @@ export default function AdminSaaSMetrics() {
   const [adjustReason, setAdjustReason] = useState<string>("");
   const [adjustType, setAdjustType] = useState<"add" | "set">("add");
 
-  // Permissão estrita de administrador global
+  // Permissão estrita de administrador global da plataforma
+  const cleanEmail = (user?.email || profile?.email || '').toLowerCase().trim();
   const isAuthorized = 
-    isGlobalAdmin || 
-    isAdmin || 
+    cleanEmail === 'joaovitor.f0725@gmail.com' ||
+    cleanEmail === 'douglas_faresi@hotmail.com' ||
     profile?.role === 'admin_master_global' || 
-    profile?.role === 'admin_master' || 
     profile?.role === 'superadmin' ||
     (typeof window !== 'undefined' && window.localStorage.getItem('navaldocs_admin_preview') === 'true');
 
@@ -66,7 +66,6 @@ export default function AdminSaaSMetrics() {
         .select(`
           id,
           name,
-          fantasy_name,
           cnpj,
           plan,
           is_pilot,
@@ -184,9 +183,20 @@ export default function AdminSaaSMetrics() {
 
       const creditsRemaining = Math.max(0, compDocsLimit - compDocsUsed);
 
+      const isInternalAdminCompany = 
+        comp.plan === 'admin' || 
+        comp.name?.toLowerCase().includes('navaldocs') || 
+        comp.fantasy_name?.toLowerCase().includes('navaldocs') ||
+        comp.cnpj === '00.000.000/0001-00';
+
       // Situação da franquia
       let statusBadge: { label: string; color: string } = { label: "Normal", color: "bg-emerald-50 text-emerald-700 border-emerald-200" };
-      if (comp.is_pilot) {
+      let planDisplayName = plan?.name || (comp.is_pilot ? "Piloto Estratégico" : "Plano Essencial");
+
+      if (isInternalAdminCompany) {
+        statusBadge = { label: "Uso Ilimitado", color: "bg-purple-50 text-purple-700 border-purple-200" };
+        planDisplayName = "Uso ilimitado — administração da plataforma";
+      } else if (comp.is_pilot) {
         statusBadge = { label: "Piloto", color: "bg-purple-50 text-purple-700 border-purple-200" };
       } else if (maxPct >= 100) {
         statusBadge = { label: "Limite Atingido", color: "bg-rose-50 text-rose-700 border-rose-200" };
@@ -204,8 +214,9 @@ export default function AdminSaaSMetrics() {
         id: comp.id,
         name: comp.fantasy_name || comp.name || "Empresa sem nome",
         cnpj: comp.cnpj || "CNPJ não informado",
-        planName: plan?.name || (comp.is_pilot ? "Piloto Estratégico" : "Plano Essencial"),
+        planName: planDisplayName,
         isPilot: Boolean(comp.is_pilot),
+        isInternalAdmin: isInternalAdminCompany,
         docsUsed: compDocsUsed,
         docsLimit: compDocsLimit,
         docsPct,
@@ -376,6 +387,26 @@ export default function AdminSaaSMetrics() {
             <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isLoading ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
+        </div>
+      </div>
+
+      {/* Banner de Isenção Oficial de Administrador Global */}
+      <div className="bg-purple-50/70 border border-purple-200/90 rounded-2xl p-4 flex items-center justify-between gap-3 text-xs text-purple-900 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 border border-purple-200">
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm text-purple-950">Isenção Operacional de Administração da Plataforma</span>
+              <Badge className="bg-purple-100 text-purple-800 border-purple-300 text-[10px] font-bold">
+                Uso ilimitado — administração da plataforma
+              </Badge>
+            </div>
+            <p className="text-purple-700 text-xs mt-0.5">
+              Administradores globais (João Vitor & Douglas Faresi) possuem isenção no backend para testes operacionais, criação de processos e extração documental sem descontar franquias comerciais.
+            </p>
+          </div>
         </div>
       </div>
 

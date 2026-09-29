@@ -28,10 +28,10 @@ import { AdminCouponStripePanel } from '@/components/admin/AdminCouponStripePane
 
 export const Route = createFileRoute('/admin/billing')({
   validateSearch: (search: Record<string, unknown>): {
-    tab?: "plans" | "subscriptions" | "coupons";
+    tab?: "subscriptions" | "payments" | "plans" | "coupons";
     app?: string;
   } => ({
-    ...(search.tab ? { tab: search.tab as "plans" | "subscriptions" | "coupons" } : {}),
+    ...(search.tab ? { tab: search.tab as "subscriptions" | "payments" | "plans" | "coupons" } : {}),
     ...(search.app ? { app: search.app as string } : {}),
   }),
   component: AdminBillingPlansPage,
@@ -40,10 +40,10 @@ export const Route = createFileRoute('/admin/billing')({
 function AdminBillingPlansPage() {
   const searchParams = Route.useSearch();
   const queryClient = useQueryClient();
-  const { profile, loading: authLoading, isGlobalAdmin, isAdmin } = useAuth();
+  const { profile, user, loading: authLoading, isGlobalAdmin, isAdmin } = useAuth();
 
   // Estados de navegação e filtros
-  const [activeTab, setActiveTab] = useState<"plans" | "subscriptions" | "coupons">(searchParams.tab || "plans");
+  const [activeTab, setActiveTab] = useState<"subscriptions" | "payments" | "plans" | "coupons">(searchParams.tab || "subscriptions");
   const [appFilter, setAppFilter] = useState<string>(searchParams.app || "all");
 
   // Filtros de Planos
@@ -63,10 +63,15 @@ function AdminBillingPlansPage() {
   const [actionType, setActionType] = useState<"cancel_end" | "refund" | "reactivate">("cancel_end");
   const [justification, setJustification] = useState("");
 
-  // Permissão de acesso administrativo estrito
+  // Filtros de Pagamentos
+  const [paySearch, setPaySearch] = useState("");
+  const [payStatusFilter, setPayStatusFilter] = useState("all");
+
+  // Permissão de acesso administrativo estrito (somente administradores globais da plataforma)
+  const cleanEmail = (user?.email || profile?.email || '').toLowerCase().trim();
   const isAuthorized = 
-    isGlobalAdmin || 
-    isAdmin || 
+    cleanEmail === 'joaovitor.f0725@gmail.com' ||
+    cleanEmail === 'douglas_faresi@hotmail.com' ||
     profile?.role === 'admin_master_global' || 
     profile?.role === 'admin_master' || 
     profile?.role === 'superadmin' ||
@@ -111,6 +116,35 @@ function AdminBillingPlansPage() {
         `)
         .order('created_at', { ascending: false });
       if (error) throw error;
+      return data || [];
+    },
+    staleTime: 1000 * 30,
+    enabled: Boolean(isAuthorized),
+  });
+
+  // =========================================================================
+  // 3. QUERY DE PAGAMENTOS (Transações Reais de Pagamento)
+  // =========================================================================
+  const { 
+    data: payments = [], 
+    isLoading: isPaymentsLoading,
+    isError: isPaymentsError,
+    error: paymentsError,
+    refetch: refetchPayments 
+  } = useQuery({
+    queryKey: ['admin-payments-list'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('payments')
+        .select(`
+          *,
+          company:companies(id, name, fantasy_name, cnpj)
+        `)
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error("Erro payments:", error);
+        return [];
+      }
       return data || [];
     },
     staleTime: 1000 * 30,
@@ -257,6 +291,36 @@ function AdminBillingPlansPage() {
       return matchSearch && matchStatus && matchApp;
     });
   }, [subscriptions, subSearch, subStatusFilter, appFilter]);
+
+  // Lista Filtrada de Pagamentos
+  const filteredPayments = useMemo(() => {
+    return payments.filter((p: any) => {
+      const search = paySearch.toLowerCase().trim();
+      const compName = (p.company?.name || p.company?.fantasy_name || "").toLowerCase();
+      const pId = (p.id || "").toLowerCase();
+      const mpId = (p.mercado_pago_payment_id || "").toLowerCase();
+      const matchSearch = !search || compName.includes(search) || pId.includes(search) || mpId.includes(search);
+
+      const matchStatus = payStatusFilter === 'all' || p.status === payStatusFilter;
+      return matchSearch && matchStatus;
+    });
+  }, [payments, paySearch, payStatusFilter]);
+
+  const approvedPaymentsTotal = useMemo(() => {
+    return payments
+      .filter((p: any) => p.status === 'approved' || p.status === 'paid')
+      .reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
+  }, [payments]);
+
+  const pendingPaymentsTotal = useMemo(() => {
+    return payments
+      .filter((p: any) => p.status === 'pending' || p.status === 'in_process')
+      .reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
+  }, [payments]);
+
+  const rejectedPaymentsCount = useMemo(() => {
+    return payments.filter((p: any) => p.status === 'rejected' || p.status === 'failed').length;
+  }, [payments]);
 
   // Handlers de Ações
   const handleOpenEdit = (plan: AdminPlanData) => {
@@ -436,14 +500,18 @@ function AdminBillingPlansPage() {
         className="space-y-6"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/90 pb-3">
-          <TabsList className="bg-slate-100 rounded-xl p-1 w-auto inline-flex">
-            <TabsTrigger value="plans" className="text-xs font-bold rounded-lg px-5 py-2 cursor-pointer">
-              <Tag className="h-3.5 w-3.5 mr-2" />
-              Planos ({plans.length})
-            </TabsTrigger>
-            <TabsTrigger value="subscriptions" className="text-xs font-bold rounded-lg px-5 py-2 cursor-pointer">
+          <TabsList className="bg-slate-100 rounded-xl p-1 w-auto inline-flex flex-wrap">
+            <TabsTrigger value="subscriptions" className="text-xs font-bold rounded-lg px-4 py-2 cursor-pointer">
               <CreditCard className="h-3.5 w-3.5 mr-2" />
               Assinaturas ({subscriptions.length})
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="text-xs font-bold rounded-lg px-4 py-2 cursor-pointer">
+              <DollarSign className="h-3.5 w-3.5 mr-2" />
+              Pagamentos ({payments.length})
+            </TabsTrigger>
+            <TabsTrigger value="plans" className="text-xs font-bold rounded-lg px-4 py-2 cursor-pointer">
+              <Tag className="h-3.5 w-3.5 mr-2" />
+              Catálogo de Planos ({plans.length})
             </TabsTrigger>
             <TabsTrigger value="coupons" className="text-xs font-bold rounded-lg px-4 py-2 cursor-pointer">
               <Zap className="h-3.5 w-3.5 mr-2" />
@@ -1032,7 +1100,180 @@ function AdminBillingPlansPage() {
         </TabsContent>
 
         {/* ========================================================================= */}
-        {/* ABA 3: CUPONS & STRIPE                                                    */}
+        {/* ABA 3: PAGAMENTOS (Aprovados, Pendentes e Recusados)                      */}
+        {/* ========================================================================= */}
+        <TabsContent value="payments" className="space-y-4">
+          {/* Métricas de Pagamento */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card className="p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Pagamentos Aprovados
+              </span>
+              <p className="text-2xl font-extrabold text-emerald-700 mt-1">
+                R$ {approvedPaymentsTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </p>
+              <span className="text-[11px] text-slate-500 block mt-0.5">
+                {payments.filter((p: any) => p.status === 'approved' || p.status === 'paid').length} transações confirmadas
+              </span>
+            </Card>
+
+            <Card className="p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Cobranças Pendentes
+              </span>
+              <p className="text-2xl font-extrabold text-amber-700 mt-1">
+                R$ {pendingPaymentsTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </p>
+              <span className="text-[11px] text-slate-500 block mt-0.5">
+                {payments.filter((p: any) => p.status === 'pending' || p.status === 'in_process').length} aguardando compensação
+              </span>
+            </Card>
+
+            <Card className="p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Falhas & Recusas
+              </span>
+              <p className="text-2xl font-extrabold text-rose-700 mt-1">
+                {rejectedPaymentsCount}
+              </p>
+              <span className="text-[11px] text-slate-500 block mt-0.5">
+                Cartões recusados ou expirados
+              </span>
+            </Card>
+          </div>
+
+          {/* Filtros de Pagamento */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-white border border-slate-200/90 rounded-2xl shadow-2xs">
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Buscar por empresa, CNPJ ou ID..."
+                value={paySearch}
+                onChange={(e) => setPaySearch(e.target.value)}
+                className="pl-9 h-9 text-xs bg-slate-50 border-slate-200 rounded-xl"
+              />
+            </div>
+
+            <div className="w-full sm:w-auto flex items-center gap-2">
+              <Select value={payStatusFilter} onValueChange={setPayStatusFilter}>
+                <SelectTrigger className="h-9 text-xs font-semibold bg-white border-slate-200 rounded-xl w-full sm:w-[180px]">
+                  <SelectValue placeholder="Situação" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as situações</SelectItem>
+                  <SelectItem value="approved">Aprovado</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="rejected">Recusado</SelectItem>
+                  <SelectItem value="refunded">Reembolsado</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetchPayments()}
+                className="h-9 px-3 rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50"
+                title="Recarregar pagamentos"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isPaymentsLoading ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
+          </div>
+
+          {/* Tabela de Pagamentos */}
+          {isPaymentsLoading ? (
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-12 text-center text-xs text-slate-500 space-y-2">
+              <RefreshCw className="h-6 w-6 text-[#075BFF] animate-spin mx-auto" />
+              <p className="font-semibold">Carregando histórico de pagamentos...</p>
+            </div>
+          ) : filteredPayments.length === 0 ? (
+            <Card className="p-12 text-center bg-white border border-slate-200 rounded-2xl shadow-xs space-y-3">
+              <div className="w-12 h-12 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center mx-auto border">
+                <DollarSign className="h-6 w-6" />
+              </div>
+              <h3 className="text-base font-bold text-[#0B1739]">Nenhum pagamento encontrado</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                {paySearch 
+                  ? "Nenhum pagamento corresponde aos termos da busca." 
+                  : "Nenhum evento financeiro registrado com os filtros selecionados."}
+              </p>
+            </Card>
+          ) : (
+            <Card className="bg-white rounded-2xl border-slate-200/90 shadow-2xs overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="bg-slate-50/80 text-slate-400 font-bold uppercase tracking-wider text-[10px] border-b border-slate-100">
+                      <th className="px-6 py-4">Empresa</th>
+                      <th className="px-6 py-4">ID Transação / Gateway</th>
+                      <th className="px-6 py-4">Valor Bruto</th>
+                      <th className="px-6 py-4">Forma</th>
+                      <th className="px-6 py-4">Data Confirmação</th>
+                      <th className="px-6 py-4">Situação</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredPayments.map((p: any) => {
+                      const compName = p.company?.name || p.company?.fantasy_name || "Cliente sem cadastro";
+                      const cnpj = p.company?.cnpj || "";
+                      const isApproved = p.status === 'approved' || p.status === 'paid';
+                      const isPending = p.status === 'pending' || p.status === 'in_process';
+                      const isRejected = p.status === 'rejected' || p.status === 'failed';
+
+                      return (
+                        <tr key={p.id} className="hover:bg-slate-50/60 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-[#0B1739] text-sm truncate max-w-[200px]">
+                              {compName}
+                            </div>
+                            {cnpj && <div className="text-[11px] text-slate-400">{cnpj}</div>}
+                          </td>
+                          <td className="px-6 py-4 font-mono text-[11px] text-slate-600">
+                            <code>{p.mercado_pago_payment_id || p.id}</code>
+                          </td>
+                          <td className="px-6 py-4 font-bold text-[#0B1739] text-sm">
+                            R$ {Number(p.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-6 py-4 text-slate-600 capitalize">
+                            {p.payment_method || "Cartão de Crédito"}
+                          </td>
+                          <td className="px-6 py-4 text-slate-600">
+                            {p.paid_at || p.created_at ? new Date(p.paid_at || p.created_at).toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                          </td>
+                          <td className="px-6 py-4">
+                            {isApproved ? (
+                              <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] font-bold flex items-center gap-1 w-fit">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Aprovado
+                              </Badge>
+                            ) : isPending ? (
+                              <Badge className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] font-bold flex items-center gap-1 w-fit">
+                                <Clock className="h-3 w-3" />
+                                Pendente
+                              </Badge>
+                            ) : isRejected ? (
+                              <Badge className="bg-rose-50 text-rose-700 border-rose-200 text-[10px] font-bold flex items-center gap-1 w-fit">
+                                <XCircle className="h-3 w-3" />
+                                Recusado
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-slate-100 text-slate-700 border-slate-200 text-[10px] font-bold w-fit">
+                                {p.status}
+                              </Badge>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* ========================================================================= */}
+        {/* ABA 4: CUPONS & STRIPE                                                    */}
         {/* ========================================================================= */}
         <TabsContent value="coupons">
           <AdminCouponStripePanel />

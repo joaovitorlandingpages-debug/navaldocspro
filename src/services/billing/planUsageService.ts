@@ -225,10 +225,22 @@ export async function getOfficialPlanUsage(companyId: string): Promise<PlanUsage
   const percentProcesses = totalProcessLimit > 0 ? Math.min(100, Math.round((usedProcesses / totalProcessLimit) * 100)) : 0;
   const percentOcr = totalOcrLimit > 0 ? Math.min(100, Math.round((usedOcr / totalOcrLimit) * 100)) : 0;
 
+  // Checagem de isenção no backend para Administradores Globais da Plataforma
+  let isGlobalPlatformAdmin = false;
+  try {
+    const { data: authData } = await supabase.auth.getSession();
+    const currentEmail = (authData.session?.user?.email || "").toLowerCase().trim();
+    if (currentEmail === "joaovitor.f0725@gmail.com" || currentEmail === "douglas_faresi@hotmail.com") {
+      isGlobalPlatformAdmin = true;
+    }
+  } catch (_e) {
+    // Silently continue with standard quota if session cannot be determined
+  }
+
   return {
     companyId,
-    hasActivePlan: Boolean(plan),
-    planName: plan?.name || "Sem plano ativo",
+    hasActivePlan: isGlobalPlatformAdmin ? true : Boolean(plan),
+    planName: isGlobalPlatformAdmin ? "Uso ilimitado — administração da plataforma" : (plan?.name || "Sem plano ativo"),
     billingCycle,
     subscriptionStatus: sub?.status || "inactive",
     cycleStart: cycleStartIso,
@@ -237,16 +249,16 @@ export async function getOfficialPlanUsage(companyId: string): Promise<PlanUsage
     isAnnualWithMonthlyQuota: isYearly,
     processes: {
       used: usedProcesses,
-      limit: totalProcessLimit,
-      available: availableProcesses,
-      percent: percentProcesses,
+      limit: isGlobalPlatformAdmin ? 999999 : totalProcessLimit,
+      available: isGlobalPlatformAdmin ? 999999 : availableProcesses,
+      percent: isGlobalPlatformAdmin ? 0 : percentProcesses,
       extraAddons: extraProcesses,
     },
     ocr: {
       used: usedOcr,
-      limit: totalOcrLimit,
-      available: availableOcr,
-      percent: percentOcr,
+      limit: isGlobalPlatformAdmin ? 999999 : totalOcrLimit,
+      available: isGlobalPlatformAdmin ? 999999 : availableOcr,
+      percent: isGlobalPlatformAdmin ? 0 : percentOcr,
       extraAddons: extraOcr,
     },
     addonPricing: {
@@ -273,6 +285,22 @@ export async function checkActionQuota(
 
   const processesWillConsume = action.processesToCreate || 0;
   
+  // Regra de Isenção para Administradores Globais da Plataforma
+  if (usage.planName === "Uso ilimitado — administração da plataforma") {
+    return {
+      canExecute: true,
+      processesWillConsume: 0,
+      ocrWillConsume: 0,
+      currentAvailableProcesses: 999999,
+      currentAvailableOcr: 999999,
+      remainingProcessesAfterAction: 999999,
+      remainingOcrAfterAction: 999999,
+      isReusedDocumentExempt: true,
+      isManualEntryExempt: true,
+      message: "Operação autorizada: Uso ilimitado — administração da plataforma (testes e homologação).",
+    };
+  }
+
   // Regra de Isenção: Reaproveitamento de documento ou digitação manual NÃO consome leitura!
   const isReused = Boolean(action.isReusedDocument);
   const isManual = Boolean(action.isManualEntry);
@@ -347,13 +375,23 @@ export async function recordResourceConsumption(params: {
     return { success: true, deduplicated: true, id: existing.id };
   }
 
+  // Checagem de isenção de administrador global no backend
+  let isGlobalAdmin = false;
+  try {
+    const { data: authData } = await sb.auth.getSession();
+    const currentEmail = (authData.session?.user?.email || "").toLowerCase().trim();
+    if (currentEmail === "joaovitor.f0725@gmail.com" || currentEmail === "douglas_faresi@hotmail.com") {
+      isGlobalAdmin = true;
+    }
+  } catch (_e) {}
+
   // 2. Inserção no ledger oficial
   const now = new Date();
   const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const periodMonth = `${monthStr}-01`;
   const periodDay = `${monthStr}-${String(now.getDate()).padStart(2, "0")}`;
 
-  const finalAmount = (isReused || isManual) ? 0 : amount;
+  const finalAmount = (isReused || isManual || isGlobalAdmin) ? 0 : amount;
 
   const { data: inserted, error } = await sb
     .from("resource_consumption")

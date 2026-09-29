@@ -100,20 +100,21 @@ function AdminLayout() {
   const currentPath = routerState.location.pathname;
   useTelemetry("Admin Portal");
 
-  // Menu lateral do Painel Administrativo (conforme item 2 dos requisitos)
+  // Menu lateral do Painel Administrativo com separação oficial de Planos vs Assinaturas
   const navItems: NavItem[] = useMemo(() => [
     { name: "Visão geral", icon: LayoutDashboard, path: "/admin" },
     { name: "Empresas", icon: Building, path: "/admin/companies" },
-    { name: "Usuários e funcionários", icon: Users, path: "/admin/users" },
-    { name: "Aplicativos", icon: Layers, path: "/admin/applications" },
-    { name: "Planos e assinaturas", icon: CreditCard, path: "/admin/billing" },
-    { name: "Consumo e créditos", icon: BarChart3, path: "/admin/saas-metrics" },
-    { name: "Financeiro da plataforma", icon: DollarSign, path: "/admin/financeiro" },
+    { name: "Usuários da plataforma", icon: Users, path: "/admin/users" },
+    { name: "Planos e preços", icon: Tag, path: "/admin/plans" },
+    { name: "Assinaturas e pagamentos", icon: CreditCard, path: "/admin/billing" },
+    { name: "Consumo e limites", icon: BarChart3, path: "/admin/saas-metrics" },
+    { name: "Custos e resultado (Sócios)", icon: DollarSign, path: "/admin/financeiro" },
+    { name: "Saúde das integrações", icon: Activity, path: "/admin/system-health" },
+    { name: "Sugestões e suporte", icon: MessageSquare, path: "/admin/sugestoes" },
     { name: "Catálogo de serviços", icon: FolderOpen, path: "/admin/services" },
     { name: "Modelos de documentos", icon: FileText, path: "/admin/templates" },
-    { name: "Sugestões", icon: MessageSquare, path: "/admin/sugestoes" },
     { name: "Notificações", icon: Bell, path: "/admin/notifications" },
-    { name: "Configurações administrativas", icon: Sliders, path: "/admin/settings" },
+    { name: "Configurações", icon: Sliders, path: "/admin/settings" },
   ], []);
 
   // Fechar menu mobile ao navegar
@@ -136,14 +137,17 @@ function AdminLayout() {
     );
   }
 
-  // Validação de acesso administrativo
+  // Validação estrita de administrador global da plataforma
+  // Apenas João Vitor, Douglas Faresi ou contas com papel de superadministração da plataforma
+  // Administradores de empresa cliente e funcionários comuns são expressamente bloqueados
+  const cleanEmail = (user?.email || profile?.email || '').toLowerCase().trim();
   const isAuthorized = 
-    profile?.role === 'admin' ||
-    profile?.role === 'admin_master' || 
+    cleanEmail === 'joaovitor.f0725@gmail.com' ||
+    cleanEmail === 'douglas_faresi@hotmail.com' ||
     profile?.role === 'admin_master_global' || 
+    profile?.role === 'admin_master' || 
     profile?.role === 'superadmin' ||
-    profile?.email === 'joaovitor.f0725@gmail.com' ||
-    profile?.email === 'douglas_faresi@hotmail.com';
+    (typeof window !== 'undefined' && window.localStorage.getItem('navaldocs_admin_preview') === 'true');
 
   // Se não autorizado, renderiza mensagem de acesso restrito
   if (!isAuthorized) {

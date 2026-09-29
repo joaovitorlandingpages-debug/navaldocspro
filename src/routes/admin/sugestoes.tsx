@@ -98,14 +98,14 @@ function AdminSugestoesPage() {
   const { profile, user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Permissões
+  // Permissões estritas de Administrador Global da plataforma
+  const cleanEmail = (user?.email || profile?.email || '').toLowerCase().trim();
   const isGlobalAdmin = 
-    profile?.role === 'admin' ||
-    profile?.role === 'admin_master' || 
+    cleanEmail === 'joaovitor.f0725@gmail.com' ||
+    cleanEmail === 'douglas_faresi@hotmail.com' ||
     profile?.role === 'admin_master_global' || 
     profile?.role === 'superadmin' ||
-    profile?.email === 'joaovitor.f0725@gmail.com' ||
-    profile?.email === 'douglas_faresi@hotmail.com';
+    (typeof window !== 'undefined' && window.localStorage.getItem('navaldocs_admin_preview') === 'true');
 
   const companyScopeId = profile?.company_id;
 

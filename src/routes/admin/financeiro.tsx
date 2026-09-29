@@ -276,12 +276,12 @@ function AdminFinanceiroPage() {
   const { profile, user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Permissão financeira estrita (Somente os administradores/sócios com papel global ou permissão financeira)
+  // Permissão financeira estrita: Exclusiva aos dois sócios e administradores globais
+  const cleanEmail = (user?.email || profile?.email || '').toLowerCase().trim();
   const isAuthorized = 
+    cleanEmail === 'joaovitor.f0725@gmail.com' ||
+    cleanEmail === 'douglas_faresi@hotmail.com' ||
     profile?.role === 'admin_master_global' || 
-    profile?.role === 'superadmin' || 
-    profile?.role === 'admin_master' ||
-    profile?.role === 'admin' ||
     (typeof window !== 'undefined' && window.localStorage.getItem('navaldocs_admin_preview') === 'true');
 
   // Competência Selecionada (Padrão: Mês Atual)
@@ -571,11 +571,11 @@ function AdminFinanceiroPage() {
           </div>
         </Card>
 
-        {/* Card 2: Parcela Sócio 1 (50%) */}
+        {/* Card 2: Simulação Sócio: João Vitor (50%) */}
         <Card className="p-5 rounded-2xl border-emerald-200/90 shadow-2xs bg-emerald-50/40 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
-              Parcela Sócio 1 (50%)
+              Simulação Sócio: João Vitor
             </span>
             <span className="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-md">
               50,0%
@@ -587,16 +587,16 @@ function AdminFinanceiroPage() {
           </p>
 
           <div className="pt-2 border-t border-emerald-200/60 flex items-center justify-between text-[11px] text-emerald-800">
-            <span>Disponível para apuração</span>
-            <span className="font-semibold">Sem débito automático</span>
+            <span>Simulação interna pós-despesas</span>
+            <span className="font-semibold text-[10px]">Sem débito/transferência automática</span>
           </div>
         </Card>
 
-        {/* Card 3: Parcela Sócio 2 (50%) */}
+        {/* Card 3: Simulação Sócio: Douglas Faresi (50%) */}
         <Card className="p-5 rounded-2xl border-emerald-200/90 shadow-2xs bg-emerald-50/40 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
-              Parcela Sócio 2 (50%)
+              Simulação Sócio: Douglas Faresi
             </span>
             <span className="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-md">
               50,0%
@@ -608,8 +608,8 @@ function AdminFinanceiroPage() {
           </p>
 
           <div className="pt-2 border-t border-emerald-200/60 flex items-center justify-between text-[11px] text-emerald-800">
-            <span>Disponível para apuração</span>
-            <span className="font-semibold">Sem débito automático</span>
+            <span>Simulação interna pós-despesas</span>
+            <span className="font-semibold text-[10px]">Sem débito/transferência automática</span>
           </div>
         </Card>
       </div>
