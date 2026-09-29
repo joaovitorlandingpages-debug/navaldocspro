@@ -888,6 +888,8 @@ function NovoClientePage() {
         isOpen={isDocModalOpen}
         onClose={() => setIsDocModalOpen(false)}
         companyId={profile?.company_id || null}
+        userId={profile?.id || undefined}
+        existingCustomer={formData.cpf || formData.cnpj ? { cpf_cnpj: formData.cpf || formData.cnpj, name: formData.nome || formData.razaoSocial } : null}
         onDataExtracted={handleDataExtracted}
       />
 

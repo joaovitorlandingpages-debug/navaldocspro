@@ -23,6 +23,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { safeString } from "@/utils/safe-string";
 import { VesselEditModal } from "@/components/vessels/VesselEditModal";
 import { toast } from "sonner";
+import { Sparkles } from "lucide-react";
+import { VesselDocumentUploadModal, ExtractedVesselData, UploadedVesselFile } from "@/components/vessels/VesselDocumentUploadModal";
 
 export const Route = createFileRoute("/vessels/$id")({
   validateSearch: (search: Record<string, unknown>): {
@@ -92,8 +94,9 @@ function VesselDetailsPage() {
   const [serviceSearch, setServiceSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Modal de edição
+  // Modal de edição e upload
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // 1. Carregar Embarcação e Cliente Vinculado
   const loadVesselData = useCallback(async () => {
@@ -137,6 +140,62 @@ function VesselDetailsPage() {
       setIsLoadingVessel(false);
     }
   }, [companyId, id]);
+
+  const handleVesselExtracted = async (extracted: ExtractedVesselData, files: UploadedVesselFile[]) => {
+    if (!vessel?.id || !companyId) return;
+
+    const updates: Record<string, any> = {};
+    if (extracted.name && extracted.name !== vessel.name) updates.name = extracted.name;
+    if (extracted.registration_number && extracted.registration_number !== vessel.registration_number) updates.registration_number = extracted.registration_number;
+    if (extracted.vessel_type && extracted.vessel_type !== vessel.vessel_type) updates.vessel_type = extracted.vessel_type;
+    if (extracted.category && extracted.category !== vessel.category) updates.category = extracted.category;
+    if (extracted.construction_year && extracted.construction_year !== vessel.construction_year) updates.construction_year = extracted.construction_year;
+    if (extracted.hull_material && extracted.hull_material !== vessel.material) updates.material = extracted.hull_material;
+    if (extracted.length && extracted.length !== vessel.length) updates.length = extracted.length;
+    if (extracted.boca && extracted.boca !== vessel.boca) updates.boca = extracted.boca;
+    if (extracted.pontal && extracted.pontal !== vessel.pontal) updates.pontal = extracted.pontal;
+    if (extracted.gross_tonnage && extracted.gross_tonnage !== vessel.gross_tonnage) updates.gross_tonnage = extracted.gross_tonnage;
+    if (extracted.capacity && extracted.capacity !== vessel.capacity) updates.capacity = extracted.capacity;
+    if (extracted.engine_power && extracted.engine_power !== vessel.engine_power) updates.engine_power = extracted.engine_power;
+    if (extracted.engine_serial_number && extracted.engine_serial_number !== vessel.engine_serial_number) updates.engine_serial_number = extracted.engine_serial_number;
+
+    try {
+      if (Object.keys(updates).length > 0) {
+        const { error } = await supabase
+          .from("vessels")
+          .update(updates)
+          .eq("id", vessel.id)
+          .eq("company_id", companyId);
+        if (error) throw error;
+        toast.success("Dados da embarcação atualizados com sucesso via documento!");
+      } else {
+        toast.info("Documento conferido. Nenhuma alteração cadastral necessária.");
+      }
+
+      if (files.length > 0 && customer?.id) {
+        for (const f of files) {
+          try {
+            await supabase.from("customer_documents").insert({
+              customer_id: customer.id,
+              company_id: companyId,
+              file_name: f.name,
+              file_path: f.path || "",
+              file_type: f.file?.type || "application/pdf",
+              file_size: f.size || 0,
+            });
+          } catch (docErr) {
+            console.warn("Erro ao vincular documento da embarcação:", docErr);
+          }
+        }
+        toast.success("Documento anexado ao histórico do cliente/embarcação!");
+      }
+
+      await loadVesselData();
+    } catch (err: any) {
+      console.error("Erro ao aplicar dados do documento na embarcação:", err);
+      toast.error("Erro ao atualizar embarcação: " + (err.message || "Erro desconhecido"));
+    }
+  };
 
   // 2. Carregar Processos / Serviços Vinculados a esta Embarcação
   const loadVesselProcesses = useCallback(async () => {
@@ -399,14 +458,24 @@ function VesselDetailsPage() {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsEditModalOpen(true)}
-          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[#0B1739] text-xs font-semibold shadow-2xs hover:border-slate-300 transition-all shrink-0 cursor-pointer self-start"
-        >
-          <Pencil className="h-3.5 w-3.5 text-slate-500" />
-          <span>Editar embarcação</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsUploadModalOpen(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-[#075BFF] text-xs font-semibold shadow-2xs transition-all shrink-0 cursor-pointer self-start"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-[#075BFF]" />
+            <span>Anexar doc / IA</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsEditModalOpen(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[#0B1739] text-xs font-semibold shadow-2xs hover:border-slate-300 transition-all shrink-0 cursor-pointer self-start"
+          >
+            <Pencil className="h-3.5 w-3.5 text-slate-500" />
+            <span>Editar embarcação</span>
+          </button>
+        </div>
       </div>
 
       {/* 3. RESUMO DA EMBARCAÇÃO (4 COLUNAS) */}
@@ -790,6 +859,21 @@ function VesselDetailsPage() {
             setVessel(updatedVessel);
             setIsEditModalOpen(false);
             toast.success("Embarcação atualizada com sucesso!");
+          }}
+        />
+      )}
+
+      {/* MODAL DE UPLOAD / LEITURA DE DOCUMENTO DA EMBARCAÇÃO */}
+      {isUploadModalOpen && (
+        <VesselDocumentUploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          companyId={companyId || null}
+          userId={profile?.id}
+          existingVessel={vessel}
+          onDataExtracted={(data, files) => {
+            handleVesselExtracted(data, files);
+            setIsUploadModalOpen(false);
           }}
         />
       )}

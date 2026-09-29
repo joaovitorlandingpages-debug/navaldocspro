@@ -1089,6 +1089,8 @@ function NovaEmbarcacaoPage() {
         isOpen={isDocModalOpen}
         onClose={() => setIsDocModalOpen(false)}
         companyId={companyId || null}
+        userId={profile?.id || undefined}
+        existingVessel={formData.registration_number ? { registration_number: formData.registration_number, name: formData.name } : null}
         onDataExtracted={handleDataExtracted}
       />
 

@@ -1,9 +1,12 @@
 import React, { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { UploadCloud, FileText, X, CheckCircle2, AlertCircle, Loader2, Sparkles, FileUp, Info } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { UploadCloud, FileText, X, CheckCircle2, AlertCircle, Loader2, Sparkles, FileUp, Info, Ship } from "lucide-react";
 import { toast } from "sonner";
 import { validateUpload, MAX_ATTACHMENT_BYTES } from "@/lib/storage";
+import { processDocumentForReview } from "@/services/ocr/smartDocumentService";
+import { DocumentReviewSplitModal } from "@/components/documents/DocumentReviewSplitModal";
+import { ExtractedDocumentReview } from "@/services/ocr/documentOcrTypes";
 
 export interface ExtractedVesselData {
   name?: string;
@@ -28,6 +31,7 @@ export interface ExtractedVesselData {
   navigation_area?: string;
   identified_owner_name?: string;
   identified_owner_doc?: string;
+  rawText?: string;
 }
 
 export interface UploadedVesselFile {
@@ -42,13 +46,24 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   companyId: string | null;
+  userId?: string;
+  existingVessel?: Record<string, any> | null;
   onDataExtracted: (data: ExtractedVesselData, files: UploadedVesselFile[]) => void;
 }
 
-export function VesselDocumentUploadModal({ isOpen, onClose, companyId, onDataExtracted }: Props) {
+export function VesselDocumentUploadModal({ 
+  isOpen, 
+  onClose, 
+  companyId, 
+  userId,
+  existingVessel,
+  onDataExtracted 
+}: Props) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStage, setProcessingStage] = useState<string>("");
+  const [reviewData, setReviewData] = useState<ExtractedDocumentReview | null>(null);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFilesAdded = (files: FileList | null) => {
@@ -90,269 +105,233 @@ export function VesselDocumentUploadModal({ isOpen, onClose, companyId, onDataEx
       return;
     }
 
-    setIsProcessing(true);
-    setProcessingStage("Enviando arquivos...");
+    if (!companyId) {
+      toast.error("Empresa não identificada. Recarregue a página.");
+      return;
+    }
 
-    const uploadedRecords: UploadedVesselFile[] = [];
-    const extracted: ExtractedVesselData = {};
+    setIsProcessing(true);
+    setProcessingStage("Iniciando leitura inteligente de documento náutico...");
 
     try {
-      for (let i = 0; i < selectedFiles.length; i++) {
-        const file = selectedFiles[i];
-        setProcessingStage(`Enviando ${file.name} (${i + 1}/${selectedFiles.length})...`);
+      const primaryFile = selectedFiles[0];
 
-        const fileExt = file.name.split(".").pop()?.toLowerCase() || "pdf";
-        const randomId = crypto.randomUUID();
-        const filePath = `${companyId || "general"}/vessel-docs/${randomId}.${fileExt}`;
+      const review = await processDocumentForReview({
+        file: primaryFile,
+        companyId,
+        userId,
+        targetEntity: "vessel",
+        existingData: existingVessel,
+        onProgress: (stage) => setProcessingStage(stage),
+      });
 
-        // 1. Upload para o bucket
-        const { error: uploadErr } = await supabase.storage
-          .from("customer-documents")
-          .upload(filePath, file, { contentType: file.type });
-
-        if (uploadErr) {
-          console.warn("Storage upload warn:", uploadErr);
-        }
-
-        uploadedRecords.push({
-          file,
-          id: randomId,
-          path: filePath,
-          name: file.name,
-          size: file.size,
-        });
-
-        // 2. OCR Trigger
-        if (companyId) {
-          setProcessingStage(`Analisando ${file.name} com OCR náutico...`);
-          try {
-            const { data: fileData } = await supabase
-              .from("uploaded_files")
-              .insert({
-                company_id: companyId,
-                file_name: file.name,
-                file_url: filePath,
-                category: "vessel_documents",
-                file_type: file.type,
-                file_size: file.size,
-                status: "pending",
-              })
-              .select()
-              .single();
-
-            if (fileData?.id) {
-              const { data: jobData } = await supabase
-                .from("ocr_jobs")
-                .insert({
-                  company_id: companyId,
-                  file_id: fileData.id,
-                  status: "pending",
-                })
-                .select()
-                .single();
-
-              if (jobData?.id) {
-                await supabase.functions.invoke("process-ocr", {
-                  body: { jobId: jobData.id },
-                });
-
-                // Polling com timeout
-                for (let attempt = 0; attempt < 4; attempt++) {
-                  await new Promise((r) => setTimeout(r, 1500));
-                  const { data: job } = await supabase
-                    .from("ocr_jobs")
-                    .select("*")
-                    .eq("id", jobData.id)
-                    .single();
-
-                  if (job?.status === "completed" && job.extracted_data) {
-                    const v = job.extracted_data.vessel || job.extracted_data;
-                    if (v.nome || v.name) extracted.name = v.nome || v.name;
-                    if (v.numero_inscricao || v.inscricao || v.tie_number) {
-                      extracted.registration_number = v.numero_inscricao || v.inscricao || v.tie_number;
-                    }
-                    if (v.tipo || v.vessel_type) extracted.vessel_type = v.tipo || v.vessel_type;
-                    if (v.categoria || v.category) extracted.category = v.categoria || v.category;
-                    if (v.ano_construcao || v.year) extracted.construction_year = String(v.ano_construcao || v.year);
-                    if (v.material || v.material_casco) extracted.hull_material = v.material || v.material_casco;
-                    if (v.comprimento || v.length) extracted.length = String(v.comprimento || v.length);
-                    if (v.boca) extracted.boca = String(v.boca);
-                    if (v.pontal) extracted.pontal = String(v.pontal);
-                    if (v.chassi || v.hin || v.hull_id) extracted.hull_identifier = v.chassi || v.hin || v.hull_id;
-                    if (v.potencia_motor || v.engine_power) extracted.engine_power = String(v.potencia_motor || v.engine_power);
-                    if (v.serie_motor || v.engine_serial) extracted.engine_serial_number = v.serie_motor || v.engine_serial;
-                    if (v.capacidade || v.lotacao) extracted.capacity = String(v.capacidade || v.lotacao);
-                    if (v.area_navegacao) extracted.navigation_area = v.area_navegacao;
-                    if (v.proprietario || v.owner_name) extracted.identified_owner_name = v.proprietario || v.owner_name;
-                    if (v.cpf_proprietario || v.cnpj_proprietario || v.owner_doc) {
-                      extracted.identified_owner_doc = v.cpf_proprietario || v.cnpj_proprietario || v.owner_doc;
-                    }
-                    break;
-                  }
-                }
-              }
-            }
-          } catch (ocrErr) {
-            console.warn("OCR non-blocking error:", ocrErr);
-          }
-        }
-      }
-
-      setProcessingStage("Finalizando preenchimento...");
-      toast.success(
-        Object.keys(extracted).length > 0
-          ? "Dados da embarcação extraídos com sucesso! Revise os campos."
-          : "Documentos anexados com sucesso. Preencha os dados complementares manualmente."
-      );
-
-      onDataExtracted(extracted, uploadedRecords);
-      setSelectedFiles([]);
-      onClose();
-    } catch (err: any) {
-      console.error("Erro na leitura de documentos da embarcação:", err);
-      toast.error("Não foi possível processar todos os documentos automaticamente. Você pode continuar preenchendo manualmente.");
-      onDataExtracted(extracted, uploadedRecords);
-      onClose();
-    } finally {
       setIsProcessing(false);
-      setProcessingStage("");
+      setReviewData(review);
+      setIsReviewOpen(true);
+    } catch (err: any) {
+      setIsProcessing(false);
+      console.error("[VesselUpload] Erro OCR:", err);
+      toast.error(
+        err.message?.includes("não suportado")
+          ? err.message
+          : "Não foi possível concluir a leitura automática do documento náutico. Prossiga com o preenchimento manual.",
+        { duration: 5000 }
+      );
     }
   };
 
+  const handleReviewConfirmed = (confirmedFields: Record<string, string>, review: ExtractedDocumentReview) => {
+    const extracted: ExtractedVesselData = {
+      name: confirmedFields.name,
+      registration_number: confirmedFields.registration_number,
+      vessel_type: confirmedFields.vessel_type,
+      hull_material: confirmedFields.hull_material,
+      construction_year: confirmedFields.construction_year,
+      length: confirmedFields.length,
+      boca: confirmedFields.boca,
+      pontal: confirmedFields.pontal,
+      capacity: confirmedFields.capacity,
+      gross_tonnage: confirmedFields.gross_tonnage,
+      navigation_area: confirmedFields.navigation_area,
+      engine_brand: confirmedFields.engine_brand,
+      engine_power: confirmedFields.engine_power,
+      engine_serial_number: confirmedFields.engine_serial_number,
+      identified_owner_name: confirmedFields.identified_owner_name,
+      identified_owner_doc: confirmedFields.identified_owner_doc,
+      rawText: review.rawText,
+    };
+
+    const uploadedRecords: UploadedVesselFile[] = selectedFiles.map((f, i) => ({
+      file: f,
+      id: review.fileId || crypto.randomUUID(),
+      path: review.fileUrl,
+      name: f.name,
+      size: f.size,
+    }));
+
+    onDataExtracted(extracted, uploadedRecords);
+    setSelectedFiles([]);
+    setIsReviewOpen(false);
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !isProcessing && !open && onClose()}>
-      <DialogContent className="max-w-xl p-6 sm:p-8 rounded-2xl bg-white border border-slate-150 shadow-xl animate-in fade-in-50 zoom-in-95 duration-200">
-        <DialogHeader className="text-left pb-2">
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#075BFF] uppercase tracking-wider mb-1">
-            <Sparkles className="h-4 w-4" />
-            <span>Extração Inteligente de Embarcação</span>
-          </div>
-          <DialogTitle className="text-2xl font-bold text-[#0B1739] tracking-tight">
-            Preencher com documentos
-          </DialogTitle>
-          <DialogDescription className="text-sm text-slate-500 mt-1 leading-relaxed">
-            Anexe o TIE, TIEM, Termo Provisório, Nota Fiscal ou Memorial Descritivo para identificar os dados da embarcação.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen && !isReviewOpen} onOpenChange={(open) => !open && !isProcessing && onClose()}>
+        <DialogContent className="max-w-xl bg-white rounded-2xl p-6 shadow-xl border-slate-200">
+          <DialogHeader className="border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
+                <Ship className="h-4 w-4" />
+              </div>
+              <DialogTitle className="text-lg font-bold text-[#0B1739]">
+                Leitura Automática de Documentos Náuticos
+              </DialogTitle>
+            </div>
+            <DialogDescription className="text-xs text-slate-500 mt-1">
+              Anexe TIE, TIEM, Provisório/BSADE ou Recibo de Compra e Venda (PDF, PNG, JPG até 20MB). A IA sugerirá os dados náuticos para você conferir antes de salvar.
+            </DialogDescription>
+          </DialogHeader>
 
-        {/* Dropzone */}
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          onDragOver={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleFilesAdded(e.dataTransfer.files);
-          }}
-          className="border-2 border-dashed border-blue-200 hover:border-[#075BFF] bg-[#F8FAFF] rounded-2xl p-8 text-center cursor-pointer transition-colors group mt-2"
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept=".pdf,.png,.jpg,.jpeg"
-            onChange={(e) => handleFilesAdded(e.target.files)}
-            className="hidden"
-          />
-          <div className="w-14 h-14 rounded-2xl bg-[#EEF4FF] text-[#075BFF] flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform">
-            <FileUp className="h-7 w-7" />
-          </div>
-          <p className="text-sm font-bold text-[#0B1739]">
-            Clique para selecionar ou arraste os documentos da embarcação
-          </p>
-          <p className="text-xs text-slate-400 mt-1">
-            Suporta PDF, JPG ou PNG (até 15MB por arquivo)
-          </p>
-        </div>
+          {/* Área de Dropzone */}
+          <div className="space-y-4 py-3">
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleFilesAdded(e.dataTransfer.files);
+              }}
+              className="border-2 border-dashed border-slate-200 hover:border-sky-500 hover:bg-sky-50/20 rounded-2xl p-6 text-center cursor-pointer transition-all space-y-2 group"
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.png,.jpg,.jpeg,image/png,image/jpeg,application/pdf"
+                className="hidden"
+                onChange={(e) => handleFilesAdded(e.target.files)}
+              />
+              <div className="h-12 w-12 rounded-xl bg-slate-100 group-hover:bg-sky-100 text-slate-500 group-hover:text-sky-600 flex items-center justify-center mx-auto transition-colors">
+                <UploadCloud className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-[#0B1739]">
+                  Clique para selecionar ou arraste o arquivo do barco aqui
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Suporta TIE, TIEM, Provisório, Termo de Entrega ou NF (PDF, JPG, PNG até 20MB)
+                </p>
+              </div>
+            </div>
 
-        {/* Lista de Arquivos */}
-        {selectedFiles.length > 0 && (
-          <div className="mt-4 space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-            <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-              Arquivos selecionados ({selectedFiles.length})
-            </p>
-            {selectedFiles.map((file, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-xs"
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <FileText className="h-4 w-4 text-[#075BFF] shrink-0" />
-                  <span className="font-semibold text-slate-800 truncate max-w-[280px]">
-                    {file.name}
+            {/* Lista de Arquivos Selecionados */}
+            {selectedFiles.length > 0 && (
+              <div className="space-y-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                  Documentos Selecionados ({selectedFiles.length})
+                </span>
+                <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
+                  {selectedFiles.map((f, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileText className="h-4 w-4 text-sky-600 shrink-0" />
+                        <span className="font-medium text-slate-700 truncate" title={f.name}>
+                          {f.name}
+                        </span>
+                        <span className="text-[10px] text-slate-400 shrink-0">
+                          ({formatFileSize(f.size)})
+                        </span>
+                      </div>
+                      {!isProcessing && (
+                        <button
+                          type="button"
+                          onClick={() => removeFile(i)}
+                          className="text-slate-400 hover:text-rose-500 p-1 rounded transition-colors"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Progresso de Processamento */}
+            {isProcessing && (
+              <div className="p-4 bg-sky-50/60 border border-sky-200 rounded-xl flex items-center gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-sky-600 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <span className="text-xs font-bold text-[#0B1739] block">
+                    Processando documento náutico...
                   </span>
-                  <span className="text-[11px] text-slate-400 shrink-0">
-                    ({formatFileSize(file.size)})
+                  <span className="text-[11px] text-slate-600 block truncate">
+                    {processingStage}
                   </span>
                 </div>
-                {!isProcessing && (
-                  <button
-                    type="button"
-                    onClick={() => removeFile(idx)}
-                    className="p-1 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
               </div>
-            ))}
-          </div>
-        )}
+            )}
 
-        {/* Loading */}
-        {isProcessing && (
-          <div className="mt-4 p-4 rounded-xl bg-blue-50 border border-blue-100 flex items-center gap-3">
-            <Loader2 className="h-5 w-5 text-[#075BFF] animate-spin shrink-0" />
-            <div className="text-xs">
-              <p className="font-bold text-[#0B1739]">Lendo documentos náuticos</p>
-              <p className="text-slate-500 mt-0.5">{processingStage}</p>
+            {/* Aviso Informativo */}
+            <div className="flex items-start gap-2 text-[11px] text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100">
+              <Info className="h-3.5 w-3.5 text-sky-500 shrink-0 mt-0.5" />
+              <span>
+                Você poderá conferir cada dado sugerido lado a lado com a imagem do documento antes de salvar. Preenchimento manual permanece 100% disponível.
+              </span>
             </div>
           </div>
-        )}
 
-        {/* Nota sobre consumo de franquia OCR */}
-        <div className="flex items-start gap-2 text-[11px] text-slate-500 mt-4 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
-          <Info className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />
-          <span>
-            Cada leitura de documento consome <strong>1 unidade</strong> da franquia OCR do seu plano.
-            Preenchimento manual, correção de campos e reutilização de documentos já salvos{" "}
-            <strong>não consomem</strong> leituras.
-          </span>
-        </div>
+          {/* Rodapé de Ações */}
+          <div className="border-t border-slate-100 pt-4 flex items-center justify-between gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isProcessing}
+              onClick={onClose}
+              className="text-xs font-semibold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-600"
+            >
+              Preencher tudo manualmente
+            </Button>
 
-        {/* Rodapé */}
-        <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
-          <button
-            type="button"
-            disabled={isProcessing}
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-colors disabled:opacity-50"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            disabled={isProcessing || selectedFiles.length === 0}
-            onClick={handleProcessDocuments}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Processando...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4" />
-                <span>Ler documentos</span>
-              </>
-            )}
-          </button>
-        </div>
-      </DialogContent>
-    </Dialog>
+            <Button
+              type="button"
+              size="sm"
+              disabled={selectedFiles.length === 0 || isProcessing}
+              onClick={handleProcessDocuments}
+              className="text-xs font-bold rounded-xl bg-sky-600 hover:bg-sky-700 text-white gap-1.5 shadow-sm cursor-pointer"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Analisando...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Iniciar Leitura Automática</span>
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* TELA DE CONFERÊNCIA OBRIGATÓRIA LADO A LADO */}
+      <DocumentReviewSplitModal
+        isOpen={isReviewOpen}
+        onClose={() => setIsReviewOpen(false)}
+        review={reviewData}
+        onConfirm={handleReviewConfirmed}
+      />
+    </>
   );
 }

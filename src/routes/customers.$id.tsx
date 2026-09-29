@@ -27,6 +27,8 @@ import { maskPhone } from "@/lib/br-format";
 import { CustomerEditModal } from "@/components/customers/CustomerEditModal";
 import { openStoredFile, downloadStoredFile } from "@/utils/file-preview";
 import { toast } from "sonner";
+import { Sparkles } from "lucide-react";
+import { CustomerDocumentUploadModal, ExtractedCustomerData, UploadedCustomerFile } from "@/components/customers/CustomerDocumentUploadModal";
 
 export const Route = createFileRoute("/customers/$id")({
   validateSearch: (search: Record<string, unknown>): {
@@ -97,6 +99,7 @@ function CustomerDetailsPage() {
 
   // Modal de edição
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // 1. Carregar Dados do Cliente
   const loadCustomer = useCallback(async () => {
@@ -266,13 +269,92 @@ function CustomerDetailsPage() {
         };
       });
 
-      setDocuments(list);
+      // Buscar também documentos anexados / enviados via OCR para este cliente
+      const { data: custDocs } = await supabase
+        .from("customer_documents")
+        .select("*")
+        .eq("company_id", companyId)
+        .eq("customer_id", id)
+        .order("created_at", { ascending: false });
+
+      const uploadedList = (custDocs || []).map((cd: any) => ({
+        id: cd.id,
+        name: cd.file_name || "Documento anexado",
+        vessel_id: null,
+        vesselName: null,
+        process_id: null,
+        serviceName: "Documento Anexado (OCR/Manual)",
+        file_url: cd.file_path,
+        category: "customer-documents",
+        created_at: cd.created_at,
+      }));
+
+      // Unir documentos gerados e anexados, ordenados por data
+      const combinedDocs = [...uploadedList, ...list].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setDocuments(combinedDocs);
     } catch (err) {
-      console.error("Erro ao carregar documentos gerados:", err);
+      console.error("Erro ao carregar documentos:", err);
     } finally {
       setIsLoadingDocs(false);
     }
   }, [companyId, id]);
+
+  const handleCustomerExtracted = async (extracted: ExtractedCustomerData, files: UploadedCustomerFile[]) => {
+    if (!customer?.id || !companyId) return;
+
+    const updates: Record<string, any> = {};
+    if (extracted.name && extracted.name !== customer.name) updates.name = extracted.name;
+    if (extracted.cpf_cnpj && extracted.cpf_cnpj !== customer.cpf_cnpj) updates.cpf_cnpj = extracted.cpf_cnpj;
+    if (extracted.rg && extracted.rg !== customer.rg) updates.rg = extracted.rg;
+    if (extracted.birth_date && extracted.birth_date !== customer.birth_date) updates.birth_date = extracted.birth_date;
+    if (extracted.email && extracted.email !== customer.email) updates.email = extracted.email;
+    if (extracted.phone && extracted.phone !== customer.phone) updates.phone = extracted.phone;
+    if (extracted.cep && extracted.cep !== customer.cep) updates.cep = extracted.cep;
+    if (extracted.cidade && extracted.cidade !== customer.city) updates.city = extracted.cidade;
+    if (extracted.uf && extracted.uf !== customer.state) updates.state = extracted.uf;
+    if (extracted.logradouro && extracted.logradouro !== customer.address) updates.address = extracted.logradouro;
+
+    try {
+      if (Object.keys(updates).length > 0) {
+        const { error } = await supabase
+          .from("customers")
+          .update(updates)
+          .eq("id", customer.id)
+          .eq("company_id", companyId);
+        if (error) throw error;
+        toast.success("Dados do cliente atualizados com base no documento conferido!");
+      } else {
+        toast.info("Documento conferido. Nenhum campo cadastral precisou de atualização.");
+      }
+
+      if (files.length > 0) {
+        for (const f of files) {
+          try {
+            await supabase.from("customer_documents").insert({
+              customer_id: customer.id,
+              company_id: companyId,
+              file_name: f.name,
+              file_path: f.path || "",
+              file_type: f.file?.type || "application/pdf",
+              file_size: f.size || 0,
+            });
+          } catch (docErr) {
+            console.warn("Erro ao vincular documento anexado:", docErr);
+          }
+        }
+        toast.success("Documento salvo no histórico do cliente!");
+      }
+
+      await loadCustomer();
+      await loadGeneratedDocuments();
+    } catch (err: any) {
+      console.error("Erro ao aplicar dados do documento:", err);
+      toast.error("Erro ao atualizar cliente: " + (err.message || "Erro desconhecido"));
+    }
+  };
 
   useEffect(() => {
     loadCustomer();
@@ -411,14 +493,24 @@ function CustomerDetailsPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsEditModalOpen(true)}
-          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[#0B1739] text-xs font-semibold shadow-2xs hover:border-slate-300 transition-all shrink-0 cursor-pointer"
-        >
-          <Pencil className="h-3.5 w-3.5 text-slate-500" />
-          <span>Editar cliente</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsUploadModalOpen(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-[#075BFF] text-xs font-semibold shadow-2xs transition-all shrink-0 cursor-pointer"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-[#075BFF]" />
+            <span>Anexar doc / IA</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsEditModalOpen(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[#0B1739] text-xs font-semibold shadow-2xs hover:border-slate-300 transition-all shrink-0 cursor-pointer"
+          >
+            <Pencil className="h-3.5 w-3.5 text-slate-500" />
+            <span>Editar cliente</span>
+          </button>
+        </div>
       </div>
 
       {/* 3. RESUMO: CPF/CNPJ, E-MAIL E TELEFONE */}
@@ -783,6 +875,21 @@ function CustomerDetailsPage() {
             loadCustomer();
             setIsEditModalOpen(false);
             toast.success("Cliente atualizado com sucesso!");
+          }}
+        />
+      )}
+
+      {/* MODAL DE UPLOAD / LEITURA DE DOCUMENTO COM IA */}
+      {isUploadModalOpen && (
+        <CustomerDocumentUploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          companyId={companyId || null}
+          userId={profile?.id}
+          existingCustomer={customer}
+          onDataExtracted={(data, files) => {
+            handleCustomerExtracted(data, files);
+            setIsUploadModalOpen(false);
           }}
         />
       )}
