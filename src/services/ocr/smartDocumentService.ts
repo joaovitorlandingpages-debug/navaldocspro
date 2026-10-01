@@ -36,26 +36,59 @@ export async function processDocumentForReview(
     throw new Error(validation.error || "Formato de arquivo ou tamanho não suportado.");
   }
 
-  // 2. Upload seguro para o bucket de documentos
+  // 2. Upload seguro para o bucket de documentos com isolamento por empresa
   onProgress?.("Enviando arquivo com armazenamento isolado por empresa...");
   const fileExt = file.name.split(".").pop()?.toLowerCase() || "pdf";
   const randomId = crypto.randomUUID();
   const folder = targetEntity === "customer" ? "customer-docs" : "vessel-docs";
-  const storagePath = `${companyId}/${folder}/${randomId}.${fileExt}`;
+  let storagePath = `${companyId}/${folder}/${randomId}.${fileExt}`;
+  let bucketUsed = targetEntity === "customer" ? "customer-documents" : "vessel-documents";
 
-  const { error: uploadError } = await supabase.storage
-    .from("customer-documents")
+  // Cria URL de blob local imediata (100% segura, rápida e imune a erros de bucket no iframe)
+  const localBlobUrl = URL.createObjectURL(file);
+
+  // Tenta upload no bucket principal do recurso
+  let uploadResult = await supabase.storage
+    .from(bucketUsed)
     .upload(storagePath, file, { contentType: file.type, upsert: false });
 
-  if (uploadError) {
-    console.warn("[SmartDocumentService] Aviso upload bucket principal:", uploadError);
+  if (uploadResult.error) {
+    console.warn(`[SmartDocumentService] Falha no bucket principal '${bucketUsed}':`, uploadResult.error.message);
+    // Tentativa resiliente no bucket de fallback 'ocr-documents'
+    const fallbackBucket = "ocr-documents";
+    const fallbackPath = `${companyId}/${folder}/${randomId}.${fileExt}`;
+    const fallbackUp = await supabase.storage
+      .from(fallbackBucket)
+      .upload(fallbackPath, file, { contentType: file.type, upsert: false });
+
+    if (!fallbackUp.error) {
+      bucketUsed = fallbackBucket;
+      storagePath = fallbackPath;
+      uploadResult = fallbackUp;
+    } else {
+      console.error("[SmartDocumentService] Falha de upload em ambos os buckets:", fallbackUp.error.message);
+      throw new Error(
+        `Não foi possível salvar o arquivo para leitura automática (${uploadResult.error.message || fallbackUp.error.message}). Por favor, tente novamente ou prossiga com o cadastro manual.`
+      );
+    }
   }
 
-  // Obter URL pública ou assinada para visualização lado a lado
-  const { data: urlData } = supabase.storage
-    .from("customer-documents")
-    .getPublicUrl(storagePath);
-  const filePreviewUrl = urlData?.publicUrl || URL.createObjectURL(file);
+  // Obter URL assinada com duração limitada (nunca URL pública de bucket privado)
+  let authorizedSignedUrl = "";
+  try {
+    const { data: signedData, error: signErr } = await supabase.storage
+      .from(bucketUsed)
+      .createSignedUrl(storagePath, 3600); // 1 hora de validade
+
+    if (!signErr && signedData?.signedUrl) {
+      authorizedSignedUrl = signedData.signedUrl;
+    }
+  } catch (signEx) {
+    console.warn("[SmartDocumentService] Erro ao obter URL assinada:", signEx);
+  }
+
+  // Prévia garantida: blob local para render imediato sem falhas, ou URL assinada autorizada
+  const filePreviewUrl = localBlobUrl || authorizedSignedUrl;
 
   // 3. Registrar o arquivo na tabela uploaded_files
   onProgress?.("Registrando arquivo e inicializando pipeline de leitura...");

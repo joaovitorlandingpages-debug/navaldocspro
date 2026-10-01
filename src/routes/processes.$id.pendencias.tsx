@@ -624,31 +624,45 @@ function PendenciasProcessoPage() {
     // GRUPO 3: AÇÕES A REALIZAR
     // -----------------------------------------------------------------------
 
-    // 3.1 Gerar e revisar minuta do requerimento (PDF)
+    // 3.1 Gerar e revisar minuta do requerimento (PDF) ou Requerimento externo anexado
     const hasGeneratedDoc = generatedDocs.length > 0;
     const latestGeneratedDoc = generatedDocs[0];
+    
+    // Suporte a requerimento externo anexado (quando o usuário já possui preenchido fora)
+    const attachedReqDoc = uploadedFiles.find((f: any) => 
+      f.category === "attached_requirement" || 
+      f.metadata?.category === "attached_requirement" ||
+      f.metadata?.document_role === "attached_requirement"
+    );
+    const hasRequirementDoc = hasGeneratedDoc || Boolean(attachedReqDoc);
+
     items.push({
       id: "acao-gerar-minuta",
       group: "acoes",
       groupLabel: "Ações a realizar",
-      title: "Gerar e revisar minuta do requerimento (PDF)",
-      description: hasGeneratedDoc 
-        ? `Requerimento oficial gerado: "${latestGeneratedDoc?.title || "Requerimento Náutico"}"` 
-        : "Gerar a minuta consolidada com os dados do cliente e da embarcação em PDF oficial.",
-      isCompleted: hasGeneratedDoc,
+      title: "Requerimento do Processo (Gerado ou Anexado)",
+      description: attachedReqDoc
+        ? `Requerimento externo anexado: "${attachedReqDoc.file_name}" (dispensa geração)`
+        : hasGeneratedDoc 
+          ? `Requerimento oficial gerado: "${latestGeneratedDoc?.title || "Requerimento Náutico"}"` 
+          : "Gerar a minuta consolidada pelo NavalDocs ou anexar documento já preenchido fora do sistema.",
+      isCompleted: hasRequirementDoc,
       isRequired: true,
-      actionType: hasGeneratedDoc ? "review_pdf" : "generate_pdf",
-      actionLabel: hasGeneratedDoc ? "Revisar documento" : "Gerar minuta (PDF)",
-      actionTarget: {
-        docId: latestGeneratedDoc?.id,
-        route: hasGeneratedDoc ? "/processes/$id/revisar-documento" : "/processes/$id/gerar-documento"
-      }
+      actionType: attachedReqDoc ? "upload_doc" : (hasGeneratedDoc ? "review_pdf" : "generate_pdf"),
+      actionLabel: attachedReqDoc ? "Visualizar anexo" : (hasGeneratedDoc ? "Revisar documento" : "Gerar minuta (PDF)"),
+      actionTarget: attachedReqDoc 
+        ? { fileObj: attachedReqDoc }
+        : {
+            docId: latestGeneratedDoc?.id,
+            route: hasGeneratedDoc ? "/processes/$id/revisar-documento" : "/processes/$id/gerar-documento"
+          }
     });
 
     // 3.2 Coletar assinatura do cliente (gov.br ou física)
     const isSigned = Boolean(
       generatedDocs.some((d: any) => d.status === "signed" || !!d.signed_file_url) ||
-      uploadedFiles.some((f: any) => f.category === "signed" || f.category === "arquivo_assinado")
+      uploadedFiles.some((f: any) => f.category === "signed" || f.category === "arquivo_assinado") ||
+      (attachedReqDoc && (attachedReqDoc.metadata?.is_signed || attachedReqDoc.metadata?.already_signed))
     );
     items.push({
       id: "acao-coletar-assinatura",

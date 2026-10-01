@@ -133,19 +133,19 @@ export function buildCustomerReview(
   };
 
   CUSTOMER_EXPECTED_FIELDS.forEach((cfg) => {
-    let rawVal: any = rawFields[cfg.key];
+    let rawVal: any = safeFields[cfg.key];
     
     // Mapeamentos alternativos comuns de IA
     if (!rawVal) {
-      if (cfg.key === "name") rawVal = rawFields.nome || rawFields.razao_social || rawFields.full_name;
-      if (cfg.key === "cpf_cnpj") rawVal = rawFields.cpf || rawFields.cnpj || rawFields.doc_number;
-      if (cfg.key === "birth_date") rawVal = rawFields.data_nascimento || rawFields.nascimento;
-      if (cfg.key === "logradouro") rawVal = rawFields.endereco || rawFields.address || rawFields.rua;
-      if (cfg.key === "cidade") rawVal = rawFields.municipio || rawFields.city;
-      if (cfg.key === "uf") rawVal = rawFields.estado || rawFields.state;
-      if (cfg.key === "cep") rawVal = rawFields.zip_code;
-      if (cfg.key === "phone") rawVal = rawFields.telefone;
-      if (cfg.key === "rg") rawVal = rawFields.identidade;
+      if (cfg.key === "name") rawVal = safeFields.nome || safeFields.razao_social || safeFields.full_name;
+      if (cfg.key === "cpf_cnpj") rawVal = safeFields.cpf || safeFields.cnpj || safeFields.doc_number;
+      if (cfg.key === "birth_date") rawVal = safeFields.data_nascimento || safeFields.nascimento;
+      if (cfg.key === "logradouro") rawVal = safeFields.endereco || safeFields.address || safeFields.rua;
+      if (cfg.key === "cidade") rawVal = safeFields.municipio || safeFields.city;
+      if (cfg.key === "uf") rawVal = safeFields.estado || safeFields.state;
+      if (cfg.key === "cep") rawVal = safeFields.zip_code;
+      if (cfg.key === "phone") rawVal = safeFields.telefone;
+      if (cfg.key === "rg") rawVal = safeFields.identidade;
     }
 
     let valStr = (rawVal !== null && rawVal !== undefined) ? String(rawVal).trim() : "";
@@ -302,20 +302,20 @@ export function buildVesselReview(
   };
 
   VESSEL_EXPECTED_FIELDS.forEach((cfg) => {
-    let rawVal: any = rawFields[cfg.key];
+    let rawVal: any = safeFields[cfg.key];
 
     if (!rawVal) {
-      if (cfg.key === "name") rawVal = rawFields.vessel_name || rawFields.nome_embarcacao;
-      if (cfg.key === "registration_number") rawVal = rawFields.inscricao || rawFields.numero_inscricao || rawFields.tie_number;
-      if (cfg.key === "vessel_type") rawVal = rawFields.tipo || rawFields.tipo_embarcacao;
-      if (cfg.key === "hull_material") rawVal = rawFields.material || rawFields.material_casco;
-      if (cfg.key === "construction_year") rawVal = rawFields.ano_construcao || rawFields.ano;
-      if (cfg.key === "length") rawVal = rawFields.comprimento || rawFields.comprimento_total;
-      if (cfg.key === "engine_brand") rawVal = rawFields.motor || rawFields.marca_motor;
-      if (cfg.key === "engine_power") rawVal = rawFields.potencia || rawFields.potencia_motor;
-      if (cfg.key === "engine_serial_number") rawVal = rawFields.engine_serial || rawFields.numero_motor;
-      if (cfg.key === "identified_owner_name") rawVal = rawFields.owner_name || rawFields.proprietario;
-      if (cfg.key === "identified_owner_doc") rawVal = rawFields.owner_document || rawFields.cpf_proprietario;
+      if (cfg.key === "name") rawVal = safeFields.vessel_name || safeFields.nome_embarcacao;
+      if (cfg.key === "registration_number") rawVal = safeFields.inscricao || safeFields.numero_inscricao || safeFields.tie_number;
+      if (cfg.key === "vessel_type") rawVal = safeFields.tipo || safeFields.tipo_embarcacao;
+      if (cfg.key === "hull_material") rawVal = safeFields.material || safeFields.material_casco;
+      if (cfg.key === "construction_year") rawVal = safeFields.ano_construcao || safeFields.ano;
+      if (cfg.key === "length") rawVal = safeFields.comprimento || safeFields.comprimento_total;
+      if (cfg.key === "engine_brand") rawVal = safeFields.motor || safeFields.marca_motor;
+      if (cfg.key === "engine_power") rawVal = safeFields.potencia || safeFields.potencia_motor;
+      if (cfg.key === "engine_serial_number") rawVal = safeFields.engine_serial || safeFields.numero_motor;
+      if (cfg.key === "identified_owner_name") rawVal = safeFields.owner_name || safeFields.proprietario;
+      if (cfg.key === "identified_owner_doc") rawVal = safeFields.owner_document || safeFields.cpf_proprietario;
     }
 
     let valStr = (rawVal !== null && rawVal !== undefined) ? String(rawVal).trim() : "";

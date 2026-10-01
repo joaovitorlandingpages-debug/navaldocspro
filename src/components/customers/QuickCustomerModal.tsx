@@ -84,15 +84,18 @@ export function QuickCustomerModal({ isOpen, onClose, companyId, onCustomerCreat
 
     setIsSubmitting(true);
     try {
-      // 1. Verifica duplicidade
-      const { data: existing } = await supabase
+      // 1. Verifica duplicidade (robusta contra formatação)
+      const cleanDoc = cpfCnpj.replace(/\D/g, "");
+      const formattedDoc = clientType === "pf" ? maskCPF(cleanDoc) : maskCNPJ(cleanDoc);
+      const { data: existingList } = await supabase
         .from("customers")
         .select("id, name, cpf_cnpj")
         .eq("company_id", companyId)
-        .eq("cpf_cnpj", cpfCnpj.trim())
-        .maybeSingle();
+        .or(`cpf_cnpj.eq.${cleanDoc},cpf_cnpj.eq.${formattedDoc},cpf_cnpj.eq.${cpfCnpj.trim()}`)
+        .limit(1);
 
-      if (existing) {
+      if (existingList && existingList.length > 0) {
+        const existing = existingList[0];
         toast.info(`Cliente já existe (${existing.name}). Selecionado automaticamente.`);
         onCustomerCreated(existing);
         onClose();
@@ -130,6 +133,35 @@ export function QuickCustomerModal({ isOpen, onClose, companyId, onCustomerCreat
       onClose();
     } catch (err: any) {
       console.error("Erro ao cadastrar cliente rápido:", err);
+      const isUniqueConstraint =
+        err?.code === "23505" ||
+        err?.message?.includes("customers_company_taxid_uniq") ||
+        err?.message?.includes("duplicate key");
+
+      if (isUniqueConstraint) {
+        try {
+          const cleanDoc = cpfCnpj.replace(/\D/g, "");
+          const formattedDoc = clientType === "pf" ? maskCPF(cleanDoc) : maskCNPJ(cleanDoc);
+          const { data: foundList } = await supabase
+            .from("customers")
+            .select("id, name, cpf_cnpj")
+            .eq("company_id", companyId)
+            .or(`cpf_cnpj.eq.${cleanDoc},cpf_cnpj.eq.${formattedDoc},cpf_cnpj.eq.${cpfCnpj.trim()}`)
+            .limit(1);
+
+          if (foundList && foundList.length > 0) {
+            toast.info(`Cliente já cadastrado (${foundList[0].name}). Selecionado automaticamente.`);
+            onCustomerCreated(foundList[0]);
+            onClose();
+            return;
+          }
+        } catch {
+          // ignore
+        }
+        toast.error("Este CPF/CNPJ já está cadastrado nesta empresa.");
+        return;
+      }
+
       toast.error(err.message || "Erro ao salvar cliente.");
     } finally {
       setIsSubmitting(false);

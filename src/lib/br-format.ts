@@ -28,6 +28,10 @@ export function maskCpfCnpj(raw: string): string {
   return maskCNPJ(d);
 }
 
+export function normalizeTaxId(raw: string): string {
+  return (raw || "").replace(/\D/g, "");
+}
+
 export function maskCEP(raw: string): string {
   const d = (raw || "").replace(/\D/g, "").slice(0, 8);
   return d.replace(/^(\d{5})(\d)/, "$1-$2");

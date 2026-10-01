@@ -35,6 +35,10 @@ import {
   ExtractedCustomerData, 
   UploadedCustomerFile 
 } from "@/components/customers/CustomerDocumentUploadModal";
+import { 
+  CustomerDuplicateResolutionModal, 
+  ExistingCustomerData 
+} from "@/components/customers/CustomerDuplicateResolutionModal";
 import { safeString } from "@/utils/safe-string";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -109,8 +113,98 @@ function NovoClientePage() {
   // Confirmação ao sair com dados preenchidos
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
-  // Alerta de duplicidade
-  const [duplicateCustomer, setDuplicateCustomer] = useState<{ id: string; name: string; cpf_cnpj: string } | null>(null);
+  // Alerta de duplicidade e modal de resolução
+  const [duplicateCustomer, setDuplicateCustomer] = useState<ExistingCustomerData | null>(null);
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false);
+  const [homonymWarning, setHomonymWarning] = useState<{ id: string; name: string; cpf_cnpj: string } | null>(null);
+
+  // Refs para focar nos campos ao corrigir
+  const cpfInputRef = useRef<HTMLInputElement>(null);
+  const cnpjInputRef = useRef<HTMLInputElement>(null);
+
+  // Documento limpo (apenas dígitos)
+  const currentDocNumber = clientType === "pf" ? formData.cpf : formData.cnpj;
+  const cleanDoc = useMemo(() => currentDocNumber.replace(/\D/g, ""), [currentDocNumber]);
+
+  // Debounced check para CPF / CNPJ dentro da MESMA empresa
+  useEffect(() => {
+    if (!profile?.company_id) return;
+    const requiredLength = clientType === "pf" ? 11 : 14;
+    if (cleanDoc.length !== requiredLength) {
+      setDuplicateCustomer(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsCheckingDuplicate(true);
+      try {
+        const formatted = clientType === "pf" ? maskCPF(cleanDoc) : maskCNPJ(cleanDoc);
+        const { data, error } = await supabase
+          .from("customers")
+          .select("id, name, cpf_cnpj, email, phone, address, city, state, rg, notes")
+          .eq("company_id", profile.company_id)
+          .or(`cpf_cnpj.eq.${cleanDoc},cpf_cnpj.eq.${formatted},cpf_cnpj.eq.${currentDocNumber.trim()}`)
+          .limit(1);
+
+        if (!error && data && data.length > 0) {
+          const found = data[0] as ExistingCustomerData;
+          setDuplicateCustomer(found);
+          setIsDuplicateModalOpen(true);
+          toast.warning("Este cliente já está cadastrado nesta empresa.", {
+            description: `${found.name} (${found.cpf_cnpj})`,
+          });
+        } else {
+          setDuplicateCustomer(null);
+        }
+      } catch (err) {
+        console.warn("Erro ao verificar duplicidade de cliente:", err);
+      } finally {
+        setIsCheckingDuplicate(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [cleanDoc, clientType, profile?.company_id, currentDocNumber]);
+
+  // Debounced check para homônimos (mesmo nome, CPF diferente) — NÃO bloqueia
+  const currentName = clientType === "pf" ? formData.nome : formData.razaoSocial;
+  useEffect(() => {
+    if (!profile?.company_id) return;
+    const trimmed = currentName.trim();
+    const words = trimmed.split(/\s+/).filter(Boolean);
+    if (words.length < 2 || trimmed.length < 5) {
+      setHomonymWarning(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("customers")
+          .select("id, name, cpf_cnpj")
+          .eq("company_id", profile.company_id)
+          .ilike("name", trimmed)
+          .limit(1);
+
+        if (!error && data && data.length > 0) {
+          const match = data[0];
+          const matchClean = (match.cpf_cnpj || "").replace(/\D/g, "");
+          if (cleanDoc && matchClean && matchClean !== cleanDoc) {
+            setHomonymWarning(match);
+          } else {
+            setHomonymWarning(null);
+          }
+        } else {
+          setHomonymWarning(null);
+        }
+      } catch {
+        // Silencioso
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [currentName, cleanDoc, profile?.company_id]);
 
   // Detecta se há dados preenchidos para avisar antes de sair
   const hasUnsavedChanges = useMemo(() => {
@@ -276,18 +370,20 @@ function NovoClientePage() {
     const loadingToast = toast.loading("Verificando e salvando cliente...");
 
     try {
-      // 1. Verificação de duplicidade dentro da mesma empresa
-      const { data: existingCustomer } = await supabase
+      // 1. Verificação de duplicidade dentro da MESMA empresa (robusta contra variações de formatação)
+      const formatted = clientType === "pf" ? maskCPF(cleanDoc) : maskCNPJ(cleanDoc);
+      const { data: existingList } = await supabase
         .from("customers")
-        .select("id, name, cpf_cnpj")
+        .select("id, name, cpf_cnpj, email, phone, address, city, state, rg, notes")
         .eq("company_id", companyId)
-        .eq("cpf_cnpj", docNumber.trim())
-        .maybeSingle();
+        .or(`cpf_cnpj.eq.${cleanDoc},cpf_cnpj.eq.${formatted},cpf_cnpj.eq.${docNumber.trim()}`)
+        .limit(1);
 
-      if (existingCustomer) {
+      if (existingList && existingList.length > 0) {
         toast.dismiss(loadingToast);
         setIsSubmitting(false);
-        setDuplicateCustomer(existingCustomer);
+        setDuplicateCustomer(existingList[0] as ExistingCustomerData);
+        setIsDuplicateModalOpen(true);
         return;
       }
 
@@ -378,6 +474,34 @@ function NovoClientePage() {
     } catch (err: any) {
       console.error("Erro ao cadastrar cliente:", err);
       toast.dismiss(loadingToast);
+
+      const isUniqueConstraint =
+        err?.code === "23505" ||
+        err?.message?.includes("customers_company_taxid_uniq") ||
+        err?.message?.includes("duplicate key");
+
+      if (isUniqueConstraint) {
+        try {
+          const formatted = clientType === "pf" ? maskCPF(cleanDoc) : maskCNPJ(cleanDoc);
+          const { data: foundDups } = await supabase
+            .from("customers")
+            .select("id, name, cpf_cnpj, email, phone, address, city, state, rg, notes")
+            .eq("company_id", companyId)
+            .or(`cpf_cnpj.eq.${cleanDoc},cpf_cnpj.eq.${formatted},cpf_cnpj.eq.${docNumber.trim()}`)
+            .limit(1);
+
+          if (foundDups && foundDups.length > 0) {
+            setDuplicateCustomer(foundDups[0] as ExistingCustomerData);
+            setIsDuplicateModalOpen(true);
+            return;
+          }
+        } catch {
+          // ignore
+        }
+        toast.error("Este cliente já está cadastrado nesta empresa.");
+        return;
+      }
+
       toast.error(err.message || "Erro ao salvar cliente. Verifique sua conexão.");
     } finally {
       setIsSubmitting(false);
@@ -518,15 +642,32 @@ function NovoClientePage() {
                 {errors.nome && (
                   <p className="text-[11px] text-red-500 mt-1 font-medium">{errors.nome}</p>
                 )}
+                {homonymWarning && (
+                  <div className="mt-2 p-2.5 rounded-xl bg-blue-50/80 border border-blue-200/80 text-[11px] text-blue-900 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-[#075BFF] shrink-0" />
+                    <span>
+                      <strong>Possível homônimo:</strong> Já existe um cliente com este mesmo nome cadastrado ({homonymWarning.name}) com outro documento ({homonymWarning.cpf_cnpj}). O cadastro não foi bloqueado e pode prosseguir normalmente.
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Grid 2 colunas: CPF + Data de nascimento */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="cpf" className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    CPF <span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label htmlFor="cpf" className="block text-xs font-semibold text-slate-700">
+                      CPF <span className="text-red-500">*</span>
+                    </label>
+                    {isCheckingDuplicate && (
+                      <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin text-[#075BFF]" />
+                        <span>Verificando...</span>
+                      </span>
+                    )}
+                  </div>
                   <input
+                    ref={cpfInputRef}
                     id="cpf"
                     type="text"
                     value={formData.cpf}
@@ -541,6 +682,21 @@ function NovoClientePage() {
                   />
                   {errors.cpf && (
                     <p className="text-[11px] text-red-500 mt-1 font-medium">{errors.cpf}</p>
+                  )}
+                  {duplicateCustomer && clientType === "pf" && (
+                    <div className="mt-2 p-3 rounded-xl bg-amber-50 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-900 animate-in fade-in duration-150">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                        <span>Este cliente já está cadastrado: <strong>{duplicateCustomer.name}</strong></span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsDuplicateModalOpen(true)}
+                        className="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] shrink-0 self-start sm:self-auto cursor-pointer"
+                      >
+                        Opções / Atualizar
+                      </button>
+                    </div>
                   )}
                 </div>
 
@@ -624,6 +780,14 @@ function NovoClientePage() {
                 {errors.razaoSocial && (
                   <p className="text-[11px] text-red-500 mt-1 font-medium">{errors.razaoSocial}</p>
                 )}
+                {homonymWarning && (
+                  <div className="mt-2 p-2.5 rounded-xl bg-blue-50/80 border border-blue-200/80 text-[11px] text-blue-900 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-[#075BFF] shrink-0" />
+                    <span>
+                      <strong>Possível homônimo:</strong> Já existe um cadastro com esta razão social ({homonymWarning.name}) com outro CNPJ ({homonymWarning.cpf_cnpj}). O cadastro não foi bloqueado e pode prosseguir normalmente.
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Grid 2 colunas: Nome fantasia + CNPJ */}
@@ -642,10 +806,19 @@ function NovoClientePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    CNPJ <span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      CNPJ <span className="text-red-500">*</span>
+                    </label>
+                    {isCheckingDuplicate && (
+                      <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin text-[#075BFF]" />
+                        <span>Verificando...</span>
+                      </span>
+                    )}
+                  </div>
                   <input
+                    ref={cnpjInputRef}
                     type="text"
                     value={formData.cnpj}
                     onChange={(e) => handleChange("cnpj", e.target.value)}
@@ -659,6 +832,21 @@ function NovoClientePage() {
                   />
                   {errors.cnpj && (
                     <p className="text-[11px] text-red-500 mt-1 font-medium">{errors.cnpj}</p>
+                  )}
+                  {duplicateCustomer && clientType === "pj" && (
+                    <div className="mt-2 p-3 rounded-xl bg-amber-50 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-900 animate-in fade-in duration-150">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                        <span>Este cliente já está cadastrado: <strong>{duplicateCustomer.name}</strong></span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsDuplicateModalOpen(true)}
+                        className="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] shrink-0 self-start sm:self-auto cursor-pointer"
+                      >
+                        Opções / Atualizar
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -918,53 +1106,69 @@ function NovoClientePage() {
         }}
       />
 
-      {/* DIÁLOGO DE CLIENTE JÁ CADASTRADO (DUPLICIDADE) */}
-      <Dialog open={duplicateCustomer !== null} onOpenChange={(open) => !open && setDuplicateCustomer(null)}>
-        <DialogContent className="max-w-md p-6 rounded-2xl bg-white border border-slate-150 shadow-xl">
-          <DialogHeader>
-            <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-2">
-              <AlertCircle className="h-6 w-6" />
-            </div>
-            <DialogTitle className="text-lg font-bold text-[#0B1739]">
-              Cliente já cadastrado
-            </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500 mt-1">
-              Já existe um cliente cadastrado com este documento ({duplicateCustomer?.cpf_cnpj}) no seu espaço de trabalho: <strong>{duplicateCustomer?.name}</strong>.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 mt-4">
-            <button
-              type="button"
-              onClick={() => setDuplicateCustomer(null)}
-              className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-            >
-              Corrigir documento
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                const existingId = duplicateCustomer?.id;
-                setDuplicateCustomer(null);
-                if (fromServicos && existingId) {
-                  navigate({
-                    to: "/servicos/selecionar",
-                    search: {
-                      category: returnCategory,
-                      customerId: existingId,
-                      ...(returnServices ? { services: returnServices } : {}),
-                    } as any,
-                  });
-                } else {
-                  navigate({ to: "/customers" });
-                }
-              }}
-              className="px-4 py-2 rounded-xl bg-[#075BFF] text-white text-xs font-semibold hover:bg-blue-600"
-            >
-              {fromServicos ? "Usar este cliente" : "Ver na relação de clientes"}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* MODAL DE RESOLUÇÃO DE DUPLICIDADE (3 AÇÕES E COMPARAÇÃO EXPLÍCITA) */}
+      <CustomerDuplicateResolutionModal
+        isOpen={isDuplicateModalOpen}
+        onClose={() => setIsDuplicateModalOpen(false)}
+        existingCustomer={duplicateCustomer}
+        newFormData={{
+          nome: clientType === "pf" ? formData.nome : formData.razaoSocial,
+          cpf_cnpj: clientType === "pf" ? formData.cpf : formData.cnpj,
+          email: formData.email,
+          telefone: formData.telefone,
+          logradouro: formData.logradouro,
+          numero: formData.numero,
+          bairro: formData.bairro,
+          complemento: formData.complemento,
+          cidade: formData.cidade,
+          uf: formData.uf,
+          cep: formData.cep,
+          rg: formData.rg,
+          notes: formData.notes,
+        }}
+        uploadedFiles={uploadedFiles}
+        companyId={profile?.company_id || null}
+        onOpenExisting={(existingId) => {
+          setIsDuplicateModalOpen(false);
+          if (fromServicos) {
+            navigate({
+              to: "/servicos/selecionar",
+              search: {
+                category: returnCategory,
+                customerId: existingId,
+                ...(returnServices ? { services: returnServices } : {}),
+              } as any,
+            });
+          } else {
+            navigate({ to: `/customers/${existingId}` as any });
+          }
+        }}
+        onCustomerUpdated={(existingId) => {
+          setIsDuplicateModalOpen(false);
+          if (fromServicos) {
+            navigate({
+              to: "/servicos/selecionar",
+              search: {
+                category: returnCategory,
+                customerId: existingId,
+                ...(returnServices ? { services: returnServices } : {}),
+              } as any,
+            });
+          } else {
+            navigate({ to: `/customers/${existingId}` as any });
+          }
+        }}
+        onFixDocument={() => {
+          setIsDuplicateModalOpen(false);
+          if (clientType === "pf") {
+            cpfInputRef.current?.focus();
+            cpfInputRef.current?.select();
+          } else {
+            cnpjInputRef.current?.focus();
+            cnpjInputRef.current?.select();
+          }
+        }}
+      />
     </div>
   );
 }

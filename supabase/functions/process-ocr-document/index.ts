@@ -75,6 +75,45 @@ function isValidCpf(val: string): boolean {
   return rev === parseInt(clean[10], 10)
 }
 
+// Extrai texto textual contido em PDFs digitais (ex: CNH-e emitida pela Senatran / CDT / Detran)
+function extractTextFromPdfBytes(pdfBytes: Uint8Array): string {
+  try {
+    const latin1 = new TextDecoder("latin1").decode(pdfBytes)
+    const foundStrings: string[] = []
+
+    // 1. Strings dentro de operadores Tj: (texto) Tj
+    const tjRegex = /\(([^)\\]*(?:\\.[^)\\]*)*\)\s*Tj/g
+    let match: RegExpExecArray | null
+    while ((match = tjRegex.exec(latin1)) !== null) {
+      const unescaped = match[1].replace(/\\([()\\])/g, "$1").trim()
+      if (unescaped.length > 0) foundStrings.push(unescaped)
+    }
+
+    // 2. Strings dentro de arrays TJ: [(texto) 10 (texto)] TJ
+    const tjArrayRegex = /\[([^\]]+)\]\s*TJ/g
+    while ((match = tjArrayRegex.exec(latin1)) !== null) {
+      const inner = match[1]
+      const innerMatches = inner.match(/\(([^)\\]*(?:\\.[^)\\]*)*\)/g)
+      if (innerMatches) {
+        const line = innerMatches.map(s => s.slice(1, -1).replace(/\\([()\\])/g, "$1")).join("").trim()
+        if (line.length > 0) foundStrings.push(line)
+      }
+    }
+
+    // 3. Fallback de streams com texto puro decodificado
+    if (foundStrings.length < 5) {
+      const textMatches = latin1.match(/[A-ZÁ-Úa-zá-ú0-9.,\-\/]{3,}(?:\s+[A-ZÁ-Úa-zá-ú0-9.,\-\/]{2,})+/g)
+      if (textMatches && textMatches.length > 0) {
+        foundStrings.push(...textMatches.slice(0, 50))
+      }
+    }
+
+    return foundStrings.join("\n")
+  } catch {
+    return ""
+  }
+}
+
 // Regex fallback parser para preencher lacunas em documentos náuticos e de pessoas
 function parseRegexFallbacks(rawText: string, current: Record<string, any>): Record<string, any> {
   if (!rawText) return current
@@ -90,11 +129,13 @@ function parseRegexFallbacks(rawText: string, current: Record<string, any>): Rec
   }
 
   // Identificação Pessoal (CNH, RG, CPF)
-  setIfEmpty("cpf", grab(/(?:CPF|C\.P\.F\.)[:\s/]*([\d.\-]{11,14})/i))
-  setIfEmpty("cnpj", grab(/(?:CNPJ|C\.N\.P\.J\.)[:\s/]*([\d.\-\/]{14,18})/i))
-  setIfEmpty("rg", grab(/(?:RG|R\.G\.|IDENTIDADE)[:\s/]*([A-Z0-9.\-]{5,15})/i))
-  setIfEmpty("name", grab(/(?:NOME|NOME\s+COMPLETO|RAZ[ÃA]O\s+SOCIAL)[:\s]+([A-ZÁ-Úa-zá-ú\s]{5,60})(?:\n|CPF|$)/i))
-  setIfEmpty("birth_date", grab(/(?:DATA\s+DE\s+NASC(?:IMENTO)?|NASCIMENTO)[:\s]*([\d]{2}[\/\-][\d]{2}[\/\-][\d]{4})/i))
+  setIfEmpty("cpf", grab(/(?:CPF|C\.P\.F\.|CADASTRO\s+DE\s+PESSOAS?\s+F[ÍI]SICAS?)[:\s/]*([\d.\-]{11,14})/i) || grab(/\b(\d{3}\.\d{3}\.\d{3}-\d{2})\b/))
+  setIfEmpty("cnpj", grab(/(?:CNPJ|C\.N\.P\.J\.)[:\s/]*([\d.\-\/]{14,18})/i) || grab(/\b(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})\b/))
+  setIfEmpty("rg", grab(/(?:RG|R\.G\.|DOC(?:UMENTO)?(?:\s+DE)?\s*IDENTIDADE|IDENTIDADE)[:\s/]*([A-Z0-9.\-\s]{5,20})/i))
+  setIfEmpty("name", grab(/(?:NOME|NOME\s+COMPLETO|CONDUTOR|RAZ[ÃA]O\s+SOCIAL)[:\s]+([A-ZÁ-Úa-zá-ú\s]{5,60})(?:\n|CPF|$)/i))
+  setIfEmpty("birth_date", grab(/(?:DATA\s+DE\s+NASC(?:IMENTO)?|NASCIMENTO|NASC)[:\s]*([\d]{2}[\/\-][\d]{2}[\/\-][\d]{4})/i))
+  setIfEmpty("cnh_number", grab(/(?:N[ºO\.]?\s*REGISTRO|REGISTRO\s+CNH|CNH\s*N[ºO\.]?)[:\s]*(\d{9,12})/i))
+  setIfEmpty("category", grab(/(?:CAT\b|CATEGORIA)[:\s]*([ABCDE]{1,2})/i))
   
   // Endereço e Contato
   setIfEmpty("zip_code", grab(/(?:CEP)[:\s]*([\d]{5}[\-]?[\d]{3})/i))
@@ -202,31 +243,78 @@ serve(async (req) => {
     let mime = file.file_type || "image/png"
 
     const tryDownload = async (bucket: string, path: string) => {
-      const { data, error } = await supabase.storage.from(bucket).download(path)
-      if (error || !data) return null
-      return new Uint8Array(await data.arrayBuffer())
+      try {
+        const { data, error } = await supabase.storage.from(bucket).download(path)
+        if (error || !data) return null
+        return new Uint8Array(await data.arrayBuffer())
+      } catch {
+        return null
+      }
     }
 
-    if (fileUrl.startsWith("http")) {
+    // 1. Tenta extrair bucket e path caso constem em metadata
+    const metaBucket = (file.metadata as any)?.bucket
+    const metaPath = (file.metadata as any)?.path
+    if (metaBucket && metaPath) {
+      bytes = await tryDownload(metaBucket, metaPath)
+    }
+
+    // 2. Se for URL absoluta
+    if (!bytes && fileUrl.startsWith("http")) {
       const m = fileUrl.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/]+)\/(.+?)(?:\?|$)/)
       if (m) bytes = await tryDownload(m[1], decodeURIComponent(m[2]))
       if (!bytes) {
-        const r = await fetch(fileUrl)
-        if (r.ok) {
-          bytes = new Uint8Array(await r.arrayBuffer())
-          mime = r.headers.get("content-type") || mime
+        try {
+          const r = await fetch(fileUrl)
+          if (r.ok) {
+            bytes = new Uint8Array(await r.arrayBuffer())
+            mime = r.headers.get("content-type") || mime
+          }
+        } catch (fetchEx) {
+          console.warn("[OCR Download Fetch Warning]", fetchEx)
         }
       }
-    } else {
-      bytes = await tryDownload("customer-documents", fileUrl)
-      if (!bytes) bytes = await tryDownload("vessel-documents", fileUrl)
-      if (!bytes) bytes = await tryDownload("ocr-documents", fileUrl)
     }
 
-    if (!bytes) throw new Error("Falha ao recuperar os bytes do arquivo para processamento: " + fileUrl)
+    // 3. Se fileUrl contiver prefixo de bucket (ex: "customer-documents/uuid/...")
+    if (!bytes && fileUrl.includes("/")) {
+      const firstSlash = fileUrl.indexOf("/")
+      const candidateBucket = fileUrl.slice(0, firstSlash)
+      const candidatePath = fileUrl.slice(firstSlash + 1)
+      const knownBuckets = ["customer-documents", "ocr-documents", "vessel-documents", "process-document-uploads"]
+      if (knownBuckets.includes(candidateBucket)) {
+        bytes = await tryDownload(candidateBucket, candidatePath)
+      }
+    }
+
+    // 4. Varredura resiliente nos buckets padrão do sistema
+    if (!bytes) bytes = await tryDownload("customer-documents", fileUrl)
+    if (!bytes) bytes = await tryDownload("ocr-documents", fileUrl)
+    if (!bytes) bytes = await tryDownload("vessel-documents", fileUrl)
+    if (!bytes) bytes = await tryDownload("process-document-uploads", fileUrl)
+
+    if (!bytes) {
+      console.error("[OCR_FILE_ACCESS_ERROR] Arquivo não localizado nos buckets do storage:", fileUrl)
+      throw new HttpError(404, {
+        error: "file_access_error",
+        message: "Falha de acesso ao arquivo no Storage. O arquivo não foi localizado ou não pôde ser baixado.",
+        fileUrl,
+      })
+    }
     console.log("[OCR_UPLOAD_SUCCESS]", { bytes: bytes.length, mime })
 
-    // Conversão segura em Base64
+    const isPdf = mime.includes("pdf") || fileUrl.toLowerCase().endsWith(".pdf")
+    
+    // Extração direta de texto embutido no PDF (muito comum em CNH-e emitida pela Senatran / CDT)
+    let pdfDigitalText = ""
+    if (isPdf) {
+      pdfDigitalText = extractTextFromPdfBytes(bytes)
+      if (pdfDigitalText.length > 20) {
+        console.log("[OCR_PDF_TEXT_EXTRACTED]", { chars: pdfDigitalText.length })
+      }
+    }
+
+    // Conversão segura em Base64 para envio à IA visual
     let binary = ""
     const chunk = 0x8000
     for (let i = 0; i < bytes.length; i += chunk) {
@@ -234,7 +322,6 @@ serve(async (req) => {
     }
     const b64 = btoa(binary)
 
-    const isPdf = mime.includes("pdf") || fileUrl.toLowerCase().endsWith(".pdf")
     const contentBlock = isPdf
       ? { type: "file", file: { filename: file.file_name || "document.pdf", file_data: `data:application/pdf;base64,${b64}` } }
       : { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } }
@@ -280,12 +367,27 @@ serve(async (req) => {
       }
     }
 
-    const rawText: string = parsedJson.raw_text || rawContent || ""
+    // Combina texto da IA com o texto nativo do PDF digital
+    const combinedRawText = [parsedJson.raw_text, rawContent, pdfDigitalText].filter(Boolean).join("\n")
+    const rawText: string = combinedRawText.trim()
     let fields: Record<string, any> = parsedJson.fields || {}
     let docType: string = parsedJson.document_type || "GENERIC"
 
-    // Reforço determinístico com analisadores de expressão regular
+    // Reforço determinístico com analisadores de expressão regular brasileiros
     fields = parseRegexFallbacks(rawText, fields)
+
+    // Ajuste fino do tipo de documento se classificado genericamente
+    if (docType === "GENERIC" || !docType) {
+      if (/HABILITA[ÇC][ÃA]O|CNH|SENATRAN|DETRAN|CONDUTOR|CATEGORIA\s+[ABCDE]/i.test(rawText)) {
+        docType = "CNH"
+      } else if (/INSCRI[ÇC][ÃA]O|TIE\b|TIEM\b|EMBARCA[ÇC][ÃA]O|CAPITANIA/i.test(rawText)) {
+        docType = "VESSEL_TIE"
+      } else if (/IDENTIDADE|REGISTRO\s+GERAL|SECRETARIA\s+DE\s+SEGURAN[ÇC]A/i.test(rawText)) {
+        docType = "RG"
+      } else if (/CADASTRO\s+NACIONAL\s+DA\s+PESSOA\s+JUR[ÍI]DICA|CNPJ/i.test(rawText)) {
+        docType = "CARTAO_CNPJ"
+      }
+    }
 
     // Ajuste de documento náutico caso detecte termos da Marinha
     if (docType === "GENERIC") {

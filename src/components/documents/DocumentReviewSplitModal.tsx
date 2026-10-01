@@ -41,10 +41,23 @@ export function DocumentReviewSplitModal({ isOpen, onClose, review, onConfirm }:
   // Estados locais para edição dos campos na conferência
   const [fields, setFields] = useState<Record<string, ExtractedFieldDetail>>({});
   const [mobileTab, setMobileTab] = useState<"document" | "fields">("fields");
+  const [previewError, setPreviewError] = useState(false);
   
   // Controles do visualizador de documento
   const [zoom, setZoom] = useState<number>(1);
   const [rotation, setRotation] = useState<number>(0);
+
+  // URL de prévia local e segura: prioriza blob do arquivo em memória para garantir render 100% livre de erros 404
+  const previewSource = useMemo(() => {
+    if (review.file instanceof File) {
+      try {
+        return URL.createObjectURL(review.file);
+      } catch {
+        // ignora e usa fileUrl
+      }
+    }
+    return review.fileUrl;
+  }, [review.file, review.fileUrl]);
 
   // Sincroniza campos quando review for atualizado
   useEffect(() => {
@@ -53,6 +66,7 @@ export function DocumentReviewSplitModal({ isOpen, onClose, review, onConfirm }:
       setZoom(1);
       setRotation(0);
       setMobileTab("fields");
+      setPreviewError(false);
     }
   }, [review]);
 
@@ -182,9 +196,15 @@ export function DocumentReviewSplitModal({ isOpen, onClose, review, onConfirm }:
 
             {/* Badges de estatística de extração */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                <CheckCircle2 className="h-3 w-3" /> {stats.filledCount} identificados
-              </span>
+              {stats.filledCount > 0 ? (
+                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3" /> {stats.filledCount} campos identificados
+                </span>
+              ) : (
+                <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" /> Nenhum campo extraido automaticamente
+                </span>
+              )}
               {stats.doubtsCount > 0 && (
                 <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" /> {stats.doubtsCount} conferir
@@ -198,13 +218,23 @@ export function DocumentReviewSplitModal({ isOpen, onClose, review, onConfirm }:
             </div>
           </div>
 
-          {/* MENSAGEM OFICIAL OBRIGATÓRIA */}
+          {/* STATUS DE EXTRAÇÃO: banners diferenciados por tipo de resultado */}
+          {stats.filledCount === 0 ? (
+            <div className="bg-orange-50/90 border border-orange-200 rounded-xl p-3 flex items-start gap-2.5 text-xs text-orange-900 shadow-2xs">
+              <AlertCircle className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
+              <div className="flex-1 font-medium leading-relaxed">
+                <strong>Não foi possível identificar os dados automaticamente.</strong>{" "}
+                Preencha os campos manualmente ao lado antes de aplicar ao cadastro.
+              </div>
+            </div>
+          ) : (
           <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-2.5 flex items-start gap-2.5 text-xs text-amber-900 shadow-2xs">
             <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
             <div className="flex-1 font-medium leading-relaxed">
               <strong>Atenção:</strong> A leitura automática pode cometer erros. Confira todos os dados antes de salvar ou gerar documentos.
             </div>
           </div>
+          )}
         </div>
 
         {/* ========================================================================= */}
@@ -288,12 +318,41 @@ export function DocumentReviewSplitModal({ isOpen, onClose, review, onConfirm }:
               </div>
             </div>
 
-            {/* Área de Visualização com suporte a Zoom e Rotação */}
+            {/* Área de Visualização com suporte a Zoom, Rotação e Tratamento Amigável de Erros */}
             <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-950/60">
-              {isPdf ? (
+              {previewError ? (
+                <div className="max-w-md p-6 bg-slate-900 border border-slate-700 rounded-2xl text-center text-slate-300 space-y-3 shadow-xl">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-slate-800 flex items-center justify-center text-blue-400">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <h4 className="text-sm font-bold text-white">Documento pronto para conferência</h4>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    O arquivo <strong className="text-slate-200">{review.fileName}</strong> foi processado. Se a prévia visual integrada estiver bloqueada pelo navegador, confira os campos extraídos no formulário ao lado.
+                  </p>
+                  <div className="flex items-center justify-center gap-2 pt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-slate-600 text-slate-200 hover:bg-slate-800 text-xs"
+                      onClick={() => setPreviewError(false)}
+                    >
+                      Tentar recarregar
+                    </Button>
+                    <a
+                      href={previewSource}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-colors flex items-center gap-1.5"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" /> Abrir arquivo
+                    </a>
+                  </div>
+                </div>
+              ) : isPdf ? (
                 <iframe
-                  src={`${review.fileUrl}#toolbar=0&navpanes=0`}
+                  src={`${previewSource}#toolbar=0&navpanes=0`}
                   title="Documento PDF"
+                  onError={() => setPreviewError(true)}
                   className="w-full h-full rounded-lg bg-white shadow-lg border border-slate-700"
                   style={{
                     transform: `scale(${zoom}) rotate(${rotation}deg)`,
@@ -303,8 +362,9 @@ export function DocumentReviewSplitModal({ isOpen, onClose, review, onConfirm }:
                 />
               ) : (
                 <img
-                  src={review.fileUrl}
+                  src={previewSource}
                   alt="Documento escaneado"
+                  onError={() => setPreviewError(true)}
                   className="max-w-full max-h-full object-contain rounded-lg shadow-xl"
                   style={{
                     transform: `scale(${zoom}) rotate(${rotation}deg)`,

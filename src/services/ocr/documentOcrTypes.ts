@@ -56,7 +56,7 @@ export interface DocumentDiscrepancy {
 export interface ExtractedDocumentReview {
   jobId?: string;
   fileId?: string;
-  file: File;
+  file?: File | null;
   fileUrl: string;
   fileName: string;
   fileSize: number;
