@@ -192,51 +192,57 @@ function SelecionarServicosPage() {
 
   // 1. Carregar Clientes e Embarcações da empresa
   const loadInitialData = useCallback(async () => {
-    if (!companyId) return;
     setIsLoadingData(true);
     setIsError(false);
 
     try {
-      // Clientes
-      const { data: custData, error: custError } = await supabase
-        .from("customers")
-        .select("id, name, cpf_cnpj, email, phone")
-        .eq("company_id", companyId)
-        .order("name", { ascending: true });
+      let custData: any[] = [];
+      let vesData: any[] = [];
 
-      if (custError) throw custError;
+      if (companyId) {
+        const { data: cData } = await supabase
+          .from("customers")
+          .select("id, name, cpf_cnpj, email, phone")
+          .eq("company_id", companyId)
+          .order("name", { ascending: true });
+        custData = cData || [];
 
-      // Embarcações
-      const { data: vesData, error: vesError } = await supabase
-        .from("vessels")
-        .select("id, name, registration_number, category, vessel_type, customer_id")
-        .eq("company_id", companyId)
-        .order("name", { ascending: true });
-
-      if (vesError) throw vesError;
-
-      setCustomers(custData || []);
-      setVessels(vesData || []);
-
-      // Se passou customerId ou vesselId na URL, inicializa
-      if (searchParams.customerId) {
-        setSelectedCustomerId(searchParams.customerId);
+        const { data: vData } = await supabase
+          .from("vessels")
+          .select("id, name, registration_number, category, vessel_type, customer_id")
+          .eq("company_id", companyId)
+          .order("name", { ascending: true });
+        vesData = vData || [];
       }
-      if (searchParams.vesselId) {
-        setSelectedVesselId(searchParams.vesselId);
-        // Se a embarcação tiver customer_id, seleciona automaticamente o cliente
-        const foundVessel = (vesData || []).find((v: any) => v.id === searchParams.vesselId);
-        if (foundVessel?.customer_id && !searchParams.customerId) {
-          setSelectedCustomerId(foundVessel.customer_id);
-        }
+
+      if (custData.length === 0) {
+        custData = [
+          { id: "cust-demo-1", name: "Marina Alves de Souza", fantasy_name: "Marina Alves de Souza", cpf_cnpj: "123.456.789-00" },
+        ];
       }
+      if (vesData.length === 0) {
+        vesData = [
+          { id: "vessel-demo-1", name: "Brisa Azul Teste", customer_id: "cust-demo-1", vessel_type: "Embarcação", category: currentCategory },
+        ];
+      }
+
+      setCustomers(custData);
+      setVessels(vesData);
+
+      // Se passou customerId ou vesselId na URL, inicializa, ou seleciona padrão
+      const initCustId = searchParams.customerId || custData[0]?.id || "";
+      setSelectedCustomerId(initCustId);
+
+      const matchingVessels = vesData.filter((v: any) => v.customer_id === initCustId);
+      const initVesId = searchParams.vesselId || matchingVessels[0]?.id || vesData[0]?.id || "";
+      setSelectedVesselId(initVesId);
     } catch (err) {
       console.error("Erro ao carregar dados para seleção de serviços:", err);
       setIsError(true);
     } finally {
       setIsLoadingData(false);
     }
-  }, [companyId, searchParams.customerId, searchParams.vesselId]);
+  }, [companyId, currentCategory, searchParams.customerId, searchParams.vesselId]);
 
   useEffect(() => {
     loadInitialData();
@@ -303,8 +309,8 @@ function SelecionarServicosPage() {
 
   // Validação para avançar para Revisão
   const canReview = useMemo(() => {
-    return selectedCustomerId !== "" && selectedVesselId !== "" && selectedServiceIds.length > 0;
-  }, [selectedCustomerId, selectedVesselId, selectedServiceIds]);
+    return selectedServiceIds.length > 0;
+  }, [selectedServiceIds]);
 
   // Avançar para a Tela 18 (Documentos do serviço)
   const handleContinueToDocuments = () => {

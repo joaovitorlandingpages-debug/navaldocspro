@@ -37,6 +37,8 @@ import { DashboardLayout } from "@/routes/dashboard";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadToBucket } from "@/lib/storage";
+import { buildBrandedDocumentPdf } from "@/services/brandedPdfBuilder";
+import { loadCompanyBranding } from "@/services/companyBranding";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -220,23 +222,56 @@ function GerarDocumentoPage() {
   // Carregamento dos Dados do Processo e Funcionários
   useEffect(() => {
     async function loadData() {
-      if (!companyId || !id) return;
+      const isPreview = typeof window !== 'undefined' && (
+        window.location.search.includes('preview=true') ||
+        window.localStorage.getItem('preview_mode') === 'true'
+      );
+      if (!id || (!companyId && !isPreview)) return;
       setIsLoading(true);
 
       try {
-        // 1. Carregar processo, cliente e embarcação
-        const { data: proc, error } = await supabase
-          .from("processes")
-          .select(`
-            *,
-            customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone, address, city, state),
-            vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length, material)
-          `)
-          .eq("id", id)
-          .eq("company_id", companyId)
-          .maybeSingle();
+        let proc: any = null;
+        if (companyId) {
+          const { data } = await supabase
+            .from("processes")
+            .select(`
+              *,
+              customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone, address, city, state),
+              vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length, material)
+            `)
+            .eq("id", id)
+            .eq("company_id", companyId)
+            .maybeSingle();
+          proc = data;
+        }
 
-        if (error || !proc) {
+        if (!proc) {
+          const isPreview = typeof window !== 'undefined' && (
+            window.location.search.includes('preview=true') ||
+            window.localStorage.getItem('preview_mode') === 'true'
+          );
+          if (isPreview) {
+            const demoProc = {
+              id,
+              title: "Processo Demonstrativo",
+              process_type: "laudo_engenharia",
+              status: "draft",
+              is_draft: true,
+              created_at: new Date().toISOString(),
+              draft_data: {
+                category: "profissional",
+                category_label: "Embarcações profissionais",
+                services: ["laudo_engenharia", "despacho_maritimo", "inscricao_inicial", "renovacao_tie"],
+              },
+              customer: { id: "c-1", name: "Marina Alves de Souza", cpf_cnpj: "123.456.789-00" },
+              vessel: { id: "v-1", name: "Brisa Azul Teste", registration_number: "SP-123456", category: "profissional", vessel_type: "Embarcação Comercial" },
+            };
+            setProcessData(demoProc);
+            setCustomer(demoProc.customer);
+            setVessel(demoProc.vessel);
+            setIsLoading(false);
+            return;
+          }
           toast.error("Processo não encontrado.");
           navigate({ to: "/processes" });
           return;
@@ -302,13 +337,14 @@ function GerarDocumentoPage() {
 
   // Categoria da Embarcação
   const vesselCategory = useMemo(() => {
+    const draftCategory = (processData?.draft_data as any)?.category || processData?.metadata?.category || vessel?.category;
+    if (draftCategory === "profissional") {
+      return "profissional";
+    }
     const typeStr = (vessel?.vessel_type || "").toLowerCase();
     const nameStr = (vessel?.name || "").toLowerCase();
     if (typeStr.includes("moto") || typeStr.includes("jet") || nameStr.includes("jet")) {
       return "moto_aquatica";
-    }
-    if (processData?.metadata?.category === "profissional") {
-      return "profissional";
     }
     return "esporte_recreio";
   }, [vessel, processData]);
@@ -560,6 +596,7 @@ function GerarDocumentoPage() {
     const loadingToast = toast.loading(`Gerando ${templatesToGenerate.length} documento(s) selecionado(s)...`);
 
     try {
+      const branding = await loadCompanyBranding(companyId);
       const now = new Date().toISOString();
       const customerName = customer?.fantasy_name || customer?.name || "Cliente";
       const vesselName = vessel?.name || "Embarcação";
@@ -567,9 +604,61 @@ function GerarDocumentoPage() {
 
       for (const tpl of templatesToGenerate) {
         const docTitle = `${tpl.name} - ${vesselName}`;
-        const fileName = `${tpl.code}_${vesselName.replace(/\s+/g, "_")}_${Date.now()}.pdf`;
+        const fileName = `${tpl.code}_${vesselName.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}.pdf`;
+        const storagePath = `${companyId}/${id}/${fileName}`;
 
-        // Snapshot imutável congelado dos dados e do funcionário responsável
+        // 1. Construir texto oficial detalhado do documento
+        const content = [
+          `DOCUMENTO OFICIAL: ${tpl.name.toUpperCase()}`,
+          `CÓDIGO: ${tpl.code} | BASE NORMATIVA: ${tpl.officialSource}`,
+          `PROCESSO Nº: ${processCode}`,
+          `DATA: ${new Date().toLocaleDateString("pt-BR")}`,
+          ``,
+          `1. DADOS DO INTERESSADO / PROPRIETÁRIO`,
+          `Nome / Razão Social: ${customerName}`,
+          `CPF / CNPJ: ${customer?.cpf_cnpj || customer?.document || "Não informado"}`,
+          `Endereço: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
+          `Telefone: ${customer?.phone || "Não informado"} | E-mail: ${customer?.email || "Não informado"}`,
+          ``,
+          `2. DADOS DA EMBARCAÇÃO`,
+          `Nome da Embarcação: ${vesselName}`,
+          `Número de Inscrição: ${vessel?.registration_number || "Em regularização"}`,
+          `Tipo: ${vessel?.vessel_type || "Embarcação"} | Categoria: ${vesselCategory === "profissional" ? "Embarcação Profissional" : "Esporte e Recreio"}`,
+          `Comprimento Total: ${vessel?.length || vessel?.length_overall || "Não informado"}`,
+          `Material do Casco: ${vessel?.material || "Não informado"}`,
+          ``,
+          `3. ESCOPO DO REQUERIMENTO E SERVIÇOS`,
+          `Serviços solicitados: ${(Array.isArray((processData?.draft_data as any)?.services)
+            ? (processData?.draft_data as any)?.services.join(", ")
+            : processData?.process_type || "Atos perante a Autoridade Marítima")}`,
+          ``,
+          `4. DECLARAÇÃO E TERMO DE COMPROMISSO`,
+          `O interessado acima qualificado requer à Capitania dos Portos / Delegacia / Agência da Capitania dos Portos a realização dos serviços especificados, declarando sob as penas da lei a veracidade das informações apresentadas para os devidos fins de direito.`,
+          ``,
+          `5. PREPARADO POR`,
+          `Responsável Técnico: ${selectedStaff.name}`,
+          `Função: ${selectedStaff.role}`,
+          selectedStaff.professional_registry ? `Registro: ${selectedStaff.professional_registry}` : "",
+          `Empresa: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"}`,
+          ``,
+          `Documento preparado via NavalDocs Pro para assinatura externa (GOV.BR ou presencial).`
+        ].filter(Boolean).join("\n");
+
+        // 2. Gerar bytes do PDF estilizado com branding
+        const { bytes, verificationCode } = await buildBrandedDocumentPdf({
+          docName: docTitle,
+          content,
+          branding,
+        });
+
+        // 3. Converter para Blob e fazer upload seguro para o bucket 'generated-documents'
+        const pdfBlob = new Blob([bytes], { type: "application/pdf" });
+        await uploadToBucket("generated-documents", storagePath, pdfBlob, {
+          contentType: "application/pdf",
+          upsert: true,
+        });
+
+        // 4. Metadados completos congelados
         const documentMetadata = {
           template_id: tpl.id,
           template_name: tpl.name,
@@ -577,6 +666,8 @@ function GerarDocumentoPage() {
           official_source: tpl.officialSource,
           validation_date: tpl.validationDate,
           validation_status: tpl.status,
+          storage_bucket: "generated-documents",
+          storage_path: storagePath,
           disclaimer: "Documento oficial preparado eletronicamente pelo NavalDocs Pro para assinatura externa (gov.br ou presencial). Não emitido pela Autoridade Marítima.",
           staff_responsible: {
             id: selectedStaff.id,
@@ -611,21 +702,25 @@ function GerarDocumentoPage() {
           generated_at: now,
         };
 
-        // Inserir registro na tabela generated_documents
+        // 5. Inserir registro na tabela generated_documents
         // NUNCA marcar como is_signed: true automaticamente!
         const { data: newDoc, error: docError } = await supabase
           .from("generated_documents")
           .insert({
             company_id: companyId,
             process_id: id,
-            title: docTitle,
-            document_type: tpl.code,
-            file_name: fileName,
-            file_path: `documents/${id}/${fileName}`,
-            is_signed: false,
+            customer_id: customer?.id || null,
+            vessel_id: vessel?.id || null,
+            name: docTitle,
+            generated_file_url: `generated-documents/${storagePath}`,
+            generated_by: profile?.id || null,
             status: "ready_for_signature",
+            signature_status: "pending",
+            verification_code: verificationCode,
+            template_id: tpl.id,
+            version: 1,
             metadata: documentMetadata,
-          } as any)
+          })
           .select("id")
           .single();
 
@@ -633,13 +728,36 @@ function GerarDocumentoPage() {
           throw new Error(docError.message || `Erro ao salvar documento gerado (${tpl.name}).`);
         }
 
+        // 6. Inserir também em uploaded_files para indexação central
+        await supabase
+          .from("uploaded_files")
+          .insert({
+            company_id: companyId,
+            process_id: id,
+            customer_id: customer?.id || null,
+            vessel_id: vessel?.id || null,
+            category: "generated_document",
+            file_name: fileName,
+            file_url: `generated-documents/${storagePath}`,
+            file_size: bytes.length,
+            file_type: "application/pdf",
+            status: "ready",
+            metadata: {
+              document_id: newDoc?.id,
+              template_code: tpl.code,
+              template_name: tpl.name,
+              verification_code: verificationCode,
+              generated_at: now,
+            },
+          });
+
         if (newDoc?.id) {
           generatedIds.push(newDoc.id);
         }
       }
 
       // Adicionar eventos no histórico do processo
-      const existingHistory = processData?.metadata?.history || [];
+      const existingHistory = (processData?.draft_data as any)?.history || processData?.metadata?.history || [];
       const historyEntries = templatesToGenerate.map((tpl) => ({
         event: "doc_generated",
         description: `Documento gerado: "${tpl.name}" por ${selectedStaff.name}`,
@@ -647,9 +765,15 @@ function GerarDocumentoPage() {
         date: now,
       }));
 
+      const updatedDraftData = {
+        ...((processData?.draft_data as any) || {}),
+        history: [...historyEntries, ...existingHistory],
+      };
+
       await supabase
         .from("processes")
         .update({
+          draft_data: updatedDraftData,
           metadata: {
             ...(processData?.metadata || {}),
             history: [...historyEntries, ...existingHistory],
@@ -662,26 +786,18 @@ function GerarDocumentoPage() {
       toast.dismiss(loadingToast);
       toast.success(
         generatedIds.length === 1
-          ? "Documento gerado com sucesso!"
-          : `${generatedIds.length} documentos gerados com sucesso!`,
+          ? "Documento gerado e armazenado com sucesso!"
+          : `${generatedIds.length} documentos gerados e armazenados com sucesso!`,
         {
-          description: "Os arquivos PDF foram criados e estão prontos para download e assinatura externa.",
+          description: "Os arquivos PDF foram criados, salvos no storage e estão prontos para download e visualização.",
         }
       );
 
-      // Redireciona
-      if (generatedIds.length === 1) {
-        navigate({
-          to: "/processes/$id/revisar-documento",
-          params: { id },
-          search: { docId: generatedIds[0] },
-        });
-      } else {
-        navigate({
-          to: "/processes/$id/documentos-gerados",
-          params: { id },
-        });
-      }
+      // Redireciona para a lista de documentos gerados deste processo
+      navigate({
+        to: "/processes/$id/documentos-gerados",
+        params: { id },
+      });
     } catch (err: any) {
       console.error("Erro ao gerar documentos selecionados:", err);
       toast.dismiss(loadingToast);

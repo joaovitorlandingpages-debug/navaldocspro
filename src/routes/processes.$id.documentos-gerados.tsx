@@ -121,23 +121,57 @@ function DocumentosGeradosPage() {
 
   // 1. Carregar Ocorrência do Processo / Serviço
   const loadProcessData = useCallback(async () => {
-    if (!companyId || !id) return;
+    const isPreview = typeof window !== 'undefined' && (
+      window.location.search.includes('preview=true') ||
+      window.localStorage.getItem('preview_mode') === 'true'
+    );
+    if (!id || (!companyId && !isPreview)) return;
     setIsLoading(true);
     setIsError(false);
 
     try {
-      const { data: proc, error: pError } = await supabase
-        .from("processes")
-        .select(`
-          *,
-          customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone),
-          vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type)
-        `)
-        .eq("id", id)
-        .eq("company_id", companyId)
-        .maybeSingle();
+      let proc: any = null;
+      if (companyId) {
+        const { data } = await supabase
+          .from("processes")
+          .select(`
+            *,
+            customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone),
+            vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type)
+          `)
+          .eq("id", id)
+          .eq("company_id", companyId)
+          .maybeSingle();
+        proc = data;
+      }
 
-      if (pError || !proc) {
+      if (!proc) {
+        const isPreview = typeof window !== 'undefined' && (
+          window.location.search.includes('preview=true') ||
+          window.localStorage.getItem('preview_mode') === 'true'
+        );
+        if (isPreview) {
+          const demoProc = {
+            id,
+            title: "Processo Demonstrativo",
+            process_type: "laudo_engenharia",
+            status: "draft",
+            is_draft: true,
+            created_at: new Date().toISOString(),
+            draft_data: {
+              category: "profissional",
+              category_label: "Embarcações profissionais",
+              services: ["laudo_engenharia", "despacho_maritimo", "inscricao_inicial", "renovacao_tie"],
+            },
+            customer: { id: "c-1", name: "Marina Alves de Souza", cpf_cnpj: "123.456.789-00" },
+            vessel: { id: "v-1", name: "Brisa Azul Teste", registration_number: "SP-123456", category: "profissional", vessel_type: "Embarcação Comercial" },
+          };
+          setProcessData(demoProc);
+          setCustomer(demoProc.customer);
+          setVessel(demoProc.vessel);
+          setIsLoading(false);
+          return;
+        }
         setIsError(true);
         setIsLoading(false);
         return;
@@ -156,22 +190,54 @@ function DocumentosGeradosPage() {
 
   // 2. Carregar Documentos Gerados
   const loadGeneratedDocuments = useCallback(async () => {
-    if (!companyId || !id) return;
+    const isPreview = typeof window !== 'undefined' && (
+      window.location.search.includes('preview=true') ||
+      window.localStorage.getItem('preview_mode') === 'true'
+    );
+    if (!id || (!companyId && !isPreview)) return;
     setIsLoadingDocs(true);
 
     try {
-      const { data: docsData, error: docsError } = await supabase
-        .from("generated_documents")
-        .select(`
-          *
-        `)
-        .eq("company_id", companyId)
-        .eq("process_id", id)
-        .order("name", { ascending: true });
-
-      if (docsError) throw docsError;
+      let docsData: any[] = [];
+      if (companyId) {
+        const { data, error: docsError } = await supabase
+          .from("generated_documents")
+          .select(`
+            *
+          `)
+          .eq("company_id", companyId)
+          .eq("process_id", id)
+          .order("created_at", { ascending: false });
+        if (docsError) throw docsError;
+        docsData = data || [];
+      }
 
       const list = docsData || [];
+      if (list.length === 0) {
+        const isPreview = typeof window !== 'undefined' && (
+          window.location.search.includes('preview=true') ||
+          window.localStorage.getItem('preview_mode') === 'true'
+        );
+        if (isPreview) {
+          const demoDoc = {
+            id: "doc-demo-1",
+            name: "Requerimento de Embarcação Profissional - Brisa Azul Teste",
+            file_name: "REQ-PROF_Brisa_Azul_Teste.pdf",
+            generated_file_url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+            created_at: new Date().toISOString(),
+            version: 1,
+            signature_status: "Não anexada",
+            metadata: {
+              responsible_name: "João Vitor",
+            }
+          };
+          setDocuments([demoDoc]);
+          setSelectedDoc(demoDoc);
+          setIsLoadingDocs(false);
+          return;
+        }
+      }
+
       setDocuments(list);
 
       // Se houver algum documento com versão assinada, selecione-o por padrão
@@ -553,8 +619,9 @@ function DocumentosGeradosPage() {
                       <div className="pt-2">
                         <button
                           type="button"
-                          onClick={handleOpenGenerateModal}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#075BFF] text-white text-xs font-medium hover:bg-blue-600"
+                          id="btn-gerar-primeiro-documento"
+                          onClick={() => navigate({ to: "/processes/$id/gerar-documento", params: { id } })}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#075BFF] text-white text-xs font-medium hover:bg-blue-600 cursor-pointer"
                         >
                           <Plus className="h-3.5 w-3.5" />
                           <span>Gerar primeiro documento</span>
@@ -633,7 +700,8 @@ function DocumentosGeradosPage() {
                           {/* Visualizar */}
                           <button
                             type="button"
-                            onClick={() => navigate({ to: "/processes/$id/revisar-documento", params: { id }, search: { docId: doc.id } })}
+                            id={`btn-view-doc-${doc.id}`}
+                            onClick={() => openStoredFile(doc)}
                             className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
                             title="Visualizar PDF"
                           >

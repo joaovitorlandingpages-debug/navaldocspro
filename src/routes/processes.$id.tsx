@@ -41,6 +41,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { getServiceDefinition } from "@/services/catalog/servicesCatalogValidation";
 
 export const Route = createFileRoute("/processes/$id")({
   validateSearch: (search: Record<string, unknown>): {
@@ -135,23 +136,55 @@ function ProcessDetailsPage() {
 
   // 1. Carregar Processo e Relacionamentos
   const loadProcessDetails = useCallback(async () => {
-    if (!companyId || !id) return;
+    const isPreview = typeof window !== 'undefined' && (
+      window.location.search.includes('preview=true') ||
+      window.localStorage.getItem('preview_mode') === 'true'
+    );
+    if (!id || (!companyId && !isPreview)) return;
+
     setIsLoading(true);
     setIsError(false);
 
     try {
-      const { data: proc, error: pError } = await supabase
-        .from("processes")
-        .select(`
-          *,
-          customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone),
-          vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length)
-        `)
-        .eq("id", id)
-        .eq("company_id", companyId)
-        .maybeSingle();
+      let proc: any = null;
+      if (companyId) {
+        const { data, error: pError } = await supabase
+          .from("processes")
+          .select(`
+            *,
+            customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone),
+            vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length)
+          `)
+          .eq("id", id)
+          .eq("company_id", companyId)
+          .maybeSingle();
+        proc = data;
+      }
 
-      if (pError || !proc) {
+      if (!proc) {
+        if (isPreview) {
+          const demoProc = {
+            id,
+            title: "Processo Demonstrativo",
+            process_type: "laudo_engenharia",
+            status: "draft",
+            is_draft: true,
+            created_at: new Date().toISOString(),
+            draft_data: {
+              category: "profissional",
+              category_label: "Embarcações profissionais",
+              services: ["laudo_engenharia", "despacho_maritimo", "inscricao_inicial", "renovacao_tie"],
+            },
+            customer: { id: "c-1", name: "Marina Alves de Souza", cpf_cnpj: "123.456.789-00" },
+            vessel: { id: "v-1", name: "Brisa Azul Teste", registration_number: "SP-123456", category: "profissional", vessel_type: "Embarcação Comercial" },
+          };
+          setProcessData(demoProc);
+          setCurrentStatus("draft");
+          setCustomer(demoProc.customer);
+          setVessel(demoProc.vessel);
+          setIsLoading(false);
+          return;
+        }
         setIsError(true);
         setIsLoading(false);
         return;
@@ -171,41 +204,43 @@ function ProcessDetailsPage() {
 
   // 2. Carregar Arquivos Reais (Documentos Gerados, Protocolos e Documentos Emitidos)
   const loadProcessFiles = useCallback(async () => {
-    if (!companyId || !id) return;
+    if (!id) return;
     setIsLoadingFiles(true);
 
     try {
-      // 2.1 Documentos Gerados
-      const { data: genDocs } = await supabase
-        .from("generated_documents")
-        .select("*")
-        .eq("company_id", companyId)
-        .eq("process_id", id)
-        .order("created_at", { ascending: false });
+      if (companyId) {
+        // 2.1 Documentos Gerados
+        const { data: genDocs } = await supabase
+          .from("generated_documents")
+          .select("*")
+          .eq("company_id", companyId)
+          .eq("process_id", id)
+          .order("created_at", { ascending: false });
 
-      setGeneratedDocs(genDocs || []);
+        setGeneratedDocs(genDocs || []);
 
-      // 2.2 Protocolos Realizados
-      const { data: protoFiles } = await supabase
-        .from("uploaded_files")
-        .select("*")
-        .eq("company_id", companyId)
-        .eq("process_id", id)
-        .eq("category", "protocol")
-        .order("created_at", { ascending: false });
+        // 2.2 Protocolos Realizados
+        const { data: protoFiles } = await supabase
+          .from("uploaded_files")
+          .select("*")
+          .eq("company_id", companyId)
+          .eq("process_id", id)
+          .eq("category", "protocol")
+          .order("created_at", { ascending: false });
 
-      setProtocolFiles(protoFiles || []);
+        setProtocolFiles(protoFiles || []);
 
-      // 2.3 Documentos Emitidos
-      const { data: issDocs } = await supabase
-        .from("uploaded_files")
-        .select("*")
-        .eq("company_id", companyId)
-        .eq("process_id", id)
-        .in("category", ["issued", "issued_doc", "documento_emitido", "final_document"])
-        .order("created_at", { ascending: false });
+        // 2.3 Documentos Emitidos
+        const { data: issDocs } = await supabase
+          .from("uploaded_files")
+          .select("*")
+          .eq("company_id", companyId)
+          .eq("process_id", id)
+          .in("category", ["issued", "issued_doc", "documento_emitido", "final_document"])
+          .order("created_at", { ascending: false });
 
-      setIssuedDocs(issDocs || []);
+        setIssuedDocs(issDocs || []);
+      }
     } catch (err) {
       console.error("Erro ao carregar arquivos do processo:", err);
     } finally {
@@ -325,36 +360,52 @@ function ProcessDetailsPage() {
 
   // Nome da Categoria
   const categoryDisplayName = useMemo(() => {
-    const metaCat = processData?.metadata?.category_label || processData?.metadata?.category;
-    if (metaCat) return metaCat;
+    const draft = (processData?.draft_data || processData?.metadata || {}) as any;
+    if (draft?.category_label) return draft.category_label;
+    if (draft?.category === "profissional") return "Embarcações profissionais";
+    if (draft?.category === "esporte_recreio") return "Embarcações de esporte e recreio";
     if (vessel?.category) return vessel.category;
     return "Embarcações de esporte e recreio";
   }, [processData, vessel]);
 
   // Serviços deste processo
   const processServices = useMemo(() => {
-    if (processData?.metadata?.parsed_services && Array.isArray(processData.metadata.parsed_services)) {
-      return processData.metadata.parsed_services;
+    const draft = (processData?.draft_data || processData?.metadata || {}) as any;
+
+    if (draft?.parsed_services && Array.isArray(draft.parsed_services) && draft.parsed_services.length > 0) {
+      return draft.parsed_services.map((srv: any) => ({
+        ...srv,
+        categoryLabel: srv.categoryLabel || categoryDisplayName,
+      }));
     }
-    if (processData?.metadata?.services && Array.isArray(processData.metadata.services)) {
-      return processData.metadata.services.map((key: string) => {
-        const def = SERVICE_CATALOG[key] || { title: key, categoryLabel: categoryDisplayName };
+
+    const serviceKeys: string[] = draft?.services || draft?.selected_services || [processData?.process_type].filter(Boolean);
+    if (Array.isArray(serviceKeys) && serviceKeys.length > 0) {
+      return serviceKeys.map((key: string) => {
+        const def = getServiceDefinition(key);
+        const isVal = def.status === "validated";
         return {
           key,
+          id: def.id,
           title: def.title,
-          categoryLabel: def.categoryLabel,
-          status: "Em andamento",
+          categoryLabel: categoryDisplayName,
+          status: isVal ? "Requisitos conferidos" : "Requisitos em revisão",
+          isValidated: isVal,
+          officialSource: def.officialSource,
+          missingValidationNote: def.missingValidationNote,
         };
       });
     }
 
-    const singleKey = processData?.process_type || "renovacao-tie";
-    const singleDef = SERVICE_CATALOG[singleKey] || { title: processData?.title || "Serviço náutico", categoryLabel: categoryDisplayName };
+    const singleKey = processData?.process_type || "renovacao_inscricao";
+    const singleDef = getServiceDefinition(singleKey);
     return [{
       key: singleKey,
-      title: singleDef.title,
-      categoryLabel: singleDef.categoryLabel,
-      status: "Em andamento",
+      id: singleDef.id,
+      title: singleDef.title || processData?.title || "Serviço náutico",
+      categoryLabel: categoryDisplayName,
+      status: singleDef.status === "validated" ? "Requisitos conferidos" : "Requisitos em revisão",
+      isValidated: singleDef.status === "validated",
     }];
   }, [processData, categoryDisplayName]);
 
@@ -362,9 +413,10 @@ function ProcessDetailsPage() {
   const historyEvents = useMemo(() => {
     const events: Array<{ id: string; event: string; description: string; user: string; date: string }> = [];
 
-    // Eventos customizados do metadata
-    if (processData?.metadata?.history && Array.isArray(processData.metadata.history)) {
-      processData.metadata.history.forEach((h: any, idx: number) => {
+    // Eventos customizados do draft_data ou metadata
+    const historyList = (processData?.draft_data as any)?.history || (processData?.metadata as any)?.history;
+    if (historyList && Array.isArray(historyList)) {
+      historyList.forEach((h: any, idx: number) => {
         events.push({
           id: `meta-${idx}`,
           event: h.event || "action",
@@ -730,7 +782,7 @@ function ProcessDetailsPage() {
                     navigate({
                       to: "/servicos/selecionar",
                       search: {
-                        category: processData?.metadata?.category || "esporte_recreio",
+                        category: (processData?.draft_data as any)?.category || (processData?.metadata as any)?.category || "esporte_recreio",
                         customerId: customer?.id || "",
                         vesselId: vessel?.id || "",
                       },
@@ -839,7 +891,7 @@ function ProcessDetailsPage() {
                     navigate({
                       to: "/servicos/documentos",
                       search: {
-                        category: processData?.metadata?.category || "esporte_recreio",
+                        category: (processData?.draft_data as any)?.category || (processData?.metadata as any)?.category || "esporte_recreio",
                         customerId: customer?.id || "",
                         vesselId: vessel?.id || "",
                         services: processServices.map((s: any) => s.key).join(","),

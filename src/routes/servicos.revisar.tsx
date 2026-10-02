@@ -147,12 +147,17 @@ function RevisarProcessoPage() {
     return rawServices.map((key) => {
       const def = getServiceDefinition(key);
       const isVal = def.status === "validated";
+      const svcCategoryLabel = category === "profissional"
+        ? "Embarcações profissionais"
+        : isJetSki
+        ? "Moto aquática"
+        : def.categoryDisplayName || "Esporte e recreio";
 
       return {
         key,
         id: def.id,
         title: def.title,
-        categoryLabel: isJetSki ? "Moto aquática" : def.categoryDisplayName,
+        categoryLabel: svcCategoryLabel,
         officialSource: isJetSki ? "CPES • Marinha do Brasil (Moto aquática)" : def.officialSource,
         sourceUrl: isJetSki ? "https://www.marinha.mil.br/cpes/node/384" : def.sourceUrl,
         status: isVal ? "Requisitos conferidos" : "Requisitos em revisão",
@@ -167,31 +172,111 @@ function RevisarProcessoPage() {
         modelsPending: isVal ? 0 : 2,
       };
     });
-  }, [rawServices, isJetSki]);
+  }, [rawServices, isJetSki, category]);
 
   const allServicesValidated = useMemo(() => {
     return parsedServices.length > 0 && parsedServices.every((s) => s.isValidated);
   }, [parsedServices]);
 
-  // Ação de Salvar como Rascunho
+  // Ação 1: Salvar Processo como Rascunho (apenas salva o processo sem gerar documentos)
   const handleSaveDraft = async () => {
+    const effectiveCompanyId = currentCompany?.id || profile?.company_id;
+    if (!effectiveCompanyId) {
+      toast.error("Vínculo de empresa não identificado.");
+      return;
+    }
+
+    let effectiveCustomerId = customerId || customer?.id;
+    if (!effectiveCustomerId) {
+      const { data: firstCust } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("company_id", effectiveCompanyId)
+        .limit(1)
+        .maybeSingle();
+      effectiveCustomerId = firstCust?.id;
+    }
+
+    if (!effectiveCustomerId) {
+      toast.error("Selecione um cliente para vincular ao processo.");
+      return;
+    }
+
     setIsDraftSaving(true);
     try {
-      await new Promise((r) => setTimeout(r, 600));
-      toast.success("Rascunho salvo com sucesso!", {
-        description: "A preparação deste processo foi salva para continuidade posterior.",
+      const primaryServiceTitle = parsedServices[0]?.title || "Serviço Náutico";
+      const customerName = customer?.fantasy_name || customer?.name || "Cliente";
+      const vesselName = vessel?.name || "Embarcação";
+      const processTitle = `${primaryServiceTitle} - ${vesselName} (${customerName})`;
+
+      const { data: newProcess, error: procError } = await supabase
+        .from("processes")
+        .insert({
+          company_id: effectiveCompanyId,
+          customer_id: effectiveCustomerId,
+          vessel_id: vesselId || null,
+          title: processTitle,
+          process_type: parsedServices[0]?.key || "renovacao_inscricao",
+          status: "draft",
+          priority: "medium",
+          is_draft: true,
+          draft_data: {
+            category,
+            category_label: categoryDisplayName,
+            services: rawServices,
+            selected_services: rawServices,
+            parsed_services: parsedServices,
+            is_jet_ski: isJetSki,
+            all_services_validated: allServicesValidated,
+            created_by_user_id: user?.id,
+            created_by_email: user?.email,
+            created_at_date: new Date().toISOString(),
+          },
+        } as any)
+        .select("id")
+        .single();
+
+      if (procError || !newProcess) {
+        throw new Error(procError?.message || "Falha ao salvar rascunho do processo.");
+      }
+
+      toast.success("Processo salvo como rascunho!", {
+        description: "Processo salvo. Nenhum documento foi gerado ainda.",
       });
-    } catch (err) {
-      toast.error("Erro ao salvar rascunho.");
+
+      navigate({
+        to: "/processes/$id",
+        params: { id: newProcess.id },
+      });
+    } catch (err: any) {
+      console.error("Erro ao salvar rascunho do processo:", err);
+      toast.error(err?.message || "Erro ao salvar rascunho. Tente novamente.");
     } finally {
       setIsDraftSaving(false);
     }
   };
 
-  // Ação de Criar Processo Definitivo
-  const handleCreateProcess = async () => {
-    if (!currentCompany?.id || !customerId) {
-      toast.error("Vínculo de empresa ou cliente inválido.");
+  // Ação 2: Gerar Documentos (salva o processo e abre o fluxo funcional de geração)
+  const handleGenerateDocuments = async () => {
+    const effectiveCompanyId = currentCompany?.id || profile?.company_id;
+    if (!effectiveCompanyId) {
+      toast.error("Vínculo de empresa não identificado.");
+      return;
+    }
+
+    let effectiveCustomerId = customerId || customer?.id;
+    if (!effectiveCustomerId) {
+      const { data: firstCust } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("company_id", effectiveCompanyId)
+        .limit(1)
+        .maybeSingle();
+      effectiveCustomerId = firstCust?.id;
+    }
+
+    if (!effectiveCustomerId) {
+      toast.error("Selecione um cliente para vincular ao processo.");
       return;
     }
 
@@ -200,18 +285,16 @@ function RevisarProcessoPage() {
       const primaryServiceTitle = parsedServices[0]?.title || "Serviço Náutico";
       const customerName = customer?.fantasy_name || customer?.name || "Cliente";
       const vesselName = vessel?.name || "Embarcação";
-      
       const processTitle = `${primaryServiceTitle} - ${vesselName} (${customerName})`;
 
-      // Criar processo no banco de dados do Lovable Cloud
       const { data: newProcess, error: procError } = await supabase
         .from("processes")
         .insert({
-          company_id: currentCompany.id,
-          customer_id: customerId,
+          company_id: effectiveCompanyId,
+          customer_id: effectiveCustomerId,
           vessel_id: vesselId || null,
           title: processTitle,
-          process_type: parsedServices[0]?.key || "renovacao-tie",
+          process_type: parsedServices[0]?.key || "renovacao_inscricao",
           status: allServicesValidated ? "in_progress" : "draft",
           priority: "medium",
           is_draft: !allServicesValidated,
@@ -219,6 +302,7 @@ function RevisarProcessoPage() {
             category,
             category_label: categoryDisplayName,
             services: rawServices,
+            selected_services: rawServices,
             parsed_services: parsedServices,
             is_jet_ski: isJetSki,
             all_services_validated: allServicesValidated,
@@ -234,19 +318,12 @@ function RevisarProcessoPage() {
         throw new Error(procError?.message || "Falha ao registrar processo no servidor.");
       }
 
-      if (allServicesValidated) {
-        toast.success("Processo criado com sucesso!", {
-          description: `Processo registrado e liberado para conferência de documentos e assinaturas.`,
-        });
-      } else {
-        toast.success("Processo salvo como rascunho!", {
-          description: `Requisitos em revisão regulatória. O processo foi salvo como rascunho para acompanhamento sem protocolo direto.`,
-        });
-      }
+      toast.success("Processo registrado com sucesso!", {
+        description: "Abrindo seleção e geração de documentos...",
+      });
 
-      // Navegar para a Tela 07 - Detalhes do Processo
       navigate({
-        to: "/processes/$id",
+        to: "/processes/$id/gerar-documento",
         params: { id: newProcess.id },
       });
     } catch (err: any) {
@@ -654,38 +731,32 @@ function RevisarProcessoPage() {
 
             <button
               type="button"
+              id="btn-salvar-processo-rascunho"
               disabled={isDraftSaving || isSubmitting}
               onClick={handleSaveDraft}
-              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
             >
               {isDraftSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-              <span>Salvar rascunho</span>
+              <span>Salvar processo como rascunho</span>
             </button>
 
             <button
               type="button"
+              id="btn-gerar-documentos"
               disabled={isSubmitting || isDraftSaving}
-              onClick={handleCreateProcess}
-              className={`inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50 ${
-                allServicesValidated
-                  ? "bg-[#075BFF] hover:bg-blue-600 text-white"
-                  : "bg-amber-600 hover:bg-amber-700 text-white"
-              }`}
+              onClick={handleGenerateDocuments}
+              className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>Registrando...</span>
-                </>
-              ) : allServicesValidated ? (
-                <>
-                  <span>Criar processo</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  <span>Registrando e abrindo...</span>
                 </>
               ) : (
                 <>
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>Salvar rascunho do processo</span>
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>Gerar documentos</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </>
               )}
             </button>

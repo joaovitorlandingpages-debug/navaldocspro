@@ -13,7 +13,10 @@ function inferBucket(file: any) {
 
 function extractStoragePath(raw: string, bucket: string) {
   if (!raw) return "";
-  if (!raw.startsWith("http")) return raw;
+  if (!raw.startsWith("http")) {
+    const prefix = `${bucket}/`;
+    return raw.startsWith(prefix) ? raw.slice(prefix.length) : raw;
+  }
   const marker = `/${bucket}/`;
   const idx = raw.indexOf(marker);
   return idx >= 0 ? raw.slice(idx + marker.length) : "";
