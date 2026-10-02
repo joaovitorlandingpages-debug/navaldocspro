@@ -23,8 +23,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { 
-  VesselDocumentUploadModal, 
+import type { 
   ExtractedVesselData, 
   UploadedVesselFile 
 } from "@/components/vessels/VesselDocumentUploadModal";
@@ -107,8 +106,6 @@ function NovaEmbarcacaoPage() {
   // Modal de Cadastro Rápido de Cliente
   const [isQuickCustomerOpen, setIsQuickCustomerOpen] = useState(false);
 
-  // Modal de Leitura de Documentos
-  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedVesselFile[]>([]);
   const [extractedBadge, setExtractedBadge] = useState(false);
   const [ownerDivergenceWarning, setOwnerDivergenceWarning] = useState<string | null>(null);
@@ -701,7 +698,14 @@ function NovaEmbarcacaoPage() {
                   JSON.stringify({ formData, selectedCustomerId, uploadedFiles })
                 );
               }
-              setIsDocModalOpen(true);
+              navigate({
+                to: "/documentos/anexar",
+                search: {
+                  tipo: "embarcacao",
+                  modo: "novo",
+                  returnTo: "/vessels/novo" + (typeof window !== "undefined" ? window.location.search : ""),
+                } as any,
+              });
             }}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-[#075BFF] bg-white text-[#075BFF] hover:bg-blue-50 font-bold text-xs sm:text-sm transition-colors shadow-2xs cursor-pointer"
           >
@@ -1145,15 +1149,7 @@ function NovaEmbarcacaoPage() {
         }}
       />
 
-      {/* MODAL DE LEITURA DE DOCUMENTOS DA EMBARCAÇÃO */}
-      <VesselDocumentUploadModal
-        isOpen={isDocModalOpen}
-        onClose={() => setIsDocModalOpen(false)}
-        companyId={companyId || null}
-        userId={profile?.id || undefined}
-        existingVessel={formData.registration_number ? { registration_number: formData.registration_number, name: formData.name } : null}
-        onDataExtracted={handleDataExtracted}
-      />
+
 
       {/* CONFIRMAÇÃO DE SAÍDA COM DADOS NÃO SALVOS */}
       <ConfirmDialog

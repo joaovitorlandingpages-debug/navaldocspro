@@ -121,6 +121,7 @@ import { Route as DashboardDocumentCenterRouteImport } from './routes/dashboard.
 import { Route as DashboardDocumentsBaseRouteImport } from './routes/dashboard/documents-base'
 import { Route as DashboardEcosystemRouteImport } from './routes/dashboard.ecosystem'
 import { Route as DashboardSecurityRouteImport } from './routes/dashboard.security'
+import { Route as DocumentosAnexarRouteImport } from './routes/documentos.anexar'
 import { Route as DocumentosBibliotecaRouteImport } from './routes/documentos.biblioteca'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as ProcessesIndexRouteImport } from './routes/processes.index'
@@ -742,6 +743,11 @@ const DashboardSecurityRoute = DashboardSecurityRouteImport.update({
   path: '/security',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DocumentosAnexarRoute = DocumentosAnexarRouteImport.update({
+  id: '/documentos/anexar',
+  path: '/documentos/anexar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocumentosBibliotecaRoute = DocumentosBibliotecaRouteImport.update({
   id: '/documentos/biblioteca',
   path: '/documentos/biblioteca',
@@ -1154,6 +1160,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/dashboard/ecosystem': typeof DashboardEcosystemRoute
   '/dashboard/security': typeof DashboardSecurityRoute
+  '/documentos/anexar': typeof DocumentosAnexarRoute
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRouteWithChildren
@@ -1320,6 +1327,7 @@ export interface FileRoutesByTo {
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/dashboard/ecosystem': typeof DashboardEcosystemRoute
   '/dashboard/security': typeof DashboardSecurityRoute
+  '/documentos/anexar': typeof DocumentosAnexarRoute
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRouteWithChildren
@@ -1491,6 +1499,7 @@ export interface FileRoutesById {
   '/dashboard/documents-base': typeof DashboardDocumentsBaseRoute
   '/dashboard/ecosystem': typeof DashboardEcosystemRoute
   '/dashboard/security': typeof DashboardSecurityRoute
+  '/documentos/anexar': typeof DocumentosAnexarRoute
   '/documentos/biblioteca': typeof DocumentosBibliotecaRoute
   '/portal/$token': typeof PortalTokenRoute
   '/processes/$id': typeof ProcessesIdRouteWithChildren
@@ -1663,6 +1672,7 @@ export interface FileRouteTypes {
     | '/dashboard/documents-base'
     | '/dashboard/ecosystem'
     | '/dashboard/security'
+    | '/documentos/anexar'
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
@@ -1829,6 +1839,7 @@ export interface FileRouteTypes {
     | '/dashboard/documents-base'
     | '/dashboard/ecosystem'
     | '/dashboard/security'
+    | '/documentos/anexar'
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
@@ -1999,6 +2010,7 @@ export interface FileRouteTypes {
     | '/dashboard/documents-base'
     | '/dashboard/ecosystem'
     | '/dashboard/security'
+    | '/documentos/anexar'
     | '/documentos/biblioteca'
     | '/portal/$token'
     | '/processes/$id'
@@ -2122,6 +2134,7 @@ export interface RootRouteChildren {
   BillingSuccessRoute: typeof BillingSuccessRoute
   CustomersIdRoute: typeof CustomersIdRoute
   CustomersNovoRoute: typeof CustomersNovoRoute
+  DocumentosAnexarRoute: typeof DocumentosAnexarRoute
   DocumentosBibliotecaRoute: typeof DocumentosBibliotecaRoute
   PortalTokenRoute: typeof PortalTokenRoute
   ProcessesIdRoute: typeof ProcessesIdRouteWithChildren
@@ -2932,6 +2945,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSecurityRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/documentos/anexar': {
+      id: '/documentos/anexar'
+      path: '/documentos/anexar'
+      fullPath: '/documentos/anexar'
+      preLoaderRoute: typeof DocumentosAnexarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/documentos/biblioteca': {
       id: '/documentos/biblioteca'
       path: '/documentos/biblioteca'
@@ -3637,6 +3657,7 @@ const rootRouteChildren: RootRouteChildren = {
   BillingSuccessRoute: BillingSuccessRoute,
   CustomersIdRoute: CustomersIdRoute,
   CustomersNovoRoute: CustomersNovoRoute,
+  DocumentosAnexarRoute: DocumentosAnexarRoute,
   DocumentosBibliotecaRoute: DocumentosBibliotecaRoute,
   PortalTokenRoute: PortalTokenRoute,
   ProcessesIdRoute: ProcessesIdRouteWithChildren,

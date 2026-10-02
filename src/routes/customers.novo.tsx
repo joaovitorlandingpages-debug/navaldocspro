@@ -30,8 +30,7 @@ import {
   isValidCNPJ, 
   fetchAddressByCEP 
 } from "@/lib/br-format";
-import { 
-  CustomerDocumentUploadModal, 
+import type { 
   ExtractedCustomerData, 
   UploadedCustomerFile 
 } from "@/components/customers/CustomerDocumentUploadModal";
@@ -105,8 +104,6 @@ function NovoClientePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingCEP, setIsSearchingCEP] = useState(false);
 
-  // Modal de Upload / Extração OCR
-  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedCustomerFile[]>([]);
   const [extractedBadge, setExtractedBadge] = useState(false);
 
@@ -604,7 +601,14 @@ function NovoClientePage() {
                   JSON.stringify({ formData, clientType, uploadedFiles })
                 );
               }
-              setIsDocModalOpen(true);
+              navigate({
+                to: "/documentos/anexar",
+                search: {
+                  tipo: "cliente",
+                  modo: "novo",
+                  returnTo: "/customers/novo" + (typeof window !== "undefined" ? window.location.search : ""),
+                } as any,
+              });
             }}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-[#075BFF] bg-white text-[#075BFF] hover:bg-blue-50 font-bold text-xs sm:text-sm transition-colors shadow-2xs cursor-pointer"
           >
@@ -1132,15 +1136,7 @@ function NovoClientePage() {
         </div>
       </form>
 
-      {/* MODAL DE EXTRAÇÃO DE DOCUMENTOS */}
-      <CustomerDocumentUploadModal
-        isOpen={isDocModalOpen}
-        onClose={() => setIsDocModalOpen(false)}
-        companyId={profile?.company_id || null}
-        userId={profile?.id || undefined}
-        existingCustomer={formData.cpf || formData.cnpj ? { cpf_cnpj: formData.cpf || formData.cnpj, name: formData.nome || formData.razaoSocial } : null}
-        onDataExtracted={handleDataExtracted}
-      />
+
 
       {/* CONFIRMAÇÃO DE SAÍDA COM DADOS NÃO SALVOS */}
       <ConfirmDialog

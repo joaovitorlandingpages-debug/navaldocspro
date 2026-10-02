@@ -13,6 +13,7 @@ export interface ReviewSessionData {
   targetEntity: "customer" | "vessel";
   createdAt: number;
   draftData?: any;
+  companyId?: string | null;
 }
 
 // Cache em memória para acesso síncrono imediato na mesma sessão
@@ -28,6 +29,7 @@ export function saveReviewSession(
     originUrl?: string;
     targetEntity?: "customer" | "vessel";
     draftData?: any;
+    companyId?: string | null;
   }
 ) {
   const sessionData: ReviewSessionData = {
@@ -36,6 +38,7 @@ export function saveReviewSession(
     targetEntity: session.targetEntity || session.review.targetEntity || "vessel",
     createdAt: Date.now(),
     draftData: session.draftData,
+    companyId: session.companyId || null,
   };
 
   memorySessionMap.set(id, sessionData);
@@ -90,10 +93,16 @@ export function getReviewSession(id: string): ReviewSessionData | null {
  * Se o usuário recarregar a tela (F5) ou acessar diretamente a URL com o ID do arquivo ou job,
  * busca os dados no Supabase e reconstrói o objeto de conferência sem apresentar tela de erro.
  */
-export async function loadReviewSessionWithFallback(id: string): Promise<ReviewSessionData | null> {
+export async function loadReviewSessionWithFallback(id: string, userCompanyId?: string | null): Promise<ReviewSessionData | null> {
   // 1. Tenta recuperar do cache local imediato
   const cached = getReviewSession(id);
-  if (cached) return cached;
+  if (cached) {
+    if (userCompanyId && cached.companyId && cached.companyId !== userCompanyId) {
+      console.warn("[reviewSessionStorage] Acesso rejeitado: empresa da sessão difere da empresa autenticada.");
+      return null;
+    }
+    return cached;
+  }
 
   // 2. Se não estiver no cache (ex: F5 / recarregamento em aba nova), recupera do banco de dados
   try {
@@ -101,45 +110,58 @@ export async function loadReviewSessionWithFallback(id: string): Promise<ReviewS
     let fileRecord: any = null;
     let ocrJobRecord: any = null;
 
-    const { data: fileById } = await supabase
+    let fileQuery = supabase
       .from("uploaded_files")
       .select("*")
-      .eq("id", id)
-      .maybeSingle();
+      .eq("id", id);
+    if (userCompanyId) {
+      fileQuery = fileQuery.eq("company_id", userCompanyId);
+    }
+    const { data: fileById } = await fileQuery.maybeSingle();
 
     if (fileById) {
       fileRecord = fileById;
-      const { data: jobByFile } = await supabase
+      let jobQuery = supabase
         .from("ocr_jobs")
         .select("*")
-        .eq("uploaded_file_id", id)
+        .eq("uploaded_file_id", id);
+      if (userCompanyId) {
+        jobQuery = jobQuery.eq("company_id", userCompanyId);
+      }
+      const { data: jobByFile } = await jobQuery
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       ocrJobRecord = jobByFile;
     } else {
       // Se não encontrou por fileId, pode ser que o id seja o ocr_jobs.id
-      const { data: jobById } = await supabase
+      let jobQuery = supabase
         .from("ocr_jobs")
         .select("*")
-        .eq("id", id)
-        .maybeSingle();
+        .eq("id", id);
+      if (userCompanyId) {
+        jobQuery = jobQuery.eq("company_id", userCompanyId);
+      }
+      const { data: jobById } = await jobQuery.maybeSingle();
 
       if (jobById) {
         ocrJobRecord = jobById;
         if (jobById.uploaded_file_id) {
-          const { data: fileByJob } = await supabase
+          let fileByJobQuery = supabase
             .from("uploaded_files")
             .select("*")
-            .eq("id", jobById.uploaded_file_id)
-            .maybeSingle();
+            .eq("id", jobById.uploaded_file_id);
+          if (userCompanyId) {
+            fileByJobQuery = fileByJobQuery.eq("company_id", userCompanyId);
+          }
+          const { data: fileByJob } = await fileByJobQuery.maybeSingle();
           fileRecord = fileByJob;
         }
       }
     }
 
     if (!fileRecord && !ocrJobRecord) {
-      console.warn("[reviewSessionStorage] Nenhum registro encontrado no Supabase para id:", id);
+      console.warn("[reviewSessionStorage] Nenhum registro encontrado com autorização para id:", id);
       return null;
     }
 

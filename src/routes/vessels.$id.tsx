@@ -24,7 +24,7 @@ import { safeString } from "@/utils/safe-string";
 import { VesselEditModal } from "@/components/vessels/VesselEditModal";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
-import { VesselDocumentUploadModal, ExtractedVesselData, UploadedVesselFile } from "@/components/vessels/VesselDocumentUploadModal";
+import type { ExtractedVesselData, UploadedVesselFile } from "@/components/vessels/VesselDocumentUploadModal";
 
 export const Route = createFileRoute("/vessels/$id")({
   validateSearch: (search: Record<string, unknown>): {
@@ -94,9 +94,8 @@ function VesselDetailsPage() {
   const [serviceSearch, setServiceSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Modal de edição e upload
+  // Modal de edição
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // 1. Carregar Embarcação e Cliente Vinculado
   const loadVesselData = useCallback(async () => {
@@ -196,6 +195,35 @@ function VesselDetailsPage() {
       toast.error("Erro ao atualizar embarcação: " + (err.message || "Erro desconhecido"));
     }
   };
+
+  // Aplica retorno da tela de conferência de leitura automática
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.sessionStorage) return;
+    const reviewResultStr = window.sessionStorage.getItem("ndp_review_result");
+    if (reviewResultStr) {
+      try {
+        const result = JSON.parse(reviewResultStr);
+        if (result.targetEntity === "vessel") {
+          const filesToAdd: UploadedVesselFile[] = result.file ? [{
+            file: null as any,
+            id: result.file.id,
+            path: result.file.path,
+            name: result.file.name,
+            size: result.file.size,
+          }] : [];
+
+          if (result.confirmed && result.fields) {
+            handleVesselExtracted(result.fields, filesToAdd);
+          } else if (result.manual && filesToAdd.length > 0) {
+            handleVesselExtracted({}, filesToAdd);
+          }
+        }
+      } catch (e) {
+        console.warn("[vessels.$id] Erro ao aplicar resultado da conferência:", e);
+      }
+      window.sessionStorage.removeItem("ndp_review_result");
+    }
+  }, [vessel?.id, companyId, handleVesselExtracted]);
 
   // 2. Carregar Processos / Serviços Vinculados a esta Embarcação
   const loadVesselProcesses = useCallback(async () => {
@@ -461,7 +489,17 @@ function VesselDetailsPage() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setIsUploadModalOpen(true)}
+            onClick={() => {
+              navigate({
+                to: "/documentos/anexar",
+                search: {
+                  tipo: "embarcacao",
+                  modo: "editar",
+                  id: vessel.id,
+                  returnTo: `/vessels/${vessel.id}`,
+                } as any,
+              });
+            }}
             className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-[#075BFF] text-xs font-semibold shadow-2xs transition-all shrink-0 cursor-pointer self-start"
           >
             <Sparkles className="h-3.5 w-3.5 text-[#075BFF]" />
@@ -863,20 +901,7 @@ function VesselDetailsPage() {
         />
       )}
 
-      {/* MODAL DE UPLOAD / LEITURA DE DOCUMENTO DA EMBARCAÇÃO */}
-      {isUploadModalOpen && (
-        <VesselDocumentUploadModal
-          isOpen={isUploadModalOpen}
-          onClose={() => setIsUploadModalOpen(false)}
-          companyId={companyId || null}
-          userId={profile?.id}
-          existingVessel={vessel}
-          onDataExtracted={(data, files) => {
-            handleVesselExtracted(data, files);
-            setIsUploadModalOpen(false);
-          }}
-        />
-      )}
+
     </div>
   );
 }

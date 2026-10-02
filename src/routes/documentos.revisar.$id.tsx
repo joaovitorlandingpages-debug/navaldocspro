@@ -32,6 +32,7 @@ import {
   loadReviewSessionWithFallback, 
   ReviewSessionData 
 } from "@/services/ocr/reviewSessionStorage";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/documentos/revisar/$id")({
@@ -41,6 +42,7 @@ export const Route = createFileRoute("/documentos/revisar/$id")({
 function DocumentoRevisarPage() {
   const { id } = useParams({ from: "/documentos/revisar/$id" });
   const navigate = useNavigate();
+  const { companyId } = useAuth();
 
   const [sessionData, setSessionData] = useState<ReviewSessionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,7 +69,7 @@ function DocumentoRevisarPage() {
       setLoadError(null);
 
       try {
-        const session = await loadReviewSessionWithFallback(id);
+        const session = await loadReviewSessionWithFallback(id, companyId);
         if (!isMounted) return;
 
         if (session && session.review) {

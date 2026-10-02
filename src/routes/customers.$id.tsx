@@ -28,7 +28,7 @@ import { CustomerEditModal } from "@/components/customers/CustomerEditModal";
 import { openStoredFile, downloadStoredFile } from "@/utils/file-preview";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
-import { CustomerDocumentUploadModal, ExtractedCustomerData, UploadedCustomerFile } from "@/components/customers/CustomerDocumentUploadModal";
+import type { ExtractedCustomerData, UploadedCustomerFile } from "@/components/customers/CustomerDocumentUploadModal";
 
 export const Route = createFileRoute("/customers/$id")({
   validateSearch: (search: Record<string, unknown>): {
@@ -99,7 +99,6 @@ function CustomerDetailsPage() {
 
   // Modal de edição
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // 1. Carregar Dados do Cliente
   const loadCustomer = useCallback(async () => {
@@ -356,6 +355,35 @@ function CustomerDetailsPage() {
     }
   };
 
+  // Aplica retorno da tela de conferência de leitura automática
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.sessionStorage) return;
+    const reviewResultStr = window.sessionStorage.getItem("ndp_review_result");
+    if (reviewResultStr) {
+      try {
+        const result = JSON.parse(reviewResultStr);
+        if (result.targetEntity === "customer") {
+          const filesToAdd: UploadedCustomerFile[] = result.file ? [{
+            file: null as any,
+            id: result.file.id,
+            path: result.file.path,
+            name: result.file.name,
+            size: result.file.size,
+          }] : [];
+
+          if (result.confirmed && result.fields) {
+            handleCustomerExtracted(result.fields, filesToAdd);
+          } else if (result.manual && filesToAdd.length > 0) {
+            handleCustomerExtracted({}, filesToAdd);
+          }
+        }
+      } catch (e) {
+        console.warn("[customers.$id] Erro ao aplicar resultado da conferência:", e);
+      }
+      window.sessionStorage.removeItem("ndp_review_result");
+    }
+  }, [customer?.id, companyId, handleCustomerExtracted]);
+
   useEffect(() => {
     loadCustomer();
     loadVessels();
@@ -496,7 +524,17 @@ function CustomerDetailsPage() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setIsUploadModalOpen(true)}
+            onClick={() => {
+              navigate({
+                to: "/documentos/anexar",
+                search: {
+                  tipo: "cliente",
+                  modo: "editar",
+                  id: customer.id,
+                  returnTo: `/customers/${customer.id}`,
+                } as any,
+              });
+            }}
             className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-[#075BFF] text-xs font-semibold shadow-2xs transition-all shrink-0 cursor-pointer"
           >
             <Sparkles className="h-3.5 w-3.5 text-[#075BFF]" />
@@ -879,20 +917,7 @@ function CustomerDetailsPage() {
         />
       )}
 
-      {/* MODAL DE UPLOAD / LEITURA DE DOCUMENTO COM IA */}
-      {isUploadModalOpen && (
-        <CustomerDocumentUploadModal
-          isOpen={isUploadModalOpen}
-          onClose={() => setIsUploadModalOpen(false)}
-          companyId={companyId || null}
-          userId={profile?.id}
-          existingCustomer={customer}
-          onDataExtracted={(data, files) => {
-            handleCustomerExtracted(data, files);
-            setIsUploadModalOpen(false);
-          }}
-        />
-      )}
+
     </div>
   );
 }
