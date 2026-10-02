@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UploadCloud, FileText, X, CheckCircle2, AlertCircle, Loader2, Sparkles, FileUp, Info, Ship } from "lucide-react";
@@ -7,6 +8,7 @@ import { validateUpload, MAX_ATTACHMENT_BYTES } from "@/lib/storage";
 import { processDocumentForReview } from "@/services/ocr/smartDocumentService";
 import { DocumentReviewSplitModal } from "@/components/documents/DocumentReviewSplitModal";
 import { ExtractedDocumentReview } from "@/services/ocr/documentOcrTypes";
+import { saveReviewSession } from "@/services/ocr/reviewSessionStorage";
 
 export interface ExtractedVesselData {
   name?: string;
@@ -59,6 +61,7 @@ export function VesselDocumentUploadModal({
   existingVessel,
   onDataExtracted 
 }: Props) {
+  const navigate = useNavigate();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStage, setProcessingStage] = useState<string>("");
@@ -124,6 +127,24 @@ export function VesselDocumentUploadModal({
         existingData: existingVessel,
         onProgress: (stage) => setProcessingStage(stage),
       });
+
+      const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+      if (isMobile) {
+        const sessionId = review.fileId || review.jobId || crypto.randomUUID();
+        saveReviewSession(sessionId, {
+          review,
+          originUrl: window.location.pathname + window.location.search,
+          targetEntity: "vessel",
+          draftData: existingVessel,
+        });
+
+        setIsProcessing(false);
+        onClose();
+        navigate({
+          to: `/documentos/revisar/${sessionId}`,
+        });
+        return;
+      }
 
       setIsProcessing(false);
       setReviewData(review);

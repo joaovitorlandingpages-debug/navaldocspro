@@ -299,6 +299,53 @@ function NovaEmbarcacaoPage() {
     setExtractedBadge(true);
   };
 
+  // Restaura rascunho anterior e aplica retorno da conferência de leitura
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.sessionStorage) return;
+
+    // 1. Restaura dados já preenchidos caso o usuário esteja retornando
+    const draftStr = window.sessionStorage.getItem("ndp_vessel_form_draft");
+    if (draftStr) {
+      try {
+        const draft = JSON.parse(draftStr);
+        if (draft.formData) setFormData((prev) => ({ ...prev, ...draft.formData }));
+        if (draft.selectedCustomerId) setSelectedCustomerId(draft.selectedCustomerId);
+        if (draft.uploadedFiles) setUploadedFiles(draft.uploadedFiles);
+      } catch (e) {
+        console.warn("[vessels.novo] Erro ao restaurar rascunho:", e);
+      }
+      window.sessionStorage.removeItem("ndp_vessel_form_draft");
+    }
+
+    // 2. Aplica retorno da tela de conferência de leitura automática
+    const reviewResultStr = window.sessionStorage.getItem("ndp_review_result");
+    if (reviewResultStr) {
+      try {
+        const result = JSON.parse(reviewResultStr);
+        if (result.targetEntity === "vessel") {
+          const filesToAdd: UploadedVesselFile[] = result.file ? [{
+            file: null as any,
+            id: result.file.id,
+            path: result.file.path,
+            name: result.file.name,
+            size: result.file.size,
+          }] : [];
+
+          if (result.manual) {
+            if (filesToAdd.length > 0) {
+              setUploadedFiles((prev) => [...prev, ...filesToAdd]);
+            }
+          } else if (result.confirmed && result.fields) {
+            handleDataExtracted(result.fields, filesToAdd);
+          }
+        }
+      } catch (e) {
+        console.warn("[vessels.novo] Erro ao aplicar resultado da conferência:", e);
+      }
+      window.sessionStorage.removeItem("ndp_review_result");
+    }
+  }, []);
+
   // Validação
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -647,7 +694,15 @@ function NovaEmbarcacaoPage() {
         <div className="flex flex-col items-start sm:items-end shrink-0 w-full sm:w-auto">
           <button
             type="button"
-            onClick={() => setIsDocModalOpen(true)}
+            onClick={() => {
+              if (typeof window !== "undefined" && window.sessionStorage) {
+                window.sessionStorage.setItem(
+                  "ndp_vessel_form_draft",
+                  JSON.stringify({ formData, selectedCustomerId, uploadedFiles })
+                );
+              }
+              setIsDocModalOpen(true);
+            }}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-[#075BFF] bg-white text-[#075BFF] hover:bg-blue-50 font-bold text-xs sm:text-sm transition-colors shadow-2xs cursor-pointer"
           >
             <Paperclip className="h-4 w-4 rotate-[-45deg]" />
