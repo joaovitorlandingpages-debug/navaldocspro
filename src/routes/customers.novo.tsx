@@ -509,7 +509,7 @@ function NovoClientePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-2 sm:py-6 px-2 sm:px-4">
+    <div className="min-h-[100dvh] max-w-4xl mx-auto py-2 sm:py-6 px-2 sm:px-4 pb-[calc(40px+env(safe-area-inset-bottom,0px))] flex flex-col justify-between">
       {/* 1. NAVEGAÇÃO "VOLTAR" */}
       <button
         type="button"
@@ -547,16 +547,16 @@ function NovoClientePage() {
           </div>
         </div>
 
-        <div className="flex flex-col items-start sm:items-end shrink-0">
+        <div className="flex flex-col items-start sm:items-end shrink-0 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setIsDocModalOpen(true)}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[#075BFF] bg-white text-[#075BFF] hover:bg-blue-50 font-semibold text-xs transition-colors shadow-2xs"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-[#075BFF] bg-white text-[#075BFF] hover:bg-blue-50 font-bold text-xs sm:text-sm transition-colors shadow-2xs cursor-pointer"
           >
             <Paperclip className="h-4 w-4 rotate-[-45deg]" />
             <span>Anexar documentos</span>
           </button>
-          <span className="text-[10px] text-slate-400 mt-1.5 pl-1 sm:pl-0">
+          <span className="text-[10px] text-slate-400 mt-1.5 pl-1 sm:pl-0 self-center sm:self-auto">
             PDF, JPG ou PNG
           </span>
         </div>
@@ -1032,22 +1032,25 @@ function NovoClientePage() {
         </div>
 
         {/* 5. RODAPÉ DO FORMULÁRIO */}
-        <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           <div>
-            <p className="text-xs text-slate-400">
-              Os dados preenchidos automaticamente podem ser corrigidos antes de salvar.
+            <p className="text-xs text-slate-500 font-medium">
+              Revise os dados antes de salvar o cadastro.
             </p>
             <p className="text-xs text-slate-400 mt-0.5">
               <span className="text-red-500 font-bold">*</span> Campos obrigatórios
             </p>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
             <button
               type="button"
               disabled={isSubmitting}
               onClick={handleBack}
-              className="px-6 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors disabled:opacity-50"
+              onPointerDown={() => {
+                (document.activeElement as HTMLElement)?.blur?.();
+              }}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50 text-center cursor-pointer shadow-2xs"
             >
               Cancelar
             </button>
@@ -1056,7 +1059,10 @@ function NovoClientePage() {
               type="submit"
               id="btn-save-customer"
               disabled={isSubmitting}
-              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-xs cursor-pointer"
+              onPointerDown={() => {
+                (document.activeElement as HTMLElement)?.blur?.();
+              }}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs sm:text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-xs cursor-pointer text-center"
             >
               {isSubmitting ? (
                 <>

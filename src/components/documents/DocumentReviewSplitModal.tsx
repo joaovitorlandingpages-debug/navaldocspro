@@ -173,16 +173,18 @@ export function DocumentReviewSplitModal({ isOpen, onClose, review, onConfirm }:
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-6xl w-[96vw] h-[90vh] flex flex-col p-0 gap-0 bg-slate-50 rounded-2xl overflow-hidden shadow-2xl border-slate-200">
+      <DialogContent 
+        className="w-full max-w-6xl h-[100dvh] max-h-[100dvh] sm:h-[90vh] sm:max-h-[90vh] sm:w-[96vw] flex flex-col p-0 gap-0 bg-slate-50 rounded-none sm:rounded-2xl overflow-hidden shadow-2xl border-0 sm:border border-slate-200"
+      >
         
         {/* ========================================================================= */}
         {/* 1. CABEÇALHO DO MODAL COM IDENTIFICAÇÃO DO TIPO E ALERTA OBRIGATÓRIO */}
         {/* ========================================================================= */}
-        <div className="bg-white border-b border-slate-200 px-6 py-4 flex flex-col gap-3 shrink-0">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sm:py-4 pr-12 sm:pr-6 flex flex-col gap-2.5 shrink-0 z-10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div>
-              <div className="flex items-center gap-2.5">
-                <span className="font-extrabold text-lg text-[#0B1739]">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-extrabold text-base sm:text-lg text-[#0B1739] leading-tight">
                   Conferência de Leitura Automática
                 </span>
                 <Badge className={`${typeMeta.badgeColor} border text-[11px] font-bold px-2.5 py-0.5`}>
@@ -262,7 +264,7 @@ export function DocumentReviewSplitModal({ isOpen, onClose, review, onConfirm }:
         {/* ========================================================================= */}
         {/* 3. CORPO PRINCIPAL COM DIVISÃO LADO A LADO NO DESKTOP */}
         {/* ========================================================================= */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 relative">
           
           {/* PAINEL ESQUERDO: VISUALIZADOR DE DOCUMENTO */}
           <div className={`w-full lg:w-1/2 bg-slate-900 flex flex-col border-r border-slate-200 overflow-hidden ${
@@ -319,7 +321,7 @@ export function DocumentReviewSplitModal({ isOpen, onClose, review, onConfirm }:
             </div>
 
             {/* Área de Visualização com suporte a Zoom, Rotação e Tratamento Amigável de Erros */}
-            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-950/60">
+            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-950/60 pb-[calc(160px+env(safe-area-inset-bottom,0px))] sm:pb-4 overscroll-contain">
               {previewError ? (
                 <div className="max-w-md p-6 bg-slate-900 border border-slate-700 rounded-2xl text-center text-slate-300 space-y-3 shadow-xl">
                   <div className="w-12 h-12 mx-auto rounded-full bg-slate-800 flex items-center justify-center text-blue-400">
@@ -377,10 +379,10 @@ export function DocumentReviewSplitModal({ isOpen, onClose, review, onConfirm }:
           </div>
 
           {/* PAINEL DIREITO: CONFERÊNCIA DOS CAMPOS EXTRAÍDOS */}
-          <div className={`w-full lg:w-1/2 bg-white flex flex-col overflow-y-auto ${
+          <div className={`w-full lg:w-1/2 bg-white flex flex-col overflow-y-auto overscroll-contain ${
             mobileTab === "fields" ? "flex" : "hidden lg:flex"
           }`}>
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-5 pb-[calc(180px+env(safe-area-inset-bottom,0px))] sm:pb-8">
 
               {/* Bloco de Divergências Encontradas (se houver) */}
               {review.discrepancies.length > 0 && (
@@ -511,29 +513,38 @@ export function DocumentReviewSplitModal({ isOpen, onClose, review, onConfirm }:
         {/* ========================================================================= */}
         {/* 4. RODAPÉ COM AÇÕES EXPLÍCITAS E REGISTRO DE AUDITORIA */}
         {/* ========================================================================= */}
-        <div className="bg-white border-t border-slate-200 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
-          <div className="text-xs text-slate-500 font-medium">
-            Confirmar transfere os campos conferidos para o formulário oficial.
+        <div 
+          className="bg-white border-t border-slate-200 px-4 sm:px-6 pt-3 sm:pt-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] z-30 shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4"
+          style={{
+            paddingBottom: "max(16px, env(safe-area-inset-bottom, 16px))",
+          }}
+        >
+          <div className="text-[11px] sm:text-xs text-slate-500 font-medium text-center sm:text-left leading-tight hidden xs:block sm:block">
+            Revise os dados conferidos antes de aplicar ao cadastro oficial.
           </div>
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
             <Button
               type="button"
               variant="outline"
-              size="sm"
               onClick={onClose}
-              className="text-xs font-semibold rounded-xl border-slate-200 hover:bg-slate-100 text-slate-600 cursor-pointer"
+              onPointerDown={() => {
+                (document.activeElement as HTMLElement)?.blur?.();
+              }}
+              className="w-full sm:w-auto min-h-[42px] px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border-slate-300 hover:bg-slate-100 text-slate-700 bg-white shadow-2xs whitespace-normal text-center cursor-pointer order-2 sm:order-1"
             >
-              Cancelar e preencher manualmente
+              <span>Preencher manualmente</span>
             </Button>
 
             <Button
               type="button"
-              size="sm"
               onClick={handleConfirmAndApply}
-              className="text-xs font-bold rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white gap-1.5 shadow-sm cursor-pointer"
+              onPointerDown={() => {
+                (document.activeElement as HTMLElement)?.blur?.();
+              }}
+              className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white gap-2 shadow-sm whitespace-normal text-center cursor-pointer order-1 sm:order-2"
             >
-              <CheckCircle2 className="h-4 w-4" />
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
               <span>Confirmar e aplicar ao cadastro</span>
             </Button>
           </div>

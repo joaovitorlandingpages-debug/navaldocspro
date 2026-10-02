@@ -168,7 +168,7 @@ export function CustomerDocumentUploadModal({
   return (
     <>
       <Dialog open={isOpen && !isReviewOpen} onOpenChange={(open) => !open && !isProcessing && onClose()}>
-        <DialogContent className="max-w-xl bg-white rounded-2xl p-6 shadow-xl border-slate-200">
+        <DialogContent className="w-full max-w-xl max-h-[100dvh] bg-white rounded-none sm:rounded-2xl p-4 sm:p-6 shadow-xl border-0 sm:border border-slate-200 overflow-y-auto">
           <DialogHeader className="border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-lg bg-blue-50 text-[#075BFF] flex items-center justify-center">
@@ -280,14 +280,20 @@ export function CustomerDocumentUploadModal({
           </div>
 
           {/* Rodapé de Ações */}
-          <div className="border-t border-slate-100 pt-4 flex items-center justify-between gap-3">
+          <div 
+            className="border-t border-slate-100 pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3"
+            style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom, 12px))" }}
+          >
             <Button
               type="button"
               variant="outline"
               size="sm"
               disabled={isProcessing}
               onClick={onClose}
-              className="text-xs font-semibold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-600"
+              onPointerDown={() => {
+                (document.activeElement as HTMLElement)?.blur?.();
+              }}
+              className="w-full sm:w-auto min-h-[42px] px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border-slate-300 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs"
             >
               Preencher tudo manualmente
             </Button>
@@ -297,16 +303,19 @@ export function CustomerDocumentUploadModal({
               size="sm"
               disabled={selectedFiles.length === 0 || isProcessing}
               onClick={handleProcessDocuments}
-              className="text-xs font-bold rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white gap-1.5 shadow-sm cursor-pointer"
+              onPointerDown={() => {
+                (document.activeElement as HTMLElement)?.blur?.();
+              }}
+              className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white gap-2 shadow-sm cursor-pointer"
             >
               {isProcessing ? (
                 <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   <span>Analisando...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-3.5 w-3.5" />
+                  <Sparkles className="h-4 w-4" />
                   <span>Iniciar Leitura Automática</span>
                 </>
               )}

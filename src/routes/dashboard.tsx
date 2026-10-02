@@ -115,7 +115,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
   }, [profile]);
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-[100dvh] bg-white text-slate-900 flex flex-col font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
       {/* 1. CABEÇALHO UNIFICADO SUPERIOR */}
       <header className="sticky top-0 z-50 h-16 bg-white border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Esquerda: Logo NavalDocs Pro */}
